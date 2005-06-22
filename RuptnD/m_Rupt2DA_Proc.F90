@@ -48,6 +48,7 @@ Module m_Rupt2DA_Proc
   Public :: Update_BC_V
   Public :: Update_BC_U
   Public :: Update_F
+  Public :: Update_Temp
 
   integer :: i
 
@@ -111,8 +112,12 @@ Contains
     Call VecDuplicate(V_Dist, V_Old, iErr)
     Call VecDuplicate(V_Dist, V_Change, iErr)
     Call VecDuplicate(V_Dist, RHS_V, iErr)
+    
+    Call VecDuplicate (V_Dist, Temp_Dist, iErr)
+    Call VecDuplicate (V_Master, Temp_Master, iErr)
 
     Call VecGhostGetLocalForm(V_Dist, V_Loc, iErr)
+    Call VecGhostGetLocalForm(Temp_Dist, Temp_Loc, iErr)
 
 #ifdef PB_2DA
     Call MatCreateMPIAIJ(PETSC_COMM_WORLD, MySD_U%Num_Nodes, MySD_U%Num_Nodes,&
@@ -350,12 +355,39 @@ Contains
      Call VecGhostUpdateEnd(F_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
    End Subroutine Update_F
 
+  Subroutine Update_Temp(TimeStep)
+  !!! Careful with variable names... Temp == temperature, tmp == temporary
+    Integer                                       :: TimeStep
+
+    PetscReal, Dimension(:), Pointer              :: Temp_Ptr, Tmp_Ptr
+
+    If (MEF90_MyRank == 0) Then
+       Call VecGetArrayF90(Temp_Master, Temp_Ptr, iErr)
+       Call Read_EXO_Result_Nodes(Geom, 8, TimeStep, Tmp_Ptr, 1)
+       Temp_Ptr = Tmp_Ptr
+       Call VecRestoreArrayF90(Temp_Master, Temp_Ptr, iErr)
+       DeAllocate(Tmp_Ptr)
+    EndIf
+
+     !!! Temp_Master -> Temp_Dist
+     Call VecScatterBegin(Temp_Master, Temp_Dist, INSERT_VALUES,              &
+          & SCATTER_REVERSE, MySD_V%ToMaster, iErr)
+     Call VecScatterEnd(Temp_Master, Temp_Dist, INSERT_VALUES,                & 
+          & SCATTER_REVERSE, MySD_V%ToMaster, iErr)
+
+     !!! Temp_Dist -> Temp_Loc
+     Call VecGhostUpdateBegin(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+     Call VecGhostUpdateEnd(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+   End Subroutine Update_Temp
+
+
   Subroutine Solve_U()
 !    Call Update_BC_U(TimeStep)
 
     Call Assemb_MR_U(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V,               &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
-
+    Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,        &
+         & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
     Call PetscGetTime(SolveTS, iErr)
     Call KSPSolve(KSP_U, RHS_U, U_Dist, iErr)
 
@@ -380,7 +412,7 @@ Contains
 !!$       Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 !!$    End If
 
-    Call Assemb_MR_V(MR_V, U_Loc, Geom, Params, MySD_U, MySD_V,                &
+    Call Assemb_MR_V(MR_V, U_Loc, Temp_Loc, Geom, Params, MySD_U, MySD_V,     &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
 !    Call Assemb_RHS_V(RHS_V, Geom, Params, MySD_V, Elem_db_V, Node_db_V)
 
@@ -491,6 +523,9 @@ Contains
     Call VecDestroy(F_Loc, iErr)
     Call VecDestroy(F_Master, iErr)
 
+    Call VecDestroy(Temp_Dist, iErr)
+    Call VecDestroy(Temp_Loc, iErr)
+    Call VecDestroy(Temp_Master, iErr)
 ! Call PetscFinalize(PETSC_NULL_CHARACTER, iErr)
 !Call MPI_FINALIZE(iErr)    
 !    Call MEF90_Finalize()

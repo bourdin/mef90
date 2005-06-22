@@ -276,69 +276,94 @@ Contains
 
 
   Subroutine Assemb_RHS_U(RHS, BC_U_Loc, Geom, Params, SD_U, Elems_U, Nodes_U,&
-       & FLoc)
+       & SD_V, Elems_V, Nodes_V, Vloc, FLoc, TempLoc)
     Vec                                           :: RHS
     Vec                                           :: BC_U_Loc
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD_U
+    Type (SD_Info)                                :: SD_V
 
 #if defined PB_2D
     Type (Node2D), Dimension(:), Pointer          :: Nodes_U
     Type (Element2D_Elast), Dimension(:), Pointer :: Elems_U
+    Type (Node2D), Dimension(:), Pointer          :: Nodes_V
+    Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
 #elif defined PB_3D
     Type (Node3D), Dimension(:), Pointer          :: Nodes_U
     Type (Element3D_Elast), Dimension(:), Pointer :: Elems_U
+    Type (Node3D), Dimension(:), Pointer          :: Nodes_V
+    Type (Element3D_Scal), Dimension(:), Pointer  :: Elems_V
 #else
     Type (Node2D), Dimension(:), Pointer          :: Nodes_U
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_U
+    Type (Node2D), Dimension(:), Pointer          :: Nodes_V
+    Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
 #endif
 
+	Vec                                           :: VLoc
 	Vec                                           :: FLoc
+	Vec                                           :: TempLoc
 
-    Real(Kind = Kr), Dimension(:), Pointer              :: F_Ptr
+    Real(Kind = Kr), Dimension(:), Pointer        :: F_Ptr
+    Real(Kind = Kr), Dimension(:), Pointer        :: Temp_Ptr
+    Real(Kind = Kr), Dimension(:), Pointer        :: V_Ptr
 
-    Integer, Dimension(:), Pointer                :: Loc_Indices
-    Integer, Dimension(:), Pointer                :: EXO_Indices
+    Integer, Dimension(:), Pointer                :: Loc_Indices_Vect
+    Integer, Dimension(:), Pointer                :: EXO_Indices_Vect
+    Integer, Dimension(:), Pointer                :: Loc_Indices_Scal
     PetscReal, Dimension(:), Pointer              :: RHS_Ptr
     PetscReal, Dimension(:), Pointer              :: BC_U_Ptr
     Integer                                       :: i, iBlk
     Integer                                       :: iE, iELoc
     Integer                                       :: iSL1, iSG1
     Integer                                       :: iSL2, iSG2
+    Integer                                       :: iSLV1, iSGV1
+    Integer                                       :: iSLV2, iSGV2
     Integer                                       :: iS, iSLoc
     Integer                                       :: iG
     Real(Kind = Kr)                               :: Tmp_Val
     PetscLogDouble                                :: TotTS, TotTF, TotT
+    Real(Kind = Kr), Dimension(:), Pointer        :: ContrV
 
     Call PetscGetTime(TotTS, iErr)
+    
+    Allocate(Loc_Indices_Scal(Geom%Num_Nodes))
+    Loc_Indices_Scal = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
+    Call AOApplicationToPETSc(SD_V%Loc_AO, Geom%Num_Nodes, Loc_Indices_Scal,  &
+        & iErr)
+
 #ifdef PB_2DA
-    Allocate(Loc_Indices(Geom%Num_Nodes))
-    Loc_Indices = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
-    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes, Loc_Indices, iErr)
+    Allocate(Loc_Indices_Vect(Geom%Num_Nodes))
+    Loc_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
+    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes, Loc_Indices_Vect,  &
+        & iErr)
 
-    Allocate(EXO_Indices(Geom%Num_Nodes))
-    EXO_Indices = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
-    Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes, EXO_Indices, iErr)
+    Allocate(EXO_Indices_Vect(Geom%Num_Nodes))
+    EXO_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
+    Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes, EXO_Indices_Vect,  &
+        & iErr)
 #else
-    Allocate(Loc_Indices(Geom%Num_Nodes * Geom%Num_Dim))
-    Loc_Indices = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim -1) /)
+    Allocate(Loc_Indices_Vect(Geom%Num_Nodes * Geom%Num_Dim))
+    Loc_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim -1) /)
     Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes * Geom%Num_Dim,    &
-         & Loc_Indices, iErr)
+         & Loc_Indices_Vect, iErr)
 
-    Allocate(EXO_Indices(Geom%Num_Nodes * Geom%Num_Dim))
-    EXO_Indices = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim -1) /)
+    Allocate(EXO_Indices_Vect(Geom%Num_Nodes * Geom%Num_Dim))
+    EXO_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim -1) /)
     Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes * Geom%Num_Dim,    &
-         & EXO_Indices, iErr)
+         & EXO_Indices_Vect, iErr)
 #endif
 
 	Call VecGetArrayF90(FLoc, F_Ptr, iErr)
+	Call VecGetArrayF90(TempLoc, Temp_Ptr, iErr)
+	Call VecGetArrayF90(VLoc, V_Ptr, iErr)
 
     Call VecSet(0.0_Kr, RHS, iErr)
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-       If (.NOT. Params%Has_Force(iBlk)) Then
-          CYCLE
-       End If
+!        If (.NOT. Params%Has_Force(iBlk)) Then
+!           CYCLE
+!        End If
 !!! Let's see if this has a performance impact.
 
        Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
@@ -348,34 +373,86 @@ Contains
           End If
           Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder,       &
                & Elem=iE)
+          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder,       &
+               & Elem=iE)
+               
+         Allocate(ContrV(Elems_V(iE)%Nb_Gauss))
+
+          Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
+             ContrV = Params%KEpsilon
+             Do_iSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
+                iSGV1 = Elems_V(iE)%ID_DoF(iSLV1)
+                DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
+                   iSGV2 = Elems_V(iE)%ID_DoF(iSLV2)
+                   Do_iGV: Do iG = 1, Elems_V(iE)%Nb_Gauss
+                      ContrV(iG) = ContrV(iG) +                               &
+                           & V_Ptr(Loc_Indices_Scal(iSGV1)+1)                 &
+                           &  * Elems_V(iE)%BF(iSLV1, iG)                     &
+                           &  * V_Ptr(Loc_Indices_Scal(iSGV2)+1)              &
+                           &  * Elems_V(iE)%BF(iSLV2, iG)
+                   End Do Do_iGV
+                End Do DoiSLV2
+              End Do Do_iSLV1
+          Else
+             ContrV = 1.0_Kr
+          End If Is_Brittle
+
 
           Do_iSL1: Do iSL1 = 1, Elems_U(iE)%Nb_DoF
              iSG1 = Elems_U(iE)%ID_DoF(iSL1)
              Tmp_Val = 0.0_Kr
-             Do_iSL2: Do iSL2 = 1, Elems_U(iE)%Nb_Gauss
-             	iSG2 = Elems_U(iE)%ID_DoF(iSL2)
-                Do_iG: Do iG = 1, Elems_U(iE)%Nb_Gauss
+
+!!! Force part
+             Has_Force: If (Params%Has_Force(iBlk)) Then
+                Do_iSL2: Do iSL2 = 1, Elems_U(iE)%Nb_Gauss
+                   iSG2 = Elems_U(iE)%ID_DoF(iSL2)
+                   Do_iG: Do iG = 1, Elems_U(iE)%Nb_Gauss
 #ifdef PB_2DA
                       Tmp_Val = Tmp_Val + Elems_U(iE)%Gauss_C(iG) * (         &
-                   		   & F_Ptr(Loc_Indices(iSG2)+1) *                     &
+                   		   & F_Ptr(Loc_Indices_Vect(iSG2)+1) *                &
                            & ( Elems_U(iE)%BF(iSL1, iG) *                     &
                            &   Elems_U(iE)%BF(iSL2,iG) ))
 #else
                       Tmp_Val = Tmp_Val + Elems_U(iE)%Gauss_C(iG) * (         &
-                   		   & F_Ptr(Loc_Indices(iSG2)+1) *                     &
+                   		   & F_Ptr(Loc_Indices_Vect(iSG2)+1) *                &
                            & ( Elems_U(iE)%BF(iSL1, iG) .DotP.                &
                            &   Elems_U(iE)%BF(iSL2,iG) ))
 #endif
-                End Do Do_iG
-             End Do Do_iSL2
-             Call VecSetValue(RHS, EXO_Indices(iSG1), Tmp_Val, ADD_VALUES,   &
-                  & iErr)
+                   End Do Do_iG
+                End Do Do_iSL2
+             EndIf Has_Force
+          
+!!! Thermal expansion part
+             Do_iSL2_Temp: Do iSL2 = 1, Elems_V(iE)%Nb_Gauss
+                iSG2 = Elems_V(iE)%ID_DoF(iSL2)
+                Do_iG_Temp: Do iG = 1, Elems_U(iE)%Nb_Gauss
+#ifdef PB_2DA                
+                   Tmp_Val = Tmp_Val + Elems_V(iE)%Gauss_C(iG) * (            &
+                		& Temp_Ptr(Loc_Indices_Scal(iSG2)+1) *                &
+                		& Params%Therm_Exp(iBlk) *                            &
+                		& trace(Elems_U(iE)%Grad_BF(iSL1, iG)) *              &
+                		& Elems_V(iE)% BF(iSL2, iG)) * ContrV(iG)
+#else
+                   Tmp_Val = Tmp_Val + Elems_V(iE)%Gauss_C(iG) * (            &
+                		& Temp_Ptr(Loc_Indices_Scal(iSG2)+1) *                &
+                		& Params%Therm_Exp(iBlk) *                            &
+                		& trace(Elems_U(iE)%GradS_BF(iSL1, iG)) *             &
+                		& Elems_V(iE)% BF(iSL2, iG)) * ContrV(iG)
+#endif
+                End Do Do_iG_Temp
+             End Do Do_iSL2_Temp
+         
+             Call VecSetValue(RHS, EXO_Indices_Vect(iSG1), Tmp_Val,           &
+                & ADD_VALUES, iErr)
           End Do Do_iSL1
+
           Call Destroy_Gauss_EXO(Elems_U, Elem=iE)
+          Call Destroy_Gauss_EXO(Elems_V, Elem=iE)
+          DeAllocate(ContrV)
        End Do Do_iE
     End Do Do_iBlk
     Call VecAssemblyBegin(RHS, iErr)
-    DeAllocate(EXO_Indices)
+    DeAllocate(EXO_Indices_Vect)
     Call VecAssemblyEnd(RHS, iErr)
 
 !!!
@@ -388,7 +465,8 @@ Contains
     Do_iS: Do iSLoc = 1, SD_U%Num_Nodes
        iS = SD_U%Node(iSLoc)
        Is_BC: If (Nodes_U(iS)%BC /= BC_Type_NONE) Then
-          RHS_Ptr(Loc_Indices(iS)+1) = BC_U_Ptr(Loc_Indices(iS)+1)*MEF90_VLV
+          RHS_Ptr(Loc_Indices_Vect(iS)+1) = BC_U_Ptr(Loc_Indices_Vect(iS)+1)  & 
+              & * MEF90_VLV
        End If Is_BC
     End Do Do_iS
 
@@ -399,7 +477,11 @@ Contains
     If (MEF90_MyRank == 0) Then
     	Print*, 'Time: ', TotT
     End If
-    DeAllocate(Loc_Indices)
+    DeAllocate(Loc_Indices_Vect)
+    DeAllocate(Loc_Indices_Scal)
+
+    Call VecRestoreArrayF90(VLoc, V_Ptr, iErr)
+    Call VecRestoreArrayF90(TempLoc, Temp_Ptr, iErr)
     Call VecRestoreArrayF90(FLoc, F_Ptr, iErr)
     Call VecRestoreArrayF90(BC_U_Loc, BC_U_Ptr, iErr)
     Call VecRestoreArrayF90(RHS, RHS_Ptr, iErr)

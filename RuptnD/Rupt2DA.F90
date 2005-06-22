@@ -80,9 +80,13 @@ Program Rupt2DA
 
      Call Update_F(TimeStep)
      Write(CharBuffer,*) 'OK Update_F\n'c
+
+     Call Update_Temp(TimeStep)
+     Write(CharBuffer,*) 'OK Update_Temp\n'c
+
      Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
      Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,      &
-          & Node_db_U, F_Loc)
+          & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
      Write(CharBuffer,*) 'OK Assemb_RHS_U\n'c
      Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
           
@@ -162,7 +166,7 @@ Program Rupt2DA
         Call PetscGetTime(InitTS, iErr)
         Call Solve_V()
         Call PetscGetTime(InitTF, iErr)
-!!$        Call VecSet(1.0_Kr, V_Loc, iErr)
+!        Call VecSet(0.5_Kr, V_Loc, iErr)
 
         Call KSPGetIterationNumber(KSP_V, NbIterKSP, iErr)
         If (MEF90_MyRank == 0) Then

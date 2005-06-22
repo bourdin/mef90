@@ -203,10 +203,11 @@ Contains
 
 !!! USING VLV SEEMS TO MAKE THE KSP UNSTABLE, UNLESS V IS INITIALIZED WITH 
 !!! THE PROPER BC
-  Subroutine Assemb_MR_V(MR, U_Loc, Geom, Params, SD_U, SD_V,                 &
+  Subroutine Assemb_MR_V(MR, U_Loc, Temp_Loc, Geom, Params, SD_U, SD_V,       &
        & Elems_U, Elems_V, Nodes_U, Nodes_V)
     Mat                                           :: MR
     Vec                                           :: U_Loc
+    Vec                                           :: Temp_Loc
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD_U
@@ -243,11 +244,13 @@ Contains
     Integer                                      :: iBlk, iE, iEloc, iG
 
     Real(Kind = Kr), Dimension(:), Pointer       :: U_Ptr
+    Real(Kind = Kr), Dimension(:), Pointer       :: Temp_Ptr
     Real(Kind = Kr), Dimension(:), Pointer       :: ContrU
 
     PetscScalar, Dimension(:,:), Pointer         :: MR_Elem
     Integer, Dimension(:), Pointer               :: EXO_Indices_V
     Integer, Dimension(:), Pointer               :: Loc_Indices_U
+    Integer, Dimension(:), Pointer               :: Loc_Indices_V
 
     PetscTruth                                   :: ISAssembled
 
@@ -277,8 +280,12 @@ Contains
     Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes * Geom%Num_Dim,     &
          & Loc_Indices_U, iErr)
 #endif
+    Allocate(Loc_Indices_V(Geom%Num_Nodes))
+    Loc_Indices_V = (/ (i ,i = 0, Geom%Num_Nodes-1) /)
+    Call AOApplicationToPETSc(SD_V%Loc_AO, Geom%Num_Nodes, Loc_Indices_V, iErr)
 
     Call VecGetArrayF90(U_Loc, U_Ptr, iErr) 
+    Call VecGetArrayF90(Temp_Loc, Temp_Ptr, iErr) 
 
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
        E  = Params%Young_Mod(iBlk)
@@ -367,7 +374,31 @@ Contains
 #endif
                    End Do Do_iGUEps
                 End Do Do_iSLEps
+
+                Do_iSLEps_Temp: Do iSLEps = 1, Elems_V(iE)%Nb_DoF
+                   iSGEps = Elems_V(iE)%ID_DoF(iSLEps)
+                   Do_iGUEps_Temp: Do iG = 1, Nb_Gauss
+#if defined PB_2DA
+                      ContrU(iG) = ContrU(iG) -                               &
+                		& Params%Therm_Exp(iBlk) *                            &
+                		& Temp_Ptr(Loc_Indices_V(iSGEps)+1) *                 &
+                		& Elems_V(iE)% BF(iSLEps, iG) *                       &
+                        & U_Ptr(Loc_Indices_U(iSGSig)+1) *                    &
+                        & trace(Elems_U(iE)%Grad_BF(iSLSig, iG))
+#else
+                      ContrU(iG) = ContrU(iG) -                               &
+                		& Params%Therm_Exp(iBlk) *                            &
+                		& Temp_Ptr(Loc_Indices_V(iSGEps)+1) *                 &
+                		& Elems_V(iE)% BF(iSLEps, iG) *                       &
+                        & U_Ptr(Loc_Indices_U(iSGSig)+1) *                    &
+                        & trace(Elems_U(iE)%GradS_BF(iSLSig, iG))
+#endif
+                   End Do Do_iGUEps_Temp
+                End Do Do_iSLEps_Temp
+
+
              End Do Do_iSLSig
+             
              DoiSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
                 DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
                    DoiGV: Do iG = 1, Nb_Gauss
@@ -428,6 +459,7 @@ Contains
     DeAllocate(Loc_Indices_U)
     
     Call VecRestoreArrayF90(U_Loc, U_Ptr, iErr) 
+    Call VecRestoreArrayF90(Temp_Loc, Temp_Ptr, iErr) 
     Call MatAssemblyEnd(MR, MAT_FLUSH_ASSEMBLY, iErr)  
     
 
