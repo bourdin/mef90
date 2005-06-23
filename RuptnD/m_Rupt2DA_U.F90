@@ -380,7 +380,7 @@ Contains
           
 #ifndef PB_2DA
           Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
-!!! the antiplane hypothesis doesn;t make sense for thermoelasticity
+!!! the antiplane hypothesis doesn't make sense for thermoelasticity
              ContrV = Params%KEpsilon
              Do_iSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
                 iSGV1 = Elems_V(iE)%ID_DoF(iSLV1)
