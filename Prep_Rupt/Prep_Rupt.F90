@@ -499,13 +499,15 @@ Contains
           Call Write_EXO_Result_Nodes(Geom, 8, iTS, Temp_Result)
        End Do
     Case (PB_Dipping)
-       Write(*, 100, advance = 'no') 'TCool, THot: '
+       Write(*, 100, advance = 'no') 'TCool, THot:                '
        Read(*,*) TCool, THot
-       Write(*, 100, advance = 'no') 'Half plane width (b): '
+       Write(*, 100, advance = 'no') 'Half plane width (b):       '
        Read(*,*) b
        Write(*, 100, advance = 'no') 'Heat diffusion coefficient: '
        Read(*,*) D
-       P = b*D
+       Write(*, 100, advance = 'no') 'Dipping speed:              '
+       Read(*,*) V
+       P = b*V/D
        Do iTS = 1, Size(Params%Load)
           Temp_Result = TCool
           Do iNode = 1, Geom%Num_Nodes
