@@ -75,20 +75,20 @@ Program Rupt2DA
      Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
      Call Update_BC_U(TimeStep)
-     Write(CharBuffer,*) 'OK Update_BC_U\n'c
-     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+!     Write(CharBuffer,*) 'OK Update_BC_U\n'c
+!     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
      Call Update_F(TimeStep)
-     Write(CharBuffer,*) 'OK Update_F\n'c
+!     Write(CharBuffer,*) 'OK Update_F\n'c
 
      Call Update_Temp(TimeStep)
-     Write(CharBuffer,*) 'OK Update_Temp\n'c
+!     Write(CharBuffer,*) 'OK Update_Temp\n'c
+!     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
-     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
      Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,      &
           & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
-     Write(CharBuffer,*) 'OK Assemb_RHS_U\n'c
-     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+!     Write(CharBuffer,*) 'OK Assemb_RHS_U\n'c
+!     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
           
      Select Case (Params%Init_U)
      Case (Init_U_ZERO)
@@ -196,7 +196,7 @@ Program Rupt2DA
            Call Export (TimeStep)
         Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom, Params,  &
              & MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V,    &
-             & F_Loc )
+             & F_Loc, Temp_Loc )
 
         Call Comp_Surf_Ener(Surf_Ener(TimeSTep), V_Loc, Geom, Params, MySD_V, &
              & Elem_db_V, Node_db_V)
@@ -215,7 +215,7 @@ Program Rupt2DA
            Call Export(TimeStep) 
            Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
                 & Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,    &
-                & Node_db_V, F_Loc )
+                & Node_db_V, F_Loc, Temp_Loc )
 
            Call Comp_Surf_Ener(Surf_Ener(TimeStep), V_Loc, Geom, Params,      &
                 & MySD_V, Elem_db_V, Node_db_V)

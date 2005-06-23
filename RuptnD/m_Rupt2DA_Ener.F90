@@ -38,7 +38,7 @@ Module m_Rupt2DA_Ener
 
 Contains
   Subroutine Comp_Bulk_Ener(Ener, ULoc, VLoc, Geom, Params, SD_U, SD_V,       &
-       & Elems_U, Elems_V, Nodes_U, Nodes_V, FLoc)
+       & Elems_U, Elems_V, Nodes_U, Nodes_V, FLoc, TempLoc)
     Type (EXO_Geom_Info)                         :: Geom
     Type (Rupt_Params)                           :: Params
     Type (SD_Info)                               :: SD_U
@@ -66,6 +66,7 @@ Contains
     Vec                                          :: ULoc
     Vec                                          :: VLoc
     Vec                                          :: FLoc
+    Vec                                          :: TempLoc
     Real(Kind = Kr), Intent(OUT)                 :: Ener
 
     PetscReal                                    :: E, Nu
@@ -81,8 +82,9 @@ Contains
     Integer                                      :: iBlk, iELoc, iE, iG
     
 
-    Real(Kind = Kr), Dimension(:), Pointer       :: UPtr, VPtr, FPtr
-    Real(Kind = Kr), Dimension(:), Pointer       :: ContrU, ContrV, ContrF
+    Real(Kind = Kr), Dimension(:), Pointer       :: UPtr, VPtr, FPtr, TempPtr
+    Real(Kind = Kr), Dimension(:), Pointer       :: ContrU, ContrV
+    Real(Kind = Kr), Dimension(:), Pointer       :: ContrF, ContrTemp
 
     Integer, Dimension(:), Pointer               :: Loc_Indices_U
     Integer, Dimension(:), Pointer               :: Loc_Indices_V
@@ -107,6 +109,7 @@ Contains
     Call VecGetArrayF90(VLoc, VPtr, iErr)
     Call VecGetArrayF90(ULoc, UPtr, iErr)
     Call VecGetArrayF90(FLoc, FPtr, iErr)
+    Call VecGetArrayF90(TempLoc, TempPtr, iErr)
 
     MyEner = 0.0_Kr
     Ener = 0.0_Kr
@@ -144,6 +147,8 @@ Contains
           Allocate(ContrU(Nb_Gauss))
           Allocate(ContrV(Nb_Gauss))
           Allocate(ContrF(Nb_Gauss))
+          Allocate(ContrTemp(Nb_Gauss))
+          
           ! V^2 + K_\epsilon term
           Is_Brittle: If (Params%Is_Brittle(iBlk)) Then
 !             ContrV = Params%KEpsilon
@@ -168,6 +173,7 @@ Contains
           !!! part related to v^2+k_\e W(e(u))
           ContrU = 0.0_Kr
           ContrF = 0.0_Kr
+          ContrTemp = 0.0_Kr
           Do_iSLSig: Do iSLSig = 1, Elems_U(iE)%Nb_DoF
              iSGSig = Elems_U(iE)%ID_DoF(iSLSig)
 #ifndef PB_2DA
@@ -192,7 +198,6 @@ Contains
                         &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) *                &
                         &  UPtr(Loc_Indices_U(iSGSig)+1) *                    &
                         &  UPtr(Loc_Indices_U(iSGEps)+1) * Mu
-!!! Put the Kepsilon back in there
 #else                   
                    ContrU(iG) = ContrU(iG) +                                  &
                         & ( Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.            &
@@ -205,6 +210,7 @@ Contains
 #endif
                 End Do Do_iGUEps
              End Do Do_iSLEps
+!!! Force stuff
              If (Params%Has_Force(iBlk)) Then
                 Do_iSLEpsF: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
                    iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
@@ -223,16 +229,33 @@ Contains
                    End Do Do_iGF
                 End Do Do_iSLEpsF
              End If
+
+!!! Thermal stuff             
+#ifndef PB_2DA                  
+             Do_iSLEpsTemp: Do iSLEps = 1, Elems_V(iE)%Nb_DoF
+                iSGEps = Elems_V(iE)%ID_DoF(iSLEps)
+                Do_iGEpsTemp: Do iG = 1, Nb_Gauss
+                   ContrTemp(iG) = ContrTemp(iG) +                            &
+                        &  Params%Therm_Exp(iBlk) *                           &
+                        &  UPtr(Loc_Indices_U(iSGSig)+1) *                    &
+                        &  trace(Elems_U(iE)%GradS_BF(iSLSig, iG)) *          &
+                        &  TempPtr(Loc_Indices_V(iSGEps)+1) *                 &
+                        &  Elems_V(iE)% BF(iSLEps, iG) * ContrV(iG)
+                End Do Do_iGEpsTemp
+             End Do Do_iSLEpsTemp
+#endif
           End Do Do_iSLSig
           
           Do_iGE: Do iG = 1, Nb_Gauss
              MyEner = MyEner + Elems_U(iE)%Gauss_C(iG) *                      &
-                  & (ContrU(iG) * .5_Kr - ContrF(iG) )
+                  & (ContrU(iG) * .5_Kr - ContrF(iG) - ContrTemp(iG))
           End Do Do_iGE
           Call Destroy_Gauss_EXO(Elems_U, Elem=iE)
           Call Destroy_Gauss_EXO(Elems_V, Elem=iE)
           DeAllocate(ContrU)
           DeAllocate(ContrV)
+          DeAllocate(ContrF)
+          DeAllocate(ContrTemp)
 #ifndef PB_2DA
           DeAllocate(Sigma)
 #endif
@@ -245,6 +268,7 @@ Contains
     Call VecRestoreArrayF90(ULoc, UPtr, iErr)
     Call VecRestoreArrayF90(VLoc, VPtr, iErr)
     Call VecRestoreArrayF90(FLoc, FPtr, iErr)
+    Call VecRestoreArrayF90(TempLoc, TempPtr, iErr)
     DeAllocate(Loc_Indices_U)
     DeAllocate(Loc_Indices_V)
   End Subroutine Comp_Bulk_Ener
