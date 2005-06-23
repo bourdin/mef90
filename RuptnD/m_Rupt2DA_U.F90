@@ -301,9 +301,9 @@ Contains
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
 #endif
 
-	Vec                                           :: VLoc
-	Vec                                           :: FLoc
-	Vec                                           :: TempLoc
+    Vec                                           :: VLoc
+    Vec                                           :: FLoc
+    Vec                                           :: TempLoc
 
     Real(Kind = Kr), Dimension(:), Pointer        :: F_Ptr
     Real(Kind = Kr), Dimension(:), Pointer        :: Temp_Ptr
@@ -331,41 +331,41 @@ Contains
     Allocate(Loc_Indices_Scal(Geom%Num_Nodes))
     Loc_Indices_Scal = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
     Call AOApplicationToPETSc(SD_V%Loc_AO, Geom%Num_Nodes, Loc_Indices_Scal,  &
-        & iErr)
-
+         & iErr)
+    
 #ifdef PB_2DA
     Allocate(Loc_Indices_Vect(Geom%Num_Nodes))
     Loc_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
     Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes, Loc_Indices_Vect,  &
-        & iErr)
-
+         & iErr)
+    
     Allocate(EXO_Indices_Vect(Geom%Num_Nodes))
     EXO_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
     Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes, EXO_Indices_Vect,  &
-        & iErr)
+         & iErr)
 #else
     Allocate(Loc_Indices_Vect(Geom%Num_Nodes * Geom%Num_Dim))
     Loc_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim -1) /)
     Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes * Geom%Num_Dim,    &
          & Loc_Indices_Vect, iErr)
-
+    
     Allocate(EXO_Indices_Vect(Geom%Num_Nodes * Geom%Num_Dim))
     EXO_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim -1) /)
     Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes * Geom%Num_Dim,    &
          & EXO_Indices_Vect, iErr)
 #endif
-
-	Call VecGetArrayF90(FLoc, F_Ptr, iErr)
-	Call VecGetArrayF90(TempLoc, Temp_Ptr, iErr)
-	Call VecGetArrayF90(VLoc, V_Ptr, iErr)
-
+    
+    Call VecGetArrayF90(FLoc, F_Ptr, iErr)
+    Call VecGetArrayF90(TempLoc, Temp_Ptr, iErr)
+    Call VecGetArrayF90(VLoc, V_Ptr, iErr)
+    
     Call VecSet(0.0_Kr, RHS, iErr)
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-!        If (.NOT. Params%Has_Force(iBlk)) Then
-!           CYCLE
-!        End If
+       !        If (.NOT. Params%Has_Force(iBlk)) Then
+       !           CYCLE
+       !        End If
 !!! Let's see if this has a performance impact.
-
+       
        Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
           iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
           If (.NOT. SD_U%IsLocal_Elem(iE)) Then
@@ -375,10 +375,12 @@ Contains
                & Elem=iE)
           Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder,       &
                & Elem=iE)
-               
-         Allocate(ContrV(Elems_V(iE)%Nb_Gauss))
-
+          
+          Allocate(ContrV(Elems_V(iE)%Nb_Gauss))
+          
+#ifndef PB_2DA
           Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
+!!! the antiplane hypothesis doesn;t make sense for thermoelasticity
              ContrV = Params%KEpsilon
              Do_iSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
                 iSGV1 = Elems_V(iE)%ID_DoF(iSLV1)
@@ -392,16 +394,16 @@ Contains
                            &  * Elems_V(iE)%BF(iSLV2, iG)
                    End Do Do_iGV
                 End Do DoiSLV2
-              End Do Do_iSLV1
+             End Do Do_iSLV1
           Else
              ContrV = 1.0_Kr
           End If Is_Brittle
-
-
+#endif
+          
           Do_iSL1: Do iSL1 = 1, Elems_U(iE)%Nb_DoF
              iSG1 = Elems_U(iE)%ID_DoF(iSL1)
              Tmp_Val = 0.0_Kr
-
+             
 !!! Force part
              Has_Force: If (Params%Has_Force(iBlk)) Then
                 Do_iSL2: Do iSL2 = 1, Elems_U(iE)%Nb_Gauss
@@ -409,43 +411,37 @@ Contains
                    Do_iG: Do iG = 1, Elems_U(iE)%Nb_Gauss
 #ifdef PB_2DA
                       Tmp_Val = Tmp_Val + Elems_U(iE)%Gauss_C(iG) * (         &
-                   		   & F_Ptr(Loc_Indices_Vect(iSG2)+1) *                &
+                           & F_Ptr(Loc_Indices_Vect(iSG2)+1) *                &
                            & ( Elems_U(iE)%BF(iSL1, iG) *                     &
                            &   Elems_U(iE)%BF(iSL2,iG) ))
 #else
                       Tmp_Val = Tmp_Val + Elems_U(iE)%Gauss_C(iG) * (         &
-                   		   & F_Ptr(Loc_Indices_Vect(iSG2)+1) *                &
+                           & F_Ptr(Loc_Indices_Vect(iSG2)+1) *                &
                            & ( Elems_U(iE)%BF(iSL1, iG) .DotP.                &
                            &   Elems_U(iE)%BF(iSL2,iG) ))
 #endif
                    End Do Do_iG
                 End Do Do_iSL2
              EndIf Has_Force
-          
+             
 !!! Thermal expansion part
+#ifndef PB_2DA
              Do_iSL2_Temp: Do iSL2 = 1, Elems_V(iE)%Nb_Gauss
                 iSG2 = Elems_V(iE)%ID_DoF(iSL2)
                 Do_iG_Temp: Do iG = 1, Elems_U(iE)%Nb_Gauss
-#ifdef PB_2DA                
                    Tmp_Val = Tmp_Val + Elems_V(iE)%Gauss_C(iG) * (            &
-                		& Temp_Ptr(Loc_Indices_Scal(iSG2)+1) *                &
-                		& Params%Therm_Exp(iBlk) *                            &
-                		& trace(Elems_U(iE)%Grad_BF(iSL1, iG)) *              &
-                		& Elems_V(iE)% BF(iSL2, iG)) * ContrV(iG)
-#else
-                   Tmp_Val = Tmp_Val + Elems_V(iE)%Gauss_C(iG) * (            &
-                		& Temp_Ptr(Loc_Indices_Scal(iSG2)+1) *                &
-                		& Params%Therm_Exp(iBlk) *                            &
-                		& trace(Elems_U(iE)%GradS_BF(iSL1, iG)) *             &
-                		& Elems_V(iE)% BF(iSL2, iG)) * ContrV(iG)
-#endif
+                        & Temp_Ptr(Loc_Indices_Scal(iSG2)+1) *                &
+                        & Params%Therm_Exp(iBlk) *                            &
+                        & trace(Elems_U(iE)%GradS_BF(iSL1, iG)) *             &
+                        & Elems_V(iE)% BF(iSL2, iG)) * ContrV(iG)
                 End Do Do_iG_Temp
              End Do Do_iSL2_Temp
-         
+#endif
+             
              Call VecSetValue(RHS, EXO_Indices_Vect(iSG1), Tmp_Val,           &
-                & ADD_VALUES, iErr)
+                  & ADD_VALUES, iErr)
           End Do Do_iSL1
-
+          
           Call Destroy_Gauss_EXO(Elems_U, Elem=iE)
           Call Destroy_Gauss_EXO(Elems_V, Elem=iE)
           DeAllocate(ContrV)
@@ -454,39 +450,36 @@ Contains
     Call VecAssemblyBegin(RHS, iErr)
     DeAllocate(EXO_Indices_Vect)
     Call VecAssemblyEnd(RHS, iErr)
-
+    
 !!!
 !!! Boundary Conditions, using VLV
 !!!
-
+    
     Call VecGetArrayF90(BC_U_Loc, BC_U_Ptr, iErr)
     Call VecGetArrayF90(RHS, RHS_Ptr, iErr)
-
+    
     Do_iS: Do iSLoc = 1, SD_U%Num_Nodes
        iS = SD_U%Node(iSLoc)
        Is_BC: If (Nodes_U(iS)%BC /= BC_Type_NONE) Then
-          RHS_Ptr(Loc_Indices_Vect(iS)+1) = BC_U_Ptr(Loc_Indices_Vect(iS)+1)  & 
-              & * MEF90_VLV
+          RHS_Ptr(Loc_Indices_Vect(iS)+1) = BC_U_Ptr(Loc_Indices_Vect(iS)+1)  &
+               & * MEF90_VLV
        End If Is_BC
     End Do Do_iS
-
-
+    
+    
     Call PetscGetTime(TotTF, iErr)
     TotT = TotTF - TotTS
-    
-    If (MEF90_MyRank == 0) Then
-    	Print*, 'Time: ', TotT
-    End If
+
     DeAllocate(Loc_Indices_Vect)
     DeAllocate(Loc_Indices_Scal)
-
+    
     Call VecRestoreArrayF90(VLoc, V_Ptr, iErr)
     Call VecRestoreArrayF90(TempLoc, Temp_Ptr, iErr)
     Call VecRestoreArrayF90(FLoc, F_Ptr, iErr)
     Call VecRestoreArrayF90(BC_U_Loc, BC_U_Ptr, iErr)
     Call VecRestoreArrayF90(RHS, RHS_Ptr, iErr)
   End Subroutine Assemb_RHS_U
-
+  
 
 
 #if defined PB_2D

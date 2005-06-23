@@ -375,26 +375,19 @@ Contains
                    End Do Do_iGUEps
                 End Do Do_iSLEps
 
+#ifndef PB_2DA
                 Do_iSLEps_Temp: Do iSLEps = 1, Elems_V(iE)%Nb_DoF
                    iSGEps = Elems_V(iE)%ID_DoF(iSLEps)
                    Do_iGUEps_Temp: Do iG = 1, Nb_Gauss
-#if defined PB_2DA
-                      ContrU(iG) = ContrU(iG) -                               &
-                		& Params%Therm_Exp(iBlk) *                            &
-                		& Temp_Ptr(Loc_Indices_V(iSGEps)+1) *                 &
-                		& Elems_V(iE)% BF(iSLEps, iG) *                       &
-                        & U_Ptr(Loc_Indices_U(iSGSig)+1) *                    &
-                        & trace(Elems_U(iE)%Grad_BF(iSLSig, iG))
-#else
                       ContrU(iG) = ContrU(iG) -                               &
                 		& Params%Therm_Exp(iBlk) *                            &
                 		& Temp_Ptr(Loc_Indices_V(iSGEps)+1) *                 &
                 		& Elems_V(iE)% BF(iSLEps, iG) *                       &
                         & U_Ptr(Loc_Indices_U(iSGSig)+1) *                    &
                         & trace(Elems_U(iE)%GradS_BF(iSLSig, iG))
-#endif
                    End Do Do_iGUEps_Temp
                 End Do Do_iSLEps_Temp
+#endif
 
 
              End Do Do_iSLSig
