@@ -54,18 +54,25 @@ Module m_Rupt2DA_Proc
 
 Contains
   Subroutine Init()
+    PetscTruth                :: Has_Sim_Str
 
     Call MEF90_Initialize()
-    MEF90_GaussOrder = 2
+    MEF90_GaussOrder = 2 
 
-    Write(CharBuffer, 100) 'Simulation name: \n'c
-    Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
-    If (MEF90_MyRank ==0) Then
-       Read(*,100) Params%Sim_Str
-    End If
 
-    Call MPI_BCAST(Params%Sim_Str, MXSTLN, MPI_CHARACTER, 0, MPI_COMM_WORLD,  &
-         & iErr)
+	Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str,     &
+	     & Has_Sim_Str, iErr)
+
+	If (.NOT. Has_Sim_Str) Then
+       Write(CharBuffer, 100) 'Simulation name: \n'c
+       Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+       If (MEF90_MyRank ==0) Then
+          Read(*,100) Params%Sim_Str
+       End If
+       Call MPI_BCAST(Params%Sim_Str, MXSTLN, MPI_CHARACTER, 0, MPI_COMM_WORLD,  &
+            & iErr)
+	End If
+	
     Geom%Filename    = Trim(Params%Sim_Str) // '.gen'
     Params%PARAM_Str = Trim(Params%Sim_Str) // '.PARAM'
     Params%CST_Str   = Trim(Params%Sim_Str) // '.CST'
