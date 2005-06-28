@@ -31,36 +31,6 @@ Module m_Rupt2DA_V
 
 
 Contains
-!!$  Function ran1()  
-!!$    !returns random number between 0 - 1
-!!$    implicit none
-!!$    Real(Kind = Kr)              ::  ran1, x
-!!$    
-!!$    call random_number(x) 
-!!$    ran1=x
-!!$    
-!!$  End Function ran1
-!!$  
-!!$  Function Spread(min,max)  
-!!$    !returns random number between min - max
-!!$    implicit none
-!!$    Real(Kind = Kr) spread
-!!$    Real(Kind = Kr) min,max
-!!$    
-!!$    Spread=(max - min) * ran1() + min
-!!$    
-!!$  End Function Spread
-!!$  
-!!$  Function Spread_Int(min,max)  
-!!$    !returns random Int_number between min - max
-!!$    implicit none
-!!$    Integer Spread_Int
-!!$    Integer min,max
-!!$    
-!!$    Spread_Int=(max - min) * ran1() + min
-!!$    
-!!$  End Function Spread_Int
-  
   Function Distance(A, B, M)
     ! computes the distance from M to the segment [A,B]
 #if defined PB_3D
@@ -315,10 +285,6 @@ Contains
 
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%ELem_ID(iELoc)
-!!$          If ((.NOT. SD_V%IsLocal_Elem(iE)) .OR.                              &
-!!$               & (.NOT. Params%Is_Domain(iBlk))) Then
-!!$             CYCLE
-!!$          End If
           If (.NOT. SD_V%IsLocal_Elem(iE)) Then
              CYCLE
           End If
@@ -450,6 +416,7 @@ Contains
     
     Call MatAssemblyBegin(MR, MAT_FLUSH_ASSEMBLY, iErr)
     DeAllocate(Loc_Indices_U)
+    DeAllocate(Loc_Indices_V)
     
     Call VecRestoreArrayF90(U_Loc, U_Ptr, iErr) 
     Call VecRestoreArrayF90(Temp_Loc, Temp_Ptr, iErr) 

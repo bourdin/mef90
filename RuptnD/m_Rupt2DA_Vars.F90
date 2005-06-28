@@ -24,7 +24,7 @@ Module m_Rupt2DA_Vars
 #include "include/finclude/petscsys.h"
 
 
-  Integer, Public                                       :: SaveInt = 1
+  Integer, Public                                       :: SaveInt = 20
   Mat, Public                                           :: MR_U
   Mat, Public                                           :: MR_V
  
