@@ -227,8 +227,8 @@ Contains
     PetscLogDouble                               :: GaussTS, GaussTF, GaussT
     PetscLogDouble                               :: SetTS, SetTF, SetT
 
-    Real(Kind = Kr)                              :: E, Nu, Lambda, Mu, k
-
+    Real(Kind = Kr)                              :: E, Nu, k
+    Real(Kind = Kr)                              :: K1, K2, K3
     Integer                                      :: SetN, i
 
     SetN = 0
@@ -262,14 +262,23 @@ Contains
        nu = Params%Poisson_Ratio(iBlk) 
        k  = Params%Toughness(iBlk)
 
-#if defined PB_2D
-       Lambda = E * nu / (1.0_Kr - nu**2)
-       Mu     = E / (1.0_Kr + nu) * InvOf2
-#elif defined PB_3D
-       Lambda = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       Mu     = E / (1.0_Kr + nu) * InvOf2
+!!! The isotropic Hooke's law is expressed as
+!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
+!!! K1, K2, K3 are computed in terms of E and nu
+!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
+!!!       (alpha = therm exp coef).
+!!! in 2D / plane stresses, the expressions are more complicated
+!!!
+#ifdef PB_2D
+       K1 = E * nu / (1.0_Kr - nu**2)
+       K2 = E / (1.0_Kr + nu) * InvOf2
+       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
+            (1.0_Kr - Params%Poisson_Ratio(iBlk) )
 #else
-       Mu     = E / (1.0_Kr + nu) * InvOf2
+       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
+       K2 = E / (1.0_Kr + nu) * InvOf2
+       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
+            (1.0_Kr - 2.0_Kr * Params%Poisson_Ratio(iBlk) )
 #endif
 
 #ifdef PB_2DA
@@ -311,14 +320,14 @@ Contains
                 iSGSig = Elems_U(iE)%ID_DoF(iSLSig)
 #ifndef PB_2DA
                 Do_iGSig: Do iG = 1, Nb_Gauss
-                   Sigma(iG) = 2.0_Kr * Mu * Elems_U(iE)%GradS_BF(iSLSig,iG)
+                   Sigma(iG) = 2.0_Kr * K2 * Elems_U(iE)%GradS_BF(iSLSig,iG)
                    Sigma(iG)%XX = Sigma(iG)%XX +&
-                        & Lambda * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
+                        & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
                    Sigma(iG)%YY = Sigma(iG)%YY +&
-                        & Lambda * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
+                        & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
 #ifdef PB_3D
                    Sigma(iG)%ZZ = Sigma(iG)%ZZ +&
-                        & Lambda * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
+                        & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
 #endif
                 End Do Do_iGSig
 #endif
@@ -330,7 +339,7 @@ Contains
                            & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.          &
                            &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) *             &
                            &  U_Ptr(Loc_Indices_U(iSGSig)+1) *                &
-                           &  U_Ptr(Loc_Indices_U(iSGEps)+1) * Mu
+                           &  U_Ptr(Loc_Indices_U(iSGEps)+1) * K2 * 2.0_KR
 #else                   
                       ContrU(iG) = ContrU(iG) +                               &
                            & ( Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.         &
@@ -345,12 +354,11 @@ Contains
                 Do_iSLEps_Temp: Do iSLEps = 1, Elems_V(iE)%Nb_DoF
                    iSGEps = Elems_V(iE)%ID_DoF(iSLEps)
                    Do_iGUEps_Temp: Do iG = 1, Nb_Gauss
-                      ContrU(iG) = ContrU(iG) -                               &
-                		& Params%Therm_Exp(iBlk) *                            &
-                		& Temp_Ptr(Loc_Indices_V(iSGEps)+1) *                 &
-                		& Elems_V(iE)% BF(iSLEps, iG) *                       &
-                        & U_Ptr(Loc_Indices_U(iSGSig)+1) *                    &
-                        & trace(Elems_U(iE)%GradS_BF(iSLSig, iG))
+                      ContrU(iG) = ContrU(iG) - K3 *                          &
+                           & Temp_Ptr(Loc_Indices_V(iSGEps)+1) *              &
+                           & Elems_V(iE)% BF(iSLEps, iG) *                    &
+                           & U_Ptr(Loc_Indices_U(iSGSig)+1) *                 &
+                           & trace(Elems_U(iE)%GradS_BF(iSLSig, iG))
                    End Do Do_iGUEps_Temp
                 End Do Do_iSLEps_Temp
 #endif

@@ -78,8 +78,9 @@ Contains
 
     Integer                                       :: SetN, i
 
-    Real(Kind = Kr)                               :: E, Nu, Lambda, Mu
-
+    Real(Kind = Kr)                               :: E, Nu
+    Real(Kind = Kr)                               :: K1, K2, K3
+    
     SetN = 0
     GaussT = 0.0
 
@@ -99,14 +100,23 @@ Contains
        E  = Params%Young_Mod(iBlk)
        nu = Params%Poisson_Ratio(iBlk) 
 
-#if defined PB_2D
-       Lambda = E * nu / (1.0_Kr - nu**2)
-       Mu     = E / (1.0_Kr + nu) * InvOf2
-#elif defined PB_3D
-       Lambda = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       Mu     = E / (1.0_Kr + nu) * InvOf2
+!!! The isotropic Hooke's law is expressed as
+!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
+!!! K1, K2, K3 are computed in terms of E and nu
+!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
+!!!       (alpha = therm exp coef).
+!!! in 2D / plane stresses, the expressions are more complicated
+!!!
+#ifdef PB_2D
+       K1 = E * nu / (1.0_Kr - nu**2)
+       K2 = E / (1.0_Kr + nu) * InvOf2
+       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
+            (1.0_Kr - Params%Poisson_Ratio(iBlk) )
 #else
-       Mu     = E / (1.0_Kr + nu) * InvOf2
+       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
+       K2 = E / (1.0_Kr + nu) * InvOf2
+       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
+            (1.0_Kr - 2.0_Kr * Params%Poisson_Ratio(iBlk) )
 #endif
 
 #ifdef PB_2DA
@@ -161,14 +171,14 @@ Contains
           Do_iSLSig: Do iSLSig = 1, Elems_U(iE)%Nb_DoF
 #ifndef PB_2DA
              Do_iGSig: Do iG = 1, Nb_Gauss
-                Sigma(iG) = 2.0_Kr * Mu * Elems_U(iE)%GradS_BF(iSLSig,iG)
+                Sigma(iG) = 2.0_Kr * K2 * Elems_U(iE)%GradS_BF(iSLSig,iG)
                 Sigma(iG)%XX = Sigma(iG)%XX +&
-                     & Lambda * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
+                     & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
                 Sigma(iG)%YY = Sigma(iG)%YY +&
-                     & Lambda * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
+                     & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
 #ifdef PB_3D
                 Sigma(iG)%ZZ = Sigma(iG)%ZZ +&
-                     & Lambda * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
+                     & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
 #endif
              End Do Do_iGSig
 #endif
@@ -322,7 +332,7 @@ Contains
     Integer                                       :: iSLV2, iSGV2
     Integer                                       :: iS, iSLoc
     Integer                                       :: iG
-    Real(Kind = Kr)                               :: Tmp_Val
+    Real(Kind = Kr)                               :: Tmp_Val, K3
     PetscLogDouble                                :: TotTS, TotTF, TotT
     Real(Kind = Kr), Dimension(:), Pointer        :: ContrV
 
@@ -361,10 +371,20 @@ Contains
     
     Call VecSet(0.0_Kr, RHS, iErr)
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-       !        If (.NOT. Params%Has_Force(iBlk)) Then
-       !           CYCLE
-       !        End If
-!!! Let's see if this has a performance impact.
+!!! The isotropic Hooke's law is expressed as
+!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
+!!! K1, K2, K3 are computed in terms of E and nu
+!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
+!!!       (alpha = therm exp coef).
+!!! in 2D / plane stresses, the expressions are more complicated
+!!!
+#ifdef PB_2D
+       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
+            (1.0_Kr - Params%Poisson_Ratio(iBlk) )
+#else
+       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
+            (1.0_Kr - 2.0_Kr * Params%Poisson_Ratio(iBlk) )
+#endif
        
        Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
           iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
@@ -430,8 +450,7 @@ Contains
                 iSG2 = Elems_V(iE)%ID_DoF(iSL2)
                 Do_iG_Temp: Do iG = 1, Elems_U(iE)%Nb_Gauss
                    Tmp_Val = Tmp_Val + Elems_V(iE)%Gauss_C(iG) * (            &
-                        & Temp_Ptr(Loc_Indices_Scal(iSG2)+1) *                &
-                        & Params%Therm_Exp(iBlk) *                            &
+                        & Temp_Ptr(Loc_Indices_Scal(iSG2)+1) * K3 *           &
                         & trace(Elems_U(iE)%GradS_BF(iSL1, iG)) *             &
                         & Elems_V(iE)% BF(iSL2, iG)) * ContrV(iG)
                 End Do Do_iG_Temp
