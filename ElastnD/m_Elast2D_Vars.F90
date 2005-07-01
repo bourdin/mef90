@@ -29,6 +29,12 @@ Module m_Elast3D_Vars
   Vec, Public                                           :: BC_Dist, BC_Loc
   Vec, Public                                           :: BC_Master
 
+  Vec, Public                                           :: F_Dist, F_Loc
+  Vec, Public                                           :: F_Master
+
+  Vec, Public                                           :: Temp_Dist, Temp_Loc
+  Vec, Public                                           :: Temp_Master
+
   KSP, Public                                           :: KSP_MR
   PC, Public                                            :: PC_MR
   KSPConvergedReason, Public                            :: KSP_Reason
@@ -37,12 +43,16 @@ Module m_Elast3D_Vars
 #ifdef PB_2D
   Type(Element2D_Elast), Dimension(:), Pointer, Public  :: Elem_db
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db
+  Type(Element2D_Scal), Dimension(:), Pointer, Public   :: Elem_Scal
+  Type(Node2D), Dimension(:), Pointer, Public           :: Node_Scal
 
   Type(MatS2D), Dimension(:), Pointer, Public           :: Stress_Sol
   Type(MatS2D), Dimension(:), Pointer, Public           :: Strain_Sol
 #else
   Type(Element3D_Elast), Dimension(:), Pointer, Public  :: Elem_db
   Type(Node3D), Dimension(:), Pointer, Public           :: Node_db
+  Type(Element3D_Scal), Dimension(:), Pointer, Public   :: Elem_Scal
+  Type(Node3D), Dimension(:), Pointer, Public           :: Node_Scal
 
   Type(MatS3D), Dimension(:), Pointer, Public           :: Stress_Sol
   Type(MatS3D), Dimension(:), Pointer, Public           :: Strain_Sol
@@ -53,7 +63,8 @@ Module m_Elast3D_Vars
 
   Type(EXO_Geom_Info), Public                           :: Geom
   Type(Rupt_Params), Public                             :: Params
-  Type(SD_Info), Public                                 :: MySD
+  Type(SD_Info), Public                                 :: MySD_Vect
+  Type(SD_Info), Public                                 :: MySD_Scal
 
   Integer, Public                                       :: iErr
   Integer, Public                                       :: TimeStep
