@@ -108,29 +108,52 @@ Program Elast
      !!! EXO -> BC_Ptr -> BC_Master
      If (MEF90_MyRank == 0) Then
         Call VecGetArrayF90(BC_Master, BC_Ptr, iErr)
-!        Allocate(EXO_Ptr(Size(BC_Ptr)))
         Call Read_EXO_Result_Nodes(Geom, 2, TimeStep, EXO_Ptr, Geom%Num_Dim)
-!        Print*, 'BC Min / Max', MinVal(EXO_Ptr), MaxVal(EXO_Ptr), Size(EXO_Ptr)
         BC_Ptr = EXO_Ptr
         Call VecRestoreArrayF90(BC_Master, BC_Ptr, iErr)
         DeAllocate(EXO_Ptr)
+        Call VecGetArrayF90(F_Master, BC_Ptr, iErr)
+        Call Read_EXO_Result_Nodes(Geom, 5, TimeStep, EXO_Ptr, Geom%Num_Dim)
+        BC_Ptr = EXO_Ptr
+        Call VecRestoreArrayF90(F_Master, BC_Ptr, iErr)
+        DeAllocate(EXO_Ptr)
+        Call VecGetArrayF90(Temp_Master, BC_Ptr, iErr)
+        Call Read_EXO_Result_Nodes(Geom, 8, TimeStep, EXO_Ptr,1)
+        BC_Ptr = EXO_Ptr
+        Call VecRestoreArrayF90(Temp_Master, BC_Ptr, iErr)
+        DeAllocate(EXO_Ptr)
      EndIf
 
-     !!! BC_Master -> BC_Dist
+     !!! XXX_Master -> XXX_Dist
      Call VecScatterBegin(BC_Master, BC_Dist, INSERT_VALUES, SCATTER_REVERSE, &
-          & MySD%ToMaster, iErr)
+          & MySD_Vect%ToMaster, iErr)
      Call VecScatterEnd(BC_Master, BC_Dist, INSERT_VALUES, SCATTER_REVERSE,   &
-          & MySD%ToMaster, iErr)
+          & MySD_Vect%ToMaster, iErr)
 
-     !!! BC_Dist -> BC_Loc
+     Call VecScatterBegin(F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE,   &
+          & MySD_Vect%ToMaster, iErr)
+     Call VecScatterEnd(F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE,     &
+          & MySD_Vect%ToMaster, iErr)
+
+     Call VecScatterBegin(Temp_Master, Temp_Dist, INSERT_VALUES,              &
+     	  & SCATTER_REVERSE, MySD_Scal%ToMaster, iErr)
+     Call VecScatterEnd(Temp_Master, Temp_Dist, INSERT_VALUES,                &
+     	  & SCATTER_REVERSE, MySD_Scal%ToMaster, iErr)
+
+     !!! XXX_Dist -> XXX_Loc
      Call VecGhostUpdateBegin(BC_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
      Call VecGhostUpdateEnd(BC_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-!     Call VecView(BC_Dist, PETSC_VIEWER_DRAW_WORLD, iErr)
+
+     Call VecGhostUpdateBegin(F_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+     Call VecGhostUpdateEnd(F_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+
+     Call VecGhostUpdateBegin(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+     Call VecGhostUpdateEnd(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 
      !!! BC_Loc -> RHS
      Call PetscGetTime(RHSTS, iErr)
-     Call Assemb_RHS_Elast(RHS, Geom, Params, Elem_db, Node_db, BC_Loc,       &
-          & Params%Load(TimeStep))
+     Call Assemb_RHS_Elast(RHS, Geom, Params, Elem_db, Node_db, Elem_Scal,    &
+          & Node_Scal, BC_Loc, F_Loc, Temp_Loc)
      Call PetscGetTime(RHSTF, iErr)
      If (MEF90_MyRank == 0) Then
         Write(CharBuffer,*) 'Total time in Assemb_RHS_Elast:          ',      &
@@ -161,8 +184,8 @@ Program Elast
 
      Call VecGhostUpdateBegin(SOL_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
      Call VecGhostUpdateEnd(SOL_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-     Call Calc_Ener(SOL_Loc, Geom, Params, Elem_db, Node_db, MySD,            &
-          & Params%Load(TimeStep), Ener_Elast) 
+     Call Calc_Ener(SOL_Loc, Geom, Params, Elem_db, Node_db, MySD_Vect,       &
+          & F_Loc, Ener_Elast) 
      Write(CharBuffer, *) '=== Elastic Energy: ', Ener_Elast, '\n'c
      Call PETScPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
