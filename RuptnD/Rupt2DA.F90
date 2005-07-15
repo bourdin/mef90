@@ -54,42 +54,30 @@ Program Rupt2DA
   Call Init()
 
 
-!#ifdef MEF90_TIMING
   Call PetscGetTime(InitTF, iErr)
   If (MEF90_MyRank == 0) Then
-     Write(CharBuffer, *) 'Time in Init():                            ',      &
+     Write(Log_Unit, *) 'Time in Init():                            ',      &
           & InitTF - InitTS, '\n'c
-     Call PetscPrintf(PETSC_COMM_SELF, CharBuffer, iErr)
   End If
-!#endif
 
-!     Write(CharBuffer,*) Params%Load
-!     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
   TimeStep = 1
   Is_BackTracking  = .False.
 
   While_TS: Do while (TimeStep <= Size(Params%Load))
      
-     Write(CharBuffer,400) TimeStep, Params%Load(TimeStep)
-     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+     If (MEF90_MyRank == 0) Then
+        Write(Log_Unit, 400) TimeStep, Params%Load(TimeStep)
+     End If
 
      Call Update_BC_U(TimeStep)
-!     Write(CharBuffer,*) 'OK Update_BC_U\n'c
-!     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
      Call Update_F(TimeStep)
-!     Write(CharBuffer,*) 'OK Update_F\n'c
 
      Call Update_Temp(TimeStep)
-!     Write(CharBuffer,*) 'OK Update_Temp\n'c
-!     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
      Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,      &
           & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
-!     Write(CharBuffer,*) 'OK Assemb_RHS_U\n'c
-!     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
-          
      Select Case (Params%Init_U)
      Case (Init_U_ZERO)
         Call VecSet(0.0_Kr, U_Dist, iErr)
@@ -98,8 +86,9 @@ Program Rupt2DA
      Case (Init_U_PREV)
         Continue
      Case Default
-        Write(CharBuffer, *) 'Unknown Params/Init_U: ', Params%Init_U, '\n'c
-        Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+        If (MEF90_MyRank ==0) Then
+           Write(Log_Unit, *) '[ERROR] Unknown Params/Init_U: ', Params%Init_U
+        End If
         STOP
      End Select
      
@@ -126,92 +115,92 @@ Program Rupt2DA
      Case (Init_V_PREV)        
 	Continue
      Case Default
-        Write(CharBuffer, *) 'Unknown Params/Init_V: ', Params%Init_V, '\n'c
-        Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+        If (MEF90_MyRank ==0) Then
+           Write(Log_Unit, *) '[ERROR] Unknown Params/Init_V: ', Params%Init_V
+        End If
         STOP
      End Select
      Call Export_V(TimeStep)
 
-!!$!!!
-!!$        Call PetscGetTime(InitTS, iErr)
-!!$        Call Solve_V()
-!!$        Call PetscGetTime(InitTF, iErr)
-!!$!        Call VecSet(1.0_Kr, V_Loc, iErr)
-!!$
-!!$        Call KSPGetIterationNumber(KSP_V, NbIterKSP, iErr)
-!!$        If (MEF90_MyRank == 0) Then
-!!$           Write(CharBuffer, 600) NbIterKSP, InitTF - InitTS
-!!$           Call PetscPrintf(PETSC_COMM_SELF, CharBuffer, iErr)
-!!$        End If
-!!$!!!
      Call VecCopy(V_Dist, V_Old, iErr)
 
-!     Params%MaxIterRelax=0
      Do_Iter: Do iIter = 1, Params%MaxIterRelax
-        Write(CharBuffer, 410) TimeStep, iIter
-        Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+        If (MEF90_MyRank == 0) Then
+           Write(Log_Unit, 410) TimeStep, iIter
+        End If
 
         Call PetscGetTime(InitTS, iErr)
         
         Call Solve_U()
+        Call KSPGetConvergedReason(KSP_U, KSP_TestCVG, iErr)
+        If (KSP_TestCVG <= 0) Then
+           If (MEF90_MyRank == 0) Then
+              Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ', KSP_TestCVG
+           End If
+        End If
         Call PetscGetTime(InitTF, iErr)
 
         Call KSPGetIterationNumber(KSP_U, NbIterKSP, iErr)
 
         If (MEF90_MyRank == 0) Then
-           Write(CharBuffer, 500) NbIterKSP, InitTF - InitTS
-           Call PetscPrintf(PETSC_COMM_SELF, CharBuffer, iErr)
+           Write(Log_Unit, 500) NbIterKSP, InitTF - InitTS, KSP_TestCVG
         End If
 
         Call PetscGetTime(InitTS, iErr)
         Call Solve_V()
+        Call KSPGetConvergedReason(KSP_V, KSP_TestCVG, iErr)
+        If (KSP_TestCVG <= 0) Then
+           If (MEF90_MyRank == 0) Then
+              Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ', KSP_TestCVG
+           End If
+        End If
         Call PetscGetTime(InitTF, iErr)
-!        Call VecSet(0.5_Kr, V_Loc, iErr)
 
         Call KSPGetIterationNumber(KSP_V, NbIterKSP, iErr)
         If (MEF90_MyRank == 0) Then
-           Write(CharBuffer, 600) NbIterKSP, InitTF - InitTS
-           Call PetscPrintf(PETSC_COMM_SELF, CharBuffer, iErr)
+           Write(Log_Unit, 600) NbIterKSP, InitTF - InitTS, KSP_TestCVG
         End If
-!!$        Call MPI_BARRIER(MPI_COMM_WORLD, iErr)
-!!$        STOP
         
 
         Call VecMax(V_Dist, VMaxPos, VMax, iErr)
         Call VecMin(V_Dist, VMinPos, VMin, iErr)
-        Write(CharBuffer, 700) VMin, VMax
-        
-        Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+        If (MEF90_MyRank ==0) Then
+           Write(Log_Unit, 700) VMin, VMax
+        End If
         
         Call VecCopy(V_Old, V_Change, iErr)
         Call VecAxPy(-1.0_Kr, V_Dist, V_Change, iErr)
         Call VecNorm(V_Change, NORM_INFINITY, ErrV, iErr)
-        Write(CharBuffer, 800) ErrV
-        Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+        If (MEF90_MyRank ==0) Then
+           Write(Log_Unit, 800) ErrV
+        End If
       
         If (Mod(iIter, SaveInt) == 0) Then 
-           Write(CharBuffer, *) 'Saving intermediate result for time step ',  &
-                & TimeStep, '\n'c
-           Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+           If (MEF90_MyRank ==0) Then
+              Write(Log_Unit, *) 'Saving intermediate result for time step ', &
+                   & TimeStep
+           End If
            Call Export (TimeStep)
-        Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom, Params,  &
-             & MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V,    &
-             & F_Loc, Temp_Loc )
-
-        Call Comp_Surf_Ener(Surf_Ener(TimeSTep), V_Loc, Geom, Params, MySD_V, &
-             & Elem_db_V, Node_db_V)
-        Tot_Ener(TimeStep) = Bulk_Ener(TimeStep) + Surf_Ener(TimeSTep)
-        Write(CharBuffer, 910) Bulk_Ener(TimeStep), Surf_Ener(TimeStep),      &
-             & Tot_Ener(TimeStep)
-        Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+           Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
+                & Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,    &
+                & Node_db_V, F_Loc, Temp_Loc )
+           
+           Call Comp_Surf_Ener(Surf_Ener(TimeSTep), V_Loc, Geom, Params,      &
+                & MySD_V, Elem_db_V, Node_db_V)
+           Tot_Ener(TimeStep) = Bulk_Ener(TimeStep) + Surf_Ener(TimeSTep)
+           If (MEF90_MyRank ==0) Then
+              Write(Log_Unit, 910) Bulk_Ener(TimeStep), Surf_Ener(TimeStep),  &
+                   & Tot_Ener(TimeStep)
+           End If
         End If
 
 
         Call VecCopy(V_Dist, V_Old, iErr)
         If ((ErrV .LE. Params%TolRelax) .AND. (iIter > 1) ) Then
-           Write(CharBuffer, *) 'Saving Final result for time step ',         &
-                & TimeStep, '\n'c
-           Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+           If (MEF90_MyRank ==0) Then
+              Write(Log_Unit, *) 'Saving intermediate result for time step ', &
+                   & TimeStep
+           End If
            Call Export(TimeStep) 
            Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
                 & Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,    &
@@ -220,10 +209,10 @@ Program Rupt2DA
            Call Comp_Surf_Ener(Surf_Ener(TimeStep), V_Loc, Geom, Params,      &
                 & MySD_V, Elem_db_V, Node_db_V)
            Tot_Ener = Bulk_Ener + Surf_Ener
-           Write(CharBuffer, 910) Bulk_Ener(TimeStep), Surf_Ener(TimeStep),   &
-                & Tot_Ener(TimeStep)
-           Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+
            If (MEF90_MyRank == 0) Then
+              Write(Log_Unit, 910) Bulk_Ener(TimeStep), Surf_Ener(TimeStep),   &
+                   & Tot_Ener(TimeStep)
               Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
               Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
                    & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
@@ -239,16 +228,16 @@ Program Rupt2DA
         TimeStep = TimeStep + 1 		 
      Else
         If (MEF90_MyRank == 0) Then  
-           Print*, 'Current energy: ', Tot_Ener(TimeStep)
+           Write(Log_Unit, *) 'Current energy: ', Tot_Ener(TimeStep)
            Do iE = 1, TimeStep - 1
-              Print*, 'Comparing with iteration ', iE
+              Write(Log_Unit, *) 'Comparing with iteration ', iE
               Tmp_Ener = Bulk_Ener(TimeStep) / Params%Load(TimeStep)**2 *     &
                    & Params%Load(iE)**2 + Surf_Ener(TimeStep)
-              Print*, 'Rescaled energy: ', Tmp_Ener
-              Print*, 'Previous energy: ', Tot_Ener(iE)
+              Write(Log_Unit, *) 'Rescaled energy: ', Tmp_Ener
+              Write(Log_Unit, *) 'Previous energy: ', Tot_Ener(iE)
               !	      Err_Rel_Ener = (Tot_Ener(TimeStep) - Tot_Ener(iE))/Tot_Ener(TimeStep)	     
 	      Err_Rel_Ener = (Tmp_Ener - Tot_Ener(iE)) / ABS(Tot_Ener(TimeStep))	     
-              Print*, 'Change Ratio:    ', Err_Rel_Ener
+              Write(Log_Unit, *) 'Change Ratio:    ', Err_Rel_Ener
               If (Err_Rel_Ener < -Params%Tol_Ener) Then          
                  Is_BackTracking = .True.
                  EXIT
@@ -256,7 +245,7 @@ Program Rupt2DA
            End Do
            If (Is_BackTracking) Then
               TimeStep = iE
-              Print*, '********** Going back to step ', TimeStep
+              Write(Log_Unit, *) '********** Going back to step ', TimeStep
               Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
               Write(Ener_Unit, *)
               Close(Ener_Unit)
@@ -271,21 +260,22 @@ Program Rupt2DA
 
   Call PetscGetTime(TotalTF, iErr)
   If (MEF90_MyRank == 0) Then
-     Write(CharBuffer, *) 'Total Time:                            ',      &
-          & TotalTF - TotalTS, '\n'c
-     Call PetscPrintf(PETSC_COMM_SELF, CharBuffer, iErr)
+     Write(Log_Unit, *) 'Total Time:                            ',      &
+          & TotalTF - TotalTS
   End If
 
-400 Format('**** Time step: ', I5, ' Load = ', ES12.5,'\n'c)
-410 Format('==== Iteration: ', I5, ' /', I5, '\n'c)
-500 Format('     Solve_U: ', I5, ' iterations in ', F7.2, 's \n'c)
-600 Format('     Solve_V: ', I5, ' iterations in ', F7.2, 's \n'c)
-700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n'c)
-800 Format('     Max change V: ', T24, ES12.5, '\n'c)
-901 Format('     Surface:      ', T24, ES12.5, '\n'c)
-902 Format('     Bulk:         ', T24, ES12.5, '\n'c)
-910 Format('     Energies:     ', T24, 2(ES10.3, ' '), 'Total: ', ES10.3, '\n'c)
-920 Format(I4, 4(ES10.3,'  '))
+400 Format('**** Time step: ', I5, ' Load = ', ES12.5)
+410 Format('==== Iteration: ', I5, ' /', I5)
+500 Format('     Solve_U: ', I5, ' iterations in ', F7.2, 's. Return value',  &
+         & I2)
+600 Format('     Solve_V: ', I5, ' iterations in ', F7.2, 's. Return value',  &
+         & I2)
+700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '))
+800 Format('     Max change V: ', T24, ES12.5)
+901 Format('     Surface:      ', T24, ES12.5)
+902 Format('     Bulk:         ', T24, ES12.5)
+910 Format('     Energies:     ', T24, 2(ES10.3, ' '), 'Total: ', ES10.3)
+920 Format(I4, 4(ES11.3,'  '))
 #if defined PB_2D
 End Program  Rupt2D
 #elif defined PB_3D
