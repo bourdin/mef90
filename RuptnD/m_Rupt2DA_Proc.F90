@@ -55,15 +55,15 @@ Module m_Rupt2DA_Proc
 Contains
   Subroutine Init()
     PetscTruth                :: Has_Sim_Str
-
+    
     Call MEF90_Initialize()
     MEF90_GaussOrder = 2 
-
-
-	Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str,     &
-	     & Has_Sim_Str, iErr)
-
-	If (.NOT. Has_Sim_Str) Then
+    
+    
+    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str,     &
+         & Has_Sim_Str, iErr)
+    
+    If (.NOT. Has_Sim_Str) Then
        Write(CharBuffer, 100) 'Simulation name: \n'c
        Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
        If (MEF90_MyRank ==0) Then
@@ -71,16 +71,25 @@ Contains
        End If
        Call MPI_BCAST(Params%Sim_Str, MXSTLN, MPI_CHARACTER, 0, MPI_COMM_WORLD,  &
             & iErr)
-	End If
-	
+       Is_Interactive = .TRUE.
+       Log_Unit = 6 !!! messages sent to stdout
+    Else
+       Is_Interactive = .FALSE.
+       Log_Str          = Trim(Params%Sim_Str) // '.log'
+       Open (File = Log_Str, Unit = Log_Unit, Status = 'Replace')
+    End If
+    
     Geom%Filename    = Trim(Params%Sim_Str) // '.gen'
     Params%PARAM_Str = Trim(Params%Sim_Str) // '.PARAM'
     Params%CST_Str   = Trim(Params%Sim_Str) // '.CST'
     Ener_Str         = Trim(Params%Sim_Str) // '.ener'
-
-    Open (File = Ener_Str, Unit = Ener_Unit, Status = 'Replace')
-    Rewind(Ener_Unit)
-    Close(Ener_Unit)
+    
+    If (MEF90_MyRank == 0) Then
+       Open (File = Ener_Str, Unit = Ener_Unit, Status = 'Replace')
+       Rewind(Ener_Unit)
+       Close(Ener_Unit)
+    End If
+    
     Call Read_EXO_Geom_Info(Geom)
     
 #ifdef PB_2DA
@@ -99,12 +108,10 @@ Contains
     Call Init_BC_U(Geom, Params, Node_db_U)
     Node_db_V%BC = BC_Type_NONE
 
-    Write(CharBuffer,*) 'Number of nodes:                          ',      &
-         & Geom%Num_Nodes, '\n'c
-    Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
-    Write(CharBuffer,*) 'Number of elements:                       ',      &
-         & Geom%Num_Elems, '\n'c
-    Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+    If (MEF90_MyRank == 0) Then
+       Write(Log_Unit,*) 'Number of nodes:      ', Geom%Num_Nodes
+       Write(Log_Unit,*) 'Number of elements:  ', Geom%Num_Elems
+    End	If
 
     Call Init_SD_NoOvlp(Geom, Elem_db_U, MySD_U, U_Dist, U_Loc, U_Master)
     Call VecDuplicate(U_Master, BCU_Master, iErr)
@@ -182,7 +189,7 @@ Contains
     Integer                                          :: iSet, iN
     
     If (Geom%Numbering /= Numbering_PerNodes) Then
-       Print*, 'Init_BC not implemented for this numbering scheme'
+       Print*, '[ERROR] Init_BC not implemented for this numbering scheme'
        STOP
     End If
 
@@ -289,7 +296,7 @@ Contains
 
     Call KSPSetTolerances(KSP_U, Params%TolKSP,                              &
            & PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,  &
-           & 25000, iErr)
+           & 50000, iErr)
     Call KSPSetFromOptions(KSP_U, iErr)
 
     Call KSPCreate(PETSC_COMM_WORLD, KSP_V, iErr)

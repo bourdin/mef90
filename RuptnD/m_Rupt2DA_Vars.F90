@@ -96,6 +96,12 @@ Module m_Rupt2DA_Vars
   Character(len=128), Public                            :: Ener_Str
   Integer, Parameter, Public                            :: Ener_Unit = 99
   
+  Character(len=128), Public                            :: Log_Str
+  Integer, Public                                       :: Log_Unit = 98
+
+  KSPConvergedReason, Public                            :: KSP_TestCVG
+  Logical, Public                                       :: Is_Interactive
+
 #if defined PB_2D
 End Module m_Rupt2D_Vars
 #elif defined PB_3D
