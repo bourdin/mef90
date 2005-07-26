@@ -241,6 +241,12 @@ Contains
           iS = SD%GhostNode(iSLoc)
           Nodes(iS)%BC = BC_Type_NONE
        End Do             
+       Do iS = 1, Geom%Num_Nodes
+          If ( (ABS(Nodes(iS)%Coord%X) <= 1.0e-5) .AND.                        & 
+          & (Nodes(iS)%Coord%Y <= 0.0_Kr) ) Then
+             Nodes(iS)%BC = BC_TYPE_Diri
+          End If
+       End Do
     Else
        ! Read the V 
        If (MEF90_MyRank == 0) Then       
