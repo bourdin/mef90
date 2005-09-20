@@ -507,14 +507,16 @@ Contains
        Read(*,*) D
        Write(*, 100, advance = 'no') 'Dipping speed:              '
        Read(*,*) V
-       P = b*V/D
+       P = V/D*b
        Do iTS = 1, Size(Params%Load)
           Temp_Result = TCool
           Do iNode = 1, Geom%Num_Nodes
              Y = Node_db(iNode)%Coord%Y
              If (Y >= Params%Load(iTS)) Then
-             	Temp_Result(iNode) = TCool + (THot - TCool) *                  &
-             		& (1.0_Kr - exp(-P*(Y-Params%Load(iTS) )) )
+!!$             	Temp_Result(iNode) = TCool + (THot - TCool) *                 &
+!!$             		& (1.0_Kr - exp(-P*(Y-Params%Load(iTS) )) )
+             	Temp_Result(iNode) = THot + (TCool - THot) *                  &
+             		& exp( -P*(Y-Params%Load(iTS)) ) 
              End If
           End Do
           Call Write_EXO_Result_Nodes(Geom, 8, iTS, Temp_Result)
