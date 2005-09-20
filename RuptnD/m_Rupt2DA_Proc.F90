@@ -241,12 +241,12 @@ Contains
           iS = SD%GhostNode(iSLoc)
           Nodes(iS)%BC = BC_Type_NONE
        End Do             
-       Do iS = 1, Geom%Num_Nodes
-          If ( (ABS(Nodes(iS)%Coord%X) <= 1.0e-5) .AND.                        & 
-          & (Nodes(iS)%Coord%Y <= 0.0_Kr) ) Then
-             Nodes(iS)%BC = BC_TYPE_Diri
-          End If
-       End Do
+!       Do iS = 1, Geom%Num_Nodes
+!          If ( (ABS(Nodes(iS)%Coord%X) <= 1.0e-5) .AND.                        & 
+!          & (Nodes(iS)%Coord%Y <= 0.0_Kr) ) Then
+!             Nodes(iS)%BC = BC_TYPE_Diri
+!          End If
+!       End Do
     Else
        ! Read the V 
        If (MEF90_MyRank == 0) Then       
@@ -300,9 +300,11 @@ Contains
 
     Call KSPSetInitialGuessNonzero(KSP_U, PETSC_TRUE, iErr)
 
+!!$    Call KSPSetTolerances(KSP_U, Params%TolKSP,                              &
+!!$           & PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,  &
+!!$           & 50000, iErr)
     Call KSPSetTolerances(KSP_U, Params%TolKSP,                              &
-           & PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,  &
-           & 50000, iErr)
+           & PETSC_DEFAULT_DOUBLE_PRECISION, 1.0e+9, 50000, iErr)
     Call KSPSetFromOptions(KSP_U, iErr)
 
     Call KSPCreate(PETSC_COMM_WORLD, KSP_V, iErr)
@@ -313,9 +315,12 @@ Contains
 
     Call KSPSetInitialGuessNonzero(KSP_V, PETSC_TRUE, iErr)
 
+!!$    Call KSPSetTolerances(KSP_V, Params%TolKSP,                              &
+!!$           & PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,  &
+!!$           & PETSC_DEFAULT_INTEGER, iErr)
     Call KSPSetTolerances(KSP_V, Params%TolKSP,                              &
-           & PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,  &
-           & PETSC_DEFAULT_INTEGER, iErr)
+           & PETSC_DEFAULT_DOUBLE_PRECISION, 1.0e+9, PETSC_DEFAULT_INTEGER,  &
+           & iErr)
     Call KSPSetFromOptions(KSP_V, iErr)
   End Subroutine Init_KSPs
 
