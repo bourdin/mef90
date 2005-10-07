@@ -335,6 +335,7 @@ Contains
     Real(Kind = Kr)                               :: Tmp_Val, K3
     PetscLogDouble                                :: TotTS, TotTF, TotT
     Real(Kind = Kr), Dimension(:), Pointer        :: ContrV
+    
 
     Call PetscGetTime(TotTS, iErr)
     
@@ -366,6 +367,7 @@ Contains
 #endif
     
     Call VecGetArrayF90(FLoc, F_Ptr, iErr)
+!    Write(100+MEF90_MyRank, *) F_Ptr
     Call VecGetArrayF90(TempLoc, Temp_Ptr, iErr)
     Call VecGetArrayF90(VLoc, V_Ptr, iErr)
     
@@ -426,7 +428,7 @@ Contains
              
 !!! Force part
              Has_Force: If (Params%Has_Force(iBlk)) Then
-                Do_iSL2: Do iSL2 = 1, Elems_U(iE)%Nb_Gauss
+                Do_iSL2: Do iSL2 = 1, Elems_U(iE)%Nb_DoF
                    iSG2 = Elems_U(iE)%ID_DoF(iSL2)
                    Do_iG: Do iG = 1, Elems_U(iE)%Nb_Gauss
 #ifdef PB_2DA
@@ -446,7 +448,7 @@ Contains
              
 !!! Thermal expansion part
 #ifndef PB_2DA
-             Do_iSL2_Temp: Do iSL2 = 1, Elems_V(iE)%Nb_Gauss
+             Do_iSL2_Temp: Do iSL2 = 1, Elems_V(iE)%Nb_DoF
                 iSG2 = Elems_V(iE)%ID_DoF(iSL2)
                 Do_iG_Temp: Do iG = 1, Elems_U(iE)%Nb_Gauss
                    Tmp_Val = Tmp_Val + Elems_V(iE)%Gauss_C(iG) * (            &
