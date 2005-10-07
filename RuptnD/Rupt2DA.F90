@@ -79,8 +79,6 @@ Program Rupt2DA
      Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,      &
           & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
 
-!     Call VecView(RHS_U, PETSC_VIEWER_DRAW_WORLD, iErr)
-
      Select Case (Params%Init_U)
      Case (Init_U_ZERO)
         Call VecSet(0.0_Kr, U_Dist, iErr)
