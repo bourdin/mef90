@@ -367,7 +367,6 @@ Contains
 #endif
     
     Call VecGetArrayF90(FLoc, F_Ptr, iErr)
-!    Write(100+MEF90_MyRank, *) F_Ptr
     Call VecGetArrayF90(TempLoc, Temp_Ptr, iErr)
     Call VecGetArrayF90(VLoc, V_Ptr, iErr)
     
