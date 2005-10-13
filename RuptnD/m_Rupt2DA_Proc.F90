@@ -8,7 +8,6 @@ Module m_Rupt2DA_Proc
 
   Use m_MEF90
   Use m_Rupt_Struct
-
 #if defined PB_2D
   Use m_Rupt2D_Vars	
   Use m_Rupt2D_U	
@@ -50,19 +49,27 @@ Module m_Rupt2DA_Proc
   Public :: Update_F
   Public :: Update_Temp
 
-  integer :: i
+!  integer :: i
 
 Contains
   Subroutine Init()
-    PetscTruth                :: Has_Sim_Str
+    PetscTruth                              :: Has_Sim_Str
+    Real(Kind = Kr), Dimension(:), Pointer  :: Tmp_Ptr, U_Ptr, V_Ptr
     
     Call MEF90_Initialize()
     MEF90_GaussOrder = 2 
     
     
-    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str,     &
+    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str,    &
          & Has_Sim_Str, iErr)
-    
+
+!!! Check for the -restart flag
+!!! If found, we are restarting a computation at step Timestep
+!!! -restart 1 is equivalent to making a new computation
+    TimeStep = 1
+    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-restart', TimeStep,       &
+         & Is_Restarting, PETSC_NULL_INTEGER, iErr)
+
     If (.NOT. Has_Sim_Str) Then
        Write(CharBuffer, 100) 'Simulation name: \n'c
        Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
@@ -76,7 +83,12 @@ Contains
     Else
        Is_Interactive = .FALSE.
        Log_Str          = Trim(Params%Sim_Str) // '.log'
-       Open (File = Log_Str, Unit = Log_Unit, Status = 'Replace')
+       If (Is_Restarting == PETSC_TRUE) Then
+          Open (File = Log_Str, Unit = Log_Unit, Status = 'Old',              &
+               & Position = 'Append')
+       Else
+          Open (File = Log_Str, Unit = Log_Unit, Status = 'Replace')
+       End If
     End If
     
     Geom%Filename    = Trim(Params%Sim_Str) // '.gen'
@@ -84,9 +96,14 @@ Contains
     Params%CST_Str   = Trim(Params%Sim_Str) // '.CST'
     Ener_Str         = Trim(Params%Sim_Str) // '.ener'
     
-    If (MEF90_MyRank == 0) Then
+    If ((MEF90_MyRank == 0) .AND. (Is_Restarting == PETSC_FALSE) )Then
        Open (File = Ener_Str, Unit = Ener_Unit, Status = 'Replace')
        Rewind(Ener_Unit)
+       Close(Ener_Unit)
+       Else
+       Open (File = Ener_Str, Unit = Ener_Unit, Position = 'Append')
+       Write(Ener_Unit, *)
+       Write(Ener_Unit, *)
        Close(Ener_Unit)
     End If
     
@@ -159,22 +176,79 @@ Contains
     Surf_Ener(0) = 0.0_Kr
     Tot_Ener(0)  = 0.0_Kr
     Bulk_Ener(0) = 0.0_Kr      
-    
-    Call VecSet(0.0_Kr, U_Dist, iErr)
-    Call VecSet(0.0_Kr, U_Loc, iErr)
 
-    Call VecSet(1.0_Kr, V_Dist, iErr)
-    Call VecSet(1.0_Kr, V_Loc, iErr)
 
-    Call VecSet(0.0_Kr, V_Old, iErr)
+    If (TimeStep == 1) Then
+       
+       Call VecSet(0.0_Kr, U_Dist, iErr)
+       Call VecSet(0.0_Kr, U_Loc, iErr)
+       
+       Call VecSet(1.0_Kr, V_Dist, iErr)
+       Call VecSet(1.0_Kr, V_Loc, iErr)
+       
+       Call VecSet(0.0_Kr, V_Old, iErr)
+    Else
+!!! Read and update V from TimeStep - 1
+       If (MEF90_MyRank == 0) Then
+          Call VecGetArrayF90(V_Master, V_Ptr, iErr)
+          Call Read_EXO_Result_Nodes(Geom, 1, TimeStep-1, Tmp_Ptr, 1)
+          V_Ptr = Tmp_Ptr
+          Call VecRestoreArrayF90(V_Master, V_Ptr, iErr)
+          DeAllocate(Tmp_Ptr)
+       EndIf
+       
+!!! V_Master -> V_Dist
+       Call VecScatterBegin(V_Master, V_Dist, INSERT_VALUES,                &
+            & SCATTER_REVERSE, MySD_V%ToMaster, iErr)
+       Call VecScatterEnd(V_Master, V_Dist, INSERT_VALUES, SCATTER_REVERSE, &
+            & MySD_V%ToMaster, iErr)
+       
+!!! V_Dist -> V_Loc
+       Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+       Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 
+       Call VecCopy(V_Dist, V_Old, iErr)
+       
+!!! Read and update U from TimeStep - 1
+       If (MEF90_MyRank == 0) Then
+          Call VecGetArrayF90(U_Master, U_Ptr, iErr)
+#ifdef PB_2DA
+          Call Read_EXO_Result_Nodes(Geom, 4, TimeStep-1, Tmp_Ptr, 1)
+#else
+          Call Read_EXO_Result_Nodes(Geom, 2, TimeStep-1, Tmp_Ptr, Geom%Num_Dim)
+#endif
+          U_Ptr = Tmp_Ptr
+          Call VecRestoreArrayF90(U_Master, U_Ptr, iErr)
+          DeAllocate(Tmp_Ptr)
+       EndIf
+       
+!!! U_Master -> U_Dist
+       Call VecScatterBegin(U_Master, U_Dist, INSERT_VALUES,                &
+            & SCATTER_REVERSE, MySD_U%ToMaster, iErr)
+       Call VecScatterEnd(U_Master, U_Dist, INSERT_VALUES, SCATTER_REVERSE, &
+            & MySD_U%ToMaster, iErr)
+       
+!!! U_Dist -> U_Loc
+       Call VecGhostUpdateBegin(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+       Call VecGhostUpdateEnd(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+
+!!! Reads the energy from the .gen file
+!!! At this point, I let each CPU read the .gen file
+!!! This is unefficient but is done only once 
+       Do iTS = 1, TimeStep 
+          Call Read_EXO_Result_Global(Geom, 1, iTS, Bulk_Ener(iTS))
+          Call Read_EXO_Result_Global(Geom, 2, iTS, Surf_Ener(iTS))
+          Call Read_EXO_Result_Global(Geom, 3, iTS, Tot_Ener(iTS))
+       End Do
+    End If
+       
     Call Init_Ksps()
-
+    
     Call Random_Seed
-
-    100 Format(A)
+    
+100 Format(A)
   End Subroutine Init
-
+  
   Subroutine Init_BC_U(Geom, Params, Nodes_U)
     Type(EXO_Geom_Info), Intent(IN)                  :: Geom
     Type(Rupt_Params), Intent(IN)                    :: Params
@@ -457,10 +531,6 @@ Contains
     Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
   End Subroutine Solve_V
   
-  Subroutine Save_V_in_Stock_V() 
-  
-  write(*,*) 'coucou'
-  End Subroutine Save_V_in_Stock_V
 
 
   Subroutine Export(TS)
@@ -474,19 +544,15 @@ Contains
     Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,      &
          & MySD_U%ToMaster, iErr)
     
+    If (MEF90_MyRank == 0) Then
+       Call VecGetArrayF90(U_Master, Sol_Ptr, iErr)
 #ifdef PB_2DA
-    If (MEF90_MyRank == 0) Then
-       Call VecGetArrayF90(U_Master, Sol_Ptr, iErr)
        Call Write_EXO_Result_Ptr_Nodes(Geom, 4, TS, SOL_Ptr)
-       Call VecRestoreArrayF90(U_Master, SOL_Ptr, iErr)
-    End If
 #else
-    If (MEF90_MyRank == 0) Then
-       Call VecGetArrayF90(U_Master, Sol_Ptr, iErr)
        Call Write_EXO_Result_Ptr_Nodes(Geom, 2, TS, SOL_Ptr)
+#endif
        Call VecRestoreArrayF90(U_Master, SOL_Ptr, iErr)
     End If
-#endif
     Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,    &
          & MySD_V%ToMaster, iErr)
     Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,      &
