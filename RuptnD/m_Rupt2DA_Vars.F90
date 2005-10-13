@@ -101,6 +101,8 @@ Module m_Rupt2DA_Vars
 
   KSPConvergedReason, Public                            :: KSP_TestCVG
   Logical, Public                                       :: Is_Interactive
+  PetscTruth, Public                                    :: Is_Restarting
+  Integer, Public                                       :: TimeStep
 
 #if defined PB_2D
 End Module m_Rupt2D_Vars

@@ -42,7 +42,6 @@ Program Rupt2DA
 #include "include/finclude/petscis.h"
 
   Integer                                               :: VMinPos, VMaxPos
-  Integer                                               :: TimeStep
   Logical                                               :: Is_BackTracking
   Integer                                               :: NbIterKSP, iE
   Real(Kind = Kr)                                       :: Err_Rel_Ener, Tmp_Ener
@@ -61,7 +60,6 @@ Program Rupt2DA
   End If
 
 
-  TimeStep = 1
   Is_BackTracking  = .False.
 
   While_TS: Do while (TimeStep <= Size(Params%Load))
@@ -231,14 +229,14 @@ Program Rupt2DA
         If (MEF90_MyRank == 0) Then  
            Write(Log_Unit, *) 'Current energy: ', Tot_Ener(TimeStep)
            Do iE = 1, TimeStep - 1
-              Write(Log_Unit, *) 'Comparing with iteration ', iE
+!              Write(Log_Unit, *) 'Comparing with iteration ', iE
               Tmp_Ener = Bulk_Ener(TimeStep) / Params%Load(TimeStep)**2 *     &
                    & Params%Load(iE)**2 + Surf_Ener(TimeStep)
-              Write(Log_Unit, *) 'Rescaled energy: ', Tmp_Ener
-              Write(Log_Unit, *) 'Previous energy: ', Tot_Ener(iE)
+!              Write(Log_Unit, *) 'Rescaled energy: ', Tmp_Ener
+!              Write(Log_Unit, *) 'Previous energy: ', Tot_Ener(iE)
               !	      Err_Rel_Ener = (Tot_Ener(TimeStep) - Tot_Ener(iE))/Tot_Ener(TimeStep)	     
 	      Err_Rel_Ener = (Tmp_Ener - Tot_Ener(iE)) / ABS(Tot_Ener(TimeStep))	     
-              Write(Log_Unit, *) 'Change Ratio:    ', Err_Rel_Ener
+!              Write(Log_Unit, *) 'Change Ratio:    ', Err_Rel_Ener
               If (Err_Rel_Ener < -Params%Tol_Ener) Then          
                  Is_BackTracking = .True.
                  EXIT
