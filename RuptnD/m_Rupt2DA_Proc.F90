@@ -55,10 +55,13 @@ Contains
   Subroutine Init()
     PetscTruth                              :: Has_Sim_Str
     Real(Kind = Kr), Dimension(:), Pointer  :: Tmp_Ptr, U_Ptr, V_Ptr
+    Real(Kind = Kr)                         :: Tmp_Bulk, Tmp_Surf, Tmp_Tot
     
     Call MEF90_Initialize()
     MEF90_GaussOrder = 2 
     
+
+
     
     Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str,    &
          & Has_Sim_Str, iErr)
@@ -109,6 +112,7 @@ Contains
     
     Call Read_EXO_Geom_Info(Geom)
     
+
 #ifdef PB_2DA
     Call Read_EXO_Node_Coord(Geom, Node_db_U, 1)
 #else
@@ -173,9 +177,9 @@ Contains
     Allocate(Tot_Ener(0:Size(Params%Load)))
     Allocate(Bulk_Ener(0:Size(Params%Load)))
     
-    Surf_Ener(0) = 0.0_Kr
-    Tot_Ener(0)  = 0.0_Kr
-    Bulk_Ener(0) = 0.0_Kr      
+    Surf_Ener = 0.0_Kr
+    Tot_Ener  = 0.0_Kr
+    Bulk_Ener = 0.0_Kr      
 
 
     If (TimeStep == 1) Then
@@ -232,21 +236,46 @@ Contains
        Call VecGhostUpdateBegin(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
        Call VecGhostUpdateEnd(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 
-!!! Reads the energy from the .gen file
+
+!!! THE FOLLOWING -SHOULD- WORK
+!!! APPARENTLY THE ENERGIES DON'T GET SAVED INTO THE .gen FILE
+!!! Reads the energy from the .gen file 
 !!! At this point, I let each CPU read the .gen file
 !!! This is unefficient but is done only once 
-       Do iTS = 1, TimeStep 
-          Call Read_EXO_Result_Global(Geom, 1, iTS, Bulk_Ener(iTS))
-          Call Read_EXO_Result_Global(Geom, 2, iTS, Surf_Ener(iTS))
-          Call Read_EXO_Result_Global(Geom, 3, iTS, Tot_Ener(iTS))
-       End Do
+!       Do iTS = 1, TimeStep 
+!          Call Read_EXO_Result_Global(Geom, 1, iTS, Bulk_Ener(iTS))
+!          Call Read_EXO_Result_Global(Geom, 2, iTS, Surf_Ener(iTS))
+!          Call Read_EXO_Result_Global(Geom, 3, iTS, Tot_Ener(iTS))
+!       End Do
+
+!!! INSTEAD, WE READ FROM .log FILE
     End If
+    If (MEF90_MyRank == 0) Then
+    	Open (File = Ener_Str, Unit = Ener_Unit, status = 'Old',              &
+    		& Action = 'Read')
+    	Rewind(Ener_Unit)
+    	Do
+    		Read(Ener_Unit, *, end=50, err=50) iTS, Bulk_Ener(iTS), Surf_Ener(iTS), &
+    		   & Tot_Ener(iTS)
+       		Tot_Ener(iTS) = Bulk_Ener(iTS) + Surf_Ener(iTS)
+            CYCLE
+50          EXIT
+        End Do
+        Close(Ener_Unit)
+    End If
+    Call MPI_BCAST(Bulk_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
+    	& MPI_COMM_WORLD, iErr) 
+    Call MPI_BCAST(Surf_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
+    	& MPI_COMM_WORLD, iErr) 
+    Call MPI_BCAST(Tot_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,       &
+    	& MPI_COMM_WORLD, iErr) 
        
     Call Init_Ksps()
     
     Call Random_Seed
     
 100 Format(A)
+920 Format(I4, 4(ES11.3,'  '))
   End Subroutine Init
   
   Subroutine Init_BC_U(Geom, Params, Nodes_U)
