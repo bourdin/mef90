@@ -197,7 +197,7 @@ Program Rupt2DA
         Call VecCopy(V_Dist, V_Old, iErr)
         If ((ErrV .LE. Params%TolRelax) .AND. (iIter > 1) ) Then
            If (MEF90_MyRank ==0) Then
-              Write(Log_Unit, *) 'Saving intermediate result for time step ', &
+              Write(Log_Unit, *) 'Saving final result for time step ', &
                    & TimeStep
            End If
            Call Export(TimeStep) 
