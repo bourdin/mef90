@@ -58,9 +58,8 @@ Program Rupt2DA
           & InitTF - InitTS, '\n'c
   End If
 
-
   Is_BackTracking  = .False.
-
+  
   While_TS: Do while (TimeStep <= Size(Params%Load))
      
      If (MEF90_MyRank == 0) Then
@@ -90,7 +89,6 @@ Program Rupt2DA
         STOP
      End Select
      
-
      If (Params%Do_Irrev) Then
         Call Update_BC_V(Geom, Params, MySD_V, Node_db_V, V_Dist, V_Old, TimeStep-1)
 !        Call Apply_BC_V(Geom, Params, MySD_V, Node_db_V, V_Dist)
@@ -261,6 +259,9 @@ Program Rupt2DA
      Write(Log_Unit, *) 'Total Time:                            ',      &
           & TotalTF - TotalTS
   End If
+
+  Call Finalize()
+  STOP
 
 400 Format('**** Time step: ', I5, ' Load = ', ES12.5)
 410 Format('==== Iteration: ', I5, ' /', I5)

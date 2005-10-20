@@ -98,7 +98,7 @@ Contains
     Params%PARAM_Str = Trim(Params%Sim_Str) // '.PARAM'
     Params%CST_Str   = Trim(Params%Sim_Str) // '.CST'
     Ener_Str         = Trim(Params%Sim_Str) // '.ener'
-    
+
     If ((MEF90_MyRank == 0) .AND. (Is_Restarting == PETSC_FALSE) )Then
        Open (File = Ener_Str, Unit = Ener_Unit, Status = 'Replace')
        Rewind(Ener_Unit)
