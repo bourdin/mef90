@@ -21,13 +21,13 @@ Program Prep_Rupt
 
 
   Type (Rupt_Params)                              :: Params
-  Character(len = MXSTLN)                         :: EXO_Str
+  Character(len = MXLNLN)                         :: EXO_Str
 !  Type(Vect3D), Dimension(:), Pointer             :: BC_U
      
 
   Integer                                         :: Num_dof_per_nodes 
   Integer                                         :: iErr
-  Character(len=MXSTLN), Dimension(3)             :: Coord_Names
+!  Character(len=MXLNLN), Dimension(3)             :: Coord_Names
 
 
   Integer                                         :: iB, iE, iV, iG
