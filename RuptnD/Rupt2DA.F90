@@ -52,7 +52,6 @@ Program Rupt2DA
   
   Call Init()
 
-
   Call PetscGetTime(InitTF, iErr)
   If (MEF90_MyRank == 0) Then
      Write(Log_Unit, *) 'Time in Init():                            ',      &
