@@ -79,7 +79,7 @@ Contains
        If (MEF90_MyRank ==0) Then
           Read(*,100) Params%Sim_Str
        End If
-       Call MPI_BCAST(Params%Sim_Str, MXSTLN, MPI_CHARACTER, 0, MPI_COMM_WORLD,  &
+       Call MPI_BCAST(Params%Sim_Str, MXLNLN, MPI_CHARACTER, 0, MPI_COMM_WORLD,  &
             & iErr)
        Is_Interactive = .TRUE.
        Log_Unit = 6 !!! messages sent to stdout
