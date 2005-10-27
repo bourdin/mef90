@@ -395,6 +395,11 @@ Contains
   End Subroutine Update_BC_V
 
   Subroutine Init_KSPs()
+    PetscReal                            :: KSP_U_DivTol  = 1.0D+12
+    PetscInt                             :: KSP_U_MaxIter = 50000
+    PetscReal                            :: KSP_V_DivTol  = 1.0D+12
+    PetscInt                             :: KSP_V_MaxIter = 50000
+
     Call KSPCreate(PETSC_COMM_WORLD, KSP_U, iErr)
     Call KSPSetOperators(KSP_U, MR_U, MR_U, SAME_NONZERO_PATTERN, iErr)
     Call KSPGetPC(KSP_U, PC_U, iErr)
@@ -407,7 +412,10 @@ Contains
 !!$           & PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,  &
 !!$           & 50000, iErr)
     Call KSPSetTolerances(KSP_U, Params%TolKSP,                              &
-           & PETSC_DEFAULT_DOUBLE_PRECISION, 1.0e+9, 50000, iErr)
+           & PETSC_DEFAULT_DOUBLE_PRECISION, KSP_U_DivTol, KSP_U_MaxIter,    &
+           & iErr)
+!!$    Call KSPSetTolerances(KSP_U, Params%TolKSP,                              &
+!!$           & PETSC_DEFAULT_DOUBLE_PRECISION, 1.0e+9, 50000, iErr)
     Call KSPSetFromOptions(KSP_U, iErr)
 
     Call KSPCreate(PETSC_COMM_WORLD, KSP_V, iErr)
@@ -421,9 +429,12 @@ Contains
 !!$    Call KSPSetTolerances(KSP_V, Params%TolKSP,                              &
 !!$           & PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,  &
 !!$           & PETSC_DEFAULT_INTEGER, iErr)
-    Call KSPSetTolerances(KSP_V, Params%TolKSP,                              &
-           & PETSC_DEFAULT_DOUBLE_PRECISION, 1.0e+9, PETSC_DEFAULT_INTEGER,  &
+    Call KSPSetTolerances(KSP_U, Params%TolKSP,                              &
+           & PETSC_DEFAULT_DOUBLE_PRECISION, KSP_V_DivTol, KSP_V_MaxIter,    &
            & iErr)
+!!$    Call KSPSetTolerances(KSP_V, Params%TolKSP,                              &
+!!$           & PETSC_DEFAULT_DOUBLE_PRECISION, 1.0e+9, PETSC_DEFAULT_INTEGER,  &
+!!$           & iErr)
     Call KSPSetFromOptions(KSP_V, iErr)
   End Subroutine Init_KSPs
 
