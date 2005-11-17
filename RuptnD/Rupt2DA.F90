@@ -274,7 +274,7 @@ Program Rupt2DA
 901 Format('     Surface:      ', T24, ES12.5)
 902 Format('     Bulk:         ', T24, ES12.5)
 910 Format('     Energies:     ', T24, 2(ES10.3, ' '), 'Total: ', ES10.3)
-920 Format(I4, 4(ES11.3,'  '))
+920 Format(I4, 4(ES13.5,'  '))
 #if defined PB_2D
 End Program  Rupt2D
 #elif defined PB_3D
