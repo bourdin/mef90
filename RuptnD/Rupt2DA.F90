@@ -44,7 +44,8 @@ Program Rupt2DA
   Integer                                               :: VMinPos, VMaxPos
   Logical                                               :: Is_BackTracking
   Integer                                               :: NbIterKSP, iE
-  Real(Kind = Kr)                                       :: Err_Rel_Ener, Tmp_Ener
+  Real(Kind = Kr)                                       :: Err_Rel_Ener, Tmp_Ener 
+  PetscLogDouble                                        :: MyFlops, TotalFlops
 
 
   Call PetscGetTime(TotalTS, iErr)
@@ -255,9 +256,16 @@ Program Rupt2DA
   End Do While_TS
 
   Call PetscGetTime(TotalTF, iErr)
+  Call PetscGetFlops(MyFlops, iErr)
+  Call MPI_Reduce(MyFlops, TotalFlops, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0,   &
+       & MPI_COMM_WORLD, iErr)
   If (MEF90_MyRank == 0) Then
      Write(Log_Unit, *) 'Total Time:                            ',      &
           & TotalTF - TotalTS
+     Write(Log_Unit, *) 'Total FLOPs:                           ',      &
+          & TotalFlops
+     Write(Log_Unit, *) 'FLOP.s^-1:                             ',      &
+          & TotalFlops / (TotalTF - TotalTS)
   End If
 
   Call Finalize()
