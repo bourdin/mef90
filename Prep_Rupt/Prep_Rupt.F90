@@ -54,6 +54,13 @@ Program Prep_Rupt
   Call Read_EXO_Geom_Info(Geom) 
   Print*, 'OK Read_EXO_Geom_Info'
   Print*, 'Dimension: ', Geom%Num_Dim
+
+  Print*, 'Node sets ', Geom%Num_Node_Sets
+  Do iB = 1, Geom%Num_Node_Sets
+     Print*, 'Node Set #', Geom%Node_Set(iB)%ID
+     Print*, '   Size ', Geom%Node_Set(iB)%Num_Nodes
+     Print*, '   Nodes', Geom%Node_Set(iB)%Node_ID
+  End Do
   
   Do
      Write(*,100, advance = 'no') '[P]repare [C]heck, or [E]xit? '
@@ -63,8 +70,8 @@ Program Prep_Rupt
      Case ('p', 'P')
 
   	 	Write(*,110) PB_Gen, 'Generic problem (CST fields, MIL)'
-  	 	Write(*,110) PB_Gen, 'Mixed mode'
-  	 	Write(*,110) PB_Antiplane, 'Antiplane problem (CST fields, MIL)'  	 	
+  	 	Write(*,110) PB_MixedMode, 'Mixed mode'
+  	 	Write(*,110) PB_Antiplane, 'Antiplane problem (CST fields, MIL) currently broken see l 350'  	 	
   	 	Write(*,110) PB_CylTwist_3D, 'Torsion of a 3D cylinder along the Z-axis'
   	 	Write(*,110) PB_Dipping, 'Unstable crack propagation, thermal loads'
   	 	Write(*,110) PB_Needleman, 'Unstable crack propagation, elastodynamic'
@@ -91,12 +98,13 @@ Program Prep_Rupt
 
         Call Ask_Rupt_Params(Geom, Params, Force_EB)
 
+
         Write(*,*) 'Updating geometrical information...'
         Call Write_EXO_Geom_Info(Geom)
  
         Select Case (Geom%Num_Dim)
         Case(2)
-		   Write(*,100, advance = 'no') 'Writing Coordinates / Connectivity'
+	   Write(*,100, advance = 'no') 'Writing Coordinates / Connectivity'
            Call Write_EXO_Node_Coord(Geom, Node2D_db, 1)
            Call Write_EXO_Connect(Geom, Elem2D_db)
            Write(*,*) 'Writing problem parameters'
@@ -125,7 +133,6 @@ Program Prep_Rupt
            Call Write_Temp3D(Geom, Params, Node3D_db, PB_Type)
         End Select
 
-  		STOP
   
      Case ('c', 'C')
         Call Show_EXO_Geom_Info(Geom)
@@ -337,6 +344,7 @@ Contains
           Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
              BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode)) =                  &
                   & Geom%Node_Set(iSet)%Dist_Factor(3)
+!!! CAN'T DO THAT A 2D MESH HAS ONLY 2 DIST_FACTOR PER NODE...
           End Do
        End If
     End Do
@@ -543,9 +551,9 @@ Contains
     !!! The following are decent values.
     Params%nbCracks           = 0
     Params%MaxCrackLength     = 0.0             
-    Params%MaxIterRelax = 5000
-    Params%TolKSP       = 1.0D-6
-    Params%TolRelax     = 1.0D-3
+    Params%MaxIterRelax       = 5000
+    Params%TolKSP             = 1.0D-6
+    Params%TolRelax           = 1.0D-3
 
     !!! This is totally meaningful in general...
     Params%Epsilon      = 1.0D-1
@@ -660,12 +668,14 @@ Contains
           Write(*,100, advance = 'no') 'BC U, Y direction                    '
           Read(*,*)  Geom%Node_Set(Set_ID)%Dist_Factor(2)
        End If
-
-       Write(*,100,advance = 'no') 'BC U type, Z direction (None=0 DIRI = 1) '
-       Read(*,*) Params%BC_Type_Z(iSet) 
-       If (Params%BC_Type_Z(iSet) == 1) Then
-          Write(*,100, advance = 'no') 'BC U, Z direction                    '
-          Read(*,*)  Geom%Node_Set(Set_ID)%Dist_Factor(3)
+       
+       If (Geom%Num_Dim == 3) Then
+          Write(*,100,advance = 'no') 'BC U type, Z direction (None=0 DIRI = 1) '
+          Read(*,*) Params%BC_Type_Z(iSet) 
+          If (Params%BC_Type_Z(iSet) == 1) Then
+             Write(*,100, advance = 'no') 'BC U, Z direction                    '
+             Read(*,*)  Geom%Node_Set(Set_ID)%Dist_Factor(3)
+          End If
        End If
     End Do
 
