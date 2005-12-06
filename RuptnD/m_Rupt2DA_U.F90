@@ -149,8 +149,8 @@ Contains
           Allocate(Sigma(Nb_Gauss))
 #endif
           Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
-!             ContrV = Params%Kepsilon
-             ContrV = 0.0_Kr
+             ContrV = Params%Kepsilon
+!             ContrV = 0.0_Kr
              Do_iSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
                 iSGV1 = Elems_V(iE)%ID_DoF(iSLV1)
                 DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
@@ -187,16 +187,20 @@ Contains
 #if defined PB_2DA
                    MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
                         & Elems_U(iE)%Gauss_C(iG) *                           &
+!                        & ( ContrV(iG) + Params%Kepsilon ) *                  &
                         & ( ContrV(iG) + Params%Kepsilon ) *                  &
                         & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.             &
                         &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) * Mu
 #else                   
                    MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
-                        & Elems_U(iE)%Gauss_C(iG) * ( ContrV(iG) *            &
-                        & (Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP. Sigma(iG))  &
-                        &  + Params%Kepsilon *                                &
-                        &  (Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.            &
-                        &   Elems_U(iE)%GradS_BF(iSLSig,iG)))
+                        & Elems_U(iE)%Gauss_C(iG) * ContrV(iG) *              &
+                        & (Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP. Sigma(iG)) 
+
+!                        & Elems_U(iE)%Gauss_C(iG) * ( ContrV(iG) *            &
+!                        & (Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP. Sigma(iG))  &
+!                        &  + Params%Kepsilon *                                &
+!                        &  (Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.            &
+!                        &   Elems_U(iE)%GradS_BF(iSLSig,iG)))
 #endif
                 End Do Do_iGUEps
              End Do Do_iSLEps

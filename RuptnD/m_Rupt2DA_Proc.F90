@@ -396,7 +396,7 @@ Contains
 
   Subroutine Init_KSPs()
     PetscReal                            :: KSP_U_DivTol  = 1.0D+12
-    PetscInt                             :: KSP_U_MaxIter = 50000
+    PetscInt                             :: KSP_U_MaxIter = 100000
     PetscReal                            :: KSP_V_DivTol  = 1.0D+12
     PetscInt                             :: KSP_V_MaxIter = 50000
 
