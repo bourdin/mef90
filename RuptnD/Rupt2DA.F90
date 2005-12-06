@@ -176,6 +176,8 @@ Program Rupt2DA
            If (MEF90_MyRank ==0) Then
               Write(Log_Unit, *) 'Saving intermediate result for time step ', &
                    & TimeStep
+              Call PetscGetTime(TotalTF, iErr)
+              Write(Log_Unit, 930) TotalTF - TotalTS
            End If
            Call Export (TimeStep)
            Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
@@ -197,6 +199,8 @@ Program Rupt2DA
            If (MEF90_MyRank ==0) Then
               Write(Log_Unit, *) 'Saving final result for time step ', &
                    & TimeStep
+              Call PetscGetTime(TotalTF, iErr)
+              Write(Log_Unit, 930) TotalTF - TotalTS
            End If
            Call Export(TimeStep) 
            Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
@@ -283,6 +287,7 @@ Program Rupt2DA
 902 Format('     Bulk:         ', T24, ES12.5)
 910 Format('     Energies:     ', T24, 2(ES10.3, ' '), 'Total: ', ES10.3)
 920 Format(I4, 4(ES13.5,'  '))
+930 Format('     Cumulated time: ', T24, ES12.5)
 #if defined PB_2D
 End Program  Rupt2D
 #elif defined PB_3D
