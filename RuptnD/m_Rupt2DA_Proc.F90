@@ -69,9 +69,13 @@ Contains
 !!! Check for the -restart flag
 !!! If found, we are restarting a computation at step Timestep
 !!! -restart 1 is equivalent to making a new computation
-    TimeStep = 1
+!    TimeStep = 1
     Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-restart', TimeStep,       &
          & Is_Restarting, PETSC_NULL_INTEGER, iErr)
+         
+    If (Is_Restarting == PETSC_FALSE) Then
+   	   TimeStep = 1
+   	EndIf
 
     If (.NOT. Has_Sim_Str) Then
        Write(CharBuffer, 100) 'Simulation name: \n'c
@@ -262,7 +266,11 @@ Contains
 50          EXIT
         End Do
         Close(Ener_Unit)
+        If (TimeStep == 0) Then
+        	TimeStep = iTS + 1
+        End If
     End If
+    Call MPI_BCAST(TimeStep, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, iErr) 
     Call MPI_BCAST(Bulk_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
     	& MPI_COMM_WORLD, iErr) 
     Call MPI_BCAST(Surf_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
