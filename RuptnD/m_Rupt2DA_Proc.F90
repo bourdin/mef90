@@ -667,7 +667,7 @@ Contains
     Call VecDestroy(Temp_Master, iErr)
 ! Call PetscFinalize(PETSC_NULL_CHARACTER, iErr)
 !Call MPI_FINALIZE(iErr)    
-!    Call MEF90_Finalize()
+    Call MEF90_Finalize()
   End Subroutine Finalize
 
 #if defined PB_2D
