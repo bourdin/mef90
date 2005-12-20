@@ -103,6 +103,12 @@ Module m_Rupt2DA_Vars
   Logical, Public                                       :: Is_Interactive
   PetscTruth, Public                                    :: Is_Restarting
   Integer, Public                                       :: TimeStep
+  
+  Integer, Public                                       :: LogStage_Init
+  Integer, Public                                       :: LogStage_IO
+  Integer, Public                                       :: LogStage_Assembly
+  Integer, Public                                       :: LogStage_Solve
+  
 
 #if defined PB_2D
 End Module m_Rupt2D_Vars
