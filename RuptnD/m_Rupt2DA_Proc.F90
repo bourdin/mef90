@@ -61,7 +61,12 @@ Contains
     MEF90_GaussOrder = 2 
     
 
-
+	Call PetscLogStageRegister(LogStage_Init,     "Init", iErr)
+	Call PetscLogStageRegister(LogStage_IO,       "I/O operations", iErr)
+	Call PetscLogStageRegister(LogStage_Assembly, "KSP Assembly", iErr)
+	Call PetscLogStageRegister(LogStage_Solve,    "KSP Solvers", iErr)
+	
+    Call PetscLogStagePush(LogStage_Init, iErr);
     
     Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str,    &
          & Has_Sim_Str, iErr)
@@ -264,6 +269,7 @@ Contains
        		Tot_Ener(iTS) = Bulk_Ener(iTS) + Surf_Ener(iTS)
             CYCLE
 50          EXIT
+	
         End Do
         Close(Ener_Unit)
         If (TimeStep == 0) Then
@@ -282,6 +288,7 @@ Contains
     
     Call Random_Seed
     
+    Call PetscLogStagePop(iErr)
 100 Format(A)
 920 Format(I4, 4(ES11.3,'  '))
   End Subroutine Init
@@ -299,6 +306,7 @@ Contains
 
     Integer                                          :: iSet, iN
     
+    Call PetscLogStagePush(LogStage_Init, iErr)
     If (Geom%Numbering /= Numbering_PerNodes) Then
        Print*, '[ERROR] Init_BC not implemented for this numbering scheme'
        STOP
@@ -322,6 +330,7 @@ Contains
 #endif
        End Do
     End Do
+    Call PetscLogStagePop(iErr)
   End Subroutine Init_BC_U
 
   Subroutine Update_BC_V(Geoms, Params, SD, Nodes, V, VOld, TS)
@@ -343,6 +352,7 @@ Contains
     Integer                                          :: i, iSloc, iS
     Integer, Dimension(:), Pointer                   :: Loc_Indices
       
+	Call PetscLogStagePush(LogStage_IO, iErr)
     If(TS ==0 ) Then
        Do iSLoc = 1, SD%Num_Nodes
           iS = SD%Node(iSLoc)
@@ -399,7 +409,7 @@ Contains
        Call VecScatterEnd(V, V_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_V%ToMaster, iErr)    
        DeAllocate(Loc_Indices)       
     End If      
-    
+    Call PetscLogStagePop(iErr)
   End Subroutine Update_BC_V
 
   Subroutine Init_KSPs()
@@ -451,6 +461,7 @@ Contains
 
     PetscReal, Dimension(:), Pointer              :: BC_Ptr, Tmp_Ptr
 
+	Call PetscLogStagePush(LogStage_IO, iErr)
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(BCU_Master, BC_Ptr, iErr)
 #ifdef PB_2DA
@@ -472,6 +483,8 @@ Contains
      !!! BC_Dist -> BC_Loc
      Call VecGhostUpdateBegin(BCU_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
      Call VecGhostUpdateEnd(BCU_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+
+	Call PetscLogStagePop(iErr)
    End Subroutine Update_BC_U
 
   Subroutine Update_F(TimeStep)
@@ -479,6 +492,7 @@ Contains
 
     PetscReal, Dimension(:), Pointer              :: F_Ptr, Tmp_Ptr
 
+	Call PetscLogStagePush(LogStage_IO, iErr)
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(F_Master, F_Ptr, iErr)
 #ifdef PB_2DA
@@ -500,6 +514,7 @@ Contains
      !!! F_Dist -> F_Loc
      Call VecGhostUpdateBegin(F_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
      Call VecGhostUpdateEnd(F_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+	Call PetscLogStagePop(iErr)
    End Subroutine Update_F
 
   Subroutine Update_Temp(TimeStep)
@@ -508,6 +523,7 @@ Contains
 
     PetscReal, Dimension(:), Pointer              :: Temp_Ptr, Tmp_Ptr
 
+	Call PetscLogStagePush(LogStage_IO, iErr)
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(Temp_Master, Temp_Ptr, iErr)
        Call Read_EXO_Result_Nodes(Geom, 8, TimeStep, Tmp_Ptr, 1)
@@ -525,18 +541,25 @@ Contains
      !!! Temp_Dist -> Temp_Loc
      Call VecGhostUpdateBegin(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
      Call VecGhostUpdateEnd(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+	 Call PetscLogStagePop(iErr) 
    End Subroutine Update_Temp
 
 
   Subroutine Solve_U()
 !    Call Update_BC_U(TimeStep)
 
+	Call PetscLogStagePush(LogStage_Assembly, iErr);
     Call Assemb_MR_U(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V,               &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
     Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,        &
          & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
+   	Call PetscLogStagePop(iErr);
+
     Call PetscGetTime(SolveTS, iErr)
+
+	Call PetscLogStagePush(LogStage_Solve, iErr);
     Call KSPSolve(KSP_U, RHS_U, U_Dist, iErr)
+   	Call PetscLogStagePop(iErr);
 
 #ifdef MEF90_TIMING
     Call PetscGetTime(SolveTF, iErr)
@@ -559,12 +582,17 @@ Contains
 !!$       Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 !!$    End If
 
+	Call PetscLogStagePush(LogStage_Assembly, iErr);
     Call Assemb_MR_V(MR_V, U_Loc, Temp_Loc, Geom, Params, MySD_U, MySD_V,     &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
 !    Call Assemb_RHS_V(RHS_V, Geom, Params, MySD_V, Elem_db_V, Node_db_V)
+  	Call PetscLogStagePop(iErr);
 
     Call PetscGetTime(SolveTS, iErr)
+
+	Call PetscLogStagePush(LogStage_Solve, iErr);
     Call KSPSolve(KSP_V, RHS_V, V_Dist, iErr)
+   	Call PetscLogStagePop(iErr);
 
 #ifdef MEF90_TIMING
     Call PetscGetTime(SolveTF, iErr)
@@ -587,6 +615,7 @@ Contains
 
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
 
+	Call PetscLogStagePush(LogStage_IO, iErr);
     Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &
          & MySD_U%ToMaster, iErr)
     Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,      &
@@ -615,6 +644,7 @@ Contains
        Call Write_EXO_Result_Global(Geom, 2, TS, Surf_Ener(TS))
        Call Write_EXO_Result_Global(Geom, 3, TS, Tot_Ener(TS))
     End If
+   	Call PetscLogStagePop(iErr);
   End Subroutine Export
 
   Subroutine Export_V(TS)
@@ -623,6 +653,7 @@ Contains
 
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
 
+	Call PetscLogStagePush(LogStage_IO, iErr);
     Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,    &
          & MySD_V%ToMaster, iErr)
     Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,      &
@@ -633,6 +664,7 @@ Contains
        Call Write_EXO_Result_Ptr_Nodes(Geom, 1, TS, SOL_Ptr)
        Call VecRestoreArrayF90(V_Master, SOL_Ptr, iErr)
     End If
+   	Call PetscLogStagePop(iErr);
   End Subroutine Export_V
 
 
