@@ -83,8 +83,7 @@ Contains
    	EndIf
 
     If (.NOT. Has_Sim_Str) Then
-       Write(CharBuffer, 100) 'Simulation name: \n'c
-       Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
+       Write(Log_Unit, *) 'Simulation name: '
        If (MEF90_MyRank ==0) Then
           Read(*,100) Params%Sim_Str
        End If
@@ -564,9 +563,8 @@ Contains
 #ifdef MEF90_TIMING
     Call PetscGetTime(SolveTF, iErr)
     If (MEF90_MyRank == 0) Then
-       Write(CharBuffer,*) 'Total time in KSP_Solve:                 ',      &
-            & SolveTF- SolveTS, '\n'c
-       Call PetscPrintf(PETSC_COMM_SELF, CharBuffer, iErr)
+       Write(Log_Unit, *)'Total time in KSP_Solve:                 ',      &
+            & SolveTF- SolveTS
     End If
 #endif
 
@@ -597,9 +595,8 @@ Contains
 #ifdef MEF90_TIMING
     Call PetscGetTime(SolveTF, iErr)
     If (MEF90_MyRank == 0) Then
-       Write(CharBuffer,*) 'Total time in KSP_Solve:                 ',      &
-            & SolveTF- SolveTS, '\n'c
-       Call PetscPrintf(PETSC_COMM_SELF, CharBuffer, iErr)
+       Write(Log_Unit, *)  'Total time in KSP_Solve:                 ',      &
+            & SolveTF- SolveTS
     End If
 #endif
 
