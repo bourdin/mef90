@@ -56,7 +56,7 @@ Program Rupt2DA
   Call PetscGetTime(InitTF, iErr)
   If (MEF90_MyRank == 0) Then
      Write(Log_Unit, *) 'Time in Init():                            ',      &
-          & InitTF - InitTS, '\n'c
+          & InitTF - InitTS
   End If
 
   Is_BackTracking  = .False.

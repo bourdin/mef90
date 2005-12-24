@@ -278,12 +278,8 @@ Contains
 
 #ifdef MEF90_TIMING
     If (MEF90_MyRank ==0) Then
-       Write(CharBuffer,*) 'Total time in Init/Destroy_Gauss:         ',      &
-            & GaussT, '\n'c
-       Call PetscPrintf(PETSC_COMM_SELF, CharBuffer, iErr)
-       Write(CharBuffer,*) 'Number of calls to MatSetValue:           ',      &
-            & SetN, '\n'c
-       Call PetscPrintf(PETSC_COMM_SELF, CharBuffer, iErr)
+       Write(Log_Unit, *) 'Total time in Init/Destroy_Gauss:         ',      &
+            & GaussT
     End If
 #endif
   End Subroutine Assemb_MR_U
