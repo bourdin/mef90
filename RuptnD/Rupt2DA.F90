@@ -272,6 +272,7 @@ Program Rupt2DA
           & TotalFlops / (TotalTF - TotalTS)
   End If
 
+  Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
   Call Finalize()
   STOP
 
