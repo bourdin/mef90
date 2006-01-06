@@ -91,7 +91,8 @@ Program Rupt2DA
      End Select
      
      If (Params%Do_Irrev) Then
-        Call Update_BC_V(Geom, Params, MySD_V, Node_db_V, V_Dist, V_Old, TimeStep-1)
+        Call Update_BC_V(Geom, Params, MySD_V, Node_db_V, V_Old)
+!        Call Update_BC_V(Geom, Params, MySD_V, Node_db_V, V_Dist, V_Old, TimeStep-1)
 !        Call Apply_BC_V(Geom, Params, MySD_V, Node_db_V, V_Dist)
 !        Call Export(max(TimeStep-1, 1)) 
      End If
@@ -248,12 +249,12 @@ Program Rupt2DA
               TimeStep = iE
               Write(Log_Unit, *) '********** Going back to step ', TimeStep
               Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
-              Write(Ener_Unit, *)
+              Write(Ener_Unit, *) '  '
               Close(Ener_Unit)
            Else
               TimeStep = TimeStep + 1
            End If
-        End If
+        End If  ! MEF90_MyRank == 0
         Call MPI_BCAST(Is_BackTracking , 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, iErr)
         Call MPI_BCAST(TimeStep, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, iErr)
      End If

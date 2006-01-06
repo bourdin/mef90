@@ -83,22 +83,24 @@ Contains
    	EndIf
 
     If (.NOT. Has_Sim_Str) Then
-       Write(Log_Unit, *) 'Simulation name: '
+       Is_Interactive = .TRUE.
+       Log_Unit = 6 !!! messages sent to stdout
        If (MEF90_MyRank ==0) Then
+          Write(Log_Unit, *) 'Simulation name: '
           Read(*,100) Params%Sim_Str
        End If
        Call MPI_BCAST(Params%Sim_Str, MXLNLN, MPI_CHARACTER, 0, MPI_COMM_WORLD,  &
             & iErr)
-       Is_Interactive = .TRUE.
-       Log_Unit = 6 !!! messages sent to stdout
     Else
        Is_Interactive = .FALSE.
        Log_Str          = Trim(Params%Sim_Str) // '.log'
-       If (Is_Restarting == PETSC_TRUE) Then
-          Open (File = Log_Str, Unit = Log_Unit, Status = 'Old',              &
-               & Position = 'Append')
-       Else
-          Open (File = Log_Str, Unit = Log_Unit, Status = 'Replace')
+       If (MEF90_MyRank ==0) Then
+          If (Is_Restarting == PETSC_TRUE) Then
+             Open (File = Log_Str, Unit = Log_Unit, Status = 'Old',           &
+                  & Position = 'Append')
+          Else
+             Open (File = Log_Str, Unit = Log_Unit, Status = 'Replace')
+          End If
        End If
     End If
     
@@ -198,7 +200,7 @@ Contains
        Call VecSet(1.0_Kr, V_Dist, iErr)
        Call VecSet(1.0_Kr, V_Loc, iErr)
        
-       Call VecSet(0.0_Kr, V_Old, iErr)
+       Call VecSet(1.0_Kr, V_Old, iErr)
     Else
 !!! Read and update V from TimeStep - 1
        If (MEF90_MyRank == 0) Then
@@ -332,7 +334,56 @@ Contains
     Call PetscLogStagePop(iErr)
   End Subroutine Init_BC_U
 
-  Subroutine Update_BC_V(Geoms, Params, SD, Nodes, V, VOld, TS)
+
+  Subroutine Update_BC_V(Geoms, Params, SD, Nodes, VOld)
+    Type(EXO_Geom_Info), Intent(IN)                  :: Geoms
+    Type(Rupt_Params), Intent(IN)                    :: Params
+    Type (SD_Info), Intent(IN)                       :: SD
+#ifdef PB_3D
+    Type(Node3D), Dimension(:), Pointer              :: Nodes
+#else
+    Type(Node2D), Dimension(:), Pointer              :: Nodes
+#endif
+    Vec                                              :: VOld    
+
+	Vec                                              :: VOld_Loc
+	Integer                                          :: i, iSloc, iS
+	Integer, Dimension(:), Pointer                   :: Loc_Indices
+	PetscReal, Dimension(:), Pointer                 :: VOld_Loc_Ptr
+	
+	Call PetscLogStagePush(LogStage_IO, iErr)
+    Allocate(Loc_Indices(Geoms%Num_Nodes))
+    Loc_Indices = (/ (i ,i = 0, Geoms%Num_Nodes - 1) /)
+    Call AOApplicationToPETSc(SD%Loc_AO, Geoms%Num_Nodes, Loc_Indices, iErr)   
+
+	!!! Get Ghost Values for VOld
+	Call VecGhostGetLocalForm(VOld, VOld_Loc, iErr)
+	Call VecGhostUpdateBegin(VOld, INSERT_VALUES, SCATTER_FORWARD, iErr)
+	Call VecGhostUpdateEnd(VOld, INSERT_VALUES, SCATTER_FORWARD, iErr)
+
+	Call VecGetArrayF90(VOld_Loc, VOld_Loc_Ptr, iErr)
+
+    Do iSLoc = 1, SD%Num_Nodes
+       iS = SD%Node(iSLoc)
+       If ( VOld_Loc_Ptr(Loc_Indices(iS)+1) <= Params%TolIrrev ) Then 
+          Nodes(iS)%BC = BC_Type_DIRI
+       End If 
+    End Do
+    Do iSLoc = 1, SD%Num_GhostNodes
+       iS = SD%GhostNode(iSLoc)
+       If ( VOld_Loc_Ptr(Loc_Indices(iS)+1) <= Params%TolIrrev ) Then 
+          Nodes(iS)%BC = BC_Type_DIRI
+       End If 
+    End Do
+
+
+	Call VecRestoreArrayF90(VOld_Loc, VOld_Loc_Ptr, iErr)
+	Call VecDestroy(VOld_Loc, iErr)
+    DeAllocate(Loc_Indices)
+  End Subroutine Update_BC_V	
+	
+  
+  Subroutine Update_BC_V_Old(Geoms, Params, SD, Nodes, V, VOld, TS)
 !!! CHECK THAT OUT. I am tired...
     Type(EXO_Geom_Info), Intent(IN)                  :: Geoms
     Type(Rupt_Params), Intent(IN)                    :: Params
@@ -387,7 +438,7 @@ Contains
        Allocate(Loc_Indices(Geoms%Num_Nodes))
        Loc_Indices = (/ (i ,i = 0, Geoms%Num_Nodes - 1) /)
        Call AOApplicationToPETSc(SD%Loc_AO, Geoms%Num_Nodes, Loc_Indices, iErr)   
-       Call VecGetArrayF90(V, VPtr, iErr)        
+       Call VecGetArrayF90(V, VPtr, iErr)  
        Do iSLoc = 1, SD%Num_Nodes
           iS = SD%Node(iSLoc)
           If ( VPtr_Old(Loc_Indices(iS)+1) <= Params%TolIrrev ) Then 
@@ -395,13 +446,18 @@ Contains
              VPtr(Loc_Indices(iS)+1) = 0.0_Kr
           End If 
        End Do
-       Do iSLoc = 1, SD%Num_GhostNodes
-          iS = SD%GhostNode(iSLoc)
-         If (. VPtr_Old(Loc_Indices(iS)+1) <= Params%TolIrrev) Then 
-             Nodes(iS)%BC = BC_Type_DIRI
-             VPtr(Loc_Indices(iS)+1) = 0.0_Kr
-          End If 
-       End Do
+       Print*, '***', MEF90_MyRank, 'Size(VPtr)', Size(VPtr), &
+!       & 'SD%GhostNode(SD%Num_GhostNodes)', SD%GhostNode(SD%Num_GhostNodes), &
+!	   & 'Loc_Indices(SD%GhostNode(SD%Num_GhostNodes))', &
+	   & Loc_Indices(SD%Node(SD%Num_Nodes)), &
+	   & Loc_Indices(SD%GhostNode(SD%Num_GhostNodes))
+!       Do iSLoc = 1, SD%Num_GhostNodes
+!          iS = SD%GhostNode(iSLoc)
+!         If ( VPtr_Old(Loc_Indices(iS)+1) <= Params%TolIrrev) Then 
+!             Nodes(iS)%BC = BC_Type_DIRI
+!             VPtr(Loc_Indices(iS)+1) = 0.0_Kr
+!          End If 
+!       End Do
        Call VecRestoreArrayF90(V, VPtr, iErr)
        Call VecRestoreArrayF90(VOld, VPtr_Old, iErr)
        Call VecScatterBegin(V, V_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_V%ToMaster, iErr)
@@ -409,7 +465,7 @@ Contains
        DeAllocate(Loc_Indices)       
     End If      
     Call PetscLogStagePop(iErr)
-  End Subroutine Update_BC_V
+  End Subroutine Update_BC_V_Old
 
   Subroutine Init_KSPs()
     PetscReal                            :: KSP_U_DivTol  = 1.0D+12
