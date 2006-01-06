@@ -25,7 +25,8 @@ include ${PETSC_DIR}/bmake/common/base
 OBJS=    ${PROJ}${DIM}.o m_Rupt${DIM}_Vars.o m_Rupt${DIM}_Proc.o            \
          m_Rupt${DIM}_U.o m_Rupt${DIM}_V.o m_Rupt${DIM}_Ener.o
 FFLAGS = -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS} -nothreads        \
-         -DNOMEF90_TIMING -DPB_${DIM} -DPETSC_USE_LOG  -CB -traceback
+         -DNOMEF90_TIMING -DPB_${DIM} -DPETSC_USE_LOG
+#  -CB -traceback
 
 ${PROJ}${DIM}-${VER}: ${PROJ}${DIM}.o
 	-${FLINKER} -o ${PROJ}${DIM}-${VER} ${OBJS} ${MEF90OBJS}   \
