@@ -351,7 +351,6 @@ Contains
 	Integer, Dimension(:), Pointer                   :: Loc_Indices
 	PetscReal, Dimension(:), Pointer                 :: VOld_Loc_Ptr
 	
-	Call PetscLogStagePush(LogStage_IO, iErr)
     Allocate(Loc_Indices(Geoms%Num_Nodes))
     Loc_Indices = (/ (i ,i = 0, Geoms%Num_Nodes - 1) /)
     Call AOApplicationToPETSc(SD%Loc_AO, Geoms%Num_Nodes, Loc_Indices, iErr)   
