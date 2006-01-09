@@ -1,5 +1,5 @@
 PROJ            = Rupt
-VER             = 0.12.7
+VER             = 0.12.8
 MEF90VER        = 0.12.0
 MEF90DIR        = $(MEF90ROOT)/MEF90-$(MEF90VER)
 MEF90OBJS	= $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
