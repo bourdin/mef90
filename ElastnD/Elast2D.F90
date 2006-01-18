@@ -41,7 +41,7 @@ Program Elast
   Call PetscGetTime(InitTS, iErr)
 
   Call Init()
-  Call VecSet(1.0_Kr, SOL_Dist, iErr)
+  Call VecSet(SOL_Dist, 1.0_Kr, iErr)
 
 
 !!$  Call GenVect(Geom, MySD, Node_db, Elem_db, SOL_Dist)
