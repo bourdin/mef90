@@ -481,8 +481,8 @@ Contains
     Integer                                             :: iSL2, iSG2
     Integer                                             :: iE, iELoc, iG
     Integer                                             :: iBlk
-
-	Real(Kind = Kr)                                     :: K3
+    
+    Real(Kind = Kr)                                     :: K3
     Integer(Kind = Ki)                                  :: i, iS
 
     PetscLogDouble                                      :: TotTS, TotTF, TotT
@@ -491,7 +491,7 @@ Contains
 
 
     Call PetscGetTime(TotTS, iErr)
-    Call VecSet(0.0_Kr, RHS, iErr)
+    Call VecSet(RHS, 0.0_Kr, iErr)
 
     Allocate(EXO_Indices(Geom%Num_Nodes * Geom%Num_Dim))
     EXO_Indices = (/ (i ,i = 0, Geom%Num_Nodes *Geom%Num_Dim - 1) /)
@@ -831,16 +831,16 @@ Contains
                         & (Elem_db(iE)%GradS_BF(iSLEps,iG) .DotP. Sigma(iG))* &
                         & InvOf2
                 End Do
+                If (Params%Has_Force(iBlk)) Then
+                   Do iG = 1, Nb_Gauss
+                      MyEner = MyEner - Elem_db(iE)%Gauss_C(iG) *             &
+                           & DISP_Ptr(Loc_Indices(iSGSig)+1) *                &
+                           & DISP_Ptr(Loc_Indices(iSGEps)+1) *                &
+                           & ( Elem_db(iE)%BF(iSLEps, iG) .DotP.              &
+                           &   Elem_db(iE)%BF(iSLSig, iG) )
+                   End Do
+                End If
              End Do Do_iSLEps
-             If (Params%Has_Force(iBlk)) Then
-                Do iG = 1, Nb_Gauss
-                   MyEner = MyEner - Elem_db(iE)%Gauss_C(iG) *                &
-                        & DISP_Ptr(Loc_Indices(iSGSig)+1) *                   &
-                        & DISP_Ptr(Loc_Indices(iSGEps)+1) *                   &
-                        & ( Elem_db(iE)%BF(iSLEps, iG) .DotP.                 &
-                        &   Elem_db(iE)%BF(iSLSig, iG) )
-                End Do
-             End If
           End Do Do_iSLSig
           DeAllocate(Sigma)
 
