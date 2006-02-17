@@ -155,6 +155,7 @@ Program Rupt2DA
 
         Call PetscGetTime(InitTS, iErr)
         Call Solve_V()
+
         Call KSPGetConvergedReason(KSP_V, KSP_TestCVG, iErr)
         If (KSP_TestCVG <= 0) Then
            If (MEF90_MyRank == 0) Then
@@ -267,6 +268,7 @@ Program Rupt2DA
         Call MPI_BCAST(Is_BackTracking , 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, iErr)
         Call MPI_BCAST(TimeStep, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, iErr)
      End If
+     Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
   End Do While_TS
 
   Call PetscGetTime(TotalTF, iErr)
@@ -282,7 +284,7 @@ Program Rupt2DA
           & TotalFlops / (TotalTF - TotalTS)
   End If
 
-!  Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
+  Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
   Call Finalize()
   STOP
 
