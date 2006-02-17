@@ -13,9 +13,8 @@ M_RUPT_STRUCT_DIR = $(MEF90ROOT)/m_Rupt_Struct-0.0.6
 M_RUPT_STRUCT_OBJS = $(M_RUPT_STRUCT_DIR)/m_Rupt_Struct.o
 
 
-EXO_CFLAGS      = -I$(MATSCI_DIR)/SEAMS.SRC/inc
-EXO_LFLAGS      = -L$(MATSCI_DIR)/SEAMS.SRC/lib -lexoIIv2for -lexoIIv2c   \
-                  -lnetcdf -lexoIIv2for -lsuplib -lsupes
+EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
+EXO_LFLAGS      = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf 
 
 all: ${PROJ}${DIM}-${VER}
 
