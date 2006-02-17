@@ -499,7 +499,7 @@ Contains
     PetscReal                                    :: Tmp_Val
     PetscReal                                    :: Toughness
 
-    Call VecSet(0.0_Kr, RHS, iErr)
+    Call VecSet(RHS, 0.0_Kr, iErr)
 
     Allocate(EXO_Indices(Geom%Num_Nodes))
     EXO_Indices = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)

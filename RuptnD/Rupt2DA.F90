@@ -47,18 +47,17 @@ Program Rupt2DA
   Real(Kind = Kr)                                       :: Err_Rel_Ener, Tmp_Ener 
   PetscLogDouble                                        :: MyFlops, TotalFlops
 
-
   Call PetscGetTime(TotalTS, iErr)
   Call PetscGetTime(InitTS, iErr)
   
   Call Init()
-
+  
   Call PetscGetTime(InitTF, iErr)
   If (MEF90_MyRank == 0) Then
      Write(Log_Unit, *) 'Time in Init():                            ',      &
           & InitTF - InitTS
   End If
-
+  
   Is_BackTracking  = .False.
   
   While_TS: Do while (TimeStep <= Size(Params%Load))
@@ -66,19 +65,26 @@ Program Rupt2DA
      If (MEF90_MyRank == 0) Then
         Write(Log_Unit, 400) TimeStep, Params%Load(TimeStep)
      End If
-
+     
      Call Update_BC_U(TimeStep)
-
+     
      Call Update_F(TimeStep)
-
+     
      Call Update_Temp(TimeStep)
-
+     
      Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,      &
           & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
-
+     Call Assemb_MR_U(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V,              &
+          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
+     
+!  End Do While_TS
+!Do while (TimeStep <= Size(Params%Load))
+!Call Finalize()
+     
+!Call VecView(RHS_U, PETSC_VIEWER_STDERR_WORLD, iErr)
      Select Case (Params%Init_U)
      Case (Init_U_ZERO)
-        Call VecSet(0.0_Kr, U_Dist, iErr)
+        Call VecSet(U_Dist, 0.0_Kr, iErr)
         Call VecGhostUpdateBegin(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
         Call VecGhostUpdateEnd(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
      Case (Init_U_PREV)
@@ -97,11 +103,13 @@ Program Rupt2DA
 !        Call Export(max(TimeStep-1, 1)) 
      End If
      Call Assemb_RHS_V(RHS_V, Geom, Params, MySD_V, Elem_db_V, Node_db_V)
-     
+!     Call VecView(RHS_V, PETSC_VIEWER_STDERR_WORLD, iErr)
+
+
      Select Case (Params%Init_V)
      Case (Init_V_ONE)
         If (.NOT. Is_BackTracking) Then
-          Call VecSet(1.0_Kr, V_Dist, iErr)
+          Call VecSet(V_Dist, 1.0_Kr, iErr)
           Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
           Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 	End If 	
@@ -130,6 +138,7 @@ Program Rupt2DA
         Call PetscGetTime(InitTS, iErr)
         
         Call Solve_U()
+
         Call KSPGetConvergedReason(KSP_U, KSP_TestCVG, iErr)
         If (KSP_TestCVG <= 0) Then
            If (MEF90_MyRank == 0) Then
@@ -167,7 +176,7 @@ Program Rupt2DA
         End If
         
         Call VecCopy(V_Old, V_Change, iErr)
-        Call VecAxPy(-1.0_Kr, V_Dist, V_Change, iErr)
+        Call VecAxPy(V_Change, -1.0_Kr, V_Dist, iErr)
         Call VecNorm(V_Change, NORM_INFINITY, ErrV, iErr)
         If (MEF90_MyRank ==0) Then
            Write(Log_Unit, 800) ErrV
@@ -273,7 +282,7 @@ Program Rupt2DA
           & TotalFlops / (TotalTF - TotalTS)
   End If
 
-  Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
+!  Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
   Call Finalize()
   STOP
 
