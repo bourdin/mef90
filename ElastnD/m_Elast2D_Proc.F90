@@ -121,6 +121,7 @@ Contains
   Subroutine Init_KSP()
     KSP                :: Sub_KSP_MR
     PC                 :: Sub_PC_MR
+    PCType             :: PC_Type
     Call KSPCreate(PETSC_COMM_WORLD, KSP_MR, iErr)
     Call KSPSetOperators(KSP_MR, MR, MR, SAME_NONZERO_PATTERN, iErr)
     Call KSPGetPC(KSP_MR, PC_MR, iErr)
@@ -134,12 +135,15 @@ Contains
            & PETSC_DEFAULT_INTEGER, iErr)
     Call KSPSetFromOptions(KSP_MR, iErr)
 
-    Call KSPSetUp(KSP_MR, iErr)
-    Call PCBJacobiGetSubKSP(PC_MR, PETSC_NULL_INTEGER, PETSC_NULL_INTEGER,    &
-         & Sub_KSP_MR, iErr)
-    Call KSPGetPC(Sub_KSP_MR, Sub_PC_MR, iErr)
-    Call PCFactorSetZeroPivot(Sub_PC_MR, 1.0D-20, iErr)
-    Call PCSetFromOptions(Sub_PC_MR, iErr)
+    Call PCGetType(PC_MR, PC_Type, iErr)
+    If (PC_Type == PCBJACOBI) Then
+       Call KSPSetUp(KSP_MR, iErr)
+       Call PCBJacobiGetSubKSP(PC_MR, PETSC_NULL_INTEGER, PETSC_NULL_INTEGER, &
+            & Sub_KSP_MR, iErr)
+       Call KSPGetPC(Sub_KSP_MR, Sub_PC_MR, iErr)
+       Call PCFactorSetZeroPivot(Sub_PC_MR, 1.0D-20, iErr)
+       Call PCSetFromOptions(Sub_PC_MR, iErr)
+    End If
   End Subroutine Init_KSP
 
   Subroutine Export()
