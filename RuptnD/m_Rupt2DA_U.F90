@@ -136,10 +136,12 @@ Contains
           End If
           EXO_Indices_U = Elems_U(iE)%Id_DoF-1
           Call AOApplicationToPETSc(SD_U%EXO_AO, Nb_DoF_U, EXO_Indices_U, iErr)
-       
+
           Call PetscGetTime(GaussTS, iErr)
-          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder, Elem=iE)
-          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder, Elem=iE)
+          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder,       &
+               & Elem=iE)
+          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder,       &
+               & Elem=iE)
           Call PetscGetTime(GaussTF, iErr)
           GaussT = Gausst + GaussTF - GaussTS
           MR_Elem = 0.0_Kr
@@ -150,16 +152,15 @@ Contains
 #endif
           Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
              ContrV = Params%Kepsilon
-!             ContrV = 0.0_Kr
              Do_iSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
                 iSGV1 = Elems_V(iE)%ID_DoF(iSLV1)
                 DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
                    iSGV2 = Elems_V(iE)%ID_DoF(iSLV2)
                    Do_iGV: Do iG = 1, Nb_Gauss
                       ContrV(iG) = ContrV(iG) +                               &
-                           & V_Ptr(Loc_Indices_V(iSGV1)+1)                      &
+                           & V_Ptr(Loc_Indices_V(iSGV1)+1)                    &
                            &  * Elems_V(iE)%BF(iSLV1, iG)                     &
-                           &  * V_Ptr(Loc_Indices_V(iSGV2)+1)                   &
+                           &  * V_Ptr(Loc_Indices_V(iSGV2)+1)                 &
                            &  * Elems_V(iE)%BF(iSLV2, iG)
                    End Do Do_iGV
                 End Do DoiSLV2
@@ -187,7 +188,6 @@ Contains
 #if defined PB_2DA
                    MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
                         & Elems_U(iE)%Gauss_C(iG) *                           &
-!                        & ( ContrV(iG) + Params%Kepsilon ) *                  &
                         & ( ContrV(iG) + Params%Kepsilon ) *                  &
                         & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.             &
                         &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) * Mu
@@ -195,12 +195,6 @@ Contains
                    MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
                         & Elems_U(iE)%Gauss_C(iG) * ContrV(iG) *              &
                         & (Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP. Sigma(iG)) 
-
-!                        & Elems_U(iE)%Gauss_C(iG) * ( ContrV(iG) *            &
-!                        & (Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP. Sigma(iG))  &
-!                        &  + Params%Kepsilon *                                &
-!                        &  (Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.            &
-!                        &   Elems_U(iE)%GradS_BF(iSLSig,iG)))
 #endif
                 End Do Do_iGUEps
              End Do Do_iSLEps
@@ -262,8 +256,8 @@ Contains
              Is_BC_BC: If ( (Nodes_U(iSGSig)%BC /= BC_Type_NONE) .AND.        &
                   & (SD_U%IsLocal_Node(iSGSig)) )Then
                 Call PetscGetTime(SetTS, iErr)
-                Call MatSetValue(MR, EXO_Indices_U(iSGSig), EXO_Indices_U(iSGSig),&
-                     &  MEF90_VLV, INSERT_VALUES, iErr)
+                Call MatSetValue(MR, EXO_Indices_U(iSGSig),                   &
+                     & EXO_Indices_U(iSGSig), MEF90_VLV, INSERT_VALUES, iErr)
                 Call PetscGetTime(SetTF, iErr)
                 SetN = SetN+1
                 SetT = SetT + SetTF - SetTS
@@ -343,7 +337,7 @@ Contains
     Loc_Indices_Scal = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
     Call AOApplicationToPETSc(SD_V%Loc_AO, Geom%Num_Nodes, Loc_Indices_Scal,  &
          & iErr)
-    
+
 #ifdef PB_2DA
     Allocate(Loc_Indices_Vect(Geom%Num_Nodes))
     Loc_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
@@ -370,7 +364,7 @@ Contains
     Call VecGetArrayF90(TempLoc, Temp_Ptr, iErr)
     Call VecGetArrayF90(VLoc, V_Ptr, iErr)
     
-    Call VecSet(0.0_Kr, RHS, iErr)
+    Call VecSet(RHS, 0.0_Kr, iErr)
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
 !!! The isotropic Hooke's law is expressed as
 !!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
