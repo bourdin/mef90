@@ -109,17 +109,18 @@ Contains
     Params%CST_Str   = Trim(Params%Sim_Str) // '.CST'
     Ener_Str         = Trim(Params%Sim_Str) // '.ener'
     
-    If ((MEF90_MyRank == 0) .AND. (Is_Restarting == PETSC_FALSE) )Then
-       Open (File = Ener_Str, Unit = Ener_Unit, Status = 'Replace')
-       Rewind(Ener_Unit)
-       Close(Ener_Unit)
-    Else
-       Open (File = Ener_Str, Unit = Ener_Unit, Position = 'Append')
-       Write(Ener_Unit, *)
-       Write(Ener_Unit, *)
-       Close(Ener_Unit)
+    If (MEF90_MyRank == 0) Then
+       If (Is_Restarting == PETSC_FALSE) Then
+          Open (File = Ener_Str, Unit = Ener_Unit, Status = 'Replace')
+          Rewind(Ener_Unit)
+          Close(Ener_Unit)
+       Else
+          Open (File = Ener_Str, Unit = Ener_Unit, Position = 'Append')
+          Write(Ener_Unit, *) '   '
+          Write(Ener_Unit, *) '   '
+          Close(Ener_Unit)
+       End If
     End If
-    
     Call Read_EXO_Geom_Info(Geom)
     
 
