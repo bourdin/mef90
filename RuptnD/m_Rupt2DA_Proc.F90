@@ -74,7 +74,8 @@ Contains
 !!! Check for the -restart flag
 !!! If found, we are restarting a computation at step Timestep
 !!! -restart 1 is equivalent to making a new computation
-    !    TimeStep = 1
+!!! -restart 0 resumes after the last complete iteration
+!!! partial timesteps are not checkpointed
     Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-restart', TimeStep,       &
          & Is_Restarting, PETSC_NULL_INTEGER, iErr)
     
@@ -193,6 +194,34 @@ Contains
     Bulk_Ener = 0.0_Kr      
 
 
+!!! Read the energies from the .ener file
+!!! Get the last iteration number if called with -restart 0
+    If (MEF90_MyRank == 0) Then
+       Open (File = Ener_Str, Unit = Ener_Unit, status = 'Old',               &
+            & Action = 'Read')
+       Rewind(Ener_Unit)
+       Do
+          Read(Ener_Unit, *, end=50, err=50) iTS, Bulk_Ener(iTS),             &
+               & Surf_Ener(iTS), Tot_Ener(iTS)
+          Tot_Ener(iTS) = Bulk_Ener(iTS) + Surf_Ener(iTS)
+          CYCLE
+50        EXIT
+          
+       End Do
+       Close(Ener_Unit)
+       If (TimeStep == 0) Then
+          TimeStep = iTS + 1
+       End If
+    End If
+    Call MPI_BCAST(TimeStep, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, iErr) 
+    Call MPI_BCAST(Bulk_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
+         & MPI_COMM_WORLD, iErr) 
+    Call MPI_BCAST(Surf_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
+         & MPI_COMM_WORLD, iErr) 
+    Call MPI_BCAST(Tot_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,       &
+         & MPI_COMM_WORLD, iErr) 
+
+
     If (TimeStep == 1) Then
        Call VecSet(U_Dist, 0.0_Kr, iErr)
        Call VecSet(U_Loc, 0.0_Kr, iErr)
@@ -245,45 +274,7 @@ Contains
 !!! U_Dist -> U_Loc
        Call VecGhostUpdateBegin(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
        Call VecGhostUpdateEnd(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-
-
-!!! THE FOLLOWING -SHOULD- WORK
-!!! APPARENTLY THE ENERGIES DON'T GET SAVED INTO THE .gen FILE
-!!! Reads the energy from the .gen file 
-!!! At this point, I let each CPU read the .gen file
-!!! This is unefficient but is done only once 
-!       Do iTS = 1, TimeStep 
-!          Call Read_EXO_Result_Global(Geom, 1, iTS, Bulk_Ener(iTS))
-!          Call Read_EXO_Result_Global(Geom, 2, iTS, Surf_Ener(iTS))
-!          Call Read_EXO_Result_Global(Geom, 3, iTS, Tot_Ener(iTS))
-!       End Do
-
-!!! INSTEAD, WE READ FROM .log FILE
     End If
-    If (MEF90_MyRank == 0) Then
-       Open (File = Ener_Str, Unit = Ener_Unit, status = 'Old',               &
-            & Action = 'Read')
-       Rewind(Ener_Unit)
-       Do
-          Read(Ener_Unit, *, end=50, err=50) iTS, Bulk_Ener(iTS),             &
-               & Surf_Ener(iTS), Tot_Ener(iTS)
-          Tot_Ener(iTS) = Bulk_Ener(iTS) + Surf_Ener(iTS)
-          CYCLE
-50        EXIT
-          
-       End Do
-       Close(Ener_Unit)
-       If (TimeStep == 0) Then
-          TimeStep = iTS + 1
-       End If
-    End If
-    Call MPI_BCAST(TimeStep, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, iErr) 
-    Call MPI_BCAST(Bulk_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
-         & MPI_COMM_WORLD, iErr) 
-    Call MPI_BCAST(Surf_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
-         & MPI_COMM_WORLD, iErr) 
-    Call MPI_BCAST(Tot_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,       &
-         & MPI_COMM_WORLD, iErr) 
     
     Call Init_Ksps()
     
