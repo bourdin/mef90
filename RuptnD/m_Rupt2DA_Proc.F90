@@ -56,6 +56,7 @@ Contains
     PetscTruth                              :: Has_Sim_Str
     Real(Kind = Kr), Dimension(:), Pointer  :: Tmp_Ptr, U_Ptr, V_Ptr
     Real(Kind = Kr)                         :: Tmp_Bulk, Tmp_Surf, Tmp_Tot
+    Real(Kind = Kr)                         :: Junk
     
     Call MEF90_Initialize()
     MEF90_GaussOrder = 2 
@@ -196,12 +197,17 @@ Contains
 
 !!! Read the energies from the .ener file
 !!! Get the last iteration number if called with -restart 0
+!!! Energies are now saved in the .gen
+!!! I could read them from there, 
+!!! but how would I find the last computed time step
+!!! Check for the first time step with total energy == 0?
+!!! or check from the .ener
     If (MEF90_MyRank == 0) Then
        Open (File = Ener_Str, Unit = Ener_Unit, status = 'Old',               &
             & Action = 'Read')
        Rewind(Ener_Unit)
        Do
-          Read(Ener_Unit, *, end=50, err=50) iTS, Bulk_Ener(iTS),             &
+          Read(Ener_Unit, *, end=50, err=50) iTS, junk, Bulk_Ener(iTS),       &
                & Surf_Ener(iTS), Tot_Ener(iTS)
           Tot_Ener(iTS) = Bulk_Ener(iTS) + Surf_Ener(iTS)
           CYCLE
@@ -212,6 +218,9 @@ Contains
        If (TimeStep == 0) Then
           TimeStep = iTS + 1
        End If
+!!$       Do iTS = 1, TimeSTep
+!!$          Write(99,*) iTS, Bulk_Ener(iTS), Surf_Ener(iTS), Tot_Ener(iTS)
+!!$       End Do
     End If
     Call MPI_BCAST(TimeStep, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, iErr) 
     Call MPI_BCAST(Bulk_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
@@ -509,15 +518,11 @@ Contains
   
   
   Subroutine Solve_U()
-    !    Call Update_BC_U(TimeStep)
-    
     Call PetscLogStagePush(LogStage_Assembly, iErr);
     Call Assemb_MR_U(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V,               &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
     Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,        &
          & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
-    !     Call VecView(RHS_U, PETSC_VIEWER_STDERR_WORLD, iErr)
-    !     Call MatView(MR_U, PETSC_VIEWER_STDERR_WORLD, iErr)
     
     Call PetscLogStagePop(iErr);
     
@@ -540,19 +545,9 @@ Contains
   End Subroutine Solve_U
   
   Subroutine Solve_V()
-    
-!!$    If (Params%Do_Irrev) Then
-!!$       Call Apply_BC_V(Geom, Params, MySD_V, Node_db_V, V_Dist)
-!!$       Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-!!$       Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-!!$    End If
-    
     Call PetscLogStagePush(LogStage_Assembly, iErr);
     Call Assemb_MR_V(MR_V, U_Loc, Temp_Loc, Geom, Params, MySD_U, MySD_V,     &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
-    !    Call Assemb_RHS_V(RHS_V, Geom, Params, MySD_V, Elem_db_V, Node_db_V)
-    !    Call VecView(RHS_V, PETSC_VIEWER_STDERR_WORLD, iErr)
-    !    Call MatView(MR_V, PETSC_VIEWER_STDERR_WORLD, iErr)
     Call PetscLogStagePop(iErr);
     
     Call PetscGetTime(SolveTS, iErr)
@@ -580,6 +575,7 @@ Contains
     
     
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
+
     
     Call PetscLogStagePush(LogStage_IO, iErr);
     Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &

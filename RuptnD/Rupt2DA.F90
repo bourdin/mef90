@@ -110,12 +110,14 @@ Program Rupt2DA
      Case (Init_V_ONE)
         If (.NOT. Is_BackTracking) Then
           Call VecSet(V_Dist, 1.0_Kr, iErr)
-          Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+          Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD,    &
+               & iErr)
           Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 	End If 	
      Case (Init_V_RND)
         If (.NOT. Is_BackTracking) Then
-          Call Init_V_Cracks(Geom, Params, MySD_V, Elem_db_V,  Node_db_V, V_Dist)
+          Call Init_V_Cracks(Geom, Params, MySD_V, Elem_db_V,  Node_db_V,     &
+               & V_Dist)
 !           Call Export (TimeStep+Size(Params%Load)+1)
 	End If  
      Case (Init_V_PREV)        
@@ -126,7 +128,7 @@ Program Rupt2DA
         End If
         STOP
      End Select
-     Call Export_V(TimeStep)
+!     Call Export_V(TimeStep)
 
      Call VecCopy(V_Dist, V_Old, iErr)
 
@@ -142,7 +144,8 @@ Program Rupt2DA
         Call KSPGetConvergedReason(KSP_U, KSP_TestCVG, iErr)
         If (KSP_TestCVG <= 0) Then
            If (MEF90_MyRank == 0) Then
-              Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ', KSP_TestCVG
+              Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',      &
+                   & KSP_TestCVG
            End If
         End If
         Call PetscGetTime(InitTF, iErr)
@@ -159,7 +162,8 @@ Program Rupt2DA
         Call KSPGetConvergedReason(KSP_V, KSP_TestCVG, iErr)
         If (KSP_TestCVG <= 0) Then
            If (MEF90_MyRank == 0) Then
-              Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ', KSP_TestCVG
+              Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',      &
+                   & KSP_TestCVG
            End If
         End If
         Call PetscGetTime(InitTF, iErr)
@@ -213,7 +217,7 @@ Program Rupt2DA
               Call PetscGetTime(TotalTF, iErr)
               Write(Log_Unit, 930) TotalTF - TotalTS
            End If
-           Call Export(TimeStep) 
+
            Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
                 & Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,    &
                 & Node_db_V, F_Loc, Temp_Loc )
@@ -231,6 +235,9 @@ Program Rupt2DA
                    & Tot_Ener(TimeStep)
               Close(Ener_Unit)
            End If
+
+           Call Export(TimeStep) 
+
            EXIT 
         End If
      End Do Do_Iter
