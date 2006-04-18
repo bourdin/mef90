@@ -116,9 +116,17 @@ Program Rupt2DA
 	End If 	
      Case (Init_V_RND)
         If (.NOT. Is_BackTracking) Then
+          Print*, 'Exporting at spot', TimeStep+Size(Params%Load)+1
           Call Init_V_Cracks(Geom, Params, MySD_V, Elem_db_V,  Node_db_V,     &
                & V_Dist)
-!           Call Export (TimeStep+Size(Params%Load)+1)
+           Call Export (TimeStep+Size(Params%Load)+1)
+	End If  
+     Case (Init_V_SPH)
+        If (.NOT. Is_BackTracking) Then
+          Call Init_V_Spheres(Geom, Params, MySD_V, Elem_db_V,  Node_db_V,     &
+               & V_Dist)
+          Print*, 'Exporting at spot', TimeStep+Size(Params%Load)+1
+           Call Export (TimeStep+Size(Params%Load)+1)
 	End If  
      Case (Init_V_PREV)        
 	Continue
