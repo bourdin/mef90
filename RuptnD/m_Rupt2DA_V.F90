@@ -26,6 +26,7 @@ Module m_Rupt2DA_V
   Public :: Assemb_RHS_V
   Public :: Apply_BC_V
   Public :: Init_V_Cracks
+  Public :: Init_V_Spheres
   
   Integer    :: iErr
 
@@ -109,7 +110,10 @@ Contains
           Call Random_Number(Rand_Theta)
           Rand_Theta = Rand_Theta * 2.0_Kr * Pi
           Call Random_Number(Rand_Length)
-          Rand_Length = Rand_Length * Params%MaxCrackLength
+!!! @altech: fix the size of the initial cracks
+!!!          Rand_Length = Rand_Length * Params%MaxCrackLength
+!!!
+          Rand_length = Params%MaxCrackLength
 
           Crack_Loc(iTerCracks*2 - 1) = Nodes_V(Rand_Node)%Coord
           Crack_Loc(iTerCracks*2 )    = Crack_Loc(iTerCracks*2 - 1) 
@@ -168,6 +172,90 @@ Contains
     DeAllocate(Loc_Indices)
     DeAllocate(Crack_Loc)
   End Subroutine Init_V_Cracks
+
+  Subroutine  Init_V_Spheres(Geom, Params, SD, Elems_V,  Nodes_V, V)
+    Type (EXO_Geom_Info)                          :: Geom
+    Type (Rupt_Params)                            :: Params
+    Type (SD_Info)                                :: SD    
+#if defined PB_2D
+    Type (Node2D), Dimension(:), Pointer          :: Nodes_V
+    Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
+#elif defined PB_3D
+    Type (Node3D), Dimension(:), Pointer          :: Nodes_V
+    Type (Element3D_Scal), Dimension(:), Pointer  :: Elems_V
+#else
+    Type (Node2D), Dimension(:), Pointer          :: Nodes_V
+    Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
+#endif
+    Vec                                           :: V
+    
+    Integer                                      :: Rand_Node
+    Real(Kind = Kr)                              :: Length
+    Integer                                      :: iTerCracks,Nb_DoF_V
+    Integer                                      :: iBlk, iE, iEloc, iS, iSG ,i
+    
+    Real(Kind = Kr), Dimension(:), Pointer       :: V_Ptr
+    Integer, Dimension(:), Pointer               :: Loc_Indices
+#if defined PB_3D
+    Type (Vect3D), Dimension(:),Pointer          :: Crack_Loc
+#else
+    Type (Vect2D), Dimension(:),Pointer          :: Crack_Loc
+#endif    
+    Real(Kind = Kr)                              :: Tmp_Node
+    
+    Allocate(Loc_Indices(Geom%Num_Nodes))
+    Loc_Indices = (/ (i ,i = 0, Geom%Num_Nodes-1) /)
+    Call AOApplicationToPETSc(SD%Loc_AO, Geom%Num_Nodes, Loc_Indices, iErr) 
+    
+    Allocate(Crack_Loc(Params%nbCracks))          
+    If (MEF90_MyRank ==0) then  
+       Do_Cracks : Do iTerCracks=1, Params%nbCracks
+          Call Random_Number(Tmp_Node)
+          Rand_Node = int( Tmp_Node * real(Geom%Num_Nodes) + 0.5_Kr)
+          Crack_Loc(iTerCracks) = Nodes_V(Rand_Node)%Coord
+       End Do Do_Cracks
+    End If
+    
+#if defined PB_3D
+    Call MPI_Bcast(Crack_Loc, Params%nbCracks, Vect3D_MPIType, 0,           &
+         & PETSC_COMM_WORLD, iErr)
+#else
+    Call MPI_Bcast(Crack_Loc, Params%nbCracks, Vect2D_MPIType, 0,           &
+         & PETSC_COMM_WORLD,iErr)
+#endif      
+    
+    Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
+       !       Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
+       Nb_Dof_V = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
+       Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
+          iE = Geom%Elem_Blk(iBlk)%ELem_ID(iELoc)
+          If (.NOT. SD%IsLocal_Elem(iE)) Then
+             CYCLE
+          End If
+          Call VecGetArrayF90(V, V_Ptr, iErr)        
+          Do_iS: Do iS = 1, Elems_V(iE)%Nb_DoF
+             iSG = Elems_V(iE)%ID_DoF(iS)
+             If (SD%IsLocal_Node(iSG)) Then
+                Do_Crack : Do iTerCracks=1, Params%nbCracks
+                   Length = sqrt((Crack_Loc(iTerCracks) - Nodes_V(iSG)%Coord)      &
+                        & .DotP. (Crack_Loc(iTerCracks) - Nodes_V(iSG)%Coord))
+                   Length = Max(0.0_Kr, Length - Params%MaxCrackLength)
+                   V_Ptr(Loc_Indices(iSG)+1) = min(V_Ptr(Loc_Indices(iSG)+1), &
+                        & CrackProfile(Length,Params)+.1_Kr)
+                End Do Do_Crack
+             End IF
+          End Do Do_iS
+          Call VecRestoreArrayF90(V, V_Ptr, iErr)
+       End Do Do_iE
+       !       End If  Is_Brittle	  
+    End Do Do_iBlk
+    
+    Call VecGhostUpdateBegin(V, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    Call VecGhostUpdateEnd(V, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    
+    DeAllocate(Loc_Indices)
+    DeAllocate(Crack_Loc)
+  End Subroutine Init_V_Spheres
 
 
 
