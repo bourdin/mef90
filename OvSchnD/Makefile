@@ -4,7 +4,7 @@ VER=1
 all: $(PROJ)$(DIM)-$(VER) 
 
 MEF90VER        = 0.12.0
-MEF90DIR        = $(HOME)/mef90/MEF90-$(MEF90VER)
+MEF90DIR        = $(MEF90ROOT)/MEF90-$(MEF90VER)
 MEF90OBJS       = $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
                   $(MEF90DIR)/m_MEF_Types.o     $(MEF90DIR)/m_MEF_Tools.o \
                   $(MEF90DIR)/m_MEF_IO.o        $(MEF90DIR)/m_MEF_Gauss.o \
