@@ -1130,6 +1130,8 @@ Contains
        !!     Call KSPSetType(KSP_CO_Seq,  KSPCG, iErr)
        Call KSPGetPC(KSP_CO_Seq, PC_CO_Seq, iErr)
        Call PCSetType(PC_CO_Seq, PCLU, iErr)
+       Call PCFactorSetZeroPivot(PC_CO_Seq, 1.0D-30)
+
        !!     Tol = 0.1
 !!!     Call KSPSetTolerances(KSP_CO_Seq, Tol,                               &
 !!!           & PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,  &
