@@ -16,8 +16,7 @@ Program Prep_Rupt
 
   Character                                       :: JobType
   
-  Type(Vect3D)                                    :: BC_U_NS
-  Type(Vect3D), Dimension(:), Pointer             :: Force_EB
+  Type(Vect3D), Dimension(:), Pointer             :: BC_U_NS
 
 
   Type (Rupt_Params)                              :: Params
@@ -96,8 +95,7 @@ Program Prep_Rupt
         Geom%exoid = EXCRE (Geom%filename, EXCLOB, exo_cpu_ws, exo_io_ws,  &
                 & iErr)
 
-        Call Ask_Rupt_Params(Geom, Params, Force_EB)
-
+        Call Ask_Rupt_Params(Geom, Params, BC_U_NS)
 
         Write(*,*) 'Updating geometrical information...'
         Call Write_EXO_Geom_Info(Geom)
@@ -112,7 +110,7 @@ Program Prep_Rupt
            Call Write_Rupt_DATA(Geom, Params)    
                
            Write(*,*) 'Writing Boundary conditions'
-           Call Write_BC2D(Geom, Params, Node2D_db, PB_Type)
+           Call Write_BC2D(Geom, Params, Node2D_db, PB_Type, BC_U_NS)
            Write(*,*) 'Writing Forces'
            Call Write_Forces2D(Geom, Params, Node2D_db, PB_Type)
            Write(*,*) 'Writing Temperature field'
@@ -126,7 +124,7 @@ Program Prep_Rupt
            Call Write_Rupt_DATA(Geom, Params)        
 
            Write(*,*) 'Writing Boundary conditions'
-           Call Write_BC3D(Geom, Params, Node3D_db, PB_Type)
+           Call Write_BC3D(Geom, Params, Node3D_db, PB_Type, BC_U_NS)
            Write(*,*) 'Writing Forces'
            Call Write_Forces3D(Geom, Params, Node3D_db, PB_Type)
            Write(*,*) 'Writing Temperature field'
@@ -159,11 +157,12 @@ Program Prep_Rupt
 !200 Format('Elem ', I3, ' ID ', I3, '  DoF ', 16(I4))
 
 Contains
-  Subroutine Write_BC3D(Geom, Params, Node_db, PB_Type)
+  Subroutine Write_BC3D(Geom, Params, Node_db, PB_Type, BC_NS)
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
     Type (Node3D), Dimension(:), Pointer          :: Node_db
     Integer, Intent(IN)                           :: PB_Type
+    Type (Vect3D), Dimension(:), Pointer          :: BC_NS
     
     Integer                                       :: iTS, iNode, iSet
     Type(Vect3D), Dimension(:), Pointer           :: BC_Result, BC_Unit
@@ -183,38 +182,40 @@ Contains
     BC_Unit%Z = 0.0_Kr
 
     Do iSet = 1, Geom%Num_Node_Sets
+       Print*, Geom%Node_Set(iSet)%Num_Nodes
        If (Params%BC_Type_X(iSet) == 1) Then
           Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%X =                  &
-                  & Geom%Node_Set(iSet)%Dist_Factor(1)
+             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%X = BC_NS(iSet)%X
           End Do
        End If
        If (Params%BC_Type_Y(iSet) == 1) Then
           Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Y =                  &
-                  & Geom%Node_Set(iSet)%Dist_Factor(2)
+             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Y = BC_NS(iSet)%Y
           End Do
        End If
        If (Params%BC_Type_Z(iSet) == 1) Then
           Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Z =                  &
-                  & Geom%Node_Set(iSet)%Dist_Factor(3)
+             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Z = BC_NS(iSet)%Z
           End Do
        End If
+       Print*, 'Params%BC_Type_X(iSet)', Params%BC_Type_X(iSet)
+       Print*, 'Params%BC_Type_Y(iSet)', Params%BC_Type_Y(iSet)
+       Print*, 'Params%BC_Type_Z(iSet)', Params%BC_Type_Z(iSet)
+      Print*, 'Done generating BC_Unit for nodeset', iSet
     End Do
     
-	Select Case (PB_Type)
-	Case (PB_Gen)
-	   Do iTS = 1, Size(Params%Load)
-	      BC_Result%X = Params%Load(iTS) * BC_Unit%X
+    Select Case (PB_Type)
+    Case (PB_Gen)
+       Do iTS = 1, Size(Params%Load)
+          BC_Result%X = Params%Load(iTS) * BC_Unit%X
     	  BC_Result%Y = Params%Load(iTS) * BC_Unit%Y
           BC_Result%Z = Params%Load(iTS) * BC_Unit%Z
-           
+          
           Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
           Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
        End Do
     Case (PB_CylTwist_3D)    
-	   Do iTS = 1, Size(Params%Load)
+       Do iTS = 1, Size(Params%Load)
           Theta = Params%Load(iTS) * Pi / 180.0_Kr 
           Do iS = 1, Geom%Num_Nodes          
              BC_Result(iS)%X =                                                &
@@ -231,32 +232,33 @@ Contains
           Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
           Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
        End Do
-	Case (PB_MixedMode)
+    Case (PB_MixedMode)
        Write(*,*) 'Theta? '
        Read*, Theta
        Theta = Theta * Pi / 180.0_Kr 
-	   Do iTS = 1, Size(Params%Load)
+       Do iTS = 1, Size(Params%Load)
           Do iS = 1, Geom%Num_Nodes          
              BC_Result(iS)%X = Cos(Theta) * BC_Unit(iS)%X * Params%Load(iTS)
              BC_Result(iS)%Y = Sin(Theta) * BC_Unit(iS)%Y * Params%Load(iTS)
              BC_Result(iS)%Z = 0.0_Kr
           End Do
-
+          
           Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
           Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
        End Do
-	Case Default
-	   Write(*,*) 'Unkown dimension / PB_Type combination in Write_BC3D'
-	End Select
-
+    Case Default
+       Write(*,*) 'Unkown dimension / PB_Type combination in Write_BC3D'
+    End Select
+    
     DeAllocate (BC_Result, BC_Unit, V_Init)
   End Subroutine Write_BC3D
 
-  Subroutine Write_BC2D(Geom, Params, Node_db, PB_Type)
+  Subroutine Write_BC2D(Geom, Params, Node_db, PB_Type, BC_NS)
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
     Type (Node2D), Dimension(:), Pointer          :: Node_db
     Integer, Intent(IN)                           :: PB_Type
+    Type(Vect3D), Dimension(:), Pointer           :: BC_NS
     
     Integer                                       :: iTS, iNode, iSet
     Type(Vect2D), Dimension(:), Pointer           :: BC_Result, BC_Unit
@@ -277,14 +279,12 @@ Contains
     Do iSet = 1, Geom%Num_Node_Sets
        If (Params%BC_Type_X(iSet) == 1) Then
           Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%X =                  &
-                  & Geom%Node_Set(iSet)%Dist_Factor(1)
+             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%X = BC_NS(iSet)%X
           End Do
        End If
        If (Params%BC_Type_Y(iSet) == 1) Then
           Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Y =                  &
-                  & Geom%Node_Set(iSet)%Dist_Factor(2)
+             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Y = BC_NS(iSet)%Y
           End Do
        End If
     End Do
@@ -318,11 +318,12 @@ Contains
     DeAllocate (BC_Result, BC_Unit, V_Init)
   End Subroutine Write_BC2D
 
-  Subroutine Write_BC2DA(Geom, Params, Node_db, PB_Type)
+  Subroutine Write_BC2DA(Geom, Params, Node_db, PB_Type, BC_NS)
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
     Type (Node2D), Dimension(:), Pointer          :: Node_db
     Integer, Intent(IN)                           :: PB_Type
+    Type(Vect3D), Dimension(:), Pointer           :: BC_NS
     
     Integer                                       :: iTS, iNode, iSet
     Real(Kind = Kr), Dimension(:), Pointer        :: BC_Result, BC_Unit
@@ -342,9 +343,7 @@ Contains
     Do iSet = 1, Geom%Num_Node_Sets
        If (Params%BC_Type_Z(iSet) == 1) Then
           Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode)) =                  &
-                  & Geom%Node_Set(iSet)%Dist_Factor(3)
-!!! CAN'T DO THAT A 2D MESH HAS ONLY 2 DIST_FACTOR PER NODE...
+             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode)) = BC_NS(iSet)%Z
           End Do
        End If
     End Do
@@ -536,14 +535,15 @@ Contains
   100 Format(A)
   End Subroutine Write_Temp2D
 
-  Subroutine Ask_Rupt_Params(Geom, Params, Force_EB)
+  Subroutine Ask_Rupt_Params(Geom, Params, BC_NS)
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
-    Type(Vect3D), Dimension(:), Pointer           :: Force_EB
+    Type(Vect3D), Dimension(:), Pointer           :: BC_NS
     
     Character                                     :: Char_Input
     Integer                                       :: Num_TS
     Real(Kind = Kr)                               :: TS_init, TS_Final
+    Real(Kind = Kr)                               :: Tmp_DistFactor
     Integer                                       :: i, iBlk, iSet
     Integer                                       :: Blk_ID, Set_ID
 
@@ -586,8 +586,7 @@ Contains
        Read(*,*) TS_Final
        Params%Load = (/ (TS_Init + (i-1.0)*(TS_Final - TS_Init)            &
             & / (Num_TS - 1.0_Kr), i = 1,Num_TS) /)
-    End If
-!    Print*, 'Load vector: ', Params%Load
+    End If!    Print*, 'Load vector: ', Params%Load
     Write(*, 100, advance = 'no')'Do_BackTrack [T/F]          '    
     Read(*,200) Params%Do_BackTrack
     If (Params%Do_BackTrack) Then
@@ -649,24 +648,27 @@ Contains
     Allocate (Params%BC_Type_X(Geom%Num_Node_Sets))
     Allocate (Params%BC_Type_Y(Geom%Num_Node_Sets))
     Allocate (Params%BC_Type_Z(Geom%Num_Node_Sets))
+    Allocate (BC_NS(Geom%Num_Node_Sets))
 
+    BC_NS%X = 0.0_Kr
+    BC_NS%Y = 0.0_Kr
+    BC_NS%Z = 0.0_Kr
     Do iSet = 1, Geom%Num_Node_Sets
        Set_ID = Geom%Node_Set(iSet)%ID
        Write(*,400) Set_ID
        Write(*,100, advance = 'no') 'BC U type, X direction (None=0 DIRI = 1) '
 
-       Geom%Node_Set(Set_ID)%Dist_Factor = 0.0_Kr
        Read(*,*) Params%BC_Type_X(iSet) 
        If (Params%BC_Type_X(iSet) == 1) Then
           Write(*,100, advance = 'no') 'BC U, X direction                     '
-          Read(*,*) Geom%Node_Set(Set_ID)%Dist_Factor(1)
+          Read(*,*) BC_NS(iSet)%X
        End If
        
        Write(*,100,advance = 'no') 'BC U type, Y direction (None=0 DIRI = 1) '
        Read(*,*) Params%BC_Type_Y(iSet) 
        If (Params%BC_Type_Y(iSet) == 1) Then
           Write(*,100, advance = 'no') 'BC U, Y direction                    '
-          Read(*,*)  Geom%Node_Set(Set_ID)%Dist_Factor(2)
+          Read(*,*) BC_NS(iSet)%Y
        End If
        
        If (Geom%Num_Dim == 3) Then
@@ -674,12 +676,11 @@ Contains
           Read(*,*) Params%BC_Type_Z(iSet) 
           If (Params%BC_Type_Z(iSet) == 1) Then
              Write(*,100, advance = 'no') 'BC U, Z direction                    '
-             Read(*,*)  Geom%Node_Set(Set_ID)%Dist_Factor(3)
+             Read(*,*) BC_NS(iSet)%Z 
           End If
        End If
     End Do
-
-
+    
 100 Format(A)
 200 Format(L1)
 300 Format('=== Element Block             ', I3)
