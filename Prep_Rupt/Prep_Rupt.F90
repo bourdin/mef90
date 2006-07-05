@@ -116,7 +116,7 @@ Program Prep_Rupt
            Write(*,*) 'Writing Temperature field'
            Call Write_Temp2D(Geom, Params, Node2D_db, PB_Type)
         Case(3)
-		   Write(*,100, advance = 'no') 'Writing Coordinates / Connectivity'
+           Write(*,100, advance = 'no') 'Writing Coordinates / Connectivity'
            Call Write_EXO_Node_Coord(Geom, Node3D_db, 1)
            Call Write_EXO_Connect(Geom, Elem3D_db)
            Write(*,*) 'Writing problem parameters...'
@@ -261,21 +261,25 @@ Contains
     Type(Vect3D), Dimension(:), Pointer           :: BC_NS
     
     Integer                                       :: iTS, iNode, iSet
-    Type(Vect2D), Dimension(:), Pointer           :: BC_Result, BC_Unit
+    Type(Vect3D), Dimension(:), Pointer           :: BC_Result, BC_Unit
+    Real(Kind = Kr), Dimension(:), Pointer        :: BC_2DA
     Real(Kind = Kr), Dimension(:), Pointer        :: V_Init
     Real(Kind = Kr)                               :: Theta
-
-    !!! Generates BC vector from the TS informations and the
-    !!! Load factor. 
-    !!! Saves them as the result for the displacement
+    
+!!! Generates BC vector from the TS informations and the
+!!! Load factor. 
+!!! Saves them as the result for the displacement
     Allocate (BC_Result(Geom%Num_Nodes))
     Allocate (BC_Unit(Geom%Num_Nodes))
+    Allocate (BC_2DA(Geom%Num_Nodes))
     Allocate (V_Init(Geom%Num_Nodes))
+
     V_Init = 1.0_Kr
     
     BC_Unit%X = 0.0_Kr
     BC_Unit%Y = 0.0_Kr
-
+    BC_Unit%Z = 0.0_Kr
+    
     Do iSet = 1, Geom%Num_Node_Sets
        If (Params%BC_Type_X(iSet) == 1) Then
           Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
@@ -287,37 +291,49 @@ Contains
              BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Y = BC_NS(iSet)%Y
           End Do
        End If
+       If (Params%BC_Type_Z(iSet) == 1) Then
+          Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
+             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Z = BC_NS(iSet)%Z
+          End Do
+       End If
     End Do
     
-	Select Case (PB_Type)
-	Case (PB_Gen, PB_Dipping)
-	   Do iTS = 1, Size(Params%Load)
-	      BC_Result%X = Params%Load(iTS) * BC_Unit%X
+    Select Case (PB_Type)
+    Case (PB_Gen, PB_Dipping)
+       Do iTS = 1, Size(Params%Load)
+          BC_Result%X = Params%Load(iTS) * BC_Unit%X
     	  BC_Result%Y = Params%Load(iTS) * BC_Unit%Y
-           
+          
           Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
           Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
        End Do
-	Case (PB_MixedMode)
+    Case (PB_MixedMode)
        Write(*,*) 'Theta? '
        Read*, Theta
        Theta = Theta * Pi / 180.0_Kr 
-	   Do iTS = 1, Size(Params%Load)
+       Do iTS = 1, Size(Params%Load)
           Do iS = 1, Geom%Num_Nodes          
              BC_Result(iS)%X = Cos(Theta) * BC_Unit(iS)%X * Params%Load(iTS)
              BC_Result(iS)%Y = Sin(Theta) * BC_Unit(iS)%Y * Params%Load(iTS)
           End Do
-
+          
           Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
           Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
        End Do
-	Case Default
-	   Write(*,*) 'Unkown dimension / PB_Type combination in Write_BC2D'
-	End Select
-
+    Case (PB_Antiplane)
+       Do iTS = 1, Size(Params%Load)
+          BC_2DA = Params%Load(iTS) * BC_Unit%Z
+          
+          Call Write_EXO_Result_Nodes(Geom, 4, iTS, BC_2DA)
+          Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
+       End Do
+    Case Default
+       Write(*,*) 'Unkown dimension / PB_Type combination in Write_BC2D'
+    End Select
+    
     DeAllocate (BC_Result, BC_Unit, V_Init)
   End Subroutine Write_BC2D
-
+  
   Subroutine Write_BC2DA(Geom, Params, Node_db, PB_Type, BC_NS)
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
@@ -671,14 +687,14 @@ Contains
           Read(*,*) BC_NS(iSet)%Y
        End If
        
-       If (Geom%Num_Dim == 3) Then
+!       If (Geom%Num_Dim == 3) Then
           Write(*,100,advance = 'no') 'BC U type, Z direction (None=0 DIRI = 1) '
           Read(*,*) Params%BC_Type_Z(iSet) 
           If (Params%BC_Type_Z(iSet) == 1) Then
              Write(*,100, advance = 'no') 'BC U, Z direction                    '
              Read(*,*) BC_NS(iSet)%Z 
           End If
-       End If
+!       End If
     End Do
     
 100 Format(A)
