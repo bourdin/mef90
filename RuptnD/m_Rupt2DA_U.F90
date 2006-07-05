@@ -121,6 +121,7 @@ Contains
 
 #ifdef PB_2DA
        Nb_DoF_U = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
+       K2 = E / (1.0_Kr + nu) * InvOf2
 #else
        Nb_DoF_U = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
 #endif
@@ -190,7 +191,7 @@ Contains
                         & Elems_U(iE)%Gauss_C(iG) *                           &
                         & ( ContrV(iG) + Params%Kepsilon ) *                  &
                         & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.             &
-                        &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) * Mu
+                        &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) * K2
 #else                   
                    MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
                         & Elems_U(iE)%Gauss_C(iG) * ContrV(iG) *              &

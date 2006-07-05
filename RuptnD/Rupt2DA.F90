@@ -116,17 +116,17 @@ Program Rupt2DA
 	End If 	
      Case (Init_V_RND)
         If (.NOT. Is_BackTracking) Then
-          Print*, 'Exporting at spot', TimeStep+Size(Params%Load)+1
+!          Print*, 'Exporting at spot', TimeStep+Size(Params%Load)+1
           Call Init_V_Cracks(Geom, Params, MySD_V, Elem_db_V,  Node_db_V,     &
                & V_Dist)
-           Call Export (TimeStep+Size(Params%Load)+1)
+!           Call Export (TimeStep+Size(Params%Load)+1)
 	End If  
      Case (Init_V_SPH)
         If (.NOT. Is_BackTracking) Then
           Call Init_V_Spheres(Geom, Params, MySD_V, Elem_db_V,  Node_db_V,     &
                & V_Dist)
-          Print*, 'Exporting at spot', TimeStep+Size(Params%Load)+1
-           Call Export (TimeStep+Size(Params%Load)+1)
+!          Print*, 'Exporting at spot', TimeStep+Size(Params%Load)+1
+!           Call Export (TimeStep+Size(Params%Load)+1)
 	End If  
      Case (Init_V_PREV)        
 	Continue
@@ -180,7 +180,13 @@ Program Rupt2DA
         If (MEF90_MyRank == 0) Then
            Write(Log_Unit, 600) NbIterKSP, InitTF - InitTS, KSP_TestCVG
         End If
-        
+
+!!$!!! Caltech 2006-04 save all intermediate steps       
+!!$        If (MEF90_MyRank == 0) Then
+!!$           Write(Log_Unit, *) 'EXPORTING TMP RESULT'
+!!$        End If
+!!$        Call Export(TimeStep+iIter+1) 
+!!$!!!
 
         Call VecMax(V_Dist, VMaxPos, VMax, iErr)
         Call VecMin(V_Dist, VMinPos, VMin, iErr)

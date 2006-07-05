@@ -137,6 +137,10 @@ Contains
             (1.0_Kr - 2.0_Kr * Params%Poisson_Ratio(iBlk) )
 #endif
 
+#ifdef PB_2DA
+       K2 = E / (1.0_Kr + nu) * InvOf2
+#endif
+
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%Elem_ID(iELoc)
           If ((.NOT. SD_U%IsLocal_Elem(iE)) .OR.                              &
@@ -206,7 +210,7 @@ Contains
                         & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.             &
                         &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) *                &
                         &  UPtr(Loc_Indices_U(iSGSig)+1) *                    &
-                        &  UPtr(Loc_Indices_U(iSGEps)+1) * Mu
+                        &  UPtr(Loc_Indices_U(iSGEps)+1) * K2 * ContrV(iG)
 #else                   
                    ContrU(iG) = ContrU(iG) +                                  &
                         & ( Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.            &
@@ -225,14 +229,14 @@ Contains
                    iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
                    Do_iGF: Do iG = 1, Nb_Gauss
 #ifdef PB_2DA                  
-                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1)* &
-                           & FPtr(Loc_Indices_U(iSGSig)+1) *                   &
-                           & Elems_U(iE)%BF(iSLSig, iG) *                      &
-                           & Elems_U(iE)%BF(iSLEps, iG)
+                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1)*&
+                           & FPtr(Loc_Indices_U(iSGSig)+1) *                  &
+                           & Elems_U(iE)%BF(iSLSig, iG) *                     &
+                           & Elems_U(iE)%BF(iSLEps, iG) 
 #else
-                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1)* &
-                           & FPtr(Loc_Indices_U(iSGSig)+1) *                   &
-                           & (Elems_U(iE)%BF(iSLSig, iG) .DotP.                &
+                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1)*&
+                           & FPtr(Loc_Indices_U(iSGSig)+1) *                  &
+                           & (Elems_U(iE)%BF(iSLSig, iG) .DotP.               &
                            & Elems_U(iE)%BF(iSLEps, iG) )
 #endif
                    End Do Do_iGF
