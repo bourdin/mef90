@@ -25,11 +25,11 @@ Module m_Poisson3D_Vars
   Mat, Public                                           :: MR
 
   Vec, Public                                           :: RHS_U
-  Vec, Public                                           :: U_Dist, U_Loc, U_Master
+  Vec, Public                                           :: U
   Real(Kind = Kr), Dimension(:), Pointer, Public        :: U_Ptr
   Integer, Public                                       :: UMin, UMax
 
-  Vec, Public                                           :: Load_Dist, Load_Loc, Load_Master
+  Vec, Public                                           :: Load
   Real(Kind = Kr), Dimension(:), Pointer, Public        :: Load_Ptr
 
   KSP, Public                                           :: KSP_U
@@ -48,7 +48,6 @@ Module m_Poisson3D_Vars
 
   Type(EXO_Geom_Info), Public                           :: Geom
   Type(Poisson_Params), Public                          :: Params
-  Type(SD_Info), Public                                 :: MySD
 
   Integer, Public                                       :: iErr
   Integer, Public                                       :: iIter

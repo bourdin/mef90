@@ -53,7 +53,7 @@ Program Poisson3D
 
   Call PetscGetTime(SolveTS, iErr)
 !  Call MatView(MR, PETSC_VIEWER_STDOUT_WORLD, iErr)
-  Call KSPSolve(KSP_U, RHS_U, U_Dist, iErr)
+  Call KSPSolve(KSP_U, RHS_U, U, iErr)
   Call PetscGetTime(SolveTF, iErr)
   Call KSPGetIterationNumber(KSP_U, NbIter, iErr)
   If (MEF90_MyRank == 0) Then
@@ -67,8 +67,9 @@ Program Poisson3D
 
   Call SaveToEXO()
 !  Call SaveToEnsight()
-!  Call VecView(U_Dist, PETSC_VIEWER_STDOUT_WORLD, iErr)
+  Call VecView(U, PETSC_VIEWER_STDOUT_WORLD, iErr)
   Call Finalize()
+
 
 
 
