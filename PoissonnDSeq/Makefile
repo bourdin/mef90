@@ -1,4 +1,4 @@
-PROJ            = Poisson
+PROJ            = PoissonSeq
 VER             = 0.12.2
 MEF90VER        = 0.12.0
 
@@ -36,7 +36,7 @@ ${PROJ}-${VER}:
 # Dependencies
 m_Poisson${DIM}_Vars.o:  ${MEF90OBJS}
 m_Poisson${DIM}_Proc.o:  ${MEF90OBJS} m_Poisson${DIM}_Vars.o
-Poisson${DIM}.o:         ${MEF90OBJS} m_Poisson${DIM}_Vars.o m_Poisson${DIM}_Proc.o
+PoissonSeq${DIM}.o:         ${MEF90OBJS} m_Poisson${DIM}_Vars.o m_Poisson${DIM}_Proc.o
 
 
 
