@@ -247,7 +247,7 @@ Contains
           Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
        End Do
     Case Default
-       Write(*,*) 'Unkown dimension / PB_Type combination in Write_BC3D'
+       Write(*,*) 'Unknown dimension / PB_Type combination in Write_BC3D'
     End Select
     
     DeAllocate (BC_Result, BC_Unit, V_Init)
@@ -279,7 +279,10 @@ Contains
     BC_Unit%X = 0.0_Kr
     BC_Unit%Y = 0.0_Kr
     BC_Unit%Z = 0.0_Kr
-    
+    BC_Result%X = 0.0_Kr
+    BC_Result%Y = 0.0_Kr
+    BC_Result%Z = 0.0_Kr
+       
     Do iSet = 1, Geom%Num_Node_Sets
        If (Params%BC_Type_X(iSet) == 1) Then
           Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
@@ -322,62 +325,63 @@ Contains
        End Do
     Case (PB_Antiplane)
        Do iTS = 1, Size(Params%Load)
-          BC_2DA = Params%Load(iTS) * BC_Unit%Z
+          BC_Result%Z = Params%Load(iTS) * BC_Unit%Z
+!          BC_2DA = Params%Load(iTS) * BC_Unit%Z
           
-          Call Write_EXO_Result_Nodes(Geom, 4, iTS, BC_2DA)
+          Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
           Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
        End Do
     Case Default
-       Write(*,*) 'Unkown dimension / PB_Type combination in Write_BC2D'
+       Write(*,*) 'Unknown dimension / PB_Type combination in Write_BC2D'
     End Select
     
     DeAllocate (BC_Result, BC_Unit, V_Init)
   End Subroutine Write_BC2D
   
-  Subroutine Write_BC2DA(Geom, Params, Node_db, PB_Type, BC_NS)
-    Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
-    Type (Node2D), Dimension(:), Pointer          :: Node_db
-    Integer, Intent(IN)                           :: PB_Type
-    Type(Vect3D), Dimension(:), Pointer           :: BC_NS
-    
-    Integer                                       :: iTS, iNode, iSet
-    Real(Kind = Kr), Dimension(:), Pointer        :: BC_Result, BC_Unit
-    Real(Kind = Kr), Dimension(:), Pointer        :: V_Init
-    Real(Kind = Kr)                               :: Theta
-
-    !!! Generates BC vector from the TS informations and the
-    !!! Load factor. 
-    !!! Saves them as the result for the displacement
-    Allocate (BC_Result(Geom%Num_Nodes))
-    Allocate (BC_Unit(Geom%Num_Nodes))
-    Allocate (V_Init(Geom%Num_Nodes))
-    V_Init = 1.0_Kr
-    
-    BC_Unit = 0.0_Kr
-
-    Do iSet = 1, Geom%Num_Node_Sets
-       If (Params%BC_Type_Z(iSet) == 1) Then
-          Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode)) = BC_NS(iSet)%Z
-          End Do
-       End If
-    End Do
-    
-	Select Case (PB_Type)
-	Case (PB_Antiplane)
-	   Do iTS = 1, Size(Params%Load)
-	      BC_Result = Params%Load(iTS) * BC_Unit
-           
-          Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
-          Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
-       End Do
-	Case Default
-	   Write(*,*) 'Unkown dimension / PB_Type combination in Write_BC2DA'
-	End Select
-
-    DeAllocate (BC_Result, BC_Unit, V_Init)
-  End Subroutine Write_BC2DA
+!  Subroutine Write_BC2DA(Geom, Params, Node_db, PB_Type, BC_NS)
+!    Type (EXO_Geom_Info)                          :: Geom
+!    Type (Rupt_Params)                            :: Params
+!    Type (Node2D), Dimension(:), Pointer          :: Node_db
+!    Integer, Intent(IN)                           :: PB_Type
+!    Type(Vect3D), Dimension(:), Pointer           :: BC_NS
+!    
+!    Integer                                       :: iTS, iNode, iSet
+!    Real(Kind = Kr), Dimension(:), Pointer        :: BC_Result, BC_Unit
+!    Real(Kind = Kr), Dimension(:), Pointer        :: V_Init
+!    Real(Kind = Kr)                               :: Theta
+!
+!    !!! Generates BC vector from the TS informations and the
+!    !!! Load factor. 
+!    !!! Saves them as the result for the displacement
+!    Allocate (BC_Result(Geom%Num_Nodes))
+!    Allocate (BC_Unit(Geom%Num_Nodes))
+!    Allocate (V_Init(Geom%Num_Nodes))
+!    V_Init = 1.0_Kr
+!    
+!    BC_Unit = 0.0_Kr
+!
+!    Do iSet = 1, Geom%Num_Node_Sets
+!       If (Params%BC_Type_Z(iSet) == 1) Then
+!          Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
+!             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode)) = BC_NS(iSet)%Z
+!          End Do
+!       End If
+!    End Do
+!    
+!	Select Case (PB_Type)
+!	Case (PB_Antiplane)
+!	   Do iTS = 1, Size(Params%Load)
+!	      BC_Result = Params%Load(iTS) * BC_Unit
+!           
+!          Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
+!          Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
+!       End Do
+!	Case Default
+!	   Write(*,*) 'Unkown dimension / PB_Type combination in Write_BC2DA'
+!	End Select
+!
+!    DeAllocate (BC_Result, BC_Unit, V_Init)
+!  End Subroutine Write_BC2DA
 
   Subroutine Write_Forces3D(Geom, Params, Node_db, PB_Type)
     Type (EXO_Geom_Info)                          :: Geom
