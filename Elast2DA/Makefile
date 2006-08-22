@@ -1,4 +1,4 @@
-PROJ            = Elast
+PROJ            = Elast2DA
 VER             = 0.12.trunk
 MEF90VER        = 0.12.0
 MEF90DIR        = $(MEF90ROOT)/MEF90-$(MEF90VER)
@@ -16,27 +16,18 @@ M_RUPT_STRUCT_OBJS = $(M_RUPT_STRUCT_DIR)/m_Rupt_Struct.o
 EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
 EXO_LFLAGS      = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf 
 
-all: ${PROJ}${DIM}-${VER}
+all: ${PROJ}-${VER}
 
-#include ../Makefile.${PETSC_ARCH}
 include ${PETSC_DIR}/bmake/common/base
 
-OBJS=    ${PROJ}${DIM}.o m_Elast${DIM}_Vars.o m_Elast${DIM}_Proc.o            \
-         m_Elast${DIM}_Debug.o
-FFLAGS = -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS} -nothreads        \
-         -DMEF90_TIMING -DPB_${DIM}
-#  -CB -traceback
+OBJS=    ${PROJ}.o m_Elast2DA_Vars.o m_Elast2DA_Proc.o
+FFLAGS = -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS} -nothreads
 
-${PROJ}${DIM}-${VER}: ${PROJ}${DIM}.o
-	-${FLINKER} -nothreads -o ${PROJ}${DIM}-${VER} ${OBJS} ${MEF90OBJS}   \
+${PROJ}-${VER}: ${PROJ}.o
+	-${FLINKER} -nothreads -o ${PROJ}-${VER} ${OBJS} ${MEF90OBJS}   \
           ${M_RUPT_STRUCT_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
 
-${PROJ}-${VER}:
-        -@ echo use 'make DIM=2D' or 'make DIM=3D'
-
 # Dependences
-m_Elast${DIM}_Vars.o:  ${MEF90OBJS}
-m_Elast${DIM}_Proc.o:  ${MEF90OBJS} m_Elast${DIM}_Vars.o m_Elast${DIM}_Debug.o
-m_Elast${DIM}_Debug.o: ${MEF90OBJS} m_Elast${DIM}_Vars.o
-Elast${DIM}.o:         ${MEF90OBJS} m_Elast${DIM}_Vars.o m_Elast${DIM}_Proc.o \
-                        m_Elast${DIM}_Debug.o
+m_Elast2DA_Vars.o:  ${MEF90OBJS}
+m_Elast2DA_Proc.o:  ${MEF90OBJS} m_Elast2DA_Vars.o
+Elast2DA.o:         ${MEF90OBJS} m_Elast2DA_Vars.o m_Elast2DA_Proc.o
