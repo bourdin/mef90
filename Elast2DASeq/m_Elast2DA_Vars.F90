@@ -19,14 +19,11 @@ Module m_Elast2DA_Vars
   Mat, Public                                           :: MR
   Vec, Public                                           :: RHS, RHS_Loc
 
-  Vec, Public                                           :: SOL_Dist, SOL_Loc
-  Vec, Public                                           :: SOL_Master
+  Vec, Public                                           :: SOL
                                                         
-  Vec, Public                                           :: BC_Dist, BC_Loc
-  Vec, Public                                           :: BC_Master
+  Vec, Public                                           :: BC
 
-  Vec, Public                                           :: F_Dist, F_Loc
-  Vec, Public                                           :: F_Master
+  Vec, Public                                           :: F
 
   KSP, Public                                           :: KSP_MR
   PC, Public                                            :: PC_MR
@@ -41,7 +38,6 @@ Module m_Elast2DA_Vars
 
   Type(EXO_Geom_Info), Public                           :: Geom
   Type(Rupt_Params), Public                             :: Params
-  Type(SD_Info), Public                                 :: MySD
 
   Integer, Public                                       :: iErr
   Integer, Public                                       :: TimeStep

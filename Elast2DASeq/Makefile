@@ -1,4 +1,4 @@
-PROJ            = Elast2DA
+PROJ            = Elast2DASeq
 VER             = 0.12.trunk
 MEF90VER        = 0.12.0
 MEF90DIR        = $(MEF90ROOT)/MEF90-$(MEF90VER)
@@ -30,4 +30,4 @@ ${PROJ}-${VER}: ${PROJ}.o
 # Dependences
 m_Elast2DA_Vars.o:  ${MEF90OBJS}
 m_Elast2DA_Proc.o:  ${MEF90OBJS} m_Elast2DA_Vars.o
-Elast2DA.o:         ${MEF90OBJS} m_Elast2DA_Vars.o m_Elast2DA_Proc.o
+Elast2DASeq.o:      ${MEF90OBJS} m_Elast2DA_Vars.o m_Elast2DA_Proc.o
