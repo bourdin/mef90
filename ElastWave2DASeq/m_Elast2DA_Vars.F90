@@ -20,6 +20,11 @@ Module m_Elast2DA_Vars
   Vec, Public                                           :: RHS, RHS_Loc
 
   Vec, Public                                           :: SOL
+  Vec, Public						:: U
+  Vec, Public						:: U_old
+  Vec, Public						:: U_t
+  Vec, Public						:: U_t_old
+
                                                         
   Vec, Public                                           :: BC
 

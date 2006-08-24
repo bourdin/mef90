@@ -63,7 +63,7 @@ Contains
          & Geom%Num_Nodes, '\n'c
     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
     Write(CharBuffer,*) 'Number of elements:                       ',      &
-         & Geom%Num_Elems, '\n'c
+         & Geom%Num_Elems, '\n'
     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
     Call Init_BC(Geom, Params, Node_db)
@@ -117,10 +117,16 @@ Contains
   Subroutine Export()
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
     
-    Call VecGetArrayF90(SOL, Sol_Ptr, iErr)
+    Call VecGetArrayF90(U, Sol_Ptr, iErr)
     Call Write_EXO_Result_Ptr_Nodes(Geom, 4, TimeStep, SOL_Ptr)
     Write(*,90) MinVal(Sol_Ptr), MaxVal(SOL_Ptr)
-    Call VecRestoreArrayF90(SOL, SOL_Ptr, iErr)
+    Call VecRestoreArrayF90(U, SOL_Ptr, iErr)
+
+    Call VecGetArrayF90(U_t, Sol_Ptr, iErr)
+    Call Write_EXO_Result_Ptr_Nodes(Geom, 7, TimeStep, SOL_Ptr)
+    Write(*,90) MinVal(Sol_Ptr), MaxVal(SOL_Ptr)
+    Call VecRestoreArrayF90(U_t, SOL_Ptr, iErr)
+
 
 90  Format('Displacement Min / max: ', 2(ES10.3,' '))
   End Subroutine Export
@@ -214,18 +220,25 @@ Contains
 
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%ELem_ID(iELoc)
-
+          
           Call Init_Gauss_EXO(Elem_db, Node_db, Geom, GaussOrder, Elem=iE)
 
           MR_Elem = 0.0_Kr
           Nb_Gauss = Elem_db(iE)%Nb_Gauss
           Do_iSLSig: Do iSLSig = 1, Nb_DoF
              ISGSig = Elem_db(iE)%ID_DoF(iSLSig)
-                
+             If ( Node_db(ISGSig)%BC /= BC_Type_NONE ) Then
+                Cycle
+             End if
+   
              Do iG = 1, Nb_Gauss
              End Do
              Do_iSLEps: Do iSLEps = 1, Nb_DoF
                 iSGEps = Elem_db(iE)%ID_DoF(iSLEps)
+                If ( Node_db(iSGEps)%BC /= BC_Type_NONE ) Then
+                   Cycle
+                End if
+
                 Do iG = 1, Nb_Gauss
                    MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
                         & Elem_db(iE)%Gauss_C(iG) * (                         &
@@ -248,21 +261,21 @@ Contains
     Call MatAssemblyEnd(MR, MAT_FLUSH_ASSEMBLY, iErr)  
     
     ! Assembly of the BC terms 
-    Do_iBlk_BC: Do iBlk = 1, Geom%Num_Elem_Blks
-       Nb_DoF = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
-
-       Do_iE_BC: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
-          iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
-          
-          Do_iSLSig_BC: Do iSLSig = 1, Nb_DoF
-             ISGSig = Elem_db(iE)%ID_DoF(iSLSig)
-             Is_BC_BC: If ( Node_db(iSGSig)%BC /= BC_Type_NONE ) Then
-                Call MatSetValue(MR, iSGSig - 1, iSGSig - 1,&
-                     &  VLV, INSERT_VALUES, iErr)
-             End If Is_BC_BC
-          End Do Do_iSLSig_BC
-       End Do Do_iE_BC
-    End Do Do_iBlk_BC
+!!$    Do_iBlk_BC: Do iBlk = 1, Geom%Num_Elem_Blks
+!!$       Nb_DoF = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
+!!$
+!!$       Do_iE_BC: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
+!!$          iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
+!!$          
+!!$          Do_iSLSig_BC: Do iSLSig = 1, Nb_DoF
+!!$             ISGSig = Elem_db(iE)%ID_DoF(iSLSig)
+!!$             Is_BC_BC: If ( Node_db(iSGSig)%BC /= BC_Type_NONE ) Then
+!!$                Call MatSetValue(MR, iSGSig - 1, iSGSig - 1,&
+!!$                     &  0.0_Kr, INSERT_VALUES, iErr)
+!!$             End If Is_BC_BC
+!!$          End Do Do_iSLSig_BC
+!!$       End Do Do_iE_BC
+!!$    End Do Do_iBlk_BC
 
     Call MatAssemblyBegin(MR, MAT_FINAL_ASSEMBLY, iErr)
     Call MatAssemblyEnd(MR, MAT_FINAL_ASSEMBLY, iErr)  
