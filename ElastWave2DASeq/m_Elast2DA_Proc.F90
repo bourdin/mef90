@@ -80,7 +80,6 @@ Contains
     Call MatSetOption(MR, MAT_SYMMETRIC, iErr)
     Call MatSetFromOptions(MR, iErr)
 
-
 100 Format(A)
 200 Format('Rank: ', I4,' Index Range: ', I7,' ',I7, '\n'c) 
   End Subroutine Init
@@ -234,10 +233,10 @@ Contains
              Do iG = 1, Nb_Gauss
              End Do
              Do_iSLEps: Do iSLEps = 1, Nb_DoF
-                iSGEps = Elem_db(iE)%ID_DoF(iSLEps)
-                If ( Node_db(iSGEps)%BC /= BC_Type_NONE ) Then
-                   Cycle
-                End if
+!                iSGEps = Elem_db(iE)%ID_DoF(iSLEps)
+!                If ( Node_db(iSGEps)%BC /= BC_Type_NONE ) Then
+!                   Cycle
+!                End if
 
                 Do iG = 1, Nb_Gauss
                    MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
