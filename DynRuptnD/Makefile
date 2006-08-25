@@ -1,4 +1,4 @@
-PROJ            = Rupt
+PROJ            = DynRupt
 VER             = 0.12.trunk
 MEF90VER        = 0.12.0
 MEF90DIR        = $(MEF90ROOT)/MEF90-$(MEF90VER)
@@ -40,5 +40,5 @@ m_Rupt${DIM}_U.o:     ${MEF90OBJS}
 m_Rupt${DIM}_V.o:     ${MEF90OBJS} 
 m_Rupt${DIM}_Ener.o:  ${MEF90OBJS} 
 m_Rupt${DIM}_Proc.o:  ${MEF90OBJS} m_Rupt${DIM}_Vars.o m_Rupt${DIM}_U.o m_Rupt${DIM}_V.o m_Rupt${DIM}_Ener.o
-Rupt${DIM}.o:         ${MEF90OBJS} m_Rupt${DIM}_Proc.o
+DynRupt${DIM}.o:         ${MEF90OBJS} m_Rupt${DIM}_Proc.o
 # m_Rupt${DIM}_U.o  m_Rupt${DIM}_V.o
