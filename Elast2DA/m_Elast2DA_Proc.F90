@@ -270,7 +270,7 @@ Contains
                    MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
                         & Elem_db(iE)%Gauss_C(iG) * (                         &
                         & (Elem_db(iE)%Grad_BF(iSLEps,iG) .DotP.              &
-                        &  Elem_db(iE)%Grad_BF(iSLSig,iG)) )
+                        &  Elem_db(iE)%Grad_BF(iSLSig,iG)) ) * K2
                 End Do
              End Do Do_iSLEps
           End Do Do_iSLSig

@@ -49,10 +49,10 @@ Program Elast2DA
   Call PetscGetTime(AssembTS, iErr)
 
   Call Assemb_Mat_Elast2DA(MR, Geom, Params, Elem_db, Node_db)
-!!!  Call MatView(MR, PETSC_VIEWER_STDOUT_WORLD, iErr)
-!!!
-!!!  Call Finalize()
-!!!  STOP
+!!$  Call MatView(MR, PETSC_VIEWER_STDOUT_WORLD, iErr)
+!!$
+!!$  Call Finalize()
+!!$  STOP
   
   Call PetscGetTime(AssembTF, iErr)
   If (MEF90_MyRank == 0) Then
