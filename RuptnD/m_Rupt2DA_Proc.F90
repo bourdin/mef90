@@ -565,6 +565,7 @@ Contains
     Call PetscGetTime(SolveTF, iErr)
     
     Call KSPGetConvergedReason(KSP_V, KSP_TestCVG, iErr)
+    Call KSPGetIterationNumber(KSP_V, NbIterKSP, iErr)
     Call VecMin(V_Dist, VMinPos, VMin, iErr)
     Call VecMax(V_Dist, VMaxPos, VMax, iErr)
     Call VecCopy(V_Old, V_Change, iErr)
