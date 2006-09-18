@@ -527,45 +527,67 @@ Contains
     Call PetscLogStagePop(iErr);
     
     Call PetscGetTime(SolveTS, iErr)
-    
     Call PetscLogStagePush(LogStage_Solve, iErr);
     Call KSPSolve(KSP_U, RHS_U, U_Dist, iErr)
     Call PetscLogStagePop(iErr);
-    
-#ifdef MEF90_TIMING
     Call PetscGetTime(SolveTF, iErr)
+
+    Call KSPGetConvergedReason(KSP_U, KSP_TestCVG, iErr)
+    Call KSPGetIterationNumber(KSP_U, NbIterKSP, iErr)
     If (MEF90_MyRank == 0) Then
-       Write(Log_Unit, *)'Total time in KSP_Solve:                 ',      &
-            & SolveTF- SolveTS
+       If (KSP_TestCVG <= 0) Then
+          Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',      &
+               & KSP_TestCVG
+       End If
+       Write(Log_Unit, 500) NbIterKSP, SolveTF - SolveTS, KSP_TestCVG
     End If
-#endif
-    
+
     Call VecGhostUpdateBegin(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
     Call VecGhostUpdateEnd(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+500 Format('     Solve_U: ', I5, ' iterations in ', F7.2, 's. Return value',  &
+         & I2)
   End Subroutine Solve_U
   
   Subroutine Solve_V()
+    Integer                                               :: VMinPos, VMaxPos
+
     Call PetscLogStagePush(LogStage_Assembly, iErr);
     Call Assemb_MR_V(MR_V, U_Loc, Temp_Loc, Geom, Params, MySD_U, MySD_V,     &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
     Call PetscLogStagePop(iErr);
     
     Call PetscGetTime(SolveTS, iErr)
-    
     Call PetscLogStagePush(LogStage_Solve, iErr);
+
     Call KSPSolve(KSP_V, RHS_V, V_Dist, iErr)
+
     Call PetscLogStagePop(iErr);
-    
-#ifdef MEF90_TIMING
     Call PetscGetTime(SolveTF, iErr)
+    
+    Call KSPGetConvergedReason(KSP_V, KSP_TestCVG, iErr)
+    Call VecMin(V_Dist, VMinPos, VMin, iErr)
+    Call VecMax(V_Dist, VMaxPos, VMax, iErr)
+    Call VecCopy(V_Old, V_Change, iErr)
+    Call VecAxPy(V_Change, -1.0_Kr, V_Dist, iErr)
+    Call VecNorm(V_Change, NORM_INFINITY, ErrV, iErr)
+
     If (MEF90_MyRank == 0) Then
-       Write(Log_Unit, *)  'Total time in KSP_Solve:                 ',      &
-            & SolveTF- SolveTS
+       If (KSP_TestCVG <= 0) Then
+          Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',      &
+               & KSP_TestCVG
+       End If
+       Write(Log_Unit, 600) NbIterKSP, InitTF - InitTS, KSP_TestCVG
+       Write(Log_Unit, 700) VMin, VMax
+       Write(Log_Unit, 800) ErrV
     End If
-#endif
     
     Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
     Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
+
+600 Format('     Solve_V: ', I5, ' iterations in ', F7.2, 's. Return value',  &
+         & I2)
+700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '))
+800 Format('     Max change V: ', T24, ES12.5)
   End Subroutine Solve_V
   
   

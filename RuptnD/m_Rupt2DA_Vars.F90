@@ -52,6 +52,7 @@ Module m_Rupt2DA_Vars
   KSP, Public                                           :: KSP_U, KSP_V
   PC, Public                                            :: PC_U, PC_V
   KSPConvergedReason, Public                            :: KSP_Reason
+  Integer, Public                                       :: NbIterKSP
 
 #if defined PB_2D
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_U
