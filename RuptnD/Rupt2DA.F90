@@ -140,6 +140,12 @@ Program Rupt2DA
            If (MEF90_MyRank ==0) Then
               Write(Log_Unit, 910) Bulk_Ener(TimeStep), Surf_Ener(TimeStep),  &
                    & Tot_Ener(TimeStep)
+              If (ErrV <= Params%TolRelax) Then
+                 Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
+                 Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
+                      & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
+                      & Tot_Ener(TimeStep)
+              End If
            End If
            Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
 
@@ -157,12 +163,12 @@ Program Rupt2DA
                     End If
                  End Do
                  If (Is_BackTracking) Then
-                    If (ErrV <= Params%TolRelax) Then
-                       Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
-                       Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
-                            & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
-                            & Tot_Ener(TimeStep)
-                    End If
+!!!                    If (ErrV <= Params%TolRelax) Then
+!!!                       Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
+!!!                       Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
+!!!                            & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
+!!!                            & Tot_Ener(TimeStep)
+!!!                    End If
                     TimeStep = iE
                     Write(Log_Unit, *) '********** Going back to step ', TimeStep
                     Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
