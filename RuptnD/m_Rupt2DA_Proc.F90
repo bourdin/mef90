@@ -40,6 +40,7 @@ Module m_Rupt2DA_Proc
   Public :: Init
   Public :: Export
   Public :: Export_V
+  Public :: Export2
   Public :: Finalize
   Public :: Solve_V
   Public :: Solve_U
@@ -652,6 +653,41 @@ Contains
     Call PetscLogStagePop(iErr);
   End Subroutine Export_V
   
+  Subroutine Export2(TS, Load)
+    Integer, Intent(IN)                           :: TS
+    Real(Kind = Kr), Intent(IN)                   :: Load
+    
+    Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
+
+    
+    Call PetscLogStagePush(LogStage_IO, iErr);
+    Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &
+         & MySD_U%ToMaster, iErr)
+    Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,      &
+         & MySD_U%ToMaster, iErr)
+    
+    If (MEF90_MyRank == 0) Then
+       Call VecGetArrayF90(U_Master, Sol_Ptr, iErr)
+#ifdef PB_2DA
+       Call Write_EXO_Result_Ptr_Nodes(Geom, 4, TS, SOL_Ptr)
+#else
+       Call Write_EXO_Result_Ptr_Nodes(Geom, 2, TS, SOL_Ptr)
+#endif
+       Call VecRestoreArrayF90(U_Master, SOL_Ptr, iErr)
+    End If
+    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,    &
+         & MySD_V%ToMaster, iErr)
+    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,      &
+         & MySD_V%ToMaster, iErr)
+    
+    If (MEF90_MyRank == 0) Then
+       Call VecGetArrayF90(V_Master, Sol_Ptr, iErr)
+       Call Write_EXO_Result_Ptr_Nodes(Geom, 1, TS, SOL_Ptr)
+       Call VecRestoreArrayF90(V_Master, SOL_Ptr, iErr)      
+       Call Write_EXO_Result_Global(Geom, 4, TS, Load)
+    End If
+    Call PetscLogStagePop(iErr);
+  End Subroutine Export2
   
   Subroutine Finalize()
     DeAllocate(Node_db_U, Elem_db_U)

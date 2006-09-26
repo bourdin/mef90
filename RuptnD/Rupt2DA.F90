@@ -44,6 +44,7 @@ Program Rupt2DA
   Logical                                               :: Is_BackTracking
   Integer                                               :: iE
   Real(Kind = Kr)                                       :: Err_Rel_Ener, Tmp_Ener 
+  Integer                                               :: TotIter = 0
 
   Call PetscGetTime(TotalTS, iErr)
   Call PetscGetTime(InitTS, iErr)
@@ -60,6 +61,7 @@ Program Rupt2DA
   
 !!! OUTER LOOP: TIME STEPS
   While_TS: Do while (TimeStep <= Size(Params%Load))     
+     TotIter = TotIter + 1
      If (MEF90_MyRank == 0) Then
         Write(Log_Unit, 400) TimeStep, Params%Load(TimeStep)
      End If
@@ -130,6 +132,11 @@ Program Rupt2DA
               Write(Log_Unit, 930) TotalTF - TotalTS
            End If
            Call Export (TimeStep)
+!!! Remove this to stop saving -all- intermediate results
+!!! This is NOT optimal
+           Call Export2(Size(Params%Load) + TotIter, Params%Load(TimeStep))
+
+
            Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
                 & Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,    &
                 & Node_db_V, F_Loc, Temp_Loc )
@@ -163,15 +170,19 @@ Program Rupt2DA
                     End If
                  End Do
                  If (Is_BackTracking) Then
-!!!                    If (ErrV <= Params%TolRelax) Then
-!!!                       Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
-!!!                       Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
-!!!                            & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
-!!!                            & Tot_Ener(TimeStep)
-!!!                    End If
+                 !!! This is a bit silly, but I have already saved the energy if I am not BT''ing
+                    If (ErrV > Params%TolRelax) Then
+                       Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
+                       Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
+                            & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
+                            & Tot_Ener(TimeStep)
+                    End If
                     TimeStep = iE
                     Write(Log_Unit, *) '********** Going back to step ', TimeStep
                     Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
+!!$                    Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
+!!$                         & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
+!!$                         & Tot_Ener(TimeStep)
                     Write(Ener_Unit, *) '  '
                     Close(Ener_Unit)
                  End If
