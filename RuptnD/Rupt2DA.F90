@@ -134,7 +134,7 @@ Program Rupt2DA
            Call Export (TimeStep)
 !!! Remove this to stop saving -all- intermediate results
 !!! This is NOT optimal
-           Call Export2(Size(Params%Load) + TotIter, Params%Load(TimeStep))
+!!!           Call Export2(Size(Params%Load) + TotIter, Params%Load(TimeStep))
 
 
            Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
