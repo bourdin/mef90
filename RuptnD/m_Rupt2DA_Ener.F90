@@ -210,7 +210,8 @@ Contains
                         & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.             &
                         &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) *                &
                         &  UPtr(Loc_Indices_U(iSGSig)+1) *                    &
-                        &  UPtr(Loc_Indices_U(iSGEps)+1) * K2 * ContrV(iG)
+                        &  UPtr(Loc_Indices_U(iSGEps)+1) * K2 * ContrV(iG)    &
+                        &  * 2.0_Kr
 #else                   
                    ContrU(iG) = ContrU(iG) +                                  &
                         & ( Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.            &

@@ -578,7 +578,7 @@ Contains
           Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',      &
                & KSP_TestCVG
        End If
-       Write(Log_Unit, 600) NbIterKSP, InitTF - InitTS, KSP_TestCVG
+       Write(Log_Unit, 600) NbIterKSP, SolveTF - SolveTS, KSP_TestCVG
        Write(Log_Unit, 700) VMin, VMax
        Write(Log_Unit, 800) ErrV
     End If
