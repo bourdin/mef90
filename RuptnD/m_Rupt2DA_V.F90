@@ -427,7 +427,7 @@ Contains
                            & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.          &
                            &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) *             &
                            &  U_Ptr(Loc_Indices_U(iSGSig)+1) *                &
-                           &  U_Ptr(Loc_Indices_U(iSGEps)+1) * K2 * 2.0_KR
+                           &  U_Ptr(Loc_Indices_U(iSGEps)+1) * K2 !* 2.0_KR
 #else                   
                       ContrU(iG) = ContrU(iG) +                               &
                            & ( Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.         &
