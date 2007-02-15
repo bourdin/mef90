@@ -116,7 +116,6 @@ Program Rupt2DA
         Call Solve_U()
         Call Solve_V()
 
-
 !!$!!! Caltech 2006-04 save all intermediate steps       
 !!$        If (MEF90_MyRank == 0) Then
 !!$           Write(Log_Unit, *) 'EXPORTING TMP RESULT'
@@ -131,12 +130,6 @@ Program Rupt2DA
               Call PetscGetTime(TotalTF, iErr)
               Write(Log_Unit, 930) TotalTF - TotalTS
            End If
-           Call Export (TimeStep)
-!!! Remove this to stop saving -all- intermediate results
-!!! This is NOT optimal
-!!!           Call Export2(Size(Params%Load) + TotIter, Params%Load(TimeStep))
-
-
            Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
                 & Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,    &
                 & Node_db_V, F_Loc, Temp_Loc )
@@ -154,6 +147,13 @@ Program Rupt2DA
                       & Tot_Ener(TimeStep)
               End If
            End If
+
+          Call Export (TimeStep)
+!!! Remove this to stop saving -all- intermediate results
+!!! This is NOT optimal
+!           Call Export2(Size(Params%Load) + TotIter, Params%Load(TimeStep))
+
+
            Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
 
            Is_BackTracking = .FALSE.

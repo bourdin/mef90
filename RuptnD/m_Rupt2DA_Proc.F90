@@ -522,6 +522,7 @@ Contains
     Call PetscLogStagePush(LogStage_Assembly, iErr);
     Call Assemb_MR_U(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V,               &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
+    
     Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,        &
          & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
     
@@ -599,7 +600,6 @@ Contains
     
     
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
-
     
     Call PetscLogStagePush(LogStage_IO, iErr);
     Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &
