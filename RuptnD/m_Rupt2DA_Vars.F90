@@ -24,7 +24,7 @@ Module m_Rupt2DA_Vars
 #include "include/finclude/petscsys.h"
 
 
-  Integer, Public                                       :: SaveInt = 20
+  Integer, Public                                       :: SaveInt = 1
   Mat, Public                                           :: MR_U
   Mat, Public                                           :: MR_V
  
@@ -110,7 +110,6 @@ Module m_Rupt2DA_Vars
   Integer, Public                                       :: LogStage_Assembly
   Integer, Public                                       :: LogStage_Solve
   
-
 #if defined PB_2D
 End Module m_Rupt2D_Vars
 #elif defined PB_3D
