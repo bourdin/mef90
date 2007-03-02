@@ -1,31 +1,17 @@
-#if defined PB_2D
-Module m_Rupt2D_Proc
-#elif defined PB_3D
-Module m_Rupt3D_Proc
-#else 
 Module m_Rupt2DA_Proc
-#endif
+
 
   Use m_MEF90
   Use m_Rupt_Struct
-#if defined PB_2D
-  Use m_Rupt2D_Vars	
-  Use m_Rupt2D_U	
-  Use m_Rupt2D_V
-#elif defined PB_3D
-  Use m_Rupt3D_Vars	
-  Use m_Rupt3D_U	
-  Use m_Rupt3D_V
-#else 
+
   Use m_Rupt2DA_Vars	
   Use m_Rupt2DA_U	
   Use m_Rupt2DA_V
-#endif
+
 
 
   Implicit NONE
   PRIVATE
-
 
 #include "include/finclude/petsc.h"
 #include "include/finclude/petscvec.h"
@@ -35,7 +21,6 @@ Module m_Rupt2DA_Proc
 #include "include/finclude/petscksp.h"
 #include "include/finclude/petscpc.h"
 #include "include/finclude/petscis.h"
-#include "include/finclude/petscsys.h"
 
   Public :: Init
   Public :: Export
@@ -47,8 +32,6 @@ Module m_Rupt2DA_Proc
   Public :: Init_BC_U
   Public :: Update_BC_V
   Public :: Update_BC_U
-  Public :: Update_F
-  Public :: Update_Temp
 
 !  integer :: i
 
@@ -70,16 +53,14 @@ Contains
     
     Call PetscLogStagePush(LogStage_Init, iErr);
     
-    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str,    &
-         & Has_Sim_Str, iErr)
+    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str, Has_Sim_Str, iErr)
     
 !!! Check for the -restart flag
 !!! If found, we are restarting a computation at step Timestep
 !!! -restart 1 is equivalent to making a new computation
 !!! -restart 0 resumes after the last complete iteration
 !!! partial timesteps are not checkpointed
-    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-restart', TimeStep,       &
-         & Is_Restarting, PETSC_NULL_INTEGER, iErr)
+    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-restart', TimeStep, Is_Restarting, PETSC_NULL_INTEGER, iErr)
     
     If (Is_Restarting == PETSC_FALSE) Then
        TimeStep = 1
@@ -92,15 +73,13 @@ Contains
           Write(Log_Unit, *) 'Simulation name: '
           Read(*,100) Params%Sim_Str
        End If
-       Call MPI_BCAST(Params%Sim_Str, MXLNLN, MPI_CHARACTER, 0,               &
-            & MPI_COMM_WORLD, iErr)
+       Call MPI_BCAST(Params%Sim_Str, MXLNLN, MPI_CHARACTER, 0, MPI_COMM_WORLD, iErr)
     Else
        Is_Interactive = .FALSE.
        Log_Str          = Trim(Params%Sim_Str) // '.log'
        If (MEF90_MyRank ==0) Then
           If (Is_Restarting == PETSC_TRUE) Then
-             Open (File = Log_Str, Unit = Log_Unit, Status = 'Old',           &
-                  & Position = 'Append')
+             Open (File = Log_Str, Unit = Log_Unit, Status = 'Old', Position = 'Append')
           Else
              Open (File = Log_Str, Unit = Log_Unit, Status = 'Replace')
           End If
@@ -127,11 +106,9 @@ Contains
     Call Read_EXO_Geom_Info(Geom)
     
 
-#ifdef PB_2DA
+
     Call Read_EXO_Node_Coord(Geom, Node_db_U, 1)
-#else
-    Call Read_EXO_Node_Coord(Geom, Node_db_U, Geom%Num_Dim)
-#endif
+
     Call Read_EXO_Node_Coord(Geom, Node_db_V, 1)
     Call Read_EXO_Connect(Geom, Elem_db_U) 
 
@@ -145,7 +122,7 @@ Contains
 
     If (MEF90_MyRank == 0) Then
        Write(Log_Unit,*) 'Number of nodes:      ', Geom%Num_Nodes
-       Write(Log_Unit,*) 'Number of elements:  ', Geom%Num_Elems
+       Write(Log_Unit,*) 'Number of elements:   ', Geom%Num_Elems
     End	If
 
     Call Init_SD_NoOvlp(Geom, Elem_db_U, MySD_U, U_Dist, U_Loc, U_Master)
@@ -168,21 +145,15 @@ Contains
     Call VecGhostGetLocalForm(V_Dist, V_Loc, iErr)
     Call VecGhostGetLocalForm(Temp_Dist, Temp_Loc, iErr)
 
-#ifdef PB_2DA
-    Call MatCreateMPIAIJ(PETSC_COMM_WORLD, MySD_U%Num_Nodes, MySD_U%Num_Nodes,&
-         & Geom%Num_Nodes, Geom%Num_Nodes, 24,                                &
-         & PETSC_NULL_INTEGER, 24, PETSC_NULL_INTEGER, MR_U, iErr)
-#else
-    Call MatCreateMPIAIJ(PETSC_COMM_WORLD, MySD_U%Num_Nodes, MySD_U%Num_Nodes,&
-         & Geom%Num_Nodes * Geom%Num_Dim, Geom%Num_Nodes * Geom%Num_Dim, 80,  &
-         & PETSC_NULL_INTEGER, 80, PETSC_NULL_INTEGER, MR_U, iErr)
-#endif
+
+    Call MatCreateMPIAIJ(PETSC_COMM_WORLD, MySD_U%Num_Nodes, MySD_U%Num_Nodes, Geom%Num_Nodes, Geom%Num_Nodes, 24,                 &
+                         PETSC_NULL_INTEGER, 24, PETSC_NULL_INTEGER, MR_U, iErr)
+
     Call MatSetOption(MR_U, MAT_SYMMETRIC, iErr)
     Call MatSetFromOptions(MR_U, iErr)
 
-    Call MatCreateMPIAIJ(PETSC_COMM_WORLD, MySD_V%Num_Nodes, MySD_V%Num_Nodes,&
-         & Geom%Num_Nodes, Geom%Num_Nodes, 24,                                &
-         & PETSC_NULL_INTEGER, 24, PETSC_NULL_INTEGER, MR_V, iErr)
+    Call MatCreateMPIAIJ(PETSC_COMM_WORLD, MySD_V%Num_Nodes, MySD_V%Num_Nodes, Geom%Num_Nodes, Geom%Num_Nodes, 24,                 &
+                         PETSC_NULL_INTEGER, 24, PETSC_NULL_INTEGER, MR_V, iErr)
     Call MatSetOption(MR_V, MAT_SYMMETRIC, iErr)
     Call MatSetFromOptions(MR_V, iErr)       
      
@@ -199,17 +170,15 @@ Contains
 !!! Read the energies from the .ener file
 !!! Get the last iteration number if called with -restart 0
 !!! Energies are now saved in the .gen
-!!! I could read them from there, 
+!!! I could read them from there,
 !!! but how would I find the last computed time step
 !!! Check for the first time step with total energy == 0?
 !!! or check from the .ener
     If (MEF90_MyRank == 0) Then
-       Open (File = Ener_Str, Unit = Ener_Unit, status = 'Old',               &
-            & Action = 'Read')
+       Open (File = Ener_Str, Unit = Ener_Unit, status = 'Old', Action = 'Read')
        Rewind(Ener_Unit)
        Do
-          Read(Ener_Unit, *, end=50, err=50) iTS, junk, Bulk_Ener(iTS),       &
-               & Surf_Ener(iTS), Tot_Ener(iTS)
+          Read(Ener_Unit, *, end=50, err=50) iTS, junk, Bulk_Ener(iTS), Surf_Ener(iTS), Tot_Ener(iTS)
           Tot_Ener(iTS) = Bulk_Ener(iTS) + Surf_Ener(iTS)
           CYCLE
 50        EXIT
@@ -224,12 +193,9 @@ Contains
 !!$       End Do
     End If
     Call MPI_BCAST(TimeStep, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, iErr) 
-    Call MPI_BCAST(Bulk_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
-         & MPI_COMM_WORLD, iErr) 
-    Call MPI_BCAST(Surf_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,      &
-         & MPI_COMM_WORLD, iErr) 
-    Call MPI_BCAST(Tot_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0,       &
-         & MPI_COMM_WORLD, iErr) 
+    Call MPI_BCAST(Bulk_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, iErr) 
+    Call MPI_BCAST(Surf_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, iErr) 
+    Call MPI_BCAST(Tot_Ener(0), TimeStep + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, iErr) 
 
 
     If (TimeStep == 1) Then
@@ -251,10 +217,8 @@ Contains
        EndIf
        
 !!! V_Master -> V_Dist
-       Call VecScatterBegin(V_Master, V_Dist, INSERT_VALUES,                &
-            & SCATTER_REVERSE, MySD_V%ToMaster, iErr)
-       Call VecScatterEnd(V_Master, V_Dist, INSERT_VALUES, SCATTER_REVERSE, &
-            & MySD_V%ToMaster, iErr)
+       Call VecScatterBegin(V_Master, V_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_V%ToMaster, iErr)
+       Call VecScatterEnd(V_Master, V_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_V%ToMaster, iErr)
        
 !!! V_Dist -> V_Loc
        Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -265,21 +229,17 @@ Contains
 !!! Read and update U from TimeStep - 1
        If (MEF90_MyRank == 0) Then
           Call VecGetArrayF90(U_Master, U_Ptr, iErr)
-#ifdef PB_2DA
+
           Call Read_EXO_Result_Nodes(Geom, 4, TimeStep-1, Tmp_Ptr, 1)
-#else
-          Call Read_EXO_Result_Nodes(Geom, 2, TimeStep-1, Tmp_Ptr, Geom%Num_Dim)
-#endif
+
           U_Ptr = Tmp_Ptr
           Call VecRestoreArrayF90(U_Master, U_Ptr, iErr)
           DeAllocate(Tmp_Ptr)
        EndIf
        
 !!! U_Master -> U_Dist
-       Call VecScatterBegin(U_Master, U_Dist, INSERT_VALUES,                &
-            & SCATTER_REVERSE, MySD_U%ToMaster, iErr)
-       Call VecScatterEnd(U_Master, U_Dist, INSERT_VALUES, SCATTER_REVERSE, &
-            & MySD_U%ToMaster, iErr)
+       Call VecScatterBegin(U_Master, U_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_U%ToMaster, iErr)
+       Call VecScatterEnd(U_Master, U_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_U%ToMaster, iErr)
        
 !!! U_Dist -> U_Loc
        Call VecGhostUpdateBegin(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -298,13 +258,9 @@ Contains
   Subroutine Init_BC_U(Geom, Params, Nodes_U)
     Type(EXO_Geom_Info), Intent(IN)                  :: Geom
     Type(Rupt_Params), Intent(IN)                    :: Params
-#if defined PB_2D
+
     Type(Node2D), Dimension(:), Pointer              :: Nodes_U
-#elif defined PB_3D
-    Type(Node3D), Dimension(:), Pointer              :: Nodes_U
-#else 
-    Type(Node2D), Dimension(:), Pointer              :: Nodes_U
-#endif
+
 
     Integer                                          :: iSet, iN
     
@@ -317,19 +273,9 @@ Contains
     Nodes_U(:)%BC = BC_Type_NONE
     Do iSet = 1, Geom%Num_Node_Sets
        Do iN = 1, Geom%Node_Set(iSet)%Num_Nodes
-#if defined PB_2DA
-          Nodes_U(Geom%Node_Set(iSet)%Node_ID(iN))%BC =                       &
-               & Params%BC_Type_Z(iSet)
-#else          
-          Nodes_U(Geom%Num_Dim * (Geom%Node_Set(iSet)%Node_ID(iN)-1)+1)%BC    &
-               & = Params%BC_Type_X(iSet)
-          Nodes_U(Geom%Num_Dim * (Geom%Node_Set(iSet)%Node_ID(iN)-1)+2)%BC    &
-               & = Params%BC_Type_Y(iSet)
-#ifdef PB_3D
-          Nodes_U(Geom%Num_Dim * Geom%Node_Set(iSet)%Node_ID(iN) )%BC         &
-               & = Params%BC_Type_Z(iSet)
-#endif
-#endif
+
+          Nodes_U(Geom%Node_Set(iSet)%Node_ID(iN))%BC = Params%BC_Type_Z(iSet)
+
        End Do
     End Do
     Call PetscLogStagePop(iErr)
@@ -340,11 +286,9 @@ Contains
     Type(EXO_Geom_Info), Intent(IN)                  :: Geoms
     Type(Rupt_Params), Intent(IN)                    :: Params
     Type (SD_Info), Intent(IN)                       :: SD
-#ifdef PB_3D
-    Type(Node3D), Dimension(:), Pointer              :: Nodes
-#else
+
     Type(Node2D), Dimension(:), Pointer              :: Nodes
-#endif
+
     Vec                                              :: VOld    
     
     Vec                                              :: VOld_Loc
@@ -402,16 +346,13 @@ Contains
     
     Call KSPSetInitialGuessNonzero(KSP_U, PETSC_TRUE, iErr)
     
-    Call KSPSetTolerances(KSP_U, Params%TolKSP,                               &
-         & PETSC_DEFAULT_DOUBLE_PRECISION, KSP_U_DivTol, KSP_U_MaxIter,       &
-         & iErr)
+    Call KSPSetTolerances(KSP_U, Params%TolKSP, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_U_DivTol, KSP_U_MaxIter, iErr)
     Call KSPSetFromOptions(KSP_U, iErr)
 
     Call PCGetType(PC_U, PC_U_Type, iErr)
     If (PC_U_Type == PCBJACOBI) Then
        Call KSPSetup(KSP_U, iErr)
-       Call PCBJacobiGetSubKSP(PC_U, PETSC_NULL_INTEGER, PETSC_NULL_INTEGER,     &
-            & Sub_KSP_U, iErr)
+       Call PCBJacobiGetSubKSP(PC_U, PETSC_NULL_INTEGER, PETSC_NULL_INTEGER, Sub_KSP_U, iErr)
        Call KSPGetPC(Sub_KSP_U, Sub_PC_U, iErr)
        Call PCFactorSetZeroPivot(Sub_PC_U, PC_U_ZeroPivot, iErr)
     End If
@@ -423,9 +364,7 @@ Contains
 
     Call KSPSetInitialGuessNonzero(KSP_V, PETSC_TRUE, iErr)
 
-    Call KSPSetTolerances(KSP_U, Params%TolKSP,                               &
-           & PETSC_DEFAULT_DOUBLE_PRECISION, KSP_V_DivTol, KSP_V_MaxIter,     &
-           & iErr)
+    Call KSPSetTolerances(KSP_U, Params%TolKSP, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_V_DivTol, KSP_V_MaxIter, iErr)
     Call KSPSetFromOptions(KSP_V, iErr)
   End Subroutine Init_KSPs
 
@@ -437,21 +376,17 @@ Contains
     Call PetscLogStagePush(LogStage_IO, iErr)
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(BCU_Master, BC_Ptr, iErr)
-#ifdef PB_2DA
+
        Call Read_EXO_Result_Nodes(Geom, 4, TimeStep, Tmp_Ptr, 1)
-#else
-       Call Read_EXO_Result_Nodes(Geom, 2, TimeStep, Tmp_Ptr, Geom%Num_Dim)
-#endif
+
        BC_Ptr = Tmp_Ptr
        Call VecRestoreArrayF90(BCU_Master, BC_Ptr, iErr)
        DeAllocate(Tmp_Ptr)
     EndIf
     
 !!! BC_Master -> BC_Dist
-    Call VecScatterBegin(BCU_Master, BCU_Dist, INSERT_VALUES,                 &
-         & SCATTER_REVERSE, MySD_U%ToMaster, iErr)
-    Call VecScatterEnd(BCU_Master, BCU_Dist, INSERT_VALUES, SCATTER_REVERSE,  &
-         & MySD_U%ToMaster, iErr)
+    Call VecScatterBegin(BCU_Master, BCU_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_U%ToMaster, iErr)
+    Call VecScatterEnd(BCU_Master, BCU_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_U%ToMaster, iErr)
     
 !!! BC_Dist -> BC_Loc
     Call VecGhostUpdateBegin(BCU_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -459,73 +394,16 @@ Contains
     
     Call PetscLogStagePop(iErr)
   End Subroutine Update_BC_U
-  
-  Subroutine Update_F(TimeStep)
-    Integer                                       :: TimeStep
-    
-    PetscReal, Dimension(:), Pointer              :: F_Ptr, Tmp_Ptr
-    
-    Call PetscLogStagePush(LogStage_IO, iErr)
-    If (MEF90_MyRank == 0) Then
-       Call VecGetArrayF90(F_Master, F_Ptr, iErr)
-#ifdef PB_2DA
-       Call Read_EXO_Result_Nodes(Geom, 7, TimeStep, Tmp_Ptr, 1)
-#else
-       Call Read_EXO_Result_Nodes(Geom, 5, TimeStep, Tmp_Ptr, Geom%Num_Dim)
-#endif
-       F_Ptr = Tmp_Ptr
-       Call VecRestoreArrayF90(F_Master, F_Ptr, iErr)
-       DeAllocate(Tmp_Ptr)
-    EndIf
-    
-!!! F_Master -> F_Dist
-    Call VecScatterBegin(F_Master, F_Dist, INSERT_VALUES,                     &
-         & SCATTER_REVERSE, MySD_U%ToMaster, iErr)
-    Call VecScatterEnd(F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE,      &
-         & MySD_U%ToMaster, iErr)
-    
-!!! F_Dist -> F_Loc
-    Call VecGhostUpdateBegin(F_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-    Call VecGhostUpdateEnd(F_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-    Call PetscLogStagePop(iErr)
-  End Subroutine Update_F
-  
-  Subroutine Update_Temp(TimeStep)
-!!! Careful with variable names... Temp == temperature, tmp == temporary
-    Integer                                       :: TimeStep
-    
-    PetscReal, Dimension(:), Pointer              :: Temp_Ptr, Tmp_Ptr
-    
-    Call PetscLogStagePush(LogStage_IO, iErr)
-    If (MEF90_MyRank == 0) Then
-       Call VecGetArrayF90(Temp_Master, Temp_Ptr, iErr)
-       Call Read_EXO_Result_Nodes(Geom, 8, TimeStep, Tmp_Ptr, 1)
-       Temp_Ptr = Tmp_Ptr
-       Call VecRestoreArrayF90(Temp_Master, Temp_Ptr, iErr)
-       DeAllocate(Tmp_Ptr)
-    EndIf
-    
-!!! Temp_Master -> Temp_Dist
-    Call VecScatterBegin(Temp_Master, Temp_Dist, INSERT_VALUES,               &
-         & SCATTER_REVERSE, MySD_V%ToMaster, iErr)
-    Call VecScatterEnd(Temp_Master, Temp_Dist, INSERT_VALUES,                 &
-         & SCATTER_REVERSE, MySD_V%ToMaster, iErr)
 
-!!! Temp_Dist -> Temp_Loc
-    Call VecGhostUpdateBegin(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-    Call VecGhostUpdateEnd(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-    Call PetscLogStagePop(iErr) 
-  End Subroutine Update_Temp
-  
-  
-  Subroutine Solve_U()
+
+  Subroutine Solve_U(TS)
+    Integer, Intent(IN)   :: TS
+    Integer                                               :: UMinPos, UMaxPos
+    Real(Kind = Kr)                                       :: UMin, UMax
+    
     Call PetscLogStagePush(LogStage_Assembly, iErr);
-    Call Assemb_MR_U(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V,               &
-         & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
-    
-    Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U,        &
-         & Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, F_Loc, Temp_Loc)
-    
+    Call Assemb_MR_U(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
+    Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U, Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, Params%Load(TS))
     Call PetscLogStagePop(iErr);
     
     Call PetscGetTime(SolveTS, iErr)
@@ -536,26 +414,31 @@ Contains
 
     Call KSPGetConvergedReason(KSP_U, KSP_TestCVG, iErr)
     Call KSPGetIterationNumber(KSP_U, NbIterKSP, iErr)
+    Call VecMin(U_Dist, UMinPos, UMin, iErr)
+    Call VecMax(U_Dist, UMaxPos, UMax, iErr)
+
     If (MEF90_MyRank == 0) Then
        If (KSP_TestCVG <= 0) Then
-          Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',      &
-               & KSP_TestCVG
+          Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',  KSP_TestCVG
        End If
        Write(Log_Unit, 500) NbIterKSP, SolveTF - SolveTS, KSP_TestCVG
+       Write(Log_Unit, 501) UMin, UMax
     End If
+
 
     Call VecGhostUpdateBegin(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
     Call VecGhostUpdateEnd(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-500 Format('     Solve_U: ', I5, ' iterations in ', F7.2, 's. Return value',  &
-         & I2)
+500 Format('     Solve_U: ', I5, ' iterations in ', F7.2, 's. Return value', I2)
+501 Format('     UMin / Max:   ', T24, 2(ES12.5, '  '))
   End Subroutine Solve_U
   
-  Subroutine Solve_V()
+  Subroutine Solve_V(TS)
+	 Integer, Intent(IN)                                   :: TS
     Integer                                               :: VMinPos, VMaxPos
 
     Call PetscLogStagePush(LogStage_Assembly, iErr);
-    Call Assemb_MR_V(MR_V, U_Loc, Temp_Loc, Geom, Params, MySD_U, MySD_V,     &
-         & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
+    Call Assemb_MR_V(MR_V, U_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V, Params%Load(TS) )
+!    Call Assemb_MR_V(MR_V, U_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V, 0.0_Kr)
     Call PetscLogStagePop(iErr);
     
     Call PetscGetTime(SolveTS, iErr)
@@ -576,8 +459,7 @@ Contains
 
     If (MEF90_MyRank == 0) Then
        If (KSP_TestCVG <= 0) Then
-          Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',      &
-               & KSP_TestCVG
+          Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',  KSP_TestCVG
        End If
        Write(Log_Unit, 600) NbIterKSP, SolveTF - SolveTS, KSP_TestCVG
        Write(Log_Unit, 700) VMin, VMax
@@ -587,8 +469,7 @@ Contains
     Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
     Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 
-600 Format('     Solve_V: ', I5, ' iterations in ', F7.2, 's. Return value',  &
-         & I2)
+600 Format('     Solve_V: ', I5, ' iterations in ', F7.2, 's. Return value', I2)
 700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '))
 800 Format('     Max change V: ', T24, ES12.5)
   End Subroutine Solve_V
@@ -602,24 +483,18 @@ Contains
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
     
     Call PetscLogStagePush(LogStage_IO, iErr);
-    Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_U%ToMaster, iErr)
-    Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_U%ToMaster, iErr)
+    Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_U%ToMaster, iErr)
+    Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_U%ToMaster, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(U_Master, Sol_Ptr, iErr)
-#ifdef PB_2DA
+
        Call Write_EXO_Result_Ptr_Nodes(Geom, 4, TS, SOL_Ptr)
-#else
-       Call Write_EXO_Result_Ptr_Nodes(Geom, 2, TS, SOL_Ptr)
-#endif
+
        Call VecRestoreArrayF90(U_Master, SOL_Ptr, iErr)
     End If
-    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_V%ToMaster, iErr)
-    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_V%ToMaster, iErr)
+    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,  MySD_V%ToMaster, iErr)
+    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_V%ToMaster, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(V_Master, Sol_Ptr, iErr)
@@ -640,10 +515,8 @@ Contains
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
     
     Call PetscLogStagePush(LogStage_IO, iErr);
-    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_V%ToMaster, iErr)
-    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_V%ToMaster, iErr)
+    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_V%ToMaster, iErr)
+    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_V%ToMaster, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(V_Master, Sol_Ptr, iErr)
@@ -661,24 +534,18 @@ Contains
 
     
     Call PetscLogStagePush(LogStage_IO, iErr);
-    Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_U%ToMaster, iErr)
-    Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_U%ToMaster, iErr)
+    Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_U%ToMaster, iErr)
+    Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_U%ToMaster, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(U_Master, Sol_Ptr, iErr)
-#ifdef PB_2DA
+
        Call Write_EXO_Result_Ptr_Nodes(Geom, 4, TS, SOL_Ptr)
-#else
-       Call Write_EXO_Result_Ptr_Nodes(Geom, 2, TS, SOL_Ptr)
-#endif
+
        Call VecRestoreArrayF90(U_Master, SOL_Ptr, iErr)
     End If
-    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_V%ToMaster, iErr)
-    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_V%ToMaster, iErr)
+    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_V%ToMaster, iErr)
+    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_V%ToMaster, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(V_Master, Sol_Ptr, iErr)
@@ -722,10 +589,6 @@ Contains
     Call MEF90_Finalize()
   End Subroutine Finalize
 
-#if defined PB_2D
-End Module m_Rupt2D_Proc
-#elif defined PB_3D
-End Module m_Rupt3D_Proc
-#else 
+
 End Module m_Rupt2DA_Proc
-#endif
+

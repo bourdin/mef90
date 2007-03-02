@@ -1,17 +1,10 @@
-#if defined PB_2D
-Module m_Rupt2D_Vars
-#elif defined PB_3D
-Module m_Rupt3D_Vars
-#else 
 Module m_Rupt2DA_Vars
-#endif
 
   Use m_MEF90
   Use m_Rupt_Struct
 
   Implicit NONE
   PRIVATE
-
 
 #include "include/finclude/petsc.h"
 #include "include/finclude/petscvec.h"
@@ -21,8 +14,6 @@ Module m_Rupt2DA_Vars
 #include "include/finclude/petscksp.h"
 #include "include/finclude/petscpc.h"
 #include "include/finclude/petscis.h"
-#include "include/finclude/petscsys.h"
-
 
   Integer, Public                                       :: SaveInt = 1
   Mat, Public                                           :: MR_U
@@ -30,47 +21,32 @@ Module m_Rupt2DA_Vars
  
 
   Vec, Public                                           :: RHS_U
-  Vec, Public                                           :: U_Dist, U_Loc,     &
-       &                                                   U_Master
+  Vec, Public                                           :: U_Dist, U_Loc, U_Master
   Integer, Public                                       :: UMin, UMax
 
   Vec, Public                                           :: RHS_V
-  Vec, Public                                           :: V_Dist, V_Loc,     &
-       &                                                   V_Master
+  Vec, Public                                           :: V_Dist, V_Loc, V_Master
   Vec, Public                                           :: V_Old, V_Change
   Real(Kind = Kr), Public                               :: VMin, VMax, ErrV
 
-  Vec, Public                                           :: BCU_Dist, BCU_Loc, &
-       &                                                   BCU_Master
+  Vec, Public                                           :: BCU_Dist, BCU_Loc, BCU_Master
 
-  Vec, Public                                           :: Temp_Dist, Temp_Loc,&
-       &                                                   Temp_Master
+  Vec, Public                                           :: Temp_Dist, Temp_Loc, Temp_Master
 
-  Vec, Public                                           :: F_Dist, F_Loc,      &
-       &                                                   F_Master
+  Vec, Public                                           :: F_Dist, F_Loc,  F_Master
 
   KSP, Public                                           :: KSP_U, KSP_V
   PC, Public                                            :: PC_U, PC_V
   KSPConvergedReason, Public                            :: KSP_Reason
   Integer, Public                                       :: NbIterKSP
 
-#if defined PB_2D
-  Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_U
-  Type(Element2D_Elast), Dimension(:), Pointer, Public  :: Elem_db_U
-  Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_V
-  Type(Element2D_Scal), Dimension(:), Pointer, Public   :: Elem_db_V
-#elif defined PB_3D
-  Type(Node3D), Dimension(:), Pointer, Public           :: Node_db_U
-  Type(Element3D_Elast), Dimension(:), Pointer, Public  :: Elem_db_U
-  Type(Node3D), Dimension(:), Pointer, Public           :: Node_db_V
-  Type(Element3D_Scal), Dimension(:), Pointer, Public   :: Elem_db_V
-#else
-  ! 2DA
+
+! 2 DA
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_U
   Type(Element2D_Scal), Dimension(:), Pointer, Public   :: Elem_db_U
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_V
   Type(Element2D_Scal), Dimension(:), Pointer, Public   :: Elem_db_V
-#endif
+
 
   Type(EXO_Geom_Info), Public                           :: Geom
   Type(Rupt_Params), Public                             :: Params
@@ -110,13 +86,9 @@ Module m_Rupt2DA_Vars
   Integer, Public                                       :: LogStage_Assembly
   Integer, Public                                       :: LogStage_Solve
   
-#if defined PB_2D
-End Module m_Rupt2D_Vars
-#elif defined PB_3D
-End Module m_Rupt3D_Vars
-#else 
+
 End Module m_Rupt2DA_Vars
-#endif
+
 
   
  
