@@ -1,16 +1,10 @@
-#if defined PB_2D
-Module m_Rupt2D_V
-#elif defined PB_3D
-Module m_Rupt3D_V
-#else
 Module m_Rupt2DA_V
-#endif
+
   Use m_MEF90
   Use m_Rupt_Struct
 
   Implicit NONE
   PRIVATE
-
 
 #include "include/finclude/petsc.h"
 #include "include/finclude/petscvec.h"
@@ -20,7 +14,6 @@ Module m_Rupt2DA_V
 #include "include/finclude/petscksp.h"
 #include "include/finclude/petscpc.h"
 #include "include/finclude/petscis.h"
-#include "include/finclude/petscsys.h"
 
   Public :: Assemb_MR_V
   Public :: Assemb_RHS_V
@@ -33,12 +26,10 @@ Module m_Rupt2DA_V
 
 Contains
   Function Distance(A, B, M)
-    ! computes the distance from M to the segment [A,B]
-#if defined PB_3D
-    Type (Vect3D)                                :: A, B, M
-#else
+! computes the distance from M to the segment [A,B]
+
     Type (Vect2D)                                :: A, B, M  
-#endif    
+
     Real(Kind = Kr)                              :: test, normAB
 
     Real(Kind = Kr)                              :: Distance
@@ -50,8 +41,7 @@ Contains
     Else If (test > normAB) Then
        Distance = sqrt( (M-B) .DotP. (M-B) )
     Else
-       Distance = sqrt( ((M-A) .DotP. (M-A)) -                             &
-            & ( ((M-A) .DotP. (B-A)) / normAB ) **2 )
+       Distance = sqrt( ((M-A) .DotP. (M-A)) - ( ((M-A) .DotP. (B-A)) / normAB ) **2 )
     End If
     
   End Function Distance
@@ -69,32 +59,24 @@ Contains
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD    
-#if defined PB_2D
+
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
-#elif defined PB_3D
-    Type (Node3D), Dimension(:), Pointer          :: Nodes_V
-    Type (Element3D_Scal), Dimension(:), Pointer  :: Elems_V
-#else
-    Type (Node2D), Dimension(:), Pointer          :: Nodes_V
-    Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
-#endif
+
     Vec                                           :: V
     
     Integer                                      :: Rand_Node
     Real(Kind = Kr)                              :: Rand_Theta ! colatitude
-    Real(Kind = Kr)                              :: Rand_Phi   ! polar angle 
+    Real(Kind = Kr)                              :: Rand_Phi   ! polar angle
     Real(Kind = Kr)                              :: Rand_Length, Length
     Integer                                      :: iTerCracks,Nb_DoF_V
     Integer                                      :: iBlk, iE, iEloc, iS, iSG ,i
     
     Real(Kind = Kr), Dimension(:), Pointer       :: V_Ptr
     Integer, Dimension(:), Pointer               :: Loc_Indices
-#if defined PB_3D
-    Type (Vect3D), Dimension(:),Pointer          :: Crack_Loc
-#else
+
     Type (Vect2D), Dimension(:),Pointer          :: Crack_Loc
-#endif    
+
     Real(Kind = Kr)                              :: Tmp_Node
     
     Allocate(Loc_Indices(Geom%Num_Nodes))
@@ -117,32 +99,19 @@ Contains
 
           Crack_Loc(iTerCracks*2 - 1) = Nodes_V(Rand_Node)%Coord
           Crack_Loc(iTerCracks*2 )    = Crack_Loc(iTerCracks*2 - 1) 
-#if defined PB_3D
-          Crack_Loc(iTerCracks*2 )%X  = Crack_Loc(iTerCracks*2)%X             &
-               & + Rand_Length * COS(Rand_Theta) * SIN(Rand_Phi)
-          Crack_Loc(iTerCracks*2 )%Y  = Crack_Loc(iTerCracks*2)%Y             &
-               & + Rand_Length * SIN(Rand_Theta) * SIN(Rand_Phi)
-          Crack_Loc(iTerCracks*2 )%Z  = Crack_Loc(iTerCracks*2)%Z             &
-               & + Rand_Length * COS(Rand_PHI)
-#else
-          Crack_Loc(iTerCracks*2 )%X  = Crack_Loc(iTerCracks*2)%X             &
-               & + Rand_Length * COS(Rand_Theta)  
-          Crack_Loc(iTerCracks*2 )%Y  = Crack_Loc(iTerCracks*2)%Y             &
-               & + Rand_Length * SIN(Rand_Theta)
-#endif
+
+          Crack_Loc(iTerCracks*2 )%X  = Crack_Loc(iTerCracks*2)%X + Rand_Length * COS(Rand_Theta)  
+          Crack_Loc(iTerCracks*2 )%Y  = Crack_Loc(iTerCracks*2)%Y + Rand_Length * SIN(Rand_Theta)
+
        End Do Do_Cracks
     End If
     
-#if defined PB_3D
-    Call MPI_Bcast(Crack_Loc, 2*Params%nbCracks, Vect3D_MPIType, 0,           &
-         & PETSC_COMM_WORLD, iErr)
-#else
-    Call MPI_Bcast(Crack_Loc, 2*Params%nbCracks, Vect2D_MPIType, 0,           &
-         & PETSC_COMM_WORLD,iErr)
-#endif      
+
+    Call MPI_Bcast(Crack_Loc, 2*Params%nbCracks, Vect2D_MPIType, 0, PETSC_COMM_WORLD,iErr)
+
     
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-       !       Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
+!       Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
        Nb_Dof_V = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%ELem_ID(iELoc)
@@ -154,16 +123,14 @@ Contains
              iSG = Elems_V(iE)%ID_DoF(iS)
              If (SD%IsLocal_Node(iSG)) Then
                 Do_Crack : Do iTerCracks=1, Params%nbCracks
-                   Length = Distance(Crack_Loc(iTerCracks*2 -1),              &
-                        & Crack_Loc(iTerCracks*2 ), Nodes_V(iSG)%Coord)
-                   V_Ptr(Loc_Indices(iSG)+1) = min(V_Ptr(Loc_Indices(iSG)+1), &
-                        & CrackProfile(Length,Params))
+                   Length = Distance(Crack_Loc(iTerCracks*2 -1), Crack_Loc(iTerCracks*2 ), Nodes_V(iSG)%Coord)
+                   V_Ptr(Loc_Indices(iSG)+1) = min(V_Ptr(Loc_Indices(iSG)+1), CrackProfile(Length,Params))
                 End Do Do_Crack
              End IF
           End Do Do_iS
           Call VecRestoreArrayF90(V, V_Ptr, iErr)
        End Do Do_iE
-       !       End If  Is_Brittle	  
+!       End If  Is_Brittle
     End Do Do_iBlk
     
     Call VecGhostUpdateBegin(V, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -177,16 +144,10 @@ Contains
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD    
-#if defined PB_2D
+
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
-#elif defined PB_3D
-    Type (Node3D), Dimension(:), Pointer          :: Nodes_V
-    Type (Element3D_Scal), Dimension(:), Pointer  :: Elems_V
-#else
-    Type (Node2D), Dimension(:), Pointer          :: Nodes_V
-    Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
-#endif
+
     Vec                                           :: V
     
     Integer                                      :: Rand_Node
@@ -196,11 +157,9 @@ Contains
     
     Real(Kind = Kr), Dimension(:), Pointer       :: V_Ptr
     Integer, Dimension(:), Pointer               :: Loc_Indices
-#if defined PB_3D
-    Type (Vect3D), Dimension(:),Pointer          :: Crack_Loc
-#else
+
     Type (Vect2D), Dimension(:),Pointer          :: Crack_Loc
-#endif    
+
     Real(Kind = Kr)                              :: Tmp_Node
     
     Allocate(Loc_Indices(Geom%Num_Nodes))
@@ -216,16 +175,11 @@ Contains
        End Do Do_Cracks
     End If
     
-#if defined PB_3D
-    Call MPI_Bcast(Crack_Loc, Params%nbCracks, Vect3D_MPIType, 0,           &
-         & PETSC_COMM_WORLD, iErr)
-#else
-    Call MPI_Bcast(Crack_Loc, Params%nbCracks, Vect2D_MPIType, 0,           &
-         & PETSC_COMM_WORLD,iErr)
-#endif      
+
+    Call MPI_Bcast(Crack_Loc, Params%nbCracks, Vect2D_MPIType, 0, PETSC_COMM_WORLD,iErr)
+
     
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-       !       Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
        Nb_Dof_V = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%ELem_ID(iELoc)
@@ -237,17 +191,14 @@ Contains
              iSG = Elems_V(iE)%ID_DoF(iS)
              If (SD%IsLocal_Node(iSG)) Then
                 Do_Crack : Do iTerCracks=1, Params%nbCracks
-                   Length = sqrt((Crack_Loc(iTerCracks) - Nodes_V(iSG)%Coord)      &
-                        & .DotP. (Crack_Loc(iTerCracks) - Nodes_V(iSG)%Coord))
+                   Length = sqrt((Crack_Loc(iTerCracks) - Nodes_V(iSG)%Coord) .DotP. (Crack_Loc(iTerCracks) - Nodes_V(iSG)%Coord))
                    Length = Max(0.0_Kr, Length - Params%MaxCrackLength)
-                   V_Ptr(Loc_Indices(iSG)+1) = min(V_Ptr(Loc_Indices(iSG)+1), &
-                        & CrackProfile(Length,Params)+.1_Kr)
+                   V_Ptr(Loc_Indices(iSG)+1) = min(V_Ptr(Loc_Indices(iSG)+1), CrackProfile(Length,Params)+.1_Kr)
                 End Do Do_Crack
              End IF
           End Do Do_iS
           Call VecRestoreArrayF90(V, V_Ptr, iErr)
        End Do Do_iE
-       !       End If  Is_Brittle	  
     End Do Do_iBlk
     
     Call VecGhostUpdateBegin(V, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -259,37 +210,24 @@ Contains
 
 
 
-!!! USING VLV SEEMS TO MAKE THE KSP UNSTABLE, UNLESS V IS INITIALIZED WITH 
+!!! USING VLV SEEMS TO MAKE THE KSP UNSTABLE, UNLESS V IS INITIALIZED WITH
 !!! THE PROPER BC
-  Subroutine Assemb_MR_V(MR, U_Loc, Temp_Loc, Geom, Params, SD_U, SD_V,       &
-       & Elems_U, Elems_V, Nodes_U, Nodes_V)
+  Subroutine Assemb_MR_V(MR, U_Loc, Geom, Params, SD_U, SD_V, Elems_U, Elems_V, Nodes_U, Nodes_V, t)
     Mat                                           :: MR
     Vec                                           :: U_Loc
-    Vec                                           :: Temp_Loc
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD_U
     Type (SD_Info)                                :: SD_V
+	Real(Kind = Kr), Intent(IN)                   :: t
 
 
-#if defined PB_2D
-    Type (Node2D), Dimension(:), Pointer          :: Nodes_U
-    Type (Node2D), Dimension(:), Pointer          :: Nodes_V
-    Type (Element2D_Elast), Dimension(:), Pointer :: Elems_U
-    Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
-    Type(MatS2D), Dimension(:), Pointer           :: Sigma
-#elif defined PB_3D
-    Type (Node3D), Dimension(:), Pointer          :: Nodes_U
-    Type (Node3D), Dimension(:), Pointer          :: Nodes_V
-    Type (Element3D_Elast), Dimension(:), Pointer :: Elems_U
-    Type (Element3D_Scal), Dimension(:), Pointer  :: Elems_V
-    Type(MatS3D), Dimension(:), Pointer           :: Sigma
-#else
+
     Type (Node2D), Dimension(:), Pointer          :: Nodes_U
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_U
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
-#endif
+
 
 
     Integer                                      :: Nb_Gauss
@@ -302,7 +240,7 @@ Contains
     Integer                                      :: iBlk, iE, iEloc, iG
 
     Real(Kind = Kr), Dimension(:), Pointer       :: U_Ptr
-    Real(Kind = Kr), Dimension(:), Pointer       :: Temp_Ptr
+!    Real(Kind = Kr), Dimension(:), Pointer       :: Temp_Ptr
     Real(Kind = Kr), Dimension(:), Pointer       :: ContrU
 
     PetscScalar, Dimension(:,:), Pointer         :: MR_Elem
@@ -316,7 +254,8 @@ Contains
     PetscLogDouble                               :: SetTS, SetTF, SetT
 
     Real(Kind = Kr)                              :: E, Nu, k
-    Real(Kind = Kr)                              :: K1, K2, K3
+    Real(Kind = Kr)                              :: K2
+ 	 Type(Vect2D)                                 :: DistorsionEps, DistorsionSig
     Integer                                      :: SetN, i
 
     SetN = 0
@@ -327,23 +266,15 @@ Contains
        Call MatZeroEntries(MR, iErr)
     End If
 
-    
-#ifdef PB_2DA
     Allocate(Loc_Indices_U(Geom%Num_Nodes))
     Loc_Indices_U = (/ (i ,i = 0, Geom%Num_Nodes-1) /)
     Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes, Loc_Indices_U, iErr)
-#else
-    Allocate(Loc_Indices_U(Geom%Num_Nodes * Geom%Num_Dim))
-    Loc_Indices_U = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim - 1) /)
-    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes * Geom%Num_Dim,     &
-         & Loc_Indices_U, iErr)
-#endif
+
     Allocate(Loc_Indices_V(Geom%Num_Nodes))
     Loc_Indices_V = (/ (i ,i = 0, Geom%Num_Nodes-1) /)
     Call AOApplicationToPETSc(SD_V%Loc_AO, Geom%Num_Nodes, Loc_Indices_V, iErr)
 
     Call VecGetArrayF90(U_Loc, U_Ptr, iErr) 
-    Call VecGetArrayF90(Temp_Loc, Temp_Ptr, iErr) 
 
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
        E  = Params%Young_Mod(iBlk)
@@ -357,25 +288,11 @@ Contains
 !!!       (alpha = therm exp coef).
 !!! in 2D / plane stresses, the expressions are more complicated
 !!!
-#ifdef PB_2D
-       K1 = E * nu / (1.0_Kr - nu**2)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
-            (1.0_Kr - Params%Poisson_Ratio(iBlk) )
-#else
-       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
-            (1.0_Kr - 2.0_Kr * Params%Poisson_Ratio(iBlk) )
-#endif
 
-#ifdef PB_2DA
+       K2 = E / (1.0_Kr + nu) * InvOf2
+
        Nb_DoF_U = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
-#else
-       Nb_DoF_U = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
-#endif
-
-       Nb_Dof_V = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
+	    Nb_Dof_V = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
 
        Allocate (MR_Elem(Nb_DoF_V, Nb_DoF_V))
        Allocate (EXO_Indices_V(Nb_DoF_V))
@@ -389,95 +306,55 @@ Contains
           Call AOApplicationToPETSc(SD_V%EXO_AO, Nb_DoF_V, EXO_Indices_V, iErr)
        
           Call PetscGetTime(GaussTS, iErr)
-          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder,       &
-               & Elem=iE)
-          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder,       &
-               & Elem=iE)
+          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder, Elem=iE)
+          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder, Elem=iE)
           Call PetscGetTime(GaussTF, iErr)
-          GaussT = Gausst + GaussTF - GaussTS
+          GaussT = GaussT + GaussTF - GaussTS
           MR_Elem = 0.0_Kr
           Nb_Gauss = Elems_U(iE)%Nb_Gauss
           Allocate(ContrU(Nb_Gauss))
-#ifndef PB_2DA
-          Allocate(Sigma(Nb_Gauss))
-#endif
-          !!! part related to v^2+k_\e W(e(u))
+
+!!! part related to v^2+k_\e W(e(u))
           Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
              ContrU = 0.0_Kr
-             Do_iSLSig: Do iSLSig = 1, Elems_U(iE)%Nb_DoF
-                iSGSig = Elems_U(iE)%ID_DoF(iSLSig)
-#ifndef PB_2DA
-                Do_iGSig: Do iG = 1, Nb_Gauss
-                   Sigma(iG) = 2.0_Kr * K2 * Elems_U(iE)%GradS_BF(iSLSig,iG)
-                   Sigma(iG)%XX = Sigma(iG)%XX +&
-                        & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
-                   Sigma(iG)%YY = Sigma(iG)%YY +&
-                        & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
-#ifdef PB_3D
-                   Sigma(iG)%ZZ = Sigma(iG)%ZZ +&
-                        & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
-#endif
-                End Do Do_iGSig
-#endif
-                Do_iSLEps: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
-                   iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
-                   Do_iGUEps: Do iG = 1, Nb_Gauss
-#if defined PB_2DA
-                      ContrU(iG) = ContrU(iG) +                               &
-                           & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.          &
-                           &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) *             &
-                           &  U_Ptr(Loc_Indices_U(iSGSig)+1) *                &
-                           &  U_Ptr(Loc_Indices_U(iSGEps)+1) * K2 !* 2.0_KR
-#else                   
-                      ContrU(iG) = ContrU(iG) +                               &
-                           & ( Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.         &
-                           &   Sigma(iG) ) *                                  &
-                           &  U_Ptr(Loc_Indices_U(iSGSig)+1) *                &
-                           &  U_Ptr(Loc_Indices_U(iSGEps)+1) 
-#endif
-                   End Do Do_iGUEps
-                End Do Do_iSLEps
+             Do_iGUEps: Do iG = 1, Nb_Gauss
+                Do_iSLSig: Do iSLSig = 1, Elems_U(iE)%Nb_DoF
+                   iSGSig = Elems_U(iE)%ID_DoF(iSLSig)
+       				 DistorsionSig%X =   Nodes_U(iSGSig)%Coord%Y * Elems_U(iE)%BF(iSLSig,iG)
+				       DistorsionSig%Y = - Nodes_U(iSGSig)%Coord%X * Elems_U(iE)%BF(iSLSig,iG)
+                   Do_iSLEps: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
+                      iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
+				          DistorsionEps%X =   Nodes_U(iSGEps)%Coord%Y * Elems_U(iE)%BF(iSLEps,iG)
+				          DistorsionEps%Y = - Nodes_U(iSGEps)%Coord%X * Elems_U(iE)%BF(iSLEps,iG)
+ 
+                      ContrU(iG) = ContrU(iG) +                                                                                    &
+                                  ( (U_Ptr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG) - t*DistorsionEps) .DotP.     &
+                                    (U_Ptr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG) - t*DistorsionSig) ) * K2 
+!                      ContrU(iG) = ContrU(iG) +                                                                                    &
+!                                  ( (U_Ptr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG) - DistorsionEps) .DotP.     &
+!\\\                                    (U_Ptr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG) - DistorsionSig) ) * K2 
 
-#ifndef PB_2DA
-                Do_iSLEps_Temp: Do iSLEps = 1, Elems_V(iE)%Nb_DoF
-                   iSGEps = Elems_V(iE)%ID_DoF(iSLEps)
-                   Do_iGUEps_Temp: Do iG = 1, Nb_Gauss
-                      ContrU(iG) = ContrU(iG) - K3 *                          &
-                           & Temp_Ptr(Loc_Indices_V(iSGEps)+1) *              &
-                           & Elems_V(iE)% BF(iSLEps, iG) *                    &
-                           & U_Ptr(Loc_Indices_U(iSGSig)+1) *                 &
-                           & trace(Elems_U(iE)%GradS_BF(iSLSig, iG))
-                   End Do Do_iGUEps_Temp
-                End Do Do_iSLEps_Temp
-#endif
-
-
-             End Do Do_iSLSig
+                   End Do Do_iSLEps
+                End Do Do_iSLSig
+             End Do Do_iGUEps
              
              DoiSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
                 DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
                    DoiGV: Do iG = 1, Nb_Gauss
-                      MR_Elem(iSLV1, iSLV2) = MR_Elem(iSLV1, iSLV2) +         &
-                           & Elems_V(iE)%Gauss_C(iG) * ContrU(iG) *           &
-                           & Elems_V(iE)%BF(iSLV1, iG) *                      &
-                           & Elems_V(iE)%BF(iSLV2, iG) * .5_Kr
+                      MR_Elem(iSLV1, iSLV2) = MR_Elem(iSLV1, iSLV2) + Elems_V(iE)%Gauss_C(iG) * ContrU(iG) *                       &
+					                          Elems_V(iE)%BF(iSLV1, iG) * Elems_V(iE)%BF(iSLV2, iG) * .5_Kr
                    End Do DoiGV
                 End Do DoiSLV2
              End Do DoiSLV1
           End If Is_Brittle
 
-       !!! Surface energy part
+!!! Surface energy part
           DoiSLV1surf: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
              DoiSLV2surf: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
                 DoiGVsurf: Do iG = 1, Nb_Gauss
-                   MR_Elem(iSLV1, iSLV2) = MR_Elem(iSLV1, iSLV2) +            &
-                        & Elems_V(iE)%Gauss_C(iG) * k *                       &
-                        & (( Elems_V(iE)%BF(iSLV1, iG) *                      &
-                        &    Elems_V(iE)%BF(iSLV2, iG) ) / Params%Epsilon     &
-                        &    * InvOf4                                         &
-                        &  +(Elems_V(iE)%Grad_BF(iSLV1, iG) .DotP.            &
-                        &    Elems_V(iE)%Grad_BF(iSLV2, iG) )                 &
-                        &    * Params%Epsilon)
+                   MR_Elem(iSLV1, iSLV2) = MR_Elem(iSLV1, iSLV2) + Elems_V(iE)%Gauss_C(iG) * k *                                   &
+				                           (( Elems_V(iE)%BF(iSLV1, iG) * Elems_V(iE)%BF(iSLV2, iG) ) / Params%Epsilon * .25_Kr +  &
+										   (Elems_V(iE)%Grad_BF(iSLV1, iG) .DotP. Elems_V(iE)%Grad_BF(iSLV2, iG)) * Params%Epsilon)
                 End Do DoiGVsurf
              End Do DoiSLV2surf
           End Do DoiSLV1surf
@@ -492,8 +369,7 @@ Contains
              End Do Do_iSLBC
           End If
           
-          Call MatSetValues(MR, Nb_DoF_V, EXO_Indices_V, Nb_DoF_V,            &
-               & EXO_Indices_V, MR_Elem, ADD_VALUES, iErr)
+          Call MatSetValues(MR, Nb_DoF_V, EXO_Indices_V, Nb_DoF_V, EXO_Indices_V, MR_Elem, ADD_VALUES, iErr)
           SetN = SetN + 1
           
           Call PetscGetTime(GaussTS, iErr)
@@ -502,9 +378,7 @@ Contains
           Call PetscGetTime(GaussTF, iErr)
           GaussT = Gausst + GaussTF - GaussTS
           DeAllocate(ContrU)
-#ifndef PB_2DA
-          DeAllocate(Sigma)
-#endif
+
        EndDo Do_iE
        DeAllocate(MR_Elem)
        DeAllocate(EXO_Indices_V)
@@ -515,16 +389,15 @@ Contains
     DeAllocate(Loc_Indices_V)
     
     Call VecRestoreArrayF90(U_Loc, U_Ptr, iErr) 
-    Call VecRestoreArrayF90(Temp_Loc, Temp_Ptr, iErr) 
+!    Call VecRestoreArrayF90(Temp_Loc, Temp_Ptr, iErr) 
     Call MatAssemblyEnd(MR, MAT_FLUSH_ASSEMBLY, iErr)  
     
 
     Do_Irrev: If (Params%Do_Irrev) Then
-       ! Assembly of the BC terms 
+! Assembly of the BC terms
        Allocate(EXO_Indices_V(Geom%Num_Nodes))
        EXO_Indices_V = (/ (i, i=0, Geom%Num_Nodes - 1) /)
-       Call AOApplicationToPETSc(SD_V%EXO_AO, Geom%Num_Nodes, EXO_Indices_V,  &
-            & iErr)
+       Call AOApplicationToPETSc(SD_V%EXO_AO, Geom%Num_Nodes, EXO_Indices_V, iErr)
 
        Do_iBlk_BC: Do iBlk = 1, Geom%Num_Elem_Blks
           Nb_DoF_V = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
@@ -539,9 +412,7 @@ Contains
                 ISGSig = Elems_V(iE)%ID_DoF(iSLSig)
                 Is_BC_BC: If ( (Nodes_V(iSGSig)%BC /= BC_Type_NONE) )Then
                    Call PetscGetTime(SetTS, iErr)
-                   Call MatSetValue(MR, EXO_Indices_V(iSGSig),                &
-                        & EXO_Indices_V(iSGSig), 1.0_Kr, INSERT_VALUES,    &
-                        & iErr)
+                   Call MatSetValue(MR, EXO_Indices_V(iSGSig), EXO_Indices_V(iSGSig), 1.0_Kr, INSERT_VALUES, iErr)
                    Call PetscGetTime(SetTF, iErr)
                    SetN = SetN+1
                    SetT = SetT + SetTF - SetTS
@@ -562,13 +433,10 @@ Contains
     Type (Rupt_Params)                           :: Params
     Type (SD_Info)                               :: SD
 
-#ifdef PB_3D
-    Type (Node3D), Dimension(:), Pointer         :: Nodes
-    Type (Element3D_Scal), Dimension(:), Pointer :: Elems
-#else
+
     Type (Node2D), Dimension(:), Pointer         :: Nodes
     Type (Element2D_Scal), Dimension(:), Pointer :: Elems
-#endif
+
 
     PetscReal, Dimension(:), Pointer             :: RHS_Ptr
 
@@ -609,13 +477,11 @@ Contains
              Tmp_Val = 0.0_Kr
              DoiSLV2: Do iSLV2 = 1, Elems(iE)%Nb_DoF
                 Do_iGV: Do iG = 1, Nb_Gauss
-                   Tmp_Val = Tmp_Val + Toughness * Elems(iE)%Gauss_C(iG) *    &
-                        & Elems(iE)%BF(iSLV1, iG) * Elems(iE)%BF(iSLV2, iG) / &
-                        & Params%Epsilon / 4.0_Kr
+                   Tmp_Val = Tmp_Val + Toughness * Elems(iE)%Gauss_C(iG) * Elems(iE)%BF(iSLV1, iG) * Elems(iE)%BF(iSLV2, iG) /     &
+				             Params%Epsilon / 4.0_Kr
                 End Do Do_iGV
              End Do DoiSLV2
-             Call VecSetValue(RHS, EXO_Indices(iSGV1), Tmp_Val, ADD_VALUES,   &
-                  & iErr)
+             Call VecSetValue(RHS, EXO_Indices(iSGV1), Tmp_Val, ADD_VALUES, iErr)
           End Do Do_iSLV1
           Call Destroy_Gauss_EXO(Elems, Elem=iE)
        End Do Do_iE
@@ -624,7 +490,7 @@ Contains
     DeAllocate(EXO_Indices)
     Call VecAssemblyEnd(RHS, iErr)
 
-    ! BC Due to irreversibility:
+! BC Due to irreversibility:
     Is_Irrev: If (Params%Do_Irrev) Then
        Allocate(Loc_Indices(Geom%Num_Nodes))
        Loc_Indices = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
@@ -644,15 +510,13 @@ Contains
   End Subroutine Assemb_RHS_V
 
   Subroutine Apply_BC_V(Geom, Params, SD, Nodes, V)
-  !!! CHECK THAT OUT. I am tired...
+!!! CHECK THAT OUT. I am tired...
     Type(EXO_Geom_Info), Intent(IN)                  :: Geom
     Type(Rupt_Params), Intent(IN)                    :: Params
     Type (SD_Info), Intent(IN)                       :: SD
-#ifdef PB_3D
-    Type(Node3D), Dimension(:), Pointer              :: Nodes
-#else
+
     Type(Node2D), Dimension(:), Pointer              :: Nodes
-#endif
+
     Vec                                              :: V
 
     PetscReal, Dimension(:), Pointer                 :: VPtr
@@ -674,12 +538,5 @@ Contains
     Call VecRestoreArrayF90(V, VPtr, iErr)
     DeAllocate(Loc_Indices)
   End Subroutine Apply_BC_V
-
-
-#if defined PB_2D
-End Module m_Rupt2D_V
-#elif defined PB_3D
-End Module m_Rupt3D_V
-#else
 End Module m_Rupt2DA_V
-#endif
+

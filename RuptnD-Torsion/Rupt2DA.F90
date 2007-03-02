@@ -1,34 +1,15 @@
-#if defined PB_2D
-Program  Rupt2D
-#elif defined PB_3D
-Program Rupt3D
-#else 
 Program Rupt2DA
-#endif
+
 
   Use m_MEF90
   Use m_Rupt_Struct
 
-#if defined PB_2D
-  Use m_Rupt2D_Vars
-  Use m_Rupt2D_U
-  Use m_Rupt2D_V
-  Use m_Rupt2D_Ener
-  Use m_Rupt2D_Proc	
-#elif defined PB_3D
-  Use m_Rupt3D_Vars
-  Use m_Rupt3D_U
-  Use m_Rupt3D_V
-  Use m_Rupt3D_Ener
-  Use m_Rupt3D_Proc
-#else 
+
   Use m_Rupt2DA_Vars	
   Use m_Rupt2DA_U
   Use m_Rupt2DA_V
   Use m_Rupt2DA_Ener
   Use m_Rupt2DA_Proc
-#endif
-
 
   Implicit NONE
 
@@ -53,8 +34,7 @@ Program Rupt2DA
   
   Call PetscGetTime(InitTF, iErr)
   If (MEF90_MyRank == 0) Then
-     Write(Log_Unit, *) 'Time in Init():                            ',      &
-          & InitTF - InitTS
+     Write(Log_Unit, *) 'Time in Init():                            ', InitTF - InitTS
   End If
   
   Is_BackTracking  = .False.
@@ -67,8 +47,6 @@ Program Rupt2DA
      End If
      
      Call Update_BC_U(TimeStep)
-     Call Update_F(TimeStep)
-     Call Update_Temp(TimeStep)
      
 !!! UPDATE BC FOR IRREVERSIBILITY
      If (Params%Do_Irrev) Then
@@ -81,19 +59,16 @@ Program Rupt2DA
      Case (Init_V_ONE)
         If (.NOT. Is_BackTracking) Then
           Call VecSet(V_Dist, 1.0_Kr, iErr)
-          Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD,    &
-               & iErr)
+          Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
           Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 	End If 	
      Case (Init_V_RND)
         If (.NOT. Is_BackTracking) Then
-          Call Init_V_Cracks(Geom, Params, MySD_V, Elem_db_V,  Node_db_V,     &
-               & V_Dist)
+          Call Init_V_Cracks(Geom, Params, MySD_V, Elem_db_V,  Node_db_V, V_Dist)
 	End If  
      Case (Init_V_SPH)
         If (.NOT. Is_BackTracking) Then
-          Call Init_V_Spheres(Geom, Params, MySD_V, Elem_db_V,  Node_db_V,     &
-               & V_Dist)
+          Call Init_V_Spheres(Geom, Params, MySD_V, Elem_db_V,  Node_db_V, V_Dist)
 	End If  
      Case (Init_V_PREV)        
 	Continue
@@ -113,14 +88,14 @@ Program Rupt2DA
            Write(Log_Unit, 410) TimeStep, iIter
         End If
 
-        Call Solve_U()
-        Call Solve_V()
+        Call Solve_U(TimeStep)
+        Call Solve_V(TimeStep)
 
-!!$!!! Caltech 2006-04 save all intermediate steps       
+!!$!!! Caltech 2006-04 save all intermediate steps
 !!$        If (MEF90_MyRank == 0) Then
 !!$           Write(Log_Unit, *) 'EXPORTING TMP RESULT'
 !!$        End If
-!!$        Call Export(TimeStep+iIter+1) 
+!!$        Call Export(TimeStep+iIter+1)
 !!$!!!
         Call VecCopy(V_Dist, V_Old, iErr)
 
@@ -130,21 +105,16 @@ Program Rupt2DA
               Call PetscGetTime(TotalTF, iErr)
               Write(Log_Unit, 930) TotalTF - TotalTS
            End If
-           Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
-                & Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,    &
-                & Node_db_V, F_Loc, Temp_Loc )
+           Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,   &
+		   &                   Node_db_V, F_Loc, Temp_Loc )
            
-           Call Comp_Surf_Ener(Surf_Ener(TimeSTep), V_Loc, Geom, Params,      &
-                & MySD_V, Elem_db_V, Node_db_V)
+           Call Comp_Surf_Ener(Surf_Ener(TimeSTep), V_Loc, Geom, Params, MySD_V, Elem_db_V, Node_db_V)
            Tot_Ener(TimeStep) = Bulk_Ener(TimeStep) + Surf_Ener(TimeSTep)
            If (MEF90_MyRank ==0) Then
-              Write(Log_Unit, 910) Bulk_Ener(TimeStep), Surf_Ener(TimeStep),  &
-                   & Tot_Ener(TimeStep)
+              Write(Log_Unit, 910) Bulk_Ener(TimeStep), Surf_Ener(TimeStep), Tot_Ener(TimeStep)
               If (ErrV <= Params%TolRelax) Then
                  Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
-                 Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
-                      & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
-                      & Tot_Ener(TimeStep)
+                 Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep), Bulk_Ener(TimeStep), Surf_Ener(TimeStep), Tot_Ener(TimeStep)
               End If
            End If
 
@@ -160,8 +130,7 @@ Program Rupt2DA
            If (Params%Do_BackTrack) Then
               If (MEF90_MyRank == 0) Then  
                  Do iE = 1, TimeStep - 1
-                    Tmp_Ener = Bulk_Ener(TimeStep) / Params%Load(TimeStep)**2 *     &
-                         & Params%Load(iE)**2 + Surf_Ener(TimeStep)
+                    Tmp_Ener = Bulk_Ener(TimeStep) / Params%Load(TimeStep)**2 * Params%Load(iE)**2 + Surf_Ener(TimeStep)
      	              Err_Rel_Ener = (Tmp_Ener - Tot_Ener(iE)) / ABS(Tot_Ener(TimeStep))	     
                     If (Err_Rel_Ener < -Params%Tol_Ener) Then         
                        Is_BackTracking = .True.
@@ -170,12 +139,11 @@ Program Rupt2DA
                     End If
                  End Do
                  If (Is_BackTracking) Then
-                 !!! This is a bit silly, but I have already saved the energy if I am not BT''ing
+!!! This is a bit silly, but I have already saved the energy if I am not BT''ing
                     If (ErrV > Params%TolRelax) Then
                        Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
-                       Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
-                            & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
-                            & Tot_Ener(TimeStep)
+                       Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep), Bulk_Ener(TimeStep), Surf_Ener(TimeStep),            &
+					   &     Tot_Ener(TimeStep)
                     End If
                     TimeStep = iE
                     Write(Log_Unit, *) '********** Going back to step ', TimeStep
@@ -212,11 +180,7 @@ Program Rupt2DA
 910 Format('     Energies:     ', T24, 2(ES10.3, ' '), 'Total: ', ES10.3)
 920 Format(I4, 4(ES13.5,'  '))
 930 Format('     Cumulated time: ', T24, ES12.5)
-#if defined PB_2D
-End Program  Rupt2D
-#elif defined PB_3D
-End Program Rupt3D
-#else 
+
 End Program Rupt2DA
-#endif
+
 
