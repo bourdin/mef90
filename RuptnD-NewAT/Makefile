@@ -1,7 +1,7 @@
 PROJ            = Rupt
-VER             = 0.12.trunk
+VER             = 0.12.NewAT
 MEF90VER        = 0.12.0
-MEF90DIR        = $(MEF90ROOT)/MEF90-$(MEF90VER)
+MEF90DIR        = ../MEF90-$(MEF90VER)
 MEF90OBJS	= $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
                   $(MEF90DIR)/m_MEF_Types.o     $(MEF90DIR)/m_MEF_Tools.o \
                   $(MEF90DIR)/m_MEF_IO.o        $(MEF90DIR)/m_MEF_Gauss.o \
@@ -9,12 +9,12 @@ MEF90OBJS	= $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
                   $(MEF90DIR)/m_MEF_Ensight.o   $(MEF90DIR)/m_MEF_EXO.o   \
                   $(MEF90DIR)/m_MEF_SD.o        $(MEF90DIR)/m_MEF_PU.o    \
                   $(MEF90DIR)/m_MEF_Communication.o
-M_RUPT_STRUCT_DIR = $(MEF90ROOT)/m_Rupt_Struct-0.0.6
+M_RUPT_STRUCT_DIR = ../m_Rupt_Struct-0.0.6
 M_RUPT_STRUCT_OBJS = $(M_RUPT_STRUCT_DIR)/m_Rupt_Struct.o
 
 
 EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
-EXO_LFLAGS      = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf
+EXO_LFLAGS      = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf -lmetis -lparmetis 
 
 all: ${PROJ}${DIM}-${VER}
 

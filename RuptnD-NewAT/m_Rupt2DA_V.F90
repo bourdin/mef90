@@ -472,12 +472,9 @@ Contains
                 DoiGVsurf: Do iG = 1, Nb_Gauss
                    MR_Elem(iSLV1, iSLV2) = MR_Elem(iSLV1, iSLV2) +            &
                         & Elems_V(iE)%Gauss_C(iG) * k *                       &
-                        & (( Elems_V(iE)%BF(iSLV1, iG) *                      &
-                        &    Elems_V(iE)%BF(iSLV2, iG) ) / Params%Epsilon     &
-                        &    * InvOf4                                         &
-                        &  +(Elems_V(iE)%Grad_BF(iSLV1, iG) .DotP.            &
-                        &    Elems_V(iE)%Grad_BF(iSLV2, iG) )                 &
-                        &    * Params%Epsilon)
+                        & ( Elems_V(iE)%Grad_BF(iSLV1, iG) .DotP.             &
+                        &   Elems_V(iE)%Grad_BF(iSLV2, iG) )                  &
+                        &    * Params%Epsilon
                 End Do DoiGVsurf
              End Do DoiSLV2surf
           End Do DoiSLV1surf
@@ -611,7 +608,8 @@ Contains
                 Do_iGV: Do iG = 1, Nb_Gauss
                    Tmp_Val = Tmp_Val + Toughness * Elems(iE)%Gauss_C(iG) *    &
                         & Elems(iE)%BF(iSLV1, iG) * Elems(iE)%BF(iSLV2, iG) / &
-                        & Params%Epsilon / 4.0_Kr
+                        & Params%Epsilon
+						!!! THIS IS STUPID!
                 End Do Do_iGV
              End Do DoiSLV2
              Call VecSetValue(RHS, EXO_Indices(iSGV1), Tmp_Val, ADD_VALUES,   &
