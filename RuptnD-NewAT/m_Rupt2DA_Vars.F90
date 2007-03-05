@@ -38,6 +38,7 @@ Module m_Rupt2DA_Vars
   Vec, Public                                           :: V_Dist, V_Loc,     &
        &                                                   V_Master
   Vec, Public                                           :: V_Old, V_Change
+  Vec, Public                                           :: One_Dist, Zero_Dist
   Real(Kind = Kr), Public                               :: VMin, VMax, ErrV
 
   Vec, Public                                           :: BCU_Dist, BCU_Loc, &

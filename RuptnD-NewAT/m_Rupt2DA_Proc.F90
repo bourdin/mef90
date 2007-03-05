@@ -195,6 +195,12 @@ Contains
     Tot_Ener  = 0.0_Kr
     Bulk_Ener = 0.0_Kr      
 
+    Call VecDuplicate (V_Dist, One_Dist, iErr)
+
+!!! THIS IS REALY DANGEROUS AND STUPID...
+	Call VecSet(One_Dist, 1.0_Kr, iErr)
+    Call VecDuplicate (V_Dist, Zero_Dist, iErr)
+	Call VecSet(Zero_Dist, 0.0_Kr, iErr)
 
 !!! Read the energies from the .ener file
 !!! Get the last iteration number if called with -restart 0
@@ -562,6 +568,8 @@ Contains
     Call PetscLogStagePush(LogStage_Solve, iErr);
 
     Call KSPSolve(KSP_V, RHS_V, V_Dist, iErr)
+	Call VecPointwiseMin(V_Dist, V_Dist, One_Dist, iErr)
+	Call VecPointwiseMax(V_Dist, V_Dist, Zero_Dist, iErr)
 
     Call PetscLogStagePop(iErr);
     Call PetscGetTime(SolveTF, iErr)

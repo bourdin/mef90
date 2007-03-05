@@ -336,18 +336,17 @@ Contains
 
           Call Init_Gauss_EXO(Elems, Nodes, Geom, MEF90_GaussOrder, Elem=iE)
           Nb_Gauss = Elems(iE)%Nb_Gauss
-          Do_iSL1: Do iSL1 = 1, Elems(iE)%Nb_DoF
-             iSG1 = Elems(iE)%ID_DoF(iSL1)
-             DoiSL2: Do iSL2 = 1, Elems(iE)%Nb_DoF
-                iSG2 = Elems(iE)%ID_DoF(iSL2)
-                Do_iG: Do iG = 1, Nb_Gauss
-                   MyEner1 = MyEner1 + Toughness * Elems(iE)%Gauss_C(iG) *    &
-                        & (                                                   &
-                        &   Elems(iE)%BF(iSL1, iG) * Elems(iE)%BF(iSL2, iG) * &
-                        &   (1.0_Kr - VPtr(Loc_Indices(iSG1)+1)) *            &
-                        &   (1.0_Kr - VPtr(Loc_Indices(iSG2)+1)) /            &
-                        &   Params%Epsilon * .25_Kr )
+		  Do_iG: Do iG = 1, Nb_Gauss
+             Do_iSL1: Do iSL1 = 1, Elems(iE)%Nb_DoF
+                iSG1 = Elems(iE)%ID_DoF(iSL1)
+                MyEner1 = MyEner1 + Toughness * Elems(iE)%Gauss_C(iG) *    &
+                     & (                                                   &
+                     &   Elems(iE)%BF(iSL1, iG) *                          &
+					 &   2.0_Kr * (1.0_Kr - VPtr(Loc_Indices(iSG1)+1)) /   &
+                     &   Params%Epsilon)
 
+                DoiSL2: Do iSL2 = 1, Elems(iE)%Nb_DoF
+                   iSG2 = Elems(iE)%ID_DoF(iSL2)
                    MyEner2 = MyEner2 + Toughness * Elems(iE)%Gauss_C(iG) *    &
                         & (                                                   &
                         &  (Elems(iE)%Grad_BF(iSL1, iG) .DotP.                &
@@ -355,9 +354,9 @@ Contains
                         &   VPtr(Loc_Indices(iSG1)+1) *                       &
                         &   VPtr(Loc_Indices(iSG2)+1) * Params%Epsilon        &
                         & )
-                End Do Do_iG
-             End Do DoiSL2
-          End Do Do_iSL1
+                End Do DoiSL2
+             End Do Do_iSL1
+	      End Do Do_iG
           Call Destroy_Gauss_EXO(Elems, Elem=iE)
        End Do Do_iE
     End Do Do_iBlk
