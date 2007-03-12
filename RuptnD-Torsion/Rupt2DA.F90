@@ -105,8 +105,8 @@ Program Rupt2DA
               Call PetscGetTime(TotalTF, iErr)
               Write(Log_Unit, 930) TotalTF - TotalTS
            End If
-           Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,   &
-		   &                   Node_db_V, F_Loc, Temp_Loc )
+           Call VecSet(U_Loc, 1.0_Kr, iErr)
+           Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V, Params%Load(TimeStep))
            
            Call Comp_Surf_Ener(Surf_Ener(TimeSTep), V_Loc, Geom, Params, MySD_V, Elem_db_V, Node_db_V)
            Tot_Ener(TimeStep) = Bulk_Ener(TimeStep) + Surf_Ener(TimeSTep)

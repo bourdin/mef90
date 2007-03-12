@@ -255,7 +255,7 @@ Contains
 
     Real(Kind = Kr)                              :: E, Nu, k
     Real(Kind = Kr)                              :: K2
- 	 Type(Vect2D)                                 :: DistorsionEps, DistorsionSig
+    Type(Vect2D)                                 :: DistorsionEps, DistorsionSig
     Integer                                      :: SetN, i
 
     SetN = 0
@@ -320,13 +320,13 @@ Contains
              Do_iGUEps: Do iG = 1, Nb_Gauss
                 Do_iSLSig: Do iSLSig = 1, Elems_U(iE)%Nb_DoF
                    iSGSig = Elems_U(iE)%ID_DoF(iSLSig)
-       				 DistorsionSig%X =   Nodes_U(iSGSig)%Coord%Y * Elems_U(iE)%BF(iSLSig,iG)
-				       DistorsionSig%Y = - Nodes_U(iSGSig)%Coord%X * Elems_U(iE)%BF(iSLSig,iG)
+       		   DistorsionSig%X =   Nodes_U(iSGSig)%Coord%Y * Elems_U(iE)%BF(iSLSig,iG)
+                   DistorsionSig%Y = - Nodes_U(iSGSig)%Coord%X * Elems_U(iE)%BF(iSLSig,iG)
                    Do_iSLEps: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
                       iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
-				          DistorsionEps%X =   Nodes_U(iSGEps)%Coord%Y * Elems_U(iE)%BF(iSLEps,iG)
-				          DistorsionEps%Y = - Nodes_U(iSGEps)%Coord%X * Elems_U(iE)%BF(iSLEps,iG)
- 
+                      DistorsionEps%X =   Nodes_U(iSGEps)%Coord%Y * Elems_U(iE)%BF(iSLEps,iG)
+                      DistorsionEps%Y = - Nodes_U(iSGEps)%Coord%X * Elems_U(iE)%BF(iSLEps,iG)
+                      
                       ContrU(iG) = ContrU(iG) +                                                                                    &
                                   ( (U_Ptr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG) - t*DistorsionEps) .DotP.     &
                                     (U_Ptr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG) - t*DistorsionSig) ) * K2 

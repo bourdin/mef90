@@ -31,9 +31,9 @@ Module m_Rupt2DA_Vars
 
   Vec, Public                                           :: BCU_Dist, BCU_Loc, BCU_Master
 
-  Vec, Public                                           :: Temp_Dist, Temp_Loc, Temp_Master
+!  Vec, Public                                           :: Temp_Dist, Temp_Loc, Temp_Master
 
-  Vec, Public                                           :: F_Dist, F_Loc,  F_Master
+!  Vec, Public                                           :: F_Dist, F_Loc,  F_Master
 
   KSP, Public                                           :: KSP_U, KSP_V
   PC, Public                                            :: PC_U, PC_V
