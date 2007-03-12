@@ -127,24 +127,16 @@ Contains
 
     Call Init_SD_NoOvlp(Geom, Elem_db_U, MySD_U, U_Dist, U_Loc, U_Master)
     Call VecDuplicate(U_Master, BCU_Master, iErr)
-    Call VecDuplicate(U_Master, F_Master, iErr)
     Call VecDuplicate(U_Dist, BCU_Dist, iErr)
     Call VecDuplicate(U_Dist, RHS_U, iErr)
-    Call VecDuplicate(U_Dist, F_Dist, iErr)
     Call VecGhostGetLocalForm(BCU_Dist, BCU_Loc, iErr)
-    Call VecGhostGetLocalForm(F_Dist, F_Loc, iErr)
 
     Call Init_SD_NoOvlp(Geom, Elem_db_V, MySD_V, V_Dist, V_Loc, V_Master)
     Call VecDuplicate(V_Dist, V_Old, iErr)
     Call VecDuplicate(V_Dist, V_Change, iErr)
     Call VecDuplicate(V_Dist, RHS_V, iErr)
     
-    Call VecDuplicate (V_Dist, Temp_Dist, iErr)
-    Call VecDuplicate (V_Master, Temp_Master, iErr)
-
     Call VecGhostGetLocalForm(V_Dist, V_Loc, iErr)
-    Call VecGhostGetLocalForm(Temp_Dist, Temp_Loc, iErr)
-
 
     Call MatCreateMPIAIJ(PETSC_COMM_WORLD, MySD_U%Num_Nodes, MySD_U%Num_Nodes, Geom%Num_Nodes, Geom%Num_Nodes, 24,                 &
                          PETSC_NULL_INTEGER, 24, PETSC_NULL_INTEGER, MR_U, iErr)
@@ -577,14 +569,6 @@ Contains
     Call VecDestroy(BCU_Dist, iErr)
     Call VecDestroy(BCU_Loc, iErr)
     Call VecDestroy(BCU_Master, iErr)
-
-    Call VecDestroy(F_Dist, iErr)
-    Call VecDestroy(F_Loc, iErr)
-    Call VecDestroy(F_Master, iErr)
-
-    Call VecDestroy(Temp_Dist, iErr)
-    Call VecDestroy(Temp_Loc, iErr)
-    Call VecDestroy(Temp_Master, iErr)
 
     Call MEF90_Finalize()
   End Subroutine Finalize
