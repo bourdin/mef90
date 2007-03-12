@@ -287,7 +287,7 @@ Contains
                    iSG2 = Elems_V(iE)%ID_DoF(iSL2)
           Do_iG_Temp: Do iG = 1, Elems_U(iE)%Nb_Gauss
                    Distorsion%X =   Nodes_U(iSG2)%Coord%Y * Elems_U(iE)%BF(iSL2,iG)
-	   			    Distorsion%Y = - Nodes_U(iSG2)%Coord%X * Elems_U(iE)%BF(iSL2,iG)
+	   	   Distorsion%Y = - Nodes_U(iSG2)%Coord%X * Elems_U(iE)%BF(iSL2,iG)
                    Tmp_Val = Tmp_Val + Elems_U(iE)%Gauss_C(iG) * ContrV(iG) * K2 * t *                                             &
                             ( Distorsion .DotP. Elems_U(iE)%Grad_BF(iSL1, iG) )
           End Do Do_iG_Temp
