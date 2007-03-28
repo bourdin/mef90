@@ -14,7 +14,7 @@ M_RUPT_STRUCT_OBJS = $(M_RUPT_STRUCT_DIR)/m_Rupt_Struct.o
 
 
 EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
-EXO_LFLAGS      = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf
+EXO_LFLAGS      = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf -lmetis -lparmetis
 
 all: ${PROJ}${DIM}-${VER}
 
