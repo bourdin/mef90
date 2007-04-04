@@ -14,7 +14,7 @@ M_Rupt_STRUCT_DIR = $(MEF90ROOT)/m_Rupt_Struct-0.0.6
 M_Rupt_STRUCT_OBJS = $(M_Rupt_STRUCT_DIR)/m_Rupt_Struct.o
 
 EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
-EXO_LFLAGS      = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf
+EXO_LFLAGS      = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf -lmetis -lparmetis
 
 all: ${PROJ}-${VER}
 include ${PETSC_DIR}/bmake/common/base
