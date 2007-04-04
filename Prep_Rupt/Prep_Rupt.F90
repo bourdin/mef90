@@ -41,7 +41,8 @@ Program Prep_Rupt
   Integer, Parameter                              :: PB_Antiplane   = 2
   Integer, Parameter                              :: PB_CylTwist_3D = 3
   Integer, Parameter                              :: PB_Dipping     = 4
-  Integer, Parameter                              :: PB_Needleman   = 5
+  Integer, Parameter                              :: PB_Dipping2    = 5
+  Integer, Parameter                              :: PB_Needleman   = 6
   Integer                                         :: PB_Type
 
 
@@ -70,9 +71,10 @@ Program Prep_Rupt
 
   	 	Write(*,110) PB_Gen, 'Generic problem (CST fields, MIL)'
   	 	Write(*,110) PB_MixedMode, 'Mixed mode'
-  	 	Write(*,110) PB_Antiplane, 'Antiplane problem (CST fields, MIL) currently broken see l 350'  	 	
+  	 	Write(*,110) PB_Antiplane, 'Antiplane problem (CST fields, MIL)'  	 	
   	 	Write(*,110) PB_CylTwist_3D, 'Torsion of a 3D cylinder along the Z-axis'
   	 	Write(*,110) PB_Dipping, 'Unstable crack propagation, thermal loads'
+  	 	Write(*,110) PB_Dipping2, 'Unstable crack propagation, thermal loads rescaled'
   	 	Write(*,110) PB_Needleman, 'Unstable crack propagation, elastodynamic'
   	 	Write(*,100, advance = 'no') 'Problem type: ' 
   	 	Read(*,*) PB_Type
@@ -302,10 +304,10 @@ Contains
     End Do
     
     Select Case (PB_Type)
-    Case (PB_Gen, PB_Dipping)
+    Case (PB_Gen, PB_Dipping, PB_Dipping2)
        Do iTS = 1, Size(Params%Load)
           BC_Result%X = Params%Load(iTS) * BC_Unit%X
-    	  BC_Result%Y = Params%Load(iTS) * BC_Unit%Y
+    	    BC_Result%Y = Params%Load(iTS) * BC_Unit%Y
           
           Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
           Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
@@ -506,6 +508,7 @@ Contains
 	Real(Kind = Kr)                               :: TCool, THot
 	Real(Kind = Kr)                               :: b, V, D, P
 	Real(Kind = Kr)                               :: Y
+	Real(Kind = Kr)                               :: l, DTheta, kappa
 	
 
     !!! Generates BC vector from the TS informations and the
@@ -548,6 +551,27 @@ Contains
           End Do
           Call Write_EXO_Result_Nodes(Geom, 8, iTS, Temp_Result)
        End Do          
+    Case (PB_Dipping2)
+       Write(*, 100, advance = 'no') 'Temperature difference (Delta Theta) '
+       Read(*,*) DTheta
+       Write(*, 100, advance = 'no') 'Characteristic length (l)            '
+       Read(*,*) l
+       Write(*, 100, advance = 'no') 'Thermal conductivity (kappa)         '
+       Read(*,*) kappa
+       Write(*, 100, advance = 'no') 'Quenching speed (V)                  '
+       Read(*,*) V
+       Temp_Result = 0.0_Kr
+       Do iTS = 1, Size(Params%Load)
+          Do iNode = 1, Geom%Num_Nodes
+             Y = Node_db(iNode)%Coord%Y
+             Print*, Y, Params%Load(iTS)
+             If (Y >= Params%Load(iTS)) Then
+!             	Temp_Result(iNode) = DTheta * (1.0_Kr -  exp( -V/kappa*(Y-Params%Load(iTS))) )
+             	Temp_Result(iNode) = DTheta
+             End If
+          End Do
+          Call Write_EXO_Result_Nodes(Geom, 8, iTS, Temp_Result)
+       End Do          
     Case Default
 	   Write(*,*) 'Unkown dimension / PB_Type combination in Write_Temp2D'
 	End Select
@@ -574,10 +598,11 @@ Contains
     Params%MaxIterRelax       = 5000
     Params%TolKSP             = 1.0D-6
     Params%TolRelax           = 1.0D-3
+    Params%Do_Irrev           = .TRUE.
 
     !!! This is totally meaningful in general...
     Params%Epsilon      = 1.0D-1
-    Params%KEpsilon     = 1.0D-4
+    Params%KEpsilon     = 1.0D-6
     Params%TolIrrev     = 1.0D-2
     Write(*,100) '===== Global Properties ======'
 !    Do
