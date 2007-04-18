@@ -560,14 +560,16 @@ Contains
        Read(*,*) kappa
        Write(*, 100, advance = 'no') 'Quenching speed (V)                  '
        Read(*,*) V
-       Temp_Result = 0.0_Kr
        Do iTS = 1, Size(Params%Load)
+       Temp_Result = -DTheta
+!          Print*, 'Y: ', Params%Load(iTS)
           Do iNode = 1, Geom%Num_Nodes
              Y = Node_db(iNode)%Coord%Y
-             Print*, Y, Params%Load(iTS)
+!             Print*, Y, Params%Load(iTS)
              If (Y >= Params%Load(iTS)) Then
-!             	Temp_Result(iNode) = DTheta * (1.0_Kr -  exp( -V/kappa*(Y-Params%Load(iTS))) )
-             	Temp_Result(iNode) = DTheta
+!             Temp_Result(iNode) = Y
+             	Temp_Result(iNode) = -DTheta * exp( -V/kappa*l*(Y-Params%Load(iTS)))
+!             	Temp_Result(iNode) = DTheta
              End If
           End Do
           Call Write_EXO_Result_Nodes(Geom, 8, iTS, Temp_Result)
