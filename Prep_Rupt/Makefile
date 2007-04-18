@@ -1,7 +1,7 @@
 PROJ=Prep_Rupt
 VER=0.0.7
 MEF90VER        = 0.12.0
-MEF90DIR        = $(MEF90ROOT)/MEF90-$(MEF90VER)
+MEF90DIR        = ../MEF90-$(MEF90VER)
 MEF90OBJS       = $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
                   $(MEF90DIR)/m_MEF_Types.o     $(MEF90DIR)/m_MEF_Tools.o \
                   $(MEF90DIR)/m_MEF_IO.o        $(MEF90DIR)/m_MEF_Gauss.o \
@@ -10,7 +10,7 @@ MEF90OBJS       = $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
                   $(MEF90DIR)/m_MEF_SD.o        $(MEF90DIR)/m_MEF_PU.o    \
                   $(MEF90DIR)/m_MEF_Communication.o
 
-M_Rupt_STRUCT_DIR = $(MEF90ROOT)/m_Rupt_Struct-0.0.6
+M_Rupt_STRUCT_DIR = ../m_Rupt_Struct-0.0.6
 M_Rupt_STRUCT_OBJS = $(M_Rupt_STRUCT_DIR)/m_Rupt_Struct.o
 
 EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
