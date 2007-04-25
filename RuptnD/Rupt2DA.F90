@@ -124,7 +124,7 @@ Program Rupt2DA
 !!$!!!
         Call VecCopy(V_Dist, V_Old, iErr)
 
-        If ( (Mod(iIter, SaveInt) == 0) .OR. (ErrV <= Params%TolRelax) )Then 
+        If ( (Mod(iIter, SaveInt) == 0) .OR. (ErrV <= Params%TolRelax) ) Then 
            If (MEF90_MyRank ==0) Then
               Write(Log_Unit, *) '    * Saving time step ',  TimeStep
               Call PetscGetTime(TotalTF, iErr)
@@ -155,7 +155,8 @@ Program Rupt2DA
 
 
            Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
-
+        End If
+        If ( Mod(iIter, BTInt) == 0) Then
            Is_BackTracking = .FALSE.
            If (Params%Do_BackTrack) Then
               If (MEF90_MyRank == 0) Then  
@@ -185,6 +186,7 @@ Program Rupt2DA
 !!$                         & Tot_Ener(TimeStep)
                     Write(Ener_Unit, *) '  '
                     Close(Ener_Unit)
+                    Call Export(TimeStep)
                  End If
               End If
            End If
