@@ -123,10 +123,10 @@ Program Rupt2DA
 !!$        Call Export(TimeStep+iIter+1) 
 !!$!!!
         Call VecCopy(V_Dist, V_Old, iErr)
-
-        If ( (Mod(iIter, SaveInt) == 0) .OR. (ErrV <= Params%TolRelax) ) Then 
+        
+        IfTmpSav: If ( (Mod(iIter, SaveInt) == 0) .OR. (ErrV <= Params%TolRelax) ) Then 
            If (MEF90_MyRank ==0) Then
-              Write(Log_Unit, *) '    * Saving time step ',  TimeStep
+              Write(Log_Unit, *) '    ** Saving time step ',  TimeStep
               Call PetscGetTime(TotalTF, iErr)
               Write(Log_Unit, 930) TotalTF - TotalTS
            End If
@@ -147,57 +147,84 @@ Program Rupt2DA
                       & Tot_Ener(TimeStep)
               End If
            End If
+           
+           Call Export (TimeStep)
 
-          Call Export (TimeStep)
 !!! Remove this to stop saving -all- intermediate results
 !!! This is NOT optimal
 !           Call Export2(Size(Params%Load) + TotIter, Params%Load(TimeStep))
 
-
+           
            Call PetscLogPrintSummary(PETSC_COMM_WORLD, "petsc_log_summary.log", iErr)
-        End If
-        If ( Mod(iIter, BTInt) == 0) Then
+        End If IfTmpSav
+
+        IfConverged: If (ErrV <= Params%TolRelax) Then 
+           Is_Backtracking = .FALSE.
+           EXIT
+        End If IfConverged
+
+
+        IfBT: If ( (Mod(iIter, BTInt) == 0) .AND.  (Params%Do_BackTrack) ) Then
            Is_BackTracking = .FALSE.
-           If (Params%Do_BackTrack) Then
-              If (MEF90_MyRank == 0) Then  
-                 Do iE = 1, TimeStep - 1
-                    Tmp_Ener = Bulk_Ener(TimeStep) / Params%Load(TimeStep)**2 *     &
-                         & Params%Load(iE)**2 + Surf_Ener(TimeStep)
-     	              Err_Rel_Ener = (Tmp_Ener - Tot_Ener(iE)) / ABS(Tot_Ener(TimeStep))	     
-                    If (Err_Rel_Ener < -Params%Tol_Ener) Then         
-                       Is_BackTracking = .True.
-                       EXIT
-                    Else
-                    End If
-                 End Do
-                 If (Is_BackTracking) Then
-                 !!! This is a bit silly, but I have already saved the energy if I am not BT''ing
-                    If (ErrV > Params%TolRelax) Then
-                       Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
-                       Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
-                            & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
-                            & Tot_Ener(TimeStep)
-                    End If
-                    TimeStep = iE
-                    Write(Log_Unit, *) '********** Going back to step ', TimeStep
+           Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom,       &
+                & Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U,    &
+                & Node_db_V, F_Loc, Temp_Loc )
+           
+           Call Comp_Surf_Ener(Surf_Ener(TimeSTep), V_Loc, Geom, Params,      &
+                & MySD_V, Elem_db_V, Node_db_V)
+           Tot_Ener(TimeStep) = Bulk_Ener(TimeStep) + Surf_Ener(TimeSTep)
+           
+           If (MEF90_MyRank ==0) Then
+              Write(Log_Unit, 910) Bulk_Ener(TimeStep), Surf_Ener(TimeStep),  &
+                   & Tot_Ener(TimeStep)
+              If (ErrV <= Params%TolRelax) Then
+                 Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
+                 Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
+                      & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
+                      & Tot_Ener(TimeStep)
+              End If
+           End If
+           !          If (Params%Do_BackTrack) Then
+           If (MEF90_MyRank == 0) Then  
+              Do iE = 1, TimeStep - 1
+                 Tmp_Ener = Bulk_Ener(TimeStep) / Params%Load(TimeStep)**2 *     &
+                      & Params%Load(iE)**2 + Surf_Ener(TimeStep)
+!                 Err_Rel_Ener = (Tmp_Ener - Tot_Ener(iE)) / ABS(Tot_Ener(TimeStep))	     
+                 Err_Rel_Ener = (Tmp_Ener - Tot_Ener(iE)) / ABS(Tot_Ener(iE))	     
+                 If (Err_Rel_Ener < -Params%Tol_Ener) Then     
+                    Is_BackTracking = .True.
+                    EXIT
+                    !                  Else
+                 End If
+              End Do
+              If (Is_BackTracking) Then
+!!! This is a bit silly, but I have already saved the energy if I am not BT''ing
+                 If (ErrV > Params%TolRelax) Then
                     Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
+                    Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
+                         & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
+                         & Tot_Ener(TimeStep)
+                 End If
+                 TimeStep = iE
+                 Write(Log_Unit, *) '********** Going back to step ', TimeStep
+                 Open(File = Ener_Str, Unit =  Ener_Unit, Position = 'append')
 !!$                    Write(Ener_Unit, 920) TimeStep, Params%Load(TimeStep),          &
 !!$                         & Bulk_Ener(TimeStep), Surf_Ener(TimeStep),                &
 !!$                         & Tot_Ener(TimeStep)
-                    Write(Ener_Unit, *) '  '
-                    Close(Ener_Unit)
-                    Call Export(TimeStep)
-                 End If
+                 Write(Ener_Unit, *) '  '
+                 Close(Ener_Unit)
               End If
            End If
+           !           End If
            Call MPI_BCAST(Is_BackTracking , 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, iErr)
            Call MPI_BCAST(TimeStep, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, iErr)
-           If ( (Is_Backtracking) .OR. (ErrV <= Params%TolRelax) ) Then
+           Call Export(TimeStep)
+           If (Is_Backtracking) Then
               EXIT
-           End If        
-        End If
+           End If   
+        End If IfBT
      End Do Do_Iter
-
+     
      If (.NOT. Is_BackTracking) Then
         TimeStep = TimeStep + 1
      End If
