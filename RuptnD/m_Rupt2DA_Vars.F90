@@ -25,7 +25,7 @@ Module m_Rupt2DA_Vars
 
 
   Integer, Public                                       :: SaveInt = 25
-  Integer, Public                                       :: BTInt = 1
+  Integer, Public                                       :: BTInt = 5
   
   Mat, Public                                           :: MR_U
   Mat, Public                                           :: MR_V

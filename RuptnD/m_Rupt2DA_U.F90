@@ -27,8 +27,7 @@ Module m_Rupt2DA_U
   Integer :: iErr
 Contains
 
-  Subroutine Assemb_MR_U(MR, V_Loc, Geom, Params, SD_U, SD_V,                 &
-       & Elems_U, Elems_V, Nodes_U, Nodes_V)
+  Subroutine Assemb_MR_U(MR, V_Loc, Geom, Params, SD_U, SD_V, Elems_U, Elems_V, Nodes_U, Nodes_V)
     Mat                                           :: MR
     Vec                                           :: V_Loc
     Type (EXO_Geom_Info)                          :: Geom
@@ -79,8 +78,8 @@ Contains
     Integer                                       :: SetN, i
 
     Real(Kind = Kr)                               :: E, Nu
-    Real(Kind = Kr)                               :: K1, K2, K3
-    
+    Real(Kind = Kr)                               :: K1, K2
+        
     SetN = 0
     GaussT = 0.0
 
@@ -110,13 +109,9 @@ Contains
 #ifdef PB_2D
        K1 = E * nu / (1.0_Kr - nu**2)
        K2 = E / (1.0_Kr + nu) * InvOf2
-       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
-            (1.0_Kr - Params%Poisson_Ratio(iBlk) )
 #else
        K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
        K2 = E / (1.0_Kr + nu) * InvOf2
-       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
-            (1.0_Kr - 2.0_Kr * Params%Poisson_Ratio(iBlk) )
 #endif
 
 #ifdef PB_2DA
@@ -131,18 +126,15 @@ Contains
 
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%ELem_ID(iELoc)
-          If ((.NOT. SD_U%IsLocal_Elem(iE)) .OR.                              &
-               & (.NOT. Params%Is_Domain(iBlk))) Then
+          If ((.NOT. SD_U%IsLocal_Elem(iE)) .OR. (.NOT. Params%Is_Domain(iBlk))) Then
              CYCLE
           End If
           EXO_Indices_U = Elems_U(iE)%Id_DoF-1
           Call AOApplicationToPETSc(SD_U%EXO_AO, Nb_DoF_U, EXO_Indices_U, iErr)
 
           Call PetscGetTime(GaussTS, iErr)
-          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder,       &
-               & Elem=iE)
-          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder,       &
-               & Elem=iE)
+          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder, Elem=iE)
+          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder, Elem=iE)
           Call PetscGetTime(GaussTF, iErr)
           GaussT = Gausst + GaussTF - GaussTS
           MR_Elem = 0.0_Kr
@@ -158,11 +150,8 @@ Contains
                 DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
                    iSGV2 = Elems_V(iE)%ID_DoF(iSLV2)
                    Do_iGV: Do iG = 1, Nb_Gauss
-                      ContrV(iG) = ContrV(iG) +                               &
-                           & V_Ptr(Loc_Indices_V(iSGV1)+1)                    &
-                           &  * Elems_V(iE)%BF(iSLV1, iG)                     &
-                           &  * V_Ptr(Loc_Indices_V(iSGV2)+1)                 &
-                           &  * Elems_V(iE)%BF(iSLV2, iG)
+                      ContrV(iG) = ContrV(iG) + V_Ptr(Loc_Indices_V(iSGV1)+1) * Elems_V(iE)%BF(iSLV1, iG)                        &
+                                              * V_Ptr(Loc_Indices_V(iSGV2)+1) * Elems_V(iE)%BF(iSLV2, iG)
                    End Do Do_iGV
                 End Do DoiSLV2
               End Do Do_iSLV1
@@ -174,35 +163,27 @@ Contains
 #ifndef PB_2DA
              Do_iGSig: Do iG = 1, Nb_Gauss
                 Sigma(iG) = 2.0_Kr * K2 * Elems_U(iE)%GradS_BF(iSLSig,iG)
-                Sigma(iG)%XX = Sigma(iG)%XX +&
-                     & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
-                Sigma(iG)%YY = Sigma(iG)%YY +&
-                     & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
+                Sigma(iG)%XX = Sigma(iG)%XX + K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
+                Sigma(iG)%YY = Sigma(iG)%YY + K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
 #ifdef PB_3D
-                Sigma(iG)%ZZ = Sigma(iG)%ZZ +&
-                     & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
+                Sigma(iG)%ZZ = Sigma(iG)%ZZ + K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
 #endif
              End Do Do_iGSig
 #endif
              Do_iSLEps: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
                 Do_iGUEps: Do iG = 1, Nb_Gauss
 #if defined PB_2DA
-                   MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
-                        & Elems_U(iE)%Gauss_C(iG) *                           &
-                        & ( ContrV(iG) + Params%Kepsilon ) *                  &
-                        & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.             &
-                        &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) * K2
+                   MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) + Elems_U(iE)%Gauss_C(iG) * (ContrV(iG) + Params%Kepsilon) *  &
+                                           ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP. Elems_U(iE)%Grad_BF(iSLSig,iG) ) * K2
 #else                   
-                   MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) +        &
-                        & Elems_U(iE)%Gauss_C(iG) * ContrV(iG) *              &
-                        & (Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP. Sigma(iG)) 
+                   MR_Elem(iSLEps, iSLSig) = MR_Elem(iSLEps, iSLSig) + Elems_U(iE)%Gauss_C(iG) * ContrV(iG) *                      &
+                                           ( Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP. Sigma(iG)) 
 #endif
                 End Do Do_iGUEps
              End Do Do_iSLEps
           End Do Do_iSLSig
 
-          Call MatSetValues(MR, Nb_DoF_U, EXO_Indices_U, Nb_DoF_U,            &
-               & EXO_Indices_U, MR_Elem, ADD_VALUES, iErr)
+          Call MatSetValues(MR, Nb_DoF_U, EXO_Indices_U, Nb_DoF_U, EXO_Indices_U, MR_Elem, ADD_VALUES, iErr)
           SetN = SetN + 1
 
           Call PetscGetTime(GaussTS, iErr)
@@ -235,8 +216,7 @@ Contains
 #else
     Allocate(EXO_Indices_U(Geom%Num_Nodes * Geom%Num_Dim))
     EXO_Indices_U = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim - 1) /)
-    Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes * Geom%Num_Dim,    &
-         & EXO_Indices_U, iErr)
+    Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes * Geom%Num_Dim, EXO_Indices_U, iErr)
 #endif 
 
     Do_iBlk_BC: Do iBlk = 1, Geom%Num_Elem_Blks
@@ -254,11 +234,9 @@ Contains
           
           Do_iSLSig_BC: Do iSLSig = 1, Nb_DoF_U
              ISGSig = Elems_U(iE)%ID_DoF(iSLSig)
-             Is_BC_BC: If ( (Nodes_U(iSGSig)%BC /= BC_Type_NONE) .AND.        &
-                  & (SD_U%IsLocal_Node(iSGSig)) )Then
+             Is_BC_BC: If ( (Nodes_U(iSGSig)%BC /= BC_Type_NONE) .AND. (SD_U%IsLocal_Node(iSGSig)) )Then
                 Call PetscGetTime(SetTS, iErr)
-                Call MatSetValue(MR, EXO_Indices_U(iSGSig),                   &
-                     & EXO_Indices_U(iSGSig), MEF90_VLV, INSERT_VALUES, iErr)
+                Call MatSetValue(MR, EXO_Indices_U(iSGSig), EXO_Indices_U(iSGSig), MEF90_VLV, INSERT_VALUES, iErr)
                 Call PetscGetTime(SetTF, iErr)
                 SetN = SetN+1
                 SetT = SetT + SetTF - SetTS
@@ -273,10 +251,10 @@ Contains
 
 #ifdef MEF90_TIMING
     If (MEF90_MyRank ==0) Then
-       Write(Log_Unit, *) 'Total time in Init/Destroy_Gauss:         ',      &
-            & GaussT
+       Write(Log_Unit, *) 'Total time in Init/Destroy_Gauss:         ', GaussT
     End If
 #endif
+!    Call MatView(MR, PETSC_VIEWER_STDOUT_WORLD, iErr)
   End Subroutine Assemb_MR_U
 
 
@@ -336,29 +314,24 @@ Contains
     
     Allocate(Loc_Indices_Scal(Geom%Num_Nodes))
     Loc_Indices_Scal = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
-    Call AOApplicationToPETSc(SD_V%Loc_AO, Geom%Num_Nodes, Loc_Indices_Scal,  &
-         & iErr)
+    Call AOApplicationToPETSc(SD_V%Loc_AO, Geom%Num_Nodes, Loc_Indices_Scal, iErr)
 
 #ifdef PB_2DA
     Allocate(Loc_Indices_Vect(Geom%Num_Nodes))
     Loc_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
-    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes, Loc_Indices_Vect,  &
-         & iErr)
+    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes, Loc_Indices_Vect, iErr)
     
     Allocate(EXO_Indices_Vect(Geom%Num_Nodes))
     EXO_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
-    Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes, EXO_Indices_Vect,  &
-         & iErr)
+    Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes, EXO_Indices_Vect, iErr)
 #else
     Allocate(Loc_Indices_Vect(Geom%Num_Nodes * Geom%Num_Dim))
     Loc_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim -1) /)
-    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes * Geom%Num_Dim,    &
-         & Loc_Indices_Vect, iErr)
+    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes * Geom%Num_Dim, Loc_Indices_Vect, iErr)
     
     Allocate(EXO_Indices_Vect(Geom%Num_Nodes * Geom%Num_Dim))
     EXO_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim -1) /)
-    Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes * Geom%Num_Dim,    &
-         & EXO_Indices_Vect, iErr)
+    Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes * Geom%Num_Dim, EXO_Indices_Vect, iErr)
 #endif
     
     Call VecGetArrayF90(FLoc, F_Ptr, iErr)
@@ -375,11 +348,9 @@ Contains
 !!! in 2D / plane stresses, the expressions are more complicated
 !!!
 #ifdef PB_2D
-       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
-            (1.0_Kr - Params%Poisson_Ratio(iBlk) )
+       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) / (1.0_Kr - Params%Poisson_Ratio(iBlk) )
 #else
-       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
-            (1.0_Kr - 2.0_Kr * Params%Poisson_Ratio(iBlk) )
+       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) / (1.0_Kr - 2.0_Kr * Params%Poisson_Ratio(iBlk) )
 #endif
        
        Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
@@ -387,10 +358,8 @@ Contains
           If (.NOT. SD_U%IsLocal_Elem(iE)) Then
              CYCLE
           End If
-          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder,       &
-               & Elem=iE)
-          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder,       &
-               & Elem=iE)
+          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder, Elem=iE)
+          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder, Elem=iE)
           
           Allocate(ContrV(Elems_V(iE)%Nb_Gauss))
           
@@ -403,11 +372,8 @@ Contains
                 DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
                    iSGV2 = Elems_V(iE)%ID_DoF(iSLV2)
                    Do_iGV: Do iG = 1, Elems_V(iE)%Nb_Gauss
-                      ContrV(iG) = ContrV(iG) +                               &
-                           & V_Ptr(Loc_Indices_Scal(iSGV1)+1)                 &
-                           &  * Elems_V(iE)%BF(iSLV1, iG)                     &
-                           &  * V_Ptr(Loc_Indices_Scal(iSGV2)+1)              &
-                           &  * Elems_V(iE)%BF(iSLV2, iG)
+                      ContrV(iG) = ContrV(iG) + V_Ptr(Loc_Indices_Scal(iSGV1)+1) * Elems_V(iE)%BF(iSLV1, iG)                     &
+                                              * V_Ptr(Loc_Indices_Scal(iSGV2)+1) * Elems_V(iE)%BF(iSLV2, iG)
                    End Do Do_iGV
                 End Do DoiSLV2
              End Do Do_iSLV1
@@ -426,15 +392,11 @@ Contains
                    iSG2 = Elems_U(iE)%ID_DoF(iSL2)
                    Do_iG: Do iG = 1, Elems_U(iE)%Nb_Gauss
 #ifdef PB_2DA
-                      Tmp_Val = Tmp_Val + Elems_U(iE)%Gauss_C(iG) * (         &
-                           & F_Ptr(Loc_Indices_Vect(iSG2)+1) *                &
-                           & ( Elems_U(iE)%BF(iSL1, iG) *                     &
-                           &   Elems_U(iE)%BF(iSL2,iG) ))
+                      Tmp_Val = Tmp_Val + Elems_U(iE)%Gauss_C(iG) * ( F_Ptr(Loc_Indices_Vect(iSG2)+1) *                           &
+                                                                    ( Elems_U(iE)%BF(iSL1, iG) * Elems_U(iE)%BF(iSL2,iG) ))
 #else
-                      Tmp_Val = Tmp_Val + Elems_U(iE)%Gauss_C(iG) * (         &
-                           & F_Ptr(Loc_Indices_Vect(iSG2)+1) *                &
-                           & ( Elems_U(iE)%BF(iSL1, iG) .DotP.                &
-                           &   Elems_U(iE)%BF(iSL2,iG) ))
+                      Tmp_Val = Tmp_Val + Elems_U(iE)%Gauss_C(iG) * ( F_Ptr(Loc_Indices_Vect(iSG2)+1) *                           &
+                                                                  & ( Elems_U(iE)%BF(iSL1, iG) .DotP. Elems_U(iE)%BF(iSL2,iG) ))
 #endif
                    End Do Do_iG
                 End Do Do_iSL2
@@ -445,16 +407,13 @@ Contains
              Do_iSL2_Temp: Do iSL2 = 1, Elems_V(iE)%Nb_DoF
                 iSG2 = Elems_V(iE)%ID_DoF(iSL2)
                 Do_iG_Temp: Do iG = 1, Elems_U(iE)%Nb_Gauss
-                   Tmp_Val = Tmp_Val + Elems_V(iE)%Gauss_C(iG) * (            &
-                        & Temp_Ptr(Loc_Indices_Scal(iSG2)+1) * K3 *           &
-                        & trace(Elems_U(iE)%GradS_BF(iSL1, iG)) *             &
-                        & Elems_V(iE)% BF(iSL2, iG)) * ContrV(iG)
+                   Tmp_Val = Tmp_Val + Elems_V(iE)%Gauss_C(iG) * ( Temp_Ptr(Loc_Indices_Scal(iSG2)+1) * K3 *                      &
+                        & trace(Elems_U(iE)%GradS_BF(iSL1, iG)) * Elems_V(iE)% BF(iSL2, iG)) * ContrV(iG)
                 End Do Do_iG_Temp
              End Do Do_iSL2_Temp
 #endif
              
-             Call VecSetValue(RHS, EXO_Indices_Vect(iSG1), Tmp_Val,           &
-                  & ADD_VALUES, iErr)
+             Call VecSetValue(RHS, EXO_Indices_Vect(iSG1), Tmp_Val, ADD_VALUES, iErr)
           End Do Do_iSL1
           
           Call Destroy_Gauss_EXO(Elems_U, Elem=iE)
@@ -476,8 +435,7 @@ Contains
     Do_iS: Do iSLoc = 1, SD_U%Num_Nodes
        iS = SD_U%Node(iSLoc)
        Is_BC: If (Nodes_U(iS)%BC /= BC_Type_NONE) Then
-          RHS_Ptr(Loc_Indices_Vect(iS)+1) = BC_U_Ptr(Loc_Indices_Vect(iS)+1)  &
-               & * MEF90_VLV
+          RHS_Ptr(Loc_Indices_Vect(iS)+1) = BC_U_Ptr(Loc_Indices_Vect(iS)+1) * MEF90_VLV
        End If Is_BC
     End Do Do_iS
     
