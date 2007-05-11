@@ -184,8 +184,9 @@ Program Elast
 
      Call VecGhostUpdateBegin(SOL_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
      Call VecGhostUpdateEnd(SOL_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
-     Call Calc_Ener(SOL_Loc, Geom, Params, Elem_db, Node_db, MySD_Vect,       &
-          & F_Loc, Ener_Elast) 
+!     Call Calc_Ener(SOL_Loc, Geom, Params, Elem_db, Node_db, MySD_Vect, F_Loc, Ener_Elast) 
+     Call Calc_Ener(SOL_Loc, Geom, Params, Elem_db, Node_db, MySD_Vect, Elem_Scal, Node_Scal, MySD_Scal, F_Loc, Temp_Loc, Ener_Elast) 
+
      Write(CharBuffer, *) '=== Elastic Energy: ', Ener_Elast, '\n'c
      Call PETScPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
