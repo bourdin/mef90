@@ -37,8 +37,7 @@ Module m_Rupt2DA_Ener
   Integer  :: iErr
 
 Contains
-  Subroutine Comp_Bulk_Ener(Ener, ULoc, VLoc, Geom, Params, SD_U, SD_V,       &
-       & Elems_U, Elems_V, Nodes_U, Nodes_V, FLoc, TempLoc)
+  Subroutine Comp_Bulk_Ener(Ener, ULoc, VLoc, Geom, Params, SD_U, SD_V, Elems_U, Elems_V, Nodes_U, Nodes_V, FLoc, TempLoc)
     Type (EXO_Geom_Info)                         :: Geom
     Type (Rupt_Params)                           :: Params
     Type (SD_Info)                               :: SD_U
@@ -49,18 +48,21 @@ Contains
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Elast), Dimension(:), Pointer :: Elems_U
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
-    Type(MatS2D), Dimension(:), Pointer           :: Sigma
+    Type(MatS2D)                                  :: Sigma, Epsilon
+    Type(Vect2D)                                  :: F, U
 #elif defined PB_3D
     Type (Node3D), Dimension(:), Pointer          :: Nodes_U
     Type (Node3D), Dimension(:), Pointer          :: Nodes_V
     Type (Element3D_Elast), Dimension(:), Pointer :: Elems_U
     Type (Element3D_Scal), Dimension(:), Pointer  :: Elems_V
-    Type(MatS3D), Dimension(:), Pointer           :: Sigma
+    Type (MatS3D)                                 :: Sigma, Epsilon
+    Type (Vect3D)                                 :: F, U
 #else
     Type (Node2D), Dimension(:), Pointer          :: Nodes_U
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_U
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
+    Type (Vect2D)                                 :: Sigma, Epsilon
 #endif
 
     Vec                                          :: ULoc
@@ -75,16 +77,16 @@ Contains
 
     Real(Kind = Kr)                              :: MyEner
     Integer                                      :: Nb_Gauss, Nb_DoF
-    Integer                                      :: iSLV1, iSGV1
-    Integer                                      :: iSLV2, iSGV2
-    Integer                                      :: iSLSig, iSGSig
-    Integer                                      :: iSLEps, iSGEps
+    Integer                                      :: iSL, iSG
+!    Integer                                      :: iSLV1, iSGV1
+!    Integer                                      :: iSLV2, iSGV2
+!    Integer                                      :: iSLSig, iSGSig
+!    Integer                                      :: iSLEps, iSGEps
     Integer                                      :: iBlk, iELoc, iE, iG
     
 
     Real(Kind = Kr), Dimension(:), Pointer       :: UPtr, VPtr, FPtr, TempPtr
-    Real(Kind = Kr), Dimension(:), Pointer       :: ContrU, ContrV
-    Real(Kind = Kr), Dimension(:), Pointer       :: ContrF, ContrTemp
+    Real(Kind = Kr)                              :: ContrV
 
     Integer, Dimension(:), Pointer               :: Loc_Indices_U
     Integer, Dimension(:), Pointer               :: Loc_Indices_V
@@ -128,13 +130,11 @@ Contains
 #ifdef PB_2D
        K1 = E * nu / (1.0_Kr - nu**2)
        K2 = E / (1.0_Kr + nu) * InvOf2
-       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
-            (1.0_Kr - Params%Poisson_Ratio(iBlk) )
+       K3 = Params%Therm_Exp(iBlk) * E / (1.0_Kr - nu )
 #else
        K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
        K2 = E / (1.0_Kr + nu) * InvOf2
-       K3 = Params%Therm_Exp(iBlk) * Params%Young_Mod(iBlk) /                 &
-            (1.0_Kr - 2.0_Kr * Params%Poisson_Ratio(iBlk) )
+       K3 = Params%Therm_Exp(iBlk) * E / (1.0_Kr - 2.0_Kr * nu)
 #endif
 
 #ifdef PB_2DA
@@ -143,138 +143,88 @@ Contains
 
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%Elem_ID(iELoc)
-          If ((.NOT. SD_U%IsLocal_Elem(iE)) .OR.                              &
-               & (.NOT. Params%Is_Domain(iBlk))) Then
+          If ((.NOT. SD_U%IsLocal_Elem(iE)) .OR. (.NOT. Params%Is_Domain(iBlk))) Then
              CYCLE
           End If
 
-          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder,       &
-               & Elem=iE)
-          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder,       &
-               & Elem=iE)
+          Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder, Elem=iE)
+          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder, Elem=iE)
 
           Nb_Gauss = Elems_U(iE)%Nb_Gauss
-#ifndef PB_2DA
-          Allocate(Sigma(Nb_Gauss))
-#endif
-          Allocate(ContrU(Nb_Gauss))
-          Allocate(ContrV(Nb_Gauss))
-          Allocate(ContrF(Nb_Gauss))
-          Allocate(ContrTemp(Nb_Gauss))
-          
+          Do_iG: Do iG = 1, Nb_Gauss
+ 
           ! V^2 + K_\epsilon term
-          Is_Brittle: If (Params%Is_Brittle(iBlk)) Then
-!             ContrV = Params%KEpsilon
-             ContrV = 0.0_Kr
-             Do_iSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
-                iSGV1 = Elems_V(iE)%ID_DoF(iSLV1)
-                DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
-                   iSGV2 = Elems_V(iE)%ID_DoF(iSLV2)
-                   Do_iGV: Do iG = 1, Nb_Gauss
-                      ContrV(iG) = ContrV(iG) + Elems_V(iE)%BF(iSLV1, iG) *   &
-                           &   Elems_V(iE)%BF(iSLV2, iG) *                    &
-                           &   (VPtr(Loc_Indices_V(iSGV1)+1) *                &
-                           &    VPtr(Loc_Indices_V(iSGV2)+1) ) 
-                   End Do Do_iGV
-                End Do DoiSLV2
-             End Do Do_iSLV1
-          Else
-             ContrV = 1.0_Kr
-          End If Is_Brittle
+             Is_Brittle: If (Params%Is_Brittle(iBlk)) Then
+                ContrV = 0.0
+                Do_iSLV: Do iSL = 1, Elems_V(iE)%Nb_DoF
+                   iSG = Elems_V(iE)%ID_DoF(iSL)
+                   
+                   ContrV = ContrV + VPtr(Loc_Indices_V(iSG)+1) * Elems_V(iE)%BF(iSL, iG)
+                End Do Do_iSLV
+                ContrV = ContrV**2 + Params%Kepsilon
+             Else
+                ContrV = 1.0_Kr
+             End If Is_Brittle
+             
+             
+             Sigma = 0.0_Kr
+             Epsilon = 0.0_Kr
+             Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF
+                iSG = Elems_U(iE)%ID_DoF(iSL)
 
-          ! W(e(u)) Term
-          !!! part related to v^2+k_\e W(e(u))
-          ContrU = 0.0_Kr
-          ContrF = 0.0_Kr
-          ContrTemp = 0.0_Kr
-          Do_iSLSig: Do iSLSig = 1, Elems_U(iE)%Nb_DoF
-             iSGSig = Elems_U(iE)%ID_DoF(iSLSig)
-#ifndef PB_2DA
-             Do_iGSig: Do iG = 1, Nb_Gauss
-                Sigma(iG) = 2.0_Kr * K2 * Elems_U(iE)%GradS_BF(iSLSig,iG)
-                Sigma(iG)%XX = Sigma(iG)%XX +                                 &
-                     & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
-                Sigma(iG)%YY = Sigma(iG)%YY +                                 &
-                     & K1* Trace(Elems_U(iE)%GradS_BF(iSLSig,iG))
-#ifdef PB_3D
-                Sigma(iG)%ZZ = Sigma(iG)%ZZ +                                 &
-                     & K1 * Trace(Elems_U(iE)%GradS_BF(iSLSig,iG)) 
-#endif
-             End Do Do_iGSig
-#endif
-             Do_iSLEps: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
-                iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
-                Do_iGUEps: Do iG = 1, Nb_Gauss
-#if defined PB_2DA
-                   ContrU(iG) = ContrU(iG) +                                  &
-                        & ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP.             &
-                        &   Elems_U(iE)%Grad_BF(iSLSig,iG) ) *                &
-                        &  UPtr(Loc_Indices_U(iSGSig)+1) *                    &
-                        &  UPtr(Loc_Indices_U(iSGEps)+1) * K2 * ContrV(iG)
-#else                   
-                   ContrU(iG) = ContrU(iG) +                                  &
-                        & ( Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.            &
-                        &   Sigma(iG) ) *                                     &
-                        &  UPtr(Loc_Indices_U(iSGSig)+1) *                    &
-                        &  UPtr(Loc_Indices_U(iSGEps)+1) * ContrV(iG) +       &
-                        &  Params%Kepsilon *                                  &
-                        & ( Elems_U(iE)%GradS_BF(iSLEps,iG) .DotP.            &
-                        &   Elems_U(iE)%GradS_BF(iSLSig,iG) )
-#endif
-                End Do Do_iGUEps
-             End Do Do_iSLEps
-!!! Force stuff
-             If (Params%Has_Force(iBlk)) Then
-                Do_iSLEpsF: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
-                   iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
-                   Do_iGF: Do iG = 1, Nb_Gauss
-#ifdef PB_2DA                  
-                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1)*&
-                           & FPtr(Loc_Indices_U(iSGSig)+1) *                  &
-                           & Elems_U(iE)%BF(iSLSig, iG) *                     &
-                           & Elems_U(iE)%BF(iSLEps, iG) 
+#ifdef PB_2DA
+                Sigma = K2 * Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
+                Epsilon =    Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
 #else
-                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1)*&
-                           & FPtr(Loc_Indices_U(iSGSig)+1) *                  &
-                           & (Elems_U(iE)%BF(iSLSig, iG) .DotP. Elems_U(iE)%BF(iSLEps, iG) )
+                Sigma    = Sigma + 2.0_Kr * K2 * Elems_U(iE)%GradS_BF(iSL,iG)  * UPtr(Loc_Indices_U(iSG)+1)
+                Sigma%XX = Sigma%XX + K1 * Trace(Elems_U(iE)%GradS_BF(iSL,iG)) * UPtr(Loc_Indices_U(iSG)+1)
+                Sigma%YY = Sigma%YY + K1 * Trace(Elems_U(iE)%GradS_BF(iSL,iG)) * UPtr(Loc_Indices_U(iSG)+1)
+#ifdef PB_3D
+                Sigma%ZZ = Sigma%ZZ + K1 * Trace(Elems_U(iE)%GradS_BF(iSL,iG)) * UPtr(Loc_Indices_U(iSG)+1)
 #endif
-                   End Do Do_iGF
-                End Do Do_iSLEpsF
-             End If
+                Epsilon  = Epsilon + Elems_U(iE)%GradS_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)
+#endif
+             End Do Do_iSL1
+             
+#ifndef PB_2DA
+!!! Thermal stuff
+             Do_iSL2: Do iSL = 1, Elems_V(iE)%Nb_DoF
+                iSG = Elems_V(iE)%ID_DoF(iSL)
 
-!!! Thermal stuff             
-#ifndef PB_2DA                  
-             Do_iSLEpsTemp: Do iSLEps = 1, Elems_V(iE)%Nb_DoF
-                iSGEps = Elems_V(iE)%ID_DoF(iSLEps)
-                Do_iGEpsTemp: Do iG = 1, Nb_Gauss
-                   ContrTemp(iG) = ContrTemp(iG) +                            &
-                        &  K3 * UPtr(Loc_Indices_U(iSGSig)+1) *               &
-                        &  trace(Elems_U(iE)%GradS_BF(iSLSig, iG)) *          &
-                        &  TempPtr(Loc_Indices_V(iSGEps)+1) *                 &
-                        &  Elems_V(iE)% BF(iSLEps, iG) * ContrV(iG)
-                End Do Do_iGEpsTemp
-             End Do Do_iSLEpsTemp
+                Sigma%XX   = Sigma%XX -   K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
+                Sigma%YY   = Sigma%YY -   K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
+                Epsilon%XX = Epsilon%XX - K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
+                Epsilon%YY = Epsilon%YY - K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
+#ifdef PB_3D
+                Sigma%ZZ   = Sigma%ZZ -   K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
+                Epsilon%ZZ = Epsilon%ZZ - K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
 #endif
-          End Do Do_iSLSig
-          
-          Do_iGE: Do iG = 1, Nb_Gauss
-             MyEner = MyEner + Elems_U(iE)%Gauss_C(iG) *                      &
-                  & (ContrU(iG) * .5_Kr - ContrF(iG) - ContrTemp(iG))
-          End Do Do_iGE
+             End Do Do_iSL2
+
+#endif
+             MyEner = MyEner + Elems_U(iE)%Gauss_C(iG) * ContrV * (Sigma .DotP. Epsilon) * .5_Kr
+             
+             
+!!! Forces stuff
+#ifndef PB_2DA
+             U = 0.0_Kr
+             F = 0.0_Kr
+             If (Params%Has_Force(iBlk)) Then
+                Do_iSL3: Do iSL = 1, Elems_U(iE)%Nb_DoF
+                   iSG = Elems_U(iE)%ID_DoF(iSL)
+                   U = U + UPtr(Loc_Indices_U(iSG)+1) * Elems_U(iE)%BF(iSL,iG)
+                   F = F + FPtr(Loc_Indices_U(iSG)+1) * Elems_U(iE)%BF(iSL,iG)
+                End Do Do_iSL3
+                MyEner = MyEner - Elems_U(iE)%Gauss_C(iG) * (F .DotP. U) 
+              End If
+#endif
+          End Do Do_iG
           Call Destroy_Gauss_EXO(Elems_U, Elem=iE)
           Call Destroy_Gauss_EXO(Elems_V, Elem=iE)
-          DeAllocate(ContrU)
-          DeAllocate(ContrV)
-          DeAllocate(ContrF)
-          DeAllocate(ContrTemp)
-#ifndef PB_2DA
-          DeAllocate(Sigma)
-#endif
        End Do Do_iE
     End Do Do_iBlk
 
-    Call MPI_Reduce(MyEner, Ener, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0,        &
-         & MPI_COMM_WORLD, iErr)
+    Call MPI_Reduce(MyEner, Ener, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD, iErr)
     Call MPI_BCAST(Ener, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, iErr)
     Call VecRestoreArrayF90(ULoc, UPtr, iErr)
     Call VecRestoreArrayF90(VLoc, VPtr, iErr)
@@ -362,11 +312,9 @@ Contains
        End Do Do_iE
     End Do Do_iBlk
     
-    Call MPI_Reduce(MyEner1, Ener1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0,      &
-         & MPI_COMM_WORLD, iErr)
+    Call MPI_Reduce(MyEner1, Ener1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD, iErr)
     Call MPI_BCAST(Ener1, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, iErr)
-    Call MPI_Reduce(MyEner2, Ener2, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0,      &
-         & MPI_COMM_WORLD, iErr)
+    Call MPI_Reduce(MyEner2, Ener2, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD, iErr)
     Call MPI_BCAST(Ener2, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, iErr)
     Ener = Ener1 + Ener2
     Call VecRestoreArrayF90(VLoc, VPtr, iErr)
