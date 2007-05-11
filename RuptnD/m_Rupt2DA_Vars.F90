@@ -32,24 +32,19 @@ Module m_Rupt2DA_Vars
  
 
   Vec, Public                                           :: RHS_U
-  Vec, Public                                           :: U_Dist, U_Loc,     &
-       &                                                   U_Master
+  Vec, Public                                           :: U_Dist, U_Loc, U_Master
   Integer, Public                                       :: UMin, UMax
 
   Vec, Public                                           :: RHS_V
-  Vec, Public                                           :: V_Dist, V_Loc,     &
-       &                                                   V_Master
+  Vec, Public                                           :: V_Dist, V_Loc, V_Master
   Vec, Public                                           :: V_Old, V_Change
   Real(Kind = Kr), Public                               :: VMin, VMax, ErrV
 
-  Vec, Public                                           :: BCU_Dist, BCU_Loc, &
-       &                                                   BCU_Master
+  Vec, Public                                           :: BCU_Dist, BCU_Loc, BCU_Master
 
-  Vec, Public                                           :: Temp_Dist, Temp_Loc,&
-       &                                                   Temp_Master
+  Vec, Public                                           :: Temp_Dist, Temp_Loc, Temp_Master
 
-  Vec, Public                                           :: F_Dist, F_Loc,      &
-       &                                                   F_Master
+  Vec, Public                                           :: F_Dist, F_Loc, F_Master
 
   KSP, Public                                           :: KSP_U, KSP_V
   PC, Public                                            :: PC_U, PC_V
