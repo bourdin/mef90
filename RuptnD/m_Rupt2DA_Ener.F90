@@ -78,10 +78,6 @@ Contains
     Real(Kind = Kr)                              :: MyEner
     Integer                                      :: Nb_Gauss, Nb_DoF
     Integer                                      :: iSL, iSG
-!    Integer                                      :: iSLV1, iSGV1
-!    Integer                                      :: iSLV2, iSGV2
-!    Integer                                      :: iSLSig, iSGSig
-!    Integer                                      :: iSLEps, iSGEps
     Integer                                      :: iBlk, iELoc, iE, iG
     
 
@@ -104,8 +100,7 @@ Contains
 #else
     Allocate(Loc_Indices_U(Geom%Num_Nodes * Geom%Num_Dim))
     Loc_Indices_U = (/ (i ,i = 0, Geom%Num_Nodes * Geom%Num_Dim - 1) /)
-    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes * Geom%Num_Dim,     &
-         & Loc_Indices_U, iErr)
+    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes * Geom%Num_Dim, Loc_Indices_U, iErr)
 #endif
 
     Call VecGetArrayF90(VLoc, VPtr, iErr)
@@ -234,46 +229,46 @@ Contains
     DeAllocate(Loc_Indices_V)
   End Subroutine Comp_Bulk_Ener
 
-  Subroutine Comp_Surf_Ener(Ener, VLoc, Geom, Params, SD, Elems, Nodes)
+  Subroutine Comp_Surf_Ener(Ener, VLoc, Geom, Params, SD, Elems_V, Nodes_V)
     Type (EXO_Geom_Info)                         :: Geom
     Type (Rupt_Params)                           :: Params
     Type (SD_Info)                               :: SD
 
 #ifdef PB_3D
-    Type (Node3D), Dimension(:), Pointer         :: Nodes
-    Type (Element3D_Scal), Dimension(:), Pointer :: Elems
+    Type (Node3D), Dimension(:), Pointer         :: Nodes_V
+    Type (Element3D_Scal), Dimension(:), Pointer :: Elems_V
+    Type (Vect3D)                                :: GradV
 #else
-    Type (Node2D), Dimension(:), Pointer         :: Nodes
-    Type (Element2D_Scal), Dimension(:), Pointer :: Elems
+    Type (Node2D), Dimension(:), Pointer         :: Nodes_V
+    Type (Element2D_Scal), Dimension(:), Pointer :: Elems_V
+    Type (Vect2D)                                :: GradV
 #endif
     Vec                                          :: VLoc
     Real(Kind = Kr), Intent(OUT)                 :: Ener
 
 
-    Real(Kind = Kr)                              :: MyEner1, MyEner2
-    Real(Kind = Kr)                              :: Ener1, Ener2
+    Real(Kind = Kr)                              :: MyEner
+    Real(Kind = Kr)                              :: V2
 
     Integer                                      :: Nb_Gauss, Nb_DoF
-    Integer                                      :: iSL1, iSG1
-    Integer                                      :: iSL2, iSG2
+    Integer                                      :: iSL, iSG
     Integer                                      :: iBlk, iELoc, iE, iG
 
     Real(Kind = Kr), Dimension(:), Pointer       :: VPtr
     PetscReal                                    :: Toughness
 
-    Integer, Dimension(:), Pointer               :: Loc_Indices
+    Integer, Dimension(:), Pointer               :: Loc_Indices_V
 
     Integer                                      :: SetN, i
 
-    Allocate(Loc_Indices(Geom%Num_Nodes))
-    Loc_Indices = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
-    Call AOApplicationToPETSc(SD%Loc_AO, Geom%Num_Nodes, Loc_Indices, iErr)
+    Allocate(Loc_Indices_V(Geom%Num_Nodes))
+    Loc_Indices_V = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
+    Call AOApplicationToPETSc(SD%Loc_AO, Geom%Num_Nodes, Loc_Indices_V, iErr)
 
     Call VecGetArrayF90(VLoc, VPtr, iErr)
     
-    MyEner1 = 0.0_Kr
-    MyEner2 = 0.0_Kr
-    Ener = 0.0_Kr
+    MyEner = 0.0_Kr
+    Ener   = 0.0_Kr
 
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
        Toughness = Params%Toughness(iBlk)
@@ -284,41 +279,29 @@ Contains
              CYCLE
           End If
 
-          Call Init_Gauss_EXO(Elems, Nodes, Geom, MEF90_GaussOrder, Elem=iE)
-          Nb_Gauss = Elems(iE)%Nb_Gauss
-          Do_iSL1: Do iSL1 = 1, Elems(iE)%Nb_DoF
-             iSG1 = Elems(iE)%ID_DoF(iSL1)
-             DoiSL2: Do iSL2 = 1, Elems(iE)%Nb_DoF
-                iSG2 = Elems(iE)%ID_DoF(iSL2)
-                Do_iG: Do iG = 1, Nb_Gauss
-                   MyEner1 = MyEner1 + Toughness * Elems(iE)%Gauss_C(iG) *    &
-                        & (                                                   &
-                        &   Elems(iE)%BF(iSL1, iG) * Elems(iE)%BF(iSL2, iG) * &
-                        &   (1.0_Kr - VPtr(Loc_Indices(iSG1)+1)) *            &
-                        &   (1.0_Kr - VPtr(Loc_Indices(iSG2)+1)) /            &
-                        &   Params%Epsilon * .25_Kr )
-
-                   MyEner2 = MyEner2 + Toughness * Elems(iE)%Gauss_C(iG) *    &
-                        & (                                                   &
-                        &  (Elems(iE)%Grad_BF(iSL1, iG) .DotP.                &
-                        &   Elems(iE)%Grad_BF(iSL2, iG)) *                    &
-                        &   VPtr(Loc_Indices(iSG1)+1) *                       &
-                        &   VPtr(Loc_Indices(iSG2)+1) * Params%Epsilon        &
-                        & )
-                End Do Do_iG
-             End Do DoiSL2
-          End Do Do_iSL1
-          Call Destroy_Gauss_EXO(Elems, Elem=iE)
+          Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder, Elem=iE)
+          Nb_Gauss = Elems_V(iE)%Nb_Gauss
+          
+          Do_iG: Do iG = 1, Nb_Gauss
+             
+             V2 = 0.0_Kr
+             GradV = 0.0_Kr
+             Do_iSLV: Do iSL = 1, Elems_V(iE)%Nb_DoF
+                iSG = Elems_V(iE)%ID_DoF(iSL)
+                   
+                V2 = V2 + (1.0_Kr - VPtr(Loc_Indices_V(iSG)+1)) * Elems_V(iE)%BF(iSL, iG)
+                GradV = GradV + VPtr(Loc_Indices_V(iSG)+1) * Elems_V(iE)%Grad_BF(iSL, iG)
+             End Do Do_iSLV
+             MyEner = MyEner + Toughness * Elems_V(iE)%Gauss_C(iG) * ( V2**2 * .25_Kr / Params%Epsilon + Params%Epsilon * (GradV .DotP. GradV) )
+          End Do Do_iG
+          Call Destroy_Gauss_EXO(Elems_V, Elem=iE)
        End Do Do_iE
     End Do Do_iBlk
     
-    Call MPI_Reduce(MyEner1, Ener1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD, iErr)
-    Call MPI_BCAST(Ener1, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, iErr)
-    Call MPI_Reduce(MyEner2, Ener2, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD, iErr)
-    Call MPI_BCAST(Ener2, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, iErr)
-    Ener = Ener1 + Ener2
+    Call MPI_Reduce(MyEner, Ener, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD, iErr)
+    Call MPI_BCAST(Ener, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, iErr)
     Call VecRestoreArrayF90(VLoc, VPtr, iErr)
-    DeAllocate(Loc_Indices)
+    DeAllocate(Loc_Indices_V)
   End Subroutine Comp_Surf_Ener
 
 #if defined PB_2D
