@@ -166,8 +166,8 @@ Contains
                 iSG = Elems_U(iE)%ID_DoF(iSL)
 
 #ifdef PB_2DA
-                Sigma = K2 * Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
-                Epsilon =    Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
+                Sigma   = Sigma + K2 * Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
+                Epsilon =    Epsilon + Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
 #else
                 Sigma    = Sigma + 2.0_Kr * K2 * Elems_U(iE)%GradS_BF(iSL,iG)  * UPtr(Loc_Indices_U(iSG)+1)
                 Sigma%XX = Sigma%XX + K1 * Trace(Elems_U(iE)%GradS_BF(iSL,iG)) * UPtr(Loc_Indices_U(iSG)+1)
