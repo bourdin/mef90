@@ -73,7 +73,6 @@ Contains
 
     PetscReal                                    :: E, Nu
     PetscReal                                    :: K1, K2, K3 
-    PetscReal                                    :: Toughness    
 
     Real(Kind = Kr)                              :: MyEner
     Integer                                      :: Nb_Gauss, Nb_DoF
@@ -113,7 +112,6 @@ Contains
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
        E         = Params%Young_Mod(iBlk)
        nu        = Params%Poisson_Ratio(iBlk) 
-       Toughness = Params%Toughness(iBlk)
 
 !!! The isotropic Hooke's law is expressed as
 !!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
