@@ -219,7 +219,7 @@ Contains
     Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD_U
     Type (SD_Info)                                :: SD_V
-	Real(Kind = Kr), Intent(IN)                   :: t
+	 Real(Kind = Kr), Intent(IN)                   :: t
 
 
 
@@ -230,36 +230,28 @@ Contains
 
 
 
-    Integer                                      :: Nb_Gauss
-    Integer                                      :: Nb_DoF_U, Nb_DoF_V
-    Integer                                      :: iSLV1
-    Integer                                      :: iSLV2
-    Integer                                      :: iSL, iSG
-    Integer                                      :: iSLSig, iSGSig
-    Integer                                      :: iSLEps, iSGEps
-    Integer                                      :: iBlk, iE, iEloc, iG
-
-    Real(Kind = Kr), Dimension(:), Pointer       :: U_Ptr
-!    Real(Kind = Kr), Dimension(:), Pointer       :: Temp_Ptr
-    Real(Kind = Kr), Dimension(:), Pointer       :: ContrU
-
-    PetscScalar, Dimension(:,:), Pointer         :: MR_Elem
-    Integer, Dimension(:), Pointer               :: EXO_Indices_V
-    Integer, Dimension(:), Pointer               :: Loc_Indices_U
-    Integer, Dimension(:), Pointer               :: Loc_Indices_V
-
-    PetscTruth                                   :: ISAssembled
-
-    PetscLogDouble                               :: GaussTS, GaussTF, GaussT
-    PetscLogDouble                               :: SetTS, SetTF, SetT
-
-    Real(Kind = Kr)                              :: E, Nu, k
-    Real(Kind = Kr)                              :: K2
-    Type(Vect2D)                                 :: DistorsionEps, DistorsionSig
-    Integer                                      :: SetN, i
-
-    SetN = 0
-    GaussT = 0.0
+    Integer                                       :: Nb_Gauss
+    Integer                                       :: Nb_DoF_U, Nb_DoF_V
+    Integer                                       :: iSLV1
+    Integer                                       :: iSLV2
+    Integer                                       :: iSL, iSG
+    Integer                                       :: iSLSig, iSGSig
+    Integer                                       :: iSLEps, iSGEps
+    Integer                                       :: iBlk, iE, iEloc, iG
+                                                  
+    Real(Kind = Kr), Dimension(:), Pointer        :: UPtr
+    Real(Kind = Kr)                               :: ContrU
+                                                  
+    PetscScalar, Dimension(:,:), Pointer          :: MR_Elem
+    Integer, Dimension(:), Pointer                :: EXO_Indices_V
+    Integer, Dimension(:), Pointer                :: Loc_Indices_U
+    Integer, Dimension(:), Pointer                :: Loc_Indices_V
+                                                  
+    PetscTruth                                    :: ISAssembled
+                                                  
+    Real(Kind = Kr)                               :: Gc
+    Type(Vect2D)                                  :: Sigma, Distortion
+    Integer                                       :: i
 
     Call MatAssembled(MR, IsAssembled, iErr)
     If (IsAssembled) Then
@@ -274,22 +266,10 @@ Contains
     Loc_Indices_V = (/ (i ,i = 0, Geom%Num_Nodes-1) /)
     Call AOApplicationToPETSc(SD_V%Loc_AO, Geom%Num_Nodes, Loc_Indices_V, iErr)
 
-    Call VecGetArrayF90(U_Loc, U_Ptr, iErr) 
+    Call VecGetArrayF90(U_Loc, UPtr, iErr) 
 
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-       k  = Params%Toughness(iBlk)
-
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
-
-       K2 = E / (1.0_Kr + nu) * InvOf2
+       Gc  = Params%Toughness(iBlk)
 
        Nb_DoF_U = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
 	    Nb_Dof_V = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
@@ -305,59 +285,43 @@ Contains
           EXO_Indices_V = Elems_V(iE)%Id_DoF-1
           Call AOApplicationToPETSc(SD_V%EXO_AO, Nb_DoF_V, EXO_Indices_V, iErr)
        
-          Call PetscGetTime(GaussTS, iErr)
           Call Init_Gauss_EXO(Elems_U, Nodes_U, Geom, MEF90_GaussOrder, Elem=iE)
           Call Init_Gauss_EXO(Elems_V, Nodes_V, Geom, MEF90_GaussOrder, Elem=iE)
-          Call PetscGetTime(GaussTF, iErr)
-          GaussT = GaussT + GaussTF - GaussTS
           MR_Elem = 0.0_Kr
-          Nb_Gauss = Elems_U(iE)%Nb_Gauss
-          Allocate(ContrU(Nb_Gauss))
+          
+          Do_iG: Do iG = 1, Elems_U(iE)%Nb_Gauss
 
 !!! part related to v^2+k_\e W(e(u))
-          Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
              ContrU = 0.0_Kr
-             Do_iGUEps: Do iG = 1, Nb_Gauss
-                Do_iSLSig: Do iSLSig = 1, Elems_U(iE)%Nb_DoF
-                   iSGSig = Elems_U(iE)%ID_DoF(iSLSig)
-       		   DistorsionSig%X =   Nodes_U(iSGSig)%Coord%Y * Elems_U(iE)%BF(iSLSig,iG)
-                   DistorsionSig%Y = - Nodes_U(iSGSig)%Coord%X * Elems_U(iE)%BF(iSLSig,iG)
-                   Do_iSLEps: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
-                      iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
-                      DistorsionEps%X =   Nodes_U(iSGEps)%Coord%Y * Elems_U(iE)%BF(iSLEps,iG)
-                      DistorsionEps%Y = - Nodes_U(iSGEps)%Coord%X * Elems_U(iE)%BF(iSLEps,iG)
-                      
-                      ContrU(iG) = ContrU(iG) +                                                                                    &
-                                  ( (U_Ptr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG) - t*DistorsionEps) .DotP.     &
-                                    (U_Ptr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG) - t*DistorsionSig) ) * K2 
-!                      ContrU(iG) = ContrU(iG) +                                                                                    &
-!                                  ( (U_Ptr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG) - DistorsionEps) .DotP.     &
-!\\\                                    (U_Ptr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG) - DistorsionSig) ) * K2 
-
-                   End Do Do_iSLEps
-                End Do Do_iSLSig
-             End Do Do_iGUEps
+             Is_Brittle: If ( Params%Is_Brittle(iBlk)) Then
+                Sigma = 0.0_Kr
+                Distortion = 0.0_Kr
+                Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF
+                   iSG = Elems_U(iE)%ID_DoF(iSL)
+                   Sigma        =  Sigma + Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
+                   Distortion%X = Distortion%X + Elems_U(iE)%BF(iSL,iG) * Nodes_U(iSG)%Coord%Y 
+                   Distortion%Y = Distortion%Y - Elems_U(iE)%BF(iSL,iG) * Nodes_U(iSG)%Coord%X
+                End Do Do_iSL1
+                ContrU = (Sigma - t * Distortion) .DotP. (sigma - t * Distortion)
              
-             DoiSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
-                DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
-                   DoiGV: Do iG = 1, Nb_Gauss
-                      MR_Elem(iSLV1, iSLV2) = MR_Elem(iSLV1, iSLV2) + Elems_V(iE)%Gauss_C(iG) * ContrU(iG) *                       &
-					                          Elems_V(iE)%BF(iSLV1, iG) * Elems_V(iE)%BF(iSLV2, iG) * .5_Kr
-                   End Do DoiGV
-                End Do DoiSLV2
-             End Do DoiSLV1
-          End If Is_Brittle
+                DoiSLV1: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
+                   DoiSLV2: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
+                      MR_Elem(iSLV1, iSLV2) = MR_Elem(iSLV1, iSLV2) + Elems_V(iE)%Gauss_C(iG) * ContrU *                           &
+   		                                     Elems_V(iE)%BF(iSLV1, iG) * Elems_V(iE)%BF(iSLV2, iG)
+                   End Do DoiSLV2
+                End Do DoiSLV1
+             End If Is_Brittle
 
 !!! Surface energy part
-          DoiSLV1surf: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
-             DoiSLV2surf: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
-                DoiGVsurf: Do iG = 1, Nb_Gauss
-                   MR_Elem(iSLV1, iSLV2) = MR_Elem(iSLV1, iSLV2) + Elems_V(iE)%Gauss_C(iG) * k *                                   &
-				                           (( Elems_V(iE)%BF(iSLV1, iG) * Elems_V(iE)%BF(iSLV2, iG) ) / Params%Epsilon * .25_Kr +  &
-										   (Elems_V(iE)%Grad_BF(iSLV1, iG) .DotP. Elems_V(iE)%Grad_BF(iSLV2, iG)) * Params%Epsilon)
-                End Do DoiGVsurf
-             End Do DoiSLV2surf
-          End Do DoiSLV1surf
+             DoiSLV1surf: Do iSLV1 = 1, Elems_V(iE)%Nb_DoF
+                DoiSLV2surf: Do iSLV2 = 1, Elems_V(iE)%Nb_DoF
+                   MR_Elem(iSLV1, iSLV2) = MR_Elem(iSLV1, iSLV2) + Elems_V(iE)%Gauss_C(iG) * Gc *                                  &
+	                                        ( (Elems_V(iE)%BF(iSLV1, iG) * Elems_V(iE)%BF(iSLV2, iG)) / Params%Epsilon * .5_Kr +    &
+				   			                     (Elems_V(iE)%Grad_BF(iSLV1, iG) .DotP. Elems_V(iE)%Grad_BF(iSLV2, iG))                &
+				   			                      * Params%Epsilon * 2.0_Kr )
+                End Do DoiSLV2surf
+             End Do DoiSLV1surf
+          End Do Do_iG
           
           If (Params%Do_Irrev) Then
              Do_iSLBC: Do iSL = 1, Elems_V(iE)%Nb_DoF
@@ -365,129 +329,93 @@ Contains
                 If (Nodes_V(iSG)%BC /= BC_TYPE_NONE) Then
                    MR_Elem(iSL,:)    = 0.0_Kr
                    MR_Elem(:,iSL)    = 0.0_Kr
+                   MR_Elem(iSL, iSL) = 1.0_Kr
                 End If
              End Do Do_iSLBC
           End If
           
           Call MatSetValues(MR, Nb_DoF_V, EXO_Indices_V, Nb_DoF_V, EXO_Indices_V, MR_Elem, ADD_VALUES, iErr)
-          SetN = SetN + 1
           
-          Call PetscGetTime(GaussTS, iErr)
           Call Destroy_Gauss_EXO(Elems_U, Elem=iE)
           Call Destroy_Gauss_EXO(Elems_V, Elem=iE)
-          Call PetscGetTime(GaussTF, iErr)
-          GaussT = Gausst + GaussTF - GaussTS
-          DeAllocate(ContrU)
-
        EndDo Do_iE
        DeAllocate(MR_Elem)
        DeAllocate(EXO_Indices_V)
     End Do Do_iBlk
     
-    Call MatAssemblyBegin(MR, MAT_FLUSH_ASSEMBLY, iErr)
     DeAllocate(Loc_Indices_U)
     DeAllocate(Loc_Indices_V)
     
-    Call VecRestoreArrayF90(U_Loc, U_Ptr, iErr) 
-!    Call VecRestoreArrayF90(Temp_Loc, Temp_Ptr, iErr) 
-    Call MatAssemblyEnd(MR, MAT_FLUSH_ASSEMBLY, iErr)  
-    
+    Call VecRestoreArrayF90(U_Loc, UPtr, iErr) 
 
-    Do_Irrev: If (Params%Do_Irrev) Then
-! Assembly of the BC terms
-       Allocate(EXO_Indices_V(Geom%Num_Nodes))
-       EXO_Indices_V = (/ (i, i=0, Geom%Num_Nodes - 1) /)
-       Call AOApplicationToPETSc(SD_V%EXO_AO, Geom%Num_Nodes, EXO_Indices_V, iErr)
-
-       Do_iBlk_BC: Do iBlk = 1, Geom%Num_Elem_Blks
-          Nb_DoF_V = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
-
-          Do_iE_BC: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
-             iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
-             If (.NOT. SD_V%IsLocal_Elem(iE)) Then
-                CYCLE
-             End If
-             
-             Do_iSLSig_BC: Do iSLSig = 1, Nb_DoF_V
-                ISGSig = Elems_V(iE)%ID_DoF(iSLSig)
-                Is_BC_BC: If ( (Nodes_V(iSGSig)%BC /= BC_Type_NONE) )Then
-                   Call PetscGetTime(SetTS, iErr)
-                   Call MatSetValue(MR, EXO_Indices_V(iSGSig), EXO_Indices_V(iSGSig), 1.0_Kr, INSERT_VALUES, iErr)
-                   Call PetscGetTime(SetTF, iErr)
-                   SetN = SetN+1
-                   SetT = SetT + SetTF - SetTS
-                End If Is_BC_BC
-             End Do Do_iSLSig_BC
-          End Do Do_iE_BC
-       End Do Do_iBlk_BC
-       DeAllocate (EXO_Indices_V)
-       
-    End If Do_Irrev
     Call MatAssemblyBegin(MR, MAT_FINAL_ASSEMBLY, iErr)
     Call MatAssemblyEnd(MR, MAT_FINAL_ASSEMBLY, iErr)  
   End Subroutine Assemb_MR_V
 
-  Subroutine Assemb_RHS_V(RHS, Geom, Params, SD, Elems, Nodes)
+
+  Subroutine Assemb_RHS_V(RHS, Geom, Params, SD, Elems_Scal, Nodes_Scal)
     Vec                                          :: RHS
     Type (EXO_Geom_Info)                         :: Geom
     Type (Rupt_Params)                           :: Params
     Type (SD_Info)                               :: SD
 
 
-    Type (Node2D), Dimension(:), Pointer         :: Nodes
-    Type (Element2D_Scal), Dimension(:), Pointer :: Elems
+    Type (Node2D), Dimension(:), Pointer         :: Nodes_Scal
+    Type (Element2D_Scal), Dimension(:), Pointer :: Elems_Scal
 
 
     PetscReal, Dimension(:), Pointer             :: RHS_Ptr
 
 
-    Integer                                      :: Nb_Gauss, Nb_DoF
-    Integer                                      :: iSLV1, iSGV1
-    Integer                                      :: iSLV2
+    Integer                                      :: Nb_DoF
+    Integer                                      :: iSL
     Integer                                      :: iE, iELoc, iG
     Integer                                      :: iSLoc, iS, iBlk
 
     Integer, Dimension(:), Pointer               :: EXO_Indices
     Integer, Dimension(:), Pointer               :: Loc_Indices
 
-    Integer                                      :: SetN, i
+    Integer                                      :: i
 
-    PetscReal                                    :: Tmp_Val
-    PetscReal                                    :: Toughness
-
+    Real(Kind = Kr)                              :: Gc
+    Real(Kind = Kr), Dimension(:), Pointer       :: RHS_Elem
+    
+    
     Call VecSet(RHS, 0.0_Kr, iErr)
 
-    Allocate(EXO_Indices(Geom%Num_Nodes))
-    EXO_Indices = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
-    Call AOApplicationToPETSc(SD%EXO_AO, Geom%Num_Nodes, EXO_Indices, iErr)
-
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-       Toughness = Params%Toughness(iBlk)
+       Gc = Params%Toughness(iBlk)
+       Nb_DoF = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
+
+       Allocate(RHS_Elem(Nb_DoF))
+       Allocate(EXO_Indices(Nb_DoF))
 
        Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
           iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
           If (.NOT. SD%IsLocal_Elem(iE)) Then
              CYCLE
           End If
-          Call Init_Gauss_EXO(Elems, Nodes, Geom, MEF90_GaussOrder, Elem=iE)
+          EXO_Indices = Elems_Scal(iE)%Id_DoF-1
+          Call AOApplicationToPETSc(SD%EXO_AO, Nb_DoF, EXO_Indices, iErr)
 
-          Nb_Gauss = Elems(iE)%Nb_Gauss
-          Do_iSLV1: Do iSLV1 = 1, Elems(iE)%Nb_DoF
-             iSGV1 = Elems(iE)%ID_DoF(iSLV1)
-             Tmp_Val = 0.0_Kr
-             DoiSLV2: Do iSLV2 = 1, Elems(iE)%Nb_DoF
-                Do_iGV: Do iG = 1, Nb_Gauss
-                   Tmp_Val = Tmp_Val + Toughness * Elems(iE)%Gauss_C(iG) * Elems(iE)%BF(iSLV1, iG) * Elems(iE)%BF(iSLV2, iG) /     &
-				             Params%Epsilon / 4.0_Kr
-                End Do Do_iGV
-             End Do DoiSLV2
-             Call VecSetValue(RHS, EXO_Indices(iSGV1), Tmp_Val, ADD_VALUES, iErr)
-          End Do Do_iSLV1
-          Call Destroy_Gauss_EXO(Elems, Elem=iE)
+          Call Init_Gauss_EXO(Elems_Scal, Nodes_Scal, Geom, MEF90_GaussOrder, Elem=iE)
+          RHS_Elem = 0.0_Kr
+
+          Do_iG: Do iG = 1, Elems_Scal(iE)%Nb_Gauss
+             Do_iSL: Do iSL = 1, Nb_DoF
+                RHS_Elem(iSL) = RHS_Elem(iSL) + Gc * Elems_Scal(iE)%Gauss_C(iG) * Elems_Scal(iE)%BF(iSL, iG)                       &
+                                / Params%Epsilon * .5_Kr
+             End Do Do_iSL
+          End Do Do_iG
+          Call VecSetValues(RHS, Nb_DoF, EXO_Indices, RHS_Elem, ADD_VALUES, iErr)
+          Call Destroy_Gauss_EXO(Elems_Scal, Elem=iE)
        End Do Do_iE
+
+       DeAllocate (RHS_Elem)
+       DeAllocate (EXO_Indices)
     End Do Do_iBlk
+    
     Call VecAssemblyBegin(RHS, iErr)
-    DeAllocate(EXO_Indices)
     Call VecAssemblyEnd(RHS, iErr)
 
 ! BC Due to irreversibility:
@@ -499,15 +427,16 @@ Contains
        Call VecGetArrayF90(RHS, RHS_Ptr, iErr)
        Do_iS: Do iSLoc = 1, SD%Num_Nodes
           iS = SD%Node(iSLoc)
-          Is_BC: If (Nodes(iS)%BC /= BC_Type_NONE) Then
+          Is_BC: If (Nodes_Scal(iS)%BC /= BC_Type_NONE) Then
              RHS_Ptr(Loc_Indices(iS)+1) = 0.0_Kr
-!             RHS_Ptr(Loc_Indices(iS)+1) = -1.0_Kr * sqrt(MEF90_VLV)
           End If Is_BC
        End Do Do_iS
        Call VecRestoreArrayF90(RHS, RHS_Ptr, iErr)
        DeAllocate(Loc_Indices)
     End If Is_Irrev
   End Subroutine Assemb_RHS_V
+
+
 
   Subroutine Apply_BC_V(Geom, Params, SD, Nodes, V)
 !!! CHECK THAT OUT. I am tired...

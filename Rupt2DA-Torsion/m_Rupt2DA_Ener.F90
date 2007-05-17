@@ -32,14 +32,11 @@ Contains
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_U
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
-    Type (Vect2D)                                 :: Sigma, Epsilon, Distortion
+    Type (Vect2D)                                 :: Sigma, Distortion
 
     Vec                                          :: ULoc
     Vec                                          :: VLoc
     Real(Kind = Kr), Intent(OUT)                 :: Ener
-
-    PetscReal                                    :: E, Nu
-    PetscReal                                    :: K2
 
     Real(Kind = Kr)                              :: MyEner
     Integer                                      :: Nb_Gauss, Nb_DoF
@@ -69,18 +66,6 @@ Contains
     MyEner = 0.0_Kr
     Ener = 0.0_Kr
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-       E         = Params%Young_Mod(iBlk)
-       nu        = Params%Poisson_Ratio(iBlk) 
-
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
-       K2 = E / (1.0_Kr + nu) * InvOf2
-
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%Elem_ID(iELoc)
           If ((.NOT. SD_U%IsLocal_Elem(iE)) .OR. (.NOT. Params%Is_Domain(iBlk))) Then
@@ -108,7 +93,7 @@ Contains
              
              
              Sigma = 0.0_Kr
-             Epsilon = 0.0_Kr
+!             Epsilon = 0.0_Kr
              Distortion = 0.0_Kr
              Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF
                 iSG = Elems_U(iE)%ID_DoF(iSL)
@@ -118,7 +103,8 @@ Contains
                 Distortion%Y = Distortion%Y - Elems_U(iE)%BF(iSL,iG) * Nodes_U(iSG)%Coord%X
                 
              End Do Do_iSL1
-             MyEner = MyEner + Elems_U(iE)%Gauss_C(iG) * ContrV * K2 * ( (Sigma - t * Distortion) .DotP. (sigma - t * Distortion) ) * .5_Kr
+             MyEner = MyEner + Elems_U(iE)%Gauss_C(iG) * ContrV * ( (Sigma - t * Distortion) .DotP. (sigma - t * Distortion) )     &
+                      * .5_Kr
               
           End Do Do_iG
           Call Destroy_Gauss_EXO(Elems_U, Elem=iE)
