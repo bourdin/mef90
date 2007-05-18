@@ -191,14 +191,6 @@ Contains
     Loc_Indices_Scal = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
     Call AOApplicationToPETSc(SD_V%Loc_AO, Geom%Num_Nodes, Loc_Indices_Scal, iErr)
 
-    Allocate(Loc_Indices_Vect(Geom%Num_Nodes))
-    Loc_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
-    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes, Loc_Indices_Vect, iErr)
-    
-    Allocate(EXO_Indices_Vect(Geom%Num_Nodes))
-    EXO_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
-    Call AOApplicationToPETSc(SD_U%EXO_AO, Geom%Num_Nodes, EXO_Indices_Vect, iErr)
-    
     Call VecGetArrayF90(VLoc, VPtr, iErr)
     
     Call VecSet(RHS, 0.0_Kr, iErr)
@@ -253,7 +245,7 @@ Contains
           Call Destroy_Gauss_EXO(Elems_U, Elem=iE)
           Call Destroy_Gauss_EXO(Elems_V, Elem=iE)
        End Do Do_iE
-       DeAllocate (RHS_Elem)
+       DeAllocate(RHS_Elem)
        DeAllocate(EXO_Indices_Vect)
 
     End Do Do_iBlk
@@ -266,6 +258,10 @@ Contains
 !!!    
     Call VecGetArrayF90(BC_U_Loc, BC_U_Ptr, iErr)
     Call VecGetArrayF90(RHS, RHS_Ptr, iErr)
+    
+    Allocate(Loc_Indices_Vect(Geom%Num_Nodes))
+    Loc_Indices_Vect = (/ (i ,i = 0, Geom%Num_Nodes - 1) /)
+    Call AOApplicationToPETSc(SD_U%Loc_AO, Geom%Num_Nodes, Loc_Indices_Vect, iErr)
     
     Do_iS: Do iSLoc = 1, SD_U%Num_Nodes
        iS = SD_U%Node(iSLoc)

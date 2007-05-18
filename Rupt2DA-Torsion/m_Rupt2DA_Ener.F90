@@ -93,7 +93,6 @@ Contains
              
              
              Sigma = 0.0_Kr
-!             Epsilon = 0.0_Kr
              Distortion = 0.0_Kr
              Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF
                 iSG = Elems_U(iE)%ID_DoF(iSL)
@@ -178,7 +177,8 @@ Contains
                 V2 = V2 + (1.0_Kr - VPtr(Loc_Indices_V(iSG)+1)) * Elems_V(iE)%BF(iSL, iG)
                 GradV = GradV + VPtr(Loc_Indices_V(iSG)+1) * Elems_V(iE)%Grad_BF(iSL, iG)
              End Do Do_iSLV
-             MyEner = MyEner + Toughness * Elems_V(iE)%Gauss_C(iG) * ( V2**2 * .25_Kr / Params%Epsilon + Params%Epsilon * (GradV .DotP. GradV) )
+             MyEner = MyEner + Toughness * Elems_V(iE)%Gauss_C(iG) *                                                               &
+                      ( V2**2 * .25_Kr / Params%Epsilon + Params%Epsilon * (GradV .DotP. GradV) )
           End Do Do_iG
           Call Destroy_Gauss_EXO(Elems_V, Elem=iE)
        End Do Do_iE
