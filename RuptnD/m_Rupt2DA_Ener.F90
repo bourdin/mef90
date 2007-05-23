@@ -71,8 +71,8 @@ Contains
     Vec                                          :: TempLoc
     Real(Kind = Kr), Intent(OUT)                 :: Ener
 
-    PetscReal                                    :: E, Nu
-    PetscReal                                    :: K1, K2, K3 
+    Real(Kind = Kr)                              :: E, Nu
+    Real(Kind = Kr)                              :: K1, K2
 
     Real(Kind = Kr)                              :: MyEner
     Integer                                      :: Nb_Gauss, Nb_DoF
@@ -123,11 +123,9 @@ Contains
 #ifdef PB_2D
        K1 = E * nu / (1.0_Kr - nu**2)
        K2 = E / (1.0_Kr + nu) * InvOf2
-       K3 = Params%Therm_Exp(iBlk) * E / (1.0_Kr - nu )
 #else
        K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
        K2 = E / (1.0_Kr + nu) * InvOf2
-       K3 = Params%Therm_Exp(iBlk) * E / (1.0_Kr - 2.0_Kr * nu)
 #endif
 
 #ifdef PB_2DA
@@ -162,41 +160,33 @@ Contains
              
              Sigma = 0.0_Kr
              Epsilon = 0.0_Kr
+#ifdef PB_2DA
              Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF
                 iSG = Elems_U(iE)%ID_DoF(iSL)
-
-#ifdef PB_2DA
+                Epsilon = Epsilon + Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
                 Sigma   = Sigma + K2 * Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
-                Epsilon =    Epsilon + Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
-#else
-                Sigma    = Sigma + 2.0_Kr * K2 * Elems_U(iE)%GradS_BF(iSL,iG)  * UPtr(Loc_Indices_U(iSG)+1)
-                Sigma%XX = Sigma%XX + K1 * Trace(Elems_U(iE)%GradS_BF(iSL,iG)) * UPtr(Loc_Indices_U(iSG)+1)
-                Sigma%YY = Sigma%YY + K1 * Trace(Elems_U(iE)%GradS_BF(iSL,iG)) * UPtr(Loc_Indices_U(iSG)+1)
-#ifdef PB_3D
-                Sigma%ZZ = Sigma%ZZ + K1 * Trace(Elems_U(iE)%GradS_BF(iSL,iG)) * UPtr(Loc_Indices_U(iSG)+1)
-#endif
-                Epsilon  = Epsilon + Elems_U(iE)%GradS_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)
-#endif
              End Do Do_iSL1
-             
-#ifndef PB_2DA
-!!! Thermal stuff
+#else
+             Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF
+                iSG = Elems_U(iE)%ID_DoF(iSL)
+                Epsilon = Epsilon + Elems_U(iE)%GradS_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)        
+             End Do Do_iSL1
              Do_iSL2: Do iSL = 1, Elems_V(iE)%Nb_DoF
                 iSG = Elems_V(iE)%ID_DoF(iSL)
-
-                Sigma%XX   = Sigma%XX -   K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
-                Sigma%YY   = Sigma%YY -   K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
-                Epsilon%XX = Epsilon%XX - K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
-                Epsilon%YY = Epsilon%YY - K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
+                Epsilon%XX = Epsilon%XX - Params%Therm_Exp(iBlk) * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
+                Epsilon%YY = Epsilon%YY - Params%Therm_Exp(iBlk) * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
 #ifdef PB_3D
-                Sigma%ZZ   = Sigma%ZZ -   K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
-                Epsilon%ZZ = Epsilon%ZZ - K3 * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
+                Epsilon%ZZ = Epsilon%ZZ - Params%Therm_Exp(iBlk) * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
 #endif
              End Do Do_iSL2
-
+             Sigma = 2.0_Kr * K2 * Epsilon
+             Sigma%XX = Sigma%XX + K1 * Trace(Epsilon)
+             Sigma%YY = Sigma%YY + K1 * Trace(Epsilon)
+#ifdef PB_3D
+             Sigma%ZZ = Sigma%ZZ + K1 * Trace(Epsilon)
 #endif
+#endif             
              MyEner = MyEner + Elems_U(iE)%Gauss_C(iG) * ContrV * (Sigma .DotP. Epsilon) * .5_Kr
-             
              
 !!! Forces stuff
 #ifndef PB_2DA
@@ -290,7 +280,8 @@ Contains
                 V2 = V2 + (1.0_Kr - VPtr(Loc_Indices_V(iSG)+1)) * Elems_V(iE)%BF(iSL, iG)
                 GradV = GradV + VPtr(Loc_Indices_V(iSG)+1) * Elems_V(iE)%Grad_BF(iSL, iG)
              End Do Do_iSLV
-             MyEner = MyEner + Toughness * Elems_V(iE)%Gauss_C(iG) * ( V2**2 * .25_Kr / Params%Epsilon + Params%Epsilon * (GradV .DotP. GradV) )
+             MyEner = MyEner + Toughness * Elems_V(iE)%Gauss_C(iG) *                                                               &
+                      ( V2**2 * .25_Kr / Params%Epsilon + Params%Epsilon * (GradV .DotP. GradV) )
           End Do Do_iG
           Call Destroy_Gauss_EXO(Elems_V, Elem=iE)
        End Do Do_iE
