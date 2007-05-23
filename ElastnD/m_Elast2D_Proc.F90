@@ -479,7 +479,6 @@ Contains
           EXO_Indices_Vect = Elem_Vect(iE)%Id_DoF-1
           Call AOApplicationToPETSc(MySD_Vect%EXO_AO, Nb_DoF_Vect, EXO_Indices_Vect, iErr)
 
-
           Call Init_Gauss_EXO(Elem_Vect, Node_Vect, Geom, GaussOrder, Elem=iE)
           Call Init_Gauss_EXO(Elem_Scal, Node_Scal, Geom, GaussOrder, Elem=iE)
 
