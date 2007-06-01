@@ -42,7 +42,8 @@ Program Prep_Rupt
   Integer, Parameter                              :: PB_CylTwist_3D = 3
   Integer, Parameter                              :: PB_Dipping     = 4
   Integer, Parameter                              :: PB_Dipping2    = 5
-  Integer, Parameter                              :: PB_Needleman   = 6
+  Integer, Parameter                              :: PB_Dipping3    = 6
+  Integer, Parameter                              :: PB_Needleman   = 7
   Integer                                         :: PB_Type
 
 
@@ -69,13 +70,14 @@ Program Prep_Rupt
      Select case (JobType)
      Case ('p', 'P')
 
-  	 	Write(*,110) PB_Gen, 'Generic problem (CST fields, MIL)'
-  	 	Write(*,110) PB_MixedMode, 'Mixed mode'
-  	 	Write(*,110) PB_Antiplane, 'Antiplane problem (CST fields, MIL)'  	 	
+  	 	Write(*,110) PB_Gen,         'Generic problem (CST fields, MIL)'
+  	 	Write(*,110) PB_MixedMode,   'Mixed mode'
+  	 	Write(*,110) PB_Antiplane,   'Antiplane problem (CST fields, MIL)'  	 	
   	 	Write(*,110) PB_CylTwist_3D, 'Torsion of a 3D cylinder along the Z-axis'
-  	 	Write(*,110) PB_Dipping, 'Unstable crack propagation, thermal loads'
-  	 	Write(*,110) PB_Dipping2, 'Unstable crack propagation, thermal loads rescaled'
-  	 	Write(*,110) PB_Needleman, 'Unstable crack propagation, elastodynamic'
+  	 	Write(*,110) PB_Dipping,     'Unstable crack propagation, thermal loads'
+  	 	Write(*,110) PB_Dipping2,    'Unstable crack propagation, thermal loads: Rescaled'
+  	 	Write(*,110) PB_Dipping3,    'Unstable crack propagation, thermal loads: First time step'
+  	 	Write(*,110) PB_Needleman,   'Unstable crack propagation, elastodynamic'
   	 	Write(*,100, advance = 'no') 'Problem type: ' 
   	 	Read(*,*) PB_Type
 
@@ -304,7 +306,7 @@ Contains
     End Do
     
     Select Case (PB_Type)
-    Case (PB_Gen, PB_Dipping, PB_Dipping2)
+    Case (PB_Gen, PB_Dipping, PB_Dipping2, PB_Dipping3)
        Do iTS = 1, Size(Params%Load)
           BC_Result%X = Params%Load(iTS) * BC_Unit%X
     	    BC_Result%Y = Params%Load(iTS) * BC_Unit%Y
@@ -562,14 +564,27 @@ Contains
        Read(*,*) V
        Do iTS = 1, Size(Params%Load)
        Temp_Result = -DTheta
-!          Print*, 'Y: ', Params%Load(iTS)
           Do iNode = 1, Geom%Num_Nodes
              Y = Node_db(iNode)%Coord%Y
-!             Print*, Y, Params%Load(iTS)
              If (Y >= Params%Load(iTS)) Then
-!             Temp_Result(iNode) = Y
              	Temp_Result(iNode) = -DTheta * exp( -V/kappa*l*(Y-Params%Load(iTS)))
-!             	Temp_Result(iNode) = DTheta
+             End If
+          End Do
+          Call Write_EXO_Result_Nodes(Geom, 8, iTS, Temp_Result)
+       End Do          
+    Case (PB_Dipping3)
+       Write(*, 100, advance = 'no') 'Temperature difference (Delta Theta) '
+       Read(*,*) DTheta
+       Write(*, 100, advance = 'no') 'Characteristic length (l)            '
+       Read(*,*) l
+       Write(*, 100, advance = 'no') 'Thermal conductivity (kappa)         '
+       Read(*,*) kappa
+       Do iTS = 1, Size(Params%Load)
+       Temp_Result = 0.0_Kr
+          Do iNode = 1, Geom%Num_Nodes
+             Y = Node_db(iNode)%Coord%Y
+             If (Y == 0.0_Kr) Then
+             	Temp_Result(iNode) = -Params%Load(iTS)
              End If
           End Do
           Call Write_EXO_Result_Nodes(Geom, 8, iTS, Temp_Result)
