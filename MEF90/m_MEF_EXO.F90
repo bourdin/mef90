@@ -1623,11 +1623,13 @@ Contains
     ! Get the number of global variables stored in the database    
     Call EXGVP(Geom%exoid, 'G', Num_Vars, iErr)
     Allocate(Tmp_Res(Num_Vars))
+    Tmp_Res = 0.0_Kr
 
     ! Read All the global variables at time step TS into Tmp_Res
     ! Modify Tmp_Res(Idx) and write everything back...
     Call EXGGV(Geom%exoid, TS, Num_Vars, Tmp_Res, iErr)
     Tmp_Res(Idx) = Res
+
     Call EXPGV(Geom%exoid, TS, Num_Vars, Tmp_Res, iErr)
     DeAllocate (Tmp_Res)
     Call EXCLOS(Geom%exoid, iErr)
