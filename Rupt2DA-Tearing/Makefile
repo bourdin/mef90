@@ -14,14 +14,14 @@ M_RUPT_STRUCT_OBJS = $(M_RUPT_STRUCT_DIR)/m_Rupt_Struct.o
 EXO_CFLAGS = -I$(HPCDIST_DIR)/include
 EXO_LFLAGS = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf -lmetis -lparmetis
 
-all: Rupt2DA-Tearing
+all: $(PROJ)
 
 include ${PETSC_DIR}/bmake/common/base
 
 OBJS=    Rupt2DA.o m_Rupt2DA_Vars.o m_Rupt2DA_Proc.o m_Rupt2DA_U.o m_Rupt2DA_V.o m_Rupt2DA_Ener.o
 FFLAGS = -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS}
 
-Rupt2DA-Tearing: Rupt2DA.o
+$(PROJ): Rupt2DA.o
 	-${FLINKER} -o ${PROJ}${DIM} ${OBJS} ${MEF90OBJS} ${M_RUPT_STRUCT_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
 
 # Dependences
