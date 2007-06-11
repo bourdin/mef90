@@ -1,18 +1,8 @@
-#ifdef PB_2D
 Module m_Elast2D_Proc
-#else
-Module m_Elast3D_Proc
-#endif
   Use m_MEF90
   Use m_Rupt_Struct
 
-#ifdef PB_2D
   Use m_Elast2D_Vars
-  Use m_Elast2D_Debug
-#else
-  Use m_Elast3D_Vars
-  Use m_Elast3D_Debug
-#endif
 
   Implicit NONE
   PRIVATE
@@ -33,7 +23,6 @@ Module m_Elast3D_Proc
 
   Public :: Assemb_Mat_Elast
   Public :: Assemb_RHS_Elast
-  Public :: Compute_SigmaEpsilon
   Public :: Calc_Ener
 
   Public :: GenVect
@@ -46,14 +35,13 @@ Contains
 
     PetscLogDouble                     :: BCastTS, BCastTF
     PetscLogDouble                     :: InitVectTS, InitVectTF
-    PetscTruth                :: Has_Sim_Str
+    PetscTruth                         :: Has_Sim_Str
 
     Call MEF90_Initialize()
     MEF90_GaussOrder = 2 
 
 
-    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str,     &
-         & Has_Sim_Str, iErr)
+    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', Params%Sim_Str, Has_Sim_Str, iErr)
     
     If (.NOT. Has_Sim_Str) Then
        Write(CharBuffer, 100) 'Simulation name: \n'c
@@ -61,8 +49,7 @@ Contains
        If (MEF90_MyRank ==0) Then
           Read(*,100) Params%Sim_Str
        End If
-       Call MPI_BCAST(Params%Sim_Str, MXSTLN, MPI_CHARACTER, 0, MPI_COMM_WORLD,  &
-            & iErr)
+       Call MPI_BCAST(Params%Sim_Str, MXSTLN, MPI_CHARACTER, 0, MPI_COMM_WORLD, iErr)
     End If
 
 
@@ -79,15 +66,12 @@ Contains
     Call Read_Rupt_EXO_Params(Geom, Params)
     Call Read_Rupt_DATA(Geom, Params)
 
-    Write(CharBuffer,*) 'Number of nodes:                          ',      &
-         & Geom%Num_Nodes, '\n'c
+    Write(CharBuffer,*) 'Number of nodes:                          ', Geom%Num_Nodes, '\n'c
     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
-    Write(CharBuffer,*) 'Number of elements:                       ',      &
-         & Geom%Num_Elems, '\n'c
+    Write(CharBuffer,*) 'Number of elements:                       ', Geom%Num_Elems, '\n'c
     Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
     Call Init_SD_NoOvlp(Geom, Elem_db, MySD_Vect, SOL_Dist, SOL_Loc, SOL_Master)
-    Call Init_SD_NoOvlp(Geom, Elem_Scal, MySD_Scal, Temp_Dist, Temp_Loc,       &
-    	Temp_Master)
+    Call Init_SD_NoOvlp(Geom, Elem_Scal, MySD_Scal, Temp_Dist, Temp_Loc, Temp_Master)
 
     Call Init_BC(Geom, Params, Node_db)
 
@@ -102,10 +86,8 @@ Contains
     Call VecDuplicate(Sol_Dist, F_Dist, iErr)
     Call VecGhostGetLocalForm(F_Dist, F_Loc, iErr)
 
-    Call MatCreateMPIAIJ(PETSC_COMM_WORLD, MySD_Vect%Num_Nodes,               &
-    	 & MySD_Vect%Num_Nodes, Geom%Num_Nodes * Geom%Num_Dim,                &
-    	 & Geom%Num_Nodes * Geom%Num_Dim, 60, PETSC_NULL_INTEGER, 60,         &
-    	 & PETSC_NULL_INTEGER, MR, iErr)
+    Call MatCreateMPIAIJ(PETSC_COMM_WORLD, MySD_Vect%Num_Nodes, MySD_Vect%Num_Nodes, Geom%Num_Nodes * Geom%Num_Dim,                &
+    	 & Geom%Num_Nodes * Geom%Num_Dim, 60, PETSC_NULL_INTEGER, 60, PETSC_NULL_INTEGER, MR, iErr)
 
     Call MatSetOption(MR, MAT_SYMMETRIC, iErr)
     Call MatSetFromOptions(MR, iErr)
@@ -130,16 +112,14 @@ Contains
 
     Call KSPSetInitialGuessNonzero(KSP_MR, PETSC_TRUE, iErr)
 
-    Call KSPSetTolerances(KSP_MR, Params%TolKSP,                              &
-           & PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,  &
-           & PETSC_DEFAULT_INTEGER, iErr)
+    Call KSPSetTolerances(KSP_MR, Params%TolKSP, PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION,                   &
+                          PETSC_DEFAULT_INTEGER, iErr)
     Call KSPSetFromOptions(KSP_MR, iErr)
 
     Call PCGetType(PC_MR, PC_Type, iErr)
     If (PC_Type == PCBJACOBI) Then
        Call KSPSetUp(KSP_MR, iErr)
-       Call PCBJacobiGetSubKSP(PC_MR, PETSC_NULL_INTEGER, PETSC_NULL_INTEGER, &
-            & Sub_KSP_MR, iErr)
+       Call PCBJacobiGetSubKSP(PC_MR, PETSC_NULL_INTEGER, PETSC_NULL_INTEGER, Sub_KSP_MR, iErr)
        Call KSPGetPC(Sub_KSP_MR, Sub_PC_MR, iErr)
        Call PCFactorSetZeroPivot(Sub_PC_MR, 1.0D-20, iErr)
        Call PCSetFromOptions(Sub_PC_MR, iErr)
@@ -149,10 +129,8 @@ Contains
   Subroutine Export()
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
     
-    Call VecScatterBegin(SOL_Dist, SOL_Master, INSERT_VALUES, SCATTER_FORWARD,&
-         & MySD_Vect%ToMaster, iErr)
-    Call VecScatterEnd(SOL_Dist, SOL_Master, INSERT_VALUES, SCATTER_FORWARD,  &
-         & MySD_Vect%ToMaster, iErr)
+    Call VecScatterBegin(SOL_Dist, SOL_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_Vect%ToMaster, iErr)
+    Call VecScatterEnd(SOL_Dist, SOL_Master, INSERT_VALUES, SCATTER_FORWARD, MySD_Vect%ToMaster, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(SOL_Master, Sol_Ptr, iErr)
@@ -161,41 +139,8 @@ Contains
        Call VecRestoreArrayF90(SOL_Master, SOL_Ptr, iErr)
     End If
 
-!!$    Call Compute_SigmaEpsilon(Stress_Sol, Strain_Sol, Geom, Params, Elem_db,  &
-!!$         & Node_db, SOL)
-!!$
-!!$    Write(*,100) minval(Strain_Sol%XX), MaxVal(Strain_Sol%XX)
-!!$    Write(*,101) minval(Strain_Sol%YY), MaxVal(Strain_Sol%YY)
-!!$    Write(*,102) minval(Strain_Sol%ZZ), MaxVal(Strain_Sol%ZZ)
-!!$    Write(*,102) minval(Strain_Sol%XY), MaxVal(Strain_Sol%XY)
-!!$    Write(*,103) minval(Strain_Sol%YZ), MaxVal(Strain_Sol%YZ)
-!!$    Write(*,104) minval(Strain_Sol%XZ), MaxVal(Strain_Sol%XZ)
-!!$    Write(*,*)
-!!$    Write(*,106) minval(Stress_Sol%XX), MaxVal(Stress_Sol%XX)
-!!$    Write(*,107) minval(Stress_Sol%YY), MaxVal(Stress_Sol%YY)
-!!$    Write(*,108) minval(Stress_Sol%ZZ), MaxVal(Stress_Sol%ZZ)
-!!$    Write(*,109) minval(Stress_Sol%XY), MaxVal(Stress_Sol%XY)
-!!$    Write(*,110) minval(Stress_Sol%YZ), MaxVal(Stress_Sol%YZ)
-!!$    Write(*,111) minval(Stress_Sol%XZ), MaxVal(Stress_Sol%XZ)
-!!$    
-!!$
-!!$    Call Write_EXO_Result_Elems(Geom, 1, TimeStep, Strain_Sol)
-!!$    Call Write_EXO_Result_Elems(Geom, 2, TimeStep, Stress_Sol)
 
 90  Format('Displacement Min / max: ', 2(ES10.3,' '))
-100 Format('Strain%XX Min / Max:    ', 2(ES10.3,' '))
-101 Format('Strain%YY Min / Max:    ', 2(ES10.3,' '))
-102 Format('Strain%ZZ Min / Max:    ', 2(ES10.3,' '))
-103 Format('Strain%XY Min / Max:    ', 2(ES10.3,' '))
-104 Format('Strain%XY Min / Max:    ', 2(ES10.3,' '))
-105 Format('Strain%XZ Min / Max:    ', 2(ES10.3,' '))
-106 Format('Stress%XX Min / Max:    ', 2(ES10.3,' '))
-107 Format('Stress%YY Min / Max:    ', 2(ES10.3,' '))
-108 Format('Stress%ZZ Min / Max:    ', 2(ES10.3,' '))
-109 Format('Stress%XY Min / Max:    ', 2(ES10.3,' '))
-110 Format('Stress%XY Min / Max:    ', 2(ES10.3,' '))
-111 Format('Stress%XZ Min / Max:    ', 2(ES10.3,' '))
-
   End Subroutine Export
 
   Subroutine Finalize()
@@ -223,13 +168,9 @@ Contains
 
   Subroutine Init_BC(Geom, Params, Node_db)
     Type(EXO_Geom_Info), Intent(IN)                  :: Geom
-    Type(Rupt_Params), Intent(IN)                    :: Params
+    Type(Rupt_Params_Hooke2D), Intent(IN)            :: Params
 
-#ifdef PB_2D
     Type(Node2D), Dimension(:), Pointer              :: Node_db
-#else
-    Type(Node3D), Dimension(:), Pointer              :: Node_db
-#endif
     Integer                                          :: iN, iSet
 
     Select Case(Geom%Numbering)
@@ -241,10 +182,6 @@ Contains
                   & Params%BC_Type_X(iSet)
              Node_db(Geom%Node_Set(iSet)%Node_ID(iN)+Geom%Num_Nodes)%BC =     &
                   & Params%BC_Type_Y(iSet)
-#ifdef PB_3D
-             Node_db(Geom%Node_Set(iSet)%Node_ID(iN)+ 2 * Geom%Num_Nodes)%BC =&
-               & Params%BC_Type_Z(iSet)
-#endif
           End Do
        End Do
     Case(Numbering_PerNodes)
@@ -255,10 +192,6 @@ Contains
                   & = Params%BC_Type_X(iSet)
              Node_db(Geom%Num_Dim * (Geom%Node_Set(iSet)%Node_ID(iN)-1)+2)%BC &
                   & = Params%BC_Type_Y(iSet)
-#ifdef PB_3D
-             Node_db(Geom%Num_Dim * Geom%Node_Set(iSet)%Node_ID(iN) )%BC      &
-                  & = Params%BC_Type_Z(iSet)
-#endif
           End Do
        End Do
     Case Default
@@ -271,23 +204,15 @@ Contains
   Subroutine Assemb_Mat_Elast(MR, Geom, Params, Elem_db, Node_db)
     Mat                                                 :: MR
     Type (EXO_Geom_Info)                                :: Geom
-    Type (Rupt_Params)                                  :: Params
-#ifdef PB_2D
+    Type (Rupt_Params_Hooke2D)                          :: Params
     Type (Node2D), Dimension(:), Pointer                :: Node_db 
     Type (Element2D_Elast), Dimension(:), Pointer       :: Elem_db 
     Type (MatS2D)                                       :: Sigma, Epsilon
-#else
-    Type (Node3D), Dimension(:), Pointer                :: Node_db 
-    Type (Element3D_Elast), Dimension(:), Pointer       :: Elem_db 
-    Type (MatS3D)                                       :: Sigma, Epsilon
-#endif
 
     Integer                                             :: Nb_Gauss, Nb_DoF
     Integer                                             :: iSL1, iSL2
     Integer                                             :: iSG1, iSG2
     Integer                                             :: iE, iG, iELoc
-    Real(Kind = Kr)                                     :: E, nu
-    Real(Kind = Kr)                                     :: K1, K2
     Integer                                             :: iBlk
     Integer                                             :: i
 
@@ -302,23 +227,6 @@ Contains
     
     ! Assembly of the Non BC terms 
     Do_iBlk: Do iBlk = 1, Geom%Num_Elem_Blks
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
-#ifdef PB_2D
-       K1 = E * nu / (1.0_Kr - nu**2)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#else
-       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#endif
 
        Nb_DoF = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
        Allocate (MR_Elem(Nb_DoF, Nb_DoF))
@@ -340,13 +248,8 @@ Contains
              Do_iSL1: Do iSL1 = 1, Nb_DoF
                 ISG1 = Elem_db(iE)%ID_DoF(iSL1)
                 Epsilon = Elem_db(iE)%GradS_BF(iSL1,iG)
-                
-                Sigma = 2.0_Kr * K2 * Epsilon
-                Sigma%XX = Sigma%XX + K1 * Trace(Epsilon)
-                Sigma%YY = Sigma%YY + K1 * Trace(Epsilon)
-#ifdef PB_3D
-                Sigma%ZZ = Sigma%ZZ + K1 * Trace(Epsilon)
-#endif
+                Sigma = Params%Hookes_Law(iBlk) * Epsilon
+
                 Do_iSL2: Do iSL2 = 1, Nb_DoF
                    iSG2 = Elem_db(iE)%ID_DoF(iSL2)
                    Epsilon = Elem_db(iE)%GradS_BF(iSL2,iG)
@@ -396,22 +299,13 @@ Contains
   Subroutine Assemb_RHS_Elast(RHS, Geom, Params, Elem_Vect, Node_Vect, Elem_Scal, Node_Scal, BC_Loc, F_Loc, Temp_Loc)
     Vec                                                 :: RHS
     Type (EXO_Geom_Info)                                :: Geom
-    Type (Rupt_Params)                                  :: Params
-#ifdef PB_2D
+    Type (Rupt_Params_Hooke2D)                          :: Params
     Type(Element2D_Elast), Dimension(:), Pointer        :: Elem_Vect
     Type(Node2D), Dimension(:), Pointer                 :: Node_Vect
     Type(Element2D_Scal), Dimension(:), Pointer         :: Elem_Scal
     Type(Node2D), Dimension(:), Pointer                 :: Node_Scal
     Type(MatS2D)                                        :: ThetaId, AThetaId
     Type(Vect2D)                                        :: F
-#else
-    Type(Element3D_Elast), Dimension(:), Pointer        :: Elem_Vect
-    Type(Node3D), Dimension(:), Pointer                 :: Node_Vect
-    Type(Element3D_Scal), Dimension(:), Pointer         :: Elem_Scal
-    Type(Node3D), Dimension(:), Pointer                 :: Node_Scal
-    Type(MatS3D)                                        :: ThetaId, AThetaId
-    Type(Vect3D)                                        :: F
-#endif
     Vec                                                 :: BC_Loc
     Vec                                                 :: F_Loc
     Vec                                                 :: Temp_Loc
@@ -431,7 +325,6 @@ Contains
     Integer                                             :: iE, iELoc, iG
     Integer                                             :: iBlk
     
-    Real(Kind = Kr)                                     :: E, nu, K1, K2
     Integer                                             :: i, iS
 
     Real(Kind = Kr), Dimension(:), Pointer              :: RHS_Elem
@@ -454,23 +347,6 @@ Contains
        Allocate (RHS_Elem(Nb_DoF_Vect))
        Allocate (EXO_Indices_Vect(Nb_DoF_Vect))
 
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-#ifdef PB_2D
-       K1 = E * nu / (1.0_Kr - nu**2)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#else
-       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#endif
-
        Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
           iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
           If (.NOT. MySD_Vect%IsLocal_Elem(iE)) Then
@@ -484,22 +360,17 @@ Contains
 
           RHS_Elem = 0.0_Kr
           Do_iG: Do iG = 1, Elem_Vect(iE)%Nb_Gauss
-          
-             ThetaId = 0.0_Kr
-             Do_iSL1: Do iSL = 1, Elem_Scal(iE)%Nb_DoF
-                iSG = Elem_Scal(iE)%ID_DoF(iSL)
-                ThetaId%XX = ThetaId%XX + Params%Therm_Exp(iBlk) * Temp_Ptr(Loc_Indices_Scal(iSG)+1) * Elem_Scal(iE)%BF(iSL, iG)
-                ThetaId%YY = ThetaId%YY + Params%Therm_Exp(iBlk) * Temp_Ptr(Loc_Indices_Scal(iSG)+1) * Elem_Scal(iE)%BF(iSL, iG)
-#ifdef PB_3D
-                ThetaId%ZZ = ThetaId%ZZ + Params%Therm_Exp(iBlk) * Temp_Ptr(Loc_Indices_Scal(iSG)+1) * Elem_Scal(iE)%BF(iSL, iG)
-#endif
-             End Do Do_iSL1
-             AThetaId = 2.0_Kr * K2 * ThetaId
-             AThetaId%XX = AThetaId%XX + K1 * Trace(ThetaId)
-             AThetaId%YY = AThetaId%YY + K1 * Trace(ThetaId)
-#ifdef PB_3D
-             AthetaId%ZZ = AThetaId%ZZ + K1 * Trace(ThetaId)
-#endif
+
+!!! Need to think about thermal expansion with generalized Hookes laws          
+!             ThetaId = 0.0_Kr
+!             Do_iSL1: Do iSL = 1, Elem_Scal(iE)%Nb_DoF
+!                iSG = Elem_Scal(iE)%ID_DoF(iSL)
+!                ThetaId%XX = ThetaId%XX + Params%Therm_Exp(iBlk) * Temp_Ptr(Loc_Indices_Scal(iSG)+1) * Elem_Scal(iE)%BF(iSL, iG)
+!                ThetaId%YY = ThetaId%YY + Params%Therm_Exp(iBlk) * Temp_Ptr(Loc_Indices_Scal(iSG)+1) * Elem_Scal(iE)%BF(iSL, iG)
+!             End Do Do_iSL1
+!             AThetaId = 2.0_Kr * K2 * ThetaId
+!             AThetaId%XX = AThetaId%XX + K1 * Trace(ThetaId)
+!             AThetaId%YY = AThetaId%YY + K1 * Trace(ThetaId)
              F = 0.0_Kr
              Do_iSL2: Do iSL = 1, Elem_Vect(iE)%Nb_DoF
                 iSG = Elem_Vect(iE)%ID_DoF(iSL)
@@ -548,13 +419,8 @@ Contains
   Subroutine GenVect(Geom, SD, Nodes, Elems, Vect_Dist)
     Type (EXO_Geom_Info)                                :: Geom
     Type (SD_Info)                                      :: SD
-#ifdef PB_2D
     Type(Element2D_Elast), Dimension(:), Pointer        :: Elems
     Type(Node2D), Dimension(:), Pointer                 :: Nodes
-#else
-    Type(Element3D_Elast), Dimension(:), Pointer        :: Elems
-    Type(Node3D), Dimension(:), Pointer                 :: Nodes
-#endif
     Vec                                                 :: Vect_Dist
 
     Integer                                             :: iS, i
@@ -571,9 +437,6 @@ Contains
        EndIf
        X = Nodes(Geom%Num_Dim * iS +1)%Coord%X
        Y = Nodes(Geom%Num_Dim * iS +1)%Coord%Y
-#ifdef PB_3D
-       Z = Nodes(Geom%Num_Dim * iS +1)%Coord%Z
-#endif
        Call VecSetValue(Vect_Dist, EXO_Indices(Geom%Num_Dim * iS +1), X, INSERT_VALUES, iErr)
     End Do
 
@@ -584,86 +447,9 @@ Contains
   End Subroutine GenVect
 
 
-  Subroutine Compute_SigmaEpsilon(Sigma, Epsilon, Geom, Params, Elem_db,      &
-       & Node_db, Defo_Vec)
-
-#ifdef PB_2D
-    Type(MatS2D), Dimension(:), Pointer                 :: Sigma
-    Type(MatS2D), Dimension(:), Pointer                 :: Epsilon
-    Type(Element2D_Elast), Dimension(:), Pointer        :: Elem_db
-    Type(Node2D), Dimension(:), Pointer                 :: Node_db 
-#else
-    Type(MatS3D), Dimension(:), Pointer                 :: Sigma
-    Type(MatS3D), Dimension(:), Pointer                 :: Epsilon
-    Type(Element3D_Elast), Dimension(:), Pointer        :: Elem_db 
-    Type(Node3D), Dimension(:), Pointer                 :: Node_db 
-#endif
-    Type (EXO_Geom_Info)                                :: Geom
-    Type (Rupt_Params)                                  :: Params
-    Vec                                                 :: Defo_Vec
-
-    Integer                                             :: iE, NE, iBlk
-    Integer                                             :: iELoc, Nb_DoF
-    Integer                                             :: Nb_Gauss
-    Integer                                             :: iG, iSL, iSG
-    Real(Kind = Kr)                                     :: Lambda, Mu
-    Real(Kind = Kr)                                     :: E, nu
-    Real(Kind = Kr)                                     :: Vol_iE
-    PetscScalar, Dimension(:), Pointer                  :: Defo
- 
-    NE = Size(Elem_db)
-
-#ifdef PB_2D
-#else
-    Call VecGetArrayF90(Defo_Vec, Defo, iErr)
-    Epsilon%XX = 0.0_Kr
-    Epsilon%YY = 0.0_Kr
-    Epsilon%ZZ = 0.0_Kr
-    Epsilon%YZ = 0.0_Kr
-    Epsilon%XZ = 0.0_Kr
-    Epsilon%XY = 0.0_Kr
-
-    Do_iBlk: Do iBlk = 1, Geom%Num_Elem_Blks
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-
-       Lambda = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       Mu     = E / (1.0_Kr + nu) * InvOf2
-
-       Nb_DoF = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
-
-       Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
-          iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
-
-          Nb_Gauss = Elem_db(iE)%Nb_Gauss
-          Vol_iE = Vol_Tetra_3D(Node_db(Elem_db(iE)%ID_DoF(1))%Coord,        &
-            &    Node_db(Elem_db(iE)%ID_DoF(4))%Coord,                       &
-            &    Node_db(Elem_db(iE)%ID_DoF(7))%Coord,                       &
-            &    Node_db(Elem_db(iE)%ID_DoF(10))%Coord)
-          Do_iSL: Do iSL = 1, Nb_DoF
-             ISG = Elem_db(iE)%ID_DoF(iSL)
-             Do_iG: Do iG = 1, Elem_db(iE)%Nb_Gauss
-                Epsilon(iE) = Epsilon(iE) + Elem_db(iE)%GradS_BF(iSL,iG)      &
-                     & * Elem_db(iE)%Gauss_C(iG) * Defo(iSG)
-             End Do Do_iG
-          End Do Do_iSL
-
-          Epsilon(iE) = Epsilon(iE) / Vol_iE
-          Sigma(iE)    = 2.0_Kr * Mu * Epsilon(iE)
-          Sigma(iE)%XX = Sigma(iE)%XX + Lambda * Trace(Epsilon(iE))
-          Sigma(iE)%YY = Sigma(iE)%YY + Lambda * Trace(Epsilon(iE))
-          Sigma(iE)%ZZ = Sigma(iE)%ZZ + Lambda * Trace(Epsilon(iE))
-       End Do Do_iE
-    End Do Do_iBlk
-    Call VecRestoreArrayF90(Defo_Vec, Defo, iErr)
-#endif
-  End Subroutine Compute_SigmaEpsilon
-
-
   Subroutine Calc_Ener(DISP_Loc, Geom, Params, Elem_db_Vec, Node_db_Vec, SD_Vec, Elem_db_Scal, Node_db_Scal, SD_Scal,              & 
                        F_Loc, Temp_Loc, Ener) 
 
-#ifdef PB_2D
     Type(MatS2D)                                        :: Sigma
     Type(MatS2D)                                        :: Epsilon
     Type(Element2D_Elast), Dimension(:), Pointer        :: Elem_db_Vec 
@@ -671,17 +457,8 @@ Contains
     Type(Vect2D)                                        :: F, U
     Type(Element2D_Scal), Dimension(:), Pointer         :: Elem_db_Scal 
     Type(Node2D), Dimension(:), Pointer                 :: Node_db_Scal
-#else
-    Type(MatS3D)                                        :: Sigma
-    Type(MatS3D)                                        :: Epsilon
-    Type(Element3D_Elast), Dimension(:), Pointer        :: Elem_db_Vec 
-    Type(Node3D), Dimension(:), Pointer                 :: Node_db_Vec 
-    Type(Vect3D)                                        :: F, U
-    Type(Element3D_Scal), Dimension(:), Pointer         :: Elem_db_Scal 
-    Type(Node3D), Dimension(:), Pointer                 :: Node_db_Scal
-#endif
     Type (EXO_Geom_Info)                                :: Geom
-    Type (Rupt_Params)                                  :: Params
+    Type (Rupt_Params_Hooke2D)                          :: Params
     Type (SD_Info)                                      :: SD_Vec, SD_Scal
     
     Vec                                                 :: DISP_Loc
@@ -694,8 +471,6 @@ Contains
     Integer                                             :: Nb_Gauss, Nb_DoF_Vec, Nb_DoF_Scal
     Integer                                             :: iSL, iSG
     Integer                                             :: iE, iG, iELoc
-    Real(Kind = Kr)                                     :: K1, K2
-    Real(Kind = Kr)                                     :: E, nu
     Integer(Kind = Ki)                                  :: iBlk
     Integer                                             :: i
     Integer, Dimension(:), Pointer                      :: Loc_Indices_Vec
@@ -719,23 +494,6 @@ Contains
     Call VecGetArrayF90(Temp_Loc, Temp_Ptr, iErr)
 
     Do_iBlk: Do iBlk = 1, Geom%Num_Elem_Blks
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
-#ifdef PB_2D
-       K1 = E * nu / (1.0_Kr - nu**2)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#else
-       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#endif
 
        Nb_DoF_Vec  = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
        Nb_DoF_Scal = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
@@ -759,22 +517,14 @@ Contains
                 Epsilon = Epsilon + Elem_db_Vec(iE)%GradS_BF(iSL,iG) * Disp_Ptr(Loc_Indices_Vec(iSG)+1)
              End Do Do_iSL1
 
-!!! Thermal stuff
-             Do_iSL2: Do iSL = 1, Nb_DoF_Scal
-                iSG = Elem_db_Scal(iE)%ID_DoF(iSL)
-                Epsilon%XX = Epsilon%XX - Params%Therm_Exp(iBlk) * Elem_db_Scal(iE)%BF(iSL,iG) * Temp_Ptr(Loc_Indices_Scal(iSG)+1)
-                Epsilon%YY = Epsilon%YY - Params%Therm_Exp(iBlk) * Elem_db_Scal(iE)%BF(iSL,iG) * Temp_Ptr(Loc_Indices_Scal(iSG)+1)
-#ifdef PB_3D
-                Epsilon%ZZ   = Epsilon%ZZ - Params%Therm_Exp(iBlk) * Elem_db_Scal(iE)%BF(iSL,iG) * Temp_Ptr(Loc_Indices_Scal(iSG)+1)
-#endif
-             End Do Do_iSL2
+!!! Need to think about Thermal stuff
+!             Do_iSL2: Do iSL = 1, Nb_DoF_Scal
+!                iSG = Elem_db_Scal(iE)%ID_DoF(iSL)
+!                Epsilon%XX = Epsilon%XX - Params%Therm_Exp(iBlk) * Elem_db_Scal(iE)%BF(iSL,iG) * Temp_Ptr(Loc_Indices_Scal(iSG)+1)
+!                Epsilon%YY = Epsilon%YY - Params%Therm_Exp(iBlk) * Elem_db_Scal(iE)%BF(iSL,iG) * Temp_Ptr(Loc_Indices_Scal(iSG)+1)
+!             End Do Do_iSL2
 
-             Sigma = 2.0_Kr * K2 * Epsilon
-             Sigma%XX = Sigma%XX + K1 * Trace(Epsilon)
-             Sigma%YY = Sigma%YY + K1 * Trace(Epsilon)
-#ifdef PB_3D
-             Sigma%ZZ = Sigma%ZZ + K1 * Trace(Epsilon)
-#endif
+             Sigma = Params%Hookes_Law(iBlk) * Epsilon
              
              MyEner = MyEner + Elem_db(iE)%Gauss_C(iG) * ( Sigma .DotP. Epsilon ) * .5_Kr
             
@@ -804,8 +554,4 @@ Contains
   End Subroutine Calc_Ener
 
 
-#ifdef PB_2D
 End Module m_Elast2D_Proc
-#else
-End Module m_Elast3D_Proc
-#endif
