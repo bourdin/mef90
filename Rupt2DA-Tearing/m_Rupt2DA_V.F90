@@ -212,14 +212,13 @@ Contains
 
 !!! USING VLV SEEMS TO MAKE THE KSP UNSTABLE, UNLESS V IS INITIALIZED WITH
 !!! THE PROPER BC
-  Subroutine Assemb_MR_V(MR, U_Loc, Geom, Params, SD_U, SD_V, Elems_U, Elems_V, Nodes_U, Nodes_V, t)
+  Subroutine Assemb_MR_V(MR, U_Loc, Geom, Params, SD_U, SD_V, Elems_U, Elems_V, Nodes_U, Nodes_V)
     Mat                                           :: MR
     Vec                                           :: U_Loc
     Type (EXO_Geom_Info)                          :: Geom
     Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD_U
     Type (SD_Info)                                :: SD_V
-	Real(Kind = Kr), Intent(IN)                   :: t
 
 
 
@@ -240,7 +239,6 @@ Contains
     Integer                                      :: iBlk, iE, iEloc, iG
 
     Real(Kind = Kr), Dimension(:), Pointer       :: U_Ptr
-!    Real(Kind = Kr), Dimension(:), Pointer       :: Temp_Ptr
     Real(Kind = Kr), Dimension(:), Pointer       :: ContrU
 
     PetscScalar, Dimension(:,:), Pointer         :: MR_Elem
@@ -255,7 +253,6 @@ Contains
 
     Real(Kind = Kr)                              :: E, Nu, k
     Real(Kind = Kr)                              :: K2
-    Type(Vect2D)                                 :: DistorsionEps, DistorsionSig
     Integer                                      :: SetN, i
 
     SetN = 0
@@ -320,20 +317,11 @@ Contains
              Do_iGUEps: Do iG = 1, Nb_Gauss
                 Do_iSLSig: Do iSLSig = 1, Elems_U(iE)%Nb_DoF
                    iSGSig = Elems_U(iE)%ID_DoF(iSLSig)
-       		   DistorsionSig%X =   Nodes_U(iSGSig)%Coord%Y * Elems_U(iE)%BF(iSLSig,iG)
-                   DistorsionSig%Y = - Nodes_U(iSGSig)%Coord%X * Elems_U(iE)%BF(iSLSig,iG)
                    Do_iSLEps: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
                       iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
-                      DistorsionEps%X =   Nodes_U(iSGEps)%Coord%Y * Elems_U(iE)%BF(iSLEps,iG)
-                      DistorsionEps%Y = - Nodes_U(iSGEps)%Coord%X * Elems_U(iE)%BF(iSLEps,iG)
-                      
                       ContrU(iG) = ContrU(iG) +                                                                                    &
-                                  ( (U_Ptr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG) - t*DistorsionEps) .DotP.     &
-                                    (U_Ptr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG) - t*DistorsionSig) ) * K2 
-!                      ContrU(iG) = ContrU(iG) +                                                                                    &
-!                                  ( (U_Ptr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG) - DistorsionEps) .DotP.     &
-!\\\                                    (U_Ptr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG) - DistorsionSig) ) * K2 
-
+                                   U_Ptr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG)%Y *                             &
+                                   U_Ptr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG)%Y * K2 
                    End Do Do_iSLEps
                 End Do Do_iSLSig
              End Do Do_iGUEps
