@@ -669,21 +669,23 @@ Contains
     Type(Element2D_Elast), Dimension(:), Pointer        :: Elem_db_Vec 
     Type(Node2D), Dimension(:), Pointer                 :: Node_db_Vec
     Type(Vect2D)                                        :: F, U
+    Type(Element2D_Scal), Dimension(:), Pointer         :: Elem_db_Scal 
+    Type(Node2D), Dimension(:), Pointer                 :: Node_db_Scal
 #else
     Type(MatS3D)                                        :: Sigma
     Type(MatS3D)                                        :: Epsilon
     Type(Element3D_Elast), Dimension(:), Pointer        :: Elem_db_Vec 
     Type(Node3D), Dimension(:), Pointer                 :: Node_db_Vec 
     Type(Vect3D)                                        :: F, U
+    Type(Element3D_Scal), Dimension(:), Pointer         :: Elem_db_Scal 
+    Type(Node3D), Dimension(:), Pointer                 :: Node_db_Scal
 #endif
-    Type(Element2D_Scal), Dimension(:), Pointer         :: Elem_db_Scal 
-    Type(Node2D), Dimension(:), Pointer                 :: Node_db_Scal
     Type (EXO_Geom_Info)                                :: Geom
     Type (Rupt_Params)                                  :: Params
     Type (SD_Info)                                      :: SD_Vec, SD_Scal
     
     Vec                                                 :: DISP_Loc
-	 Vec                                                 :: F_Loc
+    Vec                                                 :: F_Loc
     Vec                                                 :: Temp_Loc
 	    
     Real(Kind = Kr)                                     :: Ener
