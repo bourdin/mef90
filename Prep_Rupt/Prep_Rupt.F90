@@ -573,8 +573,6 @@ Contains
           Call Write_EXO_Result_Nodes(Geom, 8, iTS, Temp_Result)
        End Do          
     Case (PB_Dipping3)
-       Write(*, 100, advance = 'no') 'Temperature difference (Delta Theta) '
-       Read(*,*) DTheta
        Write(*, 100, advance = 'no') 'Characteristic length (l)            '
        Read(*,*) l
        Write(*, 100, advance = 'no') 'Thermal conductivity (kappa)         '

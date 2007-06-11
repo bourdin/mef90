@@ -1,7 +1,5 @@
 PROJ=Prep_Rupt
-VER=0.0.7
-MEF90VER        = 0.12.0
-MEF90DIR        = ../MEF90-$(MEF90VER)
+MEF90DIR        = ../MEF90
 MEF90OBJS       = $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
                   $(MEF90DIR)/m_MEF_Types.o     $(MEF90DIR)/m_MEF_Tools.o \
                   $(MEF90DIR)/m_MEF_IO.o        $(MEF90DIR)/m_MEF_Gauss.o \
@@ -10,30 +8,19 @@ MEF90OBJS       = $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
                   $(MEF90DIR)/m_MEF_SD.o        $(MEF90DIR)/m_MEF_PU.o    \
                   $(MEF90DIR)/m_MEF_Communication.o
 
-M_Rupt_STRUCT_DIR = ../m_Rupt_Struct-0.0.6
-M_Rupt_STRUCT_OBJS = $(M_Rupt_STRUCT_DIR)/m_Rupt_Struct.o
+M_RUPT_STRUCT_DIR = ../m_Rupt_Struct
+M_RUPT_STRUCT_OBJS = $(M_RUPT_STRUCT_DIR)/m_Rupt_Struct.o
 
 EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
 EXO_LFLAGS      = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf -lmetis -lparmetis
 
-all: ${PROJ}-${VER}
+all: ${PROJ}
+
 include ${PETSC_DIR}/bmake/common/base
 
 OBJS=    $(PROJ).o
-FFLAGS = -I${MEF90DIR} -I${M_Rupt_STRUCT_DIR} ${EXO_CFLAGS}
+FFLAGS = -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS}
 
-$(PROJ)-${VER}: ${PROJ}.o
-	${FLINKER} -o ${PROJ}-${VER} ${OBJS} ${MEF90OBJS}                     \
-                    ${M_Rupt_STRUCT_OBJS}                                     \
-                    ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
-
-
-# Dependences
-$(PROJ).o: $(MEF90OBJS) 
-
-really_clean: clean
-	- rm -f ${PROJ}-${VER} *~ core
-
-tarball: really_clean
-	tar zcvf ${PROJ}-${VER}-`date '+%Y-%m-%d'`-`hostname -s`.tgz *[^tgz] > /dev/null
+$(PROJ): ${PROJ}.o
+	${FLINKER} -o ${PROJ} ${OBJS} ${MEF90OBJS} ${M_RUPT_STRUCT_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
 
