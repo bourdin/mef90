@@ -395,7 +395,7 @@ Contains
     
     Call PetscLogStagePush(LogStage_Assembly, iErr);
     Call Assemb_MR_U(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
-    Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U, Node_db_U, MySD_V, Elem_db_V, Node_db_V, V_Loc, Params%Load(TS))
+    Call Assemb_RHS_U(RHS_U, BCU_loc, Geom, Params, MySD_U, Elem_db_U, Node_db_U)
     Call PetscLogStagePop(iErr);
     
     Call PetscGetTime(SolveTS, iErr)
@@ -414,7 +414,6 @@ Contains
           Write(Log_Unit, *) '[ERROR] KSPConvergedReason returned ',  KSP_TestCVG
        End If
        Write(Log_Unit, 500) NbIterKSP, SolveTF - SolveTS, KSP_TestCVG
-       Write(Log_Unit, 501) UMin, UMax
     End If
 
 
@@ -424,13 +423,11 @@ Contains
 501 Format('     UMin / Max:   ', T24, 2(ES12.5, '  '))
   End Subroutine Solve_U
   
-  Subroutine Solve_V(TS)
-	 Integer, Intent(IN)                                   :: TS
+  Subroutine Solve_V()
     Integer                                               :: VMinPos, VMaxPos
 
     Call PetscLogStagePush(LogStage_Assembly, iErr);
-    Call Assemb_MR_V(MR_V, U_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V, Params%Load(TS) )
-!    Call Assemb_MR_V(MR_V, U_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V, 0.0_Kr)
+    Call Assemb_MR_V(MR_V, U_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V)
     Call PetscLogStagePop(iErr);
     
     Call PetscGetTime(SolveTS, iErr)

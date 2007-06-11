@@ -15,7 +15,7 @@ Module m_Rupt2DA_Vars
 #include "include/finclude/petscpc.h"
 #include "include/finclude/petscis.h"
 
-  Integer, Public                                       :: SaveInt = 1
+  Integer, Public                                       :: SaveInt = 20
   Mat, Public                                           :: MR_U
   Mat, Public                                           :: MR_V
  
@@ -31,9 +31,6 @@ Module m_Rupt2DA_Vars
 
   Vec, Public                                           :: BCU_Dist, BCU_Loc, BCU_Master
 
-!  Vec, Public                                           :: Temp_Dist, Temp_Loc, Temp_Master
-
-!  Vec, Public                                           :: F_Dist, F_Loc,  F_Master
 
   KSP, Public                                           :: KSP_U, KSP_V
   PC, Public                                            :: PC_U, PC_V
@@ -41,7 +38,6 @@ Module m_Rupt2DA_Vars
   Integer, Public                                       :: NbIterKSP
 
 
-! 2 DA
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_U
   Type(Element2D_Scal), Dimension(:), Pointer, Public   :: Elem_db_U
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_V

@@ -21,19 +21,16 @@ Module m_Rupt2DA_Ener
   Integer  :: iErr
 
 Contains
-  Subroutine Comp_Bulk_Ener(Ener, ULoc, VLoc, Geom, Params, SD_U, SD_V, Elems_U, Elems_V, Nodes_U, Nodes_V, t)
+  Subroutine Comp_Bulk_Ener(Ener, ULoc, VLoc, Geom, Params, SD_U, SD_V, Elems_U, Elems_V, Nodes_U, Nodes_V)
     Type (EXO_Geom_Info)                         :: Geom
     Type (Rupt_Params)                           :: Params
     Type (SD_Info)                               :: SD_U
     Type (SD_Info)                               :: SD_V
-    Real(Kind = Kr),Intent(IN)                   :: t
-    
 
     Type (Node2D), Dimension(:), Pointer          :: Nodes_U
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_U
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
-
 
     Vec                                          :: ULoc
     Vec                                          :: VLoc
@@ -41,8 +38,6 @@ Contains
 
     PetscReal                                    :: E, Nu
     PetscReal                                    :: K2
-    PetscReal                                    :: Toughness    
-    Type(Vect2D)                                 :: DistorsionEps, DistorsionSig
 
     Real(Kind = Kr)                              :: MyEner
     Integer                                      :: Nb_Gauss, Nb_DoF
@@ -52,15 +47,12 @@ Contains
     Integer                                      :: iSLEps, iSGEps
     Integer                                      :: iBlk, iELoc, iE, iG
     
-
     Real(Kind = Kr), Dimension(:), Pointer       :: UPtr, VPtr
     Real(Kind = Kr), Dimension(:), Pointer       :: ContrV
     Real(Kind = Kr)                              :: ContrU
 
     Integer, Dimension(:), Pointer               :: Loc_Indices_U
     Integer, Dimension(:), Pointer               :: Loc_Indices_V
-
-
     Integer                                      :: i
 
     Allocate(Loc_Indices_V(Geom%Num_Nodes))
@@ -81,7 +73,6 @@ Contains
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
        E         = Params%Young_Mod(iBlk)
        nu        = Params%Poisson_Ratio(iBlk) 
-       Toughness = Params%Toughness(iBlk)
 
 !!! The isotropic Hooke's law is expressed as
 !!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
@@ -129,20 +120,15 @@ Contains
           Do_iGUEps: Do iG = 1, Nb_Gauss
              Do_iSLSig: Do iSLSig = 1, Elems_U(iE)%Nb_DoF
                 iSGSig = Elems_U(iE)%ID_DoF(iSLSig)
-                DistorsionSig%X =   Nodes_U(iSGSig)%Coord%Y * Elems_U(iE)%BF(iSLSig,iG)
-                DistorsionSig%Y = - Nodes_U(iSGSig)%Coord%X * Elems_U(iE)%BF(iSLSig,iG)
                 
                 Do_iSLEps: Do iSLEps = 1, Elems_U(iE)%Nb_DoF
                    iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
-                   DistorsionEps%X =   Nodes_U(iSGEps)%Coord%Y * Elems_U(iE)%BF(iSLEps,iG)
-                   DistorsionEps%Y = - Nodes_U(iSGEps)%Coord%X * Elems_U(iE)%BF(iSLEps,iG)
                    
-!                   ContrU = ContrU + ( Elems_U(iE)%Grad_BF(iSLEps,iG) .DotP. Elems_U(iE)%Grad_BF(iSLSig,iG) ) *            &
-!                        &                          UPtr(Loc_Indices_U(iSGSig)+1) * UPtr(Loc_Indices_U(iSGEps)+1) * K2 * ContrV(iG)
-
-                   MyEner = MyEner + ( (UPtr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG) - t*DistorsionEps) .DotP.      &
-                                    (UPtr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG) - t*DistorsionSig) ) *            &
-                                    Elems_U(iE)%Gauss_C(iG) * ContrV(iG) * .5_Kr
+                   MyEner = MyEner + ( (UPtr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG)%Y *                  &
+                                       UPtr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG)%Y) * ContrV(iG)           &
+                                     + (UPtr(Loc_Indices_U(iSGEps)+1) * Elems_U(iE)%Grad_BF(iSLEps,iG)%X *                  &
+                                       UPtr(Loc_Indices_U(iSGSig)+1) * Elems_U(iE)%Grad_BF(iSLSig,iG)%X) ) *                &
+                                    Elems_U(iE)%Gauss_C(iG) * .5_Kr * K2
                 End Do Do_iSLEps
              End Do Do_iSLSig
           End Do Do_iGUEps

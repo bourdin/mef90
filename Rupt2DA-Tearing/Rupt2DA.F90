@@ -89,7 +89,7 @@ Program Rupt2DA
         End If
 
         Call Solve_U(TimeStep)
-        Call Solve_V(TimeStep)
+        Call Solve_V()
 
 !!$!!! Caltech 2006-04 save all intermediate steps
 !!$        If (MEF90_MyRank == 0) Then
@@ -106,7 +106,7 @@ Program Rupt2DA
               Write(Log_Unit, 930) TotalTF - TotalTS
            End If
 !           Call VecSet(U_Loc, 1.0_Kr, iErr)
-           Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V, Params%Load(TimeStep))
+           Call Comp_Bulk_Ener(Bulk_Ener(TimeStep), U_Loc, V_Loc, Geom, Params, MySD_U, MySD_V, Elem_db_U, Elem_db_V, Node_db_U, Node_db_V)
            
            Call Comp_Surf_Ener(Surf_Ener(TimeSTep), V_Loc, Geom, Params, MySD_V, Elem_db_V, Node_db_V)
            Tot_Ener(TimeStep) = Bulk_Ener(TimeStep) + Surf_Ener(TimeSTep)
