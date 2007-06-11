@@ -1,4 +1,4 @@
-PROJ            = Elast
+PROJ      = Elast2D-Ortho
 MEF90DIR  = ../MEF90
 MEF90OBJS = $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
             $(MEF90DIR)/m_MEF_Types.o     $(MEF90DIR)/m_MEF_Tools.o \
@@ -14,23 +14,21 @@ M_RUPT_STRUCT_OBJS = $(M_RUPT_STRUCT_DIR)/m_Rupt_Struct.o
 EXO_CFLAGS = -I$(HPCDIST_DIR)/include
 EXO_LFLAGS = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf -lmetis -lparmetis
 
-all: ${PROJ}${DIM}
+all: ${PROJ}
 
 include ${PETSC_DIR}/bmake/common/base
 
-OBJS = ${PROJ}${DIM}.o m_Elast${DIM}_Vars.o m_Elast${DIM}_Proc.o 
+OBJS = ${PROJ}.o m_Elast2D_Vars.o m_Elast2D_Proc.o 
 
 FFLAGS = -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS} -DPB_${DIM} 
 
-${PROJ}${DIM}: ${PROJ}${DIM}.o
-	-${FLINKER} -o ${PROJ}${DIM} ${OBJS} ${MEF90OBJS} ${M_RUPT_STRUCT_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
+${PROJ}: ${PROJ}.o
+	-${FLINKER} -o ${PROJ} ${OBJS} ${MEF90OBJS} ${M_RUPT_STRUCT_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
 
 ${PROJ}:
         -@ echo use 'make DIM=2D' or 'make DIM=3D'
 
 # Dependences
-m_Elast${DIM}_Vars.o:  ${MEF90OBJS}
-m_Elast${DIM}_Proc.o:  ${MEF90OBJS} m_Elast${DIM}_Vars.o m_Elast${DIM}_Debug.o
-m_Elast${DIM}_Debug.o: ${MEF90OBJS} m_Elast${DIM}_Vars.o
-Elast${DIM}.o:         ${MEF90OBJS} m_Elast${DIM}_Vars.o m_Elast${DIM}_Proc.o \
-                        m_Elast${DIM}_Debug.o
+m_Elast2D_Vars.o:  ${MEF90OBJS}
+m_Elast2D_Proc.o:  ${MEF90OBJS} m_Elast2D_Vars.o 
+Elast2D-Ortho.o:   ${MEF90OBJS} m_Elast2D_Vars.o m_Elast2D_Proc.o

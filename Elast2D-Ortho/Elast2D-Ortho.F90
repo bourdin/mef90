@@ -4,15 +4,8 @@ Program Elast
   Use m_Rupt_Struct
 
 
-#ifdef PB_2D
   Use m_Elast2D_Vars
   Use m_Elast2D_Proc
-  Use m_Elast2D_Debug
-#else
-  Use m_Elast3D_Vars
-  Use m_Elast3D_Proc
-  Use m_Elast3D_Debug
-#endif
   Implicit NONE
 
 #include "include/finclude/petsc.h"
