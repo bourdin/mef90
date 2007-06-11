@@ -1,7 +1,6 @@
 PROJ=m_Rupt_Struct
 VER=0.0.6
-MEF90VER        = 0.12.0
-MEF90DIR        = $(MEF90ROOT)/MEF90-$(MEF90VER)
+MEF90DIR        = ../MEF90
 MEF90OBJS	= $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
                   $(MEF90DIR)/m_MEF_Types.o     $(MEF90DIR)/m_MEF_Tools.o \
                   $(MEF90DIR)/m_MEF_IO.o        $(MEF90DIR)/m_MEF_Gauss.o \
@@ -11,8 +10,7 @@ MEF90OBJS	= $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
                   $(MEF90DIR)/m_MEF_Communication.o
 
 EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
-EXO_LFLAGS      = -L$$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c   \
-                  -lnetcdf -lexoIIv2for -lsuplib -lsupes
+#EXO_LFLAGS      = -L$$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf -lexoIIv2for -lsuplib -lsupes
 
 all: ${PROJ}.o
 #include ../Makefile.${MEF90ARCH}
@@ -21,7 +19,6 @@ include ${PETSC_DIR}/bmake/common/base
 OBJS=    $(PROJ).o
 
 FFLAGS = -I${MEF90DIR} ${EXO_CFLAGS} 
-
 
 # Dependences
 $(PROJ).o: $(MEF90OBJS)
