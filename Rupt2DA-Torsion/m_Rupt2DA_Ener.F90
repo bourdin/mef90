@@ -96,11 +96,9 @@ Contains
              Distortion = 0.0_Kr
              Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF
                 iSG = Elems_U(iE)%ID_DoF(iSL)
-
                 Sigma        =  Sigma + Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
                 Distortion%X = Distortion%X + Elems_U(iE)%BF(iSL,iG) * Nodes_U(iSG)%Coord%Y 
                 Distortion%Y = Distortion%Y - Elems_U(iE)%BF(iSL,iG) * Nodes_U(iSG)%Coord%X
-                
              End Do Do_iSL1
              MyEner = MyEner + Elems_U(iE)%Gauss_C(iG) * ContrV * ( (Sigma - t * Distortion) .DotP. (sigma - t * Distortion) )     &
                       * .5_Kr
