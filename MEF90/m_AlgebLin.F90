@@ -72,24 +72,59 @@ Module m_algeblin
      Real(Kind = Kr)    :: XY
   End Type MatS3D
 
+!! After much hesitation,
+!! - the terms are numbered in alphabetical order (i.e. XXYX and not XYXX) 
+!! - the terms are stored in alphabetical order
   Type Tens4OS2D
      Sequence
      Real(Kind = Kr)    :: XXXX
-     Real(Kind = Kr)    :: YYYY
+     Real(Kind = Kr)    :: XXXY
+     Real(Kind = Kr)    :: XXYY
+     
      Real(Kind = Kr)    :: XYXY
      Real(Kind = Kr)    :: XYYY
-     Real(Kind = Kr)    :: XXYY
-     Real(Kind = Kr)    :: XXXY
+     
+     Real(Kind = Kr)    :: YYYY
   End Type Tens4OS2D
+
+  Type Tens4OS3D
+     Sequence
+     Real(Kind = Kr)    :: XXXX
+     Real(Kind = Kr)    :: XXXY
+     Real(Kind = Kr)    :: XXXZ
+     Real(Kind = Kr)    :: XXYY
+     Real(Kind = Kr)    :: XXYZ
+     Real(Kind = Kr)    :: XXZZ
+     
+     Real(Kind = Kr)    :: XYXY
+     Real(Kind = Kr)    :: XYXZ
+     Real(Kind = Kr)    :: XYYY
+     Real(Kind = Kr)    :: XYYZ
+     Real(Kind = Kr)    :: XYZZ
+
+     Real(Kind = Kr)    :: XZXZ
+     Real(Kind = Kr)    :: XZYY
+     Real(Kind = Kr)    :: XZYZ
+     Real(Kind = Kr)    :: XZZZ
+     
+     Real(Kind = Kr)    :: YYYY
+     Real(Kind = Kr)    :: YYYZ
+     Real(Kind = Kr)    :: YYZZ
+     
+     Real(Kind = Kr)    :: YZYZ
+     Real(Kind = Kr)    :: YZZZ
+     
+     Real(Kind = Kr)    :: ZZZZ
+  End Type Tens4OS3D
 
   Interface Operator (+)
      Module Procedure SumVect2D, SumVect3D, SumMat2D, SumMat3D, &
-          & SumMatS2D, SumMatS3D, SumTens4OS2D
+          & SumMatS2D, SumMatS3D, SumTens4OS2D, SumTens4OS3D
   End Interface
 
   Interface Operator (-)
      Module Procedure DifVect2D, DifVect3D, DifMat2D, DifMat3D, &
-          & DifMatS2D, DifMatS3D, DifTens4OS2D
+          & DifMatS2D, DifMatS3D, DifTens4OS2D, DifTens4OS3D
   End Interface
 
   Interface Operator (*)
@@ -97,12 +132,13 @@ Module m_algeblin
           & DbleXMat2D, Mat2DXDble, DbleXMat3D, Mat3DXDble,               &
           & DbleXMatS2D, MatS2DXDble, DbleXMatS3D, MatS3DXDble,           &
           & MatXVect2D, MatXVect3D, MatXVect2DS, MatXVect3DS,             &
-          & DbleXTens4OS2D, Tens4OS2DXDble, Tens4OS2DXMatS2D
+          & DbleXTens4OS2D, Tens4OS2DXDble, Tens4OS2DXMatS2D,             &
+          & DbleXTens4OS3D, Tens4OS3DXDble, Tens4OS3DXMatS3D
   End Interface
 
   Interface Operator (/)
      Module Procedure Vect2DQuot, Vect3DQuot, Mat2DQuot, Mat3DQuot, &
-          & MatS2DQuot, MatS3DQuot, Tens4OS2DQuot
+          & MatS2DQuot, MatS3DQuot, Tens4OS2DQuot, Tens4OS3DQuot
   End Interface
 
   Interface Operator (.DotP.)
@@ -140,7 +176,8 @@ Module m_algeblin
           & Vect2D_Get_VectR, Vect3D_Get_VectR,                         &
           & Vect2DEQ, Vect3DEQ, Mat2D_Get_Real, Mat3D_Get_Real,         &
           & Mat2DEQ, Mat3DEQ, MatS2D_Get_Real, MatS3D_Get_Real,         &
-          & MatS2DEQ, MatS3DEQ, Tens4OS2D_Get_Real, Tens4OS2DEQ
+          & MatS2DEQ, MatS3DEQ, Tens4OS2D_Get_Real, Tens4OS2DEQ,        &
+          & Tens4OS3D_Get_Real, Tens4OS3DEQ
   End Interface
   
   Interface Symmetrize
@@ -227,12 +264,46 @@ Contains
     Type (Tens4OS2D)                            :: SumTens4OS2D
 
     SumTens4OS2D%XXXX = T1%XXXX + T2%XXXX
-    SumTens4OS2D%YYYY = T1%YYYY + T2%YYYY
+    SumTens4OS2D%XXXY = T1%XXXY + T2%XXXY
+    SumTens4OS2D%XXYY = T1%XXYY + T2%XXYY
+
     SumTens4OS2D%XYXY = T1%XYXY + T2%XYXY
     SumTens4OS2D%XYYY = T1%XYYY + T2%XYYY
-    SumTens4OS2D%XXYY = T1%XXYY + T2%XXYY
-    SumTens4OS2D%XXXY = T1%XXXY + T2%XXXY
+
+    SumTens4OS2D%YYYY = T1%YYYY + T2%YYYY
   End Function SumTens4OS2D
+  
+  Function SumTens4OS3D (T1, T2)
+    Type (Tens4OS3D), Intent(IN)                :: T1, T2
+    Type (Tens4OS3D)                            :: SumTens4OS3D
+
+    SumTens4OS3D%XXXX = T1%XXXX + T2%XXXX  
+    SumTens4OS3D%XXXY = T1%XXXY + T2%XXXY
+    SumTens4OS3D%XXXZ = T1%XXXZ + T2%XXXZ  
+    SumTens4OS3D%XXYY = T1%XXYY + T2%XXYY  
+    SumTens4OS3D%XXYZ = T1%XXYZ + T2%XXYZ  
+    SumTens4OS3D%XXZZ = T1%XXZZ + T2%XXZZ  
+          
+    SumTens4OS3D%XYXY = T1%XYXY + T2%XYXY  
+    SumTens4OS3D%XYXZ = T1%XYXZ + T2%XYXZ  
+    SumTens4OS3D%XYYY = T1%XYYY + T2%XYYY  
+    SumTens4OS3D%XYYZ = T1%XYYZ + T2%XYYZ  
+    SumTens4OS3D%XYZZ = T1%XYZZ + T2%XYZZ  
+          
+    SumTens4OS3D%XZXZ = T1%XZXZ + T2%XZXZ  
+    SumTens4OS3D%XZYY = T1%XZYY + T2%XZYY  
+    SumTens4OS3D%XZYZ = T1%XZYZ + T2%XZYZ  
+    SumTens4OS3D%XZZZ = T1%XZZZ + T2%XZZZ  
+          
+    SumTens4OS3D%YYYY = T1%YYYY + T2%YYYY  
+    SumTens4OS3D%YYYZ = T1%YYYZ + T2%YYYZ  
+    SumTens4OS3D%YYZZ = T1%YYZZ + T2%YYZZ  
+          
+    SumTens4OS3D%YZYZ = T1%YZYZ + T2%YZYZ  
+    SumTens4OS3D%YZZZ = T1%YZZZ + T2%YZZZ  
+          
+    SumTens4OS3D%ZZZZ = T1%ZZZZ + T2%ZZZZ  
+  End Function SumTens4OS3D
 
   ! Fonctions pour la surcharge de l'operateur -
   Function DifVect2D (V1, V2)
@@ -304,12 +375,46 @@ Contains
     Type (Tens4OS2D)                            :: DifTens4OS2D
 
     DifTens4OS2D%XXXX = T1%XXXX - T2%XXXX
-    DifTens4OS2D%YYYY = T1%YYYY - T2%YYYY
+    DifTens4OS2D%XXXY = T1%XXXY - T2%XXXY
+    DifTens4OS2D%XXYY = T1%XXYY - T2%XXYY
+
     DifTens4OS2D%XYXY = T1%XYXY - T2%XYXY
     DifTens4OS2D%XYYY = T1%XYYY - T2%XYYY
-    DifTens4OS2D%XXYY = T1%XXYY - T2%XXYY
-    DifTens4OS2D%XXXY = T1%XXXY - T2%XXXY
+
+    DifTens4OS2D%YYYY = T1%YYYY - T2%YYYY
   End Function DifTens4OS2D
+
+  Function DifTens4OS3D (T1, T2)
+    Type (Tens4OS3D), Intent(IN)                :: T1, T2
+    Type (Tens4OS3D)                            :: DifTens4OS3D
+
+    DifTens4OS3D%XXXX = T1%XXXX - T2%XXXX  
+    DifTens4OS3D%XXXY = T1%XXXY - T2%XXXY
+    DifTens4OS3D%XXXZ = T1%XXXZ - T2%XXXZ  
+    DifTens4OS3D%XXYY = T1%XXYY - T2%XXYY  
+    DifTens4OS3D%XXYZ = T1%XXYZ - T2%XXYZ  
+    DifTens4OS3D%XXZZ = T1%XXZZ - T2%XXZZ  
+          
+    DifTens4OS3D%XYXY = T1%XYXY - T2%XYXY  
+    DifTens4OS3D%XYXZ = T1%XYXZ - T2%XYXZ  
+    DifTens4OS3D%XYYY = T1%XYYY - T2%XYYY  
+    DifTens4OS3D%XYYZ = T1%XYYZ - T2%XYYZ  
+    DifTens4OS3D%XYZZ = T1%XYZZ - T2%XYZZ  
+          
+    DifTens4OS3D%XZXZ = T1%XZXZ - T2%XZXZ  
+    DifTens4OS3D%XZYY = T1%XZYY - T2%XZYY  
+    DifTens4OS3D%XZYZ = T1%XZYZ - T2%XZYZ  
+    DifTens4OS3D%XZZZ = T1%XZZZ - T2%XZZZ  
+          
+    DifTens4OS3D%YYYY = T1%YYYY - T2%YYYY  
+    DifTens4OS3D%YYYZ = T1%YYYZ - T2%YYYZ  
+    DifTens4OS3D%YYZZ = T1%YYZZ - T2%YYZZ  
+          
+    DifTens4OS3D%YZYZ = T1%YZYZ - T2%YZYZ  
+    DifTens4OS3D%YZZZ = T1%YZZZ - T2%YZZZ  
+          
+    DifTens4OS3D%ZZZZ = T1%ZZZZ - T2%ZZZZ  
+  End Function DifTens4OS3D
 
   ! Surcharge de l'operateur *
   Function DbleXVect2D(D1, V1)
@@ -456,12 +561,48 @@ Contains
     Type (Tens4OS2D)                            :: DbleXTens4OS2D
 
     DbleXTens4OS2D%XXXX = D1 * T1%XXXX
-    DbleXTens4OS2D%YYYY = D1 * T1%YYYY
+    DbleXTens4OS2D%XXXY = D1 * T1%XXXY
+    DbleXTens4OS2D%XXYY = D1 * T1%XXYY
+
     DbleXTens4OS2D%XYXY = D1 * T1%XYXY
     DbleXTens4OS2D%XYYY = D1 * T1%XYYY
-    DbleXTens4OS2D%XXYY = D1 * T1%XXYY
-    DbleXTens4OS2D%XXXY = D1 * T1%XXXY
+
+    DbleXTens4OS2D%YYYY = D1 * T1%YYYY
   End Function DbleXTens4OS2D
+
+  Function DbleXTens4OS3D (D1, T1)
+    Real(Kind = Kr), Intent(IN)                 :: D1
+    Type (Tens4OS3D), Intent(IN)                :: T1
+    Type (Tens4OS3D)                            :: DbleXTens4OS3D
+
+    DbleXTens4OS3D%XXXX = D1 * T1%XXXX  
+    DbleXTens4OS3D%XXXY = D1 * T1%XXXY
+    DbleXTens4OS3D%XXXZ = D1 * T1%XXXZ  
+    DbleXTens4OS3D%XXYY = D1 * T1%XXYY  
+    DbleXTens4OS3D%XXYZ = D1 * T1%XXYZ  
+    DbleXTens4OS3D%XXZZ = D1 * T1%XXZZ  
+          
+    DbleXTens4OS3D%XYXY = D1 * T1%XYXY  
+    DbleXTens4OS3D%XYXZ = D1 * T1%XYXZ  
+    DbleXTens4OS3D%XYYY = D1 * T1%XYYY  
+    DbleXTens4OS3D%XYYZ = D1 * T1%XYYZ  
+    DbleXTens4OS3D%XYZZ = D1 * T1%XYZZ  
+          
+    DbleXTens4OS3D%XZXZ = D1 * T1%XZXZ  
+    DbleXTens4OS3D%XZYY = D1 * T1%XZYY  
+    DbleXTens4OS3D%XZYZ = D1 * T1%XZYZ  
+    DbleXTens4OS3D%XZZZ = D1 * T1%XZZZ  
+          
+    DbleXTens4OS3D%YYYY = D1 * T1%YYYY  
+    DbleXTens4OS3D%YYYZ = D1 * T1%YYYZ  
+    DbleXTens4OS3D%YYZZ = D1 * T1%YYZZ  
+          
+    DbleXTens4OS3D%YZYZ = D1 * T1%YZYZ  
+    DbleXTens4OS3D%YZZZ = D1 * T1%YZZZ  
+          
+    DbleXTens4OS3D%ZZZZ = D1 * T1%ZZZZ  
+  End Function DbleXTens4OS3D
+
 
   Function Tens4OS2DXDble (T1, D1)
     Real(Kind = Kr), Intent(IN)                 :: D1
@@ -469,12 +610,47 @@ Contains
     Type (Tens4OS2D)                            :: Tens4OS2DXDble
 
     Tens4OS2DXDble%XXXX = D1 * T1%XXXX
-    Tens4OS2DXDble%YYYY = D1 * T1%YYYY
+    Tens4OS2DXDble%XXXY = D1 * T1%XXXY
+    Tens4OS2DXDble%XXYY = D1 * T1%XXYY
+
     Tens4OS2DXDble%XYXY = D1 * T1%XYXY
     Tens4OS2DXDble%XYYY = D1 * T1%XYYY
-    Tens4OS2DXDble%XXYY = D1 * T1%XXYY
-    Tens4OS2DXDble%XXXY = D1 * T1%XXXY
+
+    Tens4OS2DXDble%YYYY = D1 * T1%YYYY
   End Function Tens4OS2DXDble
+
+  Function Tens4OS3DXDble (T1, D1)
+    Type (Tens4OS3D), Intent(IN)                :: T1
+    Real(Kind = Kr), Intent(IN)                 :: D1
+    Type (Tens4OS3D)                            :: Tens4OS3DXDble
+
+    Tens4OS3DXDble%XXXX = D1 * T1%XXXX  
+    Tens4OS3DXDble%XXXY = D1 * T1%XXXY
+    Tens4OS3DXDble%XXXZ = D1 * T1%XXXZ  
+    Tens4OS3DXDble%XXYY = D1 * T1%XXYY  
+    Tens4OS3DXDble%XXYZ = D1 * T1%XXYZ  
+    Tens4OS3DXDble%XXZZ = D1 * T1%XXZZ  
+          
+    Tens4OS3DXDble%XYXY = D1 * T1%XYXY  
+    Tens4OS3DXDble%XYXZ = D1 * T1%XYXZ  
+    Tens4OS3DXDble%XYYY = D1 * T1%XYYY  
+    Tens4OS3DXDble%XYYZ = D1 * T1%XYYZ  
+    Tens4OS3DXDble%XYZZ = D1 * T1%XYZZ  
+          
+    Tens4OS3DXDble%XZXZ = D1 * T1%XZXZ  
+    Tens4OS3DXDble%XZYY = D1 * T1%XZYY  
+    Tens4OS3DXDble%XZYZ = D1 * T1%XZYZ  
+    Tens4OS3DXDble%XZZZ = D1 * T1%XZZZ  
+          
+    Tens4OS3DXDble%YYYY = D1 * T1%YYYY  
+    Tens4OS3DXDble%YYYZ = D1 * T1%YYYZ  
+    Tens4OS3DXDble%YYZZ = D1 * T1%YYZZ  
+          
+    Tens4OS3DXDble%YZYZ = D1 * T1%YZYZ  
+    Tens4OS3DXDble%YZZZ = D1 * T1%YZZZ  
+          
+    Tens4OS3DXDble%ZZZZ = D1 * T1%ZZZZ  
+  End Function Tens4OS3DXDble
 
   Function  MatXVect2D(M1, V1)
     Type (Mat2D), intent(IN)                    :: M1
@@ -519,13 +695,37 @@ Contains
     Type(MatS2D), Intent(IN)                    :: M1
     Type(MatS2D)                                :: Tens4OS2DXMatS2D
 
-    Tens4OS2DXMatS2D%XX = T1%XXXX * M1%XX + T1%XXYY * M1%YY     &
-         &    + T1%XXXY * M1%XY * 2.0_Kr
-    Tens4OS2DXMatS2D%YY = T1%XXYY * M1%XX + T1%YYYY * M1%YY     &
-         &    + T1%XYYY * M1%XY * 2.0_Kr
-    Tens4OS2DXMatS2D%XY = T1%XXXY * M1%XX + T1%XYYY * M1%YY     &
-         &    + T1%XYXY * M1%XY * 2.0_Kr
+    Tens4OS2DXMatS2D%XX = T1%XXXX * M1%XX + T1%XXYY * M1%YY + T1%XXXY * M1%XY * 2.0_Kr
+    Tens4OS2DXMatS2D%YY = T1%XXYY * M1%XX + T1%YYYY * M1%YY + T1%XYYY * M1%XY * 2.0_Kr
+    Tens4OS2DXMatS2D%XY = T1%XXXY * M1%XX + T1%XYYY * M1%YY + T1%XYXY * M1%XY * 2.0_Kr
   End Function Tens4OS2DXMatS2D
+
+  Function Tens4OS3DXMatS3D(T1, M1)
+    Type(Tens4OS3D), Intent(IN)                 :: T1
+    Type(MatS3D), Intent(IN)                    :: M1
+    Type(MatS3D)                                :: Tens4OS3DXMatS3D
+
+    Tens4OS3DXMatS3D%XX = T1%XXXX * M1%XX + T1%XXXY * M1%XY * 2.0_Kr + T1%XXXZ * M1%XZ * 2.0_Kr                                    &
+                                          + T1%XXYY * M1%YY          + T1%XXYZ * M1%YZ * 2.0_Kr                                    &
+                                                                     + T1%XXZZ * M1%ZZ 
+    Tens4OS3DXMatS3D%XY = T1%XXXY * M1%XX + T1%XYXY * M1%XY * 2.0_Kr + T1%XYXZ * M1%XZ * 2.0_Kr                                    &
+                                          + T1%XYYY * M1%YY          + T1%XYYZ * M1%YZ * 2.0_Kr                                    &
+                                                                     + T1%XYZZ * M1%ZZ 
+    Tens4OS3DXMatS3D%XZ = T1%XXXZ * M1%XX + T1%XYXZ * M1%XY * 2.0_Kr + T1%XZXZ * M1%XZ * 2.0_Kr                                    &
+                                          + T1%XZYY * M1%YY          + T1%XZYZ * M1%YZ * 2.0_Kr                                    &
+                                                                     + T1%XZZZ * M1%ZZ 
+
+    Tens4OS3DXMatS3D%YY = T1%XXYY * M1%XX + T1%XYYY * M1%XY * 2.0_Kr + T1%XZYY * M1%XZ * 2.0_Kr                                    &
+                                          + T1%YYYY * M1%YY          + T1%YYYZ * M1%YZ * 2.0_Kr                                    &
+                                                                     + T1%YYZZ * M1%ZZ 
+    Tens4OS3DXMatS3D%YZ = T1%XXYZ * M1%XX + T1%XYYZ * M1%XY * 2.0_Kr + T1%XZYZ * M1%XZ * 2.0_Kr                                    &
+                                          + T1%YYYZ * M1%YY          + T1%YZYZ * M1%YZ * 2.0_Kr                                    &
+                                                                     + T1%YZZZ * M1%ZZ 
+
+    Tens4OS3DXMatS3D%ZZ = T1%XXZZ * M1%XX + T1%XYZZ * M1%XY * 2.0_Kr + T1%XZZZ * M1%XZ * 2.0_Kr                                    &
+                                          + T1%YYZZ * M1%YY          + T1%YZZZ * M1%YZ * 2.0_Kr                                    &
+                                                                     + T1%ZZZZ * M1%ZZ 
+  End Function Tens4OS3DXMatS3D
 
   ! Surcharge de l'operateur /
   Function Vect2DQuot(V1,D1)
@@ -604,14 +804,49 @@ Contains
     Type(Tens4OS2D)                             :: Tens4OS2DQuot
 
     Tens4OS2DQuot%XXXX = T1%XXXX / D1
-    Tens4OS2DQuot%YYYY = T1%YYYY / D1
+    Tens4OS2DQuot%XXXY = T1%XXXY / D1
+    Tens4OS2DQuot%XXYY = T1%XXYY / D1
+
     Tens4OS2DQuot%XYXY = T1%XYXY / D1
     Tens4OS2DQuot%XYYY = T1%XYYY / D1
-    Tens4OS2DQuot%XXYY = T1%XXYY / D1
-    Tens4OS2DQuot%XXXY = T1%XXXY / D1
+
+    Tens4OS2DQuot%YYYY = T1%YYYY / D1
   End Function Tens4OS2DQuot
     
 
+  Function Tens4OS3DQuot (T1, D1)
+    Type (Tens4OS3D), Intent(IN)                :: T1
+    Real(Kind = Kr), Intent(IN)                 :: D1
+    Type (Tens4OS3D)                            :: Tens4OS3DQuot
+
+    Tens4OS3DQuot%XXXX = T1%XXXX / D1  
+    Tens4OS3DQuot%XXXY = T1%XXXY / D1
+    Tens4OS3DQuot%XXXZ = T1%XXXZ / D1  
+    Tens4OS3DQuot%XXYY = T1%XXYY / D1  
+    Tens4OS3DQuot%XXYZ = T1%XXYZ / D1  
+    Tens4OS3DQuot%XXZZ = T1%XXZZ / D1  
+          
+    Tens4OS3DQuot%XYXY = T1%XYXY / D1  
+    Tens4OS3DQuot%XYXZ = T1%XYXZ / D1  
+    Tens4OS3DQuot%XYYY = T1%XYYY / D1  
+    Tens4OS3DQuot%XYYZ = T1%XYYZ / D1  
+    Tens4OS3DQuot%XYZZ = T1%XYZZ / D1  
+          
+    Tens4OS3DQuot%XZXZ = T1%XZXZ / D1  
+    Tens4OS3DQuot%XZYY = T1%XZYY / D1  
+    Tens4OS3DQuot%XZYZ = T1%XZYZ / D1  
+    Tens4OS3DQuot%XZZZ = T1%XZZZ / D1  
+          
+    Tens4OS3DQuot%YYYY = T1%YYYY / D1  
+    Tens4OS3DQuot%YYYZ = T1%YYYZ / D1  
+    Tens4OS3DQuot%YYZZ = T1%YYZZ / D1  
+          
+    Tens4OS3DQuot%YZYZ = T1%YZYZ / D1  
+    Tens4OS3DQuot%YZZZ = T1%YZZZ / D1  
+          
+    Tens4OS3DQuot%ZZZZ = T1%ZZZZ / D1  
+  End Function Tens4OS3DQuot
+  
   ! Produit Scalaire 2D et 3D
   Function DotP2D(V1, V2)
     Type (Vect2D), Intent(IN)                   :: V1, V2
@@ -957,24 +1192,92 @@ Contains
     Type(Tens4OS2D), Intent(IN)                         :: T2
 
     T1%XXXX = T2%XXXX
-    T1%YYYY = T2%YYYY
+    T1%XXXY = T2%XXXY
+    T1%XXYY = T2%XXYY
+
     T1%XYXY = T2%XYXY
     T1%XYYY = T2%XYYY
-    T1%XXYY = T2%XXYY
-    T1%XXXY = T2%XXXY
+
+    T1%YYYY = T2%YYYY
   End Subroutine Tens4OS2DEQ
+
+  Subroutine Tens4OS3DEQ(T1, T2)
+    Type(Tens4OS3D), Intent(OUT)                        :: T1
+    Type(Tens4OS3D), Intent(IN)                         :: T2
+
+    T1%XXXX = T2%XXXX  
+    T1%XXXY = T2%XXXY
+    T1%XXXZ = T2%XXXZ  
+    T1%XXYY = T2%XXYY  
+    T1%XXYZ = T2%XXYZ  
+    T1%XXZZ = T2%XXZZ  
+          
+    T1%XYXY = T2%XYXY  
+    T1%XYXZ = T2%XYXZ
+    T1%XYYY = T2%XYYY
+    T1%XYYZ = T2%XYYZ
+    T1%XYZZ = T2%XYZZ
+          
+    T1%XZXZ = T2%XZXZ  
+    T1%XZYY = T2%XZYY
+    T1%XZYZ = T2%XZYZ
+    T1%XZZZ = T2%XZZZ
+          
+    T1%YYYY = T2%YYYY
+    T1%YYYZ = T2%YYYZ
+    T1%YYZZ = T2%YYZZ
+          
+    T1%YZYZ = T2%YZYZ  
+    T1%YZZZ = T2%YZZZ
+          
+    T1%ZZZZ = T2%ZZZZ 
+  End Subroutine Tens4OS3DEQ
 
   Subroutine Tens4OS2D_Get_Real(T1, D1)
     Type(Tens4OS2D), Intent(OUT)                        :: T1
     Real(Kind = Kr), Intent(IN)                         :: D1
 
     T1%XXXX = D1
-    T1%YYYY = D1
+    T1%XXXY = D1
+    T1%XXYY = D1
+
     T1%XYXY = D1
     T1%XYYY = D1
-    T1%XXYY = D1
-    T1%XXXY = D1
+
+    T1%YYYY = D1
   End Subroutine Tens4OS2D_Get_Real
+
+  Subroutine Tens4OS3D_Get_Real(T1, D1)
+    Type(Tens4OS3D), Intent(OUT)                        :: T1
+    Real(Kind = Kr), Intent(IN)                         :: D1
+
+    T1%XXXX = D1  
+    T1%XXXY = D1
+    T1%XXXZ = D1  
+    T1%XXYY = D1  
+    T1%XXYZ = D1  
+    T1%XXZZ = D1  
+          
+    T1%XYXY = D1  
+    T1%XYXZ = D1  
+    T1%XYYY = D1  
+    T1%XYYZ = D1  
+    T1%XYZZ = D1  
+          
+    T1%XZXZ = D1  
+    T1%XZYY = D1  
+    T1%XZYZ = D1  
+    T1%XZZZ = D1  
+          
+    T1%YYYY = D1  
+    T1%YYYZ = D1  
+    T1%YYZZ = D1  
+          
+    T1%YZYZ = D1  
+    T1%YZZZ = D1  
+          
+    T1%ZZZZ = D1  
+  End Subroutine Tens4OS3D_Get_Real
 
   Function Symmetrize2D(M1)
     Type(Mat2D), Intent(IN)                             :: M1
