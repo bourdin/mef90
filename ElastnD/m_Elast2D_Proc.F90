@@ -276,10 +276,12 @@ Contains
     Type (Node2D), Dimension(:), Pointer                :: Node_db 
     Type (Element2D_Elast), Dimension(:), Pointer       :: Elem_db 
     Type (MatS2D)                                       :: Sigma, Epsilon
+    Type (Tens4OS2D)                                    :: HookeLaw
 #else
     Type (Node3D), Dimension(:), Pointer                :: Node_db 
     Type (Element3D_Elast), Dimension(:), Pointer       :: Elem_db 
     Type (MatS3D)                                       :: Sigma, Epsilon
+    Type (Tens4OS3D)                                    :: HookeLaw
 #endif
 
     Integer                                             :: Nb_Gauss, Nb_DoF
@@ -287,7 +289,7 @@ Contains
     Integer                                             :: iSG1, iSG2
     Integer                                             :: iE, iG, iELoc
     Real(Kind = Kr)                                     :: E, nu
-    Real(Kind = Kr)                                     :: K1, K2
+    Real(Kind = Kr)                                     :: Lambda, mu
     Integer                                             :: iBlk
     Integer                                             :: i
 
@@ -305,19 +307,29 @@ Contains
        E  = Params%Young_Mod(iBlk)
        nu = Params%Poisson_Ratio(iBlk) 
 
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
 #ifdef PB_2D
-       K1 = E * nu / (1.0_Kr - nu**2)
-       K2 = E / (1.0_Kr + nu) * InvOf2
+       lambda = E * nu / (1.0_Kr - nu**2)
+       mu     = E / (1.0_Kr+ nu) * .5_Kr
+       
+       HookeLaw = 0.0_Kr
+       HookeLaw%XXXX = lambda + 2.0_Kr * mu
+       HookeLaw%XXYY = lambda
+       HookeLaw%XYXY = mu
+       HookeLaw%YYYY = lambda + 2.0_Kr * mu
 #else
-       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       K2 = E / (1.0_Kr + nu) * InvOf2
+       Lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - nu * 2.0_Kr)
+       mu     = E / (1.0_Kr+ nu) * .5_Kr
+
+       HookeLaw = 0.0_Kr
+       HookeLaw%XXXX = lambda + mu * 2.0_Kr
+       HookeLaw%XXYY = lambda
+       HookeLaw%XXZZ = lambda
+       HookeLaw%XYXY = mu
+       HookeLaw%XZXZ = mu
+       HookeLaw%YYYY = lambda + mu * 2.0_Kr
+       HookeLaw%YYZZ = lambda
+       HookeLaw%YZYZ = mu
+       HookeLaw%ZZZZ = lambda + mu * 2.0_Kr
 #endif
 
        Nb_DoF = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
@@ -340,13 +352,8 @@ Contains
              Do_iSL1: Do iSL1 = 1, Nb_DoF
                 ISG1 = Elem_db(iE)%ID_DoF(iSL1)
                 Epsilon = Elem_db(iE)%GradS_BF(iSL1,iG)
-                
-                Sigma = 2.0_Kr * K2 * Epsilon
-                Sigma%XX = Sigma%XX + K1 * Trace(Epsilon)
-                Sigma%YY = Sigma%YY + K1 * Trace(Epsilon)
-#ifdef PB_3D
-                Sigma%ZZ = Sigma%ZZ + K1 * Trace(Epsilon)
-#endif
+                Sigma = HookeLaw * Epsilon
+
                 Do_iSL2: Do iSL2 = 1, Nb_DoF
                    iSG2 = Elem_db(iE)%ID_DoF(iSL2)
                    Epsilon = Elem_db(iE)%GradS_BF(iSL2,iG)
@@ -404,13 +411,15 @@ Contains
     Type(Node2D), Dimension(:), Pointer                 :: Node_Scal
     Type(MatS2D)                                        :: ThetaId, AThetaId
     Type(Vect2D)                                        :: F
+    Type(Tens4OS2D)                                     :: HookeLaw
 #else
     Type(Element3D_Elast), Dimension(:), Pointer        :: Elem_Vect
     Type(Node3D), Dimension(:), Pointer                 :: Node_Vect
     Type(Element3D_Scal), Dimension(:), Pointer         :: Elem_Scal
     Type(Node3D), Dimension(:), Pointer                 :: Node_Scal
-    Type(MatS3D)                                        :: ThetaId, AThetaId
+    Type(MatS3D)                                        :: ThetaId
     Type(Vect3D)                                        :: F
+    Type(Tens4OS3D)                                     :: HookeLaw
 #endif
     Vec                                                 :: BC_Loc
     Vec                                                 :: F_Loc
@@ -431,7 +440,7 @@ Contains
     Integer                                             :: iE, iELoc, iG
     Integer                                             :: iBlk
     
-    Real(Kind = Kr)                                     :: E, nu, K1, K2
+    Real(Kind = Kr)                                     :: E, nu, lambda, mu
     Integer                                             :: i, iS
 
     Real(Kind = Kr), Dimension(:), Pointer              :: RHS_Elem
@@ -454,22 +463,34 @@ Contains
        Allocate (RHS_Elem(Nb_DoF_Vect))
        Allocate (EXO_Indices_Vect(Nb_DoF_Vect))
 
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
        E  = Params%Young_Mod(iBlk)
        nu = Params%Poisson_Ratio(iBlk) 
+
 #ifdef PB_2D
-       K1 = E * nu / (1.0_Kr - nu**2)
-       K2 = E / (1.0_Kr + nu) * InvOf2
+       lambda = E * nu / (1.0_Kr - nu**2)
+       mu     = E / (1.0_Kr+ nu) * .5_Kr
+       
+       HookeLaw = 0.0_Kr
+       HookeLaw%XXXX = lambda + 2.0_Kr * mu
+       HookeLaw%XXYY = lambda
+       HookeLaw%XYXY = mu
+       HookeLaw%YYYY = lambda + 2.0_Kr * mu
 #else
-       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       K2 = E / (1.0_Kr + nu) * InvOf2
+       Lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - nu * 2.0_Kr)
+       mu     = E / (1.0_Kr+ nu) * .5_Kr
+
+       HookeLaw = 0.0_Kr
+       HookeLaw%XXXX = lambda + mu * 2.0_Kr
+       HookeLaw%XXYY = lambda
+       HookeLaw%XXZZ = lambda
+       HookeLaw%XYXY = mu
+       HookeLaw%XZXZ = mu
+       HookeLaw%YYYY = lambda + mu * 2.0_Kr
+       HookeLaw%YYZZ = lambda
+       HookeLaw%YZYZ = mu
+       HookeLaw%ZZZZ = lambda + mu * 2.0_Kr
 #endif
+
 
        Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
           iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
@@ -494,12 +515,7 @@ Contains
                 ThetaId%ZZ = ThetaId%ZZ + Params%Therm_Exp(iBlk) * Temp_Ptr(Loc_Indices_Scal(iSG)+1) * Elem_Scal(iE)%BF(iSL, iG)
 #endif
              End Do Do_iSL1
-             AThetaId = 2.0_Kr * K2 * ThetaId
-             AThetaId%XX = AThetaId%XX + K1 * Trace(ThetaId)
-             AThetaId%YY = AThetaId%YY + K1 * Trace(ThetaId)
-#ifdef PB_3D
-             AthetaId%ZZ = AThetaId%ZZ + K1 * Trace(ThetaId)
-#endif
+
              F = 0.0_Kr
              Do_iSL2: Do iSL = 1, Elem_Vect(iE)%Nb_DoF
                 iSG = Elem_Vect(iE)%ID_DoF(iSL)
@@ -508,7 +524,8 @@ Contains
              
              Do_iSL3: Do iSL = 1, Elem_Vect(iE)%Nb_DoF
                 RHS_Elem(iSL) = RHS_Elem(iSL) + Elem_Vect(iE)%Gauss_C(iG) *                                                        &
-                                ( (F .DotP. Elem_Vect(iE)%BF(iSL, iG)) + (AThetaId .DotP. Elem_Vect(iE)%GradS_BF(iSL, iG)) )
+                                ( (F .DotP. Elem_Vect(iE)%BF(iSL, iG)) +                                                           &
+                                  (ThetaId .DotP.  (HookeLaw * Elem_Vect(iE)%GradS_BF(iSL, iG))) ) 
              End Do Do_iSL3
           End Do Do_iG
           Call VecSetValues(RHS, Elem_Vect(iE)%Nb_DoF, EXO_Indices_Vect, RHS_Elem, ADD_VALUES, iErr)
@@ -671,6 +688,7 @@ Contains
     Type(Vect2D)                                        :: F, U
     Type(Element2D_Scal), Dimension(:), Pointer         :: Elem_db_Scal 
     Type(Node2D), Dimension(:), Pointer                 :: Node_db_Scal
+    Type(Tens4OS2D)                                     :: HookeLaw
 #else
     Type(MatS3D)                                        :: Sigma
     Type(MatS3D)                                        :: Epsilon
@@ -679,6 +697,7 @@ Contains
     Type(Vect3D)                                        :: F, U
     Type(Element3D_Scal), Dimension(:), Pointer         :: Elem_db_Scal 
     Type(Node3D), Dimension(:), Pointer                 :: Node_db_Scal
+    Type(Tens4OS3D)                                     :: HookeLaw
 #endif
     Type (EXO_Geom_Info)                                :: Geom
     Type (Rupt_Params)                                  :: Params
@@ -694,8 +713,8 @@ Contains
     Integer                                             :: Nb_Gauss, Nb_DoF_Vec, Nb_DoF_Scal
     Integer                                             :: iSL, iSG
     Integer                                             :: iE, iG, iELoc
-    Real(Kind = Kr)                                     :: K1, K2
     Real(Kind = Kr)                                     :: E, nu
+    Real(Kind = Kr)                                     :: Lambda, Mu
     Integer(Kind = Ki)                                  :: iBlk
     Integer                                             :: i
     Integer, Dimension(:), Pointer                      :: Loc_Indices_Vec
@@ -722,19 +741,29 @@ Contains
        E  = Params%Young_Mod(iBlk)
        nu = Params%Poisson_Ratio(iBlk) 
 
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
 #ifdef PB_2D
-       K1 = E * nu / (1.0_Kr - nu**2)
-       K2 = E / (1.0_Kr + nu) * InvOf2
+       lambda = E * nu / (1.0_Kr - nu**2)
+       mu     = E / (1.0_Kr+ nu) * .5_Kr
+       
+       HookeLaw = 0.0_Kr
+       HookeLaw%XXXX = lambda + 2.0_Kr * mu
+       HookeLaw%XXYY = lambda
+       HookeLaw%XYXY = mu
+       HookeLaw%YYYY = lambda + 2.0_Kr * mu
 #else
-       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       K2 = E / (1.0_Kr + nu) * InvOf2
+       Lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - nu * 2.0_Kr)
+       mu     = E / (1.0_Kr+ nu) * .5_Kr
+
+       HookeLaw = 0.0_Kr
+       HookeLaw%XXXX = lambda + mu * 2.0_Kr
+       HookeLaw%XXYY = lambda
+       HookeLaw%XXZZ = lambda
+       HookeLaw%XYXY = mu
+       HookeLaw%XZXZ = mu
+       HookeLaw%YYYY = lambda + mu * 2.0_Kr
+       HookeLaw%YYZZ = lambda
+       HookeLaw%YZYZ = mu
+       HookeLaw%ZZZZ = lambda + mu * 2.0_Kr
 #endif
 
        Nb_DoF_Vec  = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
@@ -768,14 +797,8 @@ Contains
                 Epsilon%ZZ   = Epsilon%ZZ - Params%Therm_Exp(iBlk) * Elem_db_Scal(iE)%BF(iSL,iG) * Temp_Ptr(Loc_Indices_Scal(iSG)+1)
 #endif
              End Do Do_iSL2
+             Sigma = HookeLaw * Epsilon
 
-             Sigma = 2.0_Kr * K2 * Epsilon
-             Sigma%XX = Sigma%XX + K1 * Trace(Epsilon)
-             Sigma%YY = Sigma%YY + K1 * Trace(Epsilon)
-#ifdef PB_3D
-             Sigma%ZZ = Sigma%ZZ + K1 * Trace(Epsilon)
-#endif
-             
              MyEner = MyEner + Elem_db(iE)%Gauss_C(iG) * ( Sigma .DotP. Epsilon ) * .5_Kr
             
 !!! Forces stuff
