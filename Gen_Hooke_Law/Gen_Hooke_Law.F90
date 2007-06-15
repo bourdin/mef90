@@ -44,7 +44,7 @@ Program Gen_Hooke_Law
       Write(*, 100, advance = 'no') '   E:      '; Read(*, *) E
       Write(*, 100, advance = 'no') '   nu:     '; Read(*, *) nu
       lambda = E * nu / (1.0_Kr - nu**2)
-      mu     = .5_Kr / (1.0_Kr+ nu)
+      mu     = E / (1.0_Kr+ nu) * .5_Kr
       A2D = iso2D(Lambda, mu)
       Write(*, *)
       Write(*,130)
@@ -66,6 +66,15 @@ Program Gen_Hooke_Law
       Write(*, *)
       Write(*,130)
       Write(*,120) A2D
+   Case(HL_Iso3DEnu)
+      Write(*, 100, advance = 'no') '   E     : '; Read(*, *) E
+      Write(*, 100, advance = 'no') '   nu:     '; Read(*, *) nu
+      lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - nu * 2.0_Kr)
+      mu     = E / (1.0_Kr + nu) * .5_Kr 
+      A3D = iso3D(Lambda, mu)
+      Write(*, *)
+      Write(*,150)
+      Write(*,140) A3D   
    Case Default
       Write(*, 100) 'Wrong choice or not implemented yet!'
    End Select
@@ -74,6 +83,8 @@ Program Gen_Hooke_Law
 110 Format('   [',I1,'] ',A)
 120 Format(6(ES12.5,' '))
 130 Format(' A_1111       A_1112       A_1122       A_1212       A_1222       A_2222')
+140 Format(21(ES12.5,' '))
+150 Format(' A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133       A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333')
 Contains
 
    Function Iso2D(lambda, mu)
@@ -101,5 +112,27 @@ Contains
 
       Ortho2D%YYYY = Ortho2D%XXXX
    End Function Ortho2D
+   
+   Function Iso3D(lambda, mu)
+      Real(Kind = Kr), Intent(IN)         :: Lambda, Mu
+      Type(Tens4OS3D)                     :: Iso3D
+   
+      Iso3D = 0.0_Kr
+      Iso3D%XXXX = lambda + mu * 2.0_Kr
+      Iso3D%XXYY = lambda
+      Iso3D%XXZZ = lambda
+      
+      Iso3D%XYXY = mu
+      
+      Iso3D%XZXZ = mu
+      
+      Iso3D%YYYY = lambda + mu * 2.0_Kr
+      Iso3D%YYZZ = lambda
+      
+      Iso3D%YZYZ = mu
+      
+      Iso3D%ZZZZ = lambda + mu * 2.0_Kr
+
+   End Function Iso3D
    
 End Program Gen_Hooke_Law   
