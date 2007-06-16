@@ -13,6 +13,12 @@ Module m_Rupt_Struct
   Public :: Rupt_Params
   Public :: Rupt_Params_Hooke2D
   
+  Public :: GenHL_Iso_LambdaMu
+  Public :: GenHL_Iso3D_Enu
+  Public :: GenHL_Iso2D_EnuPlaneStress
+  Public :: GenHL_Iso2D_EnuPlaneStrain
+  Public :: GenHL_Ortho2D_LambdaMu
+  
   Interface Read_Rupt_EXO_Params
       Module Procedure Read_Rupt_EXO_Params_Iso, Read_Rupt_EXO_Params_Hooke2D
   End Interface
@@ -27,6 +33,10 @@ Module m_Rupt_Struct
   
   Interface Write_Rupt_DATA
       Module Procedure Write_Rupt_DATA_Iso, Write_Rupt_DATA_Hooke2D
+  End Interface
+  
+  Interface GenHL_Iso_LambdaMu
+      Module Procedure GenHL_Iso2D_LambdaMu, GenHL_Iso3D_LambdaMu
   End Interface
 
   Integer, Parameter, Public                      :: Init_V_PREV = 0
@@ -721,4 +731,109 @@ Contains
 110 Format(I4)
 120 Format(I4, 6(ES12.5,' '))
   End Subroutine Read_Rupt_DATA_Hooke2D
+  
+   Subroutine GenHL_Iso2D_LambdaMu(lambda, mu, A) 
+      Real(Kind = Kr), Intent(IN)         :: lambda, mu
+      Type(Tens4OS2D), Intent(OUT)        :: A
+      A = 0.0_Kr
+      
+      A%XXXX = lambda + 2.0_Kr * mu
+      A%XXYY = lambda
+      A%XYXY = mu
+      A%YYYY = lambda + 2.0_Kr * mu
+   End Subroutine GenHL_Iso2D_LambdaMu         
+
+   Subroutine GenHL_Iso2D_EnuPlaneStress(E, nu, A) 
+      Real(Kind = Kr), Intent(IN)         :: E, nu
+      Type(Tens4OS2D), Intent(OUT)        :: A
+      
+      Real(Kind = Kr)                     :: Lambda, mu
+      
+      lambda = E * nu / (1.0_Kr - nu**2) 
+      mu     = E / (1.0_Kr + nu) * .5_Kr
+      A = 0.0_Kr
+      A%XXXX = lambda + 2.0_Kr * mu
+      A%XXYY = lambda
+      A%XYXY = mu
+      A%YYYY = lambda + 2.0_Kr * mu
+   End Subroutine GenHL_Iso2D_EnuPlaneStress         
+   
+   Subroutine GenHL_Iso2D_EnuPlaneStrain(E, nu, A) 
+      Real(Kind = Kr), Intent(IN)         :: E, nu
+      Type(Tens4OS2D), Intent(OUT)        :: A
+      
+      Real(Kind = Kr)                     :: Lambda, mu
+      
+      lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - 2.0_Kr * nu)
+      mu     = E / (1.0_Kr + nu) * .5_Kr      
+      A = 0.0_Kr
+      A%XXXX = lambda + 2.0_Kr * mu
+      A%XXYY = lambda
+      A%XYXY = mu
+      A%YYYY = lambda + 2.0_Kr * mu
+   End Subroutine GenHL_Iso2D_EnuPlaneStrain         
+
+   Subroutine GenHL_Iso3D_LambdaMu(lambda, mu, A)
+      Real(Kind = Kr), Intent(IN)         :: Lambda, Mu
+      Type(Tens4OS3D), Intent(OUT)        :: A
+   
+      A = 0.0_Kr
+      A%XXXX = lambda + mu * 2.0_Kr
+      A%XXYY = lambda
+      A%XXZZ = lambda
+      
+      A%XYXY = mu
+      
+      A%XZXZ = mu
+      
+      A%YYYY = lambda + mu * 2.0_Kr
+      A%YYZZ = lambda
+      
+      A%YZYZ = mu
+      
+      A%ZZZZ = lambda + mu * 2.0_Kr
+   End Subroutine GenHL_Iso3D_LambdaMu
+
+   Subroutine GenHL_Iso3D_Enu(E, nu, A)
+      Real(Kind = Kr), Intent(IN)         :: E, nu
+      Type(Tens4OS3D), Intent(OUT)        :: A
+      
+      Real(Kind = Kr)                     :: Lambda, mu
+   
+      lambda = E * nu / (1.0_Kr + nu) / (1 - 2.0_Kr * nu)
+      mu     = E / (1.0_Kr + nu) * .5_Kr      
+   
+      A = 0.0_Kr
+      A%XXXX = lambda + mu * 2.0_Kr
+      A%XXYY = lambda
+      A%XXZZ = lambda
+      
+      A%XYXY = mu
+      
+      A%XZXZ = mu
+      
+      A%YYYY = lambda + mu * 2.0_Kr
+      A%YYZZ = lambda
+      
+      A%YZYZ = mu
+      
+      A%ZZZZ = lambda + mu * 2.0_Kr
+   End Subroutine GenHL_Iso3D_Enu
+
+   Subroutine GenHL_Ortho2D_LambdaMu(lambda, mu1, mu2, theta, A)
+      Real(Kind = Kr), Intent(IN)         :: Lambda, mu1, mu2, theta
+      Type(Tens4OS2D), Intent(OUT)        :: A
+      
+      A = 0.0_Kr
+      A%XXXX = lambda + mu1 * (1.0_Kr + (cos(theta))**2) +  mu2 * (sin(theta))**2
+      A%XXXY = (mu1-mu2) * cos(theta) * sin(theta)
+      A%XXYY = lambda + (mu1-mu2) * (sin(theta))**2
+
+      A%XYXY = mu1 * (sin(theta))**2 + mu2 * (cos(theta))**2
+      A%XYYY = -A%XXXY
+
+      A%YYYY =  A%XXXX
+   End Subroutine GenHL_Ortho2D_LambdaMu
+   
+
 End Module m_Rupt_Struct
