@@ -289,7 +289,6 @@ Contains
     Integer                                             :: iSG1, iSG2
     Integer                                             :: iE, iG, iELoc
     Real(Kind = Kr)                                     :: E, nu
-    Real(Kind = Kr)                                     :: Lambda, mu
     Integer                                             :: iBlk
     Integer                                             :: i
 
@@ -308,28 +307,9 @@ Contains
        nu = Params%Poisson_Ratio(iBlk) 
 
 #ifdef PB_2D
-       lambda = E * nu / (1.0_Kr - nu**2)
-       mu     = E / (1.0_Kr+ nu) * .5_Kr
-       
-       HookeLaw = 0.0_Kr
-       HookeLaw%XXXX = lambda + 2.0_Kr * mu
-       HookeLaw%XXYY = lambda
-       HookeLaw%XYXY = mu
-       HookeLaw%YYYY = lambda + 2.0_Kr * mu
+       Call GenHL_ISO2D_EnuPlaneStress(E, nu, HookeLaw)
 #else
-       Lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - nu * 2.0_Kr)
-       mu     = E / (1.0_Kr+ nu) * .5_Kr
-
-       HookeLaw = 0.0_Kr
-       HookeLaw%XXXX = lambda + mu * 2.0_Kr
-       HookeLaw%XXYY = lambda
-       HookeLaw%XXZZ = lambda
-       HookeLaw%XYXY = mu
-       HookeLaw%XZXZ = mu
-       HookeLaw%YYYY = lambda + mu * 2.0_Kr
-       HookeLaw%YYZZ = lambda
-       HookeLaw%YZYZ = mu
-       HookeLaw%ZZZZ = lambda + mu * 2.0_Kr
+       Call GenHL_ISO3D_Enu(E, nu, HookeLaw)
 #endif
 
        Nb_DoF = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
@@ -440,7 +420,7 @@ Contains
     Integer                                             :: iE, iELoc, iG
     Integer                                             :: iBlk
     
-    Real(Kind = Kr)                                     :: E, nu, lambda, mu
+    Real(Kind = Kr)                                     :: E, nu
     Integer                                             :: i, iS
 
     Real(Kind = Kr), Dimension(:), Pointer              :: RHS_Elem
@@ -467,28 +447,9 @@ Contains
        nu = Params%Poisson_Ratio(iBlk) 
 
 #ifdef PB_2D
-       lambda = E * nu / (1.0_Kr - nu**2)
-       mu     = E / (1.0_Kr+ nu) * .5_Kr
-       
-       HookeLaw = 0.0_Kr
-       HookeLaw%XXXX = lambda + 2.0_Kr * mu
-       HookeLaw%XXYY = lambda
-       HookeLaw%XYXY = mu
-       HookeLaw%YYYY = lambda + 2.0_Kr * mu
+       Call GenHL_ISO2D_EnuPlaneStress(E, nu, HookeLaw)
 #else
-       Lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - nu * 2.0_Kr)
-       mu     = E / (1.0_Kr+ nu) * .5_Kr
-
-       HookeLaw = 0.0_Kr
-       HookeLaw%XXXX = lambda + mu * 2.0_Kr
-       HookeLaw%XXYY = lambda
-       HookeLaw%XXZZ = lambda
-       HookeLaw%XYXY = mu
-       HookeLaw%XZXZ = mu
-       HookeLaw%YYYY = lambda + mu * 2.0_Kr
-       HookeLaw%YYZZ = lambda
-       HookeLaw%YZYZ = mu
-       HookeLaw%ZZZZ = lambda + mu * 2.0_Kr
+       Call GenHL_ISO3D_Enu(E, nu, HookeLaw)
 #endif
 
 
@@ -714,7 +675,6 @@ Contains
     Integer                                             :: iSL, iSG
     Integer                                             :: iE, iG, iELoc
     Real(Kind = Kr)                                     :: E, nu
-    Real(Kind = Kr)                                     :: Lambda, Mu
     Integer(Kind = Ki)                                  :: iBlk
     Integer                                             :: i
     Integer, Dimension(:), Pointer                      :: Loc_Indices_Vec
@@ -742,28 +702,9 @@ Contains
        nu = Params%Poisson_Ratio(iBlk) 
 
 #ifdef PB_2D
-       lambda = E * nu / (1.0_Kr - nu**2)
-       mu     = E / (1.0_Kr+ nu) * .5_Kr
-       
-       HookeLaw = 0.0_Kr
-       HookeLaw%XXXX = lambda + 2.0_Kr * mu
-       HookeLaw%XXYY = lambda
-       HookeLaw%XYXY = mu
-       HookeLaw%YYYY = lambda + 2.0_Kr * mu
+       Call GenHL_ISO2D_EnuPlaneStress(E, nu, HookeLaw)
 #else
-       Lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - nu * 2.0_Kr)
-       mu     = E / (1.0_Kr+ nu) * .5_Kr
-
-       HookeLaw = 0.0_Kr
-       HookeLaw%XXXX = lambda + mu * 2.0_Kr
-       HookeLaw%XXYY = lambda
-       HookeLaw%XXZZ = lambda
-       HookeLaw%XYXY = mu
-       HookeLaw%XZXZ = mu
-       HookeLaw%YYYY = lambda + mu * 2.0_Kr
-       HookeLaw%YYZZ = lambda
-       HookeLaw%YZYZ = mu
-       HookeLaw%ZZZZ = lambda + mu * 2.0_Kr
+       Call GenHL_ISO3D_Enu(E, nu, HookeLaw)
 #endif
 
        Nb_DoF_Vec  = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
