@@ -21,19 +21,12 @@ Module m_Elast3D_Vars
 
 
   Mat, Public                                           :: MR
-  Vec, Public                                           :: RHS, RHS_Loc
+  Vec, Public                                           :: RHS
 
-  Vec, Public                                           :: SOL_Dist, SOL_Loc
-  Vec, Public                                           :: SOL_Master
-                                                        
-  Vec, Public                                           :: BC_Dist, BC_Loc
-  Vec, Public                                           :: BC_Master
-
-  Vec, Public                                           :: F_Dist, F_Loc
-  Vec, Public                                           :: F_Master
-
-  Vec, Public                                           :: Temp_Dist, Temp_Loc
-  Vec, Public                                           :: Temp_Master
+  Vec, Public                                           :: SOL                                                        
+  Vec, Public                                           :: BC
+  Vec, Public                                           :: F
+  Vec, Public                                           :: Temp
 
   KSP, Public                                           :: KSP_MR
   PC, Public                                            :: PC_MR
@@ -45,26 +38,18 @@ Module m_Elast3D_Vars
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db
   Type(Element2D_Scal), Dimension(:), Pointer, Public   :: Elem_Scal
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_Scal
-
-  Type(MatS2D), Dimension(:), Pointer, Public           :: Stress_Sol
-  Type(MatS2D), Dimension(:), Pointer, Public           :: Strain_Sol
 #else
   Type(Element3D_Elast), Dimension(:), Pointer, Public  :: Elem_db
   Type(Node3D), Dimension(:), Pointer, Public           :: Node_db
   Type(Element3D_Scal), Dimension(:), Pointer, Public   :: Elem_Scal
   Type(Node3D), Dimension(:), Pointer, Public           :: Node_Scal
-
-  Type(MatS3D), Dimension(:), Pointer, Public           :: Stress_Sol
-  Type(MatS3D), Dimension(:), Pointer, Public           :: Strain_Sol
 #endif
 
 
-  Integer, Public                                       :: GaussOrder=3
+  Integer, Public, Parameter                            :: GaussOrder=2
 
   Type(EXO_Geom_Info), Public                           :: Geom
   Type(Rupt_Params), Public                             :: Params
-  Type(SD_Info), Public                                 :: MySD_Vect
-  Type(SD_Info), Public                                 :: MySD_Scal
 
   Integer, Public                                       :: iErr
   Integer, Public                                       :: TimeStep
@@ -73,14 +58,6 @@ Module m_Elast3D_Vars
 
   PetscLogDouble, Public                                :: TotalTS, TotalTF
   PetscLogDouble, Public                                :: TotalT
-  PetscLogDouble, Public                                :: InitTS, InitTF
-  PetscLogDouble, Public                                :: AssembTS, AssembTF
-  PetscLogDouble, Public                                :: RHSTS, RHSTF
-  PetscLogDouble, Public                                :: SolveTS, SolveTF
-  PetscLogDouble, Public                                :: ExportTS, ExportTF
-
-  Integer, Dimension(:), Pointer, Public                :: NNZ
-!  Integer, Public                                       :: MyIdxMin, MyIdxMax
 
   Real(Kind = Kr), Public                               :: Ener_Elast
   PetscReal, Public, Parameter                          :: VLV = 1.0e+20
