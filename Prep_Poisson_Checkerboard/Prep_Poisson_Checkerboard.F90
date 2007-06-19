@@ -13,11 +13,6 @@ Program Prep_Poisson
   Character(len = MXSTLN)                         :: EXO_Str
   Character(len=MXSTLN), Dimension(3)             :: Coord_Names
 
-  Interface Write_F
-     Module Procedure Write_F2D, Write_F3D
-  End Interface
-
-
   Write(*,100, advance = 'no') 'ExodusII file name: '
   Read(*,100) EXO_Str
 
@@ -66,10 +61,10 @@ Program Prep_Poisson
   Select Case (Params%PB_Dim)
   Case (PB_2D)
      Write(*,*) 'Adding Rhs...'
-     Call Write_F(Geom, Params, Node2D_db)
+     Call Write_F2D(Geom, Params, Node2D_db)
   Case (PB_3D)
      Write(*,*) 'Adding Rhs...'
-     Call Write_F(Geom, Params, Node3D_db)
+     Call Write_F3D(Geom, Params, Node3D_db)
   End Select
 
   Write(*,*) 'Writing problem parameters'

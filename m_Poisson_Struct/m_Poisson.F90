@@ -45,9 +45,9 @@ Module m_Poisson_Struct
      !!! STORED IN THE EXODUS DB
      ! GLOBAL PROPERTIES
           
-     Character(len = MXSTLN)                      :: Sim_Str
-     Character(len = MXSTLN)                      :: PARAM_Str
-     Character(len = MXSTLN)                      :: CST_Str
+     Character(len = MXLNLN)                      :: Sim_Str
+     Character(len = MXLNLN)                      :: PARAM_Str
+     Character(len = MXLNLN)                      :: CST_Str
 
      
      ! NODE SETS PROPERTIES

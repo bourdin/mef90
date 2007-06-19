@@ -490,7 +490,6 @@ Contains
              End Do Do_iSL3
           End Do Do_iG
           Call VecSetValues(RHS, Elem_Vect(iE)%Nb_DoF, EXO_Indices_Vect, RHS_Elem, ADD_VALUES, iErr)
-         
           Call Destroy_Gauss_EXO(Elem_Vect, Elem=iE)
           Call Destroy_Gauss_EXO(Elem_Scal, Elem=iE)
        End Do Do_iE

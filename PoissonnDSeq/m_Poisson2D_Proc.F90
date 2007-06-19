@@ -246,19 +246,16 @@ Contains
        !!! time
        Call Init_Gauss_EXO(Elems, Nodes, Geom, GaussOrder, Elem=iE)
 
-       Do_iSLU1: Do iSLU1 = 1, Elems(iE)%Nb_DoF
-          DoiSLU2: Do iSLU2 = 1, Elems(iE)%Nb_DoF
-             Do_iGU: Do iG = 1, Elems(iE)%Nb_Gauss
-                MR_Elem(iSLU1, iSLU2) = MR_Elem(iSLU1, iSLU2)                 &
-                     & + Elems(iE)%Gauss_C(iG) * (                            &
-                     & Elems(iE)%Grad_BF(iSLU1, iG) .DotP.                    &
-                     & Elems(iE)%Grad_BF(iSLU2, iG) ) 
-             End Do Do_iGU
-          End Do DoiSLU2
-       End Do Do_iSLU1
+       Do_iGU: Do iG = 1, Elems(iE)%Nb_Gauss
+          Do_iSLU1: Do iSLU1 = 1, Elems(iE)%Nb_DoF
+             DoiSLU2: Do iSLU2 = 1, Elems(iE)%Nb_DoF
+                   MR_Elem(iSLU1, iSLU2) = MR_Elem(iSLU1, iSLU2) + Elems(iE)%Gauss_C(iG) *                                         &
+                                         ( Elems(iE)%Grad_BF(iSLU1, iG) .DotP. Elems(iE)%Grad_BF(iSLU2, iG) ) 
+             End Do DoiSLU2
+          End Do Do_iSLU1
+       End Do Do_iGU
 
-       Call MatSetValues(MR, Nb_DoF, Elems(iE)%Id_DoF-1, Nb_DoF,              &
-            & Elems(iE)%Id_DoF-1, MR_Elem, ADD_VALUES, iErr)
+       Call MatSetValues(MR, Nb_DoF, Elems(iE)%Id_DoF-1, Nb_DoF, Elems(iE)%Id_DoF-1, MR_Elem, ADD_VALUES, iErr)
        Call Destroy_Gauss_EXO(Elems, Elem=iE)
     EndDo Do_iE
 
@@ -297,11 +294,11 @@ Contains
 #endif
 
     Integer                                      :: Nb_Gauss, Nb_DoF
-    Integer                                      :: iSLU1, iSGU1
-    Integer                                      :: iSLU2, iSGU2
+    Integer                                      :: iSL, iSG
     Integer                                      :: iE, iG, i
-
     Integer                                      :: iSet, iS
+    Real(Kind = Kr), Dimension(:), Pointer       :: RHS_Elem
+    Real(Kind = Kr)                              :: F
 
     PetscScalar                                  :: Tmp_Val
 
@@ -310,28 +307,26 @@ Contains
     Call VecGetArrayF90(Load, Load_Ptr, iErr)
 
     Nb_DoF = Geom%Elem_Blk(1)%Num_Nodes_Per_Elem
+    Allocate (RHS_Elem(Nb_DoF))
     Do iE = 1, Geom%Num_Elems
+       RHS_Elem = 0.0_Kr
        Call Init_Gauss_EXO(Elems, Nodes, Geom, GaussOrder, Elem=iE)
-       
        Nb_Gauss = Elems(iE)%Nb_Gauss
-       Do_iSLU1: Do iSLU1 = 1, Elems(iE)%Nb_DoF
-          iSGU1 = Elems(iE)%ID_DoF(iSLU1)
-          Tmp_Val = 0.0_Kr
-          If (Node_db(iSGU1)%BC == BC_Type_DIRI) Then
-             Cycle
-          End If
-          DoiSLU2: Do iSLU2 = 1, Elems(iE)%Nb_DoF
-             iSGU2 = Elems(iE)%ID_DoF(iSLU2)
-             Do_iGU: Do iG = 1, Nb_Gauss
-                Tmp_Val = Tmp_Val + Elems(iE)%Gauss_C(iG) *                   &
-                     & Elems(iE)%BF(iSLU1, iG) * Elems(iE)%BF(iSLU2, iG) *    &
-                     & Load_Ptr(iSGU2)
-             End Do Do_iGU
-          End Do DoiSLU2
-          Call VecSetValue(RHS, iSGU1-1, Tmp_Val, ADD_VALUES, iErr)
-       End Do Do_iSLU1
+       Do_iGU: Do iG = 1, Nb_Gauss
+          F = 0.0_Kr
+          Do_iSLU1: Do iSL = 1, Elems(iE)%Nb_DoF
+             iSG = Elems(iE)%ID_DoF(iSL)
+             F = F + Elems(iE)%BF(iSL, iG) * Load_Ptr(iSG)
+          End Do Do_iSLU1
+          Do_iSLU2: Do iSL = 1, Elems(iE)%Nb_DoF
+             iSG = Elems(iE)%ID_DoF(iSL)
+             RHS_Elem(iSL) = RHS_Elem(iSL) + Elems(iE)%Gauss_C(iG) * Elems(iE)%BF(iSL, iG) * F
+          End Do Do_iSLU2
+       End Do Do_iGU
+       Call VecSetValues(RHS, Nb_DoF, Elems(iE)%ID_DoF-1, RHS_Elem, ADD_VALUES, iErr)
        Call Destroy_Gauss_EXO(Elems, Elem=iE)
     End Do
+    DeAllocate (RHS_Elem)
                 
     Call VecAssemblyBegin(RHS, iErr)
     Call VecRestoreArrayF90(Load, Load_Ptr, iErr)
@@ -342,9 +337,8 @@ Contains
           Cycle
        End If
        Do iS = 1, Geom%Node_Set(iSet)%Num_Nodes
-          iSGU1 = Geom%Node_Set(iSet)%Node_ID(iS)
-          Call VecSetValue(RHS, iSGU1-1, VLV * Params%BC_DB(iSet)%Dis_F(iS),  &
-               & INSERT_VALUES, iErr)
+          iSG = Geom%Node_Set(iSet)%Node_ID(iS)
+          Call VecSetValue(RHS, iSG, VLV * Params%BC_DB(iSet)%Dis_F(iS), INSERT_VALUES, iErr)
        End Do
     End Do
     Call VecAssemblyBegin(RHS, iErr)

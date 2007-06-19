@@ -67,7 +67,7 @@ Program Poisson3D
 
   Call SaveToEXO()
 !  Call SaveToEnsight()
-  Call VecView(U, PETSC_VIEWER_STDOUT_WORLD, iErr)
+!  Call VecView(U, PETSC_VIEWER_STDOUT_WORLD, iErr)
   Call Finalize()
 
 

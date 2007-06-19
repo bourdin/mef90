@@ -86,7 +86,6 @@ Program Elast
 
      Call Export()
   End Do
-!  Call MatView(MR, PETSC_VIEWER_STDOUT_WORLD, iErr)
 
   Call PetscGetTime(TotalTF, iErr)
   If (MEF90_MyRank ==0) Then
