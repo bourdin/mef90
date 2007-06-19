@@ -582,8 +582,8 @@ Contains
 102 Format(ES12.5,T30,'# ', A)
 103 Format(L1,ES12.5,T30,'# ', A)
 105 Format(I4,I4,ES12.5,T30, '# ', A)
-110 Format(I4,T30,'# BLK_ID, Toughness, E, nu, Alpha')
-120 Format(I4, 4(ES12.5,' '))
+110 Format(I4,T30,'# BLK_ID, Toughness, A1111, A1112, A1122, A1212, A1222, A2222, Alpha')
+120 Format(I4, 8(ES12.5,' '))
   End Subroutine Write_Rupt_DATA_Hooke2D
 
   Subroutine Read_Rupt_DATA_Iso(Geom, Params)
@@ -729,7 +729,6 @@ Contains
 102 Format(ES12.5)
 103 Format(I4,' ',ES12.5)
 110 Format(I4)
-120 Format(I4, 6(ES12.5,' '))
   End Subroutine Read_Rupt_DATA_Hooke2D
   
    Subroutine GenHL_Iso2D_LambdaMu(lambda, mu, A) 

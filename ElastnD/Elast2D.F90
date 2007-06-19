@@ -122,7 +122,8 @@ Program Elast
      Call PetscGetTime(ExportTS, iErr)
      Call Export()
   End Do
-
+!  Call VecView(RHS, PETSC_VIEWER_STDOUT_WORLD, iErr)
+!  Call MatView(MR, PETSC_VIEWER_STDOUT_WORLD, iErr)
   Call PetscGetTime(TotalTF, iErr)
   If (MEF90_MyRank ==0) Then
      Write(CharBuffer,*) 'Total time                                  ', TotalTF - TotalTS, '\n'c
