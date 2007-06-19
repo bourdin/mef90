@@ -1,4 +1,4 @@
-PROJ            = Elast
+PROJ        = Elast
 MEF90DIR  = ../MEF90
 MEF90OBJS = $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
             $(MEF90DIR)/m_MEF_Types.o     $(MEF90DIR)/m_MEF_Tools.o \
@@ -18,19 +18,18 @@ all: ${PROJ}${DIM}
 
 include ${PETSC_DIR}/bmake/common/base
 
-OBJS = ${PROJ}${DIM}.o m_Elast${DIM}_Vars.o m_Elast${DIM}_Proc.o 
+OBJS = ${PROJ}${DIM}Seq.o m_Elast${DIM}_Vars.o m_Elast${DIM}_Proc.o 
 
 FFLAGS = -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS} -DPB_${DIM} 
 
-${PROJ}${DIM}: ${PROJ}${DIM}.o
-	-${FLINKER} -o ${PROJ}${DIM} ${OBJS} ${MEF90OBJS} ${M_RUPT_STRUCT_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
+${PROJ}${DIM}: ${PROJ}${DIM}Seq.o
+	-${FLINKER} -o ${PROJ}${DIM}Seq ${OBJS} ${MEF90OBJS} ${M_RUPT_STRUCT_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
 
 ${PROJ}:
         -@ echo use 'make DIM=2D' or 'make DIM=3D'
 
 # Dependences
 m_Elast${DIM}_Vars.o:  ${MEF90OBJS}
-m_Elast${DIM}_Proc.o:  ${MEF90OBJS} m_Elast${DIM}_Vars.o m_Elast${DIM}_Debug.o
+m_Elast${DIM}_Proc.o:  ${MEF90OBJS} m_Elast${DIM}_Vars.o
 m_Elast${DIM}_Debug.o: ${MEF90OBJS} m_Elast${DIM}_Vars.o
-Elast${DIM}.o:         ${MEF90OBJS} m_Elast${DIM}_Vars.o m_Elast${DIM}_Proc.o \
-                        m_Elast${DIM}_Debug.o
+Elast${DIM}Seq.o:      ${MEF90OBJS} m_Elast${DIM}_Vars.o m_Elast${DIM}_Proc.o
