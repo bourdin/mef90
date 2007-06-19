@@ -82,7 +82,7 @@ Contains
 
     Integer                                        :: iBlk
     Integer                                        :: iSet
-    Integer(Kind = Ki)                             :: Offset,i
+    Integer                                        :: Offset,i
 
     ! Open File
     Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
