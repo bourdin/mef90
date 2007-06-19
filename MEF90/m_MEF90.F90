@@ -1,8 +1,6 @@
 Module m_MEF90
   Use m_Utils
   Use m_MEF_Gauss
-  Use m_MEF_Tools
-  Use m_MEF_IO
   Use m_MEF_Ensight
   Use m_MEF_EXO  
   Use m_MEF_PU

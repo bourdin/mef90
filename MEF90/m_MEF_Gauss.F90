@@ -760,10 +760,10 @@ Contains
     Type (Node2D), Dimension(:), Pointer                :: Nodes_bd
     Integer                                             :: Order
 
-    Integer(Kind = Ki)                                  :: NE, iE
-    Integer(Kind = Ki)                                  :: iBF
-    Integer(Kind = Ki)                                  :: iGauss, Nb_Gauss
-    Integer(Kind = Ki)                                  :: NB_BF
+    Integer                                             :: NE, iE
+    Integer                                             :: iBF
+    Integer                                             :: iGauss, Nb_Gauss
+    Integer                                             :: NB_BF
     Type (MatS2D), Dimension(:),Pointer                 :: DerSBF
     Real(Kind = Kr)                                     :: Area, InvOfArea
     Real(Kind = Kr)                                     :: rA, rB, rG1, rG2
@@ -1123,10 +1123,9 @@ Contains
     Type (Node2D), Dimension(:), Pointer                :: Nodes_bd
     Integer                                             :: Order
 
-    Integer(Kind = Ki)                                  :: NE, iE
-!    Integer(Kind = Ki)                                 :: iBF
-    Integer(Kind = Ki)                                  :: iGauss, Nb_Gauss
-    Integer(Kind = Ki)                                  :: NB_BF
+    Integer                                             :: NE, iE
+    Integer                                             :: iGauss, Nb_Gauss
+    Integer                                             :: NB_BF
     Type (Vect2D), Dimension(:),Pointer                 :: GradBF
     Real(Kind = Kr)                                     :: Area, InvOfArea
     Real(Kind = Kr)                                     :: rG1, rG2, rA, rB
@@ -2117,10 +2116,9 @@ Contains
     Type(Node3D), Dimension(:), Pointer                 :: Nodes_bd
     Integer                                             :: Order
 
-    Integer(Kind = Ki)                                  :: NE, iE
-    Integer(Kind = Ki)                                  :: iGauss, Nb_Gauss
-    Integer(Kind = Ki)                                  :: NB_BF
-!    Type (Vect2D), Dimension(:),Pointer                 :: GradBF
+    Integer                                             :: NE, iE
+    Integer                                             :: iGauss, Nb_Gauss
+    Integer                                             :: NB_BF
     Real(Kind = Kr)                                     :: Vol_iE, InvOfVol
     
     Real(Kind = Kr)                                     :: r1, s1, r2, s2

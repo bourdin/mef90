@@ -36,7 +36,7 @@ Module m_constantes
 
 
 !  Integer, Parameter    :: Kr = dpr
-! The following ensures thet mef90 and PETSC real types are compatible:
+! The following ensures that mef90 and PETSC real types are compatible:
   PetscReal, Parameter           :: PR = 1.0
   Integer, Parameter, Public     :: Kr = Selected_Real_Kind(Precision(PR))
 
