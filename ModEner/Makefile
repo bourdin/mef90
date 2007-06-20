@@ -1,8 +1,7 @@
 PROJ=ModEner
-VER=0.0.1
 
-$(PROJ)-${VER}: ${PROJ}.o chkopts
-	-${FLINKER} -o $(PROJ)-$(VER) $(PROJ).o ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+$(PROJ): ${PROJ}.o chkopts
+	-${FLINKER} -o $(PROJ) $(PROJ).o ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
 include ${PETSC_DIR}/bmake/common/base
 
