@@ -229,15 +229,11 @@ Contains
                    iSGEps = Elems_U(iE)%ID_DoF(iSLEps)
                    Do_iGF: Do iG = 1, Nb_Gauss
 #ifdef PB_2DA                  
-                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1)*&
-                           & FPtr(Loc_Indices_U(iSGSig)+1) *                  &
-                           & Elems_U(iE)%BF(iSLSig, iG) *                     &
-                           & Elems_U(iE)%BF(iSLEps, iG) 
+                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1) *  FPtr(Loc_Indices_U(iSGSig)+1) *                   &
+                                   Elems_U(iE)%BF(iSLSig, iG) * Elems_U(iE)%BF(iSLEps, iG) 
 #else
-                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1)*&
-                           & FPtr(Loc_Indices_U(iSGSig)+1) *                  &
-                           & (Elems_U(iE)%BF(iSLSig, iG) .DotP.               &
-                           & Elems_U(iE)%BF(iSLEps, iG) )
+                      ContrF(iG) = ContrF(iG) + UPtr(Loc_Indices_U(iSGSig)+1) * FPtr(Loc_Indices_U(iSGSig)+1) *                    &
+                                   (Elems_U(iE)%BF(iSLSig, iG) .DotP. Elems_U(iE)%BF(iSLEps, iG) )
 #endif
                    End Do Do_iGF
                 End Do Do_iSLEpsF

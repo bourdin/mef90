@@ -312,10 +312,8 @@ Contains
                 Cycle
              End If
              Do_iGU: Do iG = 1, Elems(iE)%Nb_Gauss
-                MR_Elem(iSLU1, iSLU2) = MR_Elem(iSLU1, iSLU2)                 &
-                     & + Elems(iE)%Gauss_C(iG) * (                            &
-                     & Elems(iE)%Grad_BF(iSLU1, iG) .DotP.                    &
-                     & Elems(iE)%Grad_BF(iSLU2, iG) ) 
+                MR_Elem(iSLU1, iSLU2) = MR_Elem(iSLU1, iSLU2) + Elems(iE)%Gauss_C(iG) *                                            &
+                                        ( Elems(iE)%Grad_BF(iSLU1, iG) .DotP. Elems(iE)%Grad_BF(iSLU2, iG) ) 
              End Do Do_iGU
           End Do DoiSLU2
        End Do Do_iSLU1
@@ -483,10 +481,8 @@ Contains
 !!$                Cycle
 !!$             End If
              Do_iGU: Do iG = 1, Elems(iE)%Nb_Gauss
-                MR_Elem(iSLU1, iSLU2) = MR_Elem(iSLU1, iSLU2)                 &
-                     & + Elems(iE)%Gauss_C(iG) * (                            &
-                     & Elems(iE)%Grad_BF(iSLU1, iG) .DotP.                    &
-                     & Elems(iE)%Grad_BF(iSLU2, iG) ) 
+                MR_Elem(iSLU1, iSLU2) = MR_Elem(iSLU1, iSLU2) + Elems(iE)%Gauss_C(iG) *                                           &
+                                       ( Elems(iE)%Grad_BF(iSLU1, iG) .DotP. Elems(iE)%Grad_BF(iSLU2, iG) ) 
              End Do Do_iGU
           End Do DoiSLU2
        End Do Do_iSLU1
