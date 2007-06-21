@@ -758,8 +758,8 @@ Contains
 102 Format(ES12.5,T30,'# ', A)
 103 Format(L1,ES12.5,T30,'# ', A)
 105 Format(I4,I4,ES12.5,T30, '# ', A)
-110 Format(I4,T30,'# BLK_ID, Toughness, A1111, A1112, A1122, A1212, A1222, A2222, Alpha')
-120 Format(I4, 8(ES12.5,' '))
+110 Format(I6,' Toughness    A1111        A1112        A1122        A1212        A1222        A2222        Alpha')
+120 Format(I6, 8(ES12.5,' '))
   End Subroutine Write_Rupt_DATA2D
 
   Subroutine Write_Rupt_DATA3D(Geom, Params)
@@ -806,8 +806,8 @@ Contains
 102 Format(ES12.5,T30,'# ', A)
 103 Format(L1,ES12.5,T30,'# ', A)
 105 Format(I4,I4,ES12.5,T30, '# ', A)
-110 Format(I4,T30,'# BLK_ID, Toughness,  A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133       A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333, Alpha')
-120 Format(I4, 23(ES12.5,' '))
+110 Format(I6,' Toughness    A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133      A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333       Alpha')
+120 Format(I6, 23(ES12.5,' '))
   End Subroutine Write_Rupt_DATA3D
 
   Subroutine Read_Rupt_DATA_Iso(Geom, Params)
@@ -823,8 +823,6 @@ Contains
     Open(File = Params%PARAM_Str, Unit = F_IN, Status = 'Old')
     Rewind(F_IN)
 
-!    Read(F_IN, 100) Params%PB_Type
-!    Read(F_IN, 100) Params%PB_Dim
     Read(F_IN, 101) Params%Do_Irrev
     Read(F_IN, 101, advance = 'no' ) Params%Do_BackTrack
     If (Params%Do_BackTrack) Then
