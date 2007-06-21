@@ -38,12 +38,12 @@ Module m_Rupt2DA_Ener
 
 Contains
   Subroutine Comp_Bulk_Ener(Ener, ULoc, VLoc, Geom, Params, SD_U, SD_V, Elems_U, Elems_V, Nodes_U, Nodes_V, FLoc, TempLoc)
-    Type (EXO_Geom_Info)                         :: Geom
-    Type (Rupt_Params)                           :: Params
-    Type (SD_Info)                               :: SD_U
-    Type (SD_Info)                               :: SD_V
+    Type (EXO_Geom_Info)                          :: Geom
+    Type (SD_Info)                                :: SD_U
+    Type (SD_Info)                                :: SD_V
     
 #if defined PB_2D
+    Type (Rupt_Params2D)                          :: Params
     Type (Node2D), Dimension(:), Pointer          :: Nodes_U
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Elast), Dimension(:), Pointer :: Elems_U
@@ -51,6 +51,7 @@ Contains
     Type(MatS2D)                                  :: Sigma, Epsilon
     Type(Vect2D)                                  :: F, U
 #elif defined PB_3D
+    Type (Rupt_Params3D)                          :: Params
     Type (Node3D), Dimension(:), Pointer          :: Nodes_U
     Type (Node3D), Dimension(:), Pointer          :: Nodes_V
     Type (Element3D_Elast), Dimension(:), Pointer :: Elems_U
@@ -58,6 +59,7 @@ Contains
     Type (MatS3D)                                 :: Sigma, Epsilon
     Type (Vect3D)                                 :: F, U
 #else
+    Type (Rupt_Params2D)                          :: Params
     Type (Node2D), Dimension(:), Pointer          :: Nodes_U
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_U
@@ -71,8 +73,8 @@ Contains
     Vec                                          :: TempLoc
     Real(Kind = Kr), Intent(OUT)                 :: Ener
 
-    Real(Kind = Kr)                              :: E, Nu
-    Real(Kind = Kr)                              :: K1, K2
+!    Real(Kind = Kr)                              :: E, Nu
+!    Real(Kind = Kr)                              :: K1, K2
 
     Real(Kind = Kr)                              :: MyEner
     Integer                                      :: Nb_Gauss, Nb_DoF
@@ -110,24 +112,6 @@ Contains
     MyEner = 0.0_Kr
     Ener = 0.0_Kr
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-       E         = Params%Young_Mod(iBlk)
-       nu        = Params%Poisson_Ratio(iBlk) 
-
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
-#ifdef PB_2D
-       K1 = E * nu / (1.0_Kr - nu**2)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#else
-       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#endif
-
 #ifdef PB_2DA
        K2 = E / (1.0_Kr + nu) * InvOf2
 #endif
@@ -179,12 +163,7 @@ Contains
                 Epsilon%ZZ = Epsilon%ZZ - Params%Therm_Exp(iBlk) * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
 #endif
              End Do Do_iSL2
-             Sigma = 2.0_Kr * K2 * Epsilon
-             Sigma%XX = Sigma%XX + K1 * Trace(Epsilon)
-             Sigma%YY = Sigma%YY + K1 * Trace(Epsilon)
-#ifdef PB_3D
-             Sigma%ZZ = Sigma%ZZ + K1 * Trace(Epsilon)
-#endif
+             Sigma = Params%Hookes_Law(iBlk) * Epsilon
 #endif             
              MyEner = MyEner + Elems_U(iE)%Gauss_C(iG) * ContrV * (Sigma .DotP. Epsilon) * .5_Kr
              
@@ -219,14 +198,15 @@ Contains
 
   Subroutine Comp_Surf_Ener(Ener, VLoc, Geom, Params, SD, Elems_V, Nodes_V)
     Type (EXO_Geom_Info)                         :: Geom
-    Type (Rupt_Params)                           :: Params
     Type (SD_Info)                               :: SD
 
 #ifdef PB_3D
+    Type (Rupt_Params3D)                         :: Params
     Type (Node3D), Dimension(:), Pointer         :: Nodes_V
     Type (Element3D_Scal), Dimension(:), Pointer :: Elems_V
     Type (Vect3D)                                :: GradV
 #else
+    Type (Rupt_Params2D)                         :: Params
     Type (Node2D), Dimension(:), Pointer         :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer :: Elems_V
     Type (Vect2D)                                :: GradV

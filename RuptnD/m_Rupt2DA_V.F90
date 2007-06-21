@@ -55,28 +55,29 @@ Contains
     
   End Function Distance
   
-  Function CrackProfile(t,Params)
-    Real(Kind = Kr)                               :: t    
-    Type (Rupt_Params)                            :: Params
+  Function CrackProfile(t,Epsilon)
+    Real(Kind = Kr)                               :: t, Epsilon
     Real(Kind = Kr)                               :: CrackProfile
     
-    CrackProfile = 1.0_Kr - EXP((Params%Epsilon**2 - t)/(2*Params%Epsilon) )
+    CrackProfile = 1.0_Kr - EXP((Epsilon**2 - t)/(2*Epsilon) )
     CrackProfile= max(CrackProfile , 0.0_Kr)
   End Function  CrackProfile
   
   Subroutine  Init_V_Cracks(Geom, Params, SD, Elems_V,  Nodes_V, V)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD    
 #if defined PB_2D
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
+    Type (Rupt_Params2D)                          :: Params
 #elif defined PB_3D
     Type (Node3D), Dimension(:), Pointer          :: Nodes_V
     Type (Element3D_Scal), Dimension(:), Pointer  :: Elems_V
+    Type (Rupt_Params3D)                          :: Params
 #else
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
+    Type (Rupt_Params2D)                          :: Params
 #endif
     Vec                                           :: V
     
@@ -147,7 +148,7 @@ Contains
              If (SD%IsLocal_Node(iSG)) Then
                 Do_Crack : Do iTerCracks=1, Params%nbCracks
                    Length = Distance(Crack_Loc(iTerCracks*2 -1), Crack_Loc(iTerCracks*2 ), Nodes_V(iSG)%Coord)
-                   V_Ptr(Loc_Indices(iSG)+1) = min(V_Ptr(Loc_Indices(iSG)+1), CrackProfile(Length,Params))
+                   V_Ptr(Loc_Indices(iSG)+1) = min(V_Ptr(Loc_Indices(iSG)+1), CrackProfile(Length,Params%Epsilon))
                 End Do Do_Crack
              End IF
           End Do Do_iS
@@ -165,17 +166,19 @@ Contains
 
   Subroutine  Init_V_Spheres(Geom, Params, SD, Elems_V,  Nodes_V, V)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD    
 #if defined PB_2D
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
+    Type (Rupt_Params2D)                          :: Params
 #elif defined PB_3D
     Type (Node3D), Dimension(:), Pointer          :: Nodes_V
     Type (Element3D_Scal), Dimension(:), Pointer  :: Elems_V
+    Type (Rupt_Params3D)                          :: Params
 #else
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
+    Type (Rupt_Params2D)                          :: Params
 #endif
     Vec                                           :: V
     
@@ -227,7 +230,7 @@ Contains
                 Do_Crack : Do iTerCracks=1, Params%nbCracks
                    Length = sqrt((Crack_Loc(iTerCracks) - Nodes_V(iSG)%Coord) .DotP. (Crack_Loc(iTerCracks) - Nodes_V(iSG)%Coord))
                    Length = Max(0.0_Kr, Length - Params%MaxCrackLength)
-                   V_Ptr(Loc_Indices(iSG)+1) = min(V_Ptr(Loc_Indices(iSG)+1), CrackProfile(Length,Params)+.1_Kr)
+                   V_Ptr(Loc_Indices(iSG)+1) = min(V_Ptr(Loc_Indices(iSG)+1), CrackProfile(Length,Params%Epsilon)+.1_Kr)
                 End Do Do_Crack
              End IF
           End Do Do_iS
@@ -248,7 +251,6 @@ Contains
     Mat                                           :: MR
     Vec                                           :: U_Loc, Temp_Loc
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
     Type (SD_Info)                                :: SD_U
     Type (SD_Info)                                :: SD_V
 
@@ -258,18 +260,21 @@ Contains
     Type (Element2D_Elast), Dimension(:), Pointer :: Elems_U
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
     Type (MatS2D)                                 :: Sigma, Epsilon
+    Type (Rupt_Params2D)                          :: Params
 #elif defined PB_3D
     Type (Node3D), Dimension(:), Pointer          :: Nodes_U
     Type (Node3D), Dimension(:), Pointer          :: Nodes_V
     Type (Element3D_Elast), Dimension(:), Pointer :: Elems_U
     Type (Element3D_Scal), Dimension(:), Pointer  :: Elems_V
     Type (MatS3D)                                 :: Sigma, Epsilon
+    Type (Rupt_Params3D)                          :: Params
 #else
     Type (Node2D), Dimension(:), Pointer          :: Nodes_U
     Type (Node2D), Dimension(:), Pointer          :: Nodes_V
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_U
     Type (Element2D_Scal), Dimension(:), Pointer  :: Elems_V
     Type (Vect2D)                                 :: Sigma, Epsilon
+    Type (Rupt_Params2D)                          :: Params
 #endif
 
     Integer                                       :: Nb_Gauss
@@ -291,8 +296,6 @@ Contains
                                                   
     PetscTruth                                    :: ISAssembled
                                                   
-    Real(Kind = Kr)                               :: E, Nu
-    Real(Kind = Kr)                               :: K1, K2
     Real(Kind = Kr)                               :: Gc
     Integer                                       :: i
 
@@ -320,22 +323,6 @@ Contains
 
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
        Gc = Params%Toughness(iBlk)
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-!!! The isotropic Hooke's law is expressed as
-!!! \sigma = K1 * trace(Epsilon) Id + 2*K2 * Epsilon - K3 Temp * Id
-!!! K1, K2, K3 are computed in terms of E and nu
-!!! in 3D, K1 = lambda, K2 = mu, K3 = E*alpha/(1-2nu) (= 3kappa alpha)
-!!!       (alpha = therm exp coef).
-!!! in 2D / plane stresses, the expressions are more complicated
-!!!
-#ifdef PB_2D
-       K1 = E * nu / (1.0_Kr - nu**2)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#else
-       K1 = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#endif
 
 #ifdef PB_2DA
        K2 = E / (1.0_Kr + nu) * InvOf2
@@ -352,9 +339,6 @@ Contains
        Allocate (MR_Elem(Nb_DoF_V, Nb_DoF_V))
        Allocate (EXO_Indices_V(Nb_DoF_V))
        
-
-       
-
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%ELem_ID(iELoc)
           If (.NOT. SD_V%IsLocal_Elem(iE)) Then
@@ -392,12 +376,7 @@ Contains
                    Epsilon%ZZ = Epsilon%ZZ - Params%Therm_Exp(iBlk) * Elems_V(iE)%BF(iSL,iG) * TempPtr(Loc_Indices_V(iSG)+1)
 #endif
                 End Do Do_iSL2
-                Sigma = 2.0_Kr * K2 * Epsilon
-                Sigma%XX = Sigma%XX + K1 * Trace(Epsilon)
-                Sigma%YY = Sigma%YY + K1 * Trace(Epsilon)
-#ifdef PB_3D
-                Sigma%ZZ = Sigma%ZZ + K1 * Trace(Epsilon)
-#endif
+                Sigma = Params%Hookes_Law(iBlk) * Epsilon
 #endif             
                 ContrU = Sigma .DotP. Epsilon
              
@@ -453,19 +432,19 @@ Contains
   Subroutine Assemb_RHS_V(RHS, Geom, Params, SD, Elems_Scal, Nodes_Scal)
     Vec                                          :: RHS
     Type (EXO_Geom_Info)                         :: Geom
-    Type (Rupt_Params)                           :: Params
     Type (SD_Info)                               :: SD
 
 #ifdef PB_3D
     Type (Node3D), Dimension(:), Pointer         :: Nodes_Scal
     Type (Element3D_Scal), Dimension(:), Pointer :: Elems_Scal
+    Type (Rupt_Params3D)                         :: Params
 #else
     Type (Node2D), Dimension(:), Pointer         :: Nodes_Scal
     Type (Element2D_Scal), Dimension(:), Pointer :: Elems_Scal
+    Type (Rupt_Params2D)                         :: Params
 #endif
 
     PetscReal, Dimension(:), Pointer             :: RHS_Ptr
-
 
     Integer                                      :: Nb_DoF
     Integer                                      :: iSL
@@ -539,11 +518,12 @@ Contains
   Subroutine Apply_BC_V(Geom, Params, SD, Nodes, V)
   !!! CHECK THAT OUT. I am tired...
     Type(EXO_Geom_Info), Intent(IN)                  :: Geom
-    Type(Rupt_Params), Intent(IN)                    :: Params
     Type (SD_Info), Intent(IN)                       :: SD
 #ifdef PB_3D
+    Type(Rupt_Params3D), Intent(IN)                    :: Params
     Type(Node3D), Dimension(:), Pointer              :: Nodes
 #else
+    Type(Rupt_Params2D), Intent(IN)                    :: Params
     Type(Node2D), Dimension(:), Pointer              :: Nodes
 #endif
     Vec                                              :: V

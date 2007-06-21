@@ -48,6 +48,7 @@ Module m_Elast3D_Vars
 
   Type(MatS2D), Dimension(:), Pointer, Public           :: Stress_Sol
   Type(MatS2D), Dimension(:), Pointer, Public           :: Strain_Sol
+  Type(Rupt_Params2D), Public                           :: Params
 #else
   Type(Element3D_Elast), Dimension(:), Pointer, Public  :: Elem_db
   Type(Node3D), Dimension(:), Pointer, Public           :: Node_db
@@ -56,13 +57,13 @@ Module m_Elast3D_Vars
 
   Type(MatS3D), Dimension(:), Pointer, Public           :: Stress_Sol
   Type(MatS3D), Dimension(:), Pointer, Public           :: Strain_Sol
+  Type(Rupt_Params3D), Public                           :: Params
 #endif
 
 
   Integer, Public                                       :: GaussOrder=3
 
   Type(EXO_Geom_Info), Public                           :: Geom
-  Type(Rupt_Params), Public                             :: Params
   Type(SD_Info), Public                                 :: MySD_Vect
   Type(SD_Info), Public                                 :: MySD_Scal
 
@@ -72,15 +73,6 @@ Module m_Elast3D_Vars
   Character(len=128), Public                            :: CharBuffer
 
   PetscLogDouble, Public                                :: TotalTS, TotalTF
-  PetscLogDouble, Public                                :: TotalT
-  PetscLogDouble, Public                                :: InitTS, InitTF
-  PetscLogDouble, Public                                :: AssembTS, AssembTF
-  PetscLogDouble, Public                                :: RHSTS, RHSTF
-  PetscLogDouble, Public                                :: SolveTS, SolveTF
-  PetscLogDouble, Public                                :: ExportTS, ExportTF
-
-  Integer, Dimension(:), Pointer, Public                :: NNZ
-!  Integer, Public                                       :: MyIdxMin, MyIdxMax
 
   Real(Kind = Kr), Public                               :: Ener_Elast
   PetscReal, Public, Parameter                          :: VLV = 1.0e+20

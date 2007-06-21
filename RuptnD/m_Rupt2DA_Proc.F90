@@ -297,13 +297,15 @@ Contains
   
   Subroutine Init_BC_U(Geom, Params, Nodes_U)
     Type(EXO_Geom_Info), Intent(IN)                  :: Geom
-    Type(Rupt_Params), Intent(IN)                    :: Params
 #if defined PB_2D
+    Type(Rupt_Params2D), Intent(IN)                  :: Params
     Type(Node2D), Dimension(:), Pointer              :: Nodes_U
 #elif defined PB_3D
     Type(Node3D), Dimension(:), Pointer              :: Nodes_U
+    Type(Rupt_Params3D), Intent(IN)                  :: Params
 #else 
     Type(Node2D), Dimension(:), Pointer              :: Nodes_U
+    Type(Rupt_Params2D), Intent(IN)                  :: Params
 #endif
 
     Integer                                          :: iSet, iN
@@ -338,11 +340,12 @@ Contains
 
   Subroutine Update_BC_V(Geoms, Params, SD, Nodes, VOld)
     Type(EXO_Geom_Info), Intent(IN)                  :: Geoms
-    Type(Rupt_Params), Intent(IN)                    :: Params
     Type (SD_Info), Intent(IN)                       :: SD
 #ifdef PB_3D
+    Type(Rupt_Params3D), Intent(IN)                  :: Params
     Type(Node3D), Dimension(:), Pointer              :: Nodes
 #else
+    Type(Rupt_Params2D), Intent(IN)                  :: Params
     Type(Node2D), Dimension(:), Pointer              :: Nodes
 #endif
     Vec                                              :: VOld    

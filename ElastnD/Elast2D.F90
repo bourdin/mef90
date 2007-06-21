@@ -38,12 +38,9 @@ Program Elast
   Mat                   :: Loc_Mat
 
   Call PetscGetTime(TotalTS, iErr)
-  Call PetscGetTime(InitTS, iErr)
 
   Call Init()
   Call VecSet(SOL_Dist, 1.0_Kr, iErr)
-
-  Call PetscGetTime(AssembTS, iErr)
 
   Call Assemb_Mat_Elast(MR, Geom, Params, Elem_db, Node_db)
 
@@ -98,11 +95,8 @@ Program Elast
      Call VecGhostUpdateEnd(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 
      !!! BC_Loc -> RHS
-     Call PetscGetTime(RHSTS, iErr)
      Call Assemb_RHS_Elast(RHS, Geom, Params, Elem_db, Node_db, Elem_Scal, Node_Scal, BC_Loc, F_Loc, Temp_Loc)
-     Call PetscGetTime(RHSTF, iErr)
 
-     Call PetscGetTime(SolveTS, iErr)
      Call KSPSolve(KSP_MR, RHS, Sol_Dist, iErr)
 
      If (MEF90_MyRank ==0) Then
@@ -119,7 +113,6 @@ Program Elast
      Write(CharBuffer, *) '=== Elastic Energy: ', Ener_Elast, '\n'c
      Call PETScPrintf(PETSC_COMM_WORLD, CharBuffer, iErr)
 
-     Call PetscGetTime(ExportTS, iErr)
      Call Export()
   End Do
 !  Call VecView(RHS, PETSC_VIEWER_STDOUT_WORLD, iErr)

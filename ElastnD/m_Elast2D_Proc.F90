@@ -33,7 +33,6 @@ Module m_Elast3D_Proc
 
   Public :: Assemb_Mat_Elast
   Public :: Assemb_RHS_Elast
-  Public :: Compute_SigmaEpsilon
   Public :: Calc_Ener
 
   Public :: GenVect
@@ -223,11 +222,12 @@ Contains
 
   Subroutine Init_BC(Geom, Params, Node_db)
     Type(EXO_Geom_Info), Intent(IN)                  :: Geom
-    Type(Rupt_Params), Intent(IN)                    :: Params
 
 #ifdef PB_2D
+    Type(Rupt_Params2D), Intent(IN)                  :: Params
     Type(Node2D), Dimension(:), Pointer              :: Node_db
 #else
+    Type(Rupt_Params3D), Intent(IN)                  :: Params
     Type(Node3D), Dimension(:), Pointer              :: Node_db
 #endif
     Integer                                          :: iN, iSet
@@ -271,17 +271,16 @@ Contains
   Subroutine Assemb_Mat_Elast(MR, Geom, Params, Elem_db, Node_db)
     Mat                                                 :: MR
     Type (EXO_Geom_Info)                                :: Geom
-    Type (Rupt_Params)                                  :: Params
 #ifdef PB_2D
+    Type (Rupt_Params2D)                                :: Params
     Type (Node2D), Dimension(:), Pointer                :: Node_db 
     Type (Element2D_Elast), Dimension(:), Pointer       :: Elem_db 
     Type (MatS2D)                                       :: Sigma, Epsilon
-    Type (Tens4OS2D)                                    :: HookeLaw
 #else
+    Type (Rupt_Params3D)                                :: Params
     Type (Node3D), Dimension(:), Pointer                :: Node_db 
     Type (Element3D_Elast), Dimension(:), Pointer       :: Elem_db 
     Type (MatS3D)                                       :: Sigma, Epsilon
-    Type (Tens4OS3D)                                    :: HookeLaw
 #endif
 
     Integer                                             :: Nb_Gauss, Nb_DoF
@@ -303,15 +302,6 @@ Contains
     
     ! Assembly of the Non BC terms 
     Do_iBlk: Do iBlk = 1, Geom%Num_Elem_Blks
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-
-#ifdef PB_2D
-       Call GenHL_ISO2D_EnuPlaneStress(E, nu, HookeLaw)
-#else
-       Call GenHL_ISO3D_Enu(E, nu, HookeLaw)
-#endif
-
        Nb_DoF = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
        Allocate (MR_Elem(Nb_DoF, Nb_DoF))
        Allocate (EXO_Indices(Nb_DoF))
@@ -332,7 +322,7 @@ Contains
              Do_iSL1: Do iSL1 = 1, Nb_DoF
                 ISG1 = Elem_db(iE)%ID_DoF(iSL1)
                 Epsilon = Elem_db(iE)%GradS_BF(iSL1,iG)
-                Sigma = HookeLaw * Epsilon
+                Sigma = Params%Hookes_Law(iBlk) * Epsilon
 
                 Do_iSL2: Do iSL2 = 1, Nb_DoF
                    iSG2 = Elem_db(iE)%ID_DoF(iSL2)
@@ -383,23 +373,22 @@ Contains
   Subroutine Assemb_RHS_Elast(RHS, Geom, Params, Elem_Vect, Node_Vect, Elem_Scal, Node_Scal, BC_Loc, F_Loc, Temp_Loc)
     Vec                                                 :: RHS
     Type (EXO_Geom_Info)                                :: Geom
-    Type (Rupt_Params)                                  :: Params
 #ifdef PB_2D
+    Type (Rupt_Params2D)                                :: Params
     Type(Element2D_Elast), Dimension(:), Pointer        :: Elem_Vect
     Type(Node2D), Dimension(:), Pointer                 :: Node_Vect
     Type(Element2D_Scal), Dimension(:), Pointer         :: Elem_Scal
     Type(Node2D), Dimension(:), Pointer                 :: Node_Scal
     Type(MatS2D)                                        :: ThetaId, AThetaId
     Type(Vect2D)                                        :: F
-    Type(Tens4OS2D)                                     :: HookeLaw
 #else
+    Type (Rupt_Params3D)                                :: Params
     Type(Element3D_Elast), Dimension(:), Pointer        :: Elem_Vect
     Type(Node3D), Dimension(:), Pointer                 :: Node_Vect
     Type(Element3D_Scal), Dimension(:), Pointer         :: Elem_Scal
     Type(Node3D), Dimension(:), Pointer                 :: Node_Scal
     Type(MatS3D)                                        :: ThetaId
     Type(Vect3D)                                        :: F
-    Type(Tens4OS3D)                                     :: HookeLaw
 #endif
     Vec                                                 :: BC_Loc
     Vec                                                 :: F_Loc
@@ -443,16 +432,6 @@ Contains
        Allocate (RHS_Elem(Nb_DoF_Vect))
        Allocate (EXO_Indices_Vect(Nb_DoF_Vect))
 
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-
-#ifdef PB_2D
-       Call GenHL_ISO2D_EnuPlaneStress(E, nu, HookeLaw)
-#else
-       Call GenHL_ISO3D_Enu(E, nu, HookeLaw)
-#endif
-
-
        Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
           iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
           If (.NOT. MySD_Vect%IsLocal_Elem(iE)) Then
@@ -486,7 +465,7 @@ Contains
              Do_iSL3: Do iSL = 1, Elem_Vect(iE)%Nb_DoF
                 RHS_Elem(iSL) = RHS_Elem(iSL) + Elem_Vect(iE)%Gauss_C(iG) *                                                        &
                                 ( (F .DotP. Elem_Vect(iE)%BF(iSL, iG)) +                                                           &
-                                  (ThetaId .DotP.  (HookeLaw * Elem_Vect(iE)%GradS_BF(iSL, iG))) ) 
+                                  (ThetaId .DotP.  (Params%Hookes_Law(iBlk) * Elem_Vect(iE)%GradS_BF(iSL, iG))) ) 
              End Do Do_iSL3
           End Do Do_iG
           Call VecSetValues(RHS, Elem_Vect(iE)%Nb_DoF, EXO_Indices_Vect, RHS_Elem, ADD_VALUES, iErr)
@@ -561,82 +540,6 @@ Contains
   End Subroutine GenVect
 
 
-  Subroutine Compute_SigmaEpsilon(Sigma, Epsilon, Geom, Params, Elem_db,      &
-       & Node_db, Defo_Vec)
-
-#ifdef PB_2D
-    Type(MatS2D), Dimension(:), Pointer                 :: Sigma
-    Type(MatS2D), Dimension(:), Pointer                 :: Epsilon
-    Type(Element2D_Elast), Dimension(:), Pointer        :: Elem_db
-    Type(Node2D), Dimension(:), Pointer                 :: Node_db 
-#else
-    Type(MatS3D), Dimension(:), Pointer                 :: Sigma
-    Type(MatS3D), Dimension(:), Pointer                 :: Epsilon
-    Type(Element3D_Elast), Dimension(:), Pointer        :: Elem_db 
-    Type(Node3D), Dimension(:), Pointer                 :: Node_db 
-#endif
-    Type (EXO_Geom_Info)                                :: Geom
-    Type (Rupt_Params)                                  :: Params
-    Vec                                                 :: Defo_Vec
-
-    Integer                                             :: iE, NE, iBlk
-    Integer                                             :: iELoc, Nb_DoF
-    Integer                                             :: Nb_Gauss
-    Integer                                             :: iG, iSL, iSG
-    Real(Kind = Kr)                                     :: Lambda, Mu
-    Real(Kind = Kr)                                     :: E, nu
-    Real(Kind = Kr)                                     :: Vol_iE
-    PetscScalar, Dimension(:), Pointer                  :: Defo
- 
-    NE = Size(Elem_db)
-
-#ifdef PB_2D
-#else
-    Call VecGetArrayF90(Defo_Vec, Defo, iErr)
-    Epsilon%XX = 0.0_Kr
-    Epsilon%YY = 0.0_Kr
-    Epsilon%ZZ = 0.0_Kr
-    Epsilon%YZ = 0.0_Kr
-    Epsilon%XZ = 0.0_Kr
-    Epsilon%XY = 0.0_Kr
-
-    Do_iBlk: Do iBlk = 1, Geom%Num_Elem_Blks
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-
-       Lambda = E * nu / (1.0_Kr - 2.0_Kr * nu) / ( 1.0_Kr + nu)
-       Mu     = E / (1.0_Kr + nu) * InvOf2
-
-       Nb_DoF = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
-
-       Do_iE: Do iELoc = 1, Geom%Elem_blk(iBlk)%Num_Elems
-          iE = Geom%Elem_blk(iBlk)%Elem_ID(iELoc)
-
-          Nb_Gauss = Elem_db(iE)%Nb_Gauss
-          Vol_iE = Vol_Tetra_3D(Node_db(Elem_db(iE)%ID_DoF(1))%Coord,        &
-            &    Node_db(Elem_db(iE)%ID_DoF(4))%Coord,                       &
-            &    Node_db(Elem_db(iE)%ID_DoF(7))%Coord,                       &
-            &    Node_db(Elem_db(iE)%ID_DoF(10))%Coord)
-          Do_iSL: Do iSL = 1, Nb_DoF
-             ISG = Elem_db(iE)%ID_DoF(iSL)
-             Do_iG: Do iG = 1, Elem_db(iE)%Nb_Gauss
-                Epsilon(iE) = Epsilon(iE) + Elem_db(iE)%GradS_BF(iSL,iG)      &
-                     & * Elem_db(iE)%Gauss_C(iG) * Defo(iSG)
-             End Do Do_iG
-          End Do Do_iSL
-
-          Epsilon(iE) = Epsilon(iE) / Vol_iE
-          Sigma(iE)    = 2.0_Kr * Mu * Epsilon(iE)
-          Sigma(iE)%XX = Sigma(iE)%XX + Lambda * Trace(Epsilon(iE))
-          Sigma(iE)%YY = Sigma(iE)%YY + Lambda * Trace(Epsilon(iE))
-          Sigma(iE)%ZZ = Sigma(iE)%ZZ + Lambda * Trace(Epsilon(iE))
-       End Do Do_iE
-    End Do Do_iBlk
-    Call VecRestoreArrayF90(Defo_Vec, Defo, iErr)
-#endif
-  End Subroutine Compute_SigmaEpsilon
-
-
   Subroutine Calc_Ener(DISP_Loc, Geom, Params, Elem_db_Vec, Node_db_Vec, SD_Vec, Elem_db_Scal, Node_db_Scal, SD_Scal,              & 
                        F_Loc, Temp_Loc, Ener) 
 
@@ -648,7 +551,7 @@ Contains
     Type(Vect2D)                                        :: F, U
     Type(Element2D_Scal), Dimension(:), Pointer         :: Elem_db_Scal 
     Type(Node2D), Dimension(:), Pointer                 :: Node_db_Scal
-    Type(Tens4OS2D)                                     :: HookeLaw
+    Type (Rupt_Params2D)                                :: Params
 #else
     Type(MatS3D)                                        :: Sigma
     Type(MatS3D)                                        :: Epsilon
@@ -657,10 +560,9 @@ Contains
     Type(Vect3D)                                        :: F, U
     Type(Element3D_Scal), Dimension(:), Pointer         :: Elem_db_Scal 
     Type(Node3D), Dimension(:), Pointer                 :: Node_db_Scal
-    Type(Tens4OS3D)                                     :: HookeLaw
+    Type (Rupt_Params3D)                                :: Params
 #endif
     Type (EXO_Geom_Info)                                :: Geom
-    Type (Rupt_Params)                                  :: Params
     Type (SD_Info)                                      :: SD_Vec, SD_Scal
     
     Vec                                                 :: DISP_Loc
@@ -697,14 +599,6 @@ Contains
     Call VecGetArrayF90(Temp_Loc, Temp_Ptr, iErr)
 
     Do_iBlk: Do iBlk = 1, Geom%Num_Elem_Blks
-       E  = Params%Young_Mod(iBlk)
-       nu = Params%Poisson_Ratio(iBlk) 
-
-#ifdef PB_2D
-       Call GenHL_ISO2D_EnuPlaneStress(E, nu, HookeLaw)
-#else
-       Call GenHL_ISO3D_Enu(E, nu, HookeLaw)
-#endif
 
        Nb_DoF_Vec  = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
        Nb_DoF_Scal = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
@@ -737,7 +631,7 @@ Contains
                 Epsilon%ZZ   = Epsilon%ZZ - Params%Therm_Exp(iBlk) * Elem_db_Scal(iE)%BF(iSL,iG) * Temp_Ptr(Loc_Indices_Scal(iSG)+1)
 #endif
              End Do Do_iSL2
-             Sigma = HookeLaw * Epsilon
+             Sigma = Params%Hookes_Law(iBlk) * Epsilon
 
              MyEner = MyEner + Elem_db(iE)%Gauss_C(iG) * ( Sigma .DotP. Epsilon ) * .5_Kr
             

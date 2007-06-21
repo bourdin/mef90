@@ -56,21 +56,23 @@ Module m_Rupt2DA_Vars
   Type(Element2D_Elast), Dimension(:), Pointer, Public  :: Elem_db_U
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_V
   Type(Element2D_Scal), Dimension(:), Pointer, Public   :: Elem_db_V
+  Type(Rupt_Params2D), Public                           :: Params
 #elif defined PB_3D
   Type(Node3D), Dimension(:), Pointer, Public           :: Node_db_U
   Type(Element3D_Elast), Dimension(:), Pointer, Public  :: Elem_db_U
   Type(Node3D), Dimension(:), Pointer, Public           :: Node_db_V
   Type(Element3D_Scal), Dimension(:), Pointer, Public   :: Elem_db_V
+  Type(Rupt_Params3D), Public                           :: Params
 #else
   ! 2DA
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_U
   Type(Element2D_Scal), Dimension(:), Pointer, Public   :: Elem_db_U
   Type(Node2D), Dimension(:), Pointer, Public           :: Node_db_V
   Type(Element2D_Scal), Dimension(:), Pointer, Public   :: Elem_db_V
+  Type(Rupt_Params2D), Public                           :: Params
 #endif
 
   Type(EXO_Geom_Info), Public                           :: Geom
-  Type(Rupt_Params), Public                             :: Params
   Type(SD_Info), Public                                 :: MySD_U
   Type(SD_Info), Public                                 :: MySD_V
 

@@ -18,17 +18,13 @@ Program Prep_Rupt
   
   Type(Vect3D), Dimension(:), Pointer             :: BC_U_NS
 
-
-  Type (Rupt_Params)                              :: Params
-  Type (Rupt_Params_Hooke2D)                      :: Params_Ortho2D
+  Type (Rupt_Params2D)                            :: Params2D
+  Type (Rupt_Params3D)                            :: Params3D
+  
   Character(len = MXLNLN)                         :: EXO_Str
-!  Type(Vect3D), Dimension(:), Pointer             :: BC_U
-     
 
   Integer                                         :: Num_dof_per_nodes 
   Integer                                         :: iErr
-!  Character(len=MXLNLN), Dimension(3)             :: Coord_Names
-
 
   Integer                                         :: iB, iE, iV, iG
   Integer                                         :: iSL1, iSL2, iSG1, iSG2
@@ -53,15 +49,6 @@ Program Prep_Rupt
 
   Geom%filename = Trim(EXO_Str)//'.gen'
   Call Read_EXO_Geom_Info(Geom) 
-  Print*, 'OK Read_EXO_Geom_Info'
-  Print*, 'Dimension: ', Geom%Num_Dim
-
-  Print*, 'Node sets ', Geom%Num_Node_Sets
-  Do iB = 1, Geom%Num_Node_Sets
-     Print*, 'Node Set #', Geom%Node_Set(iB)%ID
-     Print*, '   Size ', Geom%Node_Set(iB)%Num_Nodes
-!     Print*, '   Nodes', Geom%Node_Set(iB)%Node_ID
-  End Do
   
   Do
      Write(*,100, advance = 'no') '[P]repare [C]heck, or [E]xit?'
@@ -87,83 +74,58 @@ Program Prep_Rupt
         Case(2)
            Call Read_EXO_Node_Coord(Geom, Node2D_db, 1)
            Call Read_EXO_Connect(Geom, Elem2D_db)
-        Case(3)
-           Call Read_EXO_Node_Coord(Geom, Node3D_db, 1)
-           Call Read_EXO_Connect(Geom, Elem3D_db)
-        End Select
-
-        If (PB_Type /= PB_KBMultiscale) Then
-           Params%Sim_Str   = Trim(EXO_Str) // '_out'
-           Geom%filename    = Trim(Params%Sim_Str) // '.gen'
-           Params%PARAM_Str = Trim(Params%Sim_Str) // '.PARAM'
-           Params%CST_Str   = Trim(Params%Sim_Str) // '.CST'
+           Params2D%Sim_Str   = Trim(EXO_Str) // '_out'
+           Geom%filename      = Trim(Params2D%Sim_Str) // '.gen'
+           Params2D%PARAM_Str = Trim(Params2D%Sim_Str) // '.PARAM'
+           Params2D%CST_Str   = Trim(Params2D%Sim_Str) // '.CST'
            Geom%exoid = EXCRE (Geom%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
-           Call Ask_Rupt_Params_Iso(Geom, Params, BC_U_NS)
-        Else
-           Params_Ortho2D%Sim_Str   = Trim(EXO_Str) // '_out'
-           Geom%filename            = Trim(Params_Ortho2D%Sim_Str) // '.gen'
-           Params_Ortho2D%PARAM_Str = Trim(Params_Ortho2D%Sim_Str) // '.PARAM'
-           Params_Ortho2D%CST_Str   = Trim(Params_Ortho2D%Sim_Str) // '.CST'
-           Geom%exoid = EXCRE (Geom%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
-           Call Ask_Rupt_Params_Hooke2D(Geom, Params_Ortho2D, BC_U_NS)
-        End If        
+           Call Ask_Rupt_Params2D(Geom, Params2D, BC_U_NS)
+           Write(*,*) 'Updating geometrical information...'
+           Call Write_EXO_Geom_Info(Geom)
 
-        Write(*,*) 'Updating geometrical information...'
-        Call Write_EXO_Geom_Info(Geom)
- 
-        Select Case (Geom%Num_Dim)
-        Case(2)
   	        Write(*,100, advance = 'no') 'Writing Coordinates / Connectivity'
            Call Write_EXO_Node_Coord(Geom, Node2D_db, 1)
            Call Write_EXO_Connect(Geom, Elem2D_db)
-           If (PB_Type == PB_KBMultiscale) Then
-              Write(*,*) 'Writing problem parameters'
-              Call Write_Rupt_EXO_Params(Geom, Params_Ortho2D)
-              Call Write_Rupt_DATA(Geom, Params_Ortho2D)    
-               
-              Write(*,*) 'Writing Boundary conditions'
-              Call Write_BC_Hooke2D(Geom, Params_Ortho2D, Node2D_db, PB_Type, BC_U_NS)
-              Write(*,*) 'Writing Forces'
-              Call Write_Forces_Hooke2D(Geom, Params_Ortho2D, Node2D_db, PB_Type)
-           Else
-              Write(*,*) 'Writing problem parameters'
-              Call Write_Rupt_EXO_Params(Geom, Params)
-              Call Write_Rupt_DATA(Geom, Params)    
-               
-              Write(*,*) 'Writing Boundary conditions'
-              Call Write_BC2D(Geom, Params, Node2D_db, PB_Type, BC_U_NS)
-              Write(*,*) 'Writing Forces'
-              Call Write_Forces2D(Geom, Params, Node2D_db, PB_Type)
-              Write(*,*) 'Writing Temperature field'
-              Call Write_Temp2D(Geom, Params, Node2D_db, PB_Type)
-           End If           
+           Write(*,*) 'Writing problem parameters'
+           Call Write_Rupt_EXO_Params(Geom, Params2D)
+           Print*, 'OK Params'
+           Call Write_Rupt_DATA(Geom, Params2D)    
+            
+           Write(*,*) 'Writing Boundary conditions'
+           Call Write_BC2D(Geom, Params2D, Node2D_db, PB_Type, BC_U_NS)
+           Write(*,*) 'Writing Forces'
+           Call Write_Forces2D(Geom, Params2D, Node2D_db, PB_Type)
+           Write(*,*) 'Writing Temperature field'
+           Call Write_Temp2D(Geom, Params2D, Node2D_db, PB_Type)
         Case(3)
+           Call Read_EXO_Node_Coord(Geom, Node3D_db, 1)
+           Call Read_EXO_Connect(Geom, Elem3D_db)
+           Params3D%Sim_Str   = Trim(EXO_Str) // '_out'
+           Geom%filename      = Trim(Params3D%Sim_Str) // '.gen'
+           Params3D%PARAM_Str = Trim(Params3D%Sim_Str) // '.PARAM'
+           Params3D%CST_Str   = Trim(Params3D%Sim_Str) // '.CST'
+           Geom%exoid = EXCRE (Geom%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
+           Call Ask_Rupt_Params3D(Geom, Params3D, BC_U_NS)
+           Write(*,*) 'Updating geometrical information...'
+           Call Write_EXO_Geom_Info(Geom)
+
            Write(*,100, advance = 'no') 'Writing Coordinates / Connectivity'
            Call Write_EXO_Node_Coord(Geom, Node3D_db, 1)
            Call Write_EXO_Connect(Geom, Elem3D_db)
            Write(*,*) 'Writing problem parameters...'
-           Call Write_Rupt_EXO_Params(Geom, Params)
-           Call Write_Rupt_DATA(Geom, Params)        
+           Call Write_Rupt_EXO_Params(Geom, Params3D)
+           Call Write_Rupt_DATA(Geom, Params3D)        
 
            Write(*,*) 'Writing Boundary conditions'
-           Call Write_BC3D(Geom, Params, Node3D_db, PB_Type, BC_U_NS)
+           Call Write_BC3D(Geom, Params3D, Node3D_db, PB_Type, BC_U_NS)
            Write(*,*) 'Writing Forces'
-           Call Write_Forces3D(Geom, Params, Node3D_db, PB_Type)
+           Call Write_Forces3D(Geom, Params3D, Node3D_db, PB_Type)
            Write(*,*) 'Writing Temperature field'
-           Call Write_Temp3D(Geom, Params, Node3D_db, PB_Type)
+           Call Write_Temp3D(Geom, Params3D, Node3D_db, PB_Type)
         End Select
 
-  
      Case ('c', 'C')
         Call Show_EXO_Geom_Info(Geom)
-!        Select Case (Geom%Num_Dim)
-!        Case(2)
-!           Call Read_EXO_Node_Coord(Geom, Node2D_db, 1)
-!           Call Read_EXO_Connect(Geom, Elem2D_db)
-!        Case(3)
-!           Call Read_EXO_Node_Coord(Geom, Node3D_db, 1)
-!           Call Read_EXO_Connect(Geom, Elem3D_db)
-!        End Select
      Case ('e', 'E')
         Write(*,*)
         EXIT
@@ -173,16 +135,11 @@ Program Prep_Rupt
 
 100 Format(A,T78,': ')
 110 Format('   [',I1,'] ',A)
-!101 Format('Node ', I3, ' ID ', I3,' X: ', ES10.3)
-!102 Format('Node ', I3, ' ID ', I3, ' X: ', ES10.3, ' Y: ', ES10.3)
-!103 Format('Node ', I3, ' ID ', I3, ' X: ', ES10.3, ' Y: ', ES10.3,           &
-!         & ' Z: ', ES10.3)
-!200 Format('Elem ', I3, ' ID ', I3, '  DoF ', 16(I4))
 
 Contains
   Subroutine Write_BC3D(Geom, Params, Node_db, PB_Type, BC_NS)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
+    Type (Rupt_Params3D)                          :: Params
     Type (Node3D), Dimension(:), Pointer          :: Node_db
     Integer, Intent(IN)                           :: PB_Type
     Type (Vect3D), Dimension(:), Pointer          :: BC_NS
@@ -278,7 +235,7 @@ Contains
 
   Subroutine Write_BC2D(Geom, Params, Node_db, PB_Type, BC_NS)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
+    Type (Rupt_Params2D)                          :: Params
     Type (Node2D), Dimension(:), Pointer          :: Node_db
     Integer, Intent(IN)                           :: PB_Type
     Type(Vect3D), Dimension(:), Pointer           :: BC_NS
@@ -325,7 +282,7 @@ Contains
     End Do
     
     Select Case (PB_Type)
-    Case (PB_Gen, PB_Dipping, PB_Dipping2, PB_Dipping3)
+    Case (PB_Gen, PB_Dipping, PB_Dipping2, PB_Dipping3, PB_KBMultiscale)
        Do iTS = 1, Size(Params%Load)
           BC_Result%X = Params%Load(iTS) * BC_Unit%X
     	    BC_Result%Y = Params%Load(iTS) * BC_Unit%Y
@@ -349,7 +306,6 @@ Contains
     Case (PB_Antiplane)
        Do iTS = 1, Size(Params%Load)
           BC_Result%Z = Params%Load(iTS) * BC_Unit%Z
-!          BC_2DA = Params%Load(iTS) * BC_Unit%Z
           
           Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
           Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
@@ -360,69 +316,10 @@ Contains
     
     DeAllocate (BC_Result, BC_Unit, V_Init)
   End Subroutine Write_BC2D
-
-  Subroutine Write_BC_Hooke2D(Geom, Params, Node_db, PB_Type, BC_NS)
-    Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params_Hooke2D)                    :: Params
-    Type (Node2D), Dimension(:), Pointer          :: Node_db
-    Integer, Intent(IN)                           :: PB_Type
-    Type(Vect3D), Dimension(:), Pointer           :: BC_NS
-    
-    Integer                                       :: iTS, iNode, iSet
-    Type(Vect3D), Dimension(:), Pointer           :: BC_Result, BC_Unit
-    Real(Kind = Kr), Dimension(:), Pointer        :: BC_2DA
-    Real(Kind = Kr), Dimension(:), Pointer        :: V_Init
-    Real(Kind = Kr)                               :: Theta
-    
-!!! Generates BC vector from the TS informations and the
-!!! Load factor. 
-!!! Saves them as the result for the displacement
-    Allocate (BC_Result(Geom%Num_Nodes))
-    Allocate (BC_Unit(Geom%Num_Nodes))
-    Allocate (BC_2DA(Geom%Num_Nodes))
-    Allocate (V_Init(Geom%Num_Nodes))
-
-    V_Init = 1.0_Kr
-    
-    BC_Unit%X = 0.0_Kr
-    BC_Unit%Y = 0.0_Kr
-    BC_Unit%Z = 0.0_Kr
-    BC_Result%X = 0.0_Kr
-    BC_Result%Y = 0.0_Kr
-    BC_Result%Z = 0.0_Kr
-       
-    Do iSet = 1, Geom%Num_Node_Sets
-       If (Params%BC_Type_X(iSet) == 1) Then
-          Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%X = BC_NS(iSet)%X
-          End Do
-       End If
-       If (Params%BC_Type_Y(iSet) == 1) Then
-          Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Y = BC_NS(iSet)%Y
-          End Do
-       End If
-       If (Params%BC_Type_Z(iSet) == 1) Then
-          Do iNode = 1, Geom%Node_Set(iSet)%Num_Nodes
-             BC_Unit(Geom%Node_Set(iSet)%Node_ID(iNode))%Z = BC_NS(iSet)%Z
-          End Do
-       End If
-    End Do
-    
-    Do iTS = 1, Size(Params%Load)
-       BC_Result%X = Params%Load(iTS) * BC_Unit%X
- 	    BC_Result%Y = Params%Load(iTS) * BC_Unit%Y
-       
-       Call Write_EXO_Result_Nodes(Geom, 2, iTS, BC_Result)
-       Call Write_EXO_Result_Nodes(Geom, 1, iTS, V_Init)
-    End Do
-    
-    DeAllocate (BC_Result, BC_Unit, V_Init)
-  End Subroutine Write_BC_Hooke2D
   
   Subroutine Write_Forces3D(Geom, Params, Node_db, PB_Type)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
+    Type (Rupt_Params3D)                          :: Params
     Type (Node3D), Dimension(:), Pointer          :: Node_db
     Integer, Intent(IN)                           :: PB_Type
     
@@ -441,8 +338,12 @@ Contains
 
 	Select Case (PB_Type)
 	Case (PB_Gen)
-	   Write (*,100, advance = 'no') 'Force: '
-	   Read (*,*) Force
+	   Write (*,100, advance = 'no') 'Force%X: '
+	   Read (*,*) Force%X
+	   Write (*,100, advance = 'no') 'Force%Y: '
+	   Read (*,*) Force%Y
+	   Write (*,100, advance = 'no') 'Force%Z: '
+	   Read (*,*) Force%Z
 	   F_Unit(1:Geom%Num_Nodes * Geom%Num_Dim:Geom%Num_Dim) = Force%X
 	   F_Unit(2:Geom%Num_Nodes * Geom%Num_Dim:Geom%Num_Dim) = Force%Y
 	   F_Unit(3:Geom%Num_Nodes * Geom%Num_Dim:Geom%Num_Dim) = Force%Z
@@ -460,7 +361,7 @@ Contains
 
   Subroutine Write_Forces2D(Geom, Params, Node_db, PB_Type)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
+    Type (Rupt_Params2D)                          :: Params
     Type (Node2D), Dimension(:), Pointer          :: Node_db
     Integer, Intent(IN)                           :: PB_Type
     
@@ -479,8 +380,10 @@ Contains
 
 	Select Case (PB_Type)
 	Case (PB_Gen)
-	   Write (*,100, advance = 'no') 'Force: '
-	   Read (*,*) Force
+	   Write (*,100, advance = 'no') 'Force%X: '
+	   Read (*,*) Force%X
+	   Write (*,100, advance = 'no') 'Force%Y: '
+	   Read (*,*) Force%Y
 	   F_Unit(1:Geom%Num_Nodes * Geom%Num_Dim:Geom%Num_Dim) = Force%X
 	   F_Unit(2:Geom%Num_Nodes * Geom%Num_Dim:Geom%Num_Dim) = Force%Y
     
@@ -495,47 +398,9 @@ Contains
 100 Format (A,T78,': ')
   End Subroutine Write_Forces2D
   
-  Subroutine Write_Forces_Hooke2D(Geom, Params, Node_db, PB_Type)
-    Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params_Hooke2D)                    :: Params
-    Type (Node2D), Dimension(:), Pointer          :: Node_db
-    Integer, Intent(IN)                           :: PB_Type
-    
-    Integer                                       :: iTS, iNode, iSet
-    Real(Kind = Kr), Dimension(:), Pointer        :: F_Result, F_Unit
-    Type(Vect2D)                                  :: Force
-    Real(Kind = Kr), Dimension(:), Pointer        :: V_Init
-    Real(Kind = Kr)                               :: Theta
-
-    !!! Generates BC vector from the TS informations and the
-    !!! Load factor. 
-    !!! Saves them as the result for the displacement
-    Allocate (F_Result(Geom%Num_Nodes * Geom%Num_Dim))
-    Allocate (F_Unit(Geom%Num_Nodes * Geom%Num_Dim))
-    F_Unit = 0.0_Kr
-
-	Select Case (PB_Type)
-	Case (PB_Gen)
-	   Write (*,100, advance = 'no') 'Force: '
-	   Read (*,*) Force
-	   F_Unit(1:Geom%Num_Nodes * Geom%Num_Dim:Geom%Num_Dim) = Force%X
-	   F_Unit(2:Geom%Num_Nodes * Geom%Num_Dim:Geom%Num_Dim) = Force%Y
-    
-       Do iTS = 1, Size(Params%Load)
-		  F_Result = Params%Load(iTS) * F_Unit
-          Call Write_EXO_Result_Nodes(Geom, 5, iTS, F_Result)
-       End Do
-    Case Default
-	   Write(*,*) 'Unkown dimension / PB_Type combination in Write_Force2D'
-	End Select
-   DeAllocate (F_Result, F_Unit)
-100 Format (A,T78,': ')
-  End Subroutine Write_Forces_Hooke2D
-
-
   Subroutine Write_Temp3D(Geom, Params, Node_db, PB_Type)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
+    Type (Rupt_Params3D)                          :: Params
     Type (Node3D), Dimension(:), Pointer          :: Node_db
     Integer, Intent(IN)                           :: PB_Type
     
@@ -570,7 +435,7 @@ Contains
 
   Subroutine Write_Temp2D(Geom, Params, Node_db, PB_Type)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
+    Type (Rupt_Params2D)                          :: Params
     Type (Node2D), Dimension(:), Pointer          :: Node_db
     Integer, Intent(IN)                           :: PB_Type
     
@@ -618,10 +483,7 @@ Contains
           Do iNode = 1, Geom%Num_Nodes
              Y = Node_db(iNode)%Coord%Y
              If (Y >= Params%Load(iTS)) Then
-!!$             	Temp_Result(iNode) = TCool + (THot - TCool) *                 &
-!!$             		& (1.0_Kr - exp(-P*(Y-Params%Load(iTS) )) )
-             	Temp_Result(iNode) = THot + (TCool - THot) *                  &
-             		& exp( -P*(Y-Params%Load(iTS)) ) 
+             	Temp_Result(iNode) = THot + (TCool - THot) * exp( -P*(Y-Params%Load(iTS)) ) 
              End If
           End Do
           Call Write_EXO_Result_Nodes(Geom, 8, iTS, Temp_Result)
@@ -667,10 +529,10 @@ Contains
   100 Format(A,T78,': ')
   End Subroutine Write_Temp2D
 
-  Subroutine Ask_Rupt_Params_Iso(Geom, Params, BC_NS)
+  Subroutine Ask_Rupt_Params2D(Geom, Params, BC_NS)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params)                            :: Params
-    Type(Vect3D), Dimension(:), Pointer           :: BC_NS
+    Type (Rupt_Params2D)                          :: Params
+    Type (Vect3D), Dimension(:), Pointer          :: BC_NS
     
     Character                                     :: Char_Input
     Integer                                       :: Num_TS
@@ -679,6 +541,10 @@ Contains
     Integer                                       :: i, iBlk, iSet
     Integer                                       :: Blk_ID, Set_ID
 
+    Real(Kind = Kr)                               :: Tmp_E, Tmp_nu
+    Real(Kind = Kr)                               :: Tmp_Lambda, Tmp_mu1, Tmp_mu2
+    Real(Kind = Kr)                               :: Tmp_Toughness, Tmp_Therm_Exp, Tmp_theta
+    Integer                                       :: Num_Grains
 
     !!! The following are decent values.
     Params%nbCracks           = 0
@@ -692,34 +558,20 @@ Contains
     Params%Epsilon      = 1.0D-1
     Params%KEpsilon     = 1.0D-6
     Params%TolIrrev     = 1.0D-2
-    Write(*,100) '===== Global Properties ======'
-!    Do
-!       Write(*,100, advance = 'no')                                           &
-!            & 'Problem Type [D]isplacement, [T]ermal loads: '
-!       Read(*,100) Char_Input
-!       Select case (Char_Input)
-!       Case('d', 'D')
-!          Params%PB_Type = PB_DISPL
-!          EXIT
-!       Case('t', 'T')
-!          Params%PB_Type = PB_THERM
-!          EXIT
-!       End Select
-!    End Do
+    Write(*,101) '===== Global Properties ======'
 
-    Write(*, 100, advance = 'no') 'Number of time steps: '
+    Write(*, 100, advance = 'no') 'Number of time steps'
     Read(*,*) Num_TS
     Allocate(Params%Load(Num_TS))
-    Write(*, 100, advance = 'no') 'Initial load:         '
+    Write(*, 100, advance = 'no') 'Initial load'
     Read(*,*) TS_Init
     If (Num_TS ==1) Then
        Params%Load = TS_INIT
     Else
-       Write(*, 100, advance = 'no') 'Final load:           '
+       Write(*, 100, advance = 'no') 'Final load'
        Read(*,*) TS_Final
-       Params%Load = (/ (TS_Init + (i-1.0)*(TS_Final - TS_Init)            &
-            & / (Num_TS - 1.0_Kr), i = 1,Num_TS) /)
-    End If!    Print*, 'Load vector: ', Params%Load
+       Params%Load = (/ (TS_Init + (i-1.0)*(TS_Final - TS_Init)  / (Num_TS - 1.0_Kr), i = 1,Num_TS) /)
+    End If
     Write(*, 100, advance = 'no')'Do_BackTrack [T/F]          '    
     Read(*,200) Params%Do_BackTrack
     If (Params%Do_BackTrack) Then
@@ -734,16 +586,43 @@ Contains
 	Write(*, 100, advance = 'no') 'MaxLength of Cracks : '
 	Read(*,*) Params%MaxCrackLength
     End If
-    Write(*,100) '===== Element block Properties ======'
+    Write(*,101) '===== Element block Properties ======'
     Allocate (Params%Is_Brittle(Geom%Num_Elem_Blks))
     Allocate (Params%Is_Domain(Geom%Num_Elem_Blks))
     Allocate (Params%Has_Force(Geom%Num_Elem_Blks))
     Allocate (Params%Toughness(Geom%Num_Elem_Blks))
-    Allocate (Params%Young_Mod(Geom%Num_Elem_Blks))
-    Allocate (Params%Poisson_Ratio(Geom%Num_Elem_Blks))
+    Allocate (Params%Hookes_Law(Geom%Num_Elem_Blks))
     Allocate (Params%Therm_Exp(Geom%Num_Elem_Blks))
-
-    Do iBlk = 1, Geom%Num_Elem_Blks
+ 
+    Num_Grains = 0
+    If (PB_Type == PB_KBMultiscale) Then
+       Write(*,500)
+       Write(*,100, advance = 'no') 'Number of grains:'
+       Read(*,*) Num_Grains
+       Write(*,100, advance = 'no') 'Toughness:                '
+       Read(*,*) Tmp_Toughness
+       Write(*,100, advance = 'no') 'Lambda'
+       Read(*,*) tmp_Lambda      
+       Write(*,100, advance = 'no') 'mu1'
+       Read(*,*) tmp_mu1      
+       Write(*,100, advance = 'no') 'mu2'
+       Read(*,*) tmp_mu2      
+       Write(*,100, advance = 'no') 'Thermal Expansion coef.   ' 
+       Read(*,*) Tmp_Therm_Exp
+       Call Random_Seed
+       Do iBlk = 1, Num_Grains
+          Params%Is_Brittle(iBlk) = .TRUE.
+          Params%Is_Domain(iBlk)  = .TRUE.
+          Params%Has_Force(iBlk)  = .FALSE.
+          Call Random_Number(tmp_theta)
+          tmp_theta = tmp_theta * pi
+          Call GenHL_Ortho2D_LambdaMu(Tmp_Lambda, Tmp_mu1, Tmp_mu2, Tmp_theta, Params%Hookes_Law(iBlk))
+          Params%Toughness(iBlk) = Tmp_Toughness
+          Params%Therm_Exp(iBlk) = Tmp_Therm_Exp
+          Write(*,600) iBlk, Tmp_Theta * 180.0_Kr / pi
+       End Do
+    End If
+    Do iBlk = Num_Grains + 1, Geom%Num_Elem_Blks
        Blk_ID = Geom%Elem_Blk(iBlk)%ID
        Write(*,300) Blk_ID
        Write(*,100, advance = 'no') 'Is_Brittle [T/F]          '
@@ -755,29 +634,18 @@ Contains
        If ( Params%Is_Brittle(iBLK) .AND. Params%Has_Force(iBlk)) Then
           Print*, 'WARNING: Element block has force and is Brittle'
        End If
-!       If ( Params%Has_Force(iBlk) ) Then
-!          Write(*,100, advance = 'no') 'Force X:                  '
-!          Read(*,*) Params%Force(iBlk)%X
-!          Write(*,100, advance = 'no') 'Force Y:                  '
-!          Read(*,*) Params%Force(iBlk)%Y
-!          Write(*,100, advance = 'no') 'Force Z:                  '
-!          Read(*,*) Params%Force(iBlk)%Z
-!       Else
-!          Params%Force(iBlk)%X = 0.0_Kr
-!          Params%Force(iBlk)%Y = 0.0_Kr
-!          Params%Force(iBlk)%Z = 0.0_Kr
-!       End If
        Write(*,100, advance = 'no') 'Toughness:                '
        Read(*,*) Params%Toughness(iBlk)
        Write(*,100, advance = 'no') 'Young''s modulus           '
-       Read(*,*) Params%Young_Mod(iBlk)
+       Read(*,*) Tmp_E
        Write(*,100, advance = 'no') 'Poisson ratio             ' 
-       Read(*,*) Params%Poisson_Ratio(iBlk)
+       Read(*,*) Tmp_nu
        Write(*,100, advance = 'no') 'Thermal Expansion coef.   ' 
        Read(*,*) Params%Therm_Exp(iBlk)
+       Call GenHL_Iso2D_EnuPlaneStress(Tmp_E, Tmp_nu, Params%Hookes_Law(iBlk))
     End Do
 
-    Write(*,100) '===== Node sets Properties ========='
+    Write(*,101) '===== Node sets Properties ========='
     Allocate (Params%BC_Type_X(Geom%Num_Node_Sets))
     Allocate (Params%BC_Type_Y(Geom%Num_Node_Sets))
     Allocate (Params%BC_Type_Z(Geom%Num_Node_Sets))
@@ -804,26 +672,27 @@ Contains
           Read(*,*) BC_NS(iSet)%Y
        End If
        
-!       If (Geom%Num_Dim == 3) Then
-          Write(*,100,advance = 'no') 'BC U type, Z direction (None=0 DIRI = 1) '
-          Read(*,*) Params%BC_Type_Z(iSet) 
-          If (Params%BC_Type_Z(iSet) == 1) Then
-             Write(*,100, advance = 'no') 'BC U, Z direction                    '
-             Read(*,*) BC_NS(iSet)%Z 
-          End If
-!       End If
+       Write(*,100,advance = 'no') 'BC U type, Z direction (None=0 DIRI = 1) '
+       Read(*,*) Params%BC_Type_Z(iSet) 
+       If (Params%BC_Type_Z(iSet) == 1) Then
+          Write(*,100, advance = 'no') 'BC U, Z direction                    '
+          Read(*,*) BC_NS(iSet)%Z 
+       End If
     End Do
     
 100 Format(A,T78,': ')
+101 Format(A)
 200 Format(L1)
 300 Format('=== Element Block             ', I3)
 400 Format('=== Node set                  ', I3)
-  End Subroutine Ask_Rupt_Params_Iso
-    
-  Subroutine Ask_Rupt_Params_Hooke2D(Geom, Params, BC_NS)
+500 Format('=== Grains')
+600 Format('Grain ', I3,' : theta = ', F6.2) 
+  End Subroutine Ask_Rupt_Params2D
+
+  Subroutine Ask_Rupt_Params3D(Geom, Params, BC_NS)
     Type (EXO_Geom_Info)                          :: Geom
-    Type (Rupt_Params_Hooke2D)                    :: Params
-    Type(Vect3D), Dimension(:), Pointer           :: BC_NS
+    Type (Rupt_Params3D)                          :: Params
+    Type (Vect3D), Dimension(:), Pointer          :: BC_NS
     
     Character                                     :: Char_Input
     Integer                                       :: Num_TS
@@ -831,7 +700,8 @@ Contains
     Real(Kind = Kr)                               :: Tmp_DistFactor
     Integer                                       :: i, iBlk, iSet
     Integer                                       :: Blk_ID, Set_ID
-    Real (Kind = Kr)                              :: lambda, mu1, mu2, theta
+
+    Real(Kind = Kr)                               :: Tmp_E, Tmp_nu
 
     !!! The following are decent values.
     Params%nbCracks           = 0
@@ -857,8 +727,7 @@ Contains
     Else
        Write(*, 100, advance = 'no') 'Final load:           '
        Read(*,*) TS_Final
-       Params%Load = (/ (TS_Init + (i-1.0)*(TS_Final - TS_Init)            &
-            & / (Num_TS - 1.0_Kr), i = 1,Num_TS) /)
+       Params%Load = (/ (TS_Init + (i-1.0)*(TS_Final - TS_Init)  / (Num_TS - 1.0_Kr), i = 1,Num_TS) /)
     End If
     Write(*, 100, advance = 'no')'Do_BackTrack [T/F]          '    
     Read(*,200) Params%Do_BackTrack
@@ -896,26 +765,13 @@ Contains
        End If
        Write(*,100, advance = 'no') 'Toughness:                '
        Read(*,*) Params%Toughness(iBlk)
-       Write(*,100, advance = 'no') 'lambda:                   '
-       Read(*,*) lambda
-       Write(*,100, advance = 'no') 'mu1:                      '
-       Read(*,*) mu1
-       Write(*,100, advance = 'no') 'mu2:                      '
-       Read(*,*) mu2
-       Write(*,100, advance = 'no') 'theta:                    '
-       Read(*,*) theta
+       Write(*,100, advance = 'no') 'Young''s modulus           '
+       Read(*,*) Tmp_E
+       Write(*,100, advance = 'no') 'Poisson ratio             ' 
+       Read(*,*) Tmp_nu
        Write(*,100, advance = 'no') 'Thermal Expansion coef.   ' 
        Read(*,*) Params%Therm_Exp(iBlk)
-       
-       theta = theta * Pi / 180.0_Kr
-       Params%Hookes_Law(iBlk)%XXXX = lambda + mu1 + mu2 + (mu1-mu2) * cos(theta)**2
-       Params%Hookes_Law(iBlk)%XXXY = (mu1-mu2) * cos(theta) * sin(theta)
-       Params%Hookes_Law(iBlk)%XXYY = lambda + (mu1-mu2) * sin(theta)**2
-
-       Params%Hookes_Law(iBlk)%XYXY = mu1 - (mu1-mu2) * cos(theta)**2
-       Params%Hookes_Law(iBlk)%XYYY = -(mu1-mu2) * cos(theta) * sin(theta)
-
-       Params%Hookes_Law(iBlk)%YYYY = lambda + mu1 + mu2 + (mu1-mu2) * cos(theta)**2
+       Call GenHL_Iso3D_Enu(Tmp_E, Tmp_nu, Params%Hookes_Law(iBlk))
     End Do
 
     Write(*,100) '===== Node sets Properties ========='
@@ -945,22 +801,17 @@ Contains
           Read(*,*) BC_NS(iSet)%Y
        End If
        
-!       If (Geom%Num_Dim == 3) Then
-          Write(*,100,advance = 'no') 'BC U type, Z direction (None=0 DIRI = 1) '
-          Read(*,*) Params%BC_Type_Z(iSet) 
-          If (Params%BC_Type_Z(iSet) == 1) Then
-             Write(*,100, advance = 'no') 'BC U, Z direction                    '
-             Read(*,*) BC_NS(iSet)%Z 
-          End If
-!       End If
+       Write(*,100,advance = 'no') 'BC U type, Z direction (None=0 DIRI = 1) '
+       Read(*,*) Params%BC_Type_Z(iSet) 
+       If (Params%BC_Type_Z(iSet) == 1) Then
+          Write(*,100, advance = 'no') 'BC U, Z direction                    '
+          Read(*,*) BC_NS(iSet)%Z 
+       End If
     End Do
     
-100 Format(A)
+100 Format(A,T78,': ')
 200 Format(L1)
 300 Format('=== Element Block             ', I3)
 400 Format('=== Node set                  ', I3)
-
-
-  End Subroutine Ask_Rupt_Params_Hooke2D
-
+  End Subroutine Ask_Rupt_Params3D
 End Program Prep_Rupt
