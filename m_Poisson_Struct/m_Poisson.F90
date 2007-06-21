@@ -52,7 +52,7 @@ Module m_Poisson_Struct
      
      ! NODE SETS PROPERTIES
      Integer, Dimension(:), Pointer               :: BC_Type
-     Type(Nd_DB), Dimension(:), Pointer         :: BC_DB
+     Type(Nd_DB), Dimension(:), Pointer           :: BC_DB
 
      ! GLOBAL PARAMETERS (STORED AS RESULTS)
      Real(Kind = Kr), Dimension(:), Pointer       :: Load
