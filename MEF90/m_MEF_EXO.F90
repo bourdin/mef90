@@ -198,22 +198,21 @@ Contains
                & Geom%Node_Set(iSet)%Node_ID(:), iErr)
        End Do
     End If
-    
+
     ! Writes QA Records
-    Geom%Num_QA = Geom%Num_QA+1
-    Allocate (Tmp_QA(4, Geom%Num_QA))
-    Tmp_QA(:,1:Geom%Num_QA-1) = Geom%QA_rec
-    DeAllocate (Geom%QA_Rec)
-    Allocate (Geom%QA_Rec(4, Geom%Num_QA))
-    Geom%QA_rec = Tmp_QA
-    DeAllocate (Tmp_QA)
-    
-    Geom%QA_Rec(1,Geom%Num_QA) = 'm_MEF_EXO'
-    Geom%QA_Rec(2,Geom%Num_QA) = 'MEF90-0.9.1'
-    Call Date_And_Time(date = Geom%QA_Rec(3,Geom%Num_QA))
-    Call Date_And_Time(time = Geom%QA_Rec(4,Geom%Num_QA))
-    Call EXPQA(Geom%exoid, Geom%num_QA, Geom%QA_Rec, iErr)
-    
+!    Geom%Num_QA = Geom%Num_QA+1
+!    Allocate (Tmp_QA(4, Geom%Num_QA))
+!    Tmp_QA(:,1:Geom%Num_QA-1) = Geom%QA_rec
+!    DeAllocate (Geom%QA_Rec)
+!    Allocate (Geom%QA_Rec(4, Geom%Num_QA))
+!    Geom%QA_rec = Tmp_QA
+!    DeAllocate (Tmp_QA)
+!    
+!    Geom%QA_Rec(1,Geom%Num_QA) = 'm_MEF_EXO'
+!    Geom%QA_Rec(2,Geom%Num_QA) = 'MEF90'
+!    Call Date_And_Time(date = Geom%QA_Rec(3,Geom%Num_QA))
+!    Call Date_And_Time(time = Geom%QA_Rec(4,Geom%Num_QA))
+!    Call EXPQA(Geom%exoid, Geom%num_QA, Geom%QA_Rec, iErr)
     
     Call EXCLOS(Geom%exoid, iErr)
     Geom%exoid = 0

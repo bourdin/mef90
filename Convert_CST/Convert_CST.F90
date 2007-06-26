@@ -17,10 +17,6 @@ Program Convert_CST
    CST_OUT3D = Trim(CST_IN) // '.CST3D'
    CST_IN    = Trim(CST_IN)//'.CST'
    
-   Print*, 'CST_IN', CST_IN
-   Print*, 'CST_OUT2D', CST_OUT2D
-   Print*, 'CST_OUT3D', CST_OUT3D
-
    Open(File = CST_IN, Unit = 90, Status = 'Old')
    Rewind(90)
    Open(File = CST_OUT2D, Unit = 91, Status = 'Unknown')
