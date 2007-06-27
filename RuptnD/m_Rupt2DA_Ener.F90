@@ -73,9 +73,6 @@ Contains
     Vec                                          :: TempLoc
     Real(Kind = Kr), Intent(OUT)                 :: Ener
 
-!    Real(Kind = Kr)                              :: E, Nu
-!    Real(Kind = Kr)                              :: K1, K2
-
     Real(Kind = Kr)                              :: MyEner
     Integer                                      :: Nb_Gauss, Nb_DoF
     Integer                                      :: iSL, iSG
@@ -112,9 +109,6 @@ Contains
     MyEner = 0.0_Kr
     Ener = 0.0_Kr
     Do_iBlk: Do iBlk = 1, Geom%Num_elem_blks
-#ifdef PB_2DA
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#endif
 
        Do_iE: Do iELoc = 1, Geom%Elem_Blk(iBlk)%Num_Elems
           iE = Geom%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -148,7 +142,7 @@ Contains
              Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF
                 iSG = Elems_U(iE)%ID_DoF(iSL)
                 Epsilon = Epsilon + Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
-                Sigma   = Sigma + K2 * Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
+                Sigma   = Sigma + Params%Hookes_Law(iBlk)%XYXY * Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
              End Do Do_iSL1
 #else
              Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF

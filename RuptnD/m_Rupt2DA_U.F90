@@ -90,7 +90,6 @@ Contains
 
 #ifdef PB_2DA
        Nb_DoF_U = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
-       K2 = E / (1.0_Kr + nu) * InvOf2
 #else
        Nb_DoF_U = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
 #endif
@@ -131,7 +130,7 @@ Contains
 #ifdef PB_2DA
              Do_iSL1: Do iSL1 = 1, Elems_U(iE)%Nb_DoF
                 iSG1 = Elems_U(iE)%ID_DoF(iSL1)
-                Sigma = Sigma + 2.0_Kr * K2 * Elems_U(iE)%Grad_BF(iSL1,iG)
+                Sigma = Sigma + 2.0_Kr * Params%Hookes_Law(iBlk)%XYXY * Elems_U(iE)%Grad_BF(iSL1,iG)
                 Do_iSL2: Do iSL2 = 1, Elems_U(iE)%Nb_DoF
                    iSG2 = Elems_U(iE)%ID_DoF(iSL2)
                    Epsilon = Elems_U(iE)%Grad_BF(iSL2,iG)
@@ -330,7 +329,7 @@ Contains
              End Do Do_iSL1
              Do_iSL3: Do iSL = 1, Elems_U(iE)%Nb_DoF
                 RHS_Elem(iSL) = RHS_Elem(iSL) + Elems_U(iE)%Gauss_C(iG) *                                                         &
-                                ( (F * Elems_U(iE)%BF(iSL, iG)) + ContrV * K2 * (Epsilon .DotP. Elems_U(iE)%Grad_BF(iSL, iG)) )
+                                ( (F * Elems_U(iE)%BF(iSL, iG)) + ContrV * Params%Hookes_Law(iBlk)%XYXY * (Epsilon .DotP. Elems_U(iE)%Grad_BF(iSL, iG)) )
              End Do Do_iSL3
 
 #else
