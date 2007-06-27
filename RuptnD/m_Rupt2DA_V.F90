@@ -325,11 +325,6 @@ Contains
        Gc = Params%Toughness(iBlk)
 
 #ifdef PB_2DA
-       K2 = E / (1.0_Kr + nu) * InvOf2
-#endif
-
-
-#ifdef PB_2DA
        Nb_DoF_U = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem
 #else
        Nb_DoF_U = Geom%Elem_blk(iBlk)%Num_Nodes_per_elem * Geom%Num_Dim
@@ -361,7 +356,7 @@ Contains
                 Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF
                    iSG = Elems_U(iE)%ID_DoF(iSL)
                    Epsilon = Epsilon + Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
-                   Sigma   = Sigma + K2 * Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
+                   Sigma   = Sigma + Params%Hookes_Law(iBlk)%XYXY * Elems_U(iE)%Grad_BF(iSL,iG) * UPtr(Loc_Indices_U(iSG)+1)                
                 End Do Do_iSL1
 #else
                 Do_iSL1: Do iSL = 1, Elems_U(iE)%Nb_DoF

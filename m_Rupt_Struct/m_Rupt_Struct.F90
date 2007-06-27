@@ -948,7 +948,7 @@ Contains
 101 Format(L1)
 102 Format(ES12.5)
 103 Format(I6,' ',ES12.5)
-!110 Format(I6)
+110 Format(I6)
   End Subroutine Read_Rupt_DATA2D
   
   Subroutine Read_Rupt_DATA3D(Geom, Params)
@@ -1016,7 +1016,7 @@ Contains
 101 Format(L1)
 102 Format(ES12.5)
 103 Format(I6,' ',ES12.5)
-!110 Format(I6)
+110 Format(I6)
   End Subroutine Read_Rupt_DATA3D
   
    Subroutine GenHL_Iso2D_LambdaMu(lambda, mu, A) 
