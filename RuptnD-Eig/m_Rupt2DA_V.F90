@@ -8,6 +8,14 @@ Module m_Rupt2DA_V
   Use m_MEF90
   Use m_Rupt_Struct
 
+#if defined PB_2D
+  Use m_Rupt2D_Vars
+#elif defined PB_3D
+  Use m_Rupt3D_Vars
+#else
+  Use m_Rupt2DA_Vars
+#endif
+
   Implicit NONE
   PRIVATE
 
@@ -21,6 +29,7 @@ Module m_Rupt2DA_V
 #include "include/finclude/petscpc.h"
 #include "include/finclude/petscis.h"
 #include "include/finclude/petscsys.h"
+#include "include/finclude/petscviewer.h"
 
   Public :: Assemb_MR_V
   Public :: Assemb_RHS_V
@@ -28,7 +37,7 @@ Module m_Rupt2DA_V
   Public :: Init_V_Cracks
   Public :: Init_V_Spheres
   
-  Integer    :: iErr
+!  Integer    :: iErr
 
 
 Contains
@@ -422,6 +431,7 @@ Contains
 
     Call MatAssemblyBegin(MR, MAT_FINAL_ASSEMBLY, iErr)
     Call MatAssemblyEnd(MR, MAT_FINAL_ASSEMBLY, iErr)  
+
   End Subroutine Assemb_MR_V
 
   Subroutine Assemb_RHS_V(RHS, Geom, Params, SD, Elems_Scal, Nodes_Scal)

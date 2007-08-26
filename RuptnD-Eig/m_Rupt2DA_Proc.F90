@@ -36,6 +36,10 @@ Module m_Rupt2DA_Proc
 #include "include/finclude/petscpc.h"
 #include "include/finclude/petscis.h"
 #include "include/finclude/petscsys.h"
+#include "include/finclude/petscviewer.h"
+#include "include/finclude/slepc.h"
+#include "include/finclude/slepcst.h"
+#include "include/finclude/slepceps.h"
 
   Public :: Init
   Public :: Export
@@ -61,7 +65,7 @@ Contains
     
     Call MEF90_Initialize()
     MEF90_GaussOrder = 2 
-    
+    call SlepcInitialize(PETSC_NULL_CHARACTER,ierr)
     
     Call PetscLogStageRegister(LogStage_Init,     "Init", iErr)
     Call PetscLogStageRegister(LogStage_IO,       "I/O operations", iErr)
@@ -289,6 +293,9 @@ Contains
     Call Init_Ksps()
     
     Call Random_Seed
+
+    Open (File = 'CG_U.txt', Status = 'Unknown', Unit = 77)
+    Open (File = 'CG_V.txt', Status = 'Unknown', Unit = 78)
     
     Call PetscLogStagePop(iErr)
 100 Format(A)
@@ -396,6 +403,8 @@ Contains
     KSP                                  :: Sub_KSP_U
     PC                                   :: Sub_PC_U
     PCType                               :: PC_U_Type
+
+    Integer                              :: nev, ncv
     
     Call KSPCreate(PETSC_COMM_WORLD, KSP_U, iErr)
     Call KSPSetOperators(KSP_U, MR_U, MR_U, SAME_NONZERO_PATTERN, iErr)
@@ -430,6 +439,27 @@ Contains
            & PETSC_DEFAULT_DOUBLE_PRECISION, KSP_V_DivTol, KSP_V_MaxIter,     &
            & iErr)
     Call KSPSetFromOptions(KSP_V, iErr)
+
+    Call EPSCreate(PETSC_COMM_WORLD, EPS_U, iErr)
+    Call EPSSetOperators(EPS_U, MR_U, PETSC_NULL, iErr)
+    Call EPSSetProblemType(EPS_U, EPS_HEP, iErr)
+
+    Call EPSSetWhichEigenpairs(EPS_U, EPS_SMALLEST_MAGNITUDE, iErr)
+#ifdef PB_2DA
+    Call EPSSetDimensions(EPS_U, 1, 3 * Geom%Num_Nodes, iErr)
+#else
+    Call EPSSetDimensions(EPS_U, 1, 3 * Geom%Num_Nodes * Geom%Num_Dim, iErr)
+#endif
+    Call EPSSetFromOptions(EPS_U, iErr)
+
+    Call EPSCreate(PETSC_COMM_WORLD, EPS_V, iErr)
+    Call EPSSetOperators(EPS_V, MR_V, PETSC_NULL, iErr)
+    Call EPSSetProblemType(EPS_V, EPS_HEP, iErr)
+
+    Call EPSSetWhichEigenpairs(EPS_V, EPS_SMALLEST_MAGNITUDE, iErr)
+    Call EPSSetDimensions(EPS_V, 1, 3 * Geom%Num_Nodes, iErr)
+    Call EPSSetFromOptions(EPS_V, iErr)
+
   End Subroutine Init_KSPs
 
   Subroutine Update_BC_U(TimeStep)
@@ -522,7 +552,41 @@ Contains
   
   
   Subroutine Solve_U()
+    Integer :: i
     Call PetscLogStagePush(LogStage_Assembly, iErr);
+    Call Assemb_MR_U0(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V,               &
+         & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
+
+    !!! SAVE THE MATRIX IN MATLAB FORMAT    
+    If (MEF90_MyRank == 0 ) Then
+       Write(Log_Unit, *) '    Saving ' // MatViewer_FileName
+    EndIf
+    Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, MatViewer_FileName, MatViewer_U, iErr)
+    Call PetscViewerSetFormat(MatViewer_U, PETSC_VIEWER_ASCII_MATLAB, iErr)
+    Call MatView(MR_U, MatViewer_U, iErr)
+    Call PetscViewerFlush(MatViewer_U, iErr)
+    Call PetscViewerDestroy(MatViewer_U, iErr)
+ 
+    !!! Compute The eigenvalues
+    If (MEF90_MyRank == 0 ) Then
+       Write(Log_Unit, 501) 
+    EndIf
+    Call PetscGetTime(SolveTS, iErr)
+    Call EPSSolve(EPS_U, iErr) 
+    Call PetscGetTime(SolveTF, iErr)
+    Call EPSGetConverged(EPS_U, NbEV_U, iErr)
+
+    If (MEF90_MyRank == 0 ) Then
+       Write(Log_Unit, 502) NbEV_U, SolveTF - SolveTS 
+       Open(File = EVU_FileName, Status = 'Unknown', Unit = 64)
+       Rewind(64)
+       Do i = 1, NbEV_U
+          Call EPSGetValue(EPS_U, i-1, EigR, EigI, iErr)
+          Write(64,*) EigR
+       End Do
+       Close(64)
+    EndIf
+
     Call Assemb_MR_U(MR_U, V_Loc, Geom, Params, MySD_U, MySD_V,               &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
     
@@ -545,22 +609,53 @@ Contains
                & KSP_TestCVG
        End If
        Write(Log_Unit, 500) NbIterKSP, SolveTF - SolveTS, KSP_TestCVG
+       Write(77,*)  TimeStep, iIter, NbIterKSP, SolveTF - SolveTS
     End If
 
     Call VecGhostUpdateBegin(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
     Call VecGhostUpdateEnd(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 500 Format('     Solve_U: ', I5, ' iterations in ', F7.2, 's. Return value',  &
          & I2)
+501 Format('     Solving eigenvalue problem for U')
+502 Format('     Computed ', I5,' eigenvalues in ', F7.2, 's')
   End Subroutine Solve_U
   
   Subroutine Solve_V()
-    Integer                                               :: VMinPos, VMaxPos
+    Integer                                               :: VMinPos, VMaxPos, i
 
     Call PetscLogStagePush(LogStage_Assembly, iErr);
     Call Assemb_MR_V(MR_V, U_Loc, Temp_Loc, Geom, Params, MySD_U, MySD_V,     &
          & Elem_db_U, Elem_db_V, Node_db_U, Node_db_V )
     Call PetscLogStagePop(iErr);
     
+   !!! SAVE THE MATRIX IN MATLAB FORMAT    
+!!$    If (MEF90_MyRank == 0 ) Then
+!!$       Write(Log_Unit, *) '    Saving ' // MatViewer_FileName
+!!$    EndIf
+!!$    Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, MatViewer_FileName, MatViewer_V, iErr)
+!!$    Call PetscViewerSetFormat(MatViewer_V, PETSC_VIEWER_ASCII_MATLAB, iErr)
+!!$    Call MatView(MR_V, MatViewer_V, iErr)
+!!$    Call PetscViewerFlush(MatViewer_V, iErr)
+!!$    Call PetscViewerDestroy(MatViewer_V, iErr)
+ 
+    !!! Compute The eigenvalues
+!!$    If (MEF90_MyRank == 0 ) Then
+!!$       Write(Log_Unit, 501) 
+!!$    EndIf
+!!$    Call EPSSolve(EPS_V, iErr) 
+!!$    Call EPSGetConverged(EPS_V, NbEV_V, iErr)
+!!$
+!!$    If (MEF90_MyRank == 0 ) Then
+!!$       Write(Log_Unit, 502) NbEV_V, EVV_FileName 
+!!$       Open(File = EVV_FileName, Status = 'Unknown', Unit = 64)
+!!$       Rewind(64)
+!!$       Do i = 1, NbEV_V
+!!$          Call EPSGetValue(EPS_V, i-1, EigR, EigI, iErr)
+!!$          Write(64,*) EigR
+!!$       End Do
+!!$       Close(64)
+!!$    EndIf
+
     Call PetscGetTime(SolveTS, iErr)
     Call PetscLogStagePush(LogStage_Solve, iErr);
 
@@ -583,6 +678,7 @@ Contains
                & KSP_TestCVG
        End If
        Write(Log_Unit, 600) NbIterKSP, SolveTF - SolveTS, KSP_TestCVG
+       Write(78,*)  TimeStep, iIter, NbIterKSP, SolveTF - SolveTS
        Write(Log_Unit, 700) VMin, VMax
        Write(Log_Unit, 800) ErrV
     End If
@@ -590,6 +686,8 @@ Contains
     Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
     Call VecGhostUpdateEnd(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
 
+501 Format('     Solving eigenvalue problem for V')
+502 Format('     Saving ', I5,' eigenvalues in ',A)
 600 Format('     Solve_V: ', I5, ' iterations in ', F7.2, 's. Return value',  &
          & I2)
 700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '))

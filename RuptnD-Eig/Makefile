@@ -15,7 +15,8 @@ EXO_LFLAGS = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf -lmetis -lpar
 
 all: ${PROJ}${DIM}
 
-include ${PETSC_DIR}/bmake/common/base
+#include ${PETSC_DIR}/bmake/common/base
+include ${SLEPC_DIR}/bmake/slepc_common
 
 OBJS=    ${PROJ}${DIM}.o m_Rupt${DIM}_Vars.o m_Rupt${DIM}_Proc.o            \
          m_Rupt${DIM}_U.o m_Rupt${DIM}_V.o m_Rupt${DIM}_Ener.o 
@@ -23,7 +24,7 @@ OBJS=    ${PROJ}${DIM}.o m_Rupt${DIM}_Vars.o m_Rupt${DIM}_Proc.o            \
 FFLAGS = -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS} -DPB_${DIM} 
 
 ${PROJ}${DIM}: ${PROJ}${DIM}.o
-	-${FLINKER} -o ${PROJ}${DIM} ${OBJS} ${MEF90OBJS} ${M_RUPT_STRUCT_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
+	-${FLINKER} -o ${PROJ}${DIM} ${OBJS} ${MEF90OBJS} ${M_RUPT_STRUCT_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SLEPC_LIB} ${EXO_LFLAGS}
 
 ${PROJ}:
         -@ echo use 'make DIM=2D' or 'make DIM=3D' or 'make DIM=2DA'
