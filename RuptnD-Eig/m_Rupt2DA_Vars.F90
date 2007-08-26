@@ -22,6 +22,10 @@ Module m_Rupt2DA_Vars
 #include "include/finclude/petscpc.h"
 #include "include/finclude/petscis.h"
 #include "include/finclude/petscsys.h"
+#include "include/finclude/petscviewer.h"
+#include "include/finclude/slepc.h"
+#include "include/finclude/slepcst.h"
+#include "include/finclude/slepceps.h"
 
 
   Integer, Public                                       :: SaveInt = 25
@@ -109,6 +113,20 @@ Module m_Rupt2DA_Vars
   Integer, Public                                       :: LogStage_Assembly
   Integer, Public                                       :: LogStage_Solve
   
+  Integer, Public                                       :: MatViewer_U, MatViewer_V
+  Character(len=128), Public                            :: MatViewer_FileName
+
+!!! EigenValue Solvers stuff
+  EPS, Public                                           :: EPS_U, EPS_V
+  EPSType, Public                                       :: EPSType_U, EPSType_V
+!  STType, Public                                        :: ST_Type = STSINV
+  ST, Public                                            :: ST_U, ST_V
+  Integer, Public                                       :: Iter_EPS
+  PetscScalar, Public                                   :: ST_Shift = 0.0_Kr
+  Integer, Public                                       :: NbEV_U, NbEV_V
+  PetscScalar, Public                                   :: EigR, EigI
+
+  Character(len = 128), Public                          :: EVU_FileName, EVV_FileName
 #if defined PB_2D
 End Module m_Rupt2D_Vars
 #elif defined PB_3D

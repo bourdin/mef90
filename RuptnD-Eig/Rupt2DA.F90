@@ -113,7 +113,11 @@ Program Rupt2DA
            Write(Log_Unit, 410) TimeStep, iIter
         End If
 
+        Write(MatViewer_FileName, 800) TimeStep, iIter
+        Write(EVU_FileName, 802) TimeStep, iIter
         Call Solve_U()
+        Write(MatViewer_FileName, 801) TimeStep, iIter
+        Write(EVV_FileName, 803) TimeStep, iIter
         Call Solve_V()
 
 !!$!!! Caltech 2006-04 save all intermediate steps       
@@ -236,6 +240,10 @@ Program Rupt2DA
 
 400 Format('**** Time step: ', I5, ' Load = ', ES12.5)
 410 Format('==== Iteration: ', I5, ' /', I5)
+800 Format('U_', I4.4, '_', I4.4, '.m')
+801 Format('V_', I4.4, '_', I4.4, '.m')
+802 Format('EVU_', I4.4, '_', I4.4, '.txt')
+803 Format('EVV_', I4.4, '_', I4.4, '.txt')
 901 Format('     Surface:      ', T24, ES12.5)
 902 Format('     Bulk:         ', T24, ES12.5)
 910 Format('     Energies:     ', T24, 2(ES10.3, ' '), 'Total: ', ES10.3)
