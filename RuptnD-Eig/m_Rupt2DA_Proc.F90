@@ -255,10 +255,8 @@ Contains
        EndIf
        
 !!! V_Master -> V_Dist
-       Call VecScatterBegin(V_Master, V_Dist, INSERT_VALUES,                &
-            & SCATTER_REVERSE, MySD_V%ToMaster, iErr)
-       Call VecScatterEnd(V_Master, V_Dist, INSERT_VALUES, SCATTER_REVERSE, &
-            & MySD_V%ToMaster, iErr)
+       Call VecScatterBegin(MySD_V%ToMaster, V_Master, V_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
+       Call VecScatterEnd  (MySD_V%ToMaster, V_Master, V_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
        
 !!! V_Dist -> V_Loc
        Call VecGhostUpdateBegin(V_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -280,10 +278,8 @@ Contains
        EndIf
        
 !!! U_Master -> U_Dist
-       Call VecScatterBegin(U_Master, U_Dist, INSERT_VALUES,                &
-            & SCATTER_REVERSE, MySD_U%ToMaster, iErr)
-       Call VecScatterEnd(U_Master, U_Dist, INSERT_VALUES, SCATTER_REVERSE, &
-            & MySD_U%ToMaster, iErr)
+       Call VecScatterBegin(MySD_U%ToMaster, U_Master, U_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
+       Call VecScatterEnd  (MySD_U%ToMaster, U_Master, U_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
        
 !!! U_Dist -> U_Loc
        Call VecGhostUpdateBegin(U_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -481,10 +477,8 @@ Contains
     EndIf
     
 !!! BC_Master -> BC_Dist
-    Call VecScatterBegin(BCU_Master, BCU_Dist, INSERT_VALUES,                 &
-         & SCATTER_REVERSE, MySD_U%ToMaster, iErr)
-    Call VecScatterEnd(BCU_Master, BCU_Dist, INSERT_VALUES, SCATTER_REVERSE,  &
-         & MySD_U%ToMaster, iErr)
+    Call VecScatterBegin(MySD_U%ToMaster, BCU_Master, BCU_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
+    Call VecScatterEnd  (MySD_U%ToMaster, BCU_Master, BCU_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
     
 !!! BC_Dist -> BC_Loc
     Call VecGhostUpdateBegin(BCU_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -512,10 +506,8 @@ Contains
     EndIf
     
 !!! F_Master -> F_Dist
-    Call VecScatterBegin(F_Master, F_Dist, INSERT_VALUES,                     &
-         & SCATTER_REVERSE, MySD_U%ToMaster, iErr)
-    Call VecScatterEnd(F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE,      &
-         & MySD_U%ToMaster, iErr)
+    Call VecScatterBegin(MySD_U%ToMaster, F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
+    Call VecScatterEnd  (MySD_U%ToMaster, F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
     
 !!! F_Dist -> F_Loc
     Call VecGhostUpdateBegin(F_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -539,10 +531,8 @@ Contains
     EndIf
     
 !!! Temp_Master -> Temp_Dist
-    Call VecScatterBegin(Temp_Master, Temp_Dist, INSERT_VALUES,               &
-         & SCATTER_REVERSE, MySD_V%ToMaster, iErr)
-    Call VecScatterEnd(Temp_Master, Temp_Dist, INSERT_VALUES,                 &
-         & SCATTER_REVERSE, MySD_V%ToMaster, iErr)
+    Call VecScatterBegin(MySD_V%ToMaster, Temp_Master, Temp_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
+    Call VecScatterEnd  (MySD_V%ToMaster, Temp_Master, Temp_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
 
 !!! Temp_Dist -> Temp_Loc
     Call VecGhostUpdateBegin(Temp_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
@@ -703,10 +693,8 @@ Contains
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
     
     Call PetscLogStagePush(LogStage_IO, iErr);
-    Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_U%ToMaster, iErr)
-    Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_U%ToMaster, iErr)
+    Call VecScatterBegin(MySD_U%ToMaster, U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    Call VecScatterEnd  (MySD_U%ToMaster, U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(U_Master, Sol_Ptr, iErr)
@@ -717,10 +705,8 @@ Contains
 #endif
        Call VecRestoreArrayF90(U_Master, SOL_Ptr, iErr)
     End If
-    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_V%ToMaster, iErr)
-    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_V%ToMaster, iErr)
+    Call VecScatterBegin(MySD_V%ToMaster, V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    Call VecScatterEnd  (MySD_V%ToMaster, V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(V_Master, Sol_Ptr, iErr)
@@ -741,10 +727,8 @@ Contains
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
     
     Call PetscLogStagePush(LogStage_IO, iErr);
-    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_V%ToMaster, iErr)
-    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_V%ToMaster, iErr)
+    Call VecScatterBegin(MySD_V%ToMaster, V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    Call VecScatterEnd  (MySD_V%ToMaster, V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(V_Master, Sol_Ptr, iErr)
@@ -762,10 +746,8 @@ Contains
 
     
     Call PetscLogStagePush(LogStage_IO, iErr);
-    Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_U%ToMaster, iErr)
-    Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_U%ToMaster, iErr)
+    Call VecScatterBegin(MySD_U%ToMaster, U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    Call VecScatterEnd  (MySD_U%ToMaster, U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(U_Master, Sol_Ptr, iErr)
@@ -776,10 +758,8 @@ Contains
 #endif
        Call VecRestoreArrayF90(U_Master, SOL_Ptr, iErr)
     End If
-    Call VecScatterBegin(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD_V%ToMaster, iErr)
-    Call VecScatterEnd(V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD_V%ToMaster, iErr)
+    Call VecScatterBegin(MySD_V%ToMaster, V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    Call VecScatterEnd  (MySD_V%ToMaster, V_Dist, V_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(V_Master, Sol_Ptr, iErr)
