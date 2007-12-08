@@ -130,10 +130,8 @@ Contains
   Subroutine Export()
     Real(Kind = Kr), Dimension(:), Pointer        :: SOL_Ptr
     
-    Call VecScatterBegin(SOL_Dist, SOL_Master, INSERT_VALUES, SCATTER_FORWARD,&
-         & MySD%ToMaster, iErr)
-    Call VecScatterEnd(SOL_Dist, SOL_Master, INSERT_VALUES, SCATTER_FORWARD,  &
-         & MySD%ToMaster, iErr)
+    Call VecScatterBegin(MySD%ToMaster, SOL_Dist, SOL_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    Call VecScatterEnd  (MySD%ToMaster, SOL_Dist, SOL_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(SOL_Master, Sol_Ptr, iErr)

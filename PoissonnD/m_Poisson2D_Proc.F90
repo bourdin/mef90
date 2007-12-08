@@ -122,10 +122,8 @@ Contains
        !!! That would be much smarter
     End If
    !!! Update sthe ghost values of the load
-    Call VecScatterBegin(Load_Master, Load_Dist, INSERT_VALUES,                &
-         & SCATTER_REVERSE, MySD%ToMaster, iErr)
-    Call VecScatterEnd(Load_Master, Load_Dist, INSERT_VALUES, SCATTER_REVERSE,&
-         & MySD%ToMaster, iErr)
+    Call VecScatterBegin(MySD%ToMaster, Load_Master, Load_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
+    Call VecScatterEnd  (MySD%ToMaster, Load_Master, Load_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
 
     !!! Use the load as the initial value for U
     Call VecCopy(Load_Dist, U_Dist, iErr)
@@ -203,10 +201,8 @@ Contains
     !!! There is space for more variables in this file.
 
     !!! Usual stuff: U_Dist -> U_Master -> file
-    Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD%ToMaster, iErr)
-    Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD%ToMaster, iErr)
+    Call VecScatterBegin(MySD%ToMaster, U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    Call VecScatterEnd  (MySD%ToMaster, U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(U_Master, U_Ptr, iErr)
@@ -235,10 +231,8 @@ Contains
 #endif
     EndIf
     !!! Usual stuff: U_Dist -> U_Master -> file
-    Call VecScatterBegin(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,    &
-         & MySD%ToMaster, iErr)
-    Call VecScatterEnd(U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD,      &
-         & MySD%ToMaster, iErr)
+    Call VecScatterBegin(MySD%ToMaster, U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
+    Call VecScatterEnd  (MySD%ToMaster, U_Dist, U_Master, INSERT_VALUES, SCATTER_FORWARD, iErr)
     
     If (MEF90_MyRank == 0) Then
        Call VecGetArrayF90(U_Master, U_Ptr, iErr)

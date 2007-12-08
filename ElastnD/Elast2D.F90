@@ -75,14 +75,14 @@ Program Elast
      EndIf
 
      !!! XXX_Master -> XXX_Dist
-     Call VecScatterBegin(BC_Master, BC_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_Vect%ToMaster, iErr)
-     Call VecScatterEnd(BC_Master, BC_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_Vect%ToMaster, iErr)
+     Call VecScatterBegin(MySD_Vect%ToMaster, BC_Master, BC_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
+     Call VecScatterEnd  (MySD_Vect%ToMaster, BC_Master, BC_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
 
-     Call VecScatterBegin(F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_Vect%ToMaster, iErr)
-     Call VecScatterEnd(F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_Vect%ToMaster, iErr)
+     Call VecScatterBegin(MySD_Vect%ToMaster, F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
+     Call VecScatterEnd  (MySD_Vect%ToMaster, F_Master, F_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
 
-     Call VecScatterBegin(Temp_Master, Temp_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_Scal%ToMaster, iErr)
-     Call VecScatterEnd(Temp_Master, Temp_Dist, INSERT_VALUES, SCATTER_REVERSE, MySD_Scal%ToMaster, iErr)
+     Call VecScatterBegin(MySD_Scal%ToMaster, Temp_Master, Temp_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
+     Call VecScatterEnd  (MySD_Scal%ToMaster, Temp_Master, Temp_Dist, INSERT_VALUES, SCATTER_REVERSE, iErr)
 
      !!! XXX_Dist -> XXX_Loc
      Call VecGhostUpdateBegin(BC_Dist, INSERT_VALUES, SCATTER_FORWARD, iErr)
