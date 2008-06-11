@@ -10,7 +10,7 @@ MEF90OBJS = $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o  \
 EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
 
 all: ${PROJ}.o
-include ${PETSC_DIR}/bmake/common/base
+include ${PETSC_DIR}/conf/base
 
 OBJS=    $(PROJ).o
 

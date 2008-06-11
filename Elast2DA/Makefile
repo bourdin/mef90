@@ -14,7 +14,7 @@ EXO_LFLAGS = -L$(HPCDIST_DIR)/lib -lexoIIv2for -lexoIIv2c -lnetcdf -lmetis -lpar
 
 all: ${PROJ}
 
-include ${PETSC_DIR}/bmake/common/base
+include ${PETSC_DIR}/conf/base
 
 OBJS = ${PROJ}.o m_Elast2DA_Vars.o m_Elast2DA_Proc.o 
 

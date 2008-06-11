@@ -8,9 +8,10 @@ Module m_MEF_Types
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
 
-   Public :: Node1D, Node2D, Node3D
-   Public :: Elem_Blk_Info, Node_Set_Info, EXO_Geom_Info
+!   Public :: Node1D, Node2D, Node3D
+   Public :: Elem_Blk_Info, Node_Set_Info, Geom_Info
    Public :: Layout_Info
+   Public :: Element_Info
    
 #include "include/finclude/petsc.h"
 #include "include/finclude/petscsys.h"
@@ -33,74 +34,106 @@ Module m_MEF_Types
    !                             BF(i,j) = i^th BF at the  j^th integration point
    ! DER_BF / rad_BF / GradS_BF Derivative / gradient / symmetrized gradient of the BF
 
+
+!!! mef90-sieve:
+!!! Do I still need to sequence my data structures?
+
+!!! REMOVE
+!!! Type Node{1,2,3}D 
+!!! Layout_Info ???
+
+!!! MODIFY      
+!!! Type element:
+!!!      Remove NB_DoF, NB_Gauss, ID_EL and add an element type to blocks
+!!!      Add parent block information?
+!!!      Can we possibly need to have elements owned by more than one block? I am assuming that we don't
+!!! 
+!!! Elem_Blk_Info
+!!!      Remove Type, replace with Element_Info
+
+!!! ADD
+!!! Type Element_Info
+!!!
+!!! Various element names
+
+!!! RENAME
+!!! EXO_Geom_Info is now Geom_Info
+
    Type Element1D
-      Integer                                    :: NB_DoF
-      Integer                                    :: NB_Gauss     
-      Integer                                    :: ID_EL
+!      Integer                                    :: NB_DoF
+!      Integer                                    :: NB_Gauss     
+!      Integer                                    :: ID_EL
       Integer, Dimension(:), pointer             :: ID_DoF
       Real(Kind = Kr), Dimension(:,:), pointer   :: BF
       Real(Kind = Kr), Dimension(:,:), pointer   :: Der_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
+      Integer                                    :: Parent_Block
    End Type Element1D
  
    Type Element2D_Scal
-      Integer                                    :: NB_DoF       
-      Integer                                    :: NB_Gauss     
-      Integer                                    :: ID_EL
+!      Integer                                    :: NB_DoF       
+!      Integer                                    :: NB_Gauss     
+!      Integer                                    :: ID_EL
       Integer, Dimension(:), Pointer             :: ID_DoF
       Real(Kind = Kr), Dimension(:,:), pointer   :: BF
       Type(Vect2D), Dimension(:,:), pointer      :: Grad_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
+      Integer                                    :: Parent_Block
    End Type Element2D_Scal
  
    Type Element2D
-      Integer                                    :: NB_DoF       
-      Integer                                    :: NB_Gauss     
-      Integer                                    :: ID_EL
+!      Integer                                    :: NB_DoF       
+!      Integer                                    :: NB_Gauss     
+!      Integer                                    :: ID_EL
       Integer, Dimension(:), pointer             :: ID_DoF
       Type (Vect2D), Dimension(:,:), pointer     :: BF
       Type (Mat2D), Dimension(:,:), pointer      :: Der_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
+      Integer                                    :: Parent_Block
    End Type Element2D
  
    Type Element2D_Elast
-      Integer                                    :: NB_DoF       
-      Integer                                    :: NB_Gauss     
-      Integer                                    :: ID_EL
+!      Integer                                    :: NB_DoF       
+!      Integer                                    :: NB_Gauss     
+!      Integer                                    :: ID_EL
       Integer, Dimension(:), pointer             :: ID_DoF
       Type (Vect2D), Dimension(:,:), pointer     :: BF
       Type (MatS2D), Dimension(:,:), pointer     :: GradS_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
+      Integer                                    :: Parent_Block
    End Type Element2D_Elast
  
    Type Element3D
-      Integer                                    :: NB_DoF       
-      Integer                                    :: NB_Gauss     
-      Integer                                    :: ID_EL
+!      Integer                                    :: NB_DoF       
+!      Integer                                    :: NB_Gauss     
+!      Integer                                    :: ID_EL
       Integer, Dimension(:), pointer             :: ID_DoF
       Type (Vect3D), Dimension(:,:), pointer     :: BF
       Type (Mat3D), Dimension(:,:), pointer      :: Der_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
+      Integer                                    :: Parent_Block
    End Type Element3D
  
    Type Element3D_Scal
-      Integer                                    :: NB_DoF       
-      Integer                                    :: NB_Gauss     
-      Integer                                    :: ID_EL
+!      Integer                                    :: NB_DoF       
+!      Integer                                    :: NB_Gauss     
+!      Integer                                    :: ID_EL
       Integer, Dimension(:), pointer             :: ID_DoF
       Real(Kind = Kr), Dimension(:,:), pointer   :: BF
       Type (Vect3D), Dimension(:,:), pointer     :: Grad_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
+      Integer                                    :: Parent_Block
    End Type Element3D_Scal
  
    Type Element3D_Elast
-      Integer                                    :: NB_DoF       
-      Integer                                    :: NB_Gauss     
-      Integer                                    :: ID_EL
+!      Integer                                    :: NB_DoF       
+!      Integer                                    :: NB_Gauss     
+!      Integer                                    :: ID_EL
       Integer, Dimension(:), pointer             :: ID_DoF
       Type (Vect3D), Dimension(:,:), pointer     :: BF
       Type (MatS3D), Dimension(:,:), pointer     :: GradS_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
+      Integer                                    :: Parent_Block
    End Type Element3D_Elast
  
    Type Node1D
@@ -108,6 +141,7 @@ Module m_MEF_Types
       Real(Kind = Kr)                            :: Coord
       Integer                                    :: ID
       Integer                                    :: BC
+      Integer                                    :: Parent_Block
    End Type Node1D
  
    Type Node2D
@@ -124,13 +158,24 @@ Module m_MEF_Types
       Integer                                    :: BC
    End Type Node3D
  
+   Type Element_Info
+      Sequence
+      Integer                                    :: Name
+      Integer                                    :: dim !!! do we really need that?
+      Integer, Dimension(4)                      :: DoF_Location
+      Integer                                    :: Nb_DoF !! = sum(DoF_Location)
+      Integer                                    :: NB_Gauss
+      Integer                                    :: Pol_Degree !!! do we really need that?
+   End Type Element_Info
+
    Type Elem_Blk_Info
       Sequence
       Integer                                        :: ID
-      Character(len=MXSTLN)                          :: Type
+      Type (Element_Info)                            :: Element_Type
+!      Character(len=MXSTLN)                          :: Type
       Integer                                        :: Num_Elems
-      Integer                                        :: Num_Nodes_Per_Elem
-      Integer                                        :: Num_Attr
+!      Integer                                        :: Num_Nodes_Per_Elem
+!      Integer                                        :: Num_Attr
       Integer, Dimension(:), Pointer                 :: Elem_ID
    End Type Elem_Blk_Info
  
@@ -138,12 +183,12 @@ Module m_MEF_Types
       Sequence
       Integer                                        :: ID
       Integer                                        :: Num_Nodes
-      Integer                                        :: Num_Dist_Factors
+!      Integer                                        :: Num_Dist_Factors
       Integer, Dimension(:), Pointer                 :: Node_ID
-      Real(Kind = Kr), Dimension(:), Pointer         :: Dist_Factor
+!      Real(Kind = Kr), Dimension(:), Pointer         :: Dist_Factor
    End Type Node_Set_Info
  
-   Type EXO_Geom_Info
+   Type Geom_Info
       Sequence
       ! Global datas
       MPI_Comm                                       :: comm
@@ -151,8 +196,8 @@ Module m_MEF_Types
       Character(len=MXLNLN)                          :: title
       Integer                                        :: exoid
       Integer                                        :: num_dim
-      Integer                                        :: num_nodes 
-      Integer                                        :: num_elems
+!      Integer                                        :: num_nodes 
+!      Integer                                        :: num_elems
 !      Integer                                        :: num_ghost_nodes
 !      Integer                                        :: num_ghost_elems
       ! Element Blocks datas
@@ -166,8 +211,8 @@ Module m_MEF_Types
       ! QA DATAS
       Integer                                        :: num_QA
       Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec
-      Integer                                        :: Numbering
-   End Type EXO_Geom_Info
+!      Integer                                        :: Numbering
+   End Type Geom_Info
    
    Type Layout_Info
       IS                                         :: IS_N, IS_E
@@ -185,5 +230,24 @@ Module m_MEF_Types
       Integer, Dimension(:), Pointer             :: ghost_elem
    End Type Layout_Info
 
+   Integer, Parameter, Public                    :: MEF90_P1_Lagrange_2D_Scal = 1
+   Integer, Parameter, Public                    :: MEF90_P1_Lagrange_3D_Scal = 2
+   Integer, Parameter, Public                    :: MEF90_P1_Lagrange_2D_Vect = 3
+   Integer, Parameter, Public                    :: MEF90_P1_Lagrange_3D_Vect = 4
    
+   Integer, Parameter, Public                    :: MEF90_Q1_Lagrange_2D_Scal = 5
+   Integer, Parameter, Public                    :: MEF90_Q1_Lagrange_3D_Scal = 6
+   Integer, Parameter, Public                    :: MEF90_Q1_Lagrange_2D_Vect = 7
+   Integer, Parameter, Public                    :: MEF90_Q1_Lagrange_3D_Vect = 8
+
+   Integer, Parameter, Public                    :: MEF90_P2_Lagrange_2D_Scal = 9
+   Integer, Parameter, Public                    :: MEF90_P2_Lagrange_3D_Scal = 10
+   Integer, Parameter, Public                    :: MEF90_P2_Lagrange_2D_Vect = 11
+   Integer, Parameter, Public                    :: MEF90_P2_Lagrange_3D_Vect = 12
+   
+   Integer, Parameter, Public                    :: MEF90_Q2_Lagrange_2D_Scal = 13
+   Integer, Parameter, Public                    :: MEF90_Q2_Lagrange_3D_Scal = 14
+   Integer, Parameter, Public                    :: MEF90_Q2_Lagrange_2D_Vect = 15
+   Integer, Parameter, Public                    :: MEF90_Q2_Lagrange_3D_Vect = 16
+      
 End Module m_MEF_Types
