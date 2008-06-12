@@ -9,10 +9,8 @@ Module m_MEF_Types
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
 
 !   Public :: Node1D, Node2D, Node3D
-   Public :: Elem_Blk_Info, Node_Set_Info, Geom_Info
-   Public :: Layout_Info
-   Public :: Elem_Info
-   
+   Public :: Elem_Blk_Info, Node_Set_Info, MeshTopology_Info, EXO_Info
+      
 #include "include/finclude/petsc.h"
 #include "include/finclude/petscsys.h"
 #include "include/finclude/petscvec.h"
@@ -158,22 +156,14 @@ Module m_MEF_Types
       Integer                                    :: BC
    End Type Node3D
  
-   Type Elem_Info
-      Sequence
-      Integer                                    :: Name
-      Integer, Dimension(4)                      :: DoF_Location
-      Integer                                    :: Nb_DoF !! = sum(DoF_Location)
-      Integer                                    :: NB_Gauss
-   End Type Elem_Info
-
    Type Elem_Blk_Info
       Sequence
       Integer                                        :: ID
-      Type (Elem_Info)                               :: Elem_Type
-!      Character(len=MXSTLN)                          :: Type
+      Integer                                        :: Elem_Type
+      Integer, Dimension(4)                          :: DoF_Location
+      Integer                                        :: Nb_DoF !! = sum(DoF_Location)
+      Integer                                        :: NB_Gauss
       Integer                                        :: Num_Elems
-!      Integer                                        :: Num_Nodes_Per_Elem
-!      Integer                                        :: Num_Attr
       Integer, Dimension(:), Pointer                 :: Elem_ID
    End Type Elem_Blk_Info
  
@@ -186,19 +176,11 @@ Module m_MEF_Types
 !      Real(Kind = Kr), Dimension(:), Pointer         :: Dist_Factor
    End Type Node_Set_Info
  
-   Type Geom_Info
-      !!! Rename MESH_TOPOLOGY
-      !!! Add EXO_DATA
+   Type MeshTopology_Info
       Sequence
       ! Global datas
-      MPI_Comm                                       :: comm      ! Move somewhere else
-      Character(len=MXLNLN)                          :: filename  ! Move to EXO_DATA
-      Character(len=MXLNLN)                          :: title     ! Move to EXO_Info
-      Integer                                        :: exoid
       Integer                                        :: num_dim
       Integer                                        :: num_vert 
-      Integer                                        :: num_dof  ! num_dof is the number of dof of a scalar element
-                                                                 ! Move somewhere else!
       Integer                                        :: num_elems
 !      Integer                                        :: num_ghost_nodes
 !      Integer                                        :: num_ghost_elems
@@ -210,11 +192,17 @@ Module m_MEF_Types
       Type(Node_Set_Info), Dimension(:), Pointer     :: node_set
       ! Side Sets DATAS
       Integer                                        :: num_side_sets
+   End Type MeshTopology_Info
+   
+   Type EXO_Info
+      MPI_Comm                                       :: comm      ! Move somewhere else
+      Integer                                        :: exoid
+      Character(len=MXLNLN)                          :: filename  ! Move to EXO_DATA
+      Character(len=MXLNLN)                          :: title     ! Move to EXO_Info
       ! QA DATAS
       Integer                                        :: num_QA    ! move to EXO_Info
-      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    ! move to EXO_Info
-!      Integer                                        :: Numbering
-   End Type Geom_Info
+      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    ! move to EXO_Info   
+   End Type EXO_Info
    
    Type Layout_Info
       IS                                         :: IS_N, IS_E
