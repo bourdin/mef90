@@ -11,7 +11,7 @@ Module m_MEF_Types
 !   Public :: Node1D, Node2D, Node3D
    Public :: Elem_Blk_Info, Node_Set_Info, Geom_Info
    Public :: Layout_Info
-   Public :: Element_Info
+   Public :: Elem_Info
    
 #include "include/finclude/petsc.h"
 #include "include/finclude/petscsys.h"
@@ -158,20 +158,18 @@ Module m_MEF_Types
       Integer                                    :: BC
    End Type Node3D
  
-   Type Element_Info
+   Type Elem_Info
       Sequence
       Integer                                    :: Name
-      Integer                                    :: dim !!! do we really need that?
       Integer, Dimension(4)                      :: DoF_Location
       Integer                                    :: Nb_DoF !! = sum(DoF_Location)
       Integer                                    :: NB_Gauss
-      Integer                                    :: Pol_Degree !!! do we really need that?
-   End Type Element_Info
+   End Type Elem_Info
 
    Type Elem_Blk_Info
       Sequence
       Integer                                        :: ID
-      Type (Element_Info)                            :: Element_Type
+      Type (Elem_Info)                               :: Elem_Type
 !      Character(len=MXSTLN)                          :: Type
       Integer                                        :: Num_Elems
 !      Integer                                        :: Num_Nodes_Per_Elem
@@ -189,15 +187,19 @@ Module m_MEF_Types
    End Type Node_Set_Info
  
    Type Geom_Info
+      !!! Rename MESH_TOPOLOGY
+      !!! Add EXO_DATA
       Sequence
       ! Global datas
-      MPI_Comm                                       :: comm
-      Character(len=MXLNLN)                          :: filename
-      Character(len=MXLNLN)                          :: title
+      MPI_Comm                                       :: comm      ! Move somewhere else
+      Character(len=MXLNLN)                          :: filename  ! Move to EXO_DATA
+      Character(len=MXLNLN)                          :: title     ! Move to EXO_Info
       Integer                                        :: exoid
       Integer                                        :: num_dim
-!      Integer                                        :: num_nodes 
-!      Integer                                        :: num_elems
+      Integer                                        :: num_vert 
+      Integer                                        :: num_dof  ! num_dof is the number of dof of a scalar element
+                                                                 ! Move somewhere else!
+      Integer                                        :: num_elems
 !      Integer                                        :: num_ghost_nodes
 !      Integer                                        :: num_ghost_elems
       ! Element Blocks datas
@@ -209,8 +211,8 @@ Module m_MEF_Types
       ! Side Sets DATAS
       Integer                                        :: num_side_sets
       ! QA DATAS
-      Integer                                        :: num_QA
-      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec
+      Integer                                        :: num_QA    ! move to EXO_Info
+      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    ! move to EXO_Info
 !      Integer                                        :: Numbering
    End Type Geom_Info
    
@@ -228,26 +230,5 @@ Module m_MEF_Types
       Integer, Dimension(:), Pointer             :: ghost_dof
       Integer                                    :: num_local_elems, num_ghost_elems
       Integer, Dimension(:), Pointer             :: ghost_elem
-   End Type Layout_Info
-
-   Integer, Parameter, Public                    :: MEF90_P1_Lagrange_2D_Scal = 1
-   Integer, Parameter, Public                    :: MEF90_P1_Lagrange_3D_Scal = 2
-   Integer, Parameter, Public                    :: MEF90_P1_Lagrange_2D_Vect = 3
-   Integer, Parameter, Public                    :: MEF90_P1_Lagrange_3D_Vect = 4
-   
-   Integer, Parameter, Public                    :: MEF90_Q1_Lagrange_2D_Scal = 5
-   Integer, Parameter, Public                    :: MEF90_Q1_Lagrange_3D_Scal = 6
-   Integer, Parameter, Public                    :: MEF90_Q1_Lagrange_2D_Vect = 7
-   Integer, Parameter, Public                    :: MEF90_Q1_Lagrange_3D_Vect = 8
-
-   Integer, Parameter, Public                    :: MEF90_P2_Lagrange_2D_Scal = 9
-   Integer, Parameter, Public                    :: MEF90_P2_Lagrange_3D_Scal = 10
-   Integer, Parameter, Public                    :: MEF90_P2_Lagrange_2D_Vect = 11
-   Integer, Parameter, Public                    :: MEF90_P2_Lagrange_3D_Vect = 12
-   
-   Integer, Parameter, Public                    :: MEF90_Q2_Lagrange_2D_Scal = 13
-   Integer, Parameter, Public                    :: MEF90_Q2_Lagrange_3D_Scal = 14
-   Integer, Parameter, Public                    :: MEF90_Q2_Lagrange_2D_Vect = 15
-   Integer, Parameter, Public                    :: MEF90_Q2_Lagrange_3D_Vect = 16
-      
+   End Type Layout_Info      
 End Module m_MEF_Types
