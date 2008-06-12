@@ -726,7 +726,7 @@ Module m_MEF_EXO
              Allocate (Elem_db(iE+Offset)%ID_DoF(Elem_db(iE+Offset)%NB_DoF))
              Elem_db(iE+Offset)%ID_DoF = Tmp_Connect(:, iE)
           End Do
-          Offset = Offset +Geom%Elem_Blk(iBlock)%Num_Elems
+          Offset = Offset + Geom%Elem_Blk(iBlock)%Num_Elems
           DeAllocate (Tmp_Connect)
        End Do
     Case Default
