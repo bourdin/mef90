@@ -128,6 +128,25 @@ Module m_MEF_InitElem
          Xi(2)%X = 3.0_Kr / 5.0_Kr; Xi(2)%Y = 1.0_Kr / 5.0_Kr
          Xi(3)%X = 1.0_Kr / 5.0_Kr; Xi(3)%Y = 3.0_Kr / 5.0_Kr
          Xi(4)%X = 1.0_Kr / 5.0_Kr; Xi(4)%Y = 1.0_Kr / 5.0_Kr
+      Case(4)
+         Nb_Gauss = 7
+         Allocate(Xi(Nb_Gauss))
+         Allocate(dElem%Gauss_C(Nb_Gauss))
+         dElem%Gauss_C(1) = detBinv / 40.0_Kr
+         dElem%Gauss_C(2) = detBinv / 15.0_Kr
+         dElem%Gauss_C(3) = detBinv / 40.0_Kr
+         dElem%Gauss_C(4) = detBinv / 15.0_Kr
+         dElem%Gauss_C(5) = detBinv / 40.0_Kr
+         dElem%Gauss_C(6) = detBinv / 15.0_Kr
+         dElem%Gauss_C(7) = detBinv * 9.0_Kr / 40.0_Kr
+         Xi(1)%X = 0.0_Kr;          Xi(1)%Y = 0.0_Kr
+         Xi(2)%X = 1.0_Kr / 2.0_Kr; Xi(2)%Y = 0.0_Kr
+         Xi(3)%X = 1.0_Kr;          Xi(3)%Y = 0.0_Kr
+         Xi(4)%X = 1.0_Kr / 2.0_Kr; Xi(4)%Y = 1.0_Kr / 2.0_Kr
+         Xi(5)%X = 0.0_Kr;          Xi(5)%Y = 1.0_Kr
+         Xi(6)%X = 0.0_Kr;          Xi(6)%Y = 1.0_Kr / 2.0_Kr
+         Xi(7)%X = 1.0_Kr / 3.0_Kr; Xi(7)%Y = 1.0_Kr / 3.0_Kr
+         
       Case Default
          Print*, 'Unimplemented quadrature order', QuadratureOrder
          STOP
