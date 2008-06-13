@@ -50,11 +50,9 @@ Program TestSieve
    
    Call Read_MeshTopology_Info_EXO(MeshTopology, EXO)
    
+   MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      MeshTopology%Elem_Blk(iBlk)%Elem_Type    = MEF90_P1_Lagrange_2D_Scal
-      MeshTopology%Elem_Blk(iBlk)%DoF_Location = (/ 3, 0, 0, 0 /)
-      MeshTopology%Elem_Blk(iBlk)%Nb_DoF       = 3
-      MeshTopology%Elem_Blk(iBlk)%Nb_Gauss     = 4
+      Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
    Call Show_MeshTopology_Info(MeshTopology)
 
@@ -89,7 +87,7 @@ Program TestSieve
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          Vertices(1,:) = Coords(Elem2DA(iE)%ID_DoF(:))%X
          Vertices(2,:) = Coords(Elem2DA(iE)%ID_DoF(:))%Y
-         Call Init_Element(Elem2DA(iE), Vertices, 3, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         Call Init_Element(Elem2DA(iE), Vertices, 4, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
       End Do
    End Do
    
@@ -229,7 +227,7 @@ Program TestSieve
          Write(IO_Unit, 203) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%Num_Elems
          Write(IO_Unit, 204) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%Elem_Type
          Write(IO_Unit, 205) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%DoF_Location
-         Write(IO_Unit, 206) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%Nb_Gauss
+!         Write(IO_Unit, 206) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%Nb_Gauss
          Write(IO_Unit, 207, advance = 'no') dMeshTopology%Elem_Blk(i)%ID
          Write(IO_Unit, *) dMeshTopology%Elem_blk(i)%Elem_ID
       End Do
@@ -263,7 +261,7 @@ Program TestSieve
 203 Format('    Block ', I3, ' Number of elements ==== ', I4)
 204 Format('    Block ', I3, ' Element type ========== ', I4)
 205 Format('    Block ', I3, ' DoF location ========== ', 4(I4, ' '))
-206 Format('    Block ', I3, ' Nb_Gauss==== ========== ', I4)
+!206 Format('    Block ', I3, ' Nb_Gauss==== ========== ', I4)
 207 Format('    Block ', I3, ' IDs: ')
 
 300 Format('*** NODE SETS ***')
