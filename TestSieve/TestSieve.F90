@@ -14,7 +14,6 @@ Program TestSieve
 #include "include/finclude/petscksp.h"
 #include "include/finclude/petscpc.h"
 #include "include/finclude/petscao.h"
-!   include "exodusII.inc"
 
    Type (MeshTopology_Info)                     :: MeshTopology
    Type (EXO_Info)                              :: EXO
@@ -50,15 +49,17 @@ Program TestSieve
    EXO%Comm = PETSC_COMM_WORLD
    
    Call Read_MeshTopology_Info_EXO(MeshTopology, EXO)
+   
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       MeshTopology%Elem_Blk(iBlk)%Elem_Type    = MEF90_P1_Lagrange_2D_Scal
       MeshTopology%Elem_Blk(iBlk)%DoF_Location = (/ 3, 0, 0, 0 /)
       MeshTopology%Elem_Blk(iBlk)%Nb_DoF       = 3
-      MeshTopology%Elem_Blk(iBlk)%Nb_Gauss     = 3
+      MeshTopology%Elem_Blk(iBlk)%Nb_Gauss     = 4
    End Do
    Call Show_MeshTopology_Info(MeshTopology)
 
    Allocate (Elem2DA(MeshTopology%Num_Elems))
+
    Allocate (Coords(MeshTopology%Num_Vert))
    Allocate (Vertices(2,3))
    
@@ -88,7 +89,7 @@ Program TestSieve
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          Vertices(1,:) = Coords(Elem2DA(iE)%ID_DoF(:))%X
          Vertices(2,:) = Coords(Elem2DA(iE)%ID_DoF(:))%Y
-         Call Init_Element(Elem2DA(iE), Vertices, 2, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         Call Init_Element(Elem2DA(iE), Vertices, 3, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
       End Do
    End Do
    
