@@ -38,11 +38,10 @@ Module m_TestSieve
       Call VecGetArrayF90(dU_Loc, U_Ptr, iErr)
       Call VecGetArrayF90(dF_Loc, F_Ptr, iErr)
       
-      Print*, Size(U_Ptr)
       Do_iBlk: Do iBlk = 1, dMyMeshTopology%Num_Elem_Blks
          Do_iE: Do iELoc = 1, dMyMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMyMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Do_iG: Do iG = 1, dMyMeshTopology%Elem_Blk(iBlk)%Nb_Gauss
+            Do_iG: Do iG = 1, size(dMyElem(iE)%BF,2)
                Strain_Elem = 0.0_Kr
                U_Elem      = 0.0_Kr
                F_Elem      = 0.0_Kr

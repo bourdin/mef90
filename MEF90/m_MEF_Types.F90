@@ -161,8 +161,10 @@ Module m_MEF_Types
       Integer                                        :: ID
       Integer                                        :: Elem_Type
       Integer, Dimension(4)                          :: DoF_Location
+      !!! Edge location is Cells, faces, edges, vertices in 3D and
+      !!!                  Cell, unused, edges, vertices in2D
       Integer                                        :: Nb_DoF !! = sum(DoF_Location)
-      Integer                                        :: NB_Gauss
+!      Integer                                        :: NB_Gauss
       Integer                                        :: Num_Elems
       Integer, Dimension(:), Pointer                 :: Elem_ID
    End Type Elem_Blk_Info
