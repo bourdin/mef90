@@ -14,6 +14,7 @@ Program TestSieve
 #include "include/finclude/petscksp.h"
 #include "include/finclude/petscpc.h"
 #include "include/finclude/petscao.h"
+#include "include/finclude/petscmesh.h"
 
    Type (MeshTopology_Info)                     :: MeshTopology
    Type (EXO_Info)                              :: EXO
@@ -39,7 +40,7 @@ Program TestSieve
    Call MEF90_Initialize()
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', EXO%filename, HasF, iErr)    
    If (.NOT. HasF) Then
-      Call PetscPrintf(PETSC_COMM_WORLD, "No input file given\n"c, iErr)
+      Call PetscPrintf(PETSC_COMM_WORLD, "No input file given\n", iErr)
       Call MEF90_Finalize()
       STOP
    End If
@@ -167,19 +168,25 @@ Program TestSieve
       Integer                                      :: EXO_DummyInteger
       Character(len=MXSTLN)                        :: EXO_DummyStr   
       Integer                                      :: vers
+      Mesh                                         :: mesh
 
       ! Open File
-      dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
-      
+      !MGK dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+      call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, mesh, ierr)
+
       ! Read Global Geometric Parameters
-      Call EXGINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
+      ! MGK Call EXGINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, &
+      !     & dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
+      call MeshExodusGetInfo(mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, &
+           & dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr)
       ! Read Elem blocks informations
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
       Offset = 0
       If (dMeshTopology%Num_Elem_blks > 0) Then
          Call EXGEBI(dEXO%exoid, dMeshTopology%Elem_Blk(:)%ID, iErr)
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-            Call EXGELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, EXO_DummyStr, dMeshTopology%elem_blk(iBlk)%Num_Elems, EXO_DummyInteger, EXO_DummyInteger, iErr)
+            Call EXGELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, EXO_DummyStr, dMeshTopology%elem_blk(iBlk)%Num_Elems, &
+                 & EXO_DummyInteger, EXO_DummyInteger, iErr)
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
             dMeshTopology%Elem_Blk(iBlk)%Elem_ID = (/ (Offset+i, i=1, dMeshTopology%elem_blk(iBlk)%Num_Elems)/)
             Offset = Offset + dMeshTopology%elem_blk(iBlk)%Num_Elems
@@ -275,4 +282,4 @@ Program TestSieve
     
    End Subroutine Show_MeshTopology_Info
 
-End Program TestSieve   
+End Program TestSieve
