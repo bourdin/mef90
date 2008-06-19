@@ -235,16 +235,16 @@ Module m_MEF_InitElem
          PhiHat(1,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y) * Xi%X      
          PhiHat(2,:) = 4.0_Kr * Xi%X * Xi%Y     
          PhiHat(3,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y) * Xi%Y     
-         PhiHat(4,:) = 2.0_Kr * Xi%Y**2 - Xi%Y
-         PhiHat(5,:) = 2.0_Kr * (1.0_Kr - Xi%X - Xi%Y)**2  - (1.0_Kr - Xi%X - Xi%Y)
-         PhiHat(6,:) = 2.0_Kr * Xi%X**2 - Xi%X
+         PhiHat(4,:) = 2.0_Kr * (1.0_Kr - Xi%X - Xi%Y)**2  - (1.0_Kr - Xi%X - Xi%Y)
+         PhiHat(5,:) = 2.0_Kr * Xi%X**2 - Xi%X
+         PhiHat(6,:) = 2.0_Kr * Xi%Y**2 - Xi%Y
          
          GradPhiHat(1,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y); GradPhiHat(1,:)%Y =-4.0_Kr * Xi%X
          GradPhiHat(2,:)%X = 4.0_Kr * Xi%Y;                            GradPhiHat(2,:)%Y = 4.0_Kr * Xi%X
          GradPhiHat(3,:)%X =-4.0_Kr * Xi%Y;                            GradPhiHat(3,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y)
-         GradPhiHat(4,:)%X = 0.0_Kr;                                   GradPhiHat(4,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
-         GradPhiHat(5,:)%X = 1.0_Kr - 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y); GradPhiHat(4,:)%Y = 1.0_Kr - 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y)
-         GradPhiHat(6,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                   GradPhiHat(6,:)%Y = 0.0_Kr
+         GradPhiHat(4,:)%X = 1.0_Kr - 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y); GradPhiHat(4,:)%Y = 1.0_Kr - 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y)
+         GradPhiHat(5,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                   GradPhiHat(5,:)%Y = 0.0_Kr
+         GradPhiHat(6,:)%X = 0.0_Kr;                                   GradPhiHat(6,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
       Case Default
          Print*, 'Unimplemented PolynomialOrder', dPolynomialOrder
       End Select
