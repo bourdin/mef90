@@ -46,8 +46,6 @@ Program TestSieve
       STOP
    End If
 
-
-
    EXO%Comm = PETSC_COMM_WORLD
    
    Call Read_MeshTopology_Info_EXO(MeshTopology, Coords, Elem2DA, EXO)
@@ -59,9 +57,8 @@ Program TestSieve
    Call Show_MeshTopology_Info(MeshTopology)
    Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
 
-   Allocate (Vertices(2,3))
-
    !!! Initialize the element   
+   Allocate(Vertices(2,3))
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -70,6 +67,7 @@ Program TestSieve
          Call Init_Element(Elem2DA(iE), Vertices, 4, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
       End Do
    End Do
+   Deallocate(Vertices)
 
 !   Call Show_Elem2D_Scal(Elem2DA)
 
@@ -93,13 +91,14 @@ Program TestSieve
    Call FormObjectiveFunction(MyObjectiveFunction, MeshTopology, Elem2DA, U, F)
 
    Call PetscGlobalSum(MyObjectiveFunction, ObjectiveFunction, PETSC_COMM_WORLD, ierr); CHKERRQ(iErr)
-   Write(CharBuffer,*) MEF90_MyRank, ' My Objective Function: ', MyObjectiveFunction, '\n'c
+   Write(CharBuffer,*) MEF90_MyRank, ' My Objective Function: ', MyObjectiveFunction, '\n'
    Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
    Call PetscSynchronizedFlush(PETSC_COMM_WORLD, ierr); CHKERRQ(ierr)
 
-   Write(CharBuffer,*) '               Objective Function: ', ObjectiveFunction, '\n'c
+   Write(CharBuffer,*) '               Objective Function: ', ObjectiveFunction, '\n'
    Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
 
+   Call Destroy_MeshTopology_Info(MeshTopology, Coords, Elem2DA)
    Call MEF90_Finalize()
 
  Contains
@@ -307,5 +306,33 @@ Program TestSieve
 401 Format('    Number of side sets ============= ', I4)
     
    End Subroutine Show_MeshTopology_Info
+
+   Subroutine Destroy_MeshTopology_Info(dMeshTopology, Coords, Elem2DA)
+     Type (MeshTopology_Info)                     :: dMeshTopology
+     Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
+     Type (Vect3D), Dimension(:), Pointer         :: Coords
+     PetscInt                                     :: iSet, iE, iElem
+
+     Do iBlk = 1, MeshTopology%Num_Elem_Blks
+        Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+           iElem = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)
+           Deallocate(Elem2DA(iElem)%ID_DoF)
+        End Do
+     End Do
+     Deallocate(Elem2DA)
+     Deallocate(Coords)
+     If (dMeshTopology%Num_Node_Sets > 0) Then
+        Do iSet = 1, dMeshTopology%Num_node_sets
+           Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
+        End Do
+     End If
+     Deallocate (dMeshTopology%Node_Set)
+     If (dMeshTopology%Num_Elem_blks > 0) Then
+        Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+           Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
+        End Do
+     End If
+     Deallocate(dMeshTopology%Elem_blk)
+   End Subroutine Destroy_MeshTopology_Info
 
 End Program TestSieve
