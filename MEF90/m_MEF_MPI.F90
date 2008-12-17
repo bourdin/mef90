@@ -4,7 +4,7 @@ Module m_MEF_MPI
    Implicit None
    Private
 
-#include "include/finclude/petsc.h"
+#include "finclude/petsc.h"
    include "exodusII.inc"
 
    !Public :: MPIType_Initialize

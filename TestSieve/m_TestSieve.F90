@@ -4,14 +4,14 @@ Module m_TestSieve
   Implicit NONE
   PRIVATE
 
-#include "include/finclude/petsc.h"
-#include "include/finclude/petscvec.h"
-#include "include/finclude/petscvec.h90"
-#include "include/finclude/petscmat.h"
-#include "include/finclude/petscmat.h90"
-#include "include/finclude/petscksp.h"
-#include "include/finclude/petscpc.h"
-#include "include/finclude/petscao.h"
+#include "finclude/petsc.h"
+#include "finclude/petscvec.h"
+#include "finclude/petscvec.h90"
+#include "finclude/petscmat.h"
+#include "finclude/petscmat.h90"
+#include "finclude/petscksp.h"
+#include "finclude/petscpc.h"
+#include "finclude/petscao.h"
 
    Public :: FormObjectiveFunction
 !   Public :: FormGradient

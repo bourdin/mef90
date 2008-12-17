@@ -7,7 +7,7 @@ Module m_MEF_InitElem
    IMPLICIT NONE
    Private
    
-#include "include/finclude/petsc.h"
+#include "finclude/petsc.h"
 
    Public :: Init_Element
    Public :: Destroy_Element
