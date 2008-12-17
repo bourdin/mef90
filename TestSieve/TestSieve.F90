@@ -98,7 +98,16 @@ Program TestSieve
    Write(CharBuffer,*) '               Objective Function: ', ObjectiveFunction, '\n'
    Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
 
-   Call Destroy_MeshTopology_Info(MeshTopology, Coords, Elem2DA)
+   !!! Destroy the element   
+   Do iBlk = 1, MeshTopology%Num_Elem_Blks
+      Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Call Destroy_Element(Elem2DA(iE))
+      End Do
+   End Do
+   Deallocate(Elem2DA)
+   Deallocate(Coords)
+   Call Destroy_MeshTopology_Info(MeshTopology)
    Call MEF90_Finalize()
 
  Contains
@@ -307,20 +316,10 @@ Program TestSieve
     
    End Subroutine Show_MeshTopology_Info
 
-   Subroutine Destroy_MeshTopology_Info(dMeshTopology, Coords, Elem2DA)
-     Type (MeshTopology_Info)                     :: dMeshTopology
-     Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
-     Type (Vect3D), Dimension(:), Pointer         :: Coords
-     PetscInt                                     :: iSet, iE, iElem
+   Subroutine Destroy_MeshTopology_Info(dMeshTopology)
+     Type (MeshTopology_Info) :: dMeshTopology
+     PetscInt                 :: iSet, iBlk
 
-     Do iBlk = 1, MeshTopology%Num_Elem_Blks
-        Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
-           iElem = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)
-           Deallocate(Elem2DA(iElem)%ID_DoF)
-        End Do
-     End Do
-     Deallocate(Elem2DA)
-     Deallocate(Coords)
      If (dMeshTopology%Num_Node_Sets > 0) Then
         Do iSet = 1, dMeshTopology%Num_node_sets
            Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
