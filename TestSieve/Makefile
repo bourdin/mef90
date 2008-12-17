@@ -14,7 +14,7 @@ include ${PETSC_DIR}/conf/base
 
 OBJS = ${PROJ}.o m_${PROJ}.o
 
-FFLAGS = -I. -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS}
+FFLAGS = -I. -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS} -ftrace=full -ffree-line-length-huge
 
 ${PROJ}: ${PROJ}.o
 	-${FLINKER} -o ${PROJ} ${OBJS} ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
