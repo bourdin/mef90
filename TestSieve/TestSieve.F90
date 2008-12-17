@@ -89,7 +89,7 @@ Program TestSieve
    Call VecRestoreArrayF90(U, U_Ptr, iErr)
    Call VecRestoreArrayF90(F, F_Ptr, iErr)
 
-   !Call FormObjectiveFunction(ObjectiveFunction, MeshTopology, Elem2DA, U, F)
+   Call FormObjectiveFunction(ObjectiveFunction, MeshTopology, Elem2DA, U, F)
 
    Write(*,*) 'Objective Function: ', ObjectiveFunction
    Call MEF90_Finalize()
