@@ -72,8 +72,8 @@ Program TestSieve
 
 !   Call Show_Elem2D_Scal(Elem2DA)
 
-   Call VecCreateSeq(PETSC_COMM_WORLD, MeshTopology%Num_Vert, U, iErr)
-   Call VecCreateSeq(PETSC_COMM_WORLD, MeshTopology%Num_Vert, F, iErr)
+   Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, U, iErr)
+   Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, F, iErr)
 
    Call VecSet(U, 1.0_Kr, iErr)
    Call VecSet(F, 1.0_Kr, iErr)
@@ -151,10 +151,18 @@ Program TestSieve
       Character(len=MXSTLN)                        :: EXO_DummyStr   
       Integer                                      :: embedDim
       Integer                                      :: iNode, iElem
-      Mesh                                         :: mesh
+      Mesh                                         :: mesh, parallelMesh
+      PetscViewer                                  :: viewer
 
       ! Open File
       call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, mesh, ierr)
+      call MeshDistribute(mesh, PETSC_NULL_CHARACTER, parallelMesh, ierr)
+      call MeshDestroy(mesh, ierr)
+      mesh = parallelMesh
+      call PetscViewerASCIIOpen(PETSC_COMM_WORLD, PETSC_NULL_CHARACTER, viewer, ierr)
+      call PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_INFO_DETAIL, ierr)
+      call MeshView(mesh, ierr)
+      call PetscViewerDestroy(viewer, ierr)
 
       ! Read Global Geometric Parameters
       call MeshExodusGetInfo(mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, &
