@@ -202,7 +202,6 @@ Program TestSieve
             Coords(iNode)%Y = 0.0
             Coords(iNode)%Z = 0.0
          End If
-         write(6,*) 'Node',iNode,Coords(iNode)
       End Do
       call MeshRestoreCoordinatesF90(mesh, array, iErr)
 
