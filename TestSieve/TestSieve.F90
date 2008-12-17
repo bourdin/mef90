@@ -4,17 +4,18 @@ Program TestSieve
    Use m_TestSieve
    Implicit NONE
     
-#include "include/finclude/petsc.h"
-#include "include/finclude/petscvec.h"
-#include "include/finclude/petscviewer.h"
-#include "include/finclude/petscviewer.h90"
-#include "include/finclude/petscvec.h90"
-#include "include/finclude/petscmat.h"
-#include "include/finclude/petscmat.h90"
-#include "include/finclude/petscksp.h"
-#include "include/finclude/petscpc.h"
-#include "include/finclude/petscao.h"
-#include "include/finclude/petscmesh.h"
+#include "finclude/petsc.h"
+#include "finclude/petscvec.h"
+#include "finclude/petscviewer.h"
+#include "finclude/petscviewer.h90"
+#include "finclude/petscvec.h90"
+#include "finclude/petscmat.h"
+#include "finclude/petscmat.h90"
+#include "finclude/petscksp.h"
+#include "finclude/petscpc.h"
+#include "finclude/petscao.h"
+#include "finclude/petscmesh.h"
+#include "finclude/petscmesh.h90"
 
    Type (MeshTopology_Info)                     :: MeshTopology
    Type (EXO_Info)                              :: EXO
@@ -24,7 +25,7 @@ Program TestSieve
    
    PetscReal                                    :: ObjectiveFunction
    Vec                                          :: U, F, Gradient
-   PetscReal, DImension(:), Pointer             :: U_Ptr, F_Ptr
+   PetscReal, Dimension(:), Pointer             :: U_Ptr, F_Ptr
    Mat                                          :: Hessian
    PetscTruth                                   :: HasF
    Integer                                      :: iErr
@@ -49,7 +50,7 @@ Program TestSieve
 
    EXO%Comm = PETSC_COMM_WORLD
    
-   Call Read_MeshTopology_Info_EXO(MeshTopology, EXO)
+   Call Read_MeshTopology_Info_EXO(MeshTopology, Coords, Elem2DA, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
@@ -57,31 +58,16 @@ Program TestSieve
    End Do
    Call Show_MeshTopology_Info(MeshTopology)
 
-   Allocate (Elem2DA(MeshTopology%Num_Elems))
-
-   Allocate (Coords(MeshTopology%Num_Vert))
    Allocate (Vertices(2,3))
    
-   EXO%exoid = EXOPEN(EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+   ! MGK EXO%exoid = EXOPEN(EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
 
    !!! Read the vertices coordinates
-   Call EXGCOR(EXO%exoid, Coords%X, Coords%Y, Coords%Z, iErr)
-   
-   !!! Read the connectivity table
-   Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      Allocate ( Tmp_Connect(3, MeshTopology%Elem_Blk(iBlk)%Num_Elems) )
-      Call EXGELC (EXO%exoid, MeshTopology%Elem_Blk(iBlk)%ID, Tmp_Connect, iErr)
-      Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         Allocate (Elem2DA( MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE) )%ID_DoF(3) )
-         Elem2DA( MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE) )%ID_DoF(:)  = Tmp_Connect(:, iE)
-      End Do
-      DeAllocate (Tmp_Connect)
-   End Do
-   
-   Call EXCLOS(EXO%exoid, iErr)
-   EXO%exoid = 0
-   
-   
+   ! MGK Call EXGCOR(EXO%exoid, Coords%X, Coords%Y, Coords%Z, iErr)
+
+   ! MGK Call EXCLOS(EXO%exoid, iErr)
+   ! MGK EXO%exoid = 0
+
    !!! Initialize the element   
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -91,31 +77,31 @@ Program TestSieve
          Call Init_Element(Elem2DA(iE), Vertices, 4, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
       End Do
    End Do
-   
+
 !   Call Show_Elem2D_Scal(Elem2DA)
-   
+
    Call VecCreateSeq(PETSC_COMM_WORLD, MeshTopology%Num_Vert, U, iErr)
    Call VecCreateSeq(PETSC_COMM_WORLD, MeshTopology%Num_Vert, F, iErr)
 
    Call VecSet(U, 1.0_Kr, iErr)
    Call VecSet(F, 0.0_Kr, iErr)
-   
+
    Call VecGetArrayF90(F, F_Ptr, iErr)
    Call VecGetArrayF90(U, U_Ptr, iErr)
-   
+
    Do iS = 1, Size(U_Ptr)
       U_Ptr(iS) = Coords(iS)%X
 !      F_Ptr(iS) = Coords(iS)%Y
    End Do
-   
+
    Call VecRestoreArrayF90(U, U_Ptr, iErr)
    Call VecRestoreArrayF90(F, F_Ptr, iErr)
-   
+
    Call FormObjectiveFunction(ObjectiveFunction, MeshTopology, Elem2DA, U, F)
-   
+
    Write(*,*) 'Objective Function: ', ObjectiveFunction
    Call MEF90_Finalize()
-   
+
  Contains
    Subroutine Show_Elem2D_Scal(dElems, Unit)
       Type (Element2D_Scal), DImension(:), Pointer   :: dElems
@@ -159,15 +145,20 @@ Program TestSieve
    End Subroutine Show_Elem2D_Scal
    
    
-   Subroutine Read_MeshTopology_Info_EXO(dMeshTopology, dEXO)
+   Subroutine Read_MeshTopology_Info_EXO(dMeshTopology, Coords, Elem2DA, dEXO)
       Type (MeshTopology_Info)                     :: dMeshTopology
+      Type (Vect3D), Dimension(:), Pointer         :: Coords
+      Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
       Type (EXO_Info)                              :: dEXO
       Integer                                      :: iErr, iBlk, iSet, Offset, i
       Character(len=256)                           :: CharBuffer
       
+      PetscReal, Dimension(:,:), Pointer           :: array
+      PetscInt, Dimension(:,:), Pointer            :: arrayCon
       Integer                                      :: EXO_DummyInteger
       Character(len=MXSTLN)                        :: EXO_DummyStr   
       Integer                                      :: vers
+      Integer                                      :: iNode
       Mesh                                         :: mesh
 
       ! Open File
@@ -181,30 +172,73 @@ Program TestSieve
            & dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr)
       ! Read Elem blocks informations
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
-      Offset = 0
+      ! MGK Offset = 0
+      CharBuffer = 'CellBlocks'
       If (dMeshTopology%Num_Elem_blks > 0) Then
-         Call EXGEBI(dEXO%exoid, dMeshTopology%Elem_Blk(:)%ID, iErr)
+      ! MGK    Call EXGEBI(dEXO%exoid, dMeshTopology%Elem_Blk(:)%ID, iErr)
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-            Call EXGELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, EXO_DummyStr, dMeshTopology%elem_blk(iBlk)%Num_Elems, &
-                 & EXO_DummyInteger, EXO_DummyInteger, iErr)
+      ! MGK       Call EXGELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, EXO_DummyStr, dMeshTopology%elem_blk(iBlk)%Num_Elems, &
+      ! MGK            & EXO_DummyInteger, EXO_DummyInteger, iErr)
+            call MeshGetStratumSize(mesh, CharBuffer, iBlk-1, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr)
+            write(6,*) 'Number of elements in block',iBlk-1,dMeshTopology%Elem_blk(iBlk)%Num_Elems
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
-            dMeshTopology%Elem_Blk(iBlk)%Elem_ID = (/ (Offset+i, i=1, dMeshTopology%elem_blk(iBlk)%Num_Elems)/)
-            Offset = Offset + dMeshTopology%elem_blk(iBlk)%Num_Elems
+            call MeshGetStratum(mesh, CharBuffer, iBlk-1, dMeshTopology%Elem_blk(iBlk)%Elem_ID, ierr)
+      ! MGK       dMeshTopology%Elem_Blk(iBlk)%Elem_ID = (/ (Offset+i, i=1, dMeshTopology%elem_blk(iBlk)%Num_Elems)/)
+      ! MGK       Offset = Offset + dMeshTopology%elem_blk(iBlk)%Num_Elems
          End Do
       End If
       
       ! Read Node sets informations
       Allocate (dMeshTopology%Node_Set(dMeshTopology%Num_Node_Sets))
+      CharBuffer = 'VertexSets'
       If (dMeshTopology%Num_Node_Sets > 0) Then
-         Call EXGNSI(dEXO%exoid, dMeshTopology%Node_Set(:)%ID, iErr)
+      ! MGK    Call EXGNSI(dEXO%exoid, dMeshTopology%Node_Set(:)%ID, iErr)
          Do iSet = 1, dMeshTopology%Num_node_sets
-            Call EXGNP(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Num_Nodes, EXO_DummyInteger, iErr)
+      ! MGK       Call EXGNP(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Num_Nodes, EXO_DummyInteger, iErr)
+            call MeshGetStratumSize(mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr)
+            write(6,*) 'Number of nodes in set',iSet-1,dMeshTopology%Node_set(iSet)%Num_Nodes
             Allocate(dMeshTopology%Node_Set(iSet)%Node_ID(dMeshTopology%Node_Set(iSet)%Num_Nodes))
-            Call EXGNS(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Node_ID(:), iErr)
+            call MeshGetStratum(mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Node_ID, ierr)
+      ! MGK       Call EXGNS(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Node_ID(:), iErr)
          End Do
       End If
-       Call EXCLOS(dEXO%exoid, iErr)
-       dEXO%exoid = 0
+
+      ! Read the vertices coordinates
+      Allocate(Coords(MeshTopology%Num_Vert))
+      call MeshGetCoordinatesF90(mesh, array, iErr)
+      Do iNode = 1, dMeshTopology%Num_Vert
+         Coords(iNode)%X = array(iNode,0)
+         Coords(iNode)%Y = array(iNode,1)
+         Coords(iNode)%Z = array(iNode,2)
+      End Do
+      call MeshRestoreCoordinatesF90(mesh, array, iErr)
+      ! MGK Call EXGCOR(EXO%exoid, Coords%X, Coords%Y, Coords%Z, iErr)
+
+      ! Read the connectivity table
+      Allocate(Elem2DA(MeshTopology%Num_Elems))
+      call MeshGetElementsF90(mesh, arrayCon, iErr)
+      Do iBlk = 1, MeshTopology%Num_Elem_Blks
+         Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            Allocate(Elem2DA(MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE))%ID_DoF(3))
+            !Elem2DA(MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE))%ID_DoF(:) = arrayCon(iE,:)
+            Do i = 1, 3
+               Elem2DA(MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE))%ID_DoF(i) = arrayCon(iE,i)
+            End Do
+         End Do
+      End Do
+      call MeshRestoreElementsF90(mesh, arrayCon, iErr)
+      ! MGK Do iBlk = 1, MeshTopology%Num_Elem_Blks
+      ! MGK    Allocate(Tmp_Connect(3, MeshTopology%Elem_Blk(iBlk)%Num_Elems) )
+      ! MGK    Call EXGELC (EXO%exoid, MeshTopology%Elem_Blk(iBlk)%ID, Tmp_Connect, iErr)
+      ! MGK    Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+      ! MGK       Allocate (Elem2DA( MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE) )%ID_DoF(3) )
+      ! MGK       Elem2DA( MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE) )%ID_DoF(:)  = Tmp_Connect(:, iE)
+      ! MGK    End Do
+      ! MGK    DeAllocate (Tmp_Connect)
+      ! MGK End Do
+
+      ! MGK Call EXCLOS(dEXO%exoid, iErr)
+      dEXO%exoid = 0
     End Subroutine Read_MeshTopology_Info_EXO
 
    Subroutine Show_MeshTopology_Info(dMeshTopology, Unit)

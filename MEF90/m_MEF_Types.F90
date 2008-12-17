@@ -11,13 +11,13 @@ Module m_MEF_Types
 !   Public :: Node1D, Node2D, Node3D
    Public :: Elem_Blk_Info, Node_Set_Info, MeshTopology_Info, EXO_Info
       
-#include "include/finclude/petsc.h"
-#include "include/finclude/petscsys.h"
-#include "include/finclude/petscvec.h"
-#include "include/finclude/petscvec.h90"
-#include "include/finclude/petscis.h"
-#include "include/finclude/petscis.h90"
-#include "include/finclude/petscao.h"
+#include "finclude/petsc.h"
+#include "finclude/petscsys.h"
+#include "finclude/petscvec.h"
+#include "finclude/petscvec.h90"
+#include "finclude/petscis.h"
+#include "finclude/petscis.h90"
+#include "finclude/petscao.h"
    include "exodusII.inc"
 
    ! Defines the basid bata structures for nodes, elements and geometry
