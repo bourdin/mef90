@@ -5,6 +5,7 @@ Program TestSieve
    Implicit NONE
     
 #include "finclude/petsc.h"
+#include "finclude/petscsys.h"
 #include "finclude/petscvec.h"
 #include "finclude/petscviewer.h"
 #include "finclude/petscviewer.h90"
@@ -23,7 +24,7 @@ Program TestSieve
    Type (Vect3D), Dimension(:), Pointer         :: Coords
    PetscReal, Dimension(:,:), Pointer           :: Vertices
    
-   PetscReal                                    :: ObjectiveFunction
+   PetscReal                                    :: MyObjectiveFunction, ObjectiveFunction
    Vec                                          :: U, F, Gradient
    PetscReal, Dimension(:), Pointer             :: U_Ptr, F_Ptr
    Mat                                          :: Hessian
@@ -36,7 +37,6 @@ Program TestSieve
    Integer                                      :: vers
    Integer, Parameter                           :: exo_cpu_ws = 8
    Integer, Parameter                           :: exo_io_ws = 8
-
      
    Call MEF90_Initialize()
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', EXO%filename, HasF, iErr)    
@@ -57,6 +57,7 @@ Program TestSieve
       Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
    Call Show_MeshTopology_Info(MeshTopology)
+   Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
 
    Allocate (Vertices(2,3))
 
@@ -86,12 +87,19 @@ Program TestSieve
 !      F_Ptr(iS) = Coords(iS)%Y
    End Do
 
-   Call VecRestoreArrayF90(U, U_Ptr, iErr)
-   Call VecRestoreArrayF90(F, F_Ptr, iErr)
+   Call VecRestoreArrayF90(U, U_Ptr, iErr); CHKERRQ(iErr)
+   Call VecRestoreArrayF90(F, F_Ptr, iErr); CHKERRQ(iErr)
 
-   Call FormObjectiveFunction(ObjectiveFunction, MeshTopology, Elem2DA, U, F)
+   Call FormObjectiveFunction(MyObjectiveFunction, MeshTopology, Elem2DA, U, F)
 
-   Write(*,*) 'Objective Function: ', ObjectiveFunction
+   Call PetscGlobalSum(MyObjectiveFunction, ObjectiveFunction, PETSC_COMM_WORLD, ierr); CHKERRQ(iErr)
+   Write(CharBuffer,*) MEF90_MyRank, ' My Objective Function: ', MyObjectiveFunction, '\n'c
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
+   Call PetscSynchronizedFlush(PETSC_COMM_WORLD, ierr); CHKERRQ(ierr)
+
+   Write(CharBuffer,*) '               Objective Function: ', ObjectiveFunction, '\n'c
+   Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
+
    Call MEF90_Finalize()
 
  Contains
@@ -161,7 +169,7 @@ Program TestSieve
       mesh = parallelMesh
       call PetscViewerASCIIOpen(PETSC_COMM_WORLD, PETSC_NULL_CHARACTER, viewer, ierr)
       call PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_INFO_DETAIL, ierr)
-      call MeshView(mesh, ierr)
+      call MeshView(mesh, viewer, ierr)
       call PetscViewerDestroy(viewer, ierr)
 
       ! Read Global Geometric Parameters
