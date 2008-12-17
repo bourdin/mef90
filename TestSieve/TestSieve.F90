@@ -27,12 +27,13 @@ Program TestSieve
    PetscReal                                    :: MyObjectiveFunction, ObjectiveFunction
    Vec                                          :: U, F, Gradient
    PetscReal, Dimension(:), Pointer             :: U_Ptr, F_Ptr
-   Mat                                          :: Hessian
+   Mat                                          :: K
    PetscTruth                                   :: HasF
    Integer                                      :: iErr
    Integer                                      :: iBlk, iELoc, iE, iS
    Character(len=256)                           :: CharBuffer
    Integer, Dimension(:,:), Pointer             :: Tmp_Connect
+   SectionReal                                  :: VertexSection
    
    Integer                                      :: vers
    Integer, Parameter                           :: exo_cpu_ws = 8
@@ -70,15 +71,20 @@ Program TestSieve
    Deallocate(Vertices)
 
 !   Call Show_Elem2D_Scal(Elem2DA)
+   
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, VertexSection, ierr); CHKERRQ(iErr)
+   Call MeshGetMatrix(MeshTopology%mesh, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
+!   Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
+!   Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
 
-   Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, U, iErr)
-   Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, F, iErr)
+   Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, U, iErr); CHKERRQ(iErr)
+   Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, F, iErr); CHKERRQ(iErr)
 
-   Call VecSet(U, 1.0_Kr, iErr)
-   Call VecSet(F, 1.0_Kr, iErr)
+   Call VecSet(U, 1.0_Kr, iErr); CHKERRQ(iErr)
+   Call VecSet(F, 1.0_Kr, iErr); CHKERRQ(iErr)
 
-   Call VecGetArrayF90(F, F_Ptr, iErr)
-   Call VecGetArrayF90(U, U_Ptr, iErr)
+   Call VecGetArrayF90(F, F_Ptr, iErr); CHKERRQ(iErr)
+   Call VecGetArrayF90(U, U_Ptr, iErr); CHKERRQ(iErr)
 
    Do iS = 1, Size(U_Ptr)
       U_Ptr(iS) = 1.+Coords(iS)%Y
@@ -167,32 +173,41 @@ Program TestSieve
       Character(len=MXSTLN)                        :: EXO_DummyStr   
       Integer                                      :: embedDim
       Integer                                      :: iNode, iElem
-      Mesh                                         :: mesh, parallelMesh
+      Mesh                                         :: mesh
       PetscViewer                                  :: viewer
 
       ! Open File
       call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, mesh, ierr)
-      call MeshDistribute(mesh, PETSC_NULL_CHARACTER, parallelMesh, ierr)
+      !!! reads exo file, stores all information in a Mesh
+
+      call MeshDistribute(mesh, PETSC_NULL_CHARACTER, dMeshTopology%mesh, ierr)
+      !!! Partitions using a partitioner (currently PETSC_NULL_CHARACTER) 
       call MeshDestroy(mesh, ierr)
-      mesh = parallelMesh
+
       call PetscViewerASCIIOpen(PETSC_COMM_WORLD, PETSC_NULL_CHARACTER, viewer, ierr)
       call PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_INFO_DETAIL, ierr)
-      call MeshView(mesh, viewer, ierr)
+      call MeshView(dMeshTopology%mesh, viewer, ierr)
       call PetscViewerDestroy(viewer, ierr)
 
       ! Read Global Geometric Parameters
-      call MeshExodusGetInfo(mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, &
+      call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, &
            & dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr)
+      !!! Extracts sizes from the Mesh oject
+
+
       ! Read Elem blocks informations
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
       CharBuffer = 'CellBlocks'
       If (dMeshTopology%Num_Elem_blks > 0) Then
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-            call MeshGetStratumSize(mesh, CharBuffer, iBlk-1, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr)
+            call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, iBlk-1, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr)
+            !!! Get the size of the layer (stratum) 'CellBlock' of Mesh
             write(6,*) 'Number of elements in block',iBlk-1,dMeshTopology%Elem_blk(iBlk)%Num_Elems
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
-            call MeshGetStratum(mesh, CharBuffer, iBlk-1, dMeshTopology%Elem_blk(iBlk)%Elem_ID, ierr)
+            call MeshGetStratum(dMeshTopology%mesh, CharBuffer, iBlk-1, dMeshTopology%Elem_blk(iBlk)%Elem_ID, ierr)
+            !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
             dMeshTopology%Elem_blk(iBlk)%Elem_ID = dMeshTopology%Elem_blk(iBlk)%Elem_ID + 1
+            !!! COnverts to Fortran style indexing
          End Do
       End If
       
@@ -201,17 +216,17 @@ Program TestSieve
       CharBuffer = 'VertexSets'
       If (dMeshTopology%Num_Node_Sets > 0) Then
          Do iSet = 1, dMeshTopology%Num_node_sets
-            call MeshGetStratumSize(mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr)
+            call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr)
             write(6,*) 'Number of nodes in set',iSet-1,dMeshTopology%Node_set(iSet)%Num_Nodes
             Allocate(dMeshTopology%Node_Set(iSet)%Node_ID(dMeshTopology%Node_Set(iSet)%Num_Nodes))
-            call MeshGetStratum(mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Node_ID, ierr)
+            call MeshGetStratum(dMeshTopology%mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Node_ID, ierr)
             dMeshTopology%Node_Set(iSet)%Node_ID = dMeshTopology%Node_Set(iSet)%Node_ID - MeshTopology%Num_Elems
          End Do
       End If
 
       ! Read the vertices coordinates
       Allocate(Coords(MeshTopology%Num_Vert))
-      call MeshGetCoordinatesF90(mesh, array, iErr)
+      call MeshGetCoordinatesF90(dMeshTopology%mesh, array, iErr)
       embedDim = size(array,2)
       Coords%X = array(:,1)
       If (embedDim > 1) Then
@@ -224,11 +239,11 @@ Program TestSieve
       Else
          Coords%z = 0.0
       EndIf
-      call MeshRestoreCoordinatesF90(mesh, array, iErr)
+      call MeshRestoreCoordinatesF90(dMeshTopology%mesh, array, iErr)
  
       ! Read the connectivity table
       Allocate(Elem2DA(MeshTopology%Num_Elems))
-      call MeshGetElementsF90(mesh, arrayCon, iErr)
+      call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr)
       Do iBlk = 1, MeshTopology%Num_Elem_Blks
          Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iElem = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)
@@ -236,7 +251,7 @@ Program TestSieve
             Elem2DA(iElem)%ID_DoF = arrayCon(iElem,:)
          End Do
       End Do
-      call MeshRestoreElementsF90(mesh, arrayCon, iErr)
+      call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr)
 
       dEXO%exoid = 0
     End Subroutine Read_MeshTopology_Info_EXO
