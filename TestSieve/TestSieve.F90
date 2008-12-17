@@ -215,10 +215,8 @@ Program TestSieve
             Allocate(Elem2DA(iElem)%ID_DoF(3))
             !Elem2DA(iElem)%ID_DoF(:) = arrayCon(iE,:)
             Do i = 1, 3
-               write(6,*) 'arrayCon',iElem,i,arrayCon(iElem,i)
                Elem2DA(iElem)%ID_DoF(i) = arrayCon(iElem,i)
             End Do
-            write(6,*) 'Elem',iElem,Elem2DA(iElem)%ID_DoF
          End Do
       End Do
       call MeshRestoreElementsF90(mesh, arrayCon, iErr)
