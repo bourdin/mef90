@@ -59,14 +59,6 @@ Program TestSieve
    Call Show_MeshTopology_Info(MeshTopology)
 
    Allocate (Vertices(2,3))
-   
-   ! MGK EXO%exoid = EXOPEN(EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
-
-   !!! Read the vertices coordinates
-   ! MGK Call EXGCOR(EXO%exoid, Coords%X, Coords%Y, Coords%Z, iErr)
-
-   ! MGK Call EXCLOS(EXO%exoid, iErr)
-   ! MGK EXO%exoid = 0
 
    !!! Initialize the element   
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
@@ -97,7 +89,7 @@ Program TestSieve
    Call VecRestoreArrayF90(U, U_Ptr, iErr)
    Call VecRestoreArrayF90(F, F_Ptr, iErr)
 
-   Call FormObjectiveFunction(ObjectiveFunction, MeshTopology, Elem2DA, U, F)
+   !Call FormObjectiveFunction(ObjectiveFunction, MeshTopology, Elem2DA, U, F)
 
    Write(*,*) 'Objective Function: ', ObjectiveFunction
    Call MEF90_Finalize()
@@ -157,34 +149,26 @@ Program TestSieve
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
       Integer                                      :: EXO_DummyInteger
       Character(len=MXSTLN)                        :: EXO_DummyStr   
-      Integer                                      :: vers
-      Integer                                      :: iNode
+      Integer                                      :: embedDim
+      Integer                                      :: iNode, iElem
       Mesh                                         :: mesh
 
       ! Open File
-      !MGK dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
       call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, mesh, ierr)
 
       ! Read Global Geometric Parameters
-      ! MGK Call EXGINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, &
-      !     & dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
       call MeshExodusGetInfo(mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, &
            & dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr)
       ! Read Elem blocks informations
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
-      ! MGK Offset = 0
       CharBuffer = 'CellBlocks'
       If (dMeshTopology%Num_Elem_blks > 0) Then
-      ! MGK    Call EXGEBI(dEXO%exoid, dMeshTopology%Elem_Blk(:)%ID, iErr)
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-      ! MGK       Call EXGELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, EXO_DummyStr, dMeshTopology%elem_blk(iBlk)%Num_Elems, &
-      ! MGK            & EXO_DummyInteger, EXO_DummyInteger, iErr)
             call MeshGetStratumSize(mesh, CharBuffer, iBlk-1, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr)
             write(6,*) 'Number of elements in block',iBlk-1,dMeshTopology%Elem_blk(iBlk)%Num_Elems
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
             call MeshGetStratum(mesh, CharBuffer, iBlk-1, dMeshTopology%Elem_blk(iBlk)%Elem_ID, ierr)
-      ! MGK       dMeshTopology%Elem_Blk(iBlk)%Elem_ID = (/ (Offset+i, i=1, dMeshTopology%elem_blk(iBlk)%Num_Elems)/)
-      ! MGK       Offset = Offset + dMeshTopology%elem_blk(iBlk)%Num_Elems
+            dMeshTopology%Elem_blk(iBlk)%Elem_ID = dMeshTopology%Elem_blk(iBlk)%Elem_ID + 1
          End Do
       End If
       
@@ -192,52 +176,53 @@ Program TestSieve
       Allocate (dMeshTopology%Node_Set(dMeshTopology%Num_Node_Sets))
       CharBuffer = 'VertexSets'
       If (dMeshTopology%Num_Node_Sets > 0) Then
-      ! MGK    Call EXGNSI(dEXO%exoid, dMeshTopology%Node_Set(:)%ID, iErr)
          Do iSet = 1, dMeshTopology%Num_node_sets
-      ! MGK       Call EXGNP(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Num_Nodes, EXO_DummyInteger, iErr)
             call MeshGetStratumSize(mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr)
             write(6,*) 'Number of nodes in set',iSet-1,dMeshTopology%Node_set(iSet)%Num_Nodes
             Allocate(dMeshTopology%Node_Set(iSet)%Node_ID(dMeshTopology%Node_Set(iSet)%Num_Nodes))
             call MeshGetStratum(mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Node_ID, ierr)
-      ! MGK       Call EXGNS(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Node_ID(:), iErr)
+            dMeshTopology%Node_Set(iSet)%Node_ID = dMeshTopology%Node_Set(iSet)%Node_ID - MeshTopology%Num_Elems
          End Do
       End If
 
       ! Read the vertices coordinates
       Allocate(Coords(MeshTopology%Num_Vert))
       call MeshGetCoordinatesF90(mesh, array, iErr)
+      embedDim = size(array,2)
       Do iNode = 1, dMeshTopology%Num_Vert
-         Coords(iNode)%X = array(iNode,0)
-         Coords(iNode)%Y = array(iNode,1)
-         Coords(iNode)%Z = array(iNode,2)
+         Coords(iNode)%X = array(iNode,1)
+         If (embedDim > 1) Then
+            Coords(iNode)%Y = array(iNode,2)
+            If (embedDim > 2) Then
+               Coords(iNode)%Z = array(iNode,3)
+            Else
+               Coords(iNode)%Z = 0.0
+            End If
+         Else
+            Coords(iNode)%Y = 0.0
+            Coords(iNode)%Z = 0.0
+         End If
+         write(6,*) 'Node',iNode,Coords(iNode)
       End Do
       call MeshRestoreCoordinatesF90(mesh, array, iErr)
-      ! MGK Call EXGCOR(EXO%exoid, Coords%X, Coords%Y, Coords%Z, iErr)
 
       ! Read the connectivity table
       Allocate(Elem2DA(MeshTopology%Num_Elems))
       call MeshGetElementsF90(mesh, arrayCon, iErr)
       Do iBlk = 1, MeshTopology%Num_Elem_Blks
          Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            Allocate(Elem2DA(MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE))%ID_DoF(3))
-            !Elem2DA(MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE))%ID_DoF(:) = arrayCon(iE,:)
+            iElem = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)
+            Allocate(Elem2DA(iElem)%ID_DoF(3))
+            !Elem2DA(iElem)%ID_DoF(:) = arrayCon(iE,:)
             Do i = 1, 3
-               Elem2DA(MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE))%ID_DoF(i) = arrayCon(iE,i)
+               write(6,*) 'arrayCon',iElem,i,arrayCon(iElem,i)
+               Elem2DA(iElem)%ID_DoF(i) = arrayCon(iElem,i)
             End Do
+            write(6,*) 'Elem',iElem,Elem2DA(iElem)%ID_DoF
          End Do
       End Do
       call MeshRestoreElementsF90(mesh, arrayCon, iErr)
-      ! MGK Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      ! MGK    Allocate(Tmp_Connect(3, MeshTopology%Elem_Blk(iBlk)%Num_Elems) )
-      ! MGK    Call EXGELC (EXO%exoid, MeshTopology%Elem_Blk(iBlk)%ID, Tmp_Connect, iErr)
-      ! MGK    Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
-      ! MGK       Allocate (Elem2DA( MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE) )%ID_DoF(3) )
-      ! MGK       Elem2DA( MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE) )%ID_DoF(:)  = Tmp_Connect(:, iE)
-      ! MGK    End Do
-      ! MGK    DeAllocate (Tmp_Connect)
-      ! MGK End Do
 
-      ! MGK Call EXCLOS(dEXO%exoid, iErr)
       dEXO%exoid = 0
     End Subroutine Read_MeshTopology_Info_EXO
 
