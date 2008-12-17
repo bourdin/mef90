@@ -76,13 +76,13 @@ Program TestSieve
    Call VecCreateSeq(PETSC_COMM_WORLD, MeshTopology%Num_Vert, F, iErr)
 
    Call VecSet(U, 1.0_Kr, iErr)
-   Call VecSet(F, 0.0_Kr, iErr)
+   Call VecSet(F, 1.0_Kr, iErr)
 
    Call VecGetArrayF90(F, F_Ptr, iErr)
    Call VecGetArrayF90(U, U_Ptr, iErr)
 
    Do iS = 1, Size(U_Ptr)
-      U_Ptr(iS) = Coords(iS)%X
+      U_Ptr(iS) = 1.+Coords(iS)%Y
 !      F_Ptr(iS) = Coords(iS)%Y
    End Do
 
@@ -189,22 +189,19 @@ Program TestSieve
       Allocate(Coords(MeshTopology%Num_Vert))
       call MeshGetCoordinatesF90(mesh, array, iErr)
       embedDim = size(array,2)
-      Do iNode = 1, dMeshTopology%Num_Vert
-         Coords(iNode)%X = array(iNode,1)
-         If (embedDim > 1) Then
-            Coords(iNode)%Y = array(iNode,2)
-            If (embedDim > 2) Then
-               Coords(iNode)%Z = array(iNode,3)
-            Else
-               Coords(iNode)%Z = 0.0
-            End If
-         Else
-            Coords(iNode)%Y = 0.0
-            Coords(iNode)%Z = 0.0
-         End If
-      End Do
+      Coords%X = array(:,1)
+      If (embedDim > 1) Then
+         Coords%Y = array(:,2)
+      Else
+         Coords%Y = 0.0
+      EndIf
+      If (embedDim > 2) Then
+         Coords%Z = array(:,3)
+      Else
+         Coords%z = 0.0
+      EndIf
       call MeshRestoreCoordinatesF90(mesh, array, iErr)
-
+ 
       ! Read the connectivity table
       Allocate(Elem2DA(MeshTopology%Num_Elems))
       call MeshGetElementsF90(mesh, arrayCon, iErr)
@@ -212,10 +209,7 @@ Program TestSieve
          Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iElem = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)
             Allocate(Elem2DA(iElem)%ID_DoF(3))
-            !Elem2DA(iElem)%ID_DoF(:) = arrayCon(iE,:)
-            Do i = 1, 3
-               Elem2DA(iElem)%ID_DoF(i) = arrayCon(iElem,i)
-            End Do
+            Elem2DA(iElem)%ID_DoF = arrayCon(iElem,:)
          End Do
       End Do
       call MeshRestoreElementsF90(mesh, arrayCon, iErr)
