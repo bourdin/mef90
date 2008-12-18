@@ -18,6 +18,7 @@ Module m_MEF_Types
 #include "finclude/petscis.h"
 #include "finclude/petscis.h90"
 #include "finclude/petscao.h"
+#include "finclude/petscmesh.h"
    include "exodusII.inc"
 
    ! Defines the basid bata structures for nodes, elements and geometry
@@ -194,6 +195,7 @@ Module m_MEF_Types
       Type(Node_Set_Info), Dimension(:), Pointer     :: node_set
       ! Side Sets DATAS
       Integer                                        :: num_side_sets
+      Mesh                                           :: mesh
    End Type MeshTopology_Info
    
    Type EXO_Info
