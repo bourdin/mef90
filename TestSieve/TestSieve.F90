@@ -28,6 +28,7 @@ Program TestSieve
    Vec                                          :: U, F
    PetscReal, Dimension(:), Pointer             :: U_Ptr, F_Ptr
    Mat                                          :: K
+   Vec                                          :: V
    PetscTruth                                   :: HasF
    PetscInt                                     :: dof
    PetscTruth                                   :: verbose
@@ -50,6 +51,8 @@ Program TestSieve
       Call MEF90_Finalize()
       STOP
    End If
+
+   call PetscLogEventRegister('ElementIntegration', 0, Elem2DA%integrationEvent, ierr); CHKERRQ(ierr)
 
    EXO%Comm = PETSC_COMM_WORLD
    
@@ -80,6 +83,7 @@ Program TestSieve
    
    Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, VertexSection, ierr); CHKERRQ(iErr)
    Call MeshCreateMatrix(MeshTopology%mesh, VertexSection, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
+   Call MeshCreateVector(MeshTopology%mesh, VertexSection, V, iErr); CHKERRQ(iErr)
    Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
    Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
    Call MatAssemblyEnd(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
