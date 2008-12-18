@@ -25,17 +25,15 @@ Program TestSieve
    PetscReal, Dimension(:,:), Pointer           :: Vertices
    
    PetscReal                                    :: MyObjectiveFunction, ObjectiveFunction
-   Vec                                          :: U, F, Gradient
+   Vec                                          :: U, F
    PetscReal, Dimension(:), Pointer             :: U_Ptr, F_Ptr
    Mat                                          :: K
    PetscTruth                                   :: HasF
    Integer                                      :: iErr
    Integer                                      :: iBlk, iELoc, iE, iS
    Character(len=256)                           :: CharBuffer
-   Integer, Dimension(:,:), Pointer             :: Tmp_Connect
    SectionReal                                  :: VertexSection
    
-   Integer                                      :: vers
    Integer, Parameter                           :: exo_cpu_ws = 8
    Integer, Parameter                           :: exo_io_ws = 8
      
@@ -73,9 +71,11 @@ Program TestSieve
 !   Call Show_Elem2D_Scal(Elem2DA)
    
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, VertexSection, ierr); CHKERRQ(iErr)
-   Call MeshGetMatrix(MeshTopology%mesh, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
-!   Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
-!   Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
+   Call MeshCreateMatrix(MeshTopology%mesh, VertexSection, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
+   Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
+   Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
+   Call MatAssemblyEnd(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
+   Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
 
    Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, U, iErr); CHKERRQ(iErr)
    Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, F, iErr); CHKERRQ(iErr)
@@ -121,7 +121,7 @@ Program TestSieve
       Type (Element2D_Scal), DImension(:), Pointer   :: dElems
       Integer, Optional                              :: Unit
       
-      Integer                                        :: iE, Nb_Gauss, Nb_DoF, iG, iDoF
+      Integer                                        :: iE, Nb_Gauss, Nb_DoF, iDoF
       Integer                                        :: IO_Unit
     
       If ( Present(Unit) ) Then
@@ -164,15 +164,13 @@ Program TestSieve
       Type (Vect3D), Dimension(:), Pointer         :: Coords
       Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
       Type (EXO_Info)                              :: dEXO
-      Integer                                      :: iErr, iBlk, iSet, Offset, i
+      Integer                                      :: iErr, iBlk, iSet
       Character(len=256)                           :: CharBuffer
       
       PetscReal, Dimension(:,:), Pointer           :: array
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      Integer                                      :: EXO_DummyInteger
-      Character(len=MXSTLN)                        :: EXO_DummyStr   
       Integer                                      :: embedDim
-      Integer                                      :: iNode, iElem
+      Integer                                      :: iElem
       Mesh                                         :: mesh
       PetscViewer                                  :: viewer
 
@@ -303,7 +301,6 @@ Program TestSieve
       Write(IO_Unit, 400)
       Write(IO_Unit, 401) dMeshTopology%num_side_sets
       
-100 Format('*** GLOBAL INFORMATIONS ***')
 103 Format('    Number of dimensions ============ ', I6)
 104 Format('    Number of vertices ============== ', I6)
 105 Format('    Number of elements ============== ', I6)
@@ -313,7 +310,7 @@ Program TestSieve
 
 200 Format('*** ELEMENT BLOCKS ***')
 201 Format('    Number of blocks ================ ', I4)
-202 Format('    Block ', I3, ' Elements type ========= ', A)
+!202 Format('    Block ', I3, ' Elements type ========= ', A)
 203 Format('    Block ', I3, ' Number of elements ==== ', I4)
 204 Format('    Block ', I3, ' Element type ========== ', I4)
 205 Format('    Block ', I3, ' DoF location ========== ', 4(I4, ' '))
@@ -324,7 +321,7 @@ Program TestSieve
 301 Format('    Number of sets ================== ', I4)
 302 Format('    Set ', I3, ' Number of nodes ========= ', I4)
 303 Format('    Set ', I3, ' IDs: ')
-304 Format('    Set ', I3, ' Number of dist. factors = ', I4)
+!304 Format('    Set ', I3, ' Number of dist. factors = ', I4)
 
 400 Format('*** SIDE SETS ***')
 401 Format('    Number of side sets ============= ', I4)
