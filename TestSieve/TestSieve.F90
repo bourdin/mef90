@@ -33,6 +33,7 @@ Program TestSieve
    Integer                                      :: iBlk, iELoc, iE, iS
    Character(len=256)                           :: CharBuffer
    SectionReal                                  :: VertexSection
+   VecScatter                                   :: scatter
    
    Integer, Parameter                           :: exo_cpu_ws = 8
    Integer, Parameter                           :: exo_io_ws = 8
@@ -75,7 +76,10 @@ Program TestSieve
    Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
    Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
    Call MatAssemblyEnd(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
-   Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
+   Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
+
+   Call MeshCreateGlobalScatter(MeshTopology%mesh, VertexSection, scatter, iErr); CHKERRQ(iErr)
+   !Call VecScatterView(scatter, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
    Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, U, iErr); CHKERRQ(iErr)
    Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, F, iErr); CHKERRQ(iErr)
