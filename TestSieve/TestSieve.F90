@@ -29,7 +29,8 @@ Program TestSieve
    PetscReal, Dimension(:), Pointer             :: U_Ptr, F_Ptr
    Mat                                          :: K
    PetscTruth                                   :: HasF
-   Integer                                      :: iErr
+   PetscInt                                     :: dof
+   PetscErrorCode                               :: iErr
    Integer                                      :: iBlk, iELoc, iE, iS
    Character(len=256)                           :: CharBuffer
    SectionReal                                  :: VertexSection
@@ -39,6 +40,8 @@ Program TestSieve
    Integer, Parameter                           :: exo_io_ws = 8
      
    Call MEF90_Initialize()
+   dof = 1
+   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-dof', dof, HasF, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', EXO%filename, HasF, iErr)    
    If (.NOT. HasF) Then
       Call PetscPrintf(PETSC_COMM_WORLD, "No input file given\n", iErr)
@@ -71,7 +74,7 @@ Program TestSieve
 
 !   Call Show_Elem2D_Scal(Elem2DA)
    
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, VertexSection, ierr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, VertexSection, ierr); CHKERRQ(iErr)
    Call MeshCreateMatrix(MeshTopology%mesh, VertexSection, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
    Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
    Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
