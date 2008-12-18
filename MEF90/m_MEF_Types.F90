@@ -67,6 +67,7 @@ Module m_MEF_Types
       Real(Kind = Kr), Dimension(:,:), pointer   :: Der_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
       Integer                                    :: Parent_Block
+      PetscLogEvent                              :: integrationEvent
    End Type Element1D
  
    Type Element2D_Scal
@@ -78,6 +79,7 @@ Module m_MEF_Types
       Type(Vect2D), Dimension(:,:), pointer      :: Grad_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
       Integer                                    :: Parent_Block
+      PetscLogEvent                              :: integrationEvent
    End Type Element2D_Scal
  
    Type Element2D
@@ -89,6 +91,7 @@ Module m_MEF_Types
       Type (Mat2D), Dimension(:,:), pointer      :: Der_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
       Integer                                    :: Parent_Block
+      PetscLogEvent                              :: integrationEvent
    End Type Element2D
  
    Type Element2D_Elast
@@ -100,6 +103,7 @@ Module m_MEF_Types
       Type (MatS2D), Dimension(:,:), pointer     :: GradS_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
       Integer                                    :: Parent_Block
+      PetscLogEvent                              :: integrationEvent
    End Type Element2D_Elast
  
    Type Element3D
@@ -111,6 +115,7 @@ Module m_MEF_Types
       Type (Mat3D), Dimension(:,:), pointer      :: Der_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
       Integer                                    :: Parent_Block
+      PetscLogEvent                              :: integrationEvent
    End Type Element3D
  
    Type Element3D_Scal
@@ -122,6 +127,7 @@ Module m_MEF_Types
       Type (Vect3D), Dimension(:,:), pointer     :: Grad_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
       Integer                                    :: Parent_Block
+      PetscLogEvent                              :: integrationEvent
    End Type Element3D_Scal
  
    Type Element3D_Elast
@@ -133,6 +139,7 @@ Module m_MEF_Types
       Type (MatS3D), Dimension(:,:), pointer     :: GradS_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
       Integer                                    :: Parent_Block
+      PetscLogEvent                              :: integrationEvent
    End Type Element3D_Elast
  
    Type Node1D

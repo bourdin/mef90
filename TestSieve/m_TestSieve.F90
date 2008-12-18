@@ -32,8 +32,9 @@ Module m_TestSieve
       PetscReal, Dimension(:), Pointer              :: U_Ptr, F_Ptr
       PetscReal                                     :: U_Elem, F_Elem
       Type (Vect2D)                                 :: Strain_Elem
-      Integer                                       :: iErr
-      
+      PetscErrorCode                                :: iErr
+
+      call PetscLogEvenBegin(dMyElem%integrationEvent, ierr); CHKERRQ(ierr)
       dMyObjFunc = 0.0_Kr
       Call VecGetArrayF90(dU_Loc, U_Ptr, iErr)
       Call VecGetArrayF90(dF_Loc, F_Ptr, iErr)
@@ -51,13 +52,16 @@ Module m_TestSieve
                   Strain_Elem = Strain_Elem + dMyElem(iE)%Grad_BF(iSL, iG) * U_Ptr(iSG)
                   F_Elem      = F_Elem      + dMyElem(iE)%BF(iSL, iG)      * F_Ptr(iSG)
                   U_Elem      = U_Elem      + dMyElem(iE)%BF(iSL, iG)      * U_Ptr(iSG)
+                  PetscLogFlopsFortran(6)
                End Do Do_iSL
                dMyObjFunc = dMyObjFunc + dMyELem(iE)%Gauss_C(iG) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * U_Elem) 
+               PetscLogFlopsFortran(5 + dMyMeshTopology%dim*2 - 1)
             End Do Do_iG
          End Do Do_iE
       End Do Do_iBlk
       Call VecRestoreArrayF90(dU_Loc, U_Ptr, iErr)
       Call VecRestoreArrayF90(dF_Loc, F_Ptr, iErr)
+      call PetscLogEvenEnd(dMyElem%integrationEvent, ierr); CHKERRQ(ierr)
    End Subroutine FormObjectiveFunction
    
 End Module m_TestSieve
