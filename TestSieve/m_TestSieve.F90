@@ -5,6 +5,7 @@ Module m_TestSieve
   PRIVATE
 
 #include "finclude/petsc.h"
+#include "finclude/petsclog.h"
 #include "finclude/petscvec.h"
 #include "finclude/petscvec.h90"
 #include "finclude/petscmat.h"
@@ -34,7 +35,7 @@ Module m_TestSieve
       Type (Vect2D)                                 :: Strain_Elem
       PetscErrorCode                                :: iErr
 
-      call PetscLogEvenBegin(dMyElem%integrationEvent, ierr); CHKERRQ(ierr)
+      call PetscLogEventBegin(dMyElem%integrationEvent, ierr); CHKERRQ(ierr)
       dMyObjFunc = 0.0_Kr
       Call VecGetArrayF90(dU_Loc, U_Ptr, iErr)
       Call VecGetArrayF90(dF_Loc, F_Ptr, iErr)
@@ -52,16 +53,16 @@ Module m_TestSieve
                   Strain_Elem = Strain_Elem + dMyElem(iE)%Grad_BF(iSL, iG) * U_Ptr(iSG)
                   F_Elem      = F_Elem      + dMyElem(iE)%BF(iSL, iG)      * F_Ptr(iSG)
                   U_Elem      = U_Elem      + dMyElem(iE)%BF(iSL, iG)      * U_Ptr(iSG)
-                  PetscLogFlopsFortran(6)
+                  call PetscLogFlops(6)
                End Do Do_iSL
                dMyObjFunc = dMyObjFunc + dMyELem(iE)%Gauss_C(iG) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * U_Elem) 
-               PetscLogFlopsFortran(5 + dMyMeshTopology%dim*2 - 1)
+               call PetscLogFlops(5 + dMyMeshTopology%num_dim*2 - 1)
             End Do Do_iG
          End Do Do_iE
       End Do Do_iBlk
       Call VecRestoreArrayF90(dU_Loc, U_Ptr, iErr)
       Call VecRestoreArrayF90(dF_Loc, F_Ptr, iErr)
-      call PetscLogEvenEnd(dMyElem%integrationEvent, ierr); CHKERRQ(ierr)
+      call PetscLogEventEnd(dMyElem%integrationEvent, ierr); CHKERRQ(ierr)
    End Subroutine FormObjectiveFunction
    
 End Module m_TestSieve
