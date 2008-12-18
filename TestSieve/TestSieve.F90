@@ -30,6 +30,7 @@ Program TestSieve
    Mat                                          :: K
    PetscTruth                                   :: HasF
    PetscInt                                     :: dof
+   PetscTruth                                   :: verbose
    PetscErrorCode                               :: iErr
    Integer                                      :: iBlk, iELoc, iE, iS
    Character(len=256)                           :: CharBuffer
@@ -42,6 +43,7 @@ Program TestSieve
    Call MEF90_Initialize()
    dof = 1
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-dof', dof, HasF, iErr)    
+   Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', EXO%filename, HasF, iErr)    
    If (.NOT. HasF) Then
       Call PetscPrintf(PETSC_COMM_WORLD, "No input file given\n", iErr)
@@ -57,7 +59,9 @@ Program TestSieve
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
-   Call Show_MeshTopology_Info(MeshTopology)
+   If (verbose) Then
+      Call Show_MeshTopology_Info(MeshTopology)
+   End If
    Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
 
    !!! Initialize the element   
@@ -79,6 +83,7 @@ Program TestSieve
    Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
    Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
    Call MatAssemblyEnd(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
+   Call PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_INFO_DETAIL, ierr); CHKERRQ(ierr)
    Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
 
    Call MeshCreateGlobalScatter(MeshTopology%mesh, VertexSection, scatter, iErr); CHKERRQ(iErr)
@@ -177,7 +182,9 @@ Program TestSieve
       PetscReal, Dimension(:,:), Pointer           :: array
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
       Integer                                      :: embedDim
-      Integer                                      :: iElem
+      Integer                                      :: iElem, numIds, blkId, setId
+      PetscInt, Dimension(:), Pointer              :: blkIds
+      PetscInt, Dimension(:), Pointer              :: setIds
       Mesh                                         :: mesh
       PetscViewer                                  :: viewer
 
@@ -189,10 +196,12 @@ Program TestSieve
       !!! Partitions using a partitioner (currently PETSC_NULL_CHARACTER) 
       call MeshDestroy(mesh, ierr)
 
-      call PetscViewerASCIIOpen(PETSC_COMM_WORLD, PETSC_NULL_CHARACTER, viewer, ierr)
-      call PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_INFO_DETAIL, ierr)
-      call MeshView(dMeshTopology%mesh, viewer, ierr)
-      call PetscViewerDestroy(viewer, ierr)
+      If (verbose) Then
+         call PetscViewerASCIIOpen(PETSC_COMM_WORLD, PETSC_NULL_CHARACTER, viewer, ierr)
+         call PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_INFO_DETAIL, ierr)
+         call MeshView(dMeshTopology%mesh, viewer, ierr)
+         call PetscViewerDestroy(viewer, ierr)
+      End If
 
       ! Read Global Geometric Parameters
       call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, &
@@ -200,34 +209,50 @@ Program TestSieve
       !!! Extracts sizes from the Mesh oject
 
 
-      ! Read Elem blocks informations
-      Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
+      ! Read Elem block information
       CharBuffer = 'CellBlocks'
+      call MeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)
+      If (numIds .ne. dMeshTopology%Num_Elem_blks) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Invalid number of element ids', ierr)
+      End If
+      Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
+      Allocate(blkIds(numIds))
+      call MeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
       If (dMeshTopology%Num_Elem_blks > 0) Then
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-            call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, iBlk-1, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr)
+            blkId = blkIds(iBlk)
+            dMeshTopology%Elem_blk(iBlk)%ID = blkId
+            call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr)
             !!! Get the size of the layer (stratum) 'CellBlock' of Mesh
-            write(6,*) 'Number of elements in block',iBlk-1,dMeshTopology%Elem_blk(iBlk)%Num_Elems
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
-            call MeshGetStratum(dMeshTopology%mesh, CharBuffer, iBlk-1, dMeshTopology%Elem_blk(iBlk)%Elem_ID, ierr)
+            call MeshGetStratum(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%Elem_blk(iBlk)%Elem_ID, ierr)
             !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
             dMeshTopology%Elem_blk(iBlk)%Elem_ID = dMeshTopology%Elem_blk(iBlk)%Elem_ID + 1
             !!! COnverts to Fortran style indexing
          End Do
       End If
+      Deallocate(blkIds)
       
-      ! Read Node sets informations
-      Allocate (dMeshTopology%Node_Set(dMeshTopology%Num_Node_Sets))
+      ! Read Node set information
       CharBuffer = 'VertexSets'
+      call MeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)
+      If (numIds .ne. dMeshTopology%Num_node_sets) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Invalid number of node ids', ierr)
+      End If
+      Allocate(dMeshTopology%Node_Set(dMeshTopology%Num_Node_Sets))
+      Allocate(setIds(numIds))
+      call MeshGetLabelIds(dMeshTopology%mesh, CharBuffer, setIds, ierr); CHKERRQ(ierr)
       If (dMeshTopology%Num_Node_Sets > 0) Then
          Do iSet = 1, dMeshTopology%Num_node_sets
-            call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr)
-            write(6,*) 'Number of nodes in set',iSet-1,dMeshTopology%Node_set(iSet)%Num_Nodes
+            setId = setIds(iSet)
+            dMeshTopology%Node_Set(iSet)%ID = setId
+            call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, setId, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr)
             Allocate(dMeshTopology%Node_Set(iSet)%Node_ID(dMeshTopology%Node_Set(iSet)%Num_Nodes))
-            call MeshGetStratum(dMeshTopology%mesh, CharBuffer, iSet-1, dMeshTopology%Node_Set(iSet)%Node_ID, ierr)
+            call MeshGetStratum(dMeshTopology%mesh, CharBuffer, setId, dMeshTopology%Node_Set(iSet)%Node_ID, ierr)
             dMeshTopology%Node_Set(iSet)%Node_ID = dMeshTopology%Node_Set(iSet)%Node_ID - MeshTopology%Num_Elems
          End Do
       End If
+      Deallocate(setIds)
 
       ! Read the vertices coordinates
       Allocate(Coords(MeshTopology%Num_Vert))
