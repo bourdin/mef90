@@ -32,7 +32,9 @@ Module m_TestSieve
       SectionReal                                   :: dU, dF
       PetscLogEvent                                 :: integrationEvent
       
-      Integer                                       :: iBlk, iELoc, iE, iG, iSL
+      Integer                                       :: iBlk, blkId, numElems, iELoc, iE, iG, iSL
+      Character(len=256)                            :: CharBuffer
+      PetscInt, Dimension(:), Pointer               :: blkIds, elemIds
       PetscScalar, Dimension(:), Pointer            :: U_Ptr, F_Ptr
       PetscReal                                     :: U_Elem, F_Elem
       Type (Vect2D)                                 :: Strain_Elem
@@ -43,11 +45,21 @@ Module m_TestSieve
       Allocate(F_Ptr(dMyMeshTopology%Elem_Blk(1)%Nb_DoF))
 
       dMyObjFunc = 0.0_Kr
+      CharBuffer = 'CellBlocks'
+      Allocate(blkIds(dMyMeshTopology%Num_Elem_blks))
+      call MeshGetLabelIds(dMyMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
       Do_iBlk: Do iBlk = 1, dMyMeshTopology%Num_Elem_Blks
-         Do_iE: Do iELoc = 1, dMyMeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = dMyMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            call MeshRestrictClosure(dMyMeshTopology%mesh, dU, iE-1, Size(U_Ptr), U_Ptr, ierr)
-            call MeshRestrictClosure(dMyMeshTopology%mesh, dF, iE-1, Size(F_Ptr), F_Ptr, ierr)
+         blkId = blkIds(iBlk)
+         call MeshGetStratumSize(dMyMeshTopology%mesh, CharBuffer, blkId, numElems, ierr); CHKERRQ(ierr)
+         Allocate(elemIds(numElems))
+         call MeshGetStratum(dMyMeshTopology%mesh, CharBuffer, blkId, elemIds, ierr); CHKERRQ(ierr)
+         Do_iE: Do iELoc = 1, numElems
+            iE = elemIds(iELoc)+1
+      !Do_iBlk: Do iBlk = 1, dMyMeshTopology%Num_Elem_Blks
+      !   Do_iE: Do iELoc = 1, dMyMeshTopology%Elem_Blk(iBlk)%Num_Elems
+      !      iE = dMyMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            call MeshRestrictClosure(dMyMeshTopology%mesh, dU, iE-1, Size(U_Ptr), U_Ptr, ierr); CHKERRQ(ierr)
+            call MeshRestrictClosure(dMyMeshTopology%mesh, dF, iE-1, Size(F_Ptr), F_Ptr, ierr); CHKERRQ(ierr)
             Do_iG: Do iG = 1, size(dMyElem(iE)%BF,2)
                Strain_Elem = 0.0_Kr
                U_Elem      = 0.0_Kr
@@ -63,7 +75,9 @@ Module m_TestSieve
                call PetscLogFlops(5._Kr + dMyMeshTopology%num_dim*2 - 1, ierr)
             End Do Do_iG
          End Do Do_iE
+         Deallocate(elemIds)
       End Do Do_iBlk
+      Deallocate(blkIds)
 
       Deallocate(U_Ptr)
       Deallocate(F_Ptr)
