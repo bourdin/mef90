@@ -13,13 +13,15 @@ Module m_TestSieve
 #include "finclude/petscksp.h"
 #include "finclude/petscpc.h"
 #include "finclude/petscao.h"
+#include "finclude/petscmesh.h"
+#include "finclude/petscmesh.h90"
 
    Public :: FormObjectiveFunction
 !   Public :: FormGradient
 !   Public :: FormHessian
 
  Contains
-   Subroutine FormObjectiveFunction(dMyObjFunc, dMyMeshTopology, dMyElem, dU_Loc, dF_Loc, integrationEvent)
+   Subroutine FormObjectiveFunction(dMyObjFunc, dMyMeshTopology, dMyElem, dU, dF, integrationEvent)
    !!! Compute the contribution of each CPU to the objective function
    !!! \int 1/2 |\nabla u|^2 - f.u \, dx
    !!! dU_Loc must be a LOCAL (ghosted) vector 
@@ -27,42 +29,44 @@ Module m_TestSieve
       PetscReal                                     :: dMyObjFunc
       Type (MeshTopology_Info)                      :: dMyMeshTopology
       Type (Element2D_Scal), Dimension(:), Pointer  :: dMyElem
-      Vec                                           :: dU_Loc, dF_Loc
+      SectionReal                                   :: dU, dF
       PetscLogEvent                                 :: integrationEvent
       
-      Integer                                       :: iBlk, iELoc, iE, iG, iSL, iSG
-      PetscReal, Dimension(:), Pointer              :: U_Ptr, F_Ptr
+      Integer                                       :: iBlk, iELoc, iE, iG, iSL
+      PetscScalar, Dimension(:), Pointer            :: U_Ptr, F_Ptr
       PetscReal                                     :: U_Elem, F_Elem
       Type (Vect2D)                                 :: Strain_Elem
       PetscErrorCode                                :: iErr
 
       call PetscLogEventBegin(integrationEvent, ierr); CHKERRQ(ierr)
+      Allocate(U_Ptr(dMyMeshTopology%Elem_Blk(1)%Nb_DoF))
+      Allocate(F_Ptr(dMyMeshTopology%Elem_Blk(1)%Nb_DoF))
+
       dMyObjFunc = 0.0_Kr
-      Call VecGetArrayF90(dU_Loc, U_Ptr, iErr)
-      Call VecGetArrayF90(dF_Loc, F_Ptr, iErr)
-      
       Do_iBlk: Do iBlk = 1, dMyMeshTopology%Num_Elem_Blks
          Do_iE: Do iELoc = 1, dMyMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMyMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            call MeshRestrictClosure(dMyMeshTopology%mesh, dU, iE-1, Size(U_Ptr), U_Ptr, ierr)
+            call MeshRestrictClosure(dMyMeshTopology%mesh, dF, iE-1, Size(F_Ptr), F_Ptr, ierr)
             Do_iG: Do iG = 1, size(dMyElem(iE)%BF,2)
                Strain_Elem = 0.0_Kr
                U_Elem      = 0.0_Kr
                F_Elem      = 0.0_Kr
               
                Do_iSL: Do iSL = 1, dMyMeshTopology%Elem_Blk(iBlk)%Nb_DoF
-                  iSG = dMyElem(iE)%ID_DoF(iSL)
-                  Strain_Elem = Strain_Elem + dMyElem(iE)%Grad_BF(iSL, iG) * U_Ptr(iSG)
-                  F_Elem      = F_Elem      + dMyElem(iE)%BF(iSL, iG)      * F_Ptr(iSG)
-                  U_Elem      = U_Elem      + dMyElem(iE)%BF(iSL, iG)      * U_Ptr(iSG)
-                  call PetscLogFlops(6)
+                  Strain_Elem = Strain_Elem + dMyElem(iE)%Grad_BF(iSL, iG) * U_Ptr(iSL)
+                  F_Elem      = F_Elem      + dMyElem(iE)%BF(iSL, iG)      * F_Ptr(iSL)
+                  U_Elem      = U_Elem      + dMyElem(iE)%BF(iSL, iG)      * U_Ptr(iSL)
+                  call PetscLogFlops(6._Kr, ierr)
                End Do Do_iSL
                dMyObjFunc = dMyObjFunc + dMyELem(iE)%Gauss_C(iG) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * U_Elem) 
-               call PetscLogFlops(5 + dMyMeshTopology%num_dim*2 - 1)
+               call PetscLogFlops(5._Kr + dMyMeshTopology%num_dim*2 - 1, ierr)
             End Do Do_iG
          End Do Do_iE
       End Do Do_iBlk
-      Call VecRestoreArrayF90(dU_Loc, U_Ptr, iErr)
-      Call VecRestoreArrayF90(dF_Loc, F_Ptr, iErr)
+
+      Deallocate(U_Ptr)
+      Deallocate(F_Ptr)
       call PetscLogEventEnd(integrationEvent, ierr); CHKERRQ(ierr)
    End Subroutine FormObjectiveFunction
    

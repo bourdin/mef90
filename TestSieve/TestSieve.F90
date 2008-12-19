@@ -25,8 +25,8 @@ Program TestSieve
    PetscReal, Dimension(:,:), Pointer           :: Vertices
    
    PetscReal                                    :: MyObjectiveFunction, ObjectiveFunction
-   Vec                                          :: U, F
-   PetscReal, Dimension(:), Pointer             :: U_Ptr, F_Ptr
+   SectionReal                                  :: U, F
+   PetscReal, Dimension(:), Pointer             :: values
    Mat                                          :: K
    Vec                                          :: V
    PetscTruth                                   :: HasF
@@ -34,9 +34,8 @@ Program TestSieve
    PetscLogEvent                                :: integrationEvent
    PetscTruth                                   :: verbose
    PetscErrorCode                               :: iErr
-   Integer                                      :: iBlk, iELoc, iE, iS
+   Integer                                      :: iBlk, iELoc, iE, iV
    Character(len=256)                           :: CharBuffer
-   SectionReal                                  :: VertexSection
    VecScatter                                   :: scatter
    
    Integer, Parameter                           :: exo_cpu_ws = 8
@@ -82,34 +81,29 @@ Program TestSieve
 
 !   Call Show_Elem2D_Scal(Elem2DA)
    
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, VertexSection, ierr); CHKERRQ(iErr)
-   Call MeshCreateMatrix(MeshTopology%mesh, VertexSection, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
-   Call MeshCreateVector(MeshTopology%mesh, VertexSection, V, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, U, ierr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, F, ierr); CHKERRQ(iErr)
+   Call MeshCreateMatrix(MeshTopology%mesh, U, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
+   Call MeshCreateVector(MeshTopology%mesh, U, V, iErr); CHKERRQ(iErr)
    Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
    Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
    Call MatAssemblyEnd(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
    Call PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_INFO_DETAIL, ierr); CHKERRQ(ierr)
    Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
 
-   Call MeshCreateGlobalScatter(MeshTopology%mesh, VertexSection, scatter, iErr); CHKERRQ(iErr)
+   Call MeshCreateGlobalScatter(MeshTopology%mesh, U, scatter, iErr); CHKERRQ(iErr)
    !Call VecScatterView(scatter, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
-   Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, U, iErr); CHKERRQ(iErr)
-   Call VecCreateSeq(PETSC_COMM_SELF, MeshTopology%Num_Vert, F, iErr); CHKERRQ(iErr)
-
-   Call VecSet(U, 1.0_Kr, iErr); CHKERRQ(iErr)
-   Call VecSet(F, 1.0_Kr, iErr); CHKERRQ(iErr)
-
-   Call VecGetArrayF90(F, F_Ptr, iErr); CHKERRQ(iErr)
-   Call VecGetArrayF90(U, U_Ptr, iErr); CHKERRQ(iErr)
-
-   Do iS = 1, Size(U_Ptr)
-      U_Ptr(iS) = 1.+Coords(iS)%Y
-!      F_Ptr(iS) = Coords(iS)%Y
+   Call SectionRealSet(U, 1.0_Kr, iErr); CHKERRQ(iErr)
+   Call SectionRealSet(F, 1.0_Kr, iErr); CHKERRQ(iErr)
+   Allocate(values(dof))
+   Do iV = 1, MeshTopology%Num_Vert
+      values(1) = 1.0+Coords(iV)%Y
+      call MeshUpdateClosure(MeshTopology%mesh, U, MeshTopology%Num_Elems+iV-1, values, ierr)
    End Do
-
-   Call VecRestoreArrayF90(U, U_Ptr, iErr); CHKERRQ(iErr)
-   Call VecRestoreArrayF90(F, F_Ptr, iErr); CHKERRQ(iErr)
+   Deallocate(values)
+   Call SectionRealView(U, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
+   Call SectionRealView(F, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
 
    Call FormObjectiveFunction(MyObjectiveFunction, MeshTopology, Elem2DA, U, F, integrationEvent)
 
