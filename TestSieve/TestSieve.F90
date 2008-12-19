@@ -31,6 +31,7 @@ Program TestSieve
    Vec                                          :: V
    PetscTruth                                   :: HasF
    PetscInt                                     :: dof
+   PetscLogEvent                                :: integrationEvent
    PetscTruth                                   :: verbose
    PetscErrorCode                               :: iErr
    Integer                                      :: iBlk, iELoc, iE, iS
@@ -52,7 +53,7 @@ Program TestSieve
       STOP
    End If
 
-   call PetscLogEventRegister('ElementIntegration', 0, Elem2DA%integrationEvent, ierr); CHKERRQ(ierr)
+   call PetscLogEventRegister('ElemInteg', 0, integrationEvent, ierr); CHKERRQ(ierr)
 
    EXO%Comm = PETSC_COMM_WORLD
    
@@ -110,7 +111,7 @@ Program TestSieve
    Call VecRestoreArrayF90(U, U_Ptr, iErr); CHKERRQ(iErr)
    Call VecRestoreArrayF90(F, F_Ptr, iErr); CHKERRQ(iErr)
 
-   Call FormObjectiveFunction(MyObjectiveFunction, MeshTopology, Elem2DA, U, F)
+   Call FormObjectiveFunction(MyObjectiveFunction, MeshTopology, Elem2DA, U, F, integrationEvent)
 
    Call PetscGlobalSum(MyObjectiveFunction, ObjectiveFunction, PETSC_COMM_WORLD, ierr); CHKERRQ(iErr)
    Write(CharBuffer,*) MEF90_MyRank, ' My Objective Function: ', MyObjectiveFunction, '\n'

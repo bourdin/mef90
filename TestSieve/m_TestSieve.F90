@@ -19,7 +19,7 @@ Module m_TestSieve
 !   Public :: FormHessian
 
  Contains
-   Subroutine FormObjectiveFunction(dMyObjFunc, dMyMeshTopology, dMyElem, dU_Loc, dF_Loc)
+   Subroutine FormObjectiveFunction(dMyObjFunc, dMyMeshTopology, dMyElem, dU_Loc, dF_Loc, integrationEvent)
    !!! Compute the contribution of each CPU to the objective function
    !!! \int 1/2 |\nabla u|^2 - f.u \, dx
    !!! dU_Loc must be a LOCAL (ghosted) vector 
@@ -28,6 +28,7 @@ Module m_TestSieve
       Type (MeshTopology_Info)                      :: dMyMeshTopology
       Type (Element2D_Scal), Dimension(:), Pointer  :: dMyElem
       Vec                                           :: dU_Loc, dF_Loc
+      PetscLogEvent                                 :: integrationEvent
       
       Integer                                       :: iBlk, iELoc, iE, iG, iSL, iSG
       PetscReal, Dimension(:), Pointer              :: U_Ptr, F_Ptr
@@ -35,7 +36,7 @@ Module m_TestSieve
       Type (Vect2D)                                 :: Strain_Elem
       PetscErrorCode                                :: iErr
 
-      call PetscLogEventBegin(dMyElem%integrationEvent, ierr); CHKERRQ(ierr)
+      call PetscLogEventBegin(integrationEvent, ierr); CHKERRQ(ierr)
       dMyObjFunc = 0.0_Kr
       Call VecGetArrayF90(dU_Loc, U_Ptr, iErr)
       Call VecGetArrayF90(dF_Loc, F_Ptr, iErr)
@@ -62,7 +63,7 @@ Module m_TestSieve
       End Do Do_iBlk
       Call VecRestoreArrayF90(dU_Loc, U_Ptr, iErr)
       Call VecRestoreArrayF90(dF_Loc, F_Ptr, iErr)
-      call PetscLogEventEnd(dMyElem%integrationEvent, ierr); CHKERRQ(ierr)
+      call PetscLogEventEnd(integrationEvent, ierr); CHKERRQ(ierr)
    End Subroutine FormObjectiveFunction
    
 End Module m_TestSieve
