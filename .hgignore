@@ -1,0 +1,6 @@
+syntax: glob
+*~
+*.mod
+*.o
+TestSieve/TestSieve
+TestSieve/fort.*
