@@ -7,7 +7,7 @@ MEF90OBJS	=     m_Constantes.o    m_AlgebLin.o      \
                   #  m_MEF_EXO.o 
                   #  m_MEF_Gauss\
 
-EXO_CFLAGS      = -I$(HPCDIST_DIR)/cbind/include -I$(HPCDIST_DIR)/forbind/include
+#EXO_CFLAGS      = -I$(HPCDIST_DIR)/include
 
 all: m_MEF90.o
 
