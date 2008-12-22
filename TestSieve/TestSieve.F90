@@ -25,7 +25,7 @@ Program TestSieve
    PetscReal, Dimension(:,:), Pointer           :: Vertices
    
    PetscReal                                    :: MyObjectiveFunction, ObjectiveFunction
-   SectionReal                                  :: U, F
+   SectionReal                                  :: U, F, coordSection
    PetscReal, Dimension(:), Pointer             :: values
    Mat                                          :: K
    Vec                                          :: V
@@ -34,7 +34,7 @@ Program TestSieve
    PetscLogEvent                                :: integrationEvent
    PetscTruth                                   :: verbose
    PetscErrorCode                               :: iErr
-   Integer                                      :: iBlk, iELoc, iE, iV
+   Integer                                      :: iBlk, iELoc, iE, iV, iX
    Character(len=256)                           :: CharBuffer
    VecScatter                                   :: scatter
    
@@ -64,25 +64,51 @@ Program TestSieve
    End Do
    If (verbose) Then
       Call Show_MeshTopology_Info(MeshTopology)
+      Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
    End If
-   Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
 
    !!! Initialize the element   
    Allocate(Vertices(2,3))
+   Allocate(values(6))
+   Call MeshGetSectionReal(MeshTopology%mesh, 'coordinates', coordSection, iErr); CHKERRQ(ierr)
+   !!! Gets the Section 'coordinate'
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         Vertices(1,:) = Coords(Elem2DA(iE)%ID_DoF(:))%X
-         Vertices(2,:) = Coords(Elem2DA(iE)%ID_DoF(:))%Y
+         call MeshRestrictClosure(MeshTopology%mesh, coordSection, iE-1, Size(values), values, ierr)
+         !!! iE-1 is a point name
+         !!! puts all the "values" for element iE (iE-1 in C) of the section coordsection into the vector 
+         !!! "values"
+         !Vertices(1,:) = Coords(Elem2DA(iE)%ID_DoF(:))%X
+         !Vertices(2,:) = Coords(Elem2DA(iE)%ID_DoF(:))%Y
+         Do iX = 1, 3
+            Vertices(1,iX) = values(2*iX-1)
+            Vertices(2,iX) = values(2*iX)
+         End Do
          Call Init_Element(Elem2DA(iE), Vertices, 4, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
       End Do
    End Do
    Deallocate(Vertices)
-
-!   Call Show_Elem2D_Scal(Elem2DA)
+   Deallocate(values)
    
+!   Call Show_Elem2D_Scal(Elem2DA)
+   Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
+
    Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, U, ierr); CHKERRQ(iErr)
    Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, F, ierr); CHKERRQ(iErr)
+   !!! Unlike the coordinate section, it is not stored in the mesh hence doesn't have a name
+   !!! It would not be redistributed if we'd repartition the mesh whereas the coordinate section does
+
+   !!! In order to add the section to the mesh (and get it automatically repartitioned)
+   
+   !!! MeshSetSectionInt(MeshTopology%mesh, 'BCFlag', flag, ierr);
+   !!! Or Use MeshGetSectionInt which would not create it
+   !!! At this point the section would still be empty
+   !!! The calls would be 
+   !!!    SetFiberDimension (flag, iV, dof) (loop through all points iV) 
+   !!!    (note that iV can be of different types, and dof can be 0
+
+
    Call MeshCreateMatrix(MeshTopology%mesh, U, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, U, V, iErr); CHKERRQ(iErr)
    Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
@@ -92,16 +118,34 @@ Program TestSieve
    Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
 
    Call MeshCreateGlobalScatter(MeshTopology%mesh, U, scatter, iErr); CHKERRQ(iErr)
+   !!! This Scatter maps from unassembled section storage to global section storage
+   !!! To be used in SectionRealToVec
+
    !Call VecScatterView(scatter, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
    Call SectionRealSet(U, 1.0_Kr, iErr); CHKERRQ(iErr)
    Call SectionRealSet(F, 1.0_Kr, iErr); CHKERRQ(iErr)
+
+   
    Allocate(values(dof))
    Do iV = 1, MeshTopology%Num_Vert
-      values(1) = 1.0+Coords(iV)%Y
+      values = 1.0+Coords(iV)%Y
       call MeshUpdateClosure(MeshTopology%mesh, U, MeshTopology%Num_Elems+iV-1, values, ierr)
+      !!! Internal storage of points in the mesh is cell then vertices then everything else
+      !!! So vertex iV is at offset MeshTopology%Num_Elems+iV-1
+      !!! This is purely local (does not update "ghost values")
+      !!! This sets dof values
+
+      !!! Same thing for a Section defined over elements would be
+      !!! call MeshUpdateClosure(MeshTopology%mesh, U, iE, value, ierr)
+
+      !!! The inverse function MeshRestrictClosure
+      !!! MeshUpdateClosure(MeshTopology%mesh, 'coordinates', iE, value, ierr)
+      !!! will give the coordinates of the closure of iE which can be a cell an edge a vertex etc
    End Do
    Deallocate(values)
+
+
    Call SectionRealView(U, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
    Call SectionRealView(F, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
 
@@ -116,6 +160,14 @@ Program TestSieve
    Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
 
    Call SectionRealToVec(U, scatter, SCATTER_FORWARD, V, ierr); CHKERRQ(ierr)
+   !!! U is the equivalent of a ghosted vector
+   !!! V is the equivalent of the global vector
+   !!! They are both collective on PETSC_COMM_WORLD
+   !!! The ghost update is INSERT by default
+   !!! Doing a SCATTER_REVERSE after that would result in a ghost update
+
+   !!! Ghost update can also be done using SectionComplete (equivalent of DALocalToLocal)
+
    Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
 
    !!! Destroy the element   
