@@ -208,19 +208,19 @@ Module m_MEF_Types
       Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    ! move to EXO_Info   
    End Type EXO_Info
    
-   Type Layout_Info
-      IS                                         :: IS_N, IS_E
-      ISLocalToGlobalMapping                     :: Mapping_N, Mapping_E
-      VecScatter                                 :: ToIOSeq_N, ToIOSeq_E
-      !!! Scatters everything onto the IO node ordered component after component
-      !!! Collective on Geom%Comm
-      VecScatter                                 :: ToIODist_N
-      !!! Scatters locally ordered component by component
-      !!! Collective on PETSC_COMM_SELF (because of ghost points)
-      
-      Integer                                    :: num_local_dof, num_ghost_dof
-      Integer, Dimension(:), Pointer             :: ghost_dof
-      Integer                                    :: num_local_elems, num_ghost_elems
-      Integer, Dimension(:), Pointer             :: ghost_elem
-   End Type Layout_Info      
+!!!   Type Layout_Info
+!!!      IS                                         :: IS_N, IS_E
+!!!      ISLocalToGlobalMapping                     :: Mapping_N, Mapping_E
+!!!      VecScatter                                 :: ToIOSeq_N, ToIOSeq_E
+!!!      !!! Scatters everything onto the IO node ordered component after component
+!!!      !!! Collective on Geom%Comm
+!!!      VecScatter                                 :: ToIODist_N
+!!!      !!! Scatters locally ordered component by component
+!!!      !!! Collective on PETSC_COMM_SELF (because of ghost points)
+!!!      
+!!!      Integer                                    :: num_local_dof, num_ghost_dof
+!!!      Integer, Dimension(:), Pointer             :: ghost_dof
+!!!      Integer                                    :: num_local_elems, num_ghost_elems
+!!!      Integer, Dimension(:), Pointer             :: ghost_elem
+!!!   End Type Layout_Info      
 End Module m_MEF_Types
