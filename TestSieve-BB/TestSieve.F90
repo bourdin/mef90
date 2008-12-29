@@ -26,9 +26,9 @@ Program TestSieve
    
    PetscReal                                    :: MyObjectiveFunction, ObjectiveFunction
    SectionReal                                  :: U, F, coordSection
-   PetscReal, Dimension(:), Pointer             :: values
+   PetscReal, Dimension(:), Pointer             :: values, V_Ptr
    Mat                                          :: K
-   Vec                                          :: V
+   Vec                                          :: V, V_Local
    PetscTruth                                   :: HasF
    PetscInt                                     :: dof
    PetscLogEvent                                :: integrationEvent
@@ -67,6 +67,8 @@ Program TestSieve
       Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
    End If
 
+
+   Write(100+MEF90_MyRank, *) 'CONNECTIVITY TABLE   '
    !!! Initialize the element   
    Allocate(Vertices(2,3))
    Allocate(values(6))
@@ -81,6 +83,7 @@ Program TestSieve
          !!! "values"
          !Vertices(1,:) = Coords(Elem2DA(iE)%ID_DoF(:))%X
          !Vertices(2,:) = Coords(Elem2DA(iE)%ID_DoF(:))%Y
+	 Write(100+MEF90_MyRank, *) iE, Elem2DA(iE)%ID_DoF(:)
          Do iX = 1, 3
             Vertices(1,iX) = values(2*iX-1)
             Vertices(2,iX) = values(2*iX)
@@ -111,6 +114,9 @@ Program TestSieve
 
    Call MeshCreateMatrix(MeshTopology%mesh, U, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, U, V, iErr); CHKERRQ(iErr)
+!   Call MeshCreateLocalVector(MeshTopology%mesh, V_Local, iErr); CHKERRQ(iErr)
+    Call SectionRealCreateLocalVector(U, V_Local, iErr); CHKERRQ(iErr)
+   
    Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
    Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
    Call MatAssemblyEnd(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
@@ -126,10 +132,11 @@ Program TestSieve
    Call SectionRealSet(U, 1.0_Kr, iErr); CHKERRQ(iErr)
    Call SectionRealSet(F, 1.0_Kr, iErr); CHKERRQ(iErr)
 
-   
+   Write(100+MEF90_MyRank, *) 'COORDINATES:'
    Allocate(values(dof))
    Do iV = 1, MeshTopology%Num_Vert
-      values = 1.0+Coords(iV)%Y
+      Write(100+MEF90_MyRank, *) iV, Coords(iV)%X, Coords(iV)%Y
+      values = Coords(iV)%X
       call MeshUpdateClosure(MeshTopology%mesh, U, MeshTopology%Num_Elems+iV-1, values, ierr)
       !!! Internal storage of points in the mesh is cell then vertices then everything else
       !!! So vertex iV is at offset MeshTopology%Num_Elems+iV-1
@@ -167,9 +174,20 @@ Program TestSieve
    !!! Doing a SCATTER_REVERSE after that would result in a ghost update
 
    !!! Ghost update can also be done using SectionComplete (equivalent of DALocalToLocal)
-
    Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
 
+
+   Call VecGetArrayF90(V, V_Ptr, ierr); CHKERRQ(iErr)
+   Write(MEF90_MyRank+100, *) 'V_PTR obtained from V'
+   Write(MEF90_MyRank+100, *) 'V_PTR: LOCAL SIZE IS', size(V_Ptr)
+   Write(MEF90_MyRank+100, *) V_Ptr
+   Call VecRestoreArrayF90(V, V_Ptr, iErr); CHKERRQ(iErr)
+   Call VecGetArrayF90(V_Local, V_Ptr, ierr); CHKERRQ(iErr)
+   Write(MEF90_MyRank+100, *) 'V_PTR obtained from V_Local'
+   Write(MEF90_MyRank+100, *) 'V_PTR: LOCAL SIZE IS', size(V_Ptr)
+   Write(MEF90_MyRank+100, *) V_Ptr
+   Call VecRestoreArrayF90(V_Local, V_Ptr, iErr); CHKERRQ(iErr)
+   
    !!! Destroy the element   
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
