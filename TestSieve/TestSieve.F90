@@ -242,13 +242,14 @@ Program TestSieve
       Mesh                                         :: mesh
       PetscViewer                                  :: viewer
 
-      ! Open File
-      call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, mesh, ierr)
-      !!! reads exo file, stores all information in a Mesh
-
-      call MeshDistribute(mesh, PETSC_NULL_CHARACTER, dMeshTopology%mesh, ierr)
-      !!! Partitions using a partitioner (currently PETSC_NULL_CHARACTER) 
-      call MeshDestroy(mesh, ierr)
+!!!      ! Open File
+!!!      call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, mesh, ierr)
+!!!      !!! reads exo file, stores all information in a Mesh
+!!!
+!!!      call MeshDistribute(mesh, PETSC_NULL_CHARACTER, dMeshTopology%mesh, ierr)
+!!!      !!! Partitions using a partitioner (currently PETSC_NULL_CHARACTER) 
+!!!      call MeshDestroy(mesh, ierr)
+      call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, dMeshTopology%mesh, ierr)
 
       If (verbose) Then
          call PetscViewerASCIIOpen(PETSC_COMM_WORLD, PETSC_NULL_CHARACTER, viewer, ierr)
