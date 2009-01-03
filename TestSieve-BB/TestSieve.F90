@@ -19,7 +19,7 @@ Program TestSieve
 #include "finclude/petscmesh.h90"
 
    Type (MeshTopology_Info)                     :: MeshTopology
-   Type (EXO_Info)                              :: EXO
+   Type (EXO_Info)                              :: EXO, MyEXO
    Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
    Type (Vect3D), Dimension(:), Pointer         :: Coords
    PetscReal, Dimension(:,:), Pointer           :: Vertices
@@ -36,16 +36,17 @@ Program TestSieve
    PetscErrorCode                               :: iErr
    Integer                                      :: iBlk, iELoc, iE, iV, iX
    Character(len=256)                           :: CharBuffer
+   Character(len=MXSTLN)                        :: prefix
    VecScatter                                   :: scatter
    
-   Integer, Parameter                           :: exo_cpu_ws = 8
-   Integer, Parameter                           :: exo_io_ws = 8
+!   Integer, Parameter                           :: exo_cpu_ws = 8
+!   Integer, Parameter                           :: exo_io_ws = 8
      
    Call MEF90_Initialize()
    dof = 1
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-dof', dof, HasF, iErr)    
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr)    
-   Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-f', EXO%filename, HasF, iErr)    
+   Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasF, iErr)    
    If (.NOT. HasF) Then
       Call PetscPrintf(PETSC_COMM_WORLD, "No input file given\n", iErr)
       Call MEF90_Finalize()
@@ -53,10 +54,17 @@ Program TestSieve
    End If
 
    call PetscLogEventRegister('ElemInteg', 0, integrationEvent, ierr); CHKERRQ(ierr)
-
-   EXO%Comm = PETSC_COMM_WORLD
+   
+   EXO%Comm   = PETSC_COMM_WORLD
+   EXO%filename = Trim(prefix)//'.gen'
+    
    
    Call Read_MeshTopology_Info_EXO(MeshTopology, Coords, Elem2DA, EXO)
+   MyEXO%Comm     = PETSC_COMM_SELF
+   Write(MyEXO%Filename, 100) Trim(prefix), MEF90_MyRank
+ 100 Format(A, '-', I4.4, '.gen')
+   MyEXO%title = EXO%title
+   
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
@@ -65,7 +73,13 @@ Program TestSieve
    If (verbose) Then
       Call Show_MeshTopology_Info(MeshTopology)
       Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
+      Write(MEF90_MyRank+200, *) 'EXO'
+      Call Show_EXO_Info(EXO, MEF90_MyRank+200)
+      Write(MEF90_MyRank+200, *) 'MyEXO'
+      Call Show_EXO_Info(MyEXO, MEF90_MyRank+200)
    End If
+   
+   Call Write_MeshTopology(MeshTopology, MyEXO)
 
 
    Write(100+MEF90_MyRank, *) 'CONNECTIVITY TABLE   '
@@ -83,7 +97,7 @@ Program TestSieve
          !!! "values"
          !Vertices(1,:) = Coords(Elem2DA(iE)%ID_DoF(:))%X
          !Vertices(2,:) = Coords(Elem2DA(iE)%ID_DoF(:))%Y
-	 Write(100+MEF90_MyRank, *) iE, Elem2DA(iE)%ID_DoF(:)
+         Write(100+MEF90_MyRank, *) iE, Elem2DA(iE)%ID_DoF(:)
          Do iX = 1, 3
             Vertices(1,iX) = values(2*iX-1)
             Vertices(2,iX) = values(2*iX)
@@ -153,40 +167,40 @@ Program TestSieve
    Deallocate(values)
 
 
-   Call SectionRealView(U, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
-   Call SectionRealView(F, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
-
-   Call FormObjectiveFunction(MyObjectiveFunction, MeshTopology, Elem2DA, U, F, integrationEvent)
-
-   Call PetscGlobalSum(MyObjectiveFunction, ObjectiveFunction, PETSC_COMM_WORLD, ierr); CHKERRQ(iErr)
-   Write(CharBuffer,*) MEF90_MyRank, ' My Objective Function: ', MyObjectiveFunction, '\n'
-   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
-   Call PetscSynchronizedFlush(PETSC_COMM_WORLD, ierr); CHKERRQ(ierr)
-
-   Write(CharBuffer,*) '               Objective Function: ', ObjectiveFunction, '\n'
-   Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
-
-   Call SectionRealToVec(U, scatter, SCATTER_FORWARD, V, ierr); CHKERRQ(ierr)
-   !!! U is the equivalent of a ghosted vector
-   !!! V is the equivalent of the global vector
-   !!! They are both collective on PETSC_COMM_WORLD
-   !!! The ghost update is INSERT by default
-   !!! Doing a SCATTER_REVERSE after that would result in a ghost update
-
-   !!! Ghost update can also be done using SectionComplete (equivalent of DALocalToLocal)
-   Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
-
-
-   Call VecGetArrayF90(V, V_Ptr, ierr); CHKERRQ(iErr)
-   Write(MEF90_MyRank+100, *) 'V_PTR obtained from V'
-   Write(MEF90_MyRank+100, *) 'V_PTR: LOCAL SIZE IS', size(V_Ptr)
-   Write(MEF90_MyRank+100, *) V_Ptr
-   Call VecRestoreArrayF90(V, V_Ptr, iErr); CHKERRQ(iErr)
-   Call VecGetArrayF90(V_Local, V_Ptr, ierr); CHKERRQ(iErr)
-   Write(MEF90_MyRank+100, *) 'V_PTR obtained from V_Local'
-   Write(MEF90_MyRank+100, *) 'V_PTR: LOCAL SIZE IS', size(V_Ptr)
-   Write(MEF90_MyRank+100, *) V_Ptr
-   Call VecRestoreArrayF90(V_Local, V_Ptr, iErr); CHKERRQ(iErr)
+!!!   Call SectionRealView(U, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
+!!!   Call SectionRealView(F, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
+!!!
+!!!   Call FormObjectiveFunction(MyObjectiveFunction, MeshTopology, Elem2DA, U, F, integrationEvent)
+!!!
+!!!   Call PetscGlobalSum(MyObjectiveFunction, ObjectiveFunction, PETSC_COMM_WORLD, ierr); CHKERRQ(iErr)
+!!!   Write(CharBuffer,*) MEF90_MyRank, ' My Objective Function: ', MyObjectiveFunction, '\n'
+!!!   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
+!!!   Call PetscSynchronizedFlush(PETSC_COMM_WORLD, ierr); CHKERRQ(ierr)
+!!!
+!!!   Write(CharBuffer,*) '               Objective Function: ', ObjectiveFunction, '\n'
+!!!   Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
+!!!
+!!!   Call SectionRealToVec(U, scatter, SCATTER_FORWARD, V, ierr); CHKERRQ(ierr)
+!!!   !!! U is the equivalent of a ghosted vector
+!!!   !!! V is the equivalent of the global vector
+!!!   !!! They are both collective on PETSC_COMM_WORLD
+!!!   !!! The ghost update is INSERT by default
+!!!   !!! Doing a SCATTER_REVERSE after that would result in a ghost update
+!!!
+!!!   !!! Ghost update can also be done using SectionComplete (equivalent of DALocalToLocal)
+!!!   Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
+!!!
+!!!
+!!!   Call VecGetArrayF90(V, V_Ptr, ierr); CHKERRQ(iErr)
+!!!   Write(MEF90_MyRank+100, *) 'V_PTR obtained from V'
+!!!   Write(MEF90_MyRank+100, *) 'V_PTR: LOCAL SIZE IS', size(V_Ptr)
+!!!   Write(MEF90_MyRank+100, *) V_Ptr
+!!!   Call VecRestoreArrayF90(V, V_Ptr, iErr); CHKERRQ(iErr)
+!!!   Call VecGetArrayF90(V_Local, V_Ptr, ierr); CHKERRQ(iErr)
+!!!   Write(MEF90_MyRank+100, *) 'V_PTR obtained from V_Local'
+!!!   Write(MEF90_MyRank+100, *) 'V_PTR: LOCAL SIZE IS', size(V_Ptr)
+!!!   Write(MEF90_MyRank+100, *) V_Ptr
+!!!   Call VecRestoreArrayF90(V_Local, V_Ptr, iErr); CHKERRQ(iErr)
    
    !!! Destroy the element   
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
@@ -294,7 +308,7 @@ Program TestSieve
       call MeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
       If (dMeshTopology%Num_Elem_blks > 0) Then
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-            blkId = blkIds(iBlk)
+            blkId = blkIds(iBlk)+1
             dMeshTopology%Elem_blk(iBlk)%ID = blkId
             call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr)
             !!! Get the size of the layer (stratum) 'CellBlock' of Mesh
@@ -318,7 +332,7 @@ Program TestSieve
       call MeshGetLabelIds(dMeshTopology%mesh, CharBuffer, setIds, ierr); CHKERRQ(ierr)
       If (dMeshTopology%Num_Node_Sets > 0) Then
          Do iSet = 1, dMeshTopology%Num_node_sets
-            setId = setIds(iSet)
+            setId = setIds(iSet)+1
             dMeshTopology%Node_Set(iSet)%ID = setId
             call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, setId, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr)
             Allocate(dMeshTopology%Node_Set(iSet)%Node_ID(dMeshTopology%Node_Set(iSet)%Num_Nodes))
@@ -329,7 +343,7 @@ Program TestSieve
       Deallocate(setIds)
 
       ! Read the vertices coordinates
-      Allocate(Coords(MeshTopology%Num_Vert))
+      Allocate(Coords(dMeshTopology%Num_Vert))
       call MeshGetCoordinatesF90(dMeshTopology%mesh, array, iErr)
       embedDim = size(array,2)
       Coords%X = array(:,1)
@@ -434,6 +448,43 @@ Program TestSieve
     
    End Subroutine Show_MeshTopology_Info
 
+
+      
+   
+   Subroutine Show_EXO_Info(dEXO, Unit)
+      Type(EXO_Info), Intent(IN)                      :: dEXO
+      Integer, Optional                              :: Unit
+     
+      Integer                                        :: IO_Unit, i
+    
+      If ( Present(Unit) ) Then
+         IO_Unit = Unit
+      Else
+         IO_Unit = 6 !!! STDOUT
+      End If  
+      
+      If (dEXO%comm == PETSC_COMM_WORLD) Then
+         Write(Unit, 100) 'PETSC_COMM_WORLD'
+      ElseIf (dEXO%comm == PETSC_COMM_SELF) Then
+         Write(Unit, 100) 'PETSC_COMM_SELF'
+      Else  
+         Write(Unit, 100) 'unknown'
+      End If
+      
+      Write(Unit, 101) dEXO%exoid
+      Write(Unit, 102) dEXO%filename
+      Write(Unit, 103) dEXO%title
+!      Do i = 1, dEXO%Num_QA
+!         Write(Unit, 104) i, dEXO%QA_rec(i,:)
+!      End Do
+      
+ 100 Format('Communicator:       ', A)
+ 101 Format('exo ID:             ', I)
+ 102 Format('filename:           ', A)
+ 103 Format('title:              ', A)
+ 104 Format('QR_rec ', I2.2, '         ', A)
+   End Subroutine Show_EXO_Info
+   
    Subroutine Destroy_MeshTopology_Info(dMeshTopology)
      Type (MeshTopology_Info) :: dMeshTopology
      PetscInt                 :: iSet, iBlk

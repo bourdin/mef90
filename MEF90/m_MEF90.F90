@@ -5,7 +5,7 @@ Module m_MEF90
    Use m_Utils
 !   Use m_MEF_Gauss
    !   Use m_MEF_Ensight
-!   Use m_MEF_EXO  
+   Use m_MEF_EXO  
    Use m_MEF_MPI
 !   Use m_MEF_Layout
    Use m_MEF_InitElem 
