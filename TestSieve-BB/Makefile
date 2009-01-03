@@ -3,7 +3,7 @@ MEF90DIR  = ../MEF90
 MEF90OBJS = $(MEF90DIR)/m_Constantes.o    $(MEF90DIR)/m_AlgebLin.o    \
             $(MEF90DIR)/m_MEF_Types.o     $(MEF90DIR)/m_MEF_InitElem.o\
             $(MEF90DIR)/m_MEF90.o         $(MEF90DIR)/m_Utils.o       \
-            $(MEF90DIR)/m_MEF_MPI.o
+            $(MEF90DIR)/m_MEF_MPI.o       $(MEF90DIR)/m_MEF_EXO.o
             
 #EXO_CFLAGS = -I$(HPCDIST_DIR)/include
 #EXO_LFLAGS = -L$(HPCDIST_DIR)/cbind/src -L$(HPCDIST_DIR)/forbind/src -lexoIIv2for -lexoIIv2c -lnetcdf -lmetis -lparmetis
