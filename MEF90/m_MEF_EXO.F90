@@ -101,7 +101,9 @@ Module m_MEF_EXO
       
       Character(len=MXSTLN), Dimension(3)            :: Coord_Names
       PetscReal, Dimension(:,:), Pointer             :: Coordinates
-      Integer, Dimension(:,:), Pointer               :: ConnectMesh, ConnectBlk
+      Integer, Dimension(:,:), Pointer               :: ConnectMesh
+      Integer, Dimension(:), Pointer                 :: ConnectBlk
+      Integer                                        :: offset
       
       Coord_Names(1) = 'X'
       Coord_Names(2) = 'Y'
@@ -139,25 +141,26 @@ Module m_MEF_EXO
          Call EXPCOR(dEXO%exoid, Coordinates(:,1), Coordinates(:,2), Coordinates(:,3), iErr)
          Call MeshRestoreCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr)
          
-!!!###          ! Write Connectivity tables
-!!!###          Call MeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
-!!!###    !      Write(MEF90_MyRank+400, *) Size(ConnectMesh), Size(ConnectMesh, 1), Size(ConnectMesh, 2)
-!!!###          Do iE = 1, dMeshTopology%Num_Elems
-!!!###   !          Write(MEF90_MyRank+400, *) iE, ConnectMesh(iE, :)
-!!!###          EndDo
-!!!###          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-!!!###  !           Write(MEF90_MyRank+400, *) 'Block', iBlk
-!!!###             Allocate (ConnectBlk(dMeshTopology%Elem_Blk(iBlk)%Nb_DoF, dMeshTopology%Elem_Blk(iBlk)%Nb_DoF))
-!!!###             Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-!!!###                iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-!!!###                ConnectBlk(iELoc, :) = ConnectMesh(iE, :)
-!!!### !               Write(MEF90_MyRank+400, *) iELoc, iE, ConnectMesh(iE, :), ConnectBlk(iELoc, :)
-!!!###                Call EXPELC (dEXO%exoid, iBlk, ConnectBlk, iErr)
-!!!### !                There seems to be a problem with the EXPELC call. the block connectivity table looks fine
-!!!###             End Do
-!!!###             DeAllocate(ConnectBlk)
-!!!###          End Do
-!!!###          Call MeshRestoreElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
+          ! Write Connectivity tables
+          Call MeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
+          Write(MEF90_MyRank+400, *) Size(ConnectMesh), Size(ConnectMesh, 1), Size(ConnectMesh, 2)
+          Do iE = 1, dMeshTopology%Num_Elems
+             Write(MEF90_MyRank+400, *) iE, ConnectMesh(iE, :)
+          EndDo
+          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+             Write(MEF90_MyRank+400, *) 'Block', iBlk
+             Allocate (ConnectBlk(dMeshTopology%Elem_Blk(iBlk)%Num_Elems * dMeshTopology%Elem_Blk(iBlk)%Nb_DoF))
+             Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+                iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+                offset = (iELoc - 1) * dMeshTopology%Elem_Blk(iBlk)%Nb_DoF
+                ConnectBlk(offset + 1:offset + dMeshTopology%Elem_Blk(iBlk)%Nb_DoF) = ConnectMesh(iE, :)
+                Write(MEF90_MyRank+400, *) iELoc, iE, ConnectMesh(iE, :),  ConnectBlk(offset + 1:offset + dMeshTopology%Elem_Blk(iBlk)%Nb_DoF)
+ !                There seems to be a problem with the EXPELC call. the block connectivity table looks fine
+             End Do
+             Call EXPELC (dEXO%exoid, iBlk, ConnectBlk, iErr)
+             DeAllocate(ConnectBlk)
+          End Do
+          Call MeshRestoreElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
 
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
