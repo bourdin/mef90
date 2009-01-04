@@ -38,8 +38,6 @@ Program TestSieve
    Character(len=256)                           :: CharBuffer
    VecScatter                                   :: scatter
    
-   Integer, Parameter                           :: exo_cpu_ws = 8
-   Integer, Parameter                           :: exo_io_ws = 8
      
    Call MEF90_Initialize()
    dof = 1
