@@ -270,7 +270,7 @@ Program TestSieve
             call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, setId, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr)
             Allocate(dMeshTopology%Node_Set(iSet)%Node_ID(dMeshTopology%Node_Set(iSet)%Num_Nodes))
             call MeshGetStratum(dMeshTopology%mesh, CharBuffer, setId, dMeshTopology%Node_Set(iSet)%Node_ID, ierr)
-            dMeshTopology%Node_Set(iSet)%Node_ID = dMeshTopology%Node_Set(iSet)%Node_ID - dMeshTopology%Num_Elems
+            dMeshTopology%Node_Set(iSet)%Node_ID = dMeshTopology%Node_Set(iSet)%Node_ID - dMeshTopology%Num_Elems + 1
          End Do
       End If
       Deallocate(setIds)
@@ -341,7 +341,7 @@ Program TestSieve
             Write(MEF90_MyRank+500, *) 'Number of Vertices in VertexSet', lMeshTopology%Node_Set(iSet)%Num_Nodes
             Allocate(lMeshTopology%Node_Set(iSet)%Node_ID(lMeshTopology%Node_Set(iSet)%Num_Nodes))
             call MeshGetStratum(lMeshTopology%mesh, CharBuffer, setId, lMeshTopology%Node_Set(iSet)%Node_ID, ierr)
-            Write(MEF90_MyRank+500, *) 'Vertices in VertexSet', lMeshTopology%Node_Set(iSet)%Node_ID - lMeshTopology%Num_Elems
+            Write(MEF90_MyRank+500, *) 'Vertices in VertexSet', lMeshTopology%Node_Set(iSet)%Node_ID - lMeshTopology%Num_Elems + 1
             lMeshTopology%Node_Set(iSet)%Node_ID = lMeshTopology%Node_Set(iSet)%Node_ID - lMeshTopology%Num_Elems
          End Do
       End If
