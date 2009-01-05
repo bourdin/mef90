@@ -14,6 +14,8 @@ Module m_MEF_EXO
    Use m_Constantes
    Use m_MEF_Types
    Use m_MEF_MPI
+   Use m_MEF_Elements
+   
    IMPLICIT NONE
    Private
    include "exodusII.inc"
@@ -120,7 +122,29 @@ Module m_MEF_EXO
          
          ! Write Elem blocks informations
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-            Elem_Type = 'TRI3'
+            Select Case (dMeshTopology%elem_blk(iBlk)%Elem_Type)
+            Case (MEF90_P1_Lagrange)
+               Select Case (dMeshTopology%Num_Dim)
+               Case (2)
+                  Elem_Type = 'TRI3'
+               Case (3)
+                  Elem_Type = 'TETRA4'
+               Case Default
+                  SETERRQ(PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
+               End Select
+            Case (MEF90_P2_Lagrange)
+               Select Case (dMeshTopology%Num_Dim)
+               Case (2)
+                  Elem_Type = 'TRI6'
+               Case (3)
+                  Elem_Type = 'TETRA10'
+               Case Default
+                  SETERRQ(PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
+               End Select
+            Case Default
+                  SETERRQ(PETSC_ERR_SUP, 'Only MEF90_P1_Lagrange and MEF90_P2_Lagrange elements are supported', iErr)
+            End Select
+            
             Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
          End Do
    

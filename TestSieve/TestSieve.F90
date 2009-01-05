@@ -168,6 +168,11 @@ Program TestSieve
 
    Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
 
+!   Call ElementView(Elem2DA, PETSC_VIEWER_STDOUT_SELF)
+      Write(CharBuffer, * ) 'oula oulala\n'c
+      Call PetscViewerASCIIPrintf(PETSC_VIEWER_STDOUT_SELF, CharBuffer, iErr); CHKERRQ(iErr)
+
+
    !!! Destroy the element   
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -182,7 +187,7 @@ Program TestSieve
 
  Contains
    Subroutine Show_Elem2D_Scal(dElems, Unit)
-      Type (Element2D_Scal), DImension(:), Pointer   :: dElems
+      Type (Element2D_Scal), Dimension(:), Pointer   :: dElems
       Integer, Optional                              :: Unit
       
       Integer                                        :: iE, Nb_Gauss, Nb_DoF, iDoF

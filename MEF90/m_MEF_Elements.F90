@@ -1,4 +1,4 @@
-Module m_MEF_InitElem
+Module m_MEF_Elements
 
    Use m_AlgebLin
    Use m_MEF_Types
@@ -8,10 +8,15 @@ Module m_MEF_InitElem
    Private
    
 #include "finclude/petsc.h"
+#include "finclude/petscviewer.h"
+#include "finclude/petscviewer.h90"
+
+   include "exodusII.inc"
 
    Public :: Init_Element
    Public :: Destroy_Element
    Public :: Init_Elem_Blk_Info
+   Public :: ElementView
 
 
    Interface Init_Element
@@ -21,6 +26,10 @@ Module m_MEF_InitElem
    Interface Destroy_Element
       Module Procedure Destroy_Element2D_Scal, Destroy_Element2D, Destroy_Element2D_Elast, Destroy_Element3D_Scal, Destroy_Element3D, Destroy_Element3D_Elast
    End Interface Destroy_Element
+   
+   Interface ElementView
+      Module Procedure Element2D_ScalView
+   End Interface
    
    Integer, Parameter, Public                    :: MEF90_P1_Lagrange = 1
    Integer, Parameter, Public                    :: MEF90_P2_Lagrange = 2
@@ -427,4 +436,52 @@ Module m_MEF_InitElem
          DeAllocate(dElem%ID_DoF)
       End If
    End Subroutine Destroy_Element3D_Elast
-End Module m_MEF_InitElem
+
+   Subroutine Element2D_ScalView(dElems, viewer)
+      Type (Element2D_Scal), Dimension(:), Pointer   :: dElems
+      PetscViewer                                    :: viewer
+      
+      Integer                                        :: iE, Nb_Gauss, Nb_DoF, iDoF, iErr
+      Character(len=MXSTLN)                          :: CharBuffer
+
+                
+      Write(CharBuffer, 100) Size(dElems)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      
+      Do iE = 1, Size(dElems)
+         Write(CharBuffer, 101) iE
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Nb_DoF   = size(dElems(iE)%BF,1)
+         Nb_Gauss = size(dElems(iE)%BF,2)
+         Write(CharBuffer, 102) Nb_DoF
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Write(CharBuffer, 103) Nb_Gauss
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+!!!         Do iDoF = 1, Nb_DoF
+!!!            Write(CharBuffer, 201) iDoF
+!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!!!            Write(CharBuffer, 200) 'BF '
+!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!!!            Write(CharBuffer, *) dElems(iE)%BF(iDoF, :)
+!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!!!            Write(CharBuffer, 200) 'Grad_BF%X '
+!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!!!            Write(CharBuffer, *) dElems(iE)%Grad_BF(iDoF, :)%X
+!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!!!            Write(CharBuffer, 200) 'Grad_BF%Y '
+!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!!!            Write(CharBuffer, *) dElems(iE)%Grad_BF(iDoF, :)%Y
+!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!!!         End Do
+      End Do
+100 Format('    Number of elements =================== ', I9, '\n'c)
+101 Format('*** Element  ', I9, '\n'c)
+102 Format('    Nb_DoF   ', I9, '\n'c)
+103 Format('    Nb_Gauss ', I9, '\n'c)
+200 Format(A)
+201 Format('    *** DoF  ', I9, '\n'c)
+   End Subroutine Element2D_ScalView
+
+
+End Module m_MEF_Elements
