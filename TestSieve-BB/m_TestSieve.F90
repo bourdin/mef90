@@ -1,4 +1,4 @@
-Module m_TestSieve
+umodule m_TestSieve
   Use m_MEF90
 
   Implicit NONE
@@ -41,8 +41,8 @@ Module m_TestSieve
       PetscErrorCode                                :: iErr
 
       Call PetscLogEventBegin(integrationEvent, ierr); CHKERRQ(ierr)
-      Allocate(U_Ptr(dMyMeshTopology%Elem_Blk(1)%Nb_DoF))
-      Allocate(F_Ptr(dMyMeshTopology%Elem_Blk(1)%Nb_DoF))
+      Allocate(U_Ptr(dMyMeshTopology%Elem_Blk(1)%Num_DoF))
+      Allocate(F_Ptr(dMyMeshTopology%Elem_Blk(1)%Num_DoF))
 
       dMyObjFunc = 0.0_Kr
       CharBuffer = 'CellBlocks'
