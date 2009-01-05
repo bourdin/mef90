@@ -66,7 +66,7 @@ Module m_MEF_Types
       Real(Kind = Kr), Dimension(:,:), pointer   :: BF
       Real(Kind = Kr), Dimension(:,:), pointer   :: Der_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-      Integer                                    :: Parent_Block
+!      Integer                                    :: Parent_Block
    End Type Element1D
  
    Type Element2D_Scal
@@ -77,7 +77,7 @@ Module m_MEF_Types
       Real(Kind = Kr), Dimension(:,:), pointer   :: BF
       Type(Vect2D), Dimension(:,:), pointer      :: Grad_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-      Integer                                    :: Parent_Block
+!      Integer                                    :: Parent_Block
    End Type Element2D_Scal
  
    Type Element2D
@@ -88,7 +88,7 @@ Module m_MEF_Types
       Type (Vect2D), Dimension(:,:), pointer     :: BF
       Type (Mat2D), Dimension(:,:), pointer      :: Der_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-      Integer                                    :: Parent_Block
+!      Integer                                    :: Parent_Block
    End Type Element2D
  
    Type Element2D_Elast
@@ -99,7 +99,7 @@ Module m_MEF_Types
       Type (Vect2D), Dimension(:,:), pointer     :: BF
       Type (MatS2D), Dimension(:,:), pointer     :: GradS_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-      Integer                                    :: Parent_Block
+!      Integer                                    :: Parent_Block
    End Type Element2D_Elast
  
    Type Element3D
@@ -110,7 +110,7 @@ Module m_MEF_Types
       Type (Vect3D), Dimension(:,:), pointer     :: BF
       Type (Mat3D), Dimension(:,:), pointer      :: Der_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-      Integer                                    :: Parent_Block
+!      Integer                                    :: Parent_Block
    End Type Element3D
  
    Type Element3D_Scal
@@ -121,7 +121,7 @@ Module m_MEF_Types
       Real(Kind = Kr), Dimension(:,:), pointer   :: BF
       Type (Vect3D), Dimension(:,:), pointer     :: Grad_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-      Integer                                    :: Parent_Block
+!      Integer                                    :: Parent_Block
    End Type Element3D_Scal
  
    Type Element3D_Elast
@@ -132,30 +132,30 @@ Module m_MEF_Types
       Type (Vect3D), Dimension(:,:), pointer     :: BF
       Type (MatS3D), Dimension(:,:), pointer     :: GradS_BF
       Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-      Integer                                    :: Parent_Block
+!      Integer                                    :: Parent_Block
    End Type Element3D_Elast
  
-   Type Node1D
-      Sequence
-      Real(Kind = Kr)                            :: Coord
-      Integer                                    :: ID
-      Integer                                    :: BC
-      Integer                                    :: Parent_Block
-   End Type Node1D
+!   Type Node1D
+!      Sequence
+!      Real(Kind = Kr)                            :: Coord
+!      Integer                                    :: ID
+!      Integer                                    :: BC
+!      Integer                                    :: Parent_Block
+!   End Type Node1D
  
-   Type Node2D
-      Sequence
-      Type (Vect2D)                              :: Coord
-      Integer                                    :: ID
-      Integer                                    :: BC
-   End Type Node2D
+!   Type Node2D
+!      Sequence
+!      Type (Vect2D)                              :: Coord
+!      Integer                                    :: ID
+!      Integer                                    :: BC
+!   End Type Node2D
  
-   Type Node3D
-      Sequence
-      Type (Vect3D)                              :: Coord
-      Integer                                    :: ID
-      Integer                                    :: BC
-   End Type Node3D
+!   Type Node3D
+!      Sequence
+!      Type (Vect3D)                              :: Coord
+!      Integer                                    :: ID
+!      Integer                                    :: BC
+!   End Type Node3D
  
    Type Elem_Blk_Info
       Sequence
@@ -199,13 +199,13 @@ Module m_MEF_Types
    End Type MeshTopology_Info
    
    Type EXO_Info
-      MPI_Comm                                       :: comm      ! Move somewhere else
+      MPI_Comm                                       :: comm      
       Integer                                        :: exoid
-      Character(len=MXLNLN)                          :: filename  ! Move to EXO_DATA
-      Character(len=MXLNLN)                          :: title     ! Move to EXO_Info
+      Character(len=MXLNLN)                          :: filename  
+      Character(len=MXLNLN)                          :: title     
       ! QA DATAS
-      Integer                                        :: num_QA    ! move to EXO_Info
-      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    ! move to EXO_Info   
+      Integer                                        :: num_QA    
+      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    
    End Type EXO_Info
    
 !!!   Type Layout_Info
