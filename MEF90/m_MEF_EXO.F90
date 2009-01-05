@@ -99,10 +99,11 @@ Module m_MEF_EXO
       Integer                                        :: Num_Attr = 0         
       Integer                                        :: Num_Dist_Factor = 0
       
-      Character(len=MXSTLN), Dimension(3)            :: Coord_Names
+      Character(len=MXSTLN), Dimension(3)            :: Coord_Names, Elem_Type
       PetscReal, Dimension(:,:), Pointer             :: Coordinates
       Integer, Dimension(:,:), Pointer               :: ConnectMesh
-      Integer, Dimension(:,:), Pointer               :: ConnectBlk
+      Integer, Dimension(:), Pointer                 :: ConnectBlk
+      Integer                                        :: offset
       
       Coord_Names(1) = 'X'
       Coord_Names(2) = 'Y'
@@ -119,7 +120,8 @@ Module m_MEF_EXO
          
          ! Write Elem blocks informations
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-            Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, dMeshTopology%elem_blk(iBlk)%Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
+            Elem_Type = 'TRI3'
+            Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
          End Do
    
          ! Write Side sets informations
@@ -143,11 +145,12 @@ Module m_MEF_EXO
           ! Write Connectivity tables
           Call MeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
           Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-             Allocate (ConnectBlk(dMeshTopology%Elem_Blk(iBlk)%Num_Elems, dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
+             Allocate (ConnectBlk(dMeshTopology%Elem_Blk(iBlk)%Num_Elems * dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
+            
              Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
                 iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-               ConnectBlk(iELoc, :) = ConnectMesh(iE, :)
- !                There seems to be a problem with the EXPELC call. the block connectivity table looks fine
+                offset = (iEloc-1) * dMeshTopology%Elem_Blk(iBlk)%Num_DoF
+               ConnectBlk(offset+1: offset+dMeshTopology%Elem_Blk(iBlk)%Num_DoF) = ConnectMesh(iE, :)
              End Do
              Call EXPELC (dEXO%exoid, iBlk, ConnectBlk, iErr)
              DeAllocate(ConnectBlk)

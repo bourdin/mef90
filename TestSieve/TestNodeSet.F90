@@ -89,7 +89,7 @@ Program TestSieve
 
    
    
-
+   MeshTopology%elem_blk(:)%Elem_type = MEF90_P1_Lagrange
    Call Write_MeshTopology(MeshTopology, MyEXO)
 
 
