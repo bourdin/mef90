@@ -58,7 +58,7 @@ Module m_MEF_InitElem
          Print*, 'Unknown dimension', dDim
          STOP
       End Select
-      dBlk%Nb_DoF = sum(dBlk%DoF_Location)
+      dBlk%Num_DoF = sum(dBlk%DoF_Location)
 
    End Subroutine Init_Elem_Blk_Info      
       
@@ -143,7 +143,7 @@ Module m_MEF_InitElem
       Integer                                :: dPolynomialOrder, dQuadratureOrder
       
       Integer                                :: Nb_Gauss
-      Integer                                :: Nb_Dof
+      Integer                                :: Num_Dof
       Integer                                :: iDoF, iG
       Type (Mat2D)                           :: Bt          ! The transposed of transformation matrix
       PetscReal                              :: DetBinv     ! The determinant of B^{-1}
@@ -217,9 +217,9 @@ Module m_MEF_InitElem
       
       Select Case (dPolynomialOrder)
       Case(1)
-         Nb_DoF = 3
-         Allocate(PhiHat(Nb_DoF, Nb_Gauss))
-         Allocate(GradPhiHat(Nb_DoF, Nb_Gauss))
+         Num_DoF = 3
+         Allocate(PhiHat(Num_DoF, Nb_Gauss))
+         Allocate(GradPhiHat(Num_DoF, Nb_Gauss))
          PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y
          PhiHat(2,:) = Xi(:)%X
          PhiHat(3,:) = Xi(:)%Y
@@ -229,9 +229,9 @@ Module m_MEF_InitElem
          GradPhiHat(3,:)%X =  0.0_Kr; GradPhiHat(3,:)%Y =  1.0_Kr
           
       Case(2)
-         Nb_DoF = 6
-         Allocate(PhiHat(Nb_DoF, Nb_Gauss))
-         Allocate(GradPhiHat(Nb_DoF, Nb_Gauss))
+         Num_DoF = 6
+         Allocate(PhiHat(Num_DoF, Nb_Gauss))
+         Allocate(GradPhiHat(Num_DoF, Nb_Gauss))
          PhiHat(1,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y) * Xi%X      
          PhiHat(2,:) = 4.0_Kr * Xi%X * Xi%Y     
          PhiHat(3,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y) * Xi%Y     
@@ -249,10 +249,10 @@ Module m_MEF_InitElem
          Print*, 'Unimplemented PolynomialOrder', dPolynomialOrder
       End Select
       
-      Allocate (dElem%BF(Nb_DoF, Nb_Gauss)) 
-      Allocate (dElem%Grad_BF(Nb_DoF, Nb_Gauss))
+      Allocate (dElem%BF(Num_DoF, Nb_Gauss)) 
+      Allocate (dElem%Grad_BF(Num_DoF, Nb_Gauss))
       dElem%BF = PhiHat
-      Do iDoF = 1, Nb_DoF
+      Do iDoF = 1, Num_DoF
          Do iG = 1, Nb_Gauss
             dElem%Grad_BF(iDoF, iG) = Bt * GradPhiHat(iDoF, iG) 
          End Do
@@ -270,15 +270,15 @@ Module m_MEF_InitElem
    
       Type (Element2D_Scal)                  :: Elem_Scal
       Integer                                :: dim = 2 
-      Integer                                :: Nb_DoF, Nb_Gauss, i
+      Integer                                :: Num_DoF, Nb_Gauss, i
       
       
       Call Init_Element_P_Lagrange_2D_Scal(Elem_Scal, dCoord, dPolynomialOrder, dQuadratureOrder)
-      Nb_DoF   = Size(Elem_Scal%BF, 1) 
+      Num_DoF   = Size(Elem_Scal%BF, 1) 
       Nb_Gauss = Size(Elem_Scal%BF, 2)
       Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Nb_DoF * dim, Nb_Gauss))
-      Allocate(dElem%Der_BF(Nb_DoF * dim, Nb_Gauss))
+      Allocate(dElem%BF(Num_DoF * dim, Nb_Gauss))
+      Allocate(dElem%Der_BF(Num_DoF * dim, Nb_Gauss))
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -288,7 +288,7 @@ Module m_MEF_InitElem
       dElem%Der_BF(:,:)%YX = 0.0_Kr
       dElem%Der_BF(:,:)%YY = 0.0_Kr
       
-      Do i = 0, Nb_DoF-1
+      Do i = 0, Num_DoF-1
          dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
          dElem%Der_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
@@ -306,15 +306,15 @@ Module m_MEF_InitElem
    
       Type (Element2D_Scal)                  :: Elem_Scal
       Integer                                :: dim = 2 
-      Integer                                :: Nb_DoF, Nb_Gauss, i
+      Integer                                :: Num_DoF, Nb_Gauss, i
       
       
       Call Init_Element_P_Lagrange_2D_Scal(Elem_Scal, dCoord, dPolynomialOrder, dQuadratureOrder)
-      Nb_DoF   = Size(Elem_Scal%BF, 1) 
+      Num_DoF   = Size(Elem_Scal%BF, 1) 
       Nb_Gauss = Size(Elem_Scal%BF, 2)
       Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Nb_DoF * dim, Nb_Gauss))
-      Allocate(dElem%GradS_BF(Nb_DoF * dim, Nb_Gauss))
+      Allocate(dElem%BF(Num_DoF * dim, Nb_Gauss))
+      Allocate(dElem%GradS_BF(Num_DoF * dim, Nb_Gauss))
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -322,7 +322,7 @@ Module m_MEF_InitElem
       dElem%GradS_BF(:,:)%XX = 0.0_Kr
       dElem%GradS_BF(:,:)%XY = 0.0_Kr
       dElem%GradS_BF(:,:)%YY = 0.0_Kr
-      Do i = 0, Nb_DoF-1
+      Do i = 0, Num_DoF-1
          dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
          dElem%GradS_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X

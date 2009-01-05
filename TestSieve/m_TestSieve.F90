@@ -41,8 +41,8 @@ Module m_TestSieve
       PetscErrorCode                                :: iErr
 
       call PetscLogEventBegin(integrationEvent, ierr); CHKERRQ(ierr)
-      Allocate(U_Ptr(dMyMeshTopology%Elem_Blk(1)%Nb_DoF))
-      Allocate(F_Ptr(dMyMeshTopology%Elem_Blk(1)%Nb_DoF))
+      Allocate(U_Ptr(dMyMeshTopology%Elem_Blk(1)%Num_DoF))
+      Allocate(F_Ptr(dMyMeshTopology%Elem_Blk(1)%Num_DoF))
 
       dMyObjFunc = 0.0_Kr
       CharBuffer = 'CellBlocks'
@@ -65,7 +65,7 @@ Module m_TestSieve
                U_Elem      = 0.0_Kr
                F_Elem      = 0.0_Kr
               
-               Do_iSL: Do iSL = 1, dMyMeshTopology%Elem_Blk(iBlk)%Nb_DoF
+               Do_iSL: Do iSL = 1, dMyMeshTopology%Elem_Blk(iBlk)%Num_DoF
                   Strain_Elem = Strain_Elem + dMyElem(iE)%Grad_BF(iSL, iG) * U_Ptr(iSL)
                   F_Elem      = F_Elem      + dMyElem(iE)%BF(iSL, iG)      * F_Ptr(iSL)
                   U_Elem      = U_Elem      + dMyElem(iE)%BF(iSL, iG)      * U_Ptr(iSL)
