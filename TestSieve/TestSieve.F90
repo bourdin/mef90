@@ -168,9 +168,7 @@ Program TestSieve
 
    Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
 
-!   Call ElementView(Elem2DA, PETSC_VIEWER_STDOUT_SELF)
-      Write(CharBuffer, * ) 'oula oulala\n'c
-      Call PetscViewerASCIIPrintf(PETSC_VIEWER_STDOUT_SELF, CharBuffer, iErr); CHKERRQ(iErr)
+   Call ElementView(Elem2DA, PETSC_VIEWER_STDOUT_SELF)
 
 
    !!! Destroy the element   
@@ -186,48 +184,6 @@ Program TestSieve
    Call MEF90_Finalize()
 
  Contains
-   Subroutine Show_Elem2D_Scal(dElems, Unit)
-      Type (Element2D_Scal), Dimension(:), Pointer   :: dElems
-      Integer, Optional                              :: Unit
-      
-      Integer                                        :: iE, Nb_Gauss, Nb_DoF, iDoF
-      Integer                                        :: IO_Unit
-    
-      If ( Present(Unit) ) Then
-         IO_Unit = Unit
-      Else
-         IO_Unit = 6 !!! STDOUT
-      End If 
- 
-      
-      Write(IO_Unit, 100) Size(dElems)
-      
-      Do iE = 1, Size(dElems)
-         Write(IO_Unit, 101) iE
-         Nb_DoF   = size(dElems(iE)%BF,1)
-         Nb_Gauss = size(dElems(iE)%BF,2)
-         Write(IO_Unit, 102) Nb_DoF
-         Write(IO_Unit, 103) Nb_Gauss
-
-         Do iDoF = 1, Nb_DoF
-            Write(IO_Unit, 201) iDoF
-            Write(IO_Unit, 200, advance = 'no') 'BF'
-            Write(IO_Unit, *) dElems(iE)%BF(iDoF, :)
-            Write(IO_Unit, 200, advance = 'no') 'Grad_BF%X'
-            Write(IO_Unit, *) dElems(iE)%Grad_BF(iDoF, :)%X
-            Write(IO_Unit, 200, advance = 'no') 'Grad_BF%Y'
-            Write(IO_Unit, *) dElems(iE)%Grad_BF(iDoF, :)%Y
-         End Do
-      End Do
-100 Format('    Number of elements =================== ', I9)
-101 Format('*** Element  ', I9)
-102 Format('    Nb_DoF   ', I9)
-103 Format('    Nb_Gauss ', I9)
-200 Format(A)
-201 Format('    *** DoF  ', I9)
-   End Subroutine Show_Elem2D_Scal
-   
-   
    Subroutine Read_MeshTopology_Info_EXO(dMeshTopology, Coords, Elem2DA, dEXO)
       Type (MeshTopology_Info)                     :: dMeshTopology
       Type (Vect3D), Dimension(:), Pointer         :: Coords
@@ -345,96 +301,6 @@ Program TestSieve
       dEXO%exoid = 0
     End Subroutine Read_MeshTopology_Info_EXO
 
-   Subroutine Show_MeshTopology_Info(dMeshTopology, Unit)
-      Type (MeshTopology_Info), Intent(IN)           :: dMeshTopology
-      Integer, Optional                              :: Unit
-      
-      Integer                                        :: IO_Unit, i
-    
-      If ( Present(Unit) ) Then
-         IO_Unit = Unit
-      Else
-         IO_Unit = 6 !!! STDOUT
-      End If  
 
-
-      Write(IO_Unit, 103) MeshTopology%num_dim
-      Write(IO_Unit, 104) MeshTopology%num_Vert
-      Write(IO_Unit, 105) MeshTopology%num_elems
-      Write(IO_Unit, 106) MeshTopology%Num_Elem_blks
-      Write(IO_Unit, 107) MeshTopology%Num_Node_Sets
-      Write(IO_Unit, 108) MeshTopology%Num_Side_Sets
-      
-      Write(IO_Unit, *)
-      Write(IO_Unit, 200)
-      Write(IO_Unit, 201) MeshTopology%num_elem_blks
-      Do i = 1, dMeshTopology%Num_Elem_blks
-         Write(IO_Unit, 203) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%Num_Elems
-         Write(IO_Unit, 204) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%Elem_Type
-         Write(IO_Unit, 205) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%DoF_Location
-!         Write(IO_Unit, 206) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%Nb_Gauss
-         Write(IO_Unit, 207, advance = 'no') dMeshTopology%Elem_Blk(i)%ID
-         Write(IO_Unit, *) dMeshTopology%Elem_blk(i)%Elem_ID
-      End Do
-      
-      
-      Write(IO_Unit, *)
-      Write(IO_Unit, 300)
-      Write(IO_Unit, 301) dMeshTopology%num_node_sets
-      Do i = 1, dMeshTopology%num_node_sets
-         Write(IO_Unit, 302) dMeshTopology%Node_Set(i)%ID, dMeshTopology%Node_Set(i)%Num_Nodes
-         Write(IO_Unit, 303, advance = 'no') dMeshTopology%Node_Set(i)%ID
-         Write(IO_Unit, *) dMeshTopology%Node_Set(i)%Node_ID
-      End Do
-      
-      
-      Write(IO_Unit, *)
-      Write(IO_Unit, 400)
-      Write(IO_Unit, 401) dMeshTopology%num_side_sets
-      
-103 Format('    Number of dimensions ============ ', I6)
-104 Format('    Number of vertices ============== ', I6)
-105 Format('    Number of elements ============== ', I6)
-106 Format('    Number of elements blocks ======= ', I6)
-107 Format('    Number of node sets ============= ', I6)
-108 Format('    Number of side sets ============= ', I6)
-
-200 Format('*** ELEMENT BLOCKS ***')
-201 Format('    Number of blocks ================ ', I4)
-!202 Format('    Block ', I3, ' Elements type ========= ', A)
-203 Format('    Block ', I3, ' Number of elements ==== ', I4)
-204 Format('    Block ', I3, ' Element type ========== ', I4)
-205 Format('    Block ', I3, ' DoF location ========== ', 4(I4, ' '))
-!206 Format('    Block ', I3, ' Nb_Gauss==== ========== ', I4)
-207 Format('    Block ', I3, ' IDs: ')
-
-300 Format('*** NODE SETS ***')
-301 Format('    Number of sets ================== ', I4)
-302 Format('    Set ', I3, ' Number of nodes ========= ', I4)
-303 Format('    Set ', I3, ' IDs: ')
-!304 Format('    Set ', I3, ' Number of dist. factors = ', I4)
-
-400 Format('*** SIDE SETS ***')
-401 Format('    Number of side sets ============= ', I4)
-    
-   End Subroutine Show_MeshTopology_Info
-
-   Subroutine Destroy_MeshTopology_Info(dMeshTopology)
-     Type (MeshTopology_Info) :: dMeshTopology
-     PetscInt                 :: iSet, iBlk
-
-     If (dMeshTopology%Num_Node_Sets > 0) Then
-        Do iSet = 1, dMeshTopology%Num_node_sets
-           Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
-        End Do
-     End If
-     Deallocate (dMeshTopology%Node_Set)
-     If (dMeshTopology%Num_Elem_blks > 0) Then
-        Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-           Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
-        End Do
-     End If
-     Deallocate(dMeshTopology%Elem_blk)
-   End Subroutine Destroy_MeshTopology_Info
 
 End Program TestSieve
