@@ -8,8 +8,10 @@ Module m_MEF_Types
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
 
-!   Public :: Node1D, Node2D, Node3D
    Public :: Elem_Blk_Info, Node_Set_Info, MeshTopology_Info, EXO_Info
+   
+   Public :: EXOView
+   Public :: MeshTopologyDestroy, MeshTopologyView
       
 #include "finclude/petsc.h"
 #include "finclude/petscsys.h"
@@ -208,19 +210,158 @@ Module m_MEF_Types
       Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    
    End Type EXO_Info
    
-!!!   Type Layout_Info
-!!!      IS                                         :: IS_N, IS_E
-!!!      ISLocalToGlobalMapping                     :: Mapping_N, Mapping_E
-!!!      VecScatter                                 :: ToIOSeq_N, ToIOSeq_E
-!!!      !!! Scatters everything onto the IO node ordered component after component
-!!!      !!! Collective on Geom%Comm
-!!!      VecScatter                                 :: ToIODist_N
-!!!      !!! Scatters locally ordered component by component
-!!!      !!! Collective on PETSC_COMM_SELF (because of ghost points)
-!!!      
-!!!      Integer                                    :: num_local_dof, num_ghost_dof
-!!!      Integer, Dimension(:), Pointer             :: ghost_dof
-!!!      Integer                                    :: num_local_elems, num_ghost_elems
-!!!      Integer, Dimension(:), Pointer             :: ghost_elem
-!!!   End Type Layout_Info      
+Contains
+   Subroutine EXOView(dEXO, viewer)
+      Type(EXO_Info)              :: dEXO
+      PetscViewer                 :: viewer
+      
+      Integer                     :: iErr
+      Character(len=512)          :: CharBuffer
+   
+      If (dEXO%comm == PETSC_COMM_WORLD) Then
+         Write(CharBuffer, 100) 'PETSC_COMM_WORLD'
+      ElseIf (dEXO%comm == PETSC_COMM_SELF) Then
+         Write(CharBuffer, 100) 'PETSC_COMM_SELF'
+      Else  
+         Write(CharBuffer, 105) 'unknown', dEXO%comm
+      End If
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      
+      Write(CharBuffer, 101) dEXO%exoid
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 102) dEXO%filename
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 103) dEXO%title
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!      Do i = 1, dEXO%Num_QA
+!         Write(CharBuffer, 104) i, dEXO%QA_rec(i,:)
+!         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!      End Do
+      
+ 100 Format('Communicator:       ', A, '\n'c)
+ 101 Format('exo ID:             ', I3, '\n'c)
+ 102 Format('filename:           ', A, '\n'c)
+ 103 Format('title:              ', A, '\n'c)
+ 104 Format('QR_rec ', I2.2, '         ', A, '\n'c)
+ 105 Format('Communicator:       ', A, I3, '\n'c)
+   End Subroutine EXOView
+
+
+   Subroutine MeshTopologyDestroy(dMeshTopology)
+     Type (MeshTopology_Info)        :: dMeshTopology
+     PetscInt                        :: iSet, iBlk
+
+     If (dMeshTopology%Num_Node_Sets > 0) Then
+        Do iSet = 1, dMeshTopology%Num_node_sets
+           Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
+        End Do
+     End If
+     Deallocate (dMeshTopology%Node_Set)
+     If (dMeshTopology%Num_Elem_blks > 0) Then
+        Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+           Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
+        End Do
+     End If
+     Deallocate(dMeshTopology%Elem_blk)
+   End Subroutine MeshTopologyDestroy
+
+   Subroutine MeshTopologyView(dMeshTopology, viewer)
+      Type (MeshTopology_Info), Intent(IN)           :: dMeshTopology
+      PetscViewer                                    :: viewer
+      
+      Integer                                        :: iErr
+      Character(len=512)                             :: CharBuffer
+      Integer                                        :: i, j
+
+      Write(CharBuffer, 103) dMeshTopology%num_dim
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 104) dMeshTopology%num_Vert
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 105) dMeshTopology%num_elems
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 106) dMeshTopology%Num_Elem_blks
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 107) dMeshTopology%Num_Node_Sets
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 108) dMeshTopology%Num_Side_Sets
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+   
+      Write(CharBuffer, 600) '\n'c
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 200)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 201) dMeshTopology%num_elem_blks
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do i = 1, dMeshTopology%Num_Elem_blks
+         Write(CharBuffer, 203) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%Num_Elems
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Write(CharBuffer, 204) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%Elem_Type
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Write(CharBuffer, 205) dMeshTopology%Elem_Blk(i)%ID, dMeshTopology%Elem_blk(i)%DoF_Location
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Write(CharBuffer, 207) dMeshTopology%Elem_Blk(i)%ID
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dMeshTopology%Elem_blk(i)%Num_DoF
+            Write(CharBuffer, 208) dMeshTopology%Elem_blk(i)%Elem_ID(j)
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, 600) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      End Do
+      
+      
+      Write(CharBuffer, 600) '\n'c
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 300)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 301) dMeshTopology%num_node_sets
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do i = 1, dMeshTopology%num_node_sets
+         Write(CharBuffer, 302) dMeshTopology%Node_Set(i)%ID, dMeshTopology%Node_Set(i)%Num_Nodes
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Write(CharBuffer, 303) dMeshTopology%Node_Set(i)%ID
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
+            Write(CharBuffer, 500) dMeshTopology%Node_Set(i)%Node_ID(j)
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+      End Do
+      
+      
+      Write(CharBuffer, 600) '\n'c
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 400)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 401) dMeshTopology%num_side_sets
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      
+103 Format('    Number of dimensions ============ ', I6, '\n'c)
+104 Format('    Number of vertices ============== ', I6, '\n'c)
+105 Format('    Number of elements ============== ', I6, '\n'c)
+106 Format('    Number of elements blocks ======= ', I6, '\n'c)
+107 Format('    Number of node sets ============= ', I6, '\n'c)
+108 Format('    Number of side sets ============= ', I6, '\n'c)
+
+200 Format('*** ELEMENT BLOCKS ***', '\n'c)
+201 Format('    Number of blocks ================ ', I4, '\n'c)
+203 Format('    Block ', I3, ' Number of elements ==== ', I4, '\n'c)
+204 Format('    Block ', I3, ' Element type ========== ', I4, '\n'c)
+205 Format('    Block ', I3, ' DoF location ========== ', 4(I4, ' '), '\n'c)
+207 Format('    Block ', I3, ' IDs: ')
+208 Format('   ', I4)
+
+300 Format('*** NODE SETS ***', '\n'c)
+301 Format('    Number of sets ================== ', I4, '\n'c)
+302 Format('    Set ', I3, ' Number of nodes ========= ', I4, '\n'c)
+303 Format('    Set ', I3, ' IDs: ')
+!304 Format('    Set ', I3, ' Number of dist. factors = ', I4)
+
+400 Format('*** SIDE SETS ***', '\n'c)
+401 Format('    Number of side sets ============= ', I4, '\n'c)
+    
+500 Format(I4) 
+600 Format(A)
+   End Subroutine MeshTopologyView
+
+
 End Module m_MEF_Types

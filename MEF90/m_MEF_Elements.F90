@@ -28,7 +28,7 @@ Module m_MEF_Elements
    End Interface Destroy_Element
    
    Interface ElementView
-      Module Procedure Element2D_ScalView
+      Module Procedure Element2D_ScalView, Element2D_ScalPtrView, Element2DView, Element2DPtrView, Element2D_ElastView, Element2D_ElastPtrView, Element3D_ScalView, Element3D_ScalPtrView, Element3DView, Element3DPtrView, Element3D_ElastView, Element3D_ElastPtrView
    End Interface
    
    Integer, Parameter, Public                    :: MEF90_P1_Lagrange = 1
@@ -437,51 +437,546 @@ Module m_MEF_Elements
       End If
    End Subroutine Destroy_Element3D_Elast
 
-   Subroutine Element2D_ScalView(dElems, viewer)
-      Type (Element2D_Scal), Dimension(:), Pointer   :: dElems
+!!!
+!!! ELEMENT VIEWERS
+!!!
+
+   Subroutine Element2D_ScalView(dElem, viewer)
+      Type (Element2D_Scal)                          :: dElem
       PetscViewer                                    :: viewer
       
-      Integer                                        :: iE, Nb_Gauss, Nb_DoF, iDoF, iErr
-      Character(len=MXSTLN)                          :: CharBuffer
-
+      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      Character(len=512)                             :: CharBuffer
                 
-      Write(CharBuffer, 100) Size(dElems)
+      Nb_DoF   = size(dElem%BF,1)
+      Nb_Gauss = size(dElem%BF,2)
+      Write(CharBuffer, 102) Nb_DoF
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-      
-      Do iE = 1, Size(dElems)
-         Write(CharBuffer, 101) iE
-         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-         Nb_DoF   = size(dElems(iE)%BF,1)
-         Nb_Gauss = size(dElems(iE)%BF,2)
-         Write(CharBuffer, 102) Nb_DoF
-         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-         Write(CharBuffer, 103) Nb_Gauss
+      Write(CharBuffer, 103) Nb_Gauss
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+      Nb_Gauss = Size(dElem%BF,2)
+      Do iDoF = 1, Nb_DoF
+         Write(CharBuffer, 104) iDoF
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
 
-!!!         Do iDoF = 1, Nb_DoF
-!!!            Write(CharBuffer, 201) iDoF
-!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-!!!            Write(CharBuffer, 200) 'BF '
-!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-!!!            Write(CharBuffer, *) dElems(iE)%BF(iDoF, :)
-!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-!!!            Write(CharBuffer, 200) 'Grad_BF%X '
-!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-!!!            Write(CharBuffer, *) dElems(iE)%Grad_BF(iDoF, :)%X
-!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-!!!            Write(CharBuffer, 200) 'Grad_BF%Y '
-!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-!!!            Write(CharBuffer, *) dElems(iE)%Grad_BF(iDoF, :)%Y
-!!!            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-!!!         End Do
+         Write(CharBuffer, 200) '        BF \n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        Grad_BF (X,Y)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Grad_BF(iDoF, iG)%X
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Grad_BF(iDoF, iG)%Y
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       End Do
-100 Format('    Number of elements =================== ', I9, '\n'c)
 101 Format('*** Element  ', I9, '\n'c)
 102 Format('    Nb_DoF   ', I9, '\n'c)
 103 Format('    Nb_Gauss ', I9, '\n'c)
+104 Format('    *** DoF  ', I9, '\n'c)
 200 Format(A)
-201 Format('    *** DoF  ', I9, '\n'c)
+201 Format('   ', F5.2)
    End Subroutine Element2D_ScalView
+   
+   Subroutine Element2D_ScalPtrView(dElems, viewer)
+      Type (Element2D_Scal), Dimension(:), Pointer   :: dElems
+      PetscViewer                                    :: viewer
 
+      Integer                                        :: iE, iErr
+      Character(len=512)                             :: CharBuffer
+      
+      Write(CharBuffer, 100) Size(dElems)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do iE = 1, Size(dElems)
+         Write(CharBuffer, 101) iE
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         
+         Call ElementView(dElems(iE), viewer)
+      End Do
+100 Format('    Number of elements =================== ', I9, '\n'c)
+101 Format('*** Element  ', I9, '\n'c)
+   End Subroutine Element2D_ScalPtrView
 
+   Subroutine Element2DView(dElem, viewer)
+      Type (Element2D)                               :: dElem
+      PetscViewer                                    :: viewer
+      
+      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      Character(len=512)                             :: CharBuffer
+
+      Nb_DoF   = size(dElem%BF,1)
+      Nb_Gauss = size(dElem%BF,2)
+      Write(CharBuffer, 102) Nb_DoF
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 103) Nb_Gauss
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+      Nb_Gauss = Size(dElem%BF,2)
+      Do iDoF = 1, Nb_DoF
+         Write(CharBuffer, 104) iDoF
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        BF (X,Y)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%X
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n   'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%Y
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        Der_BF (XX, XY, YX, YY)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%XX
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%XY
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%YX
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%YY
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      End Do
+101 Format('*** Element  ', I9, '\n'c)
+102 Format('    Nb_DoF   ', I9, '\n'c)
+103 Format('    Nb_Gauss ', I9, '\n'c)
+104 Format('    *** DoF  ', I9, '\n'c)
+200 Format(A)
+201 Format('   ', F5.2)
+   End Subroutine Element2DView
+   
+   Subroutine Element2DPtrView(dElems, viewer)
+      Type (Element2D), Dimension(:), Pointer        :: dElems
+      PetscViewer                                    :: viewer
+
+      Integer                                        :: iE, iErr
+      Character(len=512)                             :: CharBuffer
+      
+      Write(CharBuffer, 100) Size(dElems)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do iE = 1, Size(dElems)
+         Write(CharBuffer, 101) iE
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         
+         Call ElementView(dElems(iE), viewer)
+      End Do
+100 Format('    Number of elements =================== ', I9, '\n'c)
+101 Format('*** Element  ', I9, '\n'c)
+   End Subroutine Element2DPtrView
+
+   Subroutine Element2D_ElastView(dElem, viewer)
+      Type (Element2D_Elast)                         :: dElem
+      PetscViewer                                    :: viewer
+      
+      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      Character(len=512)                             :: CharBuffer
+
+      Nb_DoF   = size(dElem%BF,1)
+      Nb_Gauss = size(dElem%BF,2)
+      Write(CharBuffer, 102) Nb_DoF
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 103) Nb_Gauss
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+      Nb_Gauss = Size(dElem%BF,2)
+      Do iDoF = 1, Nb_DoF
+         Write(CharBuffer, 104) iDoF
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        BF (X,Y)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%X
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n   'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%Y
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        GradS_BF (XX, YY, XY)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%GradS_BF(iDoF, iG)%XX
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%GradS_BF(iDoF, iG)%YY
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%GradS_BF(iDoF, iG)%XY
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+      End Do
+101 Format('*** Element  ', I9, '\n'c)
+102 Format('    Nb_DoF   ', I9, '\n'c)
+103 Format('    Nb_Gauss ', I9, '\n'c)
+104 Format('    *** DoF  ', I9, '\n'c)
+200 Format(A)
+201 Format('   ', F5.2)
+   End Subroutine Element2D_ElastView
+   
+   Subroutine Element2D_ElastPtrView(dElems, viewer)
+      Type (Element2D_Elast), Dimension(:), Pointer  :: dElems
+      PetscViewer                                    :: viewer
+
+      Integer                                        :: iE, iErr
+      Character(len=512)                             :: CharBuffer
+      
+      Write(CharBuffer, 100) Size(dElems)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do iE = 1, Size(dElems)
+         Write(CharBuffer, 101) iE
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         
+         Call ElementView(dElems(iE), viewer)
+      End Do
+100 Format('    Number of elements =================== ', I9, '\n'c)
+101 Format('*** Element  ', I9, '\n'c)
+   End Subroutine Element2D_ElastPtrView
+
+   Subroutine Element3D_ScalView(dElem, viewer)
+      Type (Element3D_Scal)                          :: dElem
+      PetscViewer                                    :: viewer
+      
+      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      Character(len=512)                             :: CharBuffer
+                
+      Nb_DoF   = size(dElem%BF,1)
+      Nb_Gauss = size(dElem%BF,2)
+      Write(CharBuffer, 102) Nb_DoF
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 103) Nb_Gauss
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+      Nb_Gauss = Size(dElem%BF,2)
+      Do iDoF = 1, Nb_DoF
+         Write(CharBuffer, 104) iDoF
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        BF \n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        Grad_BF (X,Y, Z)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Grad_BF(iDoF, iG)%X
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Grad_BF(iDoF, iG)%Y
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Grad_BF(iDoF, iG)%Z
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)         
+      End Do
+101 Format('*** Element  ', I9, '\n'c)
+102 Format('    Nb_DoF   ', I9, '\n'c)
+103 Format('    Nb_Gauss ', I9, '\n'c)
+104 Format('    *** DoF  ', I9, '\n'c)
+200 Format(A)
+201 Format('   ', F5.2)
+   End Subroutine Element3D_ScalView
+   
+   Subroutine Element3D_ScalPtrView(dElems, viewer)
+      Type (Element3D_Scal), Dimension(:), Pointer   :: dElems
+      PetscViewer                                    :: viewer
+
+      Integer                                        :: iE, iErr
+      Character(len=512)                             :: CharBuffer
+      
+      Write(CharBuffer, 100) Size(dElems)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do iE = 1, Size(dElems)
+         Write(CharBuffer, 101) iE
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         
+         Call ElementView(dElems(iE), viewer)
+      End Do
+100 Format('    Number of elements =================== ', I9, '\n'c)
+101 Format('*** Element  ', I9, '\n'c)
+   End Subroutine Element3D_ScalPtrView
+
+   Subroutine Element3DView(dElem, viewer)
+      Type (Element3D)                               :: dElem
+      PetscViewer                                    :: viewer
+      
+      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      Character(len=512)                             :: CharBuffer
+
+      Nb_DoF   = size(dElem%BF,1)
+      Nb_Gauss = size(dElem%BF,2)
+      Write(CharBuffer, 102) Nb_DoF
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 103) Nb_Gauss
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+      Nb_Gauss = Size(dElem%BF,2)
+      Do iDoF = 1, Nb_DoF
+         Write(CharBuffer, 104) iDoF
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        BF (X,Y,Z)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%X
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n   'c
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%Y
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n   'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%Z
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        Der_BF (XX, XY, XZ, YX, YY, YZ, ZX, ZY, ZZ)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%XX
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%XY
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%XZ
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%YX
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%YY
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%YZ
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%ZX
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%ZY
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%Der_BF(iDoF, iG)%ZZ
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+      End Do
+101 Format('*** Element  ', I9, '\n'c)
+102 Format('    Nb_DoF   ', I9, '\n'c)
+103 Format('    Nb_Gauss ', I9, '\n'c)
+104 Format('    *** DoF  ', I9, '\n'c)
+200 Format(A)
+201 Format('   ', F5.2)
+   End Subroutine Element3DView
+   
+   Subroutine Element3DPtrView(dElems, viewer)
+      Type (Element3D), Dimension(:), Pointer        :: dElems
+      PetscViewer                                    :: viewer
+
+      Integer                                        :: iE, iErr
+      Character(len=512)                             :: CharBuffer
+      
+      Write(CharBuffer, 100) Size(dElems)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do iE = 1, Size(dElems)
+         Write(CharBuffer, 101) iE
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         
+         Call ElementView(dElems(iE), viewer)
+      End Do
+100 Format('    Number of elements =================== ', I9, '\n'c)
+101 Format('*** Element  ', I9, '\n'c)
+   End Subroutine Element3DPtrView
+
+   Subroutine Element3D_ElastView(dElem, viewer)
+      Type (Element3D_Elast)                         :: dElem
+      PetscViewer                                    :: viewer
+      
+      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      Character(len=512)                             :: CharBuffer
+
+      Nb_DoF   = size(dElem%BF,1)
+      Nb_Gauss = size(dElem%BF,2)
+      Write(CharBuffer, 102) Nb_DoF
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 103) Nb_Gauss
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+      Nb_Gauss = Size(dElem%BF,2)
+      Do iDoF = 1, Nb_DoF
+         Write(CharBuffer, 104) iDoF
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        BF (X,Y,Z)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%X
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n   'c
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%Y
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n   'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%BF(iDoF, iG)%Z
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+         Write(CharBuffer, 200) '        GradS_BF (XX, YY, ZZ, YZ, XZ, XY)\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%GradS_BF(iDoF, iG)%XX
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%GradS_BF(iDoF, iG)%YY
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%GradS_BF(iDoF, iG)%ZZ
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%GradS_BF(iDoF, iG)%YZ
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%GradS_BF(iDoF, iG)%XZ
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+         Do iG = 1, Nb_Gauss
+            Write(CharBuffer, 201) dElem%GradS_BF(iDoF, iG)%XY
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+         Write(CharBuffer, *) '\n    'c
+      End Do
+101 Format('*** Element  ', I9, '\n'c)
+102 Format('    Nb_DoF   ', I9, '\n'c)
+103 Format('    Nb_Gauss ', I9, '\n'c)
+104 Format('    *** DoF  ', I9, '\n'c)
+200 Format(A)
+201 Format('   ', F5.2)
+   End Subroutine Element3D_ElastView
+   
+   Subroutine Element3D_ElastPtrView(dElems, viewer)
+      Type (Element3D_Elast), Dimension(:), Pointer  :: dElems
+      PetscViewer                                    :: viewer
+
+      Integer                                        :: iE, iErr
+      Character(len=512)                             :: CharBuffer
+      
+      Write(CharBuffer, 100) Size(dElems)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do iE = 1, Size(dElems)
+         Write(CharBuffer, 101) iE
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         
+         Call ElementView(dElems(iE), viewer)
+      End Do
+100 Format('    Number of elements =================== ', I9, '\n'c)
+101 Format('*** Element  ', I9, '\n'c)
+   End Subroutine Element3D_ElastPtrView
 End Module m_MEF_Elements
