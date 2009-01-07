@@ -61,8 +61,7 @@ Program TestSieve
       Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
    If (verbose) Then
-      Call Show_MeshTopology_Info(MeshTopology)
-      Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
+      Call MeshTopologyView(MeshTopology, PETSC_VIEWER_STDOUT_SELF)
    End If
 
    !!! Initialize the element   
@@ -90,7 +89,6 @@ Program TestSieve
    Deallocate(values)
    
 !   Call Show_Elem2D_Scal(Elem2DA)
-   Call Show_MeshTopology_Info(MeshTopology, MEF90_MyRank+100)
 
    Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, U, ierr); CHKERRQ(iErr)
    Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, F, ierr); CHKERRQ(iErr)
@@ -168,9 +166,6 @@ Program TestSieve
 
    Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
 
-   Call ElementView(Elem2DA, PETSC_VIEWER_STDOUT_SELF)
-
-
    !!! Destroy the element   
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -180,7 +175,7 @@ Program TestSieve
    End Do
    Deallocate(Elem2DA)
    Deallocate(Coords)
-   Call Destroy_MeshTopology_Info(MeshTopology)
+   Call MeshTopologyDestroy(MeshTopology)
    Call MEF90_Finalize()
 
  Contains

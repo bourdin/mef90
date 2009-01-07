@@ -86,7 +86,7 @@ Module m_MEF_EXO
 
  Contains
  
-   Subroutine Write_MeshTopology(dMeshTopology, dEXO)
+   Subroutine Write_MeshTopology(dMeshTopology, dEXO, dGlobalMeshTopology)
       Type(MeshTopology_Info)                        :: dMeshTopology
       Type(EXO_Info)                                 :: dEXO
       Integer                                        :: vers
@@ -94,7 +94,7 @@ Module m_MEF_EXO
       Integer                                        :: iDummy
       PetscReal                                      :: rDummy
       Character                                      :: cDummy
-   
+      Type(MeshTopology_Info), Optional              :: dGlobalMeshTopology
       
       Integer                                        :: iBlk, iSet, i
       Integer                                        :: iE, iELoc
@@ -110,14 +110,18 @@ Module m_MEF_EXO
       Coord_Names(1) = 'X'
       Coord_Names(2) = 'Y'
       Coord_Names(3) = 'Z'
-   
+      
       Is_IO: If (dEXO%comm == PETSC_COMM_SELF) Then
          ! Open File
          dEXO%exoid = EXCRE (dEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
          dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
          
          ! Writes Global Geometric Parameters
-         Call EXPINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
+         If (Present(dGlobalMeshTopology)) Then
+            Call EXPINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dGlobalMeshTopology%Num_Elem_Blks, dGlobalMeshTopology%Num_Node_Sets, dGlobalMeshTopology%Num_Side_Sets, iErr)
+         Else
+            Call EXPINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
+         End If
          Call EXPCON(dEXO%exoid, Coord_Names, iErr)
          
          ! Write Elem blocks informations
@@ -154,8 +158,6 @@ Module m_MEF_EXO
          End If
          
          ! Write Node sets informations
-         !!! Check that the number of node sets has been compressed like the number of element blocks
-         !!! It looks like it doesn;t
          Do iSet = 1, dMeshTopology%Num_Node_Sets
             Call EXPNP(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Num_Nodes, Num_Dist_Factor, iErr)
             Call EXPNS(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Node_ID(:), iErr)

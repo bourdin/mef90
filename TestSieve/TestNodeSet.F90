@@ -17,7 +17,7 @@ Program TestSieve
 #include "finclude/petscmesh.h"
 #include "finclude/petscmesh.h90"
 
-   Type (MeshTopology_Info)                     :: MeshTopology
+   Type (MeshTopology_Info)                     :: MeshTopology, GlobalMeshTopology
    Type (EXO_Info)                              :: EXO, MyEXO
    Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
    Type (Vect3D), Dimension(:), Pointer         :: Coords
@@ -43,6 +43,19 @@ Program TestSieve
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
 
+
+   !!! Clean that later
+!   If(MEF90_MyRank == 0) Then
+      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, GlobalMeshTopology%mesh, ierr)
+      Call MeshExodusGetInfo(GlobalMeshTopology%mesh, GlobalMeshTopology%Num_Dim, GlobalMeshTopology%Num_Vert, GlobalMeshTopology%Num_Elems, GlobalMeshTopology%Num_Elem_Blks, GlobalMeshTopology%Num_Node_Sets, iErr)
+      Call MeshDestroy(GlobalMeshTopology%mesh, ierr)
+!   End If
+   Call MPI_BCast(GlobalMeshTopology%Num_Dim, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+   Call MPI_BCast(GlobalMeshTopology%Num_Vert, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+   Call MPI_BCast(GlobalMeshTopology%Num_Elems, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+   Call MPI_BCast(GlobalMeshTopology%Num_Elem_Blks, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+   Call MPI_BCast(GlobalMeshTopology%Num_Node_Sets, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+   !!!
 
    Call MeshTopologyReadEXO(MeshTopology, Coords, Elem2DA, EXO)
    
@@ -72,7 +85,8 @@ Program TestSieve
    
 
    MeshTopology%elem_blk(:)%Elem_type = MEF90_P1_Lagrange
-   Call Write_MeshTopology(MeshTopology, MyEXO)
+   Call Write_MeshTopology(MeshTopology, MyEXO, GlobalMeshTopology)
+!   Call Write_MeshTopology(MeshTopology, MyEXO)
 
    If (verbose) Then
       Write(CharBuffer, 300) 'EXO_Info\n'c
