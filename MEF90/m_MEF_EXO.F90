@@ -32,6 +32,7 @@ Module m_MEF_EXO
    Integer, Parameter, Public                        :: exo_io_ws = 8
    
    Public :: Write_MeshTopology
+   Public :: Write_MeshTopologyGlobal
 
 !   Public :: Show_MeshTopology_Info
 !   Public :: Destroy_MeshTopology_Info
@@ -86,7 +87,48 @@ Module m_MEF_EXO
 
  Contains
  
-   Subroutine Write_MeshTopology(dMeshTopology, dEXO, dGlobalMeshTopology)
+   Subroutine Uniq(dComm, dMyVals, dVals)
+      MPI_Comm                         :: dComm
+      PetscInt, Dimension(:), Pointer  :: dMyVals, dVals
+      
+      Logical, Dimension(:), Pointer   :: ValCount
+      PetscInt                         :: GlobMinVal, MyMinVal
+      PetscInt                         :: GlobMaxVal, MyMaxVal
+      Integer                          :: UniqCount
+      PetscMPIInt                      :: rank
+      Integer                          :: i, j, iErr
+
+      Call MPI_Comm_Rank(PETSC_COMM_WORLD, rank, iErr)
+
+      MyMinVal = MinVal(dMyVals)
+      MyMaxVal = MaxVal(dMyVals)
+      Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPI_INTEGER, MPI_MIN, dComm, iErr)
+      Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPI_INTEGER, MPI_MAX, dComm, iErr)
+
+
+      Allocate(ValCount(GlobMinVal:GlobMaxVal))
+      ValCount = .FALSE.
+      Do i = 1, Size(dMyVals)
+         ValCount(dMyVals(i)) = .TRUE.
+      End Do
+
+      Call MPI_AllReduce(MPI_IN_PLACE, ValCount, GlobMaxVal-GlobMinVal+1, MPI_INTEGER, MPI_LOR, dComm, iErr)
+      !!! This is suboptimal. I could gather only to CPU 0 and do everything else on CPU 0 before broadcasting
+      
+      UniqCount = Count(ValCount)
+
+      Allocate(dVals(UniqCount))
+      j = 1
+      Do i = GlobMinVal, GlobMaxVal
+         If (ValCount(i)) Then
+            dVals(j) = i
+            j = j+1
+         End If
+      End Do
+      DeAllocate(ValCount)
+   End Subroutine Uniq
+
+   Subroutine Write_MeshTopology(dMeshTopology, dEXO)
       Type(MeshTopology_Info)                        :: dMeshTopology
       Type(EXO_Info)                                 :: dEXO
       Integer                                        :: vers
@@ -94,7 +136,6 @@ Module m_MEF_EXO
       Integer                                        :: iDummy
       PetscReal                                      :: rDummy
       Character                                      :: cDummy
-      Type(MeshTopology_Info), Optional              :: dGlobalMeshTopology
       
       Integer                                        :: iBlk, iSet, i
       Integer                                        :: iE, iELoc
@@ -116,12 +157,10 @@ Module m_MEF_EXO
          dEXO%exoid = EXCRE (dEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
          dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
          
-         ! Writes Global Geometric Parameters
-         If (Present(dGlobalMeshTopology)) Then
-            Call EXPINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dGlobalMeshTopology%Num_Elem_Blks, dGlobalMeshTopology%Num_Node_Sets, dGlobalMeshTopology%Num_Side_Sets, iErr)
-         Else
-            Call EXPINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
-         End If
+         ! Write Mesh Topology Info
+         Call EXPINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
+            
+         ! Write Coordinate Names
          Call EXPCON(dEXO%exoid, Coord_Names, iErr)
          
          ! Write Elem blocks informations
@@ -148,8 +187,9 @@ Module m_MEF_EXO
             Case Default
                   SETERRQ(PETSC_ERR_SUP, 'Only MEF90_P1_Lagrange and MEF90_P2_Lagrange elements are supported', iErr)
             End Select
-            
-            Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
+!            If (dMeshTopology%elem_blk(iBlk)%Num_Elems > 0) Then
+               Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
+!            End If
          End Do
    
          ! Write Side sets informations
@@ -160,7 +200,9 @@ Module m_MEF_EXO
          ! Write Node sets informations
          Do iSet = 1, dMeshTopology%Num_Node_Sets
             Call EXPNP(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Num_Nodes, Num_Dist_Factor, iErr)
-            Call EXPNS(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Node_ID(:), iErr)
+            If (dMeshTopology%Node_Set(iSet)%Num_Nodes>0) Then
+               Call EXPNS(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Node_ID(:), iErr)
+            End If
          End Do
    
          ! Write vertex coordinates
@@ -169,17 +211,19 @@ Module m_MEF_EXO
          Call MeshRestoreCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr)
          
           ! Write Connectivity tables
-          Call MeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
-          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-             Allocate (ConnectBlk(dMeshTopology%Elem_Blk(iBlk)%Num_Elems * dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-            
-             Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-                iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-                offset = (iEloc-1) * dMeshTopology%Elem_Blk(iBlk)%Num_DoF
-               ConnectBlk(offset+1: offset+dMeshTopology%Elem_Blk(iBlk)%Num_DoF) = ConnectMesh(iE, :)
-             End Do
-             Call EXPELC (dEXO%exoid, iBlk, ConnectBlk, iErr)
-             DeAllocate(ConnectBlk)
+         Call MeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
+         Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+            If (dMeshTopology%Elem_Blk(iBlk)%Num_Elems > 0) Then
+               Allocate (ConnectBlk(dMeshTopology%Elem_Blk(iBlk)%Num_Elems * dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
+               
+               Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+                  iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+                   offset = (iEloc-1) * dMeshTopology%Elem_Blk(iBlk)%Num_DoF
+                   ConnectBlk(offset+1: offset+dMeshTopology%Elem_Blk(iBlk)%Num_DoF) = ConnectMesh(iE, :)
+                End Do
+                Call EXPELC (dEXO%exoid, iBlk, ConnectBlk, iErr)
+                DeAllocate(ConnectBlk)
+             End If
           End Do
           Call MeshRestoreElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
 
@@ -191,6 +235,93 @@ Module m_MEF_EXO
    End Subroutine Write_MeshTopology
    
    
+   Subroutine Write_MeshTopologyGlobal(dMeshTopology, dEXO, dGlobalComm)
+      !!! Reconstruct the topology informatins for of all meshes in dGlobalComm then write it
+      Type(MeshTopology_Info)                        :: dMeshTopology
+      Type(EXO_Info)                                 :: dEXO
+      MPI_Comm                                       :: dGlobalComm
+      
+      Integer                                        :: iBlk, iSet, i, iErr
+      Integer                                        :: iE, iELoc
+      Integer                                        :: Num_Attr = 0         
+      Integer                                        :: Num_Dist_Factor = 0
+      
+      Type(MeshTopology_Info)                        :: GlobalMeshTopology
+      Integer, Dimension(:), Pointer                 :: Tmp_GlobalID, Tmp_ID
+
+
+      ! Gather Global Sizes
+      GlobalMeshTopology%num_dim  = dMeshTopology%num_dim
+      GlobalMeshTopology%num_vert = dMeshTopology%num_vert
+      GlobalMeshTopology%num_elems = dMeshTopology%num_elems
+      
+      Allocate(Tmp_ID(dMeshTopology%num_elem_blks))
+      Tmp_ID = dMeshTopology%elem_blk(:)%ID
+      Call Uniq(dGlobalComm, Tmp_ID, Tmp_GlobalID)            
+      GlobalMeshTopology%Num_elem_blks = Size(Tmp_GlobalID)
+      Allocate(GlobalMeshTopology%elem_blk(GlobalMeshTopology%num_elem_blks))
+      GlobalMeshTopology%elem_blk(:)%ID = Tmp_GlobalID
+      DeAllocate(Tmp_ID)
+
+      GlobalMeshTopology%num_side_sets = 0
+
+      Allocate(Tmp_ID(dMeshTopology%num_node_sets))
+      Tmp_ID = dMeshTopology%node_set(:)%ID
+      Call Uniq(dGlobalComm, Tmp_ID, Tmp_GlobalID)            
+      GlobalMeshTopology%Num_node_sets = Size(Tmp_GlobalID)
+      Allocate(GlobalMeshTopology%node_set(GlobalMeshTopology%num_node_sets))
+      GlobalMeshTopology%node_set(:)%ID = Tmp_GlobalID
+      DeAllocate(Tmp_ID)
+      
+      ! Element Blocks
+      Allocate(Tmp_ID(GlobalMeshTopology%num_elem_blks))
+      Tmp_ID = 0
+      Do i = 1, GlobalMeshTopology%num_elem_blks
+         GlobalMeshTopology%elem_blk(i)%num_Elems = 0
+         GlobalMeshTopology%elem_blk(i)%DoF_Location(:) = 0
+         GlobalMeshTopology%elem_blk(i)%num_DoF = 0
+         Do iBlk = 1, dMeshTopology%num_elem_blks
+            If (GlobalMeshTopology%elem_blk(i)%ID == dMeshTopology%elem_blk(iBlk)%ID) Then
+               Tmp_ID(i) = dMeshTopology%elem_blk(iBlk)%Elem_Type
+               GlobalMeshTopology%elem_blk(i)%num_elems = dMeshTopology%elem_blk(iBlk)%num_elems
+               Allocate(GlobalMeshTopology%elem_blk(i)%elem_id(GlobalMeshTopology%elem_blk(i)%num_elems))
+               GlobalMeshTopology%elem_blk(i)%elem_id = dMeshTopology%elem_blk(iBlk)%elem_id
+               GlobalMeshTopology%elem_blk(i)%DoF_Location = dMeshTopology%elem_blk(iBlk)%DoF_Location
+               GlobalMeshTopology%elem_blk(i)%num_DoF = dMeshTopology%elem_blk(iBlk)%num_DoF
+            End If
+         End Do
+      End Do
+      Call MPI_AllReduce(MPI_IN_PLACE, Tmp_ID, GlobalMeshTopology%num_elem_blks, MPI_INTEGER, MPI_MAX, dGlobalComm, iErr)
+      GlobalMeshTopology%elem_blk(:)%Elem_Type = Tmp_ID
+      DeAllocate(Tmp_ID)
+      Do iBlk = 1, GlobalMeshTopology%num_elem_blks
+         Call MPI_AllReduce(MPI_IN_PLACE, GlobalMeshTopology%elem_blk(iBlk)%DoF_Location, 4, MPI_INTEGER, MPI_MAX, dGlobalComm, iErr)
+         Call MPI_AllReduce(MPI_IN_PLACE, GlobalMeshTopology%elem_blk(iBlk)%Num_DoF, 1, MPI_INTEGER, MPI_MAX, dGlobalComm, iErr)
+      End Do
+      
+      ! Node Sets
+      GlobalMeshTopology%node_set(:)%num_nodes = 0
+      Do i = 1, GlobalMeshTopology%num_node_sets
+         Do iSet = 1, dMeshTopology%num_node_sets
+            If (GlobalMeshTopology%node_set(i)%ID == dMeshTopology%node_set(iSet)%ID) Then
+               GlobalMeshTopology%node_set(i)%num_nodes = dMeshTopology%node_set(iSet)%num_nodes
+               Allocate(GlobalMeshTopology%node_set(i)%node_ID(GlobalMeshTopology%node_set(i)%num_nodes))
+               GlobalMeshTopology%node_set(i)%node_ID = dMeshTopology%node_set(iSet)%node_ID
+            End If
+         End Do
+      End Do
+      Do iSet = 1, GlobalMeshTopology%num_node_sets
+      End Do
+
+      GlobalMeshTopology%mesh = dMeshTopology%mesh
+      Call Write_MeshTopology(GlobalMeshTopology, dEXO)
+      Call MeshTopologyDestroy(GlobalMeshTopology)
+   End Subroutine Write_MeshTopologyGlobal
+
+
+
+
+
 !!!   Subroutine Write_MeshTopology_Info(Geom)
 !!!      Type (MeshTopology_Info), Intent(INOUT)            :: Geom
 !!!      
