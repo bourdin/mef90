@@ -1,25 +1,6 @@
 Module m_algeblin
-   ! Blaise Bourdin, 1996-1998
-   ! Merci de faire parvenir toutes remarques et bugs 
-   ! eventuels aux adresses suivantes :
-   ! bourdin@lpmtm.univ-paris13.fr
-   ! bourdin@mat.dtu.dk
-   !
-   ! En cas de modifications, les noms de  modules et de 
-   ! fichiers _DOIVENT_ etre renommes
-   !          ^^^^^^^^^
-   !
    Use m_constantes
    IMPLICIT NONE
- 
- 
-   ! Definition de types matrice et vecteurs 2D et 3D
-   ! Surcharge des operateurs +-*/
-   !
-   ! Produit vectoriels, scalaire, tensoriel et symmetrique
-   ! Trace et produit contracte
-   ! Blaise Bourdin      04-97
-   ! Version 3           09-97
  
    Type Vect2D
       Sequence
