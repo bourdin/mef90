@@ -1,4 +1,4 @@
-umodule m_TestSieve
+Module m_TestSieve
   Use m_MEF90
 
   Implicit NONE
@@ -65,7 +65,7 @@ umodule m_TestSieve
                U_Elem      = 0.0_Kr
                F_Elem      = 0.0_Kr
               
-               Do_iSL: Do iSL = 1, dMyMeshTopology%Elem_Blk(iBlk)%Nb_DoF
+               Do_iSL: Do iSL = 1, dMyMeshTopology%Elem_Blk(iBlk)%Num_DoF
                   Strain_Elem = Strain_Elem + dMyElem(iE)%Grad_BF(iSL, iG) * U_Ptr(iSL)
                   F_Elem      = F_Elem      + dMyElem(iE)%BF(iSL, iG)      * F_Ptr(iSL)
                   U_Elem      = U_Elem      + dMyElem(iE)%BF(iSL, iG)      * U_Ptr(iSL)

@@ -158,7 +158,7 @@ Module m_MEF_EXO
          dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
          
          ! Write Mesh Topology Info
-         Call EXPINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
+         Call EXPINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
             
          ! Write Coordinate Names
          Call EXPCON(dEXO%exoid, Coord_Names, iErr)
@@ -187,9 +187,7 @@ Module m_MEF_EXO
             Case Default
                   SETERRQ(PETSC_ERR_SUP, 'Only MEF90_P1_Lagrange and MEF90_P2_Lagrange elements are supported', iErr)
             End Select
-!            If (dMeshTopology%elem_blk(iBlk)%Num_Elems > 0) Then
-               Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
-!            End If
+            Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
          End Do
    
          ! Write Side sets informations
@@ -252,7 +250,7 @@ Module m_MEF_EXO
 
       ! Gather Global Sizes
       GlobalMeshTopology%num_dim  = dMeshTopology%num_dim
-      GlobalMeshTopology%num_vert = dMeshTopology%num_vert
+      GlobalMeshTopology%num_verts = dMeshTopology%num_verts
       GlobalMeshTopology%num_elems = dMeshTopology%num_elems
       
       Allocate(Tmp_ID(dMeshTopology%num_elem_blks))
@@ -319,250 +317,90 @@ Module m_MEF_EXO
    End Subroutine Write_MeshTopologyGlobal
 
 
-
-
-
-!!!   Subroutine Write_MeshTopology_Info(Geom)
-!!!      Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!      
-!!!      Integer                                        :: vers
-!!!      Integer                                        :: iErr
-!!!      Integer                                        :: iDummy
-!!!      Real(Kind = Kr)                                :: rDummy
-!!!      Character                                      :: cDummy
-!!!      
-!!!      Integer                                        :: iBlk
-!!!      Integer                                        :: iSet
-!!!      Character(len=MXSTLN), Dimension(:,:), Pointer :: Tmp_QA
-!!!      Character(len=MXSTLN), Dimension(3)            :: Coord_Names
-!!!      Integer                                        :: MyRank
-!!!      
-!!!      Coord_Names(1) = 'X'
-!!!      Coord_Names(2) = 'Y'
-!!!      Coord_Names(3) = 'Z'
-!!!      
-!!!      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
-!!!      If (MyRank /= 0 ) Then
-!!!         RETURN
-!!!      End If   
-!!!      
-!!!      ! Open File
-!!!      Geom%exoid = EXCRE (Geom%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
-!!!      Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
-!!!    
-!!!      ! Writes Global Geometric Parameters
-!!!      Call EXPINI(Geom%exoid, Geom%Title, Geom%Num_Dim, Geom%Num_Nodes, Geom%Num_Elems, Geom%Num_Elem_Blks, Geom%Num_Node_Sets, Geom%Num_Side_Sets, iErr)
-!!!      Call EXPCON(Geom%exoid, Coord_Names, iErr)
-!!!      
-!!!      If (Geom%Num_Side_Sets > 0) Then
-!!!         Write(*,*) 'WARNING: Side_sets non implemented, continuing anyway'
-!!!         Write(*,*) '         Got Geom%Num_Side_Sets = ', Geom%Num_Side_Sets
-!!!      End If
-!!!    
-!!!      ! Write Elem blocks informations
-!!!      If (Geom%Num_Elem_blks > 0) Then
-!!!         Do iBlk = 1, Geom%Num_Elem_Blks
-!!!            Call EXPELB(Geom%exoid, Geom%elem_blk(iBlk)%ID, Geom%elem_blk(iBlk)%Type, Geom%elem_blk(iBlk)%Num_Elems, Geom%elem_blk(iBlk)%Num_Nodes_Per_Elem, Geom%elem_blk(iBlk)%Num_Attr, iErr)
-!!!         End Do
-!!!      End If
-!!!    
-!!!      ! Write Node sets informations
-!!!      If (Geom%Num_Node_Sets > 0) Then
-!!!         Do iSet = 1, Geom%Num_node_sets
-!!!            Call EXPNP(Geom%exoid, Geom%Node_Set(iSet)%ID, Geom%Node_Set(iSet)%Num_Nodes, Geom%Node_Set(iSet)%Num_Dist_Factors, iErr)
-!!!            Call EXPNS(Geom%exoid, Geom%Node_Set(iSet)%ID, Geom%Node_Set(iSet)%Node_ID(:), iErr)
-!!!         End Do
-!!!      End If
-!!!
-!!!    ! Writes QA Records
-!!!!    Geom%Num_QA = Geom%Num_QA+1
-!!!!    Allocate (Tmp_QA(4, Geom%Num_QA))
-!!!!    Tmp_QA(:,1:Geom%Num_QA-1) = Geom%QA_rec
-!!!!    DeAllocate (Geom%QA_Rec)
-!!!!    Allocate (Geom%QA_Rec(4, Geom%Num_QA))
-!!!!    Geom%QA_rec = Tmp_QA
-!!!!    DeAllocate (Tmp_QA)
-!!!!    
-!!!!    Geom%QA_Rec(1,Geom%Num_QA) = 'm_MEF_EXO'
-!!!!    Geom%QA_Rec(2,Geom%Num_QA) = 'MEF90'
-!!!!    Call Date_And_Time(date = Geom%QA_Rec(3,Geom%Num_QA))
-!!!!    Call Date_And_Time(time = Geom%QA_Rec(4,Geom%Num_QA))
-!!!!    Call EXPQA(Geom%exoid, Geom%num_QA, Geom%QA_Rec, iErr)
-!!!    
-!!!      Call EXCLOS(Geom%exoid, iErr)
-!!!      Geom%exoid = 0
-!!!   End Subroutine Write_MeshTopology_Info
-!!!  
-!!!   Subroutine Show_MeshTopology_Info(Geom, IO_Unit)
-!!!      Type (MeshTopology_Info), Intent(IN)               :: Geom
-!!!      Integer, Optional                              :: IO_Unit
-!!!      
-!!!      Integer                                        :: i
-!!!    
-!!!      If ( .NOT. Present(IO_UNit) ) Then
-!!!         IO_Unit = 6 !!! STDOUT
-!!!      End If  
-!!!
-!!!
-!!!      Write(IO_Unit, 100) 
-!!!      Write(IO_Unit, 101) Trim(Geom%filename)
-!!!      Write(IO_Unit, 102) Trim(Geom%title)
-!!!      Write(IO_Unit, 103) Geom%num_dim
-!!!      Write(IO_Unit, 104) Geom%num_nodes
-!!!      Write(IO_Unit, 105) Geom%num_elems
-!!!      Write(IO_Unit, 106) Geom%Num_Elem_blks
-!!!      Write(IO_Unit, 107) Geom%Num_Node_Sets
-!!!      Write(IO_Unit, 108) Geom%Num_Side_Sets
-!!!      
-!!!      Write(IO_Unit, *)
-!!!      Write(IO_Unit, 200)
-!!!      Write(IO_Unit, 201) Geom%num_elem_blks
-!!!      Do i = 1, Geom%Num_Elem_blks
-!!!         Write(IO_Unit, 202) Geom%Elem_Blk(i)%ID, Geom%Elem_blk(i)%Type
-!!!         Write(IO_Unit, 203) Geom%Elem_Blk(i)%ID, Geom%Elem_blk(i)%Num_Elems
-!!!         Write(IO_Unit, 204) Geom%Elem_Blk(i)%ID, Geom%Elem_blk(i)%Num_Nodes_Per_Elem
-!!!         Write(IO_Unit, 205) Geom%Elem_Blk(i)%ID, Geom%Elem_blk(i)%Num_Attr
-!!!         Write(IO_Unit, 206, advance = 'no') Geom%Elem_Blk(i)%ID
-!!!         Write(IO_Unit, *) Geom%Elem_blk(i)%Elem_ID
-!!!      End Do
-!!!      
-!!!      
-!!!      Write(IO_Unit, *)
-!!!      Write(IO_Unit, 300)
-!!!      Write(IO_Unit, 301) Geom%num_node_sets
-!!!      Do i = 1, Geom%num_node_sets
-!!!         Write(IO_Unit, 302) Geom%Node_Set(i)%ID, Geom%Node_Set(i)%Num_Nodes
-!!!         Write(IO_Unit, 303, advance = 'no') Geom%Node_Set(i)%ID
-!!!         Write(IO_Unit, *) Geom%Node_Set(i)%Node_ID
-!!!         Write(IO_Unit, 304) Geom%Node_Set(i)%ID, Geom%Node_Set(i)%Num_Dist_Factors
-!!!      End Do
-!!!      
-!!!      
-!!!      Write(IO_Unit, *)
-!!!      Write(IO_Unit, 400)
-!!!      Write(IO_Unit, 401) Geom%num_side_sets
-!!!      
-!!!      Write(IO_Unit, *)
-!!!      Write(IO_Unit, 500)
-!!!      Write(IO_Unit, 501) Geom%num_QA
-!!!      Do i = 1, Geom%num_QA
-!!!         Write(IO_Unit, 502) i, Trim(Geom%QA_rec(1,i))
-!!!         Write(IO_Unit, 503) i, Trim(Geom%QA_rec(2,i))
-!!!         Write(IO_Unit, 504) i, Trim(Geom%QA_rec(3,i))
-!!!         Write(IO_Unit, 505) i, Trim(Geom%QA_rec(4,i))
-!!!      End Do
-!!!
-!!!100 Format('*** GLOBAL INFORMATIONS ***')
-!!!101 Format('    Filename ======================== ', A)
-!!!102 Format('    Title =========================== ', A)
-!!!103 Format('    Number of dimensions ============ ', I1)
-!!!104 Format('    Number of nodes ================= ', I6)
-!!!105 Format('    Number of elements ============== ', I6)
-!!!106 Format('    Number of elements blocks ======= ', I6)
-!!!107 Format('    Number of node sets ============= ', I6)
-!!!108 Format('    Number of side sets ============= ', I6)
-!!!
-!!!200 Format('*** ELEMENT BLOCKS ***')
-!!!201 Format('    Number of blocks ================ ', I4)
-!!!202 Format('    Block ', I3, ' Elements type ========= ', A)
-!!!203 Format('    Block ', I3, ' Number of elements ==== ', I4)
-!!!204 Format('    Block ', I3, ' Number of nodes per elt ', I4)
-!!!205 Format('    Block ', I3, ' Number of attributes == ', I4)
-!!!206 Format('    Block ', I3, ' IDs: ')
-!!!
-!!!300 Format('*** NODE SETS ***')
-!!!301 Format('    Number of sets ================== ', I4)
-!!!302 Format('    Set ', I3, ' Number of nodes ========= ', I4)
-!!!303 Format('    Set ', I3, ' IDs: ')
-!!!304 Format('    Set ', I3, ' Number of dist. factors = ', I4)
-!!!
-!!!400 Format('*** SIDE SETS ***')
-!!!401 Format('    Number of side sets ============= ', I4)
-!!!    
-!!!500 Format('*** QA ***')
-!!!501 Format('    Number of QA Records =========== ', I2)
-!!!502 Format('    Rec ', I2, ' analysis code ============ ', A)
-!!!503 Format('    Rec ', I2, ' analysis QA desc. ======== ', A)
-!!!504 Format('    Rec ', I2, ' analysis date ============ ', A)
-!!!505 Format('    Rec ', I2, ' analysis time ============ ', A)
-!!!   End Subroutine Show_MeshTopology_Info
-
-
-
-
 !!!
 !!! RESULT FILES
 !!!
 
 !!! READ
-!!! EXO stores values per coordinates
-!!! V_PerNode = (/ (V_PerCoord(i:Size:Num_Nodes), i=1:NumDim /)
-!!! V_PerCoord = (/ (V_PerNodes(i:Size:NumDim), i=1, Num_Nodes/)
-!!! 
-
 !!! In the sequel, we always assume that we are doing distributed I/O when EXO%comm == PETSC_COMM_SELF (i.e. 1 file per CPU) and sequential (i.e. IO operation on a single file on CPU 0) when EXO%comm == PETSC_COM_WORLD
    
-!!!##   Subroutine Read_EXO_Result_Global(dEXO, dIdx, dTS, dRes, dNumRec)
-!!!##      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-!!!##      Integer                                        :: dIdx
-!!!##      Integer                                        :: dTS
-!!!##      Real(Kind = Kr)                                :: dRes
-!!!##      Integer                                        :: dNumRec
-!!!##      
-!!!##      Real(Kind = Kr)                                :: MyRes
-!!!##      Integer                                        :: iErr
-!!!##      Real(Kind = Kr)                                :: Vers
-!!!##      Real(Kind = Kr), Dimension(:), Pointer         :: Tmp_Res
-!!!##      Integer                                        :: Num_Vars, Num_TS
-!!!##      Real(Kind = Kr)                                :: fDum
-!!!##      Character                                      :: cDum
-!!!##      
-!!!##      If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
-!!!##         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
-!!!##         ! Get the number of global variables stored in the database    
-!!!##         Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
-!!!##         Allocate(Tmp_Res(Num_Vars))
-!!!##         
-!!!##         ! Read All the global variables at time step TS and copy the right one
-!!!##         ! into Res
-!!!##         Call EXGGV(dEXO%exoid, dTS, Num_Vars, Tmp_Res, iErr)
-!!!##         MyRes = Tmp_Res(dIdx)
-!!!##         DeAllocate (Tmp_Res)
-!!!##         Call EXCLOS(dEXO%exoid, iErr)
-!!!##         dEXO%exoid = 0
-!!!##         End If
-!!!##      End If
-!!!##            
-!!!##      !!! Broacast if dEXO%comm == PETSC_COMM_WORLD, AllReduce if dEXO%comm == PETSC_COMM_SELF
-!!!##      If (dEXO%comm == PETSC_COMM_WORLD) Then
-!!!##         Call MPI_BCast(MyRes, 1, MPIU_SCALAR, 0, dEXO%comm, iErr)
-!!!##         dRes = MyRes
-!!!##      Else
-!!!##         Call PetscGlobalSum(MyRes, dRes, dEXO%comm, iErr)
-!!!##      End If
-!!!##   End Subroutine Read_EXO_Result_Global
-!!!##
-!!!##   Subroutine Read_EXO_Result_Section_Nodes(dExo, dMeshTopology, dIdx, dTS, dRes)
-!!!##      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-!!!##      Type (MeshTopology_Info)                       :: dMeshTopology
-!!!##      Integer                                        :: dIdx
-!!!##      Integer                                        :: dTS
-!!!##      SectionReal                                    :: dRes
-!!!##      
-!!!##      Vec                                            :: Res_Vec
-!!!##      Real(Kind = Kr), Dimension(:), Pointer         :: Res_Ptr
-!!!##      Integer                                        :: iErr
-!!!##      Real(Kind = Kr)                                :: Vers
-!!!##      
-!!!##      Geom%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
-!!!##      
-!!!##      !!! We Assume that the section is initialized and has the proper size
-!!!##      
-!!!##      Call EXGNV(Geom%exoid, TS, Idx, Geom%Num_Nodes, Res, iErr)
-!!!##      
-!!!##      Call EXCLOS(Geom%exoid, iErr)
-!!!##      Geom%exoid = 0
-!!!##   End Subroutine Read_EXO_Result_Section_Nodes
+   Subroutine Read_EXO_Result_Global(dEXO, dIdx, dTS, dRes, dNumRec)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Integer                                        :: dIdx
+      Integer                                        :: dTS
+      PetscReal                                      :: dRes
+      Integer                                        :: dNumRec
+      
+      PetscReal                                      :: MyRes
+      Integer                                        :: iErr
+      PetscReal                                      :: Vers
+      PetscReal, Dimension(:), Pointer               :: Tmp_Res
+      Integer                                        :: Num_Vars, Num_TS
+      PetscReal                                      :: fDum
+      Character                                      :: cDum
+      
+      dRes = 0.0_Kr
+      If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         ! Get the number of global variables stored in the database    
+         Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
+         Allocate(Tmp_Res(Num_Vars))
+         
+         ! Read All the global variables at time step TS and copy the right one
+         ! into Res
+         Call EXGGV(dEXO%exoid, dTS, Num_Vars, Tmp_Res, iErr)
+         MyRes = Tmp_Res(dIdx)
+         DeAllocate (Tmp_Res)
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+            
+      !!! Broacast if dEXO%comm == PETSC_COMM_WORLD
+      If (dEXO%comm == PETSC_COMM_WORLD) Then
+         Call MPI_BCast(MyRes, 1, MPIU_SCALAR, 0, dEXO%comm, iErr)
+         dRes = MyRes
+      End If
+   End Subroutine Read_EXO_Result_Global
+
+   Subroutine Read_EXO_Result_Section_Nodes(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      Integer                                        :: dIdx
+      Integer                                        :: dTS
+      SectionReal                                    :: dRes
+      
+      Vec                                            :: Res_Vec
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr, Res_Comp_Ptr
+      Integer                                        :: Num_Rec, iRec
+      Integer                                        :: iErr
+      PetscReal                                      :: Vers
+      
+      dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+      
+      !!! We Assume that the section is initialized and has the proper size
+      Call SectionRealCreateLocalVector(dRes, Res_Vec, iErr); CHKERRQ(iErr)
+      Call VecGetArrayF90(Res_Vec, Res_Ptr, iErr); CHKERRQ(iErr)
+      If (Mod(Size(Res_Ptr), dMeshTopology%Num_Verts) /= 0) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'The Section does not match the number of dof in the mesh', iErr)
+      End If
+      Num_Rec = Size(Res_Ptr) / dMeshTopology%Num_Verts
+      
+      Allocate(Res_Comp_Ptr(dMeshTopology%Num_Verts))
+      Do iRec = dIdx, dIdx+Num_Rec
+         Call EXGNV(dEXO%exoid, dTS, iRec, dMeshTopology%Num_Verts, Res_Comp_Ptr, iErr)
+         Res_Ptr((iRec-1)*dMeshTopology%Num_Verts: iRec*dMeshTopology%Num_Verts) = Res_Comp_Ptr
+         !!! WRONG! this is not how the data is stored in Res_Ptr
+         !!!        do as below
+      End Do
+      DeAllocate(Res_Comp_Ptr)      
+      Call VecRestoreArrayF90(Res_Vec, Res_Ptr, iErr); CHKERRQ(iErr)
+      !!! How do I release Res_Vec?
+      
+      Call EXCLOS(dEXO%exoid, iErr)
+      dEXO%exoid = 0
+   End Subroutine Read_EXO_Result_Section_Nodes
+
+
 !!!##
 !!!##   Subroutine Read_EXO_Result_Vec_Nodes(Geom, Layout, Idx, TS, Res)
 !!!##      Type (MeshTopology_Info), Intent(INOUT)              :: Geom
@@ -1043,40 +881,41 @@ Module m_MEF_EXO
 !!!##    Call EXCLOS(Geom%exoid, iErr)
 !!!##    Geom%exoid = 0
 !!!##  End Subroutine Read_EXO_Result_MatS3D_Elems
-!!!##
-!!!##!!! WRITE
-!!!##  Subroutine Write_EXO_Result_Global(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
-!!!##    Real(Kind = Kr)                                :: Res
-!!!##
-!!!##    Integer                                        :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Real(Kind = Kr), Dimension(:), Pointer         :: Tmp_Res
-!!!##    Integer                                        :: Num_Vars, Num_TS
-!!!##    Real(Kind = Kr)                                :: fDum
-!!!##    Character                                      :: cDum
-!!!##
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##    ! Get the number of global variables stored in the database    
-!!!##    Call EXGVP(Geom%exoid, 'G', Num_Vars, iErr)
-!!!##    Allocate(Tmp_Res(Num_Vars))
-!!!##    Tmp_Res = 0.0_Kr
-!!!##
-!!!##    ! Read All the global variables at time step TS into Tmp_Res
-!!!##    ! Modify Tmp_Res(Idx) and write everything back...
-!!!##    Call EXGGV(Geom%exoid, TS, Num_Vars, Tmp_Res, iErr)
-!!!##    Tmp_Res(Idx) = Res
-!!!##
-!!!##    Call EXPGV(Geom%exoid, TS, Num_Vars, Tmp_Res, iErr)
-!!!##    DeAllocate (Tmp_Res)
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_Global
-!!!##
-!!!##
+
+!!! WRITE
+   Subroutine Write_EXO_Result_Global(dEXO, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Integer                                        :: dIdx
+      Integer                                        :: dTS
+      PetscReal                                      :: dRes
+      
+      Integer                                        :: iErr
+      PetscReal                                      :: Vers
+      PetscReal, Dimension(:), Pointer               :: Tmp_Res
+      Integer                                        :: Num_Vars, Num_TS
+      PetscReal                                      :: fDum
+      Character                                      :: cDum
+      
+      If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         ! Get the number of global variables stored in the database    
+         Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
+         Allocate(Tmp_Res(Num_Vars))
+         Tmp_Res = 0.0_Kr
+         
+         ! Read All the global variables at time step TS into Tmp_Res
+         ! Modify Tmp_Res(Idx) and write everything back...
+         Call EXGGV(dEXO%exoid, dTS, Num_Vars, Tmp_Res, iErr)
+         Tmp_Res(dIdx) = dRes
+         
+         Call EXPGV(dEXO%exoid, dTS, Num_Vars, Tmp_Res, iErr)
+         DeAllocate (Tmp_Res)
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+   End Subroutine Write_EXO_Result_Global
+
+
 !!!##!!$  Subroutine Write_EXO_Result_Scal_Nodes(Geom, Idx, TS, Res)
 !!!##!!$    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
 !!!##!!$    Integer                                        :: Idx

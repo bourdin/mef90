@@ -19,6 +19,15 @@ Module m_MEF_Sieve
    Interface MeshTopologyReadEXO
       Module Procedure MeshTopologyReadEXO_2DScal
    End Interface MeshTopologyReadEXO
+   
+!   Interface MeshCreateCoordinates
+!      Module Procedure MeshCreateCoordinatesPtr MeshCreateCoordinatesVect2D MeshCreateCoordinatesVect3D
+!   End Interface MeshCreateCoordinates
+   
+!   Interface Interface MeshInitElemConnectivity
+!      Module Procedure Interface MeshInitElemConnectivity2D_Scal, MeshInitElemConnectivity2D, MeshInitElemConnectivity2D_Elast, Interface MeshInitElemConnectivity3D_Scal, MeshInitElemConnectivity3D, MeshInitElemConnectivity3D_Elast
+!   End Interface MeshInitElemConnectivity
+      
 Contains
 
 !   Subroutine MeshTopologyReadGeometryEXO(dMeshTopology, dEXO)
@@ -29,6 +38,7 @@ Contains
    
    
    Subroutine MeshTopologyReadEXO_2DScal(dMeshTopology, Coords, Elem2DA, dEXO)
+      !!! Remove the element and coordinate stuff and move in separate functions
       Type (MeshTopology_Info)                     :: dMeshTopology
       Type (Vect3D), Dimension(:), Pointer         :: Coords
       Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
@@ -54,7 +64,7 @@ Contains
       call MeshDestroy(mesh, ierr)
 
       ! Read Global Geometric Parameters
-      call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr)
+      call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr)
       !!! Extracts sizes from the Mesh oject
 
       ! Read Elem block information
@@ -106,7 +116,7 @@ Contains
       Deallocate(setIds)
 
       ! Read the vertices coordinates
-      Allocate(Coords(dMeshTopology%Num_Vert))
+      Allocate(Coords(dMeshTopology%Num_Verts))
       call MeshGetCoordinatesF90(dMeshTopology%mesh, array, iErr)
       embedDim = size(array,2)
       Coords%X = array(:,1)

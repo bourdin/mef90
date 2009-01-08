@@ -19,6 +19,9 @@ ${PROJ}: ${PROJ}.o
 TestNodeSet: TestNodeSet.o
 	-${FLINKER} -o TestNodeSet TestNodeSet.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
 
+TestLocal: TestLocal.o
+	-${FLINKER} -o TestLocal TestLocal.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${EXO_LFLAGS}
+	
 # Dependences
 {PROJ}: ${PROJ}.o m_${PROJ}.o
 ${PROJ}.o: m_${PROJ}.o
