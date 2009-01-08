@@ -185,7 +185,7 @@ Module m_MEF_Types
       Sequence
       ! Global datas
       Integer                                        :: num_dim
-      Integer                                        :: num_vert 
+      Integer                                        :: num_verts
       Integer                                        :: num_elems
 !      Integer                                        :: num_ghost_nodes
 !      Integer                                        :: num_ghost_elems
@@ -275,7 +275,7 @@ Contains
 
       Write(CharBuffer, 103) dMeshTopology%num_dim
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-      Write(CharBuffer, 104) dMeshTopology%num_Vert
+      Write(CharBuffer, 104) dMeshTopology%num_Verts
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 105) dMeshTopology%num_elems
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)

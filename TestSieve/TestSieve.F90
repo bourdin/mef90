@@ -28,7 +28,7 @@ Program TestSieve
    SectionReal                                  :: U, F, coordSection
    PetscReal, Dimension(:), Pointer             :: values
    Mat                                          :: K
-   Vec                                          :: V
+   Vec                                          :: V, V_Loc
    PetscTruth                                   :: HasF
    PetscInt                                     :: dof
    PetscLogEvent                                :: integrationEvent
@@ -124,7 +124,7 @@ Program TestSieve
 
    
    Allocate(values(dof))
-   Do iV = 1, MeshTopology%Num_Vert
+   Do iV = 1, MeshTopology%Num_Verts
       values = 1.0+Coords(iV)%Y
       call MeshUpdateClosure(MeshTopology%mesh, U, MeshTopology%Num_Elems+iV-1, values, ierr)
       !!! Internal storage of points in the mesh is cell then vertices then everything else
@@ -164,6 +164,8 @@ Program TestSieve
 
    !!! Ghost update can also be done using SectionComplete (equivalent of DALocalToLocal)
 
+   Write(CharBuffer,*) 'V\n'c
+   Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
    Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
 
    !!! Destroy the element   
@@ -212,7 +214,7 @@ Program TestSieve
       End If
 
       ! Read Global Geometric Parameters
-      call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Vert, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr)
+      call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr)
       !!! Extracts sizes from the Mesh oject
 
 
@@ -265,7 +267,7 @@ Program TestSieve
       Deallocate(setIds)
 
       ! Read the vertices coordinates
-      Allocate(Coords(MeshTopology%Num_Vert))
+      Allocate(Coords(MeshTopology%Num_Verts))
       call MeshGetCoordinatesF90(dMeshTopology%mesh, array, iErr)
       embedDim = size(array,2)
       Coords%X = array(:,1)

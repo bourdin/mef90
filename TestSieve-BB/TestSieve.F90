@@ -130,6 +130,7 @@ Program TestSieve
    Call MeshCreateVector(MeshTopology%mesh, U, V, iErr); CHKERRQ(iErr)
 !   Call MeshCreateLocalVector(MeshTopology%mesh, V_Local, iErr); CHKERRQ(iErr)
     Call SectionRealCreateLocalVector(U, V_Local, iErr); CHKERRQ(iErr)
+    
    
    Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
    Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
