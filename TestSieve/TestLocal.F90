@@ -24,11 +24,17 @@ Program TestLocal
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    PetscViewer                                  :: viewer, myviewer
-   SectionReal                                  :: Coords_Sec
+   SectionReal                                  :: Coords_Sec, U_Sec
    Vec                                          :: Coords_VecG, Coords_VecL
    PetscReal, Dimension(:), Pointer             :: Coords_Ptr
    PetscInt                                     :: VSize
    VecScatter                                   :: scatter
+   Integer                                      :: exo_ver
+   Integer                                      :: i
+   PetscReal                                    :: T
+   Type(Vect2D), Dimension(:), Pointer          :: V2D
+   Type(Vect3D), Dimension(:), Pointer          :: V3D
+   PetscReal, Dimension(:), Pointer             :: V_Ptr
      
    Call MEF90_Initialize()
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr)    
@@ -162,10 +168,33 @@ Program TestLocal
    Call VecDestroy(Coords_VecG, iErr); CHKERRQ(iErr)
    Call VecDestroy(Coords_VecL, iErr); CHKERRQ(iErr)
 
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 2, U_Sec, iErr); CHKERRQ(iErr)
 
+!      Write(*,*) 'Writing in ', trim(MyEXO%filename)
+      MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
+      
+      Call EXPVP (MyEXO%exoid, 'n', 4, iErr)
+      Call EXPVAN (MyEXO%exoid, 'n', 4, (/'res1', 'Res2', 'Res3', 'Res4'/), iErr)
+      Do i = 1, 10
+         T = 1.0_Kr + i
+         Call EXPTIM (MyEXO%exoid, i, T, iErr)
+      End Do
+      Call EXCLOS(MyEXO%exoid, iErr)
 
-   Call SectionRealView(Coords_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   
+      Call Write_EXO_Result_Vertex(MyExo, MeshTopology, 2, 1, Coords_Sec)
+      Call Read_EXO_Result_Vertex(MyEXO, MeshTopology, 2, 1, U_Sec)
+      Call SectionRealView(U_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+      
+      Allocate(V2D(MeshTopology%Num_Verts))
+      V2D(:)%X = -1.0_Kr
+      V2D(:)%Y = -3.14_Kr
+      Call Read_EXO_Result_Vertex(MyEXO, MeshTopology, 2, 1, V2D)
+      If (verbose) Then
+         Do i = 1, MeshTopology%Num_Verts
+            Write(IOBuffer, *) i, V2D(i)%X, V2D(i)%Y, '\n'c
+            Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+         End Do
+      End If
    Call MeshTopologyDestroy(MeshTopology)
    Call SectionRealDestroy(Coords_Sec, iErr); CHKERRQ(iErr)
    If (verbose) Then
