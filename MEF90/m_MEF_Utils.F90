@@ -1,6 +1,7 @@
-Module m_Utils
-
-   Use m_Constantes
+Module m_MEF_Utils
+#include "finclude/petscdef.h"
+   Use m_MEF_Parameters
+   Use petsc
    Implicit None
    Private
    
@@ -13,16 +14,15 @@ Module m_Utils
       ! Gauss Jordan inversion
       ! Very closely based on the routine from Numerical recipes
       ! 
-      Implicit NONE 
-      Real(Kind = Kr), Dimension(:,:), Pointer    :: A
-      Logical, Intent(OUT)                        :: Status
+      PetscReal, Dimension(:,:), Pointer          :: A
+      PetscInt, Intent(OUT)                       :: Status
       
       Integer, Dimension(:), Pointer              :: ipiv,indxr,indxc 
       Logical, Dimension(:), Pointer              :: lpiv 
       Logical, Dimension(:,:), Pointer            :: lMask
-      Real(Kind = Kr)                             :: pivinv 
-      Real(Kind = Kr), Dimension(:),Pointer       :: dumc 
-      Real(Kind = Kr), Dimension(:,:), Pointer    :: DumC2
+      PetscReal                                   :: pivinv 
+      PetscReal, Dimension(:),Pointer             :: dumc 
+      PetscReal, Dimension(:,:), Pointer          :: DumC2
       Integer, Target                             :: irc(2) 
       Integer                                     :: i,l,n 
       Integer, Pointer                            :: irow,icol 
@@ -107,17 +107,16 @@ Module m_Utils
       ! Gauss Jordan inversion
       ! Very closely based on the routine from Numerical recipes
       ! 
-      Implicit NONE 
-      Real(Kind = Kr), Dimension(:,:), Pointer    :: A
-      Real(Kind = Kr), Dimension(:), Pointer      :: b
-      Logical, Intent(OUT)                        :: Status
+      PetscReal, Dimension(:,:), Pointer          :: A
+      PetscReal, Dimension(:), Pointer            :: b
+      PetscInt, Intent(OUT)                       :: Status
       
       Integer, Dimension(:), Pointer              :: ipiv,indxr,indxc 
       Logical, Dimension(:), Pointer              :: lpiv 
       Logical, Dimension(:,:), Pointer            :: lMask
-      Real(Kind = Kr)                             :: pivinv , DumR
-      Real(Kind = Kr), Dimension(:),Pointer       :: dumc 
-      Real(Kind = Kr), Dimension(:,:), Pointer    :: DumC2
+      PetscReal                                   :: pivinv , DumR
+      PetscReal, Dimension(:),Pointer             :: dumc 
+      PetscReal, Dimension(:,:), Pointer          :: DumC2
       Integer, Target                             :: irc(2) 
       Integer                                     :: i,l,n 
       Integer, Pointer                            :: irow,icol 
@@ -202,4 +201,4 @@ Module m_Utils
       DeAllocate (dumc)
       DeAllocate (lmask)
    End Subroutine GaussJordan_Solve1
-End Module m_Utils
+End Module m_MEF_Utils

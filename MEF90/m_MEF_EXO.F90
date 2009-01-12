@@ -1,21 +1,20 @@
 Module m_MEF_EXO
-   Use m_AlgebLin
-   Use m_Constantes
+#include "finclude/petscdef.h"
+#include "finclude/petscvecdef.h"
+#include "finclude/petscmeshdef.h"
+
+   Use m_MEF_LinAlg
+   Use m_MEF_Parameters
    Use m_MEF_Types
    Use m_MEF_MPI
    Use m_MEF_Elements
+   Use petsc
+   Use petscvec
+   Use petscmesh
+   
    
    IMPLICIT NONE
    Private
-   include "exodusII.inc"
-#include "finclude/petsc.h"
-#include "finclude/petscvec.h"
-#include "finclude/petscvec.h90"
-#include "finclude/petscsys.h"
-#include "finclude/petscviewer.h"
-#include "finclude/petscviewer.h90"
-#include "finclude/petscmesh.h"
-#include "finclude/petscmesh.h90"
 
    Integer, Parameter, Public                        :: exo_cpu_ws = 8
    Integer, Parameter, Public                        :: exo_io_ws = 8
@@ -60,9 +59,9 @@ Module m_MEF_EXO
       Logical, Dimension(:), Pointer   :: ValCount
       PetscInt                         :: GlobMinVal, MyMinVal
       PetscInt                         :: GlobMaxVal, MyMaxVal
-      Integer                          :: UniqCount
+      PetscInt                         :: UniqCount
       PetscMPIInt                      :: rank
-      Integer                          :: i, j, iErr
+      PetscInt                         :: i, j, iErr
 
       Call MPI_Comm_Rank(PETSC_COMM_WORLD, rank, iErr)
 
@@ -97,22 +96,22 @@ Module m_MEF_EXO
    Subroutine Write_MeshTopology(dMeshTopology, dEXO)
       Type(MeshTopology_Info)                        :: dMeshTopology
       Type(EXO_Info)                                 :: dEXO
-      Integer                                        :: vers
-      Integer                                        :: iErr
-      Integer                                        :: iDummy
+      PetscInt                                       :: vers
+      PetscInt                                       :: iErr
+      PetscInt                                       :: iDummy
       PetscReal                                      :: rDummy
       Character                                      :: cDummy
       
-      Integer                                        :: iBlk, iSet, i
-      Integer                                        :: iE, iELoc
-      Integer                                        :: Num_Attr = 0         
-      Integer                                        :: Num_Dist_Factor = 0
+      PetscInt                                       :: iBlk, iSet, i
+      PetscInt                                       :: iE, iELoc
+      PetscInt                                       :: Num_Attr = 0         
+      PetscInt                                       :: Num_Dist_Factor = 0
       
       Character(len=MXSTLN), Dimension(3)            :: Coord_Names, Elem_Type
       PetscReal, Dimension(:,:), Pointer             :: Coordinates
-      Integer, Dimension(:,:), Pointer               :: ConnectMesh
-      Integer, Dimension(:), Pointer                 :: ConnectBlk
-      Integer                                        :: offset
+      PetscInt, Dimension(:,:), Pointer              :: ConnectMesh
+      PetscInt, Dimension(:), Pointer                :: ConnectBlk
+      PetscInt                                       :: offset
       
       Coord_Names(1) = 'X'
       Coord_Names(2) = 'Y'
@@ -205,13 +204,13 @@ Module m_MEF_EXO
       Type(EXO_Info)                                 :: dEXO
       MPI_Comm                                       :: dGlobalComm
       
-      Integer                                        :: iBlk, iSet, i, iErr
-      Integer                                        :: iE, iELoc
-      Integer                                        :: Num_Attr = 0         
-      Integer                                        :: Num_Dist_Factor = 0
+      PetscInt                                       :: iBlk, iSet, i, iErr
+      PetscInt                                       :: iE, iELoc
+      PetscInt                                       :: Num_Attr = 0         
+      PetscInt                                       :: Num_Dist_Factor = 0
       
       Type(MeshTopology_Info)                        :: GlobalMeshTopology
-      Integer, Dimension(:), Pointer                 :: Tmp_GlobalID, Tmp_ID
+      PetscInt, Dimension(:), Pointer                :: Tmp_GlobalID, Tmp_ID
 
 
       ! Gather Global Sizes
@@ -292,16 +291,16 @@ Module m_MEF_EXO
    
    Subroutine Read_EXO_Result_Global(dEXO, dIdx, dTS, dRes, dNumRec)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
       PetscReal                                      :: dRes
-      Integer                                        :: dNumRec
+      PetscInt                                       :: dNumRec
       
       PetscReal                                      :: MyRes
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
       PetscReal                                      :: Vers
       PetscReal, Dimension(:), Pointer               :: Tmp_Res
-      Integer                                        :: Num_Vars, Num_TS
+      PetscInt                                       :: Num_Vars, Num_TS
       PetscReal                                      :: fDum
       Character                                      :: cDum
       
@@ -331,12 +330,12 @@ Module m_MEF_EXO
    Subroutine Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
       PetscReal, Dimension(:), Pointer               :: dRes
       
-      Integer                                        :: Num_Rec, iRec
-      Integer                                        :: iErr
+      PetscInt                                       :: Num_Rec, iRec
+      PetscInt                                       :: iErr
       PetscReal                                      :: Vers
       
       dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
@@ -356,13 +355,13 @@ Module m_MEF_EXO
    Subroutine Read_EXO_Result_VertexSection(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
-      SectionReal                                    :: dRes
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (SectionReal)                             :: dRes
       
-      Vec                                            :: Res_Vec
+      Type (Vec)                                     :: Res_Vec
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
       
       !!! We Assume that the section is initialized and has the proper size
       Call SectionRealCreateLocalVector(dRes, Res_Vec, iErr); CHKERRQ(iErr)
@@ -375,12 +374,12 @@ Module m_MEF_EXO
    Subroutine Read_EXO_Result_VertexVec(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
-      Vec                                            :: dRes
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vec)                                     :: dRes
       
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
       
       !!! We Assume that the section is initialized and has the proper size
       Call VecGetArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
@@ -391,12 +390,12 @@ Module m_MEF_EXO
    Subroutine Read_EXO_Result_VertexVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
-      Type(Vect2D), Dimension(:), Pointer            :: dRes
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vect2D), Dimension(:), Pointer           :: dRes
       
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
          SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexVect2D: The argument does not match the number of vertices in the mesh', iErr)
@@ -413,12 +412,12 @@ Module m_MEF_EXO
    Subroutine Read_EXO_Result_VertexVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
-      Type(Vect3D), Dimension(:), Pointer            :: dRes
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vect3D), Dimension(:), Pointer           :: dRes
       
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
          SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexVect3D: The argument does not match the number of vertices in the mesh', iErr)
@@ -436,11 +435,11 @@ Module m_MEF_EXO
 
 !!!##  Subroutine Read_EXO_Result_Mat2D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Mat2D), Dimension(:), Pointer             :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -465,11 +464,11 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_MatS2D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(MatS2D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -493,11 +492,11 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_Vect3D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Vect3D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -521,11 +520,11 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_Mat3D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Mat3D), Dimension(:), Pointer             :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -555,11 +554,11 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_MatS3D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(MatS3D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -586,12 +585,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_Scal_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Real(Kind = Kr), Dimension(:), Pointer         :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -607,12 +606,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_Vect2D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Vect2D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -630,12 +629,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_Mat2D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Mat2D), Dimension(:), Pointer             :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -657,12 +656,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_MatS2D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(MatS2D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -682,12 +681,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_Vect3D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Vect3D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -705,12 +704,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_Mat3D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Mat3D), Dimension(:), Pointer             :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -742,12 +741,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Read_EXO_Result_MatS3D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(MatS3D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -774,14 +773,14 @@ Module m_MEF_EXO
 !!! WRITE
    Subroutine Write_EXO_Result_Global(dEXO, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
       PetscReal                                      :: dRes
       
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
       PetscReal                                      :: Vers
       PetscReal, Dimension(:), Pointer               :: Tmp_Res
-      Integer                                        :: Num_Vars, Num_TS
+      PetscInt                                       :: Num_Vars, Num_TS
       PetscReal                                      :: fDum
       Character                                      :: cDum
       
@@ -807,12 +806,12 @@ Module m_MEF_EXO
    Subroutine Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
       PetscReal, Dimension(:), Pointer               :: dRes
       
-      Integer                                        :: Num_Rec, iRec
-      Integer                                        :: iErr
+      PetscInt                                       :: Num_Rec, iRec
+      PetscInt                                       :: iErr
       PetscReal                                      :: Vers
       
       dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
@@ -831,13 +830,13 @@ Module m_MEF_EXO
    Subroutine Write_EXO_Result_VertexSection(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
-      SectionReal                                    :: dRes
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (SectionReal)                             :: dRes
       
-      Vec                                            :: Res_Vec
+      Type (Vec)                                     :: Res_Vec
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
 
       Call SectionRealCreateLocalVector(dRes, Res_Vec, iErr); CHKERRQ(iErr)
       Call VecGetArrayF90(Res_Vec, Res_Ptr, iErr); CHKERRQ(iErr)
@@ -849,12 +848,12 @@ Module m_MEF_EXO
    Subroutine Write_EXO_Result_VertexVec(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
-      Vec                                            :: dRes
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vec)                                     :: dRes
       
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
 
       Call VecGetArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
       Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, Res_Ptr)
@@ -864,12 +863,12 @@ Module m_MEF_EXO
    Subroutine Write_EXO_Result_VertexVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
-      Type(Vect2D), Dimension(:), Pointer            :: dRes
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vect2D), Dimension(:), Pointer           :: dRes
       
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
          SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexVect2D: The argument size does not match the number of vertices in the mesh', iErr)
@@ -885,12 +884,12 @@ Module m_MEF_EXO
    Subroutine Write_EXO_Result_VertexVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
-      Integer                                        :: dIdx
-      Integer                                        :: dTS
-      Type(Vect3D), Dimension(:), Pointer            :: dRes
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vect3D), Dimension(:), Pointer           :: dRes
       
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
-      Integer                                        :: iErr
+      PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
          SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexVect2D: The argument size does not match the number of vertices in the mesh', iErr)
@@ -908,11 +907,11 @@ Module m_MEF_EXO
 
 !!!##  Subroutine Write_EXO_Result_Mat2D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Mat2D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -933,11 +932,11 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_MatS2D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(MatS2D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -957,11 +956,11 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_Vect3D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Vect3D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -981,11 +980,11 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_Mat3D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Mat3D), Dimension(:), Pointer             :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -1011,11 +1010,11 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_MatS3D_Nodes(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(MatS3D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -1038,13 +1037,13 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_Scal_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Real(Kind = Kr), Dimension(:), Pointer         :: Res
 !!!##
 !!!##    Real(Kind = Kr), Dimension(:), Pointer         :: Tmp_Res
-!!!##    Integer                                        :: iBlk, iE
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk, iE
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -1067,12 +1066,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_Vect2D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Vect2D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -1090,12 +1089,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_Mat2D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Mat2D), Dimension(:), Pointer             :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -1117,12 +1116,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_MatS2D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(MatS2D), Dimension(:), Pointer            :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -1142,13 +1141,13 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_Vect3D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Vect3D), Dimension(:), Pointer            :: Res
 !!!##
 !!!##    Type(Vect3D), DImension(:), Pointer            :: Tmp_Res
-!!!##    Integer                                        :: iBlk, iE
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk, iE
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -1173,12 +1172,12 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_Mat3D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(Mat3D), Dimension(:), Pointer             :: Res
 !!!##
-!!!##    Integer                                        :: iBlk
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)
@@ -1210,13 +1209,13 @@ Module m_MEF_EXO
 !!!##
 !!!##  Subroutine Write_EXO_Result_MatS3D_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    Integer                                        :: Idx
-!!!##    Integer                                        :: TS
+!!!##    PetscInt                                       :: Idx
+!!!##    PetscInt                                       :: TS
 !!!##    Type(MatS3D), Dimension(:), Pointer            :: Res
 !!!##
 !!!##    Type(MatS3D), Dimension(:), Pointer            :: Tmp_Res
-!!!##    Integer                                        :: iBlk, iE
-!!!##    Integer                                        :: iErr
+!!!##    PetscInt                                       :: iBlk, iE
+!!!##    PetscInt                                       :: iErr
 !!!##    Real(Kind = Kr)                                :: Vers
 !!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
 !!!##         & ierr)

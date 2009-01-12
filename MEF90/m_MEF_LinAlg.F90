@@ -1,56 +1,59 @@
-Module m_algeblin
-   Use m_constantes
+Module m_MEF_LinAlg
+#include "finclude/petscdef.h"
+   Use m_MEF_Parameters
+   Use petsc
+   
    IMPLICIT NONE
  
    Type Vect2D
       Sequence
-      Real(Kind = Kr)    :: X
-      Real(Kind = Kr)    :: Y
+      PetscReal          :: X
+      PetscReal          :: Y
    End Type Vect2D
  
    Type Vect3D
       Sequence
-      Real(Kind = Kr)    :: X
-      Real(Kind = Kr)    :: Y
-      Real(Kind = Kr)    :: Z
+      PetscReal          :: X
+      PetscReal          :: Y
+      PetscReal          :: Z
    End Type Vect3D
  
    Type Mat2D
       Sequence
-      Real(Kind = Kr)    :: XX
-      Real(Kind = Kr)    :: XY
-      Real(Kind = Kr)    :: YX
-      Real(Kind = Kr)    :: YY
+      PetscReal          :: XX
+      PetscReal          :: XY
+      PetscReal          :: YX
+      PetscReal          :: YY
    End Type Mat2D
  
    Type MatS2D
       Sequence
-      Real(Kind = Kr)    :: XX
-      Real(Kind = Kr)    :: YY
-      Real(Kind = Kr)    :: XY
+      PetscReal          :: XX
+      PetscReal          :: YY
+      PetscReal          :: XY
    End Type MatS2D
  
    Type Mat3D
       Sequence
-      Real(Kind = Kr)    :: XX
-      Real(Kind = Kr)    :: XY
-      Real(Kind = Kr)    :: XZ
-      Real(Kind = Kr)    :: YX
-      Real(Kind = Kr)    :: YY
-      Real(Kind = Kr)    :: YZ
-      Real(Kind = Kr)    :: ZX
-      Real(Kind = Kr)    :: ZY
-      Real(Kind = Kr)    :: ZZ
+      PetscReal          :: XX
+      PetscReal          :: XY
+      PetscReal          :: XZ
+      PetscReal          :: YX
+      PetscReal          :: YY
+      PetscReal          :: YZ
+      PetscReal          :: ZX
+      PetscReal          :: ZY
+      PetscReal          :: ZZ
    End Type Mat3D
  
    Type MatS3D
       Sequence
-      Real(Kind = Kr)    :: XX
-      Real(Kind = Kr)    :: YY
-      Real(Kind = Kr)    :: ZZ
-      Real(Kind = Kr)    :: YZ
-      Real(Kind = Kr)    :: XZ
-      Real(Kind = Kr)    :: XY
+      PetscReal          :: XX
+      PetscReal          :: YY
+      PetscReal          :: ZZ
+      PetscReal          :: YZ
+      PetscReal          :: XZ
+      PetscReal          :: XY
    End Type MatS3D
  
  !! After much hesitation,
@@ -58,44 +61,44 @@ Module m_algeblin
  !! - the terms are stored in alphabetical order
    Type Tens4OS2D
       Sequence
-      Real(Kind = Kr)    :: XXXX
-      Real(Kind = Kr)    :: XXXY
-      Real(Kind = Kr)    :: XXYY
+      PetscReal          :: XXXX
+      PetscReal          :: XXXY
+      PetscReal          :: XXYY
       
-      Real(Kind = Kr)    :: XYXY
-      Real(Kind = Kr)    :: XYYY
+      PetscReal          :: XYXY
+      PetscReal          :: XYYY
       
-      Real(Kind = Kr)    :: YYYY
+      PetscReal          :: YYYY
    End Type Tens4OS2D
  
    Type Tens4OS3D
       Sequence
-      Real(Kind = Kr)    :: XXXX
-      Real(Kind = Kr)    :: XXXY
-      Real(Kind = Kr)    :: XXXZ
-      Real(Kind = Kr)    :: XXYY
-      Real(Kind = Kr)    :: XXYZ
-      Real(Kind = Kr)    :: XXZZ
+      PetscReal          :: XXXX
+      PetscReal          :: XXXY
+      PetscReal          :: XXXZ
+      PetscReal          :: XXYY
+      PetscReal          :: XXYZ
+      PetscReal          :: XXZZ
       
-      Real(Kind = Kr)    :: XYXY
-      Real(Kind = Kr)    :: XYXZ
-      Real(Kind = Kr)    :: XYYY
-      Real(Kind = Kr)    :: XYYZ
-      Real(Kind = Kr)    :: XYZZ
+      PetscReal          :: XYXY
+      PetscReal          :: XYXZ
+      PetscReal          :: XYYY
+      PetscReal          :: XYYZ
+      PetscReal          :: XYZZ
  
-      Real(Kind = Kr)    :: XZXZ
-      Real(Kind = Kr)    :: XZYY
-      Real(Kind = Kr)    :: XZYZ
-      Real(Kind = Kr)    :: XZZZ
+      PetscReal          :: XZXZ
+      PetscReal          :: XZYY
+      PetscReal          :: XZYZ
+      PetscReal          :: XZZZ
       
-      Real(Kind = Kr)    :: YYYY
-      Real(Kind = Kr)    :: YYYZ
-      Real(Kind = Kr)    :: YYZZ
+      PetscReal          :: YYYY
+      PetscReal          :: YYYZ
+      PetscReal          :: YYZZ
       
-      Real(Kind = Kr)    :: YZYZ
-      Real(Kind = Kr)    :: YZZZ
+      PetscReal          :: YZYZ
+      PetscReal          :: YZZZ
       
-      Real(Kind = Kr)    :: ZZZZ
+      PetscReal          :: ZZZZ
    End Type Tens4OS3D
 
   Interface Operator (+)
@@ -394,7 +397,7 @@ Contains
 
   ! Surcharge de l'operateur *
   Function DbleXVect2D(D1, V1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Vect2D), intent(IN)                   :: V1
     Type (Vect2D)                               :: DbleXVect2D
 
@@ -403,7 +406,7 @@ Contains
   End Function DbleXVect2D
 
   Function Vect2DXDble(V1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Vect2D), intent(IN)                   :: V1
     Type (Vect2D)                               :: Vect2DXDble
 
@@ -412,7 +415,7 @@ Contains
   End Function Vect2DXDble
 
   Function DbleXVect3D(D1,V1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Vect3D), intent(IN)                   :: V1
     Type (Vect3D)                               :: DbleXVect3D
 
@@ -422,7 +425,7 @@ Contains
   End Function DbleXVect3D
 
   Function Vect3DXDble(V1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Vect3D), intent(IN)                   :: V1
     Type (Vect3D)                               :: Vect3DXDble
 
@@ -432,7 +435,7 @@ Contains
   End Function Vect3DXDble
 
   Function DbleXMat2D(D1, M1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Mat2D), intent(IN)                    :: M1
     Type (Mat2D)                                :: DbleXMat2D
 
@@ -443,7 +446,7 @@ Contains
   End Function DbleXMat2D
 
   Function Mat2DXDble(M1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Mat2D), intent(IN)                    :: M1
     Type (Mat2D)                                :: Mat2DXDble
 
@@ -454,7 +457,7 @@ Contains
   End Function Mat2DXDble
 
   Function DbleXMatS2D(D1, M1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (MatS2D), intent(IN)                   :: M1
     Type (MatS2D)                               :: DbleXMatS2D
 
@@ -464,7 +467,7 @@ Contains
   End Function DbleXMatS2D
 
   Function MatS2DXDble(M1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (MatS2D), intent(IN)                   :: M1
     Type (MatS2D)                               :: MatS2DXDble
 
@@ -474,7 +477,7 @@ Contains
   End Function MatS2DXDble
 
   Function DbleXMat3D(D1,M1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Mat3D), intent(IN)                    :: M1
     Type (Mat3D)                                :: DbleXMat3D
 
@@ -490,7 +493,7 @@ Contains
   End Function DbleXMat3D
 
   Function Mat3DXDble(M1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Mat3D), intent(IN)                    :: M1
     Type (Mat3D)                                :: Mat3DXDble
 
@@ -506,7 +509,7 @@ Contains
   End Function Mat3DXDble
 
   Function DbleXMatS3D(D1,M1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (MatS3D), intent(IN)                   :: M1
     Type (MatS3D)                               :: DbleXMatS3D
 
@@ -532,7 +535,7 @@ Contains
   End Function MatS3DXDble
 
   Function DbleXTens4OS2D (D1, T1)
-    Real(Kind = Kr), Intent(IN)                 :: D1
+    PetscReal,       Intent(IN)                 :: D1
     Type (Tens4OS2D), Intent(IN)                :: T1
     Type (Tens4OS2D)                            :: DbleXTens4OS2D
 
@@ -547,7 +550,7 @@ Contains
   End Function DbleXTens4OS2D
 
   Function DbleXTens4OS3D (D1, T1)
-    Real(Kind = Kr), Intent(IN)                 :: D1
+    PetscReal,       Intent(IN)                 :: D1
     Type (Tens4OS3D), Intent(IN)                :: T1
     Type (Tens4OS3D)                            :: DbleXTens4OS3D
 
@@ -581,7 +584,7 @@ Contains
 
 
   Function Tens4OS2DXDble (T1, D1)
-    Real(Kind = Kr), Intent(IN)                 :: D1
+    PetscReal,       Intent(IN)                 :: D1
     Type (Tens4OS2D), Intent(IN)                :: T1
     Type (Tens4OS2D)                            :: Tens4OS2DXDble
 
@@ -597,7 +600,7 @@ Contains
 
   Function Tens4OS3DXDble (T1, D1)
     Type (Tens4OS3D), Intent(IN)                :: T1
-    Real(Kind = Kr), Intent(IN)                 :: D1
+    PetscReal,       Intent(IN)                 :: D1
     Type (Tens4OS3D)                            :: Tens4OS3DXDble
 
     Tens4OS3DXDble%XXXX = D1 * T1%XXXX  
@@ -705,7 +708,7 @@ Contains
 
   ! Surcharge de l'operateur /
   Function Vect2DQuot(V1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Vect2D), intent(IN)                   :: V1
     Type (Vect2D)                               :: Vect2DQuot
 
@@ -715,7 +718,7 @@ Contains
 
 
   Function Vect3DQuot(V1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Vect3D), intent(IN)                   :: V1
     Type (Vect3D)                               :: Vect3DQuot
 
@@ -725,7 +728,7 @@ Contains
   End Function Vect3DQuot
 
   Function Mat2DQuot(M1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Mat2D), intent(IN)                    :: M1
     Type (Mat2D)                                :: Mat2DQuot
 
@@ -736,7 +739,7 @@ Contains
   End Function Mat2DQuot
 
   Function MatS2DQuot(M1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (MatS2D), intent(IN)                   :: M1
     Type (MatS2D)                               :: MatS2DQuot
 
@@ -746,7 +749,7 @@ Contains
   End Function MatS2DQuot
 
   Function Mat3DQuot(M1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (Mat3D), intent(IN)                    :: M1
     Type (Mat3D)                                :: Mat3DQuot
 
@@ -762,7 +765,7 @@ Contains
   End Function Mat3DQuot
 
   Function MatS3DQuot(M1,D1)
-    Real(Kind = Kr), intent(IN)                 :: D1
+    PetscReal,       intent(IN)                 :: D1
     Type (MatS3D), intent(IN)                   :: M1
     Type (MatS3D)                               :: MatS3DQuot
 
@@ -776,7 +779,7 @@ Contains
 
   Function Tens4OS2DQuot(T1, D1)
     Type(Tens4OS2D), Intent(IN)                 :: T1
-    Real(Kind = Kr), Intent(IN)                 :: D1
+    PetscReal,       Intent(IN)                 :: D1
     Type(Tens4OS2D)                             :: Tens4OS2DQuot
 
     Tens4OS2DQuot%XXXX = T1%XXXX / D1
@@ -792,7 +795,7 @@ Contains
 
   Function Tens4OS3DQuot (T1, D1)
     Type (Tens4OS3D), Intent(IN)                :: T1
-    Real(Kind = Kr), Intent(IN)                 :: D1
+    PetscReal,       Intent(IN)                 :: D1
     Type (Tens4OS3D)                            :: Tens4OS3DQuot
 
     Tens4OS3DQuot%XXXX = T1%XXXX / D1  
@@ -823,23 +826,23 @@ Contains
     Tens4OS3DQuot%ZZZZ = T1%ZZZZ / D1  
   End Function Tens4OS3DQuot
   
-  ! Produit Scalaire 2D et 3D
+  ! dot product 2D et 3D
   Function DotP2D(V1, V2)
     Type (Vect2D), Intent(IN)                   :: V1, V2
-    Real(Kind = Kr)                             :: DotP2D
+    PetscReal                                   :: DotP2D
     DotP2D = V1%X * V2%X + V1%Y * V2%Y
   End Function DotP2D
 
   Function DotP3D(V1, V2)
     Type (Vect3D), Intent(IN)                   :: V1, V2
-    Real(Kind = Kr)                             :: DotP3D
+    PetscReal                                   :: DotP3D
     DotP3D = V1%X * V2%X + V1%Y * V2%Y + V1%Z * V2%Z
   End Function DotP3D
 
   Function ContP2D(M1, M2)
     ! tr(A^t x B)
     Type(Mat2D), Intent(IN)                       :: M1, M2
-    Real(Kind = Kr)                               :: ContP2D
+    PetscReal                                     :: ContP2D
     ContP2D = M1%XX * M2%XX + M1%XY * M2%XY + &
          &          M1%YX * M2%YX + M1%YY * M2%YY
   End Function ContP2D
@@ -847,7 +850,7 @@ Contains
   Function ContP2DS(M1, M2)
     ! tr(A^t x B)
     Type(MatS2D), Intent(IN)                      :: M1, M2
-    Real(Kind = Kr)                               :: ContP2DS
+    PetscReal                                     :: ContP2DS
     ContP2DS = M1%XX * M2%XX + M1%YY * M2%YY + &
          &         2.0_Kr * M1%XY * M2%XY
   End Function ContP2DS
@@ -855,7 +858,7 @@ Contains
   Function ContP3D(M1, M2)
     ! tr(A^t x B)
     Type(Mat3D), Intent(IN)                       :: M1, M2
-    Real(Kind = Kr)                               :: ContP3D
+    PetscReal                                     :: ContP3D
     ContP3D = M1%XX * M2%XX + M1%XY * M2%XY + M1%XZ * M2%XZ + &
          &          M1%YX * M2%YX + M1%YY * M2%YY + M1%YZ * M2%YZ + &
          &          M1%ZX * M2%ZX + M1%ZY * M2%ZY + M1%ZZ * M2%ZZ
@@ -864,14 +867,14 @@ Contains
   Function ContP3DS(M1, M2)
     ! tr(A^t x B)
     Type(MatS3D), Intent(IN)                      :: M1, M2
-    Real(Kind = Kr)                               :: ContP3DS
+    PetscReal                                     :: ContP3DS
     ContP3DS = M1%XX * M2%XX + M1%YY * M2%YY + M1%ZZ * M2%ZZ &
          &      + 2.0_Kr * M1%YZ * M2%YZ &
          &      + 2.0_Kr * M1%XZ * M2%XZ &
          &      + 2.0_Kr * M1%XY * M2%XY
   End Function ContP3DS
 
-  ! Produit Vectoriel 3D
+  ! cross product 3D
   Function VectP3D(V1, V2)
     Type (Vect3D), Intent(IN)                   :: V1, V2
     Type (Vect3D)                               :: VectP3D
@@ -880,7 +883,7 @@ Contains
     VectP3D%Z =  V1%X * V2%Y - V1%Y * V2%X
   End Function VectP3D
 
-  ! Transposition
+  ! Transpose
   Function Transpose2D(M1)
     Type (Mat2D), Intent(IN)                    :: M1
     Type (Mat2D)                                :: Transpose2D
@@ -904,7 +907,7 @@ Contains
     Transpose3D%ZZ = M1%ZZ
   End Function Transpose3D
 
-  ! Fonctions pour le Produit Tensoriel
+  ! Tensorial product
   Function TensPVect2D (V1, V2)
     Type (Vect2D), intent(IN)                   :: V1
     Type (Vect2D), intent(IN)                   :: V2
@@ -977,7 +980,7 @@ Contains
     TensPMatS3D%XY = M1%XY * M2%XY
   End Function TensPMatS3D
 
-  ! Fonctions pour le produit Symmetrique
+  ! Symmetrized product
   Function SymPVect2D (V1, V2)
     Type (Vect2D), intent(IN)                   :: V1, V2
     Type (MatS2D)                               :: SymPVect2D
@@ -996,7 +999,7 @@ Contains
     Type (Mat2D), Intent(IN)                    :: M1, M2
     Type (Mat2D)                                :: SymPMat2D
 
-    SymPMat2D = ((M1 .TensP. M2) + (M2 .TensP. M1)) * InvOf2
+    SymPMat2D = ((M1 .TensP. M2) + (M2 .TensP. M1)) * 0.5_Kr
   End Function SymPMat2D
 
   Function SymPMatS2D(M1, M2)
@@ -1010,7 +1013,7 @@ Contains
     Type (Mat3D), Intent(IN)                    :: M1, M2
     Type (Mat3D)                                :: SymPMat3D
 
-    SymPMat3D = ((M1 .TensP. M2) + (M2 .TensP. M1)) / Dble2
+    SymPMat3D = ((M1 .TensP. M2) + (M2 .TensP. M1)) * 0.5_Kr
   End Function SymPMat3D
 
   Function SymPMatS3D(M1, M2)
@@ -1022,35 +1025,35 @@ Contains
 
   Function Trace2D(M1)
     Type (Mat2D), Intent(IN)                      :: M1
-    Real(Kind = Kr)                               :: Trace2D
+    PetscReal                                     :: Trace2D
 
     Trace2D = M1%XX + M1%YY
   End Function Trace2D
 
   Function Trace2DS(M1)
     Type (MatS2D), Intent(IN)                     :: M1
-    Real(Kind = Kr)                               :: Trace2DS
+    PetscReal                                     :: Trace2DS
 
     Trace2DS = M1%XX + M1%YY
   End Function Trace2DS
 
   Function Trace3D(M1)
     Type (Mat3D), Intent(IN)                      :: M1
-    Real(Kind = Kr)                               :: Trace3D
+    PetscReal                                     :: Trace3D
 
     Trace3D = M1%XX + M1%YY + M1%ZZ
   End Function Trace3D
 
   Function Trace3DS(M1)
     Type (MatS3D), Intent(IN)                     :: M1
-    Real(Kind = Kr)                               :: Trace3DS
+    PetscReal                                     :: Trace3DS
 
     Trace3DS = M1%XX + M1%YY + M1%ZZ
   End Function Trace3DS
 
   Subroutine Vect2D_Get_Real(V1, R1)
     Type (Vect2D), intent(OUT)                    :: V1
-    Real(Kind = Kr), Intent(IN)                   :: R1
+    PetscReal,       Intent(IN)                   :: R1
 
     V1%X = R1
     V1%Y = R1
@@ -1058,7 +1061,7 @@ Contains
 
   Subroutine Vect3D_Get_Real(V1, R1)
     Type (Vect3D), intent(OUT)                    :: V1
-    Real(Kind = Kr), Intent(IN)                   :: R1
+    PetscReal,       Intent(IN)                   :: R1
 
     V1%X = R1
     V1%Y = R1
@@ -1067,7 +1070,7 @@ Contains
 
   Subroutine Vect2D_Get_VectR(V1, R1)
     Type (Vect2D), intent(OUT)                    :: V1
-    Real(Kind = Kr), Dimension(2), Intent(IN)     :: R1
+    PetscReal,       Dimension(2), Intent(IN)     :: R1
 
     V1%X = R1(1)
     V1%Y = R1(2)
@@ -1075,7 +1078,7 @@ Contains
 
   Subroutine Vect3D_Get_VectR(V1, R1)
     Type (Vect3D), intent(OUT)                    :: V1
-    Real(Kind = Kr), Dimension(3), Intent(IN)     :: R1
+    PetscReal,       Dimension(3), Intent(IN)     :: R1
 
     V1%X = R1(1)
     V1%Y = R1(2)
@@ -1101,7 +1104,7 @@ Contains
 
   Subroutine Mat2D_Get_Real(M1, R1)
     Type (Mat2D), intent(OUT)                     :: M1
-    Real(Kind = Kr), Intent(IN)                   :: R1
+    PetscReal,       Intent(IN)                   :: R1
 
     M1%XX = R1 ; M1%XY = R1
     M1%YX = R1 ; M1%YY = R1
@@ -1109,7 +1112,7 @@ Contains
 
   Subroutine Mat3D_Get_Real(M1, R1)
     Type (Mat3D), intent(OUT)                     :: M1
-    Real(Kind = Kr), Intent(IN)                   :: R1
+    PetscReal,       Intent(IN)                   :: R1
 
     M1%XX = R1 ; M1%XY = R1 ; M1%XZ = R1
     M1%YX = R1 ; M1%YY = R1 ; M1%YZ = R1
@@ -1135,14 +1138,14 @@ Contains
 
   Subroutine MatS2D_Get_Real(M1, R1)
     Type (MatS2D), intent(OUT)                    :: M1
-    Real(Kind = Kr), Intent(IN)                   :: R1
+    PetscReal,       Intent(IN)                   :: R1
 
     M1%XX = R1 ; M1%YY = R1 ; M1%XY = R1 
   End Subroutine MatS2D_Get_Real
 
   Subroutine MatS3D_Get_Real(M1, R1)
     Type (MatS3D), intent(OUT)                     :: M1
-    Real(Kind = Kr), Intent(IN)                    :: R1
+    PetscReal,       Intent(IN)                    :: R1
 
     M1%XX = R1 ; M1%YY = R1 ; M1%ZZ = R1
     M1%YZ = R1 ; M1%XZ = R1 ; M1%XY = R1
@@ -1211,7 +1214,7 @@ Contains
 
   Subroutine Tens4OS2D_Get_Real(T1, D1)
     Type(Tens4OS2D), Intent(OUT)                        :: T1
-    Real(Kind = Kr), Intent(IN)                         :: D1
+    PetscReal,       Intent(IN)                         :: D1
 
     T1%XXXX = D1
     T1%XXXY = D1
@@ -1225,7 +1228,7 @@ Contains
 
   Subroutine Tens4OS3D_Get_Real(T1, D1)
     Type(Tens4OS3D), Intent(OUT)                        :: T1
-    Real(Kind = Kr), Intent(IN)                         :: D1
+    PetscReal,       Intent(IN)                         :: D1
 
     T1%XXXX = D1  
     T1%XXXY = D1
@@ -1261,7 +1264,7 @@ Contains
 
     Symmetrize2D%XX = M1%XX
     Symmetrize2D%YY = M1%YY
-    Symmetrize2D%XY = (M1%XY + M1%YX) * InvOf2
+    Symmetrize2D%XY = (M1%XY + M1%YX) * 0.5_Kr
   End Function Symmetrize2D
 
   Function Symmetrize3D(M1)
@@ -1272,9 +1275,9 @@ Contains
     Symmetrize3D%YY = M1%YY
     Symmetrize3D%ZZ = M1%YY
     
-    Symmetrize3D%YZ = (M1%YZ + M1%ZY) * InvOf2
-    Symmetrize3D%XZ = (M1%XZ + M1%ZX) * InvOf2
-    Symmetrize3D%XY = (M1%XY + M1%YX) * InvOf2
+    Symmetrize3D%YZ = (M1%YZ + M1%ZY) * 0.5_Kr
+    Symmetrize3D%XZ = (M1%XZ + M1%ZX) * 0.5_Kr
+    Symmetrize3D%XY = (M1%XY + M1%YX) * 0.5_Kr
   End Function Symmetrize3D
 !====================================================================
 !             END OF OPERATOR OVERLOADING
@@ -1282,7 +1285,7 @@ Contains
 
   Function Vol_Tetra_3D(V1, V2, V3, V4)
     Type (Vect3D), Intent(IN)                   :: V1, V2, V3, V4
-    Real(Kind = Kr)                             :: Vol_Tetra_3D
+    PetscReal                                   :: Vol_Tetra_3D
 
     Type(Vect3D)                                :: C1, C2, C3
 
@@ -1291,26 +1294,26 @@ Contains
     C3 = V3 - V4
     Vol_Tetra_3D = ABS(C1%X * (C2%Y * C3%Z - C2%Z * C3%Y) -                   &
          &             C1%Y * (C2%X * C3%Z - C2%Z * C3%X) +                   &
-         &             C1%Z * (C2%X * C3%Y - C2%Y * C3%X) ) * InvOf6
+         &             C1%Z * (C2%X * C3%Y - C2%Y * C3%X) ) / 6.0_Kr
   End Function Vol_Tetra_3D
 
   Function Area_Tri_2D(S1, S2, S3)
     Type (Vect2D), Intent(IN)                   :: S1, S2, S3
-    Real(Kind = Kr)                             :: Area_Tri_2D
+    PetscReal                                   :: Area_Tri_2D
 
     Type(Vect2D)                                :: C1, C2
 
     C1 = S2-S1
     C2 = S3-S1
-    Area_Tri_2D = ABS(C1%X * C2%Y - C1%Y * C2%X) * InvOf2
+    Area_Tri_2D = ABS(C1%X * C2%Y - C1%Y * C2%X) * 0.5_Kr
   End Function Area_Tri_2D
 
   Function Ht_Min_Tri_2D(S1, S2, S3)
     Type (Vect2D), Intent(IN)                      :: S1, S2, S3
-    Real(Kind = Kr)                                :: Ht_Min_Tri_2D
+    PetscReal                                      :: Ht_Min_Tri_2D
 
     Type (Vect2D)                                  :: C1, C2, C3
-    Real(Kind = Kr)                                :: H1, H2, H3, AreaX2
+    PetscReal                                      :: H1, H2, H3, AreaX2
 
     C1 = S2-S3
     C2 = S3-S1
@@ -1328,7 +1331,7 @@ Contains
   Function ValP2D(M)
     Type (Mat2D), Intent(IN)                      :: M
     Type (Vect2D)                                 :: ValP2D, VPTemp
-    Real(Kind = Kr)                               :: Tmp1
+    PetscReal                                     :: Tmp1
 
     Tmp1 = (M%XX - M%YY)**2+ 4.0_Kr * M%XY * M%YX
     If (Tmp1 < 0.0_Kr) Then
@@ -1343,8 +1346,8 @@ Contains
        VPTemp%X = 0.0_Kr
        VPTemp%Y = 0.0_Kr
     Else
-       VPTemp%X = (M%XX + M%YY  + SQRT ( Tmp1)) * InvOf2
-       VPTemp%Y = (M%XX + M%YY  - SQRT ( Tmp1)) * InvOf2
+       VPTemp%X = (M%XX + M%YY  + SQRT ( Tmp1)) * 0.5_Kr
+       VPTemp%Y = (M%XX + M%YY  - SQRT ( Tmp1)) * 0.5_Kr
     EndIf
     ValP2D = VPTemp
   End Function ValP2D
@@ -1352,14 +1355,14 @@ Contains
   Function ValP2DS(M)
     Type (MatS2D), Intent(IN)                     :: M
     Type (Vect2D)                                 :: ValP2DS, VPTemp
-    Real(Kind = Kr)                               :: Tmp1
+    PetscReal                                     :: Tmp1
 
     Tmp1 = (M%XX - M%YY)**2+ 4.0_Kr * M%XY**2
 
-    VPTemp%X = (M%XX + M%YY  + SQRT ( Tmp1)) * InvOf2
-    VPTemp%Y = (M%XX + M%YY  - SQRT ( Tmp1)) * InvOf2
+    VPTemp%X = (M%XX + M%YY  + SQRT ( Tmp1)) * 0.5_Kr
+    VPTemp%Y = (M%XX + M%YY  - SQRT ( Tmp1)) * 0.5_Kr
 
     ValP2DS= VPTemp
   End Function ValP2DS
 
-End Module m_algeblin
+End Module m_MEF_LinAlg

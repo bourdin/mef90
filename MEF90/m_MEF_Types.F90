@@ -1,5 +1,9 @@
 Module m_MEF_Types
-   Use m_AlgebLin
+#include "finclude/petscdef.h"
+#include "finclude/petscmeshdef.h"
+
+   Use m_MEF_LinAlg
+   Use petsc
 
    IMPLICIT NONE
    Private
@@ -13,17 +17,7 @@ Module m_MEF_Types
    Public :: EXOView
    Public :: MeshTopologyDestroy, MeshTopologyView
       
-#include "finclude/petsc.h"
-#include "finclude/petscsys.h"
-#include "finclude/petscvec.h"
-#include "finclude/petscvec.h90"
-#include "finclude/petscis.h"
-#include "finclude/petscis.h90"
-#include "finclude/petscao.h"
-#include "finclude/petscmesh.h"
-   include "exodusII.inc"
-
-   ! Defines the basid bata structures for nodes, elements and geometry
+   ! Defines the basic data structures for nodes, elements and geometry
    
    ! Basic element data structure:
    ! NB_DoF              Number of degree of freedoms in the element
@@ -61,142 +55,87 @@ Module m_MEF_Types
 !!! EXO_Geom_Info is now Geom_Info
 
    Type Element1D
-!      Integer                                    :: NB_DoF
-!      Integer                                    :: NB_Gauss     
-!      Integer                                    :: ID_EL
-      Integer, Dimension(:), pointer             :: ID_DoF
-      Real(Kind = Kr), Dimension(:,:), pointer   :: BF
-      Real(Kind = Kr), Dimension(:,:), pointer   :: Der_BF
-      Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-!      Integer                                    :: Parent_Block
+      PetscInt, Dimension(:), Pointer            :: ID_DoF
+      PetscReal, Dimension(:,:), Pointer         :: BF
+      PetscReal, Dimension(:,:), Pointer         :: Der_BF
+      PetscReal, Dimension(:), Pointer           :: Gauss_C
    End Type Element1D
  
    Type Element2D_Scal
-!      Integer                                    :: NB_DoF       
-!      Integer                                    :: NB_Gauss     
-!      Integer                                    :: ID_EL
-      Integer, Dimension(:), Pointer             :: ID_DoF
-      Real(Kind = Kr), Dimension(:,:), pointer   :: BF
-      Type(Vect2D), Dimension(:,:), pointer      :: Grad_BF
-      Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-!      Integer                                    :: Parent_Block
+      PetscInt, Dimension(:), Pointer            :: ID_DoF
+      PetscReal, Dimension(:,:), Pointer         :: BF
+      Type(Vect2D), Dimension(:,:), Pointer      :: Grad_BF
+      PetscReal, Dimension(:), Pointer           :: Gauss_C
    End Type Element2D_Scal
  
    Type Element2D
-!      Integer                                    :: NB_DoF       
-!      Integer                                    :: NB_Gauss     
-!      Integer                                    :: ID_EL
-      Integer, Dimension(:), pointer             :: ID_DoF
-      Type (Vect2D), Dimension(:,:), pointer     :: BF
-      Type (Mat2D), Dimension(:,:), pointer      :: Der_BF
-      Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-!      Integer                                    :: Parent_Block
+      PetscInt, Dimension(:), Pointer            :: ID_DoF
+      Type (Vect2D), Dimension(:,:), Pointer     :: BF
+      Type (Mat2D), Dimension(:,:), Pointer      :: Der_BF
+      PetscReal, Dimension(:), Pointer           :: Gauss_C
    End Type Element2D
  
    Type Element2D_Elast
-!      Integer                                    :: NB_DoF       
-!      Integer                                    :: NB_Gauss     
-!      Integer                                    :: ID_EL
-      Integer, Dimension(:), pointer             :: ID_DoF
-      Type (Vect2D), Dimension(:,:), pointer     :: BF
-      Type (MatS2D), Dimension(:,:), pointer     :: GradS_BF
-      Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-!      Integer                                    :: Parent_Block
+      PetscInt, Dimension(:), Pointer            :: ID_DoF
+      Type (Vect2D), Dimension(:,:), Pointer     :: BF
+      Type (MatS2D), Dimension(:,:), Pointer     :: GradS_BF
+      PetscReal, Dimension(:), Pointer           :: Gauss_C
    End Type Element2D_Elast
  
    Type Element3D
-!      Integer                                    :: NB_DoF       
-!      Integer                                    :: NB_Gauss     
-!      Integer                                    :: ID_EL
-      Integer, Dimension(:), pointer             :: ID_DoF
-      Type (Vect3D), Dimension(:,:), pointer     :: BF
-      Type (Mat3D), Dimension(:,:), pointer      :: Der_BF
-      Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-!      Integer                                    :: Parent_Block
+      PetscInt, Dimension(:), Pointer            :: ID_DoF
+      Type (Vect3D), Dimension(:,:), Pointer     :: BF
+      Type (Mat3D), Dimension(:,:), Pointer      :: Der_BF
+      PetscReal, Dimension(:), Pointer           :: Gauss_C
    End Type Element3D
  
    Type Element3D_Scal
-!      Integer                                    :: NB_DoF       
-!      Integer                                    :: NB_Gauss     
-!      Integer                                    :: ID_EL
-      Integer, Dimension(:), pointer             :: ID_DoF
-      Real(Kind = Kr), Dimension(:,:), pointer   :: BF
-      Type (Vect3D), Dimension(:,:), pointer     :: Grad_BF
-      Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-!      Integer                                    :: Parent_Block
+      PetscInt, Dimension(:), Pointer            :: ID_DoF
+      PetscReal, Dimension(:,:), Pointer         :: BF
+      Type (Vect3D), Dimension(:,:), Pointer     :: Grad_BF
+      PetscReal, Dimension(:), Pointer           :: Gauss_C
    End Type Element3D_Scal
  
    Type Element3D_Elast
-!      Integer                                    :: NB_DoF       
-!      Integer                                    :: NB_Gauss     
-!      Integer                                    :: ID_EL
-      Integer, Dimension(:), pointer             :: ID_DoF
-      Type (Vect3D), Dimension(:,:), pointer     :: BF
-      Type (MatS3D), Dimension(:,:), pointer     :: GradS_BF
-      Real(Kind = Kr), Dimension(:), Pointer     :: Gauss_C
-!      Integer                                    :: Parent_Block
+      PetscInt, Dimension(:), Pointer            :: ID_DoF
+      Type (Vect3D), Dimension(:,:), Pointer     :: BF
+      Type (MatS3D), Dimension(:,:), Pointer     :: GradS_BF
+      PetscReal, Dimension(:), Pointer           :: Gauss_C
    End Type Element3D_Elast
- 
-!   Type Node1D
-!      Sequence
-!      Real(Kind = Kr)                            :: Coord
-!      Integer                                    :: ID
-!      Integer                                    :: BC
-!      Integer                                    :: Parent_Block
-!   End Type Node1D
- 
-!   Type Node2D
-!      Sequence
-!      Type (Vect2D)                              :: Coord
-!      Integer                                    :: ID
-!      Integer                                    :: BC
-!   End Type Node2D
- 
-!   Type Node3D
-!      Sequence
-!      Type (Vect3D)                              :: Coord
-!      Integer                                    :: ID
-!      Integer                                    :: BC
-!   End Type Node3D
  
    Type Elem_Blk_Info
       Sequence
-      Integer                                        :: ID
-      Integer                                        :: Elem_Type
-      Integer, Dimension(4)                          :: DoF_Location
+      PetscInt                                       :: ID
+      PetscInt                                       :: Elem_Type
+      PetscInt, Dimension(4)                         :: DoF_Location
       !!! Edge location is Cells, faces, edges, vertices in 3D and
       !!!                  Cell, unused, edges, vertices in2D
-      Integer                                        :: Num_DoF !! = sum(DoF_Location)
-!      Integer                                        :: NB_Gauss
-      Integer                                        :: Num_Elems
-      Integer, Dimension(:), Pointer                 :: Elem_ID
+      PetscInt                                       :: Num_DoF !! = sum(DoF_Location)
+      PetscInt                                       :: Num_Elems
+      PetscInt, Dimension(:), Pointer                :: Elem_ID
    End Type Elem_Blk_Info
  
    Type Node_Set_Info
       Sequence
-      Integer                                        :: ID
-      Integer                                        :: Num_Nodes
-!      Integer                                        :: Num_Dist_Factors
-      Integer, Dimension(:), Pointer                 :: Node_ID
-!      Real(Kind = Kr), Dimension(:), Pointer         :: Dist_Factor
+      PetscInt                                       :: ID
+      PetscInt                                       :: Num_Nodes
+      PetscInt, Dimension(:), Pointer                :: Node_ID
    End Type Node_Set_Info
  
    Type MeshTopology_Info
       Sequence
       ! Global datas
-      Integer                                        :: num_dim
-      Integer                                        :: num_verts
-      Integer                                        :: num_elems
-!      Integer                                        :: num_ghost_nodes
-!      Integer                                        :: num_ghost_elems
+      PetscInt                                       :: num_dim
+      PetscInt                                       :: num_verts
+      PetscInt                                       :: num_elems
       ! Element Blocks datas
-      Integer                                        :: num_elem_blks
+      PetscInt                                       :: num_elem_blks
       Type(Elem_Blk_Info), Dimension(:), Pointer     :: elem_blk
       ! Node sets datas
-      Integer                                        :: num_node_sets 
+      PetscInt                                       :: num_node_sets 
       Type(Node_Set_Info), Dimension(:), Pointer     :: node_set
       ! Side Sets DATAS
-      Integer                                        :: num_side_sets
+      PetscInt                                       :: num_side_sets
       Mesh                                           :: mesh
    End Type MeshTopology_Info
    
@@ -215,7 +154,7 @@ Contains
       Type(EXO_Info)              :: dEXO
       PetscViewer                 :: viewer
       
-      Integer                     :: iErr
+      PetscInt                    :: iErr
       Character(len=512)          :: CharBuffer
    
       If (dEXO%comm == PETSC_COMM_WORLD) Then
@@ -362,6 +301,4 @@ Contains
 500 Format(I4) 
 600 Format(A)
    End Subroutine MeshTopologyView
-
-
 End Module m_MEF_Types
