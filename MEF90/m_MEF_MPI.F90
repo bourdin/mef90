@@ -1,14 +1,12 @@
 Module m_MEF_MPI
-   Use m_Constantes
+
+#include "finclude/petscdef.h"
+   Use m_MEF_Parameters
    Use m_MEF_Types
+   Use petsc
    Implicit None
    Private
 
-#include "finclude/petsc.h"
-   include "exodusII.inc"
-
-   !Public :: MPIType_Initialize
-   !Public :: MPIType_Finalize
    Public :: MEF90_Initialize
    Public :: MEF90_Finalize
 
@@ -25,7 +23,7 @@ Module m_MEF_MPI
    
  Contains
    Subroutine MEF90_Initialize()
-       Integer                           :: iErr
+       PetscInt                          :: iErr
        
       Call PetscInitialize(PETSC_NULL_CHARACTER, iErr)
       Call MPIType_Initialize()
@@ -35,14 +33,15 @@ Module m_MEF_MPI
    End Subroutine MEF90_Initialize
    
    Subroutine MEF90_Finalize()
-      Integer                           :: iErr
+      PetscInt                          :: iErr
       
+      Call MPIType_Finalize()
       Call PetscFinalize(PETSC_NULL_CHARACTER, iErr)
    End Subroutine MEF90_Finalize
 
    Subroutine MPIType_Initialize()
-      Integer, Dimension(:), Pointer    :: BlkCounts, Offsets, DataTypes
-      Integer                           :: NumBlk, extent, iErr
+      PetscInt, Dimension(:), Pointer   :: BlkCounts, Offsets, DataTypes
+      PetscInt                          :: NumBlk, extent, iErr
       
       !!! Vect2D, Vect3D, Mat2D, MatS2D, Mat3D, MatS3D, Tens4OS2D, Tens4OSD3D
       NumBlk=1
@@ -90,7 +89,7 @@ Module m_MEF_MPI
    End Subroutine MPIType_Initialize
    
    Subroutine MPIType_Finalize()
-      Integer                           :: iErr
+      PetscInt                          :: iErr
       
       Call MPI_TYPE_FREE(Vect2D_MPIType, iErr)
       Call MPI_TYPE_FREE(Vect3D_MPIType, iErr)
@@ -101,7 +100,4 @@ Module m_MEF_MPI
       Call MPI_TYPE_FREE(Tens4OS2D_MPIType, iErr)
       Call MPI_TYPE_FREE(Tens4OS3D_MPIType, iErr)
    End Subroutine MPIType_Finalize
-
-
-
 End Module m_MEF_MPI

@@ -1,18 +1,16 @@
 Module m_MEF_Elements
 
-   Use m_AlgebLin
+#include "finclude/petscdef.h"
+#include "finclude/petscviewerdef.h"
+
+   Use m_MEF_LinAlg
    Use m_MEF_Types
-   Use m_Utils
-   
+   Use m_MEF_Utils
+   Use petsc
+      
    IMPLICIT NONE
    Private
    
-#include "finclude/petsc.h"
-#include "finclude/petscviewer.h"
-#include "finclude/petscviewer.h90"
-
-   include "exodusII.inc"
-
    Public :: Init_Element
    Public :: Destroy_Element
    Public :: Init_Elem_Blk_Info
@@ -31,16 +29,16 @@ Module m_MEF_Elements
       Module Procedure Element2D_ScalView, Element2D_ScalPtrView, Element2DView, Element2DPtrView, Element2D_ElastView, Element2D_ElastPtrView, Element3D_ScalView, Element3D_ScalPtrView, Element3DView, Element3DPtrView, Element3D_ElastView, Element3D_ElastPtrView
    End Interface
    
-   Integer, Parameter, Public                    :: MEF90_P1_Lagrange = 1
-   Integer, Parameter, Public                    :: MEF90_P2_Lagrange = 2
+   PetscInt, Parameter, Public                   :: MEF90_P1_Lagrange = 1
+   PetscInt, Parameter, Public                   :: MEF90_P2_Lagrange = 2
    
-!   Integer, Parameter, Public                    :: MEF90_Q1_Lagrange = 3
-!   Integer, Parameter, Public                    :: MEF90_Q2_Lagrange = 4
+!   PetscInt, Parameter, Public                   :: MEF90_Q1_Lagrange = 3
+!   PetscInt, Parameter, Public                   :: MEF90_Q2_Lagrange = 4
 
  Contains
    Subroutine Init_Elem_Blk_Info(dBlk, dDim)
       Type (Elem_Blk_Info)                   :: dBlk
-      Integer                                :: dDim
+      PetscInt                               :: dDim
       
       Select Case (dDim)
       Case (2)
@@ -75,8 +73,8 @@ Module m_MEF_Elements
    Subroutine Init_Element2D_Scal(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element2D_Scal)                  :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
-      Integer, Intent(IN)                    :: QuadratureOrder
-      Integer, Intent(IN)                    :: Element_Type
+      PetscInt, Intent(IN)                   :: QuadratureOrder
+      PetscInt, Intent(IN)                   :: Element_Type
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
@@ -97,8 +95,8 @@ Module m_MEF_Elements
    Subroutine Init_Element2D(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element2D)                       :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
-      Integer, Intent(IN)                    :: QuadratureOrder
-      Integer, Intent(IN)                    :: Element_Type
+      PetscInt, Intent(IN)                   :: QuadratureOrder
+      PetscInt, Intent(IN)                   :: Element_Type
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
@@ -119,8 +117,8 @@ Module m_MEF_Elements
    Subroutine Init_Element2D_Elast(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element2D_Elast)                 :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
-      Integer, Intent(IN)                    :: QuadratureOrder
-      Integer, Intent(IN)                    :: Element_Type
+      PetscInt, Intent(IN)                   :: QuadratureOrder
+      PetscInt, Intent(IN)                   :: Element_Type
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
@@ -149,11 +147,11 @@ Module m_MEF_Elements
       
       Type (Element2D_Scal)                  :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
-      Integer                                :: dPolynomialOrder, dQuadratureOrder
+      PetscInt                               :: dPolynomialOrder, dQuadratureOrder
       
-      Integer                                :: Nb_Gauss
-      Integer                                :: Num_Dof
-      Integer                                :: iDoF, iG
+      PetscInt                               :: Nb_Gauss
+      PetscInt                               :: Num_Dof
+      PetscInt                               :: iDoF, iG
       Type (Mat2D)                           :: Bt          ! The transposed of transformation matrix
       PetscReal                              :: DetBinv     ! The determinant of B^{-1}
 
@@ -275,11 +273,11 @@ Module m_MEF_Elements
    Subroutine Init_Element_P_Lagrange_2D(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       Type (Element2D)                       :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
-      Integer                                :: dPolynomialOrder, dQuadratureOrder
+      PetscInt                               :: dPolynomialOrder, dQuadratureOrder
    
       Type (Element2D_Scal)                  :: Elem_Scal
-      Integer                                :: dim = 2 
-      Integer                                :: Num_DoF, Nb_Gauss, i
+      PetscInt                               :: dim = 2 
+      PetscInt                               :: Num_DoF, Nb_Gauss, i
       
       
       Call Init_Element_P_Lagrange_2D_Scal(Elem_Scal, dCoord, dPolynomialOrder, dQuadratureOrder)
@@ -311,11 +309,11 @@ Module m_MEF_Elements
    Subroutine Init_Element_P_Lagrange_2D_Elast(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       Type (Element2D_Elast)                 :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
-      Integer                                :: dPolynomialOrder, dQuadratureOrder
+      PetscInt                               :: dPolynomialOrder, dQuadratureOrder
    
       Type (Element2D_Scal)                  :: Elem_Scal
-      Integer                                :: dim = 2 
-      Integer                                :: Num_DoF, Nb_Gauss, i
+      PetscInt                               :: dim = 2 
+      PetscInt                               :: Num_DoF, Nb_Gauss, i
       
       
       Call Init_Element_P_Lagrange_2D_Scal(Elem_Scal, dCoord, dPolynomialOrder, dQuadratureOrder)
@@ -445,7 +443,7 @@ Module m_MEF_Elements
       Type (Element2D_Scal)                          :: dElem
       PetscViewer                                    :: viewer
       
-      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
                 
       Nb_DoF   = size(dElem%BF,1)
@@ -496,7 +494,7 @@ Module m_MEF_Elements
       Type (Element2D_Scal), Dimension(:), Pointer   :: dElems
       PetscViewer                                    :: viewer
 
-      Integer                                        :: iE, iErr
+      PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
       
       Write(CharBuffer, 100) Size(dElems)
@@ -515,7 +513,7 @@ Module m_MEF_Elements
       Type (Element2D)                               :: dElem
       PetscViewer                                    :: viewer
       
-      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
 
       Nb_DoF   = size(dElem%BF,1)
@@ -584,7 +582,7 @@ Module m_MEF_Elements
       Type (Element2D), Dimension(:), Pointer        :: dElems
       PetscViewer                                    :: viewer
 
-      Integer                                        :: iE, iErr
+      PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
       
       Write(CharBuffer, 100) Size(dElems)
@@ -603,7 +601,7 @@ Module m_MEF_Elements
       Type (Element2D_Elast)                         :: dElem
       PetscViewer                                    :: viewer
       
-      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
 
       Nb_DoF   = size(dElem%BF,1)
@@ -665,7 +663,7 @@ Module m_MEF_Elements
       Type (Element2D_Elast), Dimension(:), Pointer  :: dElems
       PetscViewer                                    :: viewer
 
-      Integer                                        :: iE, iErr
+      PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
       
       Write(CharBuffer, 100) Size(dElems)
@@ -684,7 +682,7 @@ Module m_MEF_Elements
       Type (Element3D_Scal)                          :: dElem
       PetscViewer                                    :: viewer
       
-      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
                 
       Nb_DoF   = size(dElem%BF,1)
@@ -741,7 +739,7 @@ Module m_MEF_Elements
       Type (Element3D_Scal), Dimension(:), Pointer   :: dElems
       PetscViewer                                    :: viewer
 
-      Integer                                        :: iE, iErr
+      PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
       
       Write(CharBuffer, 100) Size(dElems)
@@ -760,7 +758,7 @@ Module m_MEF_Elements
       Type (Element3D)                               :: dElem
       PetscViewer                                    :: viewer
       
-      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
 
       Nb_DoF   = size(dElem%BF,1)
@@ -864,7 +862,7 @@ Module m_MEF_Elements
       Type (Element3D), Dimension(:), Pointer        :: dElems
       PetscViewer                                    :: viewer
 
-      Integer                                        :: iE, iErr
+      PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
       
       Write(CharBuffer, 100) Size(dElems)
@@ -883,7 +881,7 @@ Module m_MEF_Elements
       Type (Element3D_Elast)                         :: dElem
       PetscViewer                                    :: viewer
       
-      Integer                                        :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
+      PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
 
       Nb_DoF   = size(dElem%BF,1)
@@ -965,7 +963,7 @@ Module m_MEF_Elements
       Type (Element3D_Elast), Dimension(:), Pointer  :: dElems
       PetscViewer                                    :: viewer
 
-      Integer                                        :: iE, iErr
+      PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
       
       Write(CharBuffer, 100) Size(dElems)
