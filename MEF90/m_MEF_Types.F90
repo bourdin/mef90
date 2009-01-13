@@ -136,7 +136,7 @@ Module m_MEF_Types
       Type(Node_Set_Info), Dimension(:), Pointer     :: node_set
       ! Side Sets DATAS
       PetscInt                                       :: num_side_sets
-      Mesh                                           :: mesh
+      Type(Mesh)                                     :: mesh
    End Type MeshTopology_Info
    
    Type EXO_Info
@@ -152,7 +152,7 @@ Module m_MEF_Types
 Contains
    Subroutine EXOView(dEXO, viewer)
       Type(EXO_Info)              :: dEXO
-      PetscViewer                 :: viewer
+      Type(PetscViewer)           :: viewer
       
       PetscInt                    :: iErr
       Character(len=512)          :: CharBuffer
@@ -187,7 +187,7 @@ Contains
 
 
    Subroutine MeshTopologyDestroy(dMeshTopology)
-     Type (MeshTopology_Info)        :: dMeshTopology
+     Type(MeshTopology_Info)         :: dMeshTopology
      PetscInt                        :: iSet, iBlk
 
      If (dMeshTopology%Num_Node_Sets > 0) Then
@@ -205,8 +205,8 @@ Contains
    End Subroutine MeshTopologyDestroy
 
    Subroutine MeshTopologyView(dMeshTopology, viewer)
-      Type (MeshTopology_Info), Intent(IN)           :: dMeshTopology
-      PetscViewer                                    :: viewer
+      Type(MeshTopology_Info), Intent(IN)           :: dMeshTopology
+      Type(PetscViewer)                             :: viewer
       
       Integer                                        :: iErr
       Character(len=512)                             :: CharBuffer
