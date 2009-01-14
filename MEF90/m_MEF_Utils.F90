@@ -3,12 +3,50 @@ Module m_MEF_Utils
    Use m_MEF_Parameters
    Use petsc
    Implicit None
-   Private
-   
-   Public :: GaussJordan_Inverse
-   Public :: GaussJordan_Solve1
 
  Contains
+    Subroutine Uniq(dComm, dMyVals, dVals)
+      MPI_Comm                         :: dComm
+      PetscInt, Dimension(:), Pointer  :: dMyVals, dVals
+      
+      Logical, Dimension(:), Pointer   :: ValCount
+      PetscInt                         :: GlobMinVal, MyMinVal
+      PetscInt                         :: GlobMaxVal, MyMaxVal
+      PetscInt                         :: UniqCount
+      PetscMPIInt                      :: rank
+      PetscInt                         :: i, j, iErr
+
+      Call MPI_Comm_Rank(PETSC_COMM_WORLD, rank, iErr)
+
+      MyMinVal = MinVal(dMyVals)
+      MyMaxVal = MaxVal(dMyVals)
+      Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPI_INTEGER, MPI_MIN, dComm, iErr)
+      Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPI_INTEGER, MPI_MAX, dComm, iErr)
+
+
+      Allocate(ValCount(GlobMinVal:GlobMaxVal))
+      ValCount = .FALSE.
+      Do i = 1, Size(dMyVals)
+         ValCount(dMyVals(i)) = .TRUE.
+      End Do
+
+      Call MPI_AllReduce(MPI_IN_PLACE, ValCount, GlobMaxVal-GlobMinVal+1, MPI_INTEGER, MPI_LOR, dComm, iErr)
+      !!! This is suboptimal. I could gather only to CPU 0 and do everything else on CPU 0 before broadcasting
+      
+      UniqCount = Count(ValCount)
+
+      Allocate(dVals(UniqCount))
+      j = 1
+      Do i = GlobMinVal, GlobMaxVal
+         If (ValCount(i)) Then
+            dVals(j) = i
+            j = j+1
+         End If
+      End Do
+      DeAllocate(ValCount)
+   End Subroutine Uniq
+
+
    Subroutine GaussJordan_Inverse(A, Status)
       !
       ! Gauss Jordan inversion
@@ -102,7 +140,7 @@ Module m_MEF_Utils
       DeAllocate (lmask)
    End Subroutine GaussJordan_Inverse
 
-   Subroutine GaussJordan_Solve1(A, b, Status)
+   Subroutine GaussJordan_Solve(A, b, Status)
       !
       ! Gauss Jordan inversion
       ! Very closely based on the routine from Numerical recipes
@@ -200,5 +238,5 @@ Module m_MEF_Utils
       DeAllocate (lpiv)
       DeAllocate (dumc)
       DeAllocate (lmask)
-   End Subroutine GaussJordan_Solve1
+   End Subroutine GaussJordan_Solve
 End Module m_MEF_Utils
