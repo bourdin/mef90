@@ -46,7 +46,6 @@ Module m_MEF_Utils
       DeAllocate(ValCount)
    End Subroutine Uniq
 
-
    Subroutine GaussJordan_Inverse(A, Status)
       !
       ! Gauss Jordan inversion

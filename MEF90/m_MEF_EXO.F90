@@ -8,6 +8,7 @@ Module m_MEF_EXO
    Use m_MEF_Types
    Use m_MEF_MPI
    Use m_MEF_Elements
+   Use m_MEF_Utils
    Use petsc
    Use petscvec
    Use petscmesh
@@ -48,47 +49,6 @@ Module m_MEF_EXO
    End Interface Write_EXO_Result_Cell
 
  Contains
-   Subroutine Uniq(dComm, dMyVals, dVals)
-      MPI_Comm                         :: dComm
-      PetscInt, Dimension(:), Pointer  :: dMyVals, dVals
-      
-      Logical, Dimension(:), Pointer   :: ValCount
-      PetscInt                         :: GlobMinVal, MyMinVal
-      PetscInt                         :: GlobMaxVal, MyMaxVal
-      PetscInt                         :: UniqCount
-      PetscMPIInt                      :: rank
-      PetscInt                         :: i, j, iErr
-
-      Call MPI_Comm_Rank(PETSC_COMM_WORLD, rank, iErr)
-
-      MyMinVal = MinVal(dMyVals)
-      MyMaxVal = MaxVal(dMyVals)
-      Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPI_INTEGER, MPI_MIN, dComm, iErr)
-      Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPI_INTEGER, MPI_MAX, dComm, iErr)
-
-
-      Allocate(ValCount(GlobMinVal:GlobMaxVal))
-      ValCount = .FALSE.
-      Do i = 1, Size(dMyVals)
-         ValCount(dMyVals(i)) = .TRUE.
-      End Do
-
-      Call MPI_AllReduce(MPI_IN_PLACE, ValCount, GlobMaxVal-GlobMinVal+1, MPI_INTEGER, MPI_LOR, dComm, iErr)
-      !!! This is suboptimal. I could gather only to CPU 0 and do everything else on CPU 0 before broadcasting
-      
-      UniqCount = Count(ValCount)
-
-      Allocate(dVals(UniqCount))
-      j = 1
-      Do i = GlobMinVal, GlobMaxVal
-         If (ValCount(i)) Then
-            dVals(j) = i
-            j = j+1
-         End If
-      End Do
-      DeAllocate(ValCount)
-   End Subroutine Uniq
-
    Subroutine Write_MeshTopology(dMeshTopology, dEXO)
       Type(MeshTopology_Info)                        :: dMeshTopology
       Type(EXO_Info)                                 :: dEXO
