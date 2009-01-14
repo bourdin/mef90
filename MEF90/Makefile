@@ -18,7 +18,7 @@ m_MEF_LinAlg.o:     m_MEF_Parameters.o
 m_MEF_Utils.o:      m_MEF_Parameters.o
 m_MEF_Types.o:      m_MEF_LinAlg.o
 m_MEF_MPI.o:        m_MEF_Parameters.o m_MEF_Types.o
-m_MEF_Elements.o:   m_MEF_Types.o m_Utils.o m_MEF_Parameters.o
+m_MEF_Elements.o:   m_MEF_Types.o m_MEF_Parameters.o
 m_MEF_Sieve.o:      m_MEF_Types.o
 m_MEF_Ensight.o:    m_MEF_Types.o
 m_MEF_EXO.o:        m_MEF_Types.o m_MEF_MPI.o m_MEF_Elements.o

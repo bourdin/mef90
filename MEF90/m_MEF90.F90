@@ -8,7 +8,5 @@ Module m_MEF90
    Use m_MEF_EXO  
    Use m_MEF_Sieve
         
-   include "exodusII.inc"
-
 End Module m_MEF90
 

@@ -4,6 +4,7 @@ Module m_MEF_Types
 
    Use m_MEF_LinAlg
    Use petsc
+   Use petscmesh
 
    IMPLICIT NONE
    Private
@@ -33,9 +34,6 @@ Module m_MEF_Types
 !!! mef90-sieve:
 !!! Do I still need to sequence my data structures?
 
-!!! REMOVE
-!!! Type Node{1,2,3}D 
-!!! Layout_Info ???
 
 !!! MODIFY      
 !!! Type element:
@@ -123,7 +121,7 @@ Module m_MEF_Types
    End Type Node_Set_Info
  
    Type MeshTopology_Info
-      Sequence
+!      Sequence
       ! Global datas
       PetscInt                                       :: num_dim
       PetscInt                                       :: num_verts
