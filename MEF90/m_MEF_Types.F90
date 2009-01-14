@@ -188,18 +188,24 @@ Contains
      Type(MeshTopology_Info)         :: dMeshTopology
      PetscInt                        :: iSet, iBlk
 
-     If (dMeshTopology%Num_Node_Sets > 0) Then
-        Do iSet = 1, dMeshTopology%Num_node_sets
-           Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
-        End Do
+     If (Size(dMeshTopology%Node_set) > 0) Then
+!!!        Do iSet = 1, Size(dMeshTopology%Node_set)
+!!!           Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
+!!!        End Do
+!!!        This will cause the following  error: 
+!!!        A pointer passed to DEALLOCATE points to an array that cannot be deallocated
+!!!        I don't understand why
+        Deallocate (dMeshTopology%Node_Set)
      End If
-     Deallocate (dMeshTopology%Node_Set)
-     If (dMeshTopology%Num_Elem_blks > 0) Then
-        Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-           Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
-        End Do
+     If (Size(dMeshTopology%Elem_Blk) > 0) Then
+!!!        Do iBlk = 1, Size(dMeshTopology%Elem_Blk)
+!!!           Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
+!!!        End Do
+!!!        This will cause the following  error: 
+!!!        A pointer passed to DEALLOCATE points to an array that cannot be deallocated
+!!!        I don't understand why
+        Deallocate(dMeshTopology%Elem_blk)
      End If
-     Deallocate(dMeshTopology%Elem_blk)
    End Subroutine MeshTopologyDestroy
 
    Subroutine MeshTopologyView(dMeshTopology, viewer)
@@ -238,7 +244,7 @@ Contains
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          Write(CharBuffer, 207) dMeshTopology%Elem_Blk(i)%ID
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-         Do j = 1, dMeshTopology%Elem_blk(i)%Num_DoF
+         Do j = 1, dMeshTopology%Elem_blk(i)%Num_Elems
             Write(CharBuffer, 208) dMeshTopology%Elem_blk(i)%Elem_ID(j)
             Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          End Do
@@ -285,7 +291,7 @@ Contains
 204 Format('    Block ', I3, ' Element type ========== ', I4, '\n'c)
 205 Format('    Block ', I3, ' DoF location ========== ', 4(I4, ' '), '\n'c)
 207 Format('    Block ', I3, ' IDs: ')
-208 Format('   ', I4)
+208 Format(' ', I4)
 
 300 Format('*** NODE SETS ***', '\n'c)
 301 Format('    Number of sets ================== ', I4, '\n'c)

@@ -14,7 +14,7 @@ Module m_MEF_EXO
    
    
    IMPLICIT NONE
-   Private
+!   Private
 
    Integer, Parameter, Public                        :: exo_cpu_ws = 8
    Integer, Parameter, Public                        :: exo_io_ws = 8
@@ -26,32 +26,28 @@ Module m_MEF_EXO
    Public :: Write_EXO_Result_Global   
    Public :: Read_EXO_Result_Vertex
    Public :: Write_EXO_Result_Vertex
+   Public :: Read_EXO_Result_Cell
+   Public :: Write_EXO_Result_Cell
+
    
    Interface Read_EXO_Result_Vertex
-      Module Procedure Read_EXO_Result_VertexPtrInterlaced, Read_EXO_Result_VertexSection, Read_EXO_Result_VertexVec, Read_EXO_Result_VertexVect2D, Read_EXO_Result_VertexVect3D
+      Module Procedure Read_EXO_Result_VertexPtrInterlaced, Read_EXO_Result_VertexSection, Read_EXO_Result_VertexVec, Read_EXO_Result_VertexVect2D, Read_EXO_Result_VertexVect3D, Read_EXO_Result_VertexMat2D, Read_EXO_Result_VertexMatS2D, Read_EXO_Result_VertexMat3D, Read_EXO_Result_VertexMatS3D
    End Interface Read_EXO_Result_Vertex
+   !!! These are BROKEN! the number of values may not match the number of vertices (non P1)
 
    Interface Write_EXO_Result_Vertex
-      Module Procedure Write_EXO_Result_VertexPtrInterlaced, Write_EXO_Result_VertexSection, Write_EXO_Result_VertexVec, Write_EXO_Result_VertexVect2D, Write_EXO_Result_VertexVect3D
+      Module Procedure Write_EXO_Result_VertexPtrInterlaced, Write_EXO_Result_VertexSection, Write_EXO_Result_VertexVec, Write_EXO_Result_VertexVect2D, Write_EXO_Result_VertexVect3D, Write_EXO_Result_VertexMat2D, Write_EXO_Result_VertexMatS2D, Write_EXO_Result_VertexMat3D, Write_EXO_Result_VertexMatS3D
    End Interface Write_EXO_Result_Vertex
+   
+   Interface Read_EXO_Result_Cell
+      Module Procedure Read_EXO_Result_CellPtrInterlaced, Read_EXO_Result_CellSection, Read_EXO_Result_CellVec, Read_EXO_Result_CellVect2D, Read_EXO_Result_CellVect3D, Read_EXO_Result_CellMat2D, Read_EXO_Result_CellMatS2D, Read_EXO_Result_CellMat3D, Read_EXO_Result_CellMatS3D
+   End Interface Read_EXO_Result_Cell
 
-!   Public :: Read_EXO_Result_Ptr_Nodes   
-!   Public :: Write_EXO_Result_Ptr_Nodes   
-!   Public :: Read_EXO_Result_Elems
-!   Public :: Write_EXO_Result_Elems   
-!   Public :: Read_EXO_Result_Ptr_Elems
-!   Public :: Write_EXO_Result_Ptr_Elems   
-
-!   Interface Read_EXO_Result_Elems
-!      Module Procedure Read_EXO_Result_Scal_Elems, Read_EXO_Result_Vect2D_Elems, Read_EXO_Result_Mat2D_Elems, Read_EXO_Result_MatS2D_Elems, Read_EXO_Result_Vect3D_Elems, Read_EXO_Result_Mat3D_Elems, Read_EXO_Result_MatS3D_Elems
-!   End Interface
-!   
-!   Interface Write_EXO_Result_Elems
-!      Module Procedure Write_EXO_Result_Scal_Elems, Write_EXO_Result_Vect2D_Elems, Write_EXO_Result_Mat2D_Elems, Write_EXO_Result_MatS2D_Elems, Write_EXO_Result_Vect3D_Elems, Write_EXO_Result_Mat3D_Elems, Write_EXO_Result_MatS3D_Elems
-!   End Interface
+   Interface Write_EXO_Result_Cell
+      Module Procedure Write_EXO_Result_CellPtrInterlaced, Write_EXO_Result_CellSection, Write_EXO_Result_CellVec, Write_EXO_Result_CellVect2D, Write_EXO_Result_CellVect3D, Write_EXO_Result_CellMat2D, Write_EXO_Result_CellMatS2D, Write_EXO_Result_CellMat3D, Write_EXO_Result_CellMatS3D
+   End Interface Write_EXO_Result_Cell
 
  Contains
- 
    Subroutine Uniq(dComm, dMyVals, dVals)
       MPI_Comm                         :: dComm
       PetscInt, Dimension(:), Pointer  :: dMyVals, dVals
@@ -289,12 +285,11 @@ Module m_MEF_EXO
 !!! READ
 !!! In the sequel, we always assume that we are doing distributed I/O when EXO%comm == PETSC_COMM_SELF (i.e. 1 file per CPU) and sequential (i.e. IO operation on a single file on CPU 0) when EXO%comm == PETSC_COM_WORLD
    
-   Subroutine Read_EXO_Result_Global(dEXO, dIdx, dTS, dRes, dNumRec)
+   Subroutine Read_EXO_Result_Global(dEXO, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       PetscReal                                      :: dRes
-      PetscInt                                       :: dNumRec
       
       PetscReal                                      :: MyRes
       PetscInt                                       :: iErr
@@ -323,10 +318,13 @@ Module m_MEF_EXO
       !!! Broacast if dEXO%comm == PETSC_COMM_WORLD
       If (dEXO%comm == PETSC_COMM_WORLD) Then
          Call MPI_BCast(MyRes, 1, MPIU_SCALAR, 0, dEXO%comm, iErr)
-         dRes = MyRes
       End If
+      dRes = MyRes
    End Subroutine Read_EXO_Result_Global
 
+!!!
+!!! READ VERTEX BASED VARIABLES (NODAL VARIABLES)
+!!!
    Subroutine Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Info), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Info)                       :: dMeshTopology
@@ -381,7 +379,7 @@ Module m_MEF_EXO
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
       PetscInt                                       :: iErr
       
-      !!! We Assume that the section is initialized and has the proper size
+      !!! We Assume that the vector is initialized and has the proper size
       Call VecGetArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
       Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, Res_Ptr)
       Call VecRestoreArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
@@ -433,156 +431,360 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_VertexVect3D
 
-!!!##  Subroutine Read_EXO_Result_Mat2D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Mat2D), Dimension(:), Pointer             :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 2) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 2D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    If (Associated(Res)) Then
-!!!##       DeAllocate(Res)
-!!!##    End If
-!!!##    Allocate(Res(Geom%Num_Nodes))
-!!!##    Call EXGNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%XX, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%XY, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%YX, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+3, Geom%Num_Nodes, Res%YY, iErr)
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Read_EXO_Result_Mat2D_Nodes
-!!!##
-!!!##  Subroutine Read_EXO_Result_MatS2D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(MatS2D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 2) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 2D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    If (Associated(Res)) Then
-!!!##       DeAllocate(Res)
-!!!##    End If
-!!!##    Allocate(Res(Geom%Num_Nodes))
-!!!##    Call EXGNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%XX, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%YY, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%XY, iErr)
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Read_EXO_Result_MatS2D_Nodes
-!!!##
-!!!##  Subroutine Read_EXO_Result_Vect3D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Vect3D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 3) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 3D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    If (Associated(Res)) Then
-!!!##       DeAllocate(Res)
-!!!##    End If
-!!!##    Allocate(Res(Geom%Num_Nodes))
-!!!##    Call EXGNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%X, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%Y, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%Z, iErr)
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Read_EXO_Result_Vect3D_Nodes
-!!!##
-!!!##  Subroutine Read_EXO_Result_Mat3D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Mat3D), Dimension(:), Pointer             :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 3) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 3D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    If (Associated(Res)) Then
-!!!##       DeAllocate(Res)
-!!!##    End If
-!!!##    Allocate(Res(Geom%Num_Nodes))
-!!!##    Call EXGNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%XX, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%XY, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%XZ, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+3, Geom%Num_Nodes, Res%YX, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+4, Geom%Num_Nodes, Res%YY, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+5, Geom%Num_Nodes, Res%YZ, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+6, Geom%Num_Nodes, Res%ZX, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+7, Geom%Num_Nodes, Res%ZY, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+8, Geom%Num_Nodes, Res%ZZ, iErr)
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Read_EXO_Result_Mat3D_Nodes
-!!!##
-!!!##  Subroutine Read_EXO_Result_MatS3D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(MatS3D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 3) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 3D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    If (Associated(Res)) Then
-!!!##       DeAllocate(Res)
-!!!##    End If
-!!!##    Allocate(Res(Geom%Num_Nodes))
-!!!##    Call EXGNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%XX, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%YY, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%ZZ, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+3, Geom%Num_Nodes, Res%XY, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+4, Geom%Num_Nodes, Res%YZ, iErr)
-!!!##    Call EXGNV(Geom%exoid, TS, Idx+5, Geom%Num_Nodes, Res%XZ, iErr)
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Read_EXO_Result_MatS3D_Nodes
-!!!##
+   Subroutine Read_EXO_Result_VertexMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Mat2D), Dimension(:), Pointer            :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat2D: The argument does not match the number of vertices in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(dMeshTopology%Num_Verts))
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%XX = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%XY = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      dRes(:)%YX = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+3, dTS, Res_Ptr)
+      dRes(:)%YY = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_VertexMat2D
+
+   Subroutine Read_EXO_Result_VertexMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (MatS2D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMatS2D: The argument does not match the number of vertices in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(dMeshTopology%Num_Verts))
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%XX = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%YY = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      dRes(:)%XY = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_VertexMatS2D
+
+   Subroutine Read_EXO_Result_VertexMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Mat3D), Dimension(:), Pointer            :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat3D: The argument does not match the number of vertices in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(dMeshTopology%Num_Verts))
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%XX = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%XY = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      dRes(:)%XZ = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+3, dTS, Res_Ptr)
+      dRes(:)%YX = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+4, dTS, Res_Ptr)
+      dRes(:)%YY = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+5, dTS, Res_Ptr)
+      dRes(:)%YZ = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+6, dTS, Res_Ptr)
+      dRes(:)%ZX = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+7, dTS, Res_Ptr)
+      dRes(:)%ZY = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+8, dTS, Res_Ptr)
+      dRes(:)%ZZ = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_VertexMat3D
+
+   Subroutine Read_EXO_Result_VertexMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (MatS3D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMatS3D: The argument does not match the number of vertices in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(dMeshTopology%Num_Verts))
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%XX = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%YY = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      dRes(:)%ZZ = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+3,   dTS, Res_Ptr)
+      dRes(:)%YZ = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+4, dTS, Res_Ptr)
+      dRes(:)%XZ = Res_Ptr
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+5, dTS, Res_Ptr)
+      dRes(:)%XY = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_VertexMatS3D
+
+!!!
+!!! READ CELL BASED VARIABLE (ELEMENTAL VARIABLES)
+!!!
+
+   Subroutine Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      PetscReal, Dimension(:), Pointer               :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Tmp
+      PetscInt                                       :: Num_Rec, iRec, iBlk, iE
+      PetscInt                                       :: iErr
+      PetscReal                                      :: Vers
+      
+      dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+      
+      If (Mod(Size(dRes), dMeshTopology%Num_Elems) /= 0) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
+      End If
+      Num_Rec = Size(dRes) / dMeshTopology%Num_Elems
+
+      Do_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks      
+         If (dMeshTopology%Elem_Blk(iBlk)%Num_elems > 0) Then
+            Allocate(Res_Tmp(dMeshTopology%Elem_Blk(iBlk)%Num_elems))
+            Do_iRec: Do iRec = 1, Num_Rec
+               Call EXGEV(dEXO%exoid, dTS, dIdx + iRec-1, dMeshTopology%Elem_Blk(iBlk)%ID, dMeshTopology%Elem_Blk(iBlk)%Num_Elems, Res_Tmp, iErr); CHKERRQ(iErr)
+               Do_iE: Do iE = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+                  dRes(iRec +  Num_Rec * (dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)-1)) = Res_Tmp(iE)
+               End Do Do_iE
+            End Do Do_iRec
+            DeAllocate(Res_Tmp)
+         End If
+      End Do Do_iBlk
+      Call EXCLOS(dEXO%exoid, iErr)
+      dEXO%exoid = 0
+   End Subroutine Read_EXO_Result_CellPtrInterlaced
+
+   Subroutine Read_EXO_Result_CellSection(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (SectionReal)                             :: dRes
+      
+      Type (Vec)                                     :: Res_Vec
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      !!! We Assume that the section is initialized and has the proper size
+      Call SectionRealCreateLocalVector(dRes, Res_Vec, iErr); CHKERRQ(iErr)
+      Call VecGetArrayF90(Res_Vec, Res_Ptr, iErr); CHKERRQ(iErr)
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, Res_Ptr)
+      Call VecRestoreArrayF90(Res_Vec, Res_Ptr, iErr); CHKERRQ(iErr)
+      Call VecDestroy(Res_Vec, iErr); CHKERRQ(iErr)
+   End Subroutine Read_EXO_Result_CellSection
+
+   Subroutine Read_EXO_Result_CellVec(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vec)                                     :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      !!! We Assume that the vector is initialized and has the proper size
+      Call VecGetArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, Res_Ptr)
+      Call VecRestoreArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
+   End Subroutine Read_EXO_Result_CellVec
+
+   Subroutine Read_EXO_Result_CellVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vect2D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellVect2D: The argument does not match the number of cells in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(Size(dRes)))
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%X = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%Y = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_CellVect2D
+
+   Subroutine Read_EXO_Result_CellVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vect3D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellVect3D: The argument does not match the number of cells in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(Size(dRes)))
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%X = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%Y = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      dRes(:)%Z = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_CellVect3D
+
+   Subroutine Read_EXO_Result_CellMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Mat2D), Dimension(:), Pointer            :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_elems) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat2D: The argument does not match the number of cells in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(Size(dRes)))
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%XX = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%XY = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      dRes(:)%YX = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+3, dTS, Res_Ptr)
+      dRes(:)%YY = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_CellMat2D
+
+   Subroutine Read_EXO_Result_CellMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (MatS2D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_elems) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMatS2D: The argument does not match the number of cells in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(Size(dRes)))
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%XX = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%YY = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      dRes(:)%XY = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_CellMatS2D
+
+   Subroutine Read_EXO_Result_CellMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Mat3D), Dimension(:), Pointer            :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_Elems) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMat3D: The argument does not match the number of cells in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(Size(dRes)))
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%XX = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%XY = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      dRes(:)%XZ = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+3, dTS, Res_Ptr)
+      dRes(:)%YX = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+4, dTS, Res_Ptr)
+      dRes(:)%YY = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+5, dTS, Res_Ptr)
+      dRes(:)%YZ = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+6, dTS, Res_Ptr)
+      dRes(:)%ZX = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+7, dTS, Res_Ptr)
+      dRes(:)%ZY = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+8, dTS, Res_Ptr)
+      dRes(:)%ZZ = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_CellMat3D
+
+   Subroutine Read_EXO_Result_CellMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (MatS3D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      If ( Size(dRes) /= dMeshTopology%Num_Elems) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMatS3D: The argument does not match the number of cells in the mesh', iErr)
+      End If
+
+      Allocate(Res_Ptr(Size(dRes)))
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      dRes(:)%XX = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      dRes(:)%YY = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      dRes(:)%ZZ = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+3,   dTS, Res_Ptr)
+      dRes(:)%YZ = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+4, dTS, Res_Ptr)
+      dRes(:)%XZ = Res_Ptr
+      Call Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+5, dTS, Res_Ptr)
+      dRes(:)%XY = Res_Ptr
+      DeAllocate(Res_Ptr)
+   End Subroutine Read_EXO_Result_CellMatS3D
+
+
+
 !!!##  Subroutine Read_EXO_Result_Scal_Elems(Geom, Idx, TS, Res)
 !!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
 !!!##    PetscInt                                       :: Idx
@@ -785,7 +987,7 @@ Module m_MEF_EXO
       Character                                      :: cDum
       
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
          ! Get the number of global variables stored in the database    
          Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
          Allocate(Tmp_Res(Num_Vars))
@@ -904,358 +1106,344 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_VertexVect3D
 
+   Subroutine Write_EXO_Result_VertexMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Mat2D), Dimension(:), Pointer            :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
 
-!!!##  Subroutine Write_EXO_Result_Mat2D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Mat2D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 2) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 2D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    Call EXPNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%XX, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%XY, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%YX, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+3, Geom%Num_Nodes, Res%YY, iErr)
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_Mat2D_Nodes
-!!!##
-!!!##  Subroutine Write_EXO_Result_MatS2D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(MatS2D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 2) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 2D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    Call EXPNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%XX, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%YY, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%XY, iErr)
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_MatS2D_Nodes
-!!!##
-!!!##  Subroutine Write_EXO_Result_Vect3D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Vect3D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 3) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 3D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    Call EXPNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%X, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%Y, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%Z, iErr)
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_Vect3D_Nodes
-!!!##
-!!!##  Subroutine Write_EXO_Result_Mat3D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Mat3D), Dimension(:), Pointer             :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 3) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 3D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    Call EXPNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%XX, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%XY, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%XZ, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+3, Geom%Num_Nodes, Res%YX, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+4, Geom%Num_Nodes, Res%YY, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+5, Geom%Num_Nodes, Res%YZ, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+6, Geom%Num_Nodes, Res%ZX, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+7, Geom%Num_Nodes, Res%ZY, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+8, Geom%Num_Nodes, Res%ZZ, iErr)
-!!!##
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_Mat3D_Nodes
-!!!##
-!!!##  Subroutine Write_EXO_Result_MatS3D_Nodes(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(MatS3D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##!!$    If (Geom%Num_Dim /= 3) Then 
-!!!##!!$       Write(*,*) Trim(Geom%Filename), 'is not a 3D File.'
-!!!##!!$       Write(*,*) 'Aborting'
-!!!##!!$       STOP
-!!!##!!$    End If
-!!!##    Call EXPNV(Geom%exoid, TS, Idx,   Geom%Num_Nodes, Res%XX, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+1, Geom%Num_Nodes, Res%YY, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+2, Geom%Num_Nodes, Res%ZZ, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+3, Geom%Num_Nodes, Res%XY, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+4, Geom%Num_Nodes, Res%YZ, iErr)
-!!!##    Call EXPNV(Geom%exoid, TS, Idx+5, Geom%Num_Nodes, Res%XZ, iErr)
-!!!##
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_MatS3D_Nodes
-!!!##
-!!!##  Subroutine Write_EXO_Result_Scal_Elems(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Real(Kind = Kr), Dimension(:), Pointer         :: Res
-!!!##
-!!!##    Real(Kind = Kr), Dimension(:), Pointer         :: Tmp_Res
-!!!##    PetscInt                                       :: iBlk, iE
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##    Do iBlk = 1, Geom%Num_Elem_Blks
-!!!##       Allocate (Tmp_Res(Geom%Elem_Blk(iBlk)%Num_Elems))
-!!!##       Do iE = 1, Geom%Elem_Blk(iBlk)%Num_Elems
-!!!##          Tmp_Res(iE) = Res(Geom%Elem_Blk(iBlk)%Elem_ID(iE))
-!!!##       End Do
-!!!##
-!!!##       Call EXPEV(Geom%exoid, TS, Idx, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems,   &
-!!!##            & Tmp_Res, iErr)
-!!!##       DeAllocate(Tmp_Res)
-!!!##    End Do
-!!!##
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_Scal_Elems
-!!!##
-!!!##  Subroutine Write_EXO_Result_Vect2D_Elems(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Vect2D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    PetscInt                                       :: iBlk
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##    Do iBlk = 1, Geom%Num_Elem_Blks
-!!!##       Call EXPEV(Geom%exoid, TS, Idx, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems,   &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%X, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+1, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%Y, iErr)
-!!!##    End Do
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_Vect2D_Elems
-!!!##
-!!!##  Subroutine Write_EXO_Result_Mat2D_Elems(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Mat2D), Dimension(:), Pointer             :: Res
-!!!##
-!!!##    PetscInt                                       :: iBlk
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##    Do iBlk = 1, Geom%Num_Elem_Blks
-!!!##       Call EXPEV(Geom%exoid, TS, Idx, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems,   &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XX, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+1, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XY, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+2, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%YX, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+3, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%YY, iErr)
-!!!##    End Do
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_Mat2D_Elems
-!!!##
-!!!##  Subroutine Write_EXO_Result_MatS2D_Elems(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(MatS2D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    PetscInt                                       :: iBlk
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##    Do iBlk = 1, Geom%Num_Elem_Blks
-!!!##       Call EXPEV(Geom%exoid, TS, Idx, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems,   &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XX, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+1, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%YY, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+2, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XY, iErr)
-!!!##    End Do
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_MatS2D_Elems
-!!!##
-!!!##  Subroutine Write_EXO_Result_Vect3D_Elems(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Vect3D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    Type(Vect3D), DImension(:), Pointer            :: Tmp_Res
-!!!##    PetscInt                                       :: iBlk, iE
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##    Do iBlk = 1, Geom%Num_Elem_Blks
-!!!##       Allocate (Tmp_Res(Geom%Elem_Blk(iBlk)%Num_Elems))
-!!!##       Do iE = 1, Geom%Elem_Blk(iBlk)%Num_Elems
-!!!##          Tmp_Res(iE) = Res(Geom%Elem_Blk(iBlk)%Elem_ID(iE))
-!!!##       End Do
-!!!##       Call EXPEV(Geom%exoid, TS, Idx, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems,   &
-!!!##            & Tmp_Res%X, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+1, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Tmp_Res%Y, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+2, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Tmp_Res%Z, iErr)
-!!!##       DeAllocate(Tmp_Res)
-!!!##    End Do
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_Vect3D_Elems
-!!!##
-!!!##  Subroutine Write_EXO_Result_Mat3D_Elems(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(Mat3D), Dimension(:), Pointer             :: Res
-!!!##
-!!!##    PetscInt                                       :: iBlk
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##    Do iBlk = 1, Geom%Num_Elem_Blks
-!!!##       Call EXPEV(Geom%exoid, TS, Idx, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems,   &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XX, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+1, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XY, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+2, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XZ, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+3, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%YX, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+4, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%YY, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+5, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%YZ, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+6, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%ZX, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+7, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%ZY, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+8, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%ZZ, iErr)
-!!!##    End Do
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_Mat3D_Elems
-!!!##
-!!!##  Subroutine Write_EXO_Result_MatS3D_Elems(Geom, Idx, TS, Res)
-!!!##    Type (MeshTopology_Info), Intent(INOUT)            :: Geom
-!!!##    PetscInt                                       :: Idx
-!!!##    PetscInt                                       :: TS
-!!!##    Type(MatS3D), Dimension(:), Pointer            :: Res
-!!!##
-!!!##    Type(MatS3D), Dimension(:), Pointer            :: Tmp_Res
-!!!##    PetscInt                                       :: iBlk, iE
-!!!##    PetscInt                                       :: iErr
-!!!##    Real(Kind = Kr)                                :: Vers
-!!!##    Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers,   &
-!!!##         & ierr)
-!!!##
-!!!##    Do iBlk = 1, Geom%Num_Elem_Blks
-!!!##       Allocate (Tmp_Res(Geom%Elem_Blk(iBlk)%Num_Elems))
-!!!##       Do iE = 1, Geom%Elem_Blk(iBlk)%Num_Elems
-!!!##          Tmp_Res(iE) = Res(Geom%Elem_Blk(iBlk)%Elem_ID(iE))
-!!!##       End Do
-!!!##       Call EXPEV(Geom%exoid, TS, Idx, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems,   &
-!!!##            & Tmp_Res%XX, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+1, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Tmp_Res%YY, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+2, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Tmp_Res%ZZ, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+3, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Tmp_Res%XY, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+4, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Tmp_Res%YZ, iErr)
-!!!##       Call EXPEV(Geom%exoid, TS, Idx+5, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##            & Tmp_Res%XZ, iErr)
-!!!##!!$
-!!!##!!$       Call EXPEV(Geom%exoid, TS, Idx, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems,   &
-!!!##!!$            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XX, iErr)
-!!!##!!$       Call EXPEV(Geom%exoid, TS, Idx+1, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##!!$            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%YY, iErr)
-!!!##!!$       Call EXPEV(Geom%exoid, TS, Idx+2, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##!!$            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%ZZ, iErr)
-!!!##!!$       Call EXPEV(Geom%exoid, TS, Idx+3, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##!!$            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XY, iErr)
-!!!##!!$       Call EXPEV(Geom%exoid, TS, Idx+4, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##!!$            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%YZ, iErr)
-!!!##!!$       Call EXPEV(Geom%exoid, TS, Idx+5, iBlk, Geom%Elem_Blk(iBlk)%Num_Elems, &
-!!!##!!$            & Res(Geom%Elem_Blk(iBlk)%Elem_ID)%XZ, iErr)
-!!!##       DeAllocate(Tmp_Res)
-!!!##    End Do
-!!!##    
-!!!##    Call EXCLOS(Geom%exoid, iErr)
-!!!##    Geom%exoid = 0
-!!!##  End Subroutine Write_EXO_Result_MatS3D_Elems
-  
+      If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMat2D: The argument size does not match the number of vertices in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(dMeshTopology%Num_Verts))
+      Res_Ptr = dRes(:)%XX
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XY
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YX
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+2,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YY
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+3, dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_VertexMat2D
+
+   Subroutine Write_EXO_Result_VertexMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (MatS2D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMatS2D: The argument size does not match the number of vertices in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(dMeshTopology%Num_Verts))
+      Res_Ptr = dRes(:)%XX
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YY
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+1,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XY
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_VertexMatS2D
+
+   Subroutine Write_EXO_Result_VertexMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Mat3D), Dimension(:), Pointer            :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMat3D: The argument size does not match the number of vertices in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(dMeshTopology%Num_Verts))
+      Res_Ptr = dRes(:)%XX
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XY
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XZ
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+2,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YX
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+3,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YY
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+4, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YZ
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+5,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%ZX
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+6,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%ZY
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+7, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%ZZ
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+8,   dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_VertexMat3D
+
+   Subroutine Write_EXO_Result_VertexMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (MatS3D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMatS3D: The argument size does not match the number of vertices in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(dMeshTopology%Num_Verts))
+      Res_Ptr = dRes(:)%XX
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YY
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+1,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%ZZ
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YZ
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+3,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XZ
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+4,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XY
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx+5, dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_VertexMatS3D
+
+!!!
+!!! WRITE CELL BASED VARIABLES (ELEMENTAL)
+!!!   
+   Subroutine Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      PetscReal, Dimension(:), Pointer               :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Tmp
+      PetscInt                                       :: Num_Rec, iRec, iBlk, iE
+      PetscInt                                       :: iErr
+      PetscReal                                      :: Vers
+      
+      dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+      
+      If (Mod(Size(dRes), dMeshTopology%Num_Elems) /= 0) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
+      End If
+      Num_Rec = Size(dRes) / dMeshTopology%Num_Elems
+
+      Do_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks      
+         If (dMeshTopology%Elem_Blk(iBlk)%Num_elems > 0) Then
+            Allocate(Res_Tmp(dMeshTopology%Elem_Blk(iBlk)%Num_elems))
+            Do_iRec: Do iRec = 1, Num_Rec
+               Do_iE: Do iE = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+                  Res_Tmp(iE) = dRes(iRec +  Num_Rec * (dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)-1))
+               End Do Do_iE
+               Call EXPEV(dEXO%exoid, dTS, dIdx + iRec-1, dMeshTopology%Elem_Blk(iBlk)%ID, dMeshTopology%Elem_Blk(iBlk)%Num_Elems, Res_Tmp, iErr); CHKERRQ(iErr)
+            End Do Do_iRec
+            DeAllocate(Res_Tmp)
+         End If
+      End Do Do_iBlk
+      Call EXCLOS(dEXO%exoid, iErr)
+      dEXO%exoid = 0
+   End Subroutine Write_EXO_Result_CellPtrInterlaced
+
+   Subroutine Write_EXO_Result_CellSection(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (SectionReal)                             :: dRes
+      
+      Type (Vec)                                     :: Res_Vec
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      Call SectionRealCreateLocalVector(dRes, Res_Vec, iErr); CHKERRQ(iErr)
+      Call VecGetArrayF90(Res_Vec, Res_Ptr, iErr); CHKERRQ(iErr)
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, Res_Ptr)
+      Call VecRestoreArrayF90(Res_Vec, Res_Ptr, iErr); CHKERRQ(iErr)
+      Call VecDestroy(Res_Vec, iErr); CHKERRQ(iErr)
+   End Subroutine Write_EXO_Result_CellSection
+
+   Subroutine Write_EXO_Result_CellVec(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vec)                                     :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      Call VecGetArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, Res_Ptr)
+      Call VecRestoreArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
+   End Subroutine Write_EXO_Result_CellVec
+
+   Subroutine Write_EXO_Result_CellVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vect2D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellVect2D: The argument size does not match the number of cells in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(Size(dRes)))
+      Res_Ptr = dRes(:)%X
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%Y
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_CellVect2D
+
+   Subroutine Write_EXO_Result_CellVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Vect3D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellVect2D: The argument size does not match the number of cells in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(Size(dRes)))
+      Res_Ptr = dRes(:)%X
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%Y
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%Z
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_CellVect3D
+
+   Subroutine Write_EXO_Result_CellMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Mat2D), Dimension(:), Pointer            :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMat2D: The argument size does not match the number of cells in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(Size(dRes)))
+      Res_Ptr = dRes(:)%XX
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XY
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YX
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YY
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+3, dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_CellMat2D
+
+   Subroutine Write_EXO_Result_CellMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (MatS2D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMatS2D: The argument size does not match the number of cells in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(Size(dRes)))
+      Res_Ptr = dRes(:)%XX
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YY
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XY
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_CellMatS2D
+
+   Subroutine Write_EXO_Result_CellMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Mat3D), Dimension(:), Pointer            :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMat3D: The argument size does not match the number of cells in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(Size(dRes)))
+      Res_Ptr = dRes(:)%XX
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XY
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XZ
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YX
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+3,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YY
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+4, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YZ
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+5,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%ZX
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+6,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%ZY
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+7, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%ZZ
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+8,   dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_CellMat3D
+
+   Subroutine Write_EXO_Result_CellMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Info)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (MatS3D), Dimension(:), Pointer           :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMatS3D: The argument size does not match the number of cells in the mesh', iErr)
+      End If
+      Allocate(Res_Ptr(Size(dRes)))
+      Res_Ptr = dRes(:)%XX
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YY
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+1,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%ZZ
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+2, dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%YZ
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+3,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XZ
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+4,   dTS, Res_Ptr)
+      Res_Ptr = dRes(:)%XY
+      Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+5, dTS, Res_Ptr)
+      DeAllocate(Res_Ptr)
+   End Subroutine Write_EXO_Result_CellMatS3D
+
 End Module m_MEF_EXO
 

@@ -49,8 +49,6 @@ Program TestLocal
    EXO%filename = Trim(prefix)//'.gen'
 
 
-!   Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, GlobalMeshTopology%mesh, ierr)
-
    Call MeshTopologyReadEXO(MeshTopology, Coords, Elem2DA, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
@@ -170,18 +168,38 @@ Program TestLocal
 
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 2, U_Sec, iErr); CHKERRQ(iErr)
 
-!      Write(*,*) 'Writing in ', trim(MyEXO%filename)
+!!! Format the output mesh with variables
       MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
       
       Call EXPVP (MyEXO%exoid, 'n', 4, iErr)
-      Call EXPVAN (MyEXO%exoid, 'n', 4, (/'res1', 'Res2', 'Res3', 'Res4'/), iErr)
+      Call EXPVAN (MyEXO%exoid, 'n', 4, (/'nRes1', 'nRes2', 'nRes3', 'nRes4'/), iErr)
+      Call EXPVP (MyEXO%exoid, 'e', 4, iErr)
+      Call EXPVAN (MyEXO%exoid, 'e', 4, (/'eRes1', 'eRes2', 'eRes3', 'eRes4'/), iErr)
+      Call EXPVP (MyEXO%exoid, 'g', 2, iErr)
+      Call EXPVAN (MyEXO%exoid, 'g', 2, (/'gRes1', 'gRes2'/), iErr)
       Do i = 1, 10
          T = 1.0_Kr + i
          Call EXPTIM (MyEXO%exoid, i, T, iErr)
       End Do
       Call EXCLOS(MyEXO%exoid, iErr)
+      
+      !!! TEST GLOBAL IO
+      T = 1.41_Kr + MEF90_MyRank
+      Call Write_EXO_Result_Global(MyExo, 2, 1, T)
+      T = 3.14_Kr + MEF90_MyRank
+      Call Write_EXO_Result_Global(MyExo, 1, 1, T)
 
+      Call Read_EXO_Result_Global(MyExo, 2, 1, T)
+
+      Write(IOBuffer, *) 'Read ', T, 'from EXO file ', Trim(MyEXO%filename), '\n'c
+      Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+
+      !!! TEST NODAL IO
       Call Write_EXO_Result_Vertex(MyExo, MeshTopology, 2, 1, Coords_Sec)
+      Call SectionRealCreateLocalVector(Coords_Sec, Coords_VecL, iErr); CHKERRQ(iErr)
+      Call Write_EXO_Result_Vertex(MyExo, MeshTopology, 2, 2, Coords_VecL)
+      Call VecDestroy(Coords_VecL, iErr); CHKERRQ(iErr)
       Call Read_EXO_Result_Vertex(MyEXO, MeshTopology, 2, 1, U_Sec)
       Call SectionRealView(U_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
       
@@ -195,8 +213,27 @@ Program TestLocal
             Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
          End Do
       End If
+      
+      
+      !!! TEST ELEMENTAL IO
+      Allocate(V_Ptr(MeshTopology%Num_Elems))
+      V_Ptr = MEF90_MyRank + 1.0_Kr
+      Call Write_EXO_Result_Cell(MyExo, MeshTopology, 2, 2, V_Ptr)
+      V_Ptr = 0.0_Kr
+      Call Read_EXO_Result_Cell(MyExo, MeshTopology, 2, 2, V_Ptr)      
+      Write(IOBuffer, *) MEF90_MyRank, 'V_Ptr Min/Max:', MinVal(V_Ptr), MaxVal(V_Ptr), '\n'c
+      Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      
+      DeAllocate(V_Ptr)
+
+      
    Call MeshTopologyDestroy(MeshTopology)
    Call SectionRealDestroy(Coords_Sec, iErr); CHKERRQ(iErr)
+   Call SectionRealDestroy(U_Sec, iErr)
+   DeAllocate(V2D)
+   
+   
    If (verbose) Then
       Call PetscViewerFlush(myviewer, iErr); CHKERRQ(iErr)
       Call PetscViewerDestroy(myviewer, iErr); CHKERRQ(iErr)
