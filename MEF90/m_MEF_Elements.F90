@@ -440,8 +440,8 @@ Module m_MEF_Elements
 !!!
 
    Subroutine Element2D_ScalView(dElem, viewer)
-      Type (Element2D_Scal)                          :: dElem
-      PetscViewer                                    :: viewer
+      Type(Element2D_Scal)                           :: dElem
+      Type(PetscViewer)                              :: viewer
       
       PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
@@ -491,8 +491,8 @@ Module m_MEF_Elements
    End Subroutine Element2D_ScalView
    
    Subroutine Element2D_ScalPtrView(dElems, viewer)
-      Type (Element2D_Scal), Dimension(:), Pointer   :: dElems
-      PetscViewer                                    :: viewer
+      Type(Element2D_Scal), Dimension(:), Pointer    :: dElems
+      Type(PetscViewer)                              :: viewer
 
       PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
@@ -510,8 +510,8 @@ Module m_MEF_Elements
    End Subroutine Element2D_ScalPtrView
 
    Subroutine Element2DView(dElem, viewer)
-      Type (Element2D)                               :: dElem
-      PetscViewer                                    :: viewer
+      Type(Element2D)                                :: dElem
+      Type(PetscViewer)                              :: viewer
       
       PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
@@ -579,8 +579,8 @@ Module m_MEF_Elements
    End Subroutine Element2DView
    
    Subroutine Element2DPtrView(dElems, viewer)
-      Type (Element2D), Dimension(:), Pointer        :: dElems
-      PetscViewer                                    :: viewer
+      Type(Element2D), Dimension(:), Pointer         :: dElems
+      Type(PetscViewer)                              :: viewer
 
       PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
@@ -598,8 +598,8 @@ Module m_MEF_Elements
    End Subroutine Element2DPtrView
 
    Subroutine Element2D_ElastView(dElem, viewer)
-      Type (Element2D_Elast)                         :: dElem
-      PetscViewer                                    :: viewer
+      Type(Element2D_Elast)                          :: dElem
+      Type(PetscViewer)                              :: viewer
       
       PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
@@ -660,8 +660,8 @@ Module m_MEF_Elements
    End Subroutine Element2D_ElastView
    
    Subroutine Element2D_ElastPtrView(dElems, viewer)
-      Type (Element2D_Elast), Dimension(:), Pointer  :: dElems
-      PetscViewer                                    :: viewer
+      Type(Element2D_Elast), Dimension(:), Pointer   :: dElems
+      Type(PetscViewer)                              :: viewer
 
       PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
@@ -679,8 +679,8 @@ Module m_MEF_Elements
    End Subroutine Element2D_ElastPtrView
 
    Subroutine Element3D_ScalView(dElem, viewer)
-      Type (Element3D_Scal)                          :: dElem
-      PetscViewer                                    :: viewer
+      Type(Element3D_Scal)                           :: dElem
+      Type(PetscViewer)                              :: viewer
       
       PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
@@ -736,8 +736,8 @@ Module m_MEF_Elements
    End Subroutine Element3D_ScalView
    
    Subroutine Element3D_ScalPtrView(dElems, viewer)
-      Type (Element3D_Scal), Dimension(:), Pointer   :: dElems
-      PetscViewer                                    :: viewer
+      Type(Element3D_Scal), Dimension(:), Pointer    :: dElems
+      Type(PetscViewer)                              :: viewer
 
       PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
@@ -755,8 +755,8 @@ Module m_MEF_Elements
    End Subroutine Element3D_ScalPtrView
 
    Subroutine Element3DView(dElem, viewer)
-      Type (Element3D)                               :: dElem
-      PetscViewer                                    :: viewer
+      Type(Element3D)                                :: dElem
+      Type(PetscViewer)                              :: viewer
       
       PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
@@ -859,8 +859,8 @@ Module m_MEF_Elements
    End Subroutine Element3DView
    
    Subroutine Element3DPtrView(dElems, viewer)
-      Type (Element3D), Dimension(:), Pointer        :: dElems
-      PetscViewer                                    :: viewer
+      Type(Element3D), Dimension(:), Pointer         :: dElems
+      Type(PetscViewer)                              :: viewer
 
       PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer
@@ -878,8 +878,8 @@ Module m_MEF_Elements
    End Subroutine Element3DPtrView
 
    Subroutine Element3D_ElastView(dElem, viewer)
-      Type (Element3D_Elast)                         :: dElem
-      PetscViewer                                    :: viewer
+      Type(Element3D_Elast)                          :: dElem
+      Type(PetscViewer)                              :: viewer
       
       PetscInt                                       :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
       Character(len=512)                             :: CharBuffer
@@ -960,8 +960,8 @@ Module m_MEF_Elements
    End Subroutine Element3D_ElastView
    
    Subroutine Element3D_ElastPtrView(dElems, viewer)
-      Type (Element3D_Elast), Dimension(:), Pointer  :: dElems
-      PetscViewer                                    :: viewer
+      Type(Element3D_Elast), Dimension(:), Pointer   :: dElems
+      Type(PetscViewer)                              :: viewer
 
       PetscInt                                       :: iE, iErr
       Character(len=512)                             :: CharBuffer

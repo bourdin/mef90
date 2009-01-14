@@ -1,16 +1,16 @@
 Program TestLocal
 
+#include "finclude/petscdef.h"
+#include "finclude/petscvecdef.h"
+#include "finclude/petscviewerdef.h"
+#include "finclude/petscmeshdef.h"
+
    Use m_MEF90
-   Implicit NONE
-    
-#include "finclude/petsc.h"
-#include "finclude/petscsys.h"
-#include "finclude/petscvec.h"
-#include "finclude/petscviewer.h"
-#include "finclude/petscviewer.h90"
-#include "finclude/petscvec.h90"
-#include "finclude/petscmesh.h"
-#include "finclude/petscmesh.h90"
+   Use petsc
+   Use petscvec
+   Use petscmesh
+
+   Implicit NONE   
 
    Type (MeshTopology_Info)                     :: MeshTopology
    Type (EXO_Info)                              :: EXO, MyEXO
@@ -20,17 +20,17 @@ Program TestLocal
    PetscTruth                                   :: HasPrefix
    PetscTruth                                   :: verbose
    PetscErrorCode                               :: iErr
-   Integer                                      :: iBlk
+   PetscInt                                     :: iBlk
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
-   PetscViewer                                  :: viewer, myviewer
-   SectionReal                                  :: Coords_Sec, U_Sec
-   Vec                                          :: Coords_VecG, Coords_VecL
+   Type(PetscViewer)                            :: viewer, myviewer
+   Type(SectionReal)                            :: Coords_Sec, U_Sec
+   Type(Vec)                                    :: Coords_VecG, Coords_VecL
    PetscReal, Dimension(:), Pointer             :: Coords_Ptr
    PetscInt                                     :: VSize
-   VecScatter                                   :: scatter
-   Integer                                      :: exo_ver
-   Integer                                      :: i
+   Type(VecScatter)                             :: scatter
+   PetscInt                                     :: exo_ver
+   PetscInt                                     :: i
    PetscReal                                    :: T
    Type(Vect2D), Dimension(:), Pointer          :: V2D
    Type(Vect3D), Dimension(:), Pointer          :: V3D

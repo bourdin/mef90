@@ -1,18 +1,16 @@
 Module m_MEF_Sieve
+#include "finclude/petscdef.h"
+#include "finclude/petscvecdef.h"
+#include "finclude/petscmeshdef.h"
 
-   Use m_AlgebLin
+   Use m_MEF_LinAlg
    Use m_MEF_Types
+   Use petsc
+   Use petscmesh
    
    IMPLICIT NONE
    Private
    
-#include "finclude/petsc.h"
-#include "finclude/petscviewer.h"
-#include "finclude/petscviewer.h90"
-#include "finclude/petscmesh.h"
-#include "finclude/petscmesh.h90"
-
-   include "exodusII.inc"
 
    Public :: MeshTopologyReadEXO
    
@@ -43,14 +41,14 @@ Contains
       Type (Vect3D), Dimension(:), Pointer         :: Coords
       Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
       Type (EXO_Info)                              :: dEXO
-      Integer                                      :: iErr, iBlk, iSet
+      PetscInt                                     :: iErr, iBlk, iSet
       Character(len=256)                           :: CharBuffer
       
-      Mesh                                         :: mesh
+      Type(Mesh)                                   :: mesh
       PetscReal, Dimension(:,:), Pointer           :: array
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      Integer                                      :: embedDim
-      Integer                                      :: iE, iElem, numIds, blkId, setId
+      PetscInt                                     :: embedDim
+      PetscInt                                     :: iE, iElem, numIds, blkId, setId
       PetscInt, Dimension(:), Pointer              :: blkIds
       PetscInt, Dimension(:), Pointer              :: setIds
       
