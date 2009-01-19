@@ -1,20 +1,14 @@
 Module m_TestSieve
-  Use m_MEF90
+#include "finclude/petscdef.h"
+#include "finclude/petscvecdef.h"
+#include "finclude/petscviewerdef.h"
+#include "finclude/petscmeshdef.h"
 
-  Implicit NONE
-  PRIVATE
-
-#include "finclude/petsc.h"
-#include "finclude/petsclog.h"
-#include "finclude/petscvec.h"
-#include "finclude/petscvec.h90"
-#include "finclude/petscmat.h"
-#include "finclude/petscmat.h90"
-#include "finclude/petscksp.h"
-#include "finclude/petscpc.h"
-#include "finclude/petscao.h"
-#include "finclude/petscmesh.h"
-#include "finclude/petscmesh.h90"
+   Use m_MEF90
+   Use petsc
+   Use petscmesh
+   
+   Implicit NONE
 
    Public :: FormObjectiveFunction
 !   Public :: FormGradient
@@ -27,17 +21,17 @@ Module m_TestSieve
    !!! dU_Loc must be a LOCAL (ghosted) vector 
    
       PetscReal                                     :: dMyObjFunc
-      Type (MeshTopology_Info)                      :: dMyMeshTopology
-      Type (Element2D_Scal), Dimension(:), Pointer  :: dMyElem
-      SectionReal                                   :: dU, dF
+      Type(MeshTopology_Info)                       :: dMyMeshTopology
+      Type(Element2D_Scal), Dimension(:), Pointer   :: dMyElem
+      Type(SectionReal)                             :: dU, dF
       PetscLogEvent                                 :: integrationEvent
       
-      Integer                                       :: iBlk, blkId, numElems, iELoc, iE, iG, iSL
+      PetscInt                                      :: iBlk, blkId, numElems, iELoc, iE, iG, iSL
       Character(len=256)                            :: CharBuffer
       PetscInt, Dimension(:), Pointer               :: blkIds, elemIds
       PetscScalar, Dimension(:), Pointer            :: U_Ptr, F_Ptr
       PetscReal                                     :: U_Elem, F_Elem
-      Type (Vect2D)                                 :: Strain_Elem
+      Type(Vect2D)                                  :: Strain_Elem
       PetscErrorCode                                :: iErr
 
       call PetscLogEventBegin(integrationEvent, ierr); CHKERRQ(ierr)
