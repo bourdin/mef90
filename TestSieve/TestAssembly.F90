@@ -29,6 +29,8 @@ Program TestAssembly
    Type(SectionReal)                            :: U_Sec
    Type(Vec)                                    :: U_VecG, U_VecL
    PetscReal, Dimension(:), Pointer             :: val
+   PetscReal, DImension(:,:), Pointer           :: Kelem
+   Type(Mat)                                    :: K
    Type(VecScatter)                             :: scatter
    PetscInt                                     :: exo_ver
    PetscInt                                     :: i
@@ -70,6 +72,7 @@ Program TestAssembly
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, U_Sec, iErr); CHKERRQ(iErr)
    Call MeshCreateGlobalScatter(MeshTopology%mesh, U_Sec, scatter, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, U_Sec, U_VecG, iErr); CHKERRQ(iErr)
+   Call MeshCreateMatrix(MeshTopology%mesh, U_Sec, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
    Call SectionRealCreateLocalVector(U_Sec, U_VecL, iErr); CHKERRQ(iErr)
 
    Call VecSet(U_VecG, 1.0_Kr, iErr); CHKERRQ(iErr)
@@ -77,11 +80,15 @@ Program TestAssembly
    
 
    Allocate(val(3))
+   Allocate(Kelem(3,3))
    val = 1.0_Kr
+   Kelem = 1.0_Kr
    Do i = 1, MeshTopology%Num_Elems
-      Call assemblevector(U_VecG, val, i-1, 'ADD_VALUES', iErr); CHKERRQ(iErr)
+      Call assemblevector(U_VecG, i, val, ADD_VALUES, iErr); CHKERRQ(iErr)
+!      Call assembleMatrix(K, i-1, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
    End Do
    DeAllocate(val)
+   DeAllocate(Kelem)
    Call VecView(U_VecG, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
 
    Call VecDestroy(U_VecG, iErr); CHKERRQ(iErr)
