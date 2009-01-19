@@ -1,42 +1,38 @@
 Program TestSieve
 
+#include "finclude/petscdef.h"
+#include "finclude/petscvecdef.h"
+#include "finclude/petscviewerdef.h"
+#include "finclude/petscmeshdef.h"
+
    Use m_MEF90
+   Use petsc
+   Use petscvec
+   Use petscmat
+   Use petscmesh
    Use m_TestSieve
+   
    Implicit NONE
     
-#include "finclude/petsc.h"
-#include "finclude/petscsys.h"
-#include "finclude/petscvec.h"
-#include "finclude/petscviewer.h"
-#include "finclude/petscviewer.h90"
-#include "finclude/petscvec.h90"
-#include "finclude/petscmat.h"
-#include "finclude/petscmat.h90"
-#include "finclude/petscksp.h"
-#include "finclude/petscpc.h"
-#include "finclude/petscao.h"
-#include "finclude/petscmesh.h"
-#include "finclude/petscmesh.h90"
-
-   Type (MeshTopology_Info)                     :: MeshTopology
-   Type (EXO_Info)                              :: EXO
-   Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
-   Type (Vect3D), Dimension(:), Pointer         :: Coords
+   Type(MeshTopology_Info)                      :: MeshTopology
+   Type(EXO_Info)                               :: EXO
+   Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
+   Type(Vect3D), Dimension(:), Pointer          :: Coords
    PetscReal, Dimension(:,:), Pointer           :: Vertices
    
    PetscReal                                    :: MyObjectiveFunction, ObjectiveFunction
-   SectionReal                                  :: U, F, coordSection
+   Type(SectionReal)                            :: U, F, coordSection
    PetscReal, Dimension(:), Pointer             :: values
-   Mat                                          :: K
-   Vec                                          :: V, V_Loc
+   Type(Mat)                                    :: K
+   Type(Vec)                                    :: V, V_Loc
    PetscTruth                                   :: HasF
    PetscInt                                     :: dof
    PetscLogEvent                                :: integrationEvent
    PetscTruth                                   :: verbose
    PetscErrorCode                               :: iErr
-   Integer                                      :: iBlk, iELoc, iE, iV, iX
+   PetscInt                                     :: iBlk, iELoc, iE, iV, iX
    Character(len=256)                           :: CharBuffer
-   VecScatter                                   :: scatter
+   Type(VecScatter)                             :: scatter
    
      
    Call MEF90_Initialize()
@@ -61,7 +57,7 @@ Program TestSieve
       Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
    If (verbose) Then
-      Call MeshTopologyView(MeshTopology, PETSC_VIEWER_STDOUT_SELF)
+      Call MeshTopologyView(MeshTopology, PetscViewer(PETSC_VIEWER_STDOUT_SELF))
    End If
 
    !!! Initialize the element   
@@ -182,21 +178,21 @@ Program TestSieve
 
  Contains
    Subroutine Read_MeshTopology_Info_EXO(dMeshTopology, Coords, Elem2DA, dEXO)
-      Type (MeshTopology_Info)                     :: dMeshTopology
-      Type (Vect3D), Dimension(:), Pointer         :: Coords
-      Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
-      Type (EXO_Info)                              :: dEXO
-      Integer                                      :: iErr, iBlk, iSet
+      Type(MeshTopology_Info)                      :: dMeshTopology
+      Type(Vect3D), Dimension(:), Pointer          :: Coords
+      Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
+      Type(EXO_Info)                               :: dEXO
+      PetscInt                                     :: iErr, iBlk, iSet
       Character(len=256)                           :: CharBuffer
       
       PetscReal, Dimension(:,:), Pointer           :: array
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      Integer                                      :: embedDim
-      Integer                                      :: iElem, numIds, blkId, setId
+      PetscInt                                     :: embedDim
+      PetscInt                                     :: iElem, numIds, blkId, setId
       PetscInt, Dimension(:), Pointer              :: blkIds
       PetscInt, Dimension(:), Pointer              :: setIds
-      Mesh                                         :: mesh
-      PetscViewer                                  :: viewer
+      Type(Mesh)                                   :: mesh
+      Type(PetscViewer)                            :: viewer
 
       ! Open File
       call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, mesh, ierr)
