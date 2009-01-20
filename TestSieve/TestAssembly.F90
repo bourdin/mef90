@@ -84,8 +84,8 @@ Program TestAssembly
    val = 1.0_Kr
    Kelem = 1.0_Kr
    Do i = 1, MeshTopology%Num_Elems
-      Call assemblevector(U_VecG, i, val, ADD_VALUES, iErr); CHKERRQ(iErr)
-!      Call assembleMatrix(K, i-1, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
+!      Call assemblevector(U_VecG, i, val, ADD_VALUES, iErr); CHKERRQ(iErr)
+      Call assembleMatrix(K, MeshTopology%mesh, U_Sec, i-1, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
    End Do
    DeAllocate(val)
    DeAllocate(Kelem)
