@@ -72,7 +72,6 @@ Program TestAssembly
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, U_Sec, iErr); CHKERRQ(iErr)
    Call MeshCreateGlobalScatter(MeshTopology%mesh, U_Sec, scatter, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, U_Sec, U_VecG, iErr); CHKERRQ(iErr)
-   Call MeshCreateMatrix(MeshTopology%mesh, U_Sec, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
    Call SectionRealCreateLocalVector(U_Sec, U_VecL, iErr); CHKERRQ(iErr)
 
    Call VecSet(U_VecG, 1.0_Kr, iErr); CHKERRQ(iErr)
@@ -83,6 +82,7 @@ Program TestAssembly
 
 
    Call MeshGetSectionReal(MeshTopology%mesh, 'default', DefaultSection, iErr); CHKERRQ(ierr)
+   Call MeshCreateMatrix(MeshTopology%mesh, DefaultSection, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
    Allocate(val(3))
    Allocate(Kelem(9))
    val = 1.0_Kr
@@ -90,6 +90,7 @@ Program TestAssembly
    Do i = 0, MeshTopology%Num_Elems-1
 !      Call assemblevector(U_VecG, i, val, ADD_VALUES, iErr); CHKERRQ(iErr)
       Call assembleMatrix(K, MeshTopology%mesh, DefaultSection, i, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
+!      Call assembleMatrix(K, MeshTopology%mesh, U_Sec, i, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
    End Do
    DeAllocate(val)
    DeAllocate(Kelem)
