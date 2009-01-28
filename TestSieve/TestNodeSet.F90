@@ -1,15 +1,17 @@
-Program TestSieve
+Program TestNodeSet
+
+#include "finclude/petscdef.h"
+#include "finclude/petscvecdef.h"
+#include "finclude/petscmatdef.h"
+#include "finclude/petscviewerdef.h"
+#include "finclude/petscmeshdef.h"
 
    Use m_MEF90
-   Implicit NONE
-    
-#include "finclude/petsc.h"
-#include "finclude/petscsys.h"
-#include "finclude/petscvec.h"
-#include "finclude/petscviewer.h"
-#include "finclude/petscviewer.h90"
-#include "finclude/petscmesh.h"
-#include "finclude/petscmesh.h90"
+   Use petsc
+   Use petscvec
+   Use petscmat
+   Use petscmesh
+   Use m_TestSieve
 
    Type (MeshTopology_Info)                     :: MeshTopology
    Type (EXO_Info)                              :: EXO, MyEXO
@@ -22,7 +24,7 @@ Program TestSieve
    Integer                                      :: iBlk
    Character(len=256)                           :: CharBuffer, filename
    Character(len=256)                           :: prefix
-   PetscViewer                                  :: viewer, myviewer
+   Type(PetscViewer)                            :: viewer, myviewer
      
    Call MEF90_Initialize()
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr)    
@@ -36,7 +38,7 @@ Program TestSieve
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
 
-   Call MeshTopologyReadEXO(MeshTopology, Coords, Elem2DA, EXO)
+   Call MeshTopologyReadEXO(MeshTopology, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
@@ -92,13 +94,13 @@ Program TestSieve
 
  Contains
    Subroutine ShowNodeSets(dmesh, viewer)
-      Mesh                                         :: dmesh
-      PetscViewer                                  :: viewer
+      Type(Mesh)                                   :: dmesh
+      Type(PetscViewer)                            :: viewer
       
       Type(MeshTopology_Info)                      :: lMeshTopology
       Character(len=512)                           :: CharBuffer, IOBuffer
-      Integer                                      :: iElem, numIds, blkId, setId, iSet, i
-      Integer                                      :: iErr
+      PetscInt                                     :: iElem, numIds, blkId, setId, iSet, i
+      PetscInt                                     :: iErr
       PetscInt, Dimension(:), Pointer              :: blkIds
       PetscInt, Dimension(:), Pointer              :: setIds
 
@@ -161,4 +163,4 @@ Program TestSieve
 105 Format('  ', I5)
 200 Format(A)
    End Subroutine ShowNodeSets
-End Program TestSieve
+End Program TestNodeSet

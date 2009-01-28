@@ -51,8 +51,7 @@ Program TestSieve
 
    EXO%Comm = PETSC_COMM_WORLD
    
-   Call Read_MeshTopology_Info_EXO(MeshTopology, Coords, Elem2DA, EXO)
-   
+   Call MeshTopologyReadEXO(MeshTopology, EXO)
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
@@ -62,6 +61,7 @@ Program TestSieve
    End If
 
    !!! Initialize the element   
+   Allocate(Elem2DA(MeshTopology%Num_Elems))
    Allocate(Vertices(2,3))
    Allocate(values(6))
    Call MeshGetSectionReal(MeshTopology%mesh, 'coordinates', coordSection, iErr); CHKERRQ(ierr)
@@ -121,6 +121,8 @@ Program TestSieve
 
    
    Allocate(values(dof))
+   Allocate(Coords(MeshTopology%Num_Verts))
+   Call MeshInitCoordinates(MeshTopology, Coords)
    Do iV = 1, MeshTopology%Num_Verts
       values = 1.0+Coords(iV)%Y
       call MeshUpdateClosure(MeshTopology%mesh, U, MeshTopology%Num_Elems+iV-1, values, ierr)
@@ -169,132 +171,15 @@ Program TestSieve
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         Call Destroy_Element(Elem2DA(iE))
+!         Call Destroy_Element(Elem2DA(iE))
+         !!! DestroyELement crashes when the element has not been fully allocated
+         !!! Remove the deallocation of the ID_DoF later if I indeed don;t use the 
+         !!! connectivity table anymore
       End Do
    End Do
    Deallocate(Elem2DA)
    Deallocate(Coords)
    Call MeshTopologyDestroy(MeshTopology)
    Call MEF90_Finalize()
-
- Contains
-   Subroutine Read_MeshTopology_Info_EXO(dMeshTopology, Coords, Elem2DA, dEXO)
-      Type(MeshTopology_Info)                      :: dMeshTopology
-      Type(Vect3D), Dimension(:), Pointer          :: Coords
-      Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
-      Type(EXO_Info)                               :: dEXO
-      PetscInt                                     :: iErr, iBlk, iSet
-      Character(len=256)                           :: CharBuffer
-      
-      PetscReal, Dimension(:,:), Pointer           :: array
-      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      PetscInt                                     :: embedDim
-      PetscInt                                     :: iElem, numIds, blkId, setId
-      PetscInt, Dimension(:), Pointer              :: blkIds
-      PetscInt, Dimension(:), Pointer              :: setIds
-      Type(Mesh)                                   :: mesh
-      Type(PetscViewer)                            :: viewer
-
-      ! Open File
-      call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, mesh, ierr)
-      !!! reads exo file, stores all information in a Mesh
-
-      call MeshDistribute(mesh, PETSC_NULL_CHARACTER, dMeshTopology%mesh, ierr)
-      !!! Partitions using a partitioner (currently PETSC_NULL_CHARACTER) 
-      call MeshDestroy(mesh, ierr)
-
-      If (verbose) Then
-         call PetscViewerASCIIOpen(PETSC_COMM_WORLD, PETSC_NULL_CHARACTER, viewer, ierr)
-         call PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_INFO_DETAIL, ierr)
-         call MeshView(dMeshTopology%mesh, viewer, ierr)
-         call PetscViewerDestroy(viewer, ierr)
-      End If
-
-      ! Read Global Geometric Parameters
-      call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr)
-      !!! Extracts sizes from the Mesh oject
-
-
-      ! Read Elem block information
-      CharBuffer = 'CellBlocks'
-      Call MeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)  
-      !!! Get the number of labels of type 'CellBlocks' in the mesh
-      If (numIds .ne. dMeshTopology%Num_Elem_blks) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Invalid number of element ids', ierr)
-      End If
-      !!! Compare to the number initialized in MeshTopology
-      
-      Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
-      Allocate(blkIds(numIds))
-      call MeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
-      If (dMeshTopology%Num_Elem_blks > 0) Then
-         Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-            blkId = blkIds(iBlk)
-            dMeshTopology%Elem_blk(iBlk)%ID = blkId
-            call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr)
-            !!! Get the size of the layer (stratum) 'CellBlock' of Mesh
-            Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
-            call MeshGetStratum(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%Elem_blk(iBlk)%Elem_ID, ierr)
-            !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
-            dMeshTopology%Elem_blk(iBlk)%Elem_ID = dMeshTopology%Elem_blk(iBlk)%Elem_ID + 1
-            !!! Converts to Fortran style indexing
-         End Do
-      End If
-      Deallocate(blkIds)
-      
-      ! Read Node set information
-      CharBuffer = 'VertexSets'
-      call MeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)
-      If (numIds .ne. dMeshTopology%Num_node_sets) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Invalid number of node ids', ierr)
-      End If
-      Allocate(dMeshTopology%Node_Set(dMeshTopology%Num_Node_Sets))
-      Allocate(setIds(numIds))
-      call MeshGetLabelIds(dMeshTopology%mesh, CharBuffer, setIds, ierr); CHKERRQ(ierr)
-      If (dMeshTopology%Num_Node_Sets > 0) Then
-         Do iSet = 1, dMeshTopology%Num_node_sets
-            setId = setIds(iSet)
-            dMeshTopology%Node_Set(iSet)%ID = setId
-            call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, setId, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr)
-            Allocate(dMeshTopology%Node_Set(iSet)%Node_ID(dMeshTopology%Node_Set(iSet)%Num_Nodes))
-            call MeshGetStratum(dMeshTopology%mesh, CharBuffer, setId, dMeshTopology%Node_Set(iSet)%Node_ID, ierr)
-            dMeshTopology%Node_Set(iSet)%Node_ID = dMeshTopology%Node_Set(iSet)%Node_ID - dMeshTopology%Num_Elems + 1
-         End Do
-      End If
-      Deallocate(setIds)
-
-      ! Read the vertices coordinates
-      Allocate(Coords(MeshTopology%Num_Verts))
-      call MeshGetCoordinatesF90(dMeshTopology%mesh, array, iErr)
-      embedDim = size(array,2)
-      Coords%X = array(:,1)
-      If (embedDim > 1) Then
-         Coords%Y = array(:,2)
-      Else
-         Coords%Y = 0.0
-      EndIf
-      If (embedDim > 2) Then
-         Coords%Z = array(:,3)
-      Else
-         Coords%z = 0.0
-      EndIf
-      call MeshRestoreCoordinatesF90(dMeshTopology%mesh, array, iErr)
- 
-      ! Read the connectivity table
-      Allocate(Elem2DA(MeshTopology%Num_Elems))
-      call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr)
-      Do iBlk = 1, MeshTopology%Num_Elem_Blks
-         Do iE = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iElem = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)
-            Allocate(Elem2DA(iElem)%ID_DoF(3))
-            Elem2DA(iElem)%ID_DoF = arrayCon(iElem,:)
-         End Do
-      End Do
-      call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr)
-
-      dEXO%exoid = 0
-    End Subroutine Read_MeshTopology_Info_EXO
-
-
 
 End Program TestSieve

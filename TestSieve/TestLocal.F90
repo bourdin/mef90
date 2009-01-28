@@ -49,7 +49,7 @@ Program TestLocal
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   Call MeshTopologyReadEXO(MeshTopology, Coords, Elem2DA, EXO)
+   Call MeshTopologyReadEXO(MeshTopology, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
