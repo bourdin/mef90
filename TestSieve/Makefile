@@ -26,6 +26,9 @@ TestLocal: TestLocal.o
 TestAssembly: TestAssembly.o
 	-${FLINKER} -o TestAssembly TestAssembly.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+TestSectionInt: TestSectionInt.o
+	-${FLINKER} -o TestSectionInt TestSectionInt.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 # Dependences
 {PROJ}: ${PROJ}.o m_${PROJ}.o
 ${PROJ}.o: m_${PROJ}.o
