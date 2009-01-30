@@ -47,6 +47,10 @@ Module m_MEF_Utils
    End Subroutine Uniq
 
    Subroutine GaussJordan_Inverse(A, Status)
+!!!
+!!! TODO
+!!! Use Status correctly
+!!!
       !
       ! Gauss Jordan inversion
       ! Very closely based on the routine from Numerical recipes

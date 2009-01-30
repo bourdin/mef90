@@ -17,7 +17,6 @@ Program TestAssembly
    Type (MeshTopology_Info)                     :: MeshTopology
    Type (EXO_Info)                              :: EXO, MyEXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
-   Type(Vect3D), Dimension(:), Pointer          :: Coords
    
    PetscTruth                                   :: HasPrefix
    PetscTruth                                   :: verbose
@@ -26,7 +25,7 @@ Program TestAssembly
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: viewer, myviewer
-   Type(SectionReal)                            :: U_Sec, DefaultSection
+   Type(SectionReal)                            :: U_Sec
    Type(Vec)                                    :: U_VecG, U_VecL
    PetscReal, Dimension(:), Pointer             :: val
    PetscReal, Dimension(:), Pointer             :: Kelem
@@ -75,22 +74,21 @@ Program TestAssembly
    Call SectionRealCreateLocalVector(U_Sec, U_VecL, iErr); CHKERRQ(iErr)
 
    Call VecSet(U_VecG, 1.0_Kr, iErr); CHKERRQ(iErr)
-   Call VecView(U_VecG, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
+!   Call VecView(U_VecG, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
    
    i = 1
    Call MeshSetMaxDof(MeshTopology%Mesh, i, iErr); CHKERRQ(iErr) 
 
 
-   Call MeshGetSectionReal(MeshTopology%mesh, 'default', DefaultSection, iErr); CHKERRQ(ierr)
-   Call MeshCreateMatrix(MeshTopology%mesh, DefaultSection, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
+   Call MeshCreateMatrix(MeshTopology%mesh, U_Sec, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
+
    Allocate(val(3))
    Allocate(Kelem(9))
    val = 1.0_Kr
    Kelem = 1.0_Kr
    Do i = 0, MeshTopology%Num_Elems-1
 !      Call assemblevector(U_VecG, i, val, ADD_VALUES, iErr); CHKERRQ(iErr)
-      Call assembleMatrix(K, MeshTopology%mesh, DefaultSection, i, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
-!      Call assembleMatrix(K, MeshTopology%mesh, U_Sec, i, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      Call assembleMatrix(K, MeshTopology%mesh, U_Sec, i, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
    End Do
    DeAllocate(val)
    DeAllocate(Kelem)

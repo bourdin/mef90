@@ -19,6 +19,8 @@ Module m_MEF_EXO
 
    Integer, Parameter, Public                        :: exo_cpu_ws = 8
    Integer, Parameter, Public                        :: exo_io_ws = 8
+   PetscInt, Public                                  :: exo_ver
+
    
    Public :: Write_MeshTopology
    Public :: Write_MeshTopologyGlobal
