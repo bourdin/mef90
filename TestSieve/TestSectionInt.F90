@@ -59,39 +59,51 @@ Program TestSectionInt
    
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
 
-   Allocate(Values(1))
+   Allocate(IntValues(3))
    Call MeshGetVertexSectionInt(MeshTopology%mesh, 1, Flag_Sec, iErr); CHKERRQ(iErr)
-   Do iE = 1, MeshTopology%Num_Verts
-      Values = iE
-!      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1+MeshTopology%Num_Elems, Values, iErr)
-   End Do  
+!   Do iE = 1, MeshTopology%Num_Verts
+      iE = 5
+      IntValues = 1
+      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
+      iE = 9
+      IntValues = 10
+      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
+!   End Do  
 !!!   Call MeshGetCellSectionInt(MeshTopology%mesh, 1, Flag_Sec, iErr); CHKERRQ(iErr)
 !!!   Do iE = 1, MeshTopology%Num_Elems
 !!!      IntValues = iE
 !!!      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
 !!!   End Do  
-   DeAllocate(Values)
+   DeAllocate(IntValues)
    Call SectionIntView(Flag_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
-   Allocate(Values(1))
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, U_Sec, iErr); CHKERRQ(iErr)
-   Do iE = 1, MeshTopology%Num_Verts
-      Values = iE
-      Call MeshUpdateClosure(MeshTopology%Mesh, U_Sec, iE-1+MeshTopology%Num_Elems, Values, iErr)
-   End Do  
+
+!   Allocate(Values(1))
+!   Do iE = 1, MeshTopology%Num_Verts
+!      Values = 1
+!      Call MeshUpdateClosure(MeshTopology%Mesh, U_Sec, iE-1+MeshTopology%Num_Elems, Values, iErr)
+!      Call SectionRealComplete(U_Sec, iErr)
+!   End Do  
 !!!   Call MeshGetCellSectionReal(MeshTopology%mesh, 1, U_Sec, iErr); CHKERRQ(iErr)
 !!!   Do iE = 1, MeshTopology%Num_Elems
 !!!      Values = iE
 !!!      Call MeshUpdateClosure(MeshTopology%Mesh, U_Sec, iE-1, Values, iErr)
 !!!   End Do  
-   DeAllocate(Values)
-!   Call SectionRealView(U_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+!   DeAllocate(Values)
 
-   Allocate(Values(3))
-   Do iE = 1, MeshTopology%Num_Elems
-      Call MeshRestrictClosure(MeshTopology%Mesh, U_Sec, iE-1, 3, Values, iErr)
-   End Do
-   DeAllocate(Values)
+   Allocate(Values(1))
+   iE = 5
+   Values = 1.0   
+   Call MeshUpdateAddClosure(MeshTopology%Mesh, U_Sec, iE-1+MeshTopology%Num_Elems, Values, iErr)
+
+   Call SectionRealView(U_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+
+!   Allocate(Values(3))
+!   Do iE = 1, MeshTopology%Num_Elems
+!      Call MeshRestrictClosure(MeshTopology%Mesh, U_Sec, iE-1, 3, Values, iErr)
+!   End Do
+!   DeAllocate(Values)
 
    
    Call MeshTopologyDestroy(MeshTopology)
