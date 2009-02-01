@@ -28,8 +28,11 @@ Program SimplePoisson3D
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
    
+
    Call SimplePoissonInit(AppCtx)
-   
+
+   Call MatAssembly(AppCtx)
+   Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    Call SimplePoissonFinalize(AppCtx)
 #if defined PB_2D

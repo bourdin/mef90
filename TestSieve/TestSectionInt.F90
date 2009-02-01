@@ -25,6 +25,7 @@ Program TestSectionInt
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: viewer, myviewer
    Type(SectionReal)                            :: U_Sec
+   Type(Vec)                                    :: U_Vec
    PetscReal, Dimension(:), Pointer             :: Values
    PetscInt, Dimension(:), Pointer              :: IntValues
    Type(SectionInt)                             :: Flag_Sec
@@ -92,13 +93,15 @@ Program TestSectionInt
 !!!   End Do  
 !   DeAllocate(Values)
 
-   Allocate(Values(1))
+   Allocate(Values(3))
    iE = 5
    Values = 1.0   
-   Call MeshUpdateAddClosure(MeshTopology%Mesh, U_Sec, iE-1+MeshTopology%Num_Elems, Values, iErr)
-
+   Call MeshUpdateClosure(MeshTopology%Mesh, U_Sec, iE-1, Values, iErr)
+   Values = 10.0
+   Call MeshUpdateAddClosure(MeshTopology%Mesh, U_Sec, iE-1, Values, iErr)
+   DeAllocate(Values)
    Call SectionRealView(U_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-
+   
 !   Allocate(Values(3))
 !   Do iE = 1, MeshTopology%Num_Elems
 !      Call MeshRestrictClosure(MeshTopology%Mesh, U_Sec, iE-1, 3, Values, iErr)
