@@ -42,6 +42,8 @@ Module m_SimplePoisson3D
       Type(SectionReal)                            :: U
       Type(SectionInt)                             :: BCFlag
       Type(LogInfo_Type)                           :: LogInfo
+      Type(Mat)                                    :: K
+      Type(Vec)                                    :: RHS
    End Type AppCtx_Type
    
 Contains
@@ -50,10 +52,18 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
-      PetscInt                                     :: iBlk      
+      PetscInt                                     :: iBlk, iDoF      
       PetscTruth                                   :: HasPrefix
       PetscTruth                                   :: verbose
       Character(len=MXSTLN)                        :: prefix
+      PetscInt, Dimension(:), Pointer              :: TmpFlag
+      PetscInt                                     :: TmpPoint
+      
+      Type(SectionReal)                            :: CoordSection
+      PetscReal, Dimension(:), Pointer             :: TmpCoords
+      PetscReal, Dimension(:,:), Pointer           :: Coords
+      PetscInt                                     :: iE, iELoc
+
 
       Call MEF90_Initialize()
       Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr); CHKERRQ(iErr)
@@ -69,12 +79,31 @@ Contains
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
       !!! Split in order to be able to take the distribute out if necessary
    
-      AppCtx%MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
-      !!! What is this again and should it really be independent of MeshReadTopologtEXO?
+      !!! Sets the type of elements for each block
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type = MEF90_P1_Lagrange
          Call Init_Elem_Blk_Info(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
       End Do
    
+      !!! Allocate the elements
+      Allocate(AppCtx%Elem(AppCtx%MeshTopology%Num_Elems))
+
+      !!! Initialize the Basis Functions in each element
+      Call MeshGetSectionReal(AppCtx%MeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Allocate(TmpCoords(AppCtx%MeshTopology%Num_Dim * AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+         Allocate(Coords(AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+            Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
+            Call Init_Element(AppCtx%Elem(iE), Coords, 4, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoords)
+         DeAllocate(Coords)
+      End Do Do_Elem_iBlk
+      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+
       !!! Prepare and format the output mesh
       !!! 1. Geometry
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
@@ -104,7 +133,24 @@ Contains
 
       !!! Allocate the Section for U
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%U, iErr); CHKERRQ(iErr)
+      
+      !!! Allocate and initialize the Section for the flag
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
+      Allocate(TmpFlag(1))
+      Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
+         Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
+            TmpPoint = AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iBlk)%Node_ID(iDoF)-1
+            TmpFlag = 1
+            Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%BCFlag, TmpPoint, TmpFlag, iErr); CHKERRQ(iErr)
+         End Do
+      End Do
+      DeAllocate(TmpFlag)
+
+      !!! Initialize the matrix and vector for the linear system
+      Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
+      !Max DoF per point is 1 (Should it be 3?)
+      Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
+      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHS, iErr); CHKERRQ(iErr)
    End Subroutine SimplePoissonInit
    
    Subroutine InitLog(AppCtx)
@@ -122,6 +168,27 @@ Contains
       Call PetscLogStageRegister("KSP Solve",         AppCtx%LogInfo%KSPSolve_Stage,    iErr)
       Call PetscLogStageRegister("Energy Evaluation", AppCtx%LogInfo%EnergyEval_Stage,  iErr)
    End Subroutine InitLog
+   
+   Subroutine MatAssembly(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iBlk, iE, iELoc, iErr
+      PetscReal, Dimension(:,:), Pointer           :: MatElem
+      
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call MatAssemblyLocal(iE, AppCtx, MatElem)
+            Call assembleMatrix(AppCtx%K, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         End Do Do_Elem_iE
+         DeAllocate(MatElem)
+      End Do Do_Elem_iBlk
+      Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+
+   End Subroutine MatAssembly
+   
    
    Subroutine MatAssemblyLocal(iE, AppCtx, MatElem)
       Type(AppCtx_Type)                            :: AppCtx
@@ -142,9 +209,9 @@ Contains
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
       Do iGauss = 1, NumGauss
          Do iDoF1 = 1, NumDoF
-            If (BCFlag(iDoF1) /= 0) Then
+            If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoF
-                  MatElem(iDoF1, iDoF2) = AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) 
+                  MatElem(iDoF2, iDoF1) = AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) 
                End Do
             End If
          End Do
