@@ -7,6 +7,7 @@ Program SimplePoisson3D
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
 #include "finclude/petscmatdef.h"
+#include "finclude/petsckspdef.h"
 #include "finclude/petscviewerdef.h"
 #include "finclude/petscmeshdef.h"
 
@@ -20,6 +21,7 @@ Program SimplePoisson3D
    Use petsc
    Use petscvec
    Use petscmat
+   Use petscksp
    Use petscmesh
 
    Implicit NONE   
@@ -27,13 +29,35 @@ Program SimplePoisson3D
 
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
-   
+   Type(Vec)                                    :: F
+   Character(len=MXSTLN)                        :: IOBuffer
+   KSPConvergedReason                           :: reason
 
    Call SimplePoissonInit(AppCtx)
 
+   Write(IOBuffer, *) 'Assembling the matrix\n'c
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
    Call MatAssembly(AppCtx)
-   Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
+   Write(IOBuffer, *) 'Assembling the RHS\n'c
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+   Call SectionRealCreateLocalVector(AppCtx%F, F, iErr); CHKERRQ(iErr)
+   Call VecSet(F, 1.0_Kr, iErr); CHKERRQ(iErr);
+   Call VecDestroy(F, iErr); CHKERRQ(iErr)
+   
+   Call RHSAssembly(AppCtx)
+   
+   Call KSPSolve(AppCtx%KSP, AppCtx%RHS, AppCtx%RHS, iErr); CHKERRQ(iErr)
+   Call VecView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)   
+   
+!   Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%RHS) 
+   !!! Why is this crashing?
+!   Call KSPGetConvergedReason(AppCtx%KSP, reason, iErr); CHKERRQ(iErr)
+!   Write(IOBuffer, *) 'KSPGetConvergedReason returned ', reason, '\n'c
+!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
    Call SimplePoissonFinalize(AppCtx)
 #if defined PB_2D
 End Program  SimplePoisson2D

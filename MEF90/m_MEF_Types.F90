@@ -179,7 +179,7 @@ Contains
  101 Format('exo ID:             ', I3, '\n'c)
  102 Format('filename:           ', A, '\n'c)
  103 Format('title:              ', A, '\n'c)
- 104 Format('QR_rec ', I2.2, '         ', A, '\n'c)
+ 104 Format('QA_rec ', I2.2, '         ', A, '\n'c)
  105 Format('Communicator:       ', A, I3, '\n'c)
    End Subroutine EXOView
 
