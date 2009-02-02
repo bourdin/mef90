@@ -33,6 +33,12 @@ Module m_SimplePoisson3D
       PetscLogEvent               :: EnergyEval_Event
    End Type LogInfo_Type
 
+   Type AppParam_Type
+      PetscTruth                                   :: Verbose
+      Character(len=MEF90_MXSTRLEN)                :: prefix
+      Type(PetscViewer)                            :: LogViewer, MyLogViewer
+   End Type AppParam_Type
+
    Type AppCtx_Type
       Type (MeshTopology_Info)                     :: MeshTopology
       Type (EXO_Info)                              :: EXO, MyEXO
@@ -45,12 +51,14 @@ Module m_SimplePoisson3D
       Type(SectionReal)                            :: F
       Type(VecScatter)                             :: Scatter
       Type(SectionInt)                             :: BCFlag
-      Type(LogInfo_Type)                           :: LogInfo
       Type(Mat)                                    :: K
       Type(Vec)                                    :: RHS
       Type(KSP)                                    :: KSP
       Type(PC)                                     :: PC
+      Type(LogInfo_Type)                           :: LogInfo
+      Type(AppParam_Type)                          :: AppParam
    End Type AppCtx_Type
+   
    
 Contains
 
@@ -60,8 +68,6 @@ Contains
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk, iDoF      
       PetscTruth                                   :: HasPrefix
-      PetscTruth                                   :: verbose
-      Character(len=MXSTLN)                        :: prefix
       PetscInt, Dimension(:), Pointer              :: TmpFlag
       PetscInt                                     :: TmpPoint
       
@@ -69,20 +75,38 @@ Contains
       PetscReal, Dimension(:), Pointer             :: TmpCoords
       PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscInt                                     :: iE, iELoc
-      
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename   
 !!!      PetscInt                                     :: i, j
 
 
       Call MEF90_Initialize()
-      Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr); CHKERRQ(iErr)
+      Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       
       Call InitLog(AppCtx)
+      If (AppCtx%AppParam%verbose) Then
+         Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
+         Call PetscViewerASCIIOpen(PETSC_COMM_SELF, filename, AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr);   
+         Write(IOBuffer, 102) MEF90_MyRank, Trim(filename)
+         Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call PetscSynchronizedFlush (PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+   
+         Write(filename, 103) Trim(AppCtx%AppParam%prefix)
+         Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr);   
+         Write(IOBuffer, 104) Trim(filename)
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+   
+101 Format(A, '-', I4.4, '.log')
+102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n'c)
+103 Format(A,'.log')
+104 Format('Collective output redirected to file ', A, '\n'c)
+
 
       !!! Read and partition the mesh
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
-      AppCtx%EXO%filename = Trim(prefix)//'.gen'
+      AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
 
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
       !!! Split in order to be able to take the distribute out if necessary
@@ -123,7 +147,7 @@ Contains
       !!! 1. Geometry
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
-      Write(AppCtx%MyEXO%filename, 200) trim(prefix), MEF90_MyRank
+      Write(AppCtx%MyEXO%filename, 200) trim(AppCtx%AppParam%prefix), MEF90_MyRank
    200 Format(A, '-', I4.4, '.gen')
       AppCtx%MyEXO%title = trim(AppCtx%EXO%title)
       AppCtx%MyEXO%Num_QA = AppCtx%EXO%Num_QA
@@ -142,6 +166,8 @@ Contains
       Call EXPVP (AppCtx%MyEXO%exoid, 'e', 3, iErr)
       Call EXPVAN(AppCtx%MyEXO%exoid, 'e', 3, (/'Grad U_X', 'Grad U_Y', 'Grad U_Z'/), iErr)
 #endif
+      Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
+
       Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
