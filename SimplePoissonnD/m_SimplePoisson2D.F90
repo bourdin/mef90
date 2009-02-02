@@ -7,13 +7,15 @@ Module m_SimplePoisson3D
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
 #include "finclude/petscmatdef.h"
-#include "finclude/petscviewerdef.h"
+#include "finclude/petsckspdef.h"
 #include "finclude/petscmeshdef.h"
+#include "finclude/petscviewerdef.h"
 
    Use m_MEF90
    Use petsc
    Use petscvec
    Use petscmat
+   Use petscksp
    Use petscmesh
 
    Implicit NONE   
@@ -40,10 +42,14 @@ Module m_SimplePoisson3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
 #endif
       Type(SectionReal)                            :: U
+      Type(SectionReal)                            :: F
+      Type(VecScatter)                             :: Scatter
       Type(SectionInt)                             :: BCFlag
       Type(LogInfo_Type)                           :: LogInfo
       Type(Mat)                                    :: K
       Type(Vec)                                    :: RHS
+      Type(KSP)                                    :: KSP
+      Type(PC)                                     :: PC
    End Type AppCtx_Type
    
 Contains
@@ -63,6 +69,8 @@ Contains
       PetscReal, Dimension(:), Pointer             :: TmpCoords
       PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscInt                                     :: iE, iELoc
+      
+!!!      PetscInt                                     :: i, j
 
 
       Call MEF90_Initialize()
@@ -96,6 +104,13 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+            
+!!!            Do i = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+!!!               Do j = 1, AppCtx%MeshTopology%Num_Dim
+!!!                  Coords(j,i) = TmpCoords(AppCtx%MeshTopology%Num_Dim*(i-1)+j)
+!!!               End Do
+!!!            End Do
+
             Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
             Call Init_Element(AppCtx%Elem(iE), Coords, 4, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
@@ -131,8 +146,10 @@ Contains
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
-      !!! Allocate the Section for U
+      !!! Allocate the Section for U and F
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%U, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%F, iErr); CHKERRQ(iErr)
+      Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
       
       !!! Allocate and initialize the Section for the flag
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
@@ -151,6 +168,18 @@ Contains
       !Max DoF per point is 1 (Should it be 3?)
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHS, iErr); CHKERRQ(iErr)
+      
+      !!! Create the KSP and PCs
+      Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSP, iErr); CHKERRQ(iErr)
+      Call KSPSetOperators(AppCtx%KSP, AppCtx%K, AppCtx%K, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+      
+      Call KSPGetPC(AppCtx%KSP, AppCtx%PC, iErr); CHKERRQ(iErr)
+      Call PCSetType(AppCtx%PC, PCBJACOBI, iErr); CHKERRQ(iErr)
+      Call KSPSetType(AppCtx%KSP, KSPCG, iErr); CHKERRQ(iErr)
+      
+      Call KSPSetInitialGuessNonzero(AppCtx%KSP, PETSC_TRUE, iErr); CHKERRQ(iErr)
+      
+      Call KSPSetFromOptions(AppCtx%KSP, iErr); CHKERRQ(iErr)
    End Subroutine SimplePoissonInit
    
    Subroutine InitLog(AppCtx)
@@ -175,6 +204,8 @@ Contains
       PetscInt                                     :: iBlk, iE, iELoc, iErr
       PetscReal, Dimension(:,:), Pointer           :: MatElem
       
+      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
+      
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -187,6 +218,7 @@ Contains
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
+      Call PetscLogStagePop(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
    End Subroutine MatAssembly
    
    
@@ -195,10 +227,10 @@ Contains
       PetscReal, Dimension(:,:), Pointer           :: MatElem 
       PetscInt                                     :: iE
    
+      PetscInt                                     :: iErr
       PetscInt                                     :: NumDoF, NumGauss
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
-      PetscInt                                     :: iErr
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
       
@@ -212,15 +244,86 @@ Contains
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoF
                   MatElem(iDoF2, iDoF1) = AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) 
+                  Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
+                  !!! Is that right?
                End Do
             End If
          End Do
       End Do
-      Call PetscLogFlops(1, iErr);CHKERRQ(iErr)
       
       DeAllocate(BCFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatAssemblyLocal
+   
+   Subroutine RHSAssembly(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iErr
+      Type(SectionReal)                            :: RHSSec
+      PetscInt                                     :: iBlk, iE, iELoc
+      PetscReal, Dimension(:), Pointer             :: RHSElem
+      PetscInt                                     :: NumDoFPerVertex = 1
+      
+      !!! Hopefully one day we will use assembleVector instead of going through a section
+      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call RHSAssemblyLocal(iE, AppCtx, RHSElem)
+            Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr)
+         End Do Do_Elem_iE
+         DeAllocate(RHSElem)
+      End Do Do_Elem_iBlk
+      Call SectionRealComplete(RHSSec, iErr); CHKERRQ(iErr)
+      !!! VERY important! This is the equivalent of a ghost update
+      Call SectionRealToVec(RHSSec, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%RHS, ierr); CHKERRQ(ierr)
+      Call SectionRealDestroy(RHSSec, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
+   End Subroutine RHSAssembly
+
+
+
+   Subroutine RHSAssemblyLocal(iE, AppCtx, RHSElem)
+      PetscInt                                     :: iE
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscReal, Dimension(:), Pointer             :: RHSElem
+      
+      PetscInt                                     :: iErr
+      PetscInt                                     :: NumDoF, NumGauss
+      PetscInt, Dimension(:), Pointer              :: BCFlag
+      PetscReal, Dimension(:), Pointer             :: F
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscReal                                    :: TmpRHS
+      
+      Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+      
+      RHSElem  = 0.0_Kr
+      NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
+      NumGauss = Size(AppCtx%Elem(iE)%BF,2)
+      Allocate(BCFlag(NumDoF))
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
+      Allocate(F(NumDoF))
+      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
+      Do iGauss = 1, NumGauss
+         TmpRHS = 0.0_Kr
+         Do iDoF2 = 1, NumDoF
+            TmpRHS = TmpRHS + AppCtx%Elem(iE)%BF(iDoF2, iGauss)! * F(iDoF2)
+            Call PetscLogFlops(2 , iErr);CHKERRQ(iErr)
+         End Do
+         Do iDoF1 = 1, NumDoF
+            If (BCFlag(iDoF1) == 0) Then
+               RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%BF(iDoF1, iGauss) * TmpRHS
+               Call PetscLogFlops(2 , iErr);CHKERRQ(iErr)
+            End If
+         End Do
+      End Do
+      
+      DeAllocate(BCFlag)
+      DeAllocate(F)
+      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+   End Subroutine RHSAssemblyLocal
    
    Subroutine SimplePoissonFinalize(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
@@ -228,7 +331,12 @@ Contains
       PetscInt                                     :: iErr
 
       Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
+      Call VecScatterDestroy(AppCtx%Scatter, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)
+      Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
+      Call VecDestroy(AppCtx%RHS, iErr); CHKERRQ(iErr)
+      Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
       Call MEF90_Finalize()
    End Subroutine SimplePoissonFinalize

@@ -66,7 +66,7 @@ Module m_TestSieve
                   call PetscLogFlops(6._Kr, ierr)
                End Do Do_iSL
                dMyObjFunc = dMyObjFunc + dMyELem(iE)%Gauss_C(iG) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * U_Elem) 
-               call PetscLogFlops(5._Kr + dMyMeshTopology%num_dim*2 - 1, ierr)
+               call PetscLogFlops(5 + dMyMeshTopology%num_dim*2 - 1, ierr)
             End Do Do_iG
          End Do Do_iE
          Deallocate(elemIds)
