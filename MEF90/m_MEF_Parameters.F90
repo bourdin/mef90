@@ -23,4 +23,5 @@ Module m_MEF_Parameters
    Integer, Public                      :: MEF90_GaussOrder
    Integer, Public                      :: MEF90_MyRank
    Integer, Public                      :: MEF90_NumProcs
+   Integer, Parameter, Public           :: MEF90_MXSTRLEN = 256
 End Module m_MEF_Parameters
