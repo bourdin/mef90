@@ -244,6 +244,7 @@ Contains
       
       PetscInt                                     :: iErr
       KSPConvergedReason                           :: reason
+      PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
@@ -254,10 +255,12 @@ Contains
       !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%U
       
       Call KSPGetConvergedReason(AppCtx%KSP, reason, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, *) 'KSPGetConvergedReason returned ', reason, '\n'c
+      Write(IOBuffer, 100) KSPNumIter, reason
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call KSPGetIterationNumber(AppCtx%KSP, KSPNumIter, iErr); CHKERRQ(iErr)
       
       Call PetscLogStagePop (AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
+100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I, '\n'c)
    End Subroutine Solve
    
       
@@ -372,7 +375,7 @@ Contains
       Do iGauss = 1, NumGauss
          TmpRHS = 0.0_Kr
          Do iDoF2 = 1, NumDoF
-            TmpRHS = TmpRHS + AppCtx%Elem(iE)%BF(iDoF2, iGauss)! * F(iDoF2)
+            TmpRHS = TmpRHS + AppCtx%Elem(iE)%BF(iDoF2, iGauss) * F(iDoF2)
             Call PetscLogFlops(2 , iErr);CHKERRQ(iErr)
          End Do
          Do iDoF1 = 1, NumDoF
@@ -444,6 +447,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr
+      Character(len=MEF90_MXSTRLEN)                :: filename
 
       Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
@@ -460,7 +464,10 @@ Contains
          Call PetscViewerDestroy(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerDestroy(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
+      Write(filename, 103) Trim(AppCtx%AppParam%prefix)
+      Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
+103 Format(A,'.log')
    End Subroutine SimplePoissonFinalize
 
 #if defined PB_2D
