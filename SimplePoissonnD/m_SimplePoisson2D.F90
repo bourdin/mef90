@@ -254,13 +254,13 @@ Contains
       Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%RHS, ierr); CHKERRQ(ierr)
       !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%U
       
+      Call KSPGetIterationNumber(AppCtx%KSP, KSPNumIter, iErr); CHKERRQ(iErr)
       Call KSPGetConvergedReason(AppCtx%KSP, reason, iErr); CHKERRQ(iErr)
       Write(IOBuffer, 100) KSPNumIter, reason
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Call KSPGetIterationNumber(AppCtx%KSP, KSPNumIter, iErr); CHKERRQ(iErr)
       
       Call PetscLogStagePop (AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
-100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I, '\n'c)
+100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n'c)
    End Subroutine Solve
    
       
