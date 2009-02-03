@@ -16,6 +16,9 @@ FFLAGS = -I. -I${MEF90DIR} -I${M_RUPT_STRUCT_DIR} ${EXO_CFLAGS} -ftrace=full -ff
 
 ${PROJ}: ${PROJ}.o
 	-${FLINKER} -o ${PROJ} ${OBJS} ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+
+TestSieve3D: TestSieve3D.o m_TestSieve3D.o
+	-${FLINKER} -o TestSieve3D TestSieve3D.o m_TestSieve3D.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 	
 TestNodeSet: TestNodeSet.o
 	-${FLINKER} -o TestNodeSet TestNodeSet.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
@@ -32,3 +35,5 @@ TestSectionInt: TestSectionInt.o
 # Dependences
 {PROJ}: ${PROJ}.o m_${PROJ}.o
 ${PROJ}.o: m_${PROJ}.o
+
+TestSieve3D.o: m_TestSieve3D.o

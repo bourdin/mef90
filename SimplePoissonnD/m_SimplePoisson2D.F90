@@ -23,6 +23,7 @@ Module m_SimplePoisson3D
    Type LogInfo_Type
       PetscLogStage               :: IO_Stage
       PetscLogStage               :: Distribute_Stage
+      PetscLogStage               :: DataSetup_Stage
       PetscLogStage               :: MatAssembly_Stage
       PetscLogStage               :: RHSAssembly_Stage
       PetscLogStage               :: KSPSolve_Stage
@@ -49,6 +50,7 @@ Module m_SimplePoisson3D
 #endif
       Type(SectionReal)                            :: U
       Type(SectionReal)                            :: F
+      PetscReal                                    :: Energy
       Type(VecScatter)                             :: Scatter
       Type(SectionInt)                             :: BCFlag
       Type(Mat)                                    :: K
@@ -76,7 +78,8 @@ Contains
       PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscInt                                     :: iE, iELoc
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename   
-!!!      PetscInt                                     :: i, j
+      PetscLogDouble                               :: TS, TF
+      Type(Mesh)                                   :: Tmp_Mesh
 
 
       Call MEF90_Initialize()
@@ -108,14 +111,25 @@ Contains
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
 
+      
+      Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      !!! reads exo file, stores all information in a Mesh
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+
+      Call PetscLogStagePush(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
+      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call PetscLogStagePop(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
+
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
-      !!! Split in order to be able to take the distribute out if necessary
-   
+         
+      Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Sets the type of elements for each block
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type = MEF90_P1_Lagrange
          Call Init_Elem_Blk_Info(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
       End Do
+      Call PetscLogStagePop(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
    
       !!! Allocate the elements
       Allocate(AppCtx%Elem(AppCtx%MeshTopology%Num_Elems))
@@ -128,21 +142,16 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
-            
-!!!            Do i = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
-!!!               Do j = 1, AppCtx%MeshTopology%Num_Dim
-!!!                  Coords(j,i) = TmpCoords(AppCtx%MeshTopology%Num_Dim*(i-1)+j)
-!!!               End Do
-!!!            End Do
-
-            Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
-            Call Init_Element(AppCtx%Elem(iE), Coords, 4, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
+             Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
+            Call Init_Element(AppCtx%Elem(iE), Coords, 2, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
          DeAllocate(Coords)
       End Do Do_Elem_iBlk
       Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
 
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       !!! Prepare and format the output mesh
       !!! 1. Geometry
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
@@ -170,8 +179,9 @@ Contains
 
       Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
 
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
 
+      Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Allocate the Section for U and F
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%U, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%F, iErr); CHKERRQ(iErr)
@@ -206,6 +216,10 @@ Contains
       Call KSPSetInitialGuessNonzero(AppCtx%KSP, PETSC_TRUE, iErr); CHKERRQ(iErr)
       
       Call KSPSetFromOptions(AppCtx%KSP, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
+      
+      !!! Create the EXO cae file
+      Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
    End Subroutine SimplePoissonInit
    
    Subroutine InitLog(AppCtx)
@@ -216,14 +230,37 @@ Contains
       Call PetscLogEventRegister('RHSAssembly Local', 0, AppCtx%LogInfo%RHSAssemblyLocal_Event, ierr); CHKERRQ(ierr)
       Call PetscLogEventRegister('Energy Eval',       0, AppCtx%LogInfo%EnergyEval_Event,       ierr); CHKERRQ(ierr)
 
-      Call PetscLogStageRegister("IO Stage",          AppCtx%LogInfo%IO_Stage,     iErr)
-      Call PetscLogStageRegister("Mesh Distribution", AppCtx%LogInfo%Distribute_Stage,  iErr)
+      Call PetscLogStageRegister("IO Stage",          AppCtx%LogInfo%IO_Stage,          iErr)
+      Call PetscLogStageRegister("Distribution",      AppCtx%LogInfo%Distribute_Stage,  iErr)
+      Call PetscLogStageRegister("Objects Setup",     AppCtx%LogInfo%DataSetup_Stage,   iErr)
       Call PetscLogStageRegister("Mat Assembly",      AppCtx%LogInfo%MatAssembly_Stage, iErr)
       Call PetscLogStageRegister("RHS Assembly",      AppCtx%LogInfo%RHSAssembly_Stage, iErr)
       Call PetscLogStageRegister("KSP Solve",         AppCtx%LogInfo%KSPSolve_Stage,    iErr)
-      Call PetscLogStageRegister("Energy Evaluation", AppCtx%LogInfo%EnergyEval_Stage,  iErr)
+      Call PetscLogStageRegister("Energy Eval",       AppCtx%LogInfo%EnergyEval_Stage,  iErr)
    End Subroutine InitLog
    
+   Subroutine Solve(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iErr
+      KSPConvergedReason                           :: reason
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+      
+      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
+      Call KSPSolve(AppCtx%KSP, AppCtx%RHS, AppCtx%RHS, iErr); CHKERRQ(iErr)
+      !!! Solve and store the solution in AppCtx%RHS
+      
+      Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%RHS, ierr); CHKERRQ(ierr)
+      !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%U
+      
+      Call KSPGetConvergedReason(AppCtx%KSP, reason, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, *) 'KSPGetConvergedReason returned ', reason, '\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      
+      Call PetscLogStagePop (AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
+   End Subroutine Solve
+   
+      
    Subroutine MatAssembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -350,6 +387,58 @@ Contains
       DeAllocate(F)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSAssemblyLocal
+
+   Subroutine ComputeEnergy(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iErr
+      PetscInt                                     :: NumDoF, NumGauss
+      PetscReal, Dimension(:), Pointer             :: F, U
+      PetscInt                                     :: iBlk, iELoc, iE
+      PetscInt                                     :: iDoF, iGauss
+#if defined PB_2D
+      Type(Vect2D)                                 :: Strain_Elem, Stress_Elem      
+#elif defined PB_3D
+      Type(Vect3D)                                 :: Strain_Elem, Stress_Elem      
+#endif
+      PetscReal                                    :: F_Elem, U_Elem
+      PetscReal                                    :: MyEnergy
+
+      Call PetscLogStagePush(AppCtx%LogInfo%EnergyEval_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogEventBegin(AppCtx%LogInfo%EnergyEval_Event, iErr); CHKERRQ(iErr)
+      
+      MyEnergy = 0.0_Kr
+      
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
+            NumGauss = Size(AppCtx%Elem(iE)%BF,2)
+            Allocate(F(NumDoF))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
+            Allocate(U(NumDoF))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
+            Do iGauss = 1, NumGauss
+               Strain_Elem = 0.0_Kr
+               Stress_Elem = 0.0_Kr
+               F_Elem      = 0.0_Kr
+               U_Elem      = 0.0_Kr
+               Do iDoF = 1, NumDoF
+                  Stress_Elem = Stress_Elem + AppCtx%Elem(iE)%Grad_BF(iDoF, iGauss) * U(iDoF)
+                  Strain_Elem = Strain_Elem + AppCtx%Elem(iE)%Grad_BF(iDoF, iGauss) * U(iDoF)
+                  F_Elem = F_Elem + AppCtx%Elem(iE)%BF(iDoF, iGauss) * F(iDoF)
+                  U_Elem = U_Elem + AppCtx%Elem(iE)%BF(iDoF, iGauss) * U(iDoF)
+                  Call PetscLogFlops(0, iErr) !!! FIX THAT!
+               End Do
+               MyEnergy = MyEnergy + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * U_Elem)
+            End Do
+         End Do Do_Elem_iE
+      End Do Do_Elem_iBlk
+      Call PetscGlobalSum(MyEnergy, AppCtx%Energy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+               
+      Call PetscLogEventEnd  (AppCtx%LogInfo%EnergyEval_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(AppCtx%LogInfo%EnergyEval_Stage, iErr); CHKERRQ(iErr)
+   End Subroutine ComputeEnergy
    
    Subroutine SimplePoissonFinalize(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
@@ -364,6 +453,13 @@ Contains
       Call VecDestroy(AppCtx%RHS, iErr); CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
+      
+      If (AppCtx%AppParam%verbose) Then
+         Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
+         Call PetscViewerFlush(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+         Call PetscViewerDestroy(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
+         Call PetscViewerDestroy(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+      End If
       Call MEF90_Finalize()
    End Subroutine SimplePoissonFinalize
 

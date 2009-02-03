@@ -31,15 +31,16 @@ Program SimplePoisson3D
    PetscInt                                     :: iErr
    Type(Vec)                                    :: F
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   KSPConvergedReason                           :: reason
+   Type(Vec)                                    :: V
+
    Call SimplePoissonInit(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
-      Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
+!      Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
-   
+
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the matrix\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -62,28 +63,27 @@ Program SimplePoisson3D
       Write(IOBuffer, *) 'Calling KSPSolve\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
+   Call Solve(AppCtx)
+   Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+   Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
+   Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
 
-   Call KSPSolve(AppCtx%KSP, AppCtx%RHS, AppCtx%RHS, iErr); CHKERRQ(iErr)
-
-   Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%RHS, ierr); CHKERRQ(ierr)
-
-   Call KSPGetConvergedReason(AppCtx%KSP, reason, iErr); CHKERRQ(iErr)
-   Write(IOBuffer, *) 'KSPGetConvergedReason returned ', reason, '\n'c
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Computing energy\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
+   Call ComputeEnergy(AppCtx)
+   Write(IOBuffer, 100) AppCtx%Energy
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
+100 Format('Total energy: ', ES12.5, '\n'c)    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Saving U\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-
-   Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
-!   Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, -1.0_Kr)
-   !!! Why is this crashing?
+   Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+   Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%Energy)
+   Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
 
    Call SimplePoissonFinalize(AppCtx)
 #if defined PB_2D

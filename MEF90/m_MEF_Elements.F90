@@ -18,7 +18,7 @@ Module m_MEF_Elements
 
 
    Interface Init_Element
-      Module Procedure Init_Element2D_Scal, Init_Element2D, Init_Element2D_Elast
+      Module Procedure Init_Element2D_Scal, Init_Element2D, Init_Element2D_Elast, Init_Element3D_Scal
    End Interface Init_Element
    
    Interface Destroy_Element
@@ -137,6 +137,28 @@ Module m_MEF_Elements
    End Subroutine Init_Element2D_Elast
 
 
+   Subroutine Init_Element3D_Scal(dElem, dCoord, QuadratureOrder, Element_Type)
+      Type (Element3D_Scal)                  :: dElem
+      PetscReal, Dimension(:,:), Pointer     :: dCoord
+      PetscInt, Intent(IN)                   :: QuadratureOrder
+      PetscInt, Intent(IN)                   :: Element_Type
+      
+      Select Case (Element_Type)
+         Case (MEF90_P1_Lagrange)
+            Call Init_Element_P_Lagrange_3D_Scal(dElem, dCoord, 1, QuadratureOrder)
+
+         Case (MEF90_P2_Lagrange)
+            Call Init_Element_P_Lagrange_3D_Scal(dElem, dCoord, 2, QuadratureOrder)
+
+!         Case (MEF90_Q1_Lagrange)
+!            Call Init_Element_Q_Lagrange_3D_Scal(dElem, dCoord, 1, QuadratureOrder)
+!         Case (MEF90_Q2_Lagrange)
+!            Call Init_Element_Q_Lagrange_3D_Scal(dElem, dCoord, 2, QuadratureOrder)
+         Case Default
+            Print*, 'Element type not implemented yet', Element_Type
+      End Select
+   End Subroutine Init_Element3D_Scal                                
+
    Subroutine Init_Element_P_Lagrange_2D_Scal(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
@@ -162,14 +184,14 @@ Module m_MEF_Elements
       Type (Vect2D), Dimension(:), Pointer   :: Xi ! The quadrature points coordinates in the reference element
       
       !!! The transformation matrix and the determinant of its inverse
-      Bt%XX = dCoord(2,3) - dCoord(2,1)
-      Bt%XY = dCoord(2,1) - dCoord(2,2)
-      Bt%YX = dCoord(1,1) - dCoord(1,3)
-      Bt%YY = dCoord(1,2) - dCoord(1,1)
+      Bt%XX = dCoord(1,2) - dCoord(1,1) 
+      Bt%XY = dCoord(2,2) - dCoord(2,1)
+      Bt%YX = dCoord(1,3) - dCoord(1,1)
+      Bt%YY = dCoord(2,3) - dCoord(2,1)
       
-      detBinv = Bt%XX * Bt%YY - Bt%XY * Bt%YX
-      Bt = Bt / detBinv
-      
+      DetBinv = Det(Bt)
+      Bt = Invert(Bt)
+
       Select Case (dQuadratureOrder)
       Case(1)
          Nb_Gauss = 1
@@ -338,6 +360,100 @@ Module m_MEF_Elements
       End Do
       Call Destroy_Element(Elem_Scal)
    End Subroutine Init_Element_P_Lagrange_2D_Elast
+
+   Subroutine Init_Element_P_Lagrange_3D_Scal(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
+      ! Compute the quadrature weights and the value of the basis functions and their gradient 
+      ! at the quadrature points.
+      ! One day when I am smart I will use FIAT for that...
+      !
+      ! Assumes that the elements connectivity is known
+      !
+      
+      Type (Element3D_Scal)                  :: dElem
+      PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
+      PetscInt                               :: dPolynomialOrder, dQuadratureOrder
+      
+      PetscInt                               :: Nb_Gauss
+      PetscInt                               :: Num_Dof
+      PetscInt                               :: iDoF, iG
+      Type (Mat3D)                           :: Bt          ! The transposed of transformation matrix
+      PetscReal                              :: DetBinv     ! The determinant of B^{-1}
+
+      PetscReal, Dimension(:,:), Pointer     :: PhiHat      ! PhiHat(i,k) The value of the ith basis function at the kth integration point
+      Type (Vect3D), Dimension(:,:), Pointer :: GradPhiHat
+      
+      
+      Type (Vect3D), Dimension(:), Pointer   :: Xi ! The quadrature points coordinates in the reference element
+      
+      !!! The transformation matrix and the determinant of its inverse
+      Bt%XX = dCoord(1,2) - dCoord(1,1) 
+      Bt%XY = dCoord(2,2) - dCoord(2,1)
+      Bt%XZ = dCoord(3,2) - dCoord(3,1)
+      
+      Bt%YX = dCoord(1,3) - dCoord(1,1)
+      Bt%YY = dCoord(2,3) - dCoord(2,1)
+      Bt%YZ = dCoord(3,3) - dCoord(3,1)
+      
+      Bt%ZX = dCoord(1,4) - dCoord(1,1)
+      Bt%ZY = dCoord(2,4) - dCoord(2,1)
+      Bt%ZZ = dCoord(3,4) - dCoord(3,1)
+      
+      DetBinv = Det(Bt)
+      Bt = Invert(Bt)
+      
+      Select Case (dQuadratureOrder)
+      Case(1,2,3)
+         !!! 3rd order cubature on a tetrahedron forula from J.E. Akin' book
+         Nb_Gauss = 5
+         Allocate(Xi(Nb_Gauss))
+         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Xi(1) = (/ .25_Kr, .25_Kr, .25_Kr /)
+         Xi(2) = (/ .5_Kr, 1._Kr / 6._Kr, 1._Kr / 6._Kr /)
+         Xi(3) = (/ 1._Kr / 6._Kr, .5_Kr, 1._Kr / 6._Kr /)
+         Xi(4) = (/ 1._Kr / 6._Kr, 1._Kr / 6._Kr, .5_Kr /)
+         Xi(5) = (/ 1._Kr / 6._Kr, 1._Kr / 6._Kr, 1._Kr / 6._Kr /)
+         dElem%Gauss_C(1) = -2.0_Kr / 15.0_Kr * detBinv
+         dElem%Gauss_C(2:5) = 3.0_Kr / 40.0_Kr * detBinv
+
+      Case Default
+         Print*, 'Unimplemented quadrature order', dQuadratureOrder
+         STOP
+      End Select
+      
+      Select Case (dPolynomialOrder)
+      Case(1)
+         Num_DoF = 4
+         Allocate(PhiHat(Num_DoF, Nb_Gauss))
+         Allocate(GradPhiHat(Num_DoF, Nb_Gauss))
+         PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y - Xi%Z
+         PhiHat(2,:) = Xi(:)%X
+         PhiHat(3,:) = Xi(:)%Y
+         PhiHat(4,:) = Xi(:)%Z
+         
+         GradPhiHat(1,:)%X = -1.0_Kr; GradPhiHat(1,:)%Y = -1.0_Kr; GradPhiHat(1,:)%Z = -1.0_Kr; 
+         GradPhiHat(2,:)%X =  1.0_Kr; GradPhiHat(2,:)%Y =  0.0_Kr; GradPhiHat(2,:)%Z =  0.0_Kr; 
+         GradPhiHat(3,:)%X =  0.0_Kr; GradPhiHat(3,:)%Y =  1.0_Kr; GradPhiHat(3,:)%Z =  0.0_Kr;
+         GradPhiHat(4,:)%X =  0.0_Kr; GradPhiHat(4,:)%Y =  0.0_Kr; GradPhiHat(4,:)%Z =  1.0_Kr;
+          
+      Case Default
+         Print*, 'Unimplemented PolynomialOrder', dPolynomialOrder
+      End Select
+      
+      Allocate (dElem%BF(Num_DoF, Nb_Gauss)) 
+      Allocate (dElem%Grad_BF(Num_DoF, Nb_Gauss))
+      dElem%BF = PhiHat
+      Do iDoF = 1, Num_DoF
+         Do iG = 1, Nb_Gauss
+            dElem%Grad_BF(iDoF, iG) = Bt * GradPhiHat(iDoF, iG) 
+            !dElem%Grad_BF(iDoF, iG) = GradPhiHat(iDoF, iG) 
+         End Do
+      End Do
+     
+      DeAllocate(Xi)
+      DeAllocate(PhiHat)
+      DeAllocate(GradPhiHat)
+   End Subroutine Init_Element_P_Lagrange_3D_Scal
+
 
    Subroutine Destroy_Element2D_Scal(dElem)
       Type (Element2D_Scal)                  :: dElem
@@ -706,7 +822,7 @@ Module m_MEF_Elements
          Write(CharBuffer, *) '\n'c
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
 
-         Write(CharBuffer, 200) '        Grad_BF (X,Y, Z)\n    'c
+         Write(CharBuffer, 200) '        Grad_BF (X,Y,Z)\n    'c
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          Do iG = 1, Nb_Gauss
             Write(CharBuffer, 201) dElem%Grad_BF(iDoF, iG)%X

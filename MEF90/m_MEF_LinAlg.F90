@@ -101,67 +101,77 @@ Module m_MEF_LinAlg
       PetscReal          :: ZZZZ
    End Type Tens4OS3D
 
-  Interface Operator (+)
-     Module Procedure SumVect2D, SumVect3D, SumMat2D, SumMat3D, SumMatS2D, SumMatS3D, SumTens4OS2D, SumTens4OS3D
-  End Interface
+   Interface Operator (+)
+      Module Procedure SumVect2D, SumVect3D, SumMat2D, SumMat3D, SumMatS2D, SumMatS3D, SumTens4OS2D, SumTens4OS3D
+   End Interface
 
-  Interface Operator (-)
-     Module Procedure DifVect2D, DifVect3D, DifMat2D, DifMat3D,DifMatS2D, DifMatS3D, DifTens4OS2D, DifTens4OS3D
-  End Interface
+   Interface Operator (-)
+      Module Procedure DifVect2D, DifVect3D, DifMat2D, DifMat3D,DifMatS2D, DifMatS3D, DifTens4OS2D, DifTens4OS3D
+   End Interface
 
-  Interface Operator (*)
-     Module Procedure DbleXVect2D, Vect2DXDble, DbleXVect3D, Vect3DXDble, &
-            DbleXMat2D, Mat2DXDble, DbleXMat3D, Mat3DXDble,               &
-            DbleXMatS2D, MatS2DXDble, DbleXMatS3D, MatS3DXDble,           &
-            MatXVect2D, MatXVect3D, MatXVect2DS, MatXVect3DS,             &
-            DbleXTens4OS2D, Tens4OS2DXDble, Tens4OS2DXMatS2D,             &
-            DbleXTens4OS3D, Tens4OS3DXDble, Tens4OS3DXMatS3D
-  End Interface
+   Interface Operator (*)
+      Module Procedure DbleXVect2D, Vect2DXDble, DbleXVect3D, Vect3DXDble, &
+         DbleXMat2D, Mat2DXDble, DbleXMat3D, Mat3DXDble,               &
+         DbleXMatS2D, MatS2DXDble, DbleXMatS3D, MatS3DXDble,           &
+         MatXVect2D, MatXVect3D, MatXVect2DS, MatXVect3DS,             &
+         DbleXTens4OS2D, Tens4OS2DXDble, Tens4OS2DXMatS2D,             &
+         DbleXTens4OS3D, Tens4OS3DXDble, Tens4OS3DXMatS3D,             &
+         Mat2DXMat2D, MatS2DXMatS2D, Mat3DXMat3D, MatS3DXMatS3D
+   End Interface
 
-  Interface Operator (/)
-     Module Procedure Vect2DQuot, Vect3DQuot, Mat2DQuot, Mat3DQuot, MatS2DQuot, MatS3DQuot, Tens4OS2DQuot, Tens4OS3DQuot
-  End Interface
+   Interface Operator (/)
+      Module Procedure Vect2DQuot, Vect3DQuot, Mat2DQuot, Mat3DQuot, MatS2DQuot, MatS3DQuot, Tens4OS2DQuot, Tens4OS3DQuot
+   End Interface
 
-  Interface Operator (.DotP.)
-     Module Procedure DotP2D, DotP3D, ContP2D, ContP3D, ContP2DS, ContP3DS
-  End Interface
+   Interface Operator (.DotP.)
+      Module Procedure DotP2D, DotP3D, ContP2D, ContP3D, ContP2DS, ContP3DS
+   End Interface
+   
+   Interface Operator (.VectP.)
+      Module Procedure VectP3D
+   End Interface
+   
+   Interface Transpose
+      Module Procedure Transpose2D, Transpose3D
+   End Interface
+   
+   Interface Invert
+      Module Procedure InvertMat2D, InvertMatS2D, InvertMat3D, InvertMatS3D
+   End Interface
 
-  Interface Operator (.VectP.)
-     Module Procedure VectP3D
-  End Interface
+   Interface Operator (.TensP.)
+      Module Procedure TensPVect2D, TensPVect3D, TensPMat2D, TensPMat3D, TensPMatS2D, TensPMatS3D
+   End Interface
+   
+   Interface Operator (.SymP.)
+      Module Procedure SymPVect2D, SymPVect3D, SymPMat2D, SymPMat3D, SymPMatS2D, SymPMatS3D
+   End Interface
+   
+   Interface Trace
+      Module Procedure Trace2D, Trace3D, Trace2DS, Trace3DS
+   End Interface
+   
+   Interface Det
+      Module Procedure DetMat2D, DetMatS2D, DetMat3D, DetMatS3D
+   End Interface
 
-  Interface Transpose
-     Module Procedure Transpose2D, Transpose3D
-  End Interface
-
-  Interface Operator (.TensP.)
-     Module Procedure TensPVect2D, TensPVect3D, TensPMat2D, TensPMat3D, TensPMatS2D, TensPMatS3D
-  End Interface
-
-  Interface Operator (.SymP.)
-     Module Procedure SymPVect2D, SymPVect3D, SymPMat2D, SymPMat3D, SymPMatS2D, SymPMatS3D
-  End Interface
-
-  Interface Trace
-     Module Procedure Trace2D, Trace3D, Trace2DS, Trace3DS
-  End Interface
-
-  Interface ValP
-     Module Procedure ValP2D, ValP2DS
-  End Interface
-
-  Interface Assignment (=)
-     Module Procedure Vect2D_Get_Real, Vect3D_Get_Real,                 &
-            Vect2D_Get_VectR, Vect3D_Get_VectR,                         &
-            Vect2DEQ, Vect3DEQ, Mat2D_Get_Real, Mat3D_Get_Real,         &
-            Mat2DEQ, Mat3DEQ, MatS2D_Get_Real, MatS3D_Get_Real,         &
-            MatS2DEQ, MatS3DEQ, Tens4OS2D_Get_Real, Tens4OS2DEQ,        &
-            Tens4OS3D_Get_Real, Tens4OS3DEQ
-  End Interface
+   Interface ValP
+      Module Procedure ValP2D, ValP2DS
+   End Interface
+   
+   Interface Assignment (=)
+      Module Procedure Vect2D_Get_Real, Vect3D_Get_Real,                 &
+         Vect2D_Get_VectR, Vect3D_Get_VectR,                         &
+         Vect2DEQ, Vect3DEQ, Mat2D_Get_Real, Mat3D_Get_Real,         &
+         Mat2DEQ, Mat3DEQ, MatS2D_Get_Real, MatS3D_Get_Real,         &
+         MatS2DEQ, MatS3DEQ, Tens4OS2D_Get_Real, Tens4OS2DEQ,        &
+         Tens4OS3D_Get_Real, Tens4OS3DEQ
+   End Interface
   
-  Interface Symmetrize
-     Module Procedure Symmetrize2D, Symmetrize3D
-  End Interface
+   Interface Symmetrize
+      Module Procedure Symmetrize2D, Symmetrize3D
+   End Interface
+   
 
 !!$  Type(Vect2D), Parameter       :: e1_2D = (/ 1.0_Kr, 0.0_Kr /)
 !!$  Type(Vect2D), Parameter       :: e2_2D = (/ 0.0_Kr, 1.0_Kr /)
@@ -705,7 +715,57 @@ Contains
                                           + T1%YYZZ * M1%YY          + T1%YZZZ * M1%YZ * 2.0_Kr                                    &
                                                                      + T1%ZZZZ * M1%ZZ 
   End Function Tens4OS3DXMatS3D
-
+  
+   Function Mat2DXMat2D(M1, M2)
+      Type(Mat2D), Intent(IN)                     :: M1, M2
+      Type(Mat2D)                                 :: Mat2DXMat2D
+      
+      Mat2DXMat2D%XX = M1%XX * M2%XX + M1%XY * M2%YX
+      Mat2DXMat2D%XY = M1%XX * M2%XY + M1%XY * M2%YY
+      Mat2DXMat2D%YX = M1%YX * M2%XX + M1%YY * M2%YX
+      Mat2DXMat2D%YY = M1%YX * M2%XY + M1%YY * M2%YY
+   End Function Mat2DXMat2D
+      
+   Function MatS2DXMatS2D(M1, M2)
+      Type(MatS2D), Intent(IN)                    :: M1, M2
+      Type(Mat2D)                                :: MatS2DXMatS2D
+      
+      MatS2DXMatS2D%XX = M1%XX * M2%XX + M1%XY * M2%XY
+      MatS2DXMatS2D%XY = M1%XX * M2%XY + M1%XY * M2%YY
+      MatS2DXMatS2D%YX = M1%XY * M2%XX + M1%YY * M2%XY
+      MatS2DXMatS2D%YY = M1%XY * M2%XY + M1%YY * M2%YY
+   End Function MatS2DXMatS2D
+      
+   Function Mat3DXMat3D(M1, M2)
+      Type(Mat3D), Intent(IN)                     :: M1, M2
+      Type(Mat3D)                                 :: Mat3DXMat3D
+      
+      Mat3DXMat3D%XX = M1%XX * M2%XX + M1%XY * M2%YX + M1%XZ * M2%ZX
+      Mat3DXMat3D%XY = M1%XX * M2%XY + M1%XY * M2%YY + M1%XZ * M2%ZY
+      Mat3DXMat3D%XZ = M1%XX * M2%XZ + M1%XY * M2%YZ + M1%XZ * M2%ZZ 
+      Mat3DXMat3D%YX = M1%YX * M2%XX + M1%YY * M2%YX + M1%YZ * M2%ZX
+      Mat3DXMat3D%YY = M1%YX * M2%XY + M1%YY * M2%YY + M1%YZ * M2%ZY
+      Mat3DXMat3D%YZ = M1%YX * M2%XZ + M1%YY * M2%YZ + M1%YZ * M2%ZZ
+      Mat3DXMat3D%ZX = M1%ZX * M2%XX + M1%ZY * M2%YX + M1%ZZ * M2%ZX
+      Mat3DXMat3D%ZY = M1%ZX * M2%XY + M1%ZY * M2%YY + M1%ZZ * M2%ZY
+      Mat3DXMat3D%ZZ = M1%ZX * M2%XZ + M1%ZY * M2%YZ + M1%ZZ * M2%ZZ
+   End Function Mat3DXMat3D
+   
+   Function MatS3DXMatS3D(M1, M2)
+      Type(MatS3D), Intent(IN)                    :: M1, M2
+      Type(Mat3D)                                 :: MatS3DXMatS3D
+      
+      MatS3DXMatS3D%XX = M1%XX * M2%XX + M1%XY * M2%XY + M1%XZ * M2%XZ
+      MatS3DXMatS3D%XY = M1%XX * M2%XY + M1%XY * M2%YY + M1%XZ * M2%YZ
+      MatS3DXMatS3D%XZ = M1%XX * M2%XZ + M1%XY * M2%YZ + M1%XZ * M2%ZZ 
+      MatS3DXMatS3D%YX = M1%XY * M2%XX + M1%YY * M2%XY + M1%YZ * M2%XZ
+      MatS3DXMatS3D%YY = M1%XY * M2%XY + M1%YY * M2%YY + M1%YZ * M2%YZ
+      MatS3DXMatS3D%YZ = M1%XY * M2%XZ + M1%YY * M2%YZ + M1%YZ * M2%ZZ
+      MatS3DXMatS3D%ZX = M1%XZ * M2%XX + M1%YZ * M2%XY + M1%ZZ * M2%XZ
+      MatS3DXMatS3D%ZY = M1%XZ * M2%XY + M1%YZ * M2%YY + M1%ZZ * M2%YZ
+      MatS3DXMatS3D%ZZ = M1%XZ * M2%XZ + M1%YZ * M2%YZ + M1%ZZ * M2%ZZ
+   End Function MatS3DXMatS3D
+   
   ! Surcharge de l'operateur /
   Function Vect2DQuot(V1,D1)
     PetscReal,       intent(IN)                 :: D1
@@ -1346,8 +1406,8 @@ Contains
        VPTemp%X = 0.0_Kr
        VPTemp%Y = 0.0_Kr
     Else
-       VPTemp%X = (M%XX + M%YY  + SQRT ( Tmp1)) * 0.5_Kr
-       VPTemp%Y = (M%XX + M%YY  - SQRT ( Tmp1)) * 0.5_Kr
+       VPTemp%X = (M%XX + M%YY  + SQRT(Tmp1)) * 0.5_Kr
+       VPTemp%Y = (M%XX + M%YY  - SQRT(Tmp1)) * 0.5_Kr
     EndIf
     ValP2D = VPTemp
   End Function ValP2D
@@ -1359,10 +1419,120 @@ Contains
 
     Tmp1 = (M%XX - M%YY)**2+ 4.0_Kr * M%XY**2
 
-    VPTemp%X = (M%XX + M%YY  + SQRT ( Tmp1)) * 0.5_Kr
-    VPTemp%Y = (M%XX + M%YY  - SQRT ( Tmp1)) * 0.5_Kr
+    VPTemp%X = (M%XX + M%YY  + SQRT(Tmp1)) * 0.5_Kr
+    VPTemp%Y = (M%XX + M%YY  - SQRT(Tmp1)) * 0.5_Kr
 
     ValP2DS= VPTemp
   End Function ValP2DS
+  
+   Function DetMat2D(M)
+      Type(Mat2D), intent(IN)                        :: M
+      PetscReal                                      :: DetMat2D
+      
+      DetMat2D = M%XX * M%YY - M%XY * M%YX
+   End Function DetMat2D
+   
+   Function DetMatS2D(M)
+      Type(MatS2D), intent(IN)                       :: M
+      PetscReal                                      :: DetMatS2D
+      
+      DetMatS2D = M%XX * M%YY - M%XY * M%XY
+   End Function DetMatS2D
+   
+   
+   Function DetMat3D(M)
+      Type(Mat3D), intent(IN)                        :: M
+      PetscReal                                      :: DetMat3D
+      
+      DetMat3D = M%XX * (M%YY * M%ZZ - M%ZY * M%YZ) &
+           - M%YX * (M%XY * M%ZZ - M%ZY * M%XZ) &
+           + M%ZX * (M%XY * M%YZ - M%YY * M%XZ)
+   End Function DetMat3D
+   
+   Function DetMatS3D(M)
+      Type(MatS3D), intent(IN)                       :: M
+      PetscReal                                      :: DetMatS3D
+      
+      DetMatS3D = M%XX * (M%YY * M%ZZ - M%YZ * M%YZ) &
+           - M%XY * (M%XY * M%ZZ - M%YZ * M%XZ) &
+           + M%XZ * (M%XY * M%YZ - M%YY * M%XZ)
+   End Function DetMatS3D
 
+   !!! Make functions and add error checking
+   Function InvertMat2D(M)
+      Type (Mat2D), Intent(IN)                       :: M
+      Type (Mat2D)                                   :: InvertMat2D
+      
+      Type (Mat2D)                                   :: CofMt
+      PetscReal                                      :: DetM
+      
+      DetM = M%XX * M%YY - M%XY * M%YX
+      CofMt%XX =  M%YY
+      CofMt%XY = -M%XY
+      CofMt%YX = -M%YX
+      CofMt%YY =  M%XX
+      
+      InvertMat2D = CofMt / DetM
+   End Function InvertMat2D
+
+   Function InvertMatS2D(M)
+      Type (MatS2D), Intent(IN)                      :: M
+      Type (MatS2D)                                  :: InvertMatS2D
+      
+      Type (MatS2D)                                  :: CofMt
+      PetscReal                                      :: DetM
+      
+      DetM = M%XX * M%YY - M%XY **2
+      CofMt%XX =  M%YY
+      CofMt%XY = -M%XY
+      CofMt%YY =  M%XX
+      
+      InvertMatS2D = CofMt / DetM
+   End Function InvertMatS2D
+
+   Function InvertMat3D(M)
+      Type (Mat3D), Intent(IN)                       :: M
+      Type (Mat3D)                                   :: InvertMat3D
+      
+      Type (Mat3D)                                   :: CofMt
+      PetscReal                                      :: DetM
+      
+      DetM = M%XX * (M%YY * M%ZZ - M%ZY * M%YZ) &
+           - M%YX * (M%XY * M%ZZ - M%ZY * M%XZ) &
+           + M%ZX * (M%XY * M%YZ - M%YY * M%XZ)
+           
+      CofMt%XX =   M%YY * M%ZZ - M%ZY * M%YZ
+      CofMt%YX = -(M%YX * M%ZZ - M%ZX * M%YZ)
+      CofMt%ZX =   M%YX * M%ZY - M%ZX * M%YY
+      CofMt%XY = -(M%XY * M%ZZ - M%ZY * M%XZ)
+      CofMt%YY =   M%XX * M%ZZ - M%ZX * M%XZ
+      CofMt%ZY = -(M%XX * M%ZY - M%ZX * M%XY)
+      CofMt%XZ =   M%XY * M%YZ - M%YY * M%XZ
+      CofMt%YZ = -(M%XX * M%YZ - M%YX * M%XZ)
+      CofMt%ZZ =   M%XX * M%YY - M%YX * M%XY
+       
+      InvertMat3D = CofMt / DetM
+   End Function InvertMat3D
+
+   Function InvertMatS3D(M)
+      Type (MatS3D), Intent(IN)                      :: M
+      Type (MatS3D)                                  :: InvertMatS3D
+      
+      Type (MatS3D)                                  :: CofMt
+      PetscReal                                      :: DetM
+      
+      DetM = M%XX * (M%YY * M%ZZ - M%YZ * M%YZ) &
+           - M%XY * (M%XY * M%ZZ - M%YZ * M%XZ) &
+           + M%XZ * (M%XY * M%YZ - M%YY * M%XZ)
+           
+      CofMt%XX =   M%YY * M%ZZ - M%YZ * M%YZ
+      CofMt%XY = -(M%XY * M%ZZ - M%XZ * M%YZ)
+      CofMt%XZ =   M%XY * M%YZ - M%XZ * M%YY
+      CofMt%YY =   M%XX * M%ZZ - M%XZ * M%XZ
+      CofMt%YZ = -(M%XX * M%YZ - M%XZ * M%XY)
+      CofMt%YZ = -(M%XX * M%YZ - M%XY * M%XZ)
+      CofMt%ZZ =   M%XX * M%YY - M%XY * M%XY
+       
+      InvertMatS3D = CofMt / DetM
+   End Function InvertMatS3D
 End Module m_MEF_LinAlg
