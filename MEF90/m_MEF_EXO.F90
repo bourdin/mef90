@@ -22,6 +22,7 @@ Module m_MEF_EXO
    PetscInt, Public                                  :: exo_ver
 
    
+   Public :: Write_EXO_Case
    Public :: Write_MeshTopology
    Public :: Write_MeshTopologyGlobal
 
@@ -51,6 +52,26 @@ Module m_MEF_EXO
    End Interface Write_EXO_Result_Cell
 
  Contains
+    Subroutine Write_EXO_Case(prefix, formatstring, numprocs)
+      Character(len=*)                               :: prefix, formatstring
+      PetscInt                                       :: numprocs
+      
+      Character(len=MEF90_MXSTRLEN)                  :: casefile
+      
+      casefile = Trim(prefix)//'.e2c'
+      If (MEF90_MyRank == 0) Then
+         Open(unit = F_OUT, File = casefile, status = 'Unknown')
+         Rewind(F_OUT)
+         Write(F_OUT, 100) '#!EXODUS_CASE 1.0'
+         Write(F_OUT, 101) numprocs
+         Write(F_OUT, 102) Trim(prefix), Trim(formatstring)
+         Close(F_OUT)
+      End If
+100 Format(A)
+101 Format('FILES_PER_TIMESET', I)
+102 Format('TIMESET_TEMPLATE "', A, '-', A, '.gen"')
+   End Subroutine Write_EXO_Case
+      
    Subroutine Write_MeshTopology(dMeshTopology, dEXO)
       Type(MeshTopology_Info)                        :: dMeshTopology
       Type(EXO_Info)                                 :: dEXO
