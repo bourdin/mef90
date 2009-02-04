@@ -27,11 +27,11 @@ Module m_SimplePoisson3D
       PetscLogStage               :: MatAssembly_Stage
       PetscLogStage               :: RHSAssembly_Stage
       PetscLogStage               :: KSPSolve_Stage
-      PetscLogStage               :: EnergyEval_Stage
+      PetscLogStage               :: PostProc_Stage
       
       PetscLogEvent               :: MatAssemblyLocal_Event
       PetscLogEvent               :: RHSAssemblyLocal_Event
-      PetscLogEvent               :: EnergyEval_Event
+      PetscLogEvent               :: PostProc_Event
    End Type LogInfo_Type
 
    Type AppParam_Type
@@ -49,6 +49,7 @@ Module m_SimplePoisson3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
 #endif
       Type(SectionReal)                            :: U
+      Type(SectionReal)                            :: GradU
       Type(SectionReal)                            :: F
       PetscReal                                    :: Energy
       Type(VecScatter)                             :: Scatter
@@ -166,8 +167,8 @@ Contains
       AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
       Call EXPVP (AppCtx%MyEXO%exoid, 'g', 1, iErr)
       Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 1, (/'Energy'/), iErr)
-      Call EXPVP (AppCtx%MyEXO%exoid, 'n', 1, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'n', 1, (/'U'/), iErr)
+      Call EXPVP (AppCtx%MyEXO%exoid, 'n', 2, iErr)
+      Call EXPVAN(AppCtx%MyEXO%exoid, 'n', 2, (/'U', 'F'/), iErr)
 #if defined PB_2D
       Call EXPVP (AppCtx%MyEXO%exoid, 'e', 2, iErr)
       Call EXPVAN(AppCtx%MyEXO%exoid, 'e', 2, (/'Grad U_X', 'Grad U_Y'/), iErr)
@@ -184,6 +185,7 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Allocate the Section for U and F
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%U, iErr); CHKERRQ(iErr)
+      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
       
@@ -228,7 +230,7 @@ Contains
       
       Call PetscLogEventRegister('MatAssembly Local', 0, AppCtx%LogInfo%MatAssemblyLocal_Event, ierr); CHKERRQ(ierr)
       Call PetscLogEventRegister('RHSAssembly Local', 0, AppCtx%LogInfo%RHSAssemblyLocal_Event, ierr); CHKERRQ(ierr)
-      Call PetscLogEventRegister('Energy Eval',       0, AppCtx%LogInfo%EnergyEval_Event,       ierr); CHKERRQ(ierr)
+      Call PetscLogEventRegister('Post Processing',   0, AppCtx%LogInfo%PostProc_Event,         ierr); CHKERRQ(ierr)
 
       Call PetscLogStageRegister("IO Stage",          AppCtx%LogInfo%IO_Stage,          iErr)
       Call PetscLogStageRegister("Distribution",      AppCtx%LogInfo%Distribute_Stage,  iErr)
@@ -236,7 +238,7 @@ Contains
       Call PetscLogStageRegister("Mat Assembly",      AppCtx%LogInfo%MatAssembly_Stage, iErr)
       Call PetscLogStageRegister("RHS Assembly",      AppCtx%LogInfo%RHSAssembly_Stage, iErr)
       Call PetscLogStageRegister("KSP Solve",         AppCtx%LogInfo%KSPSolve_Stage,    iErr)
-      Call PetscLogStageRegister("Energy Eval",       AppCtx%LogInfo%EnergyEval_Stage,  iErr)
+      Call PetscLogStageRegister("Post Proc",         AppCtx%LogInfo%PostProc_Stage,  iErr)
    End Subroutine InitLog
    
    Subroutine Solve(AppCtx)
@@ -381,7 +383,7 @@ Contains
          Do iDoF1 = 1, NumDoF
             If (BCFlag(iDoF1) == 0) Then
                RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%BF(iDoF1, iGauss) * TmpRHS
-               Call PetscLogFlops(2 , iErr);CHKERRQ(iErr)
+               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
             End If
          End Do
       End Do
@@ -407,8 +409,8 @@ Contains
       PetscReal                                    :: F_Elem, U_Elem
       PetscReal                                    :: MyEnergy
 
-      Call PetscLogStagePush(AppCtx%LogInfo%EnergyEval_Stage, iErr); CHKERRQ(iErr)
-      Call PetscLogEventBegin(AppCtx%LogInfo%EnergyEval_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
       MyEnergy = 0.0_Kr
       
@@ -431,17 +433,69 @@ Contains
                   Strain_Elem = Strain_Elem + AppCtx%Elem(iE)%Grad_BF(iDoF, iGauss) * U(iDoF)
                   F_Elem = F_Elem + AppCtx%Elem(iE)%BF(iDoF, iGauss) * F(iDoF)
                   U_Elem = U_Elem + AppCtx%Elem(iE)%BF(iDoF, iGauss) * U(iDoF)
-                  Call PetscLogFlops(0, iErr) !!! FIX THAT!
+                  Call PetscLogFlops(4*AppCtx%MeshTopology%Num_Dim+4, iErr)
                End Do
                MyEnergy = MyEnergy + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * U_Elem)
+               Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       Call PetscGlobalSum(MyEnergy, AppCtx%Energy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
                
-      Call PetscLogEventEnd  (AppCtx%LogInfo%EnergyEval_Event, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(AppCtx%LogInfo%EnergyEval_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
+   
+   Subroutine ComputeGradient(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iErr
+#if defined PB_2D
+      Type(Vect2D)                                 :: Grad
+#elif defined PB_3D
+      Type(Vect3D)                                 :: Grad
+#endif
+      PetscReal                                    :: Vol
+      PetscInt                                     :: NumDoF, NumGauss
+      PetscReal, Dimension(:), Pointer             :: U
+      PetscInt                                     :: iBlk, iELoc, iE
+      PetscInt                                     :: iDoF, iGauss
+      PetscReal, Dimension(:), Pointer             :: Grad_Ptr
+
+      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+      Allocate(Grad_Ptr(AppCtx%MeshTopology%Num_Dim))
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
+            NumGauss = Size(AppCtx%Elem(iE)%BF,2)
+            Allocate(U(NumDoF))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
+            Grad = 0.0_Kr
+            Vol  = 0.0_Kr
+            Do iGauss = 1, NumGauss
+               Do iDoF = 1, NumDoF
+                  Grad = Grad + AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%Grad_BF(iDoF, iGauss) * U(iDoF)
+                  Vol = Vol + AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%BF(iDoF, iGauss)
+                  Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
+               End Do
+            End Do
+            Grad = Grad / Vol
+            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
+#if defined PB_2D
+            Grad_Ptr = (/ Grad%X, Grad%Y /)
+#elif defined PB_3D
+            Grad_Ptr = (/ Grad%X, Grad%Y, Grad%Z /)
+#endif
+            Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%GradU, iE-1, Grad_Ptr, iErr)
+         End Do Do_Elem_iE
+      End Do Do_Elem_iBlk
+      DeAllocate(Grad_Ptr)
+      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+   End Subroutine ComputeGradient
+   
    
    Subroutine SimplePoissonFinalize(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
@@ -450,6 +504,7 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: filename
 
       Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(AppCtx%GradU, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
       Call VecScatterDestroy(AppCtx%Scatter, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)

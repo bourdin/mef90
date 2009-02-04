@@ -64,27 +64,27 @@ Program SimplePoisson3D
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    Call Solve(AppCtx)
-   Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-   Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
-   Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Computing energy\n'c
+      Write(IOBuffer, *) 'Computing energy and gradient\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    Call ComputeEnergy(AppCtx)
    Write(IOBuffer, 100) AppCtx%Energy
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call ComputeGradient(AppCtx)
 
 100 Format('Total energy: ', ES12.5, '\n'c)    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Saving U\n'c
+      Write(IOBuffer, *) 'Saving results\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%Energy)
+   Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
+   Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
+   Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-
+   
    Call SimplePoissonFinalize(AppCtx)
 #if defined PB_2D
 End Program  SimplePoisson2D
