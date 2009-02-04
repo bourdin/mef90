@@ -35,7 +35,9 @@ Module m_SimplePoisson3D
    End Type LogInfo_Type
 
    Type AppParam_Type
+      PetscTruth                                   :: Restart
       PetscTruth                                   :: Verbose
+      PetscInt                                     :: TestCase
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
    End Type AppParam_Type
@@ -75,17 +77,20 @@ Contains
       PetscInt                                     :: TmpPoint
       
       Type(SectionReal)                            :: CoordSection
-      PetscReal, Dimension(:), Pointer             :: TmpCoords
+      PetscReal, Dimension(:), Pointer             :: TmpCoords, Value
       PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscInt                                     :: iE, iELoc
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename   
       PetscLogDouble                               :: TS, TF
       Type(Mesh)                                   :: Tmp_Mesh
-
+      Type(Vec)                                    :: F
 
       Call MEF90_Initialize()
-      Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
+      Call PetscOptionsHasName  (PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, iErr); CHKERRQ(iErr)
+      Call PetscOptionsHasName  (PETSC_NULL_CHARACTER, '-restart', AppCtx%AppParam%restart, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',       AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
+      AppCtx%AppParam%TestCase = 1
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-test',       AppCtx%AppParam%TestCase, HasPrefix, iErr); CHKERRQ(iErr)
       
       Call InitLog(AppCtx)
       If (AppCtx%AppParam%verbose) Then
@@ -152,42 +157,14 @@ Contains
       Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
 
-      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      !!! Prepare and format the output mesh
-      !!! 1. Geometry
-      AppCtx%MyEXO%comm = PETSC_COMM_SELF
-      AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
-      Write(AppCtx%MyEXO%filename, 200) trim(AppCtx%AppParam%prefix), MEF90_MyRank
-   200 Format(A, '-', I4.4, '.gen')
-      AppCtx%MyEXO%title = trim(AppCtx%EXO%title)
-      AppCtx%MyEXO%Num_QA = AppCtx%EXO%Num_QA
-      Call Write_MeshTopologyGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
-      
-      !!! 2. Variables
-      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
-      Call EXPVP (AppCtx%MyEXO%exoid, 'g', 1, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 1, (/'Energy'/), iErr)
-      Call EXPVP (AppCtx%MyEXO%exoid, 'n', 2, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'n', 2, (/'U', 'F'/), iErr)
-#if defined PB_2D
-      Call EXPVP (AppCtx%MyEXO%exoid, 'e', 2, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'e', 2, (/'Grad U_X', 'Grad U_Y'/), iErr)
-#elif defined PB_3D
-      Call EXPVP (AppCtx%MyEXO%exoid, 'e', 3, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'e', 3, (/'Grad U_X', 'Grad U_Y', 'Grad U_Z'/), iErr)
-#endif
-      Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
-
-      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
-
-      Call PetscLogStagePop(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-
       Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Allocate the Section for U and F
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%U, iErr); CHKERRQ(iErr)
       Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
+      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHS, iErr); CHKERRQ(iErr)
+
       
       !!! Allocate and initialize the Section for the flag
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
@@ -205,7 +182,6 @@ Contains
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
       !Max DoF per point is 1 (Should it be 3?)
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHS, iErr); CHKERRQ(iErr)
       
       !!! Create the KSP and PCs
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSP, iErr); CHKERRQ(iErr)
@@ -220,9 +196,69 @@ Contains
       Call KSPSetFromOptions(AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       
-      !!! Create the EXO cae file
+      !!! Read Force and BC from Data file or reformat it
+      AppCtx%MyEXO%comm = PETSC_COMM_SELF
+      AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
+      Write(AppCtx%MyEXO%filename, 200) trim(AppCtx%AppParam%prefix), MEF90_MyRank
+   200 Format(A, '-', I4.4, '.gen')
+      AppCtx%MyEXO%title = trim(AppCtx%EXO%title)
+      AppCtx%MyEXO%Num_QA = AppCtx%EXO%Num_QA
+      If (AppCtx%AppParam%Restart) Then
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
+      Else
+         !!! Prepare and format the output mesh   
+         Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+         Call Write_MeshTopologyGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
+         Call EXOFormat_SimplePoisson(AppCtx)
+         Call PetscLogStagePop(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+         
+         Select Case (AppCtx%AppParam%TestCase)
+         Case(1)
+            !!! U = 0, F=1
+            Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
+            Call SectionRealSet(AppCtx%U, 0.0_Kr, iErr); CHKERRQ(iErr);
+         Case(2)
+            Print*, 'Test2'
+            !!! Test of non homogeneous Dirichlet BC
+            Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
+            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            
+            Allocate(Value(1))
+            Do iDoF = 1, Size(Coords,1)
+               Value = (Coords(iDoF,1) - 0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
+               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, iErr); CHKERRQ(iErr)
+            End Do
+            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            DeAllocate(Value)
+         End Select            
+      End If
+
+      
+      !!! Create the EXO case file
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
    End Subroutine SimplePoissonInit
+   
+   Subroutine EXOFormat_SimplePoisson(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
+   
+      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
+      Call EXPVP (AppCtx%MyEXO%exoid, 'g', 1, iErr)
+      Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 1, (/'Energy'/), iErr)
+      Call EXPVP (AppCtx%MyEXO%exoid, 'n', 2, iErr)
+      Call EXPVAN(AppCtx%MyEXO%exoid, 'n', 2, (/'U', 'F'/), iErr)
+#if defined PB_2D
+      Call EXPVP (AppCtx%MyEXO%exoid, 'e', 2, iErr)
+      Call EXPVAN(AppCtx%MyEXO%exoid, 'e', 2, (/'Grad U_X', 'Grad U_Y'/), iErr)
+#elif defined PB_3D
+      Call EXPVP (AppCtx%MyEXO%exoid, 'e', 3, iErr)
+      Call EXPVAN(AppCtx%MyEXO%exoid, 'e', 3, (/'Grad U_X', 'Grad U_Y', 'Grad U_Z'/), iErr)
+#endif
+      Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
+
+      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+   End Subroutine EXOFormat_SimplePoisson
    
    Subroutine InitLog(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
@@ -248,12 +284,15 @@ Contains
       KSPConvergedReason                           :: reason
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+      Type(Vec)                                    :: U_Vec
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
-      Call KSPSolve(AppCtx%KSP, AppCtx%RHS, AppCtx%RHS, iErr); CHKERRQ(iErr)
+      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, U_Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_FORWARD, U_Vec, ierr); CHKERRQ(ierr)
+      Call KSPSolve(AppCtx%KSP, AppCtx%RHS, U_Vec, iErr); CHKERRQ(iErr)
       !!! Solve and store the solution in AppCtx%RHS
       
-      Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%RHS, ierr); CHKERRQ(ierr)
+      Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_REVERSE, U_Vec, ierr); CHKERRQ(ierr)
       !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%U
       
       Call KSPGetIterationNumber(AppCtx%KSP, KSPNumIter, iErr); CHKERRQ(iErr)
@@ -261,6 +300,7 @@ Contains
       Write(IOBuffer, 100) KSPNumIter, reason
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
+      Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop (AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
 100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n'c)
    End Subroutine Solve
@@ -340,7 +380,7 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call RHSAssemblyLocal(iE, AppCtx, RHSElem)
-            Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr)
+            Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(RHSElem)
       End Do Do_Elem_iBlk
