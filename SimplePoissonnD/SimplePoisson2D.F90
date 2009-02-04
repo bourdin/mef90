@@ -29,7 +29,6 @@ Program SimplePoisson3D
 
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
-   Type(Vec)                                    :: F
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    Type(Vec)                                    :: V
 
@@ -53,31 +52,33 @@ Program SimplePoisson3D
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call SectionRealCreateLocalVector(AppCtx%F, F, iErr); CHKERRQ(iErr)
-   Call VecSet(F, 1.0_Kr, iErr); CHKERRQ(iErr);
-   Call VecDestroy(F, iErr); CHKERRQ(iErr)
-   
    Call RHSAssembly(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Calling KSPSolve\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
+   
    Call Solve(AppCtx)
+   
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Computing energy and gradient\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
+   
    Call ComputeEnergy(AppCtx)
+
    Write(IOBuffer, 100) AppCtx%Energy
+100 Format('Total energy: ', ES12.5, '\n'c)    
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
    Call ComputeGradient(AppCtx)
 
-100 Format('Total energy: ', ES12.5, '\n'c)    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Saving results\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
+
    Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%Energy)
    Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
