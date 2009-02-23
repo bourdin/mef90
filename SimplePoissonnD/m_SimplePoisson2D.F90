@@ -112,20 +112,25 @@ Contains
 104 Format('Collective output redirected to file ', A, '\n'c)
 
 
-      !!! Read and partition the mesh
-      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      AppCtx%EXO%Comm = PETSC_COMM_WORLD
-      AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
 
       
-      Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      !!! reads exo file, stores all information in a Mesh
-      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-
-      Call PetscLogStagePush(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
-      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-      Call PetscLogStagePop(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
+      AppCtx%EXO%Comm = PETSC_COMM_WORLD
+      AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
+      !!! Read and partition the mesh
+      If (MEF90_NumProcs == 1) Then
+         Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+         Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+         Call PetscLogStagePop(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+      Else
+         Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+         Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call PetscLogStagePop(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+         
+         Call PetscLogStagePush(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
+         Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+         Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call PetscLogStagePop(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
+      End If
 
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
          
@@ -215,21 +220,62 @@ Contains
          
          Select Case (AppCtx%AppParam%TestCase)
          Case(1)
+            If (AppCtx%AppParam%verbose) Then
+               Write(IOBuffer, *) 'Reading U and F from the mesh\n'c
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
             !!! U = 0, F=1
             Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
             Call SectionRealSet(AppCtx%U, 0.0_Kr, iErr); CHKERRQ(iErr);
          Case(2)
-            Print*, 'Test2'
+            If (AppCtx%AppParam%verbose) Then
+               Write(IOBuffer, *) 'Solving Test Case 2\n'c
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
+
             !!! Test of non homogeneous Dirichlet BC
             Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
             Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             
             Allocate(Value(1))
             Do iDoF = 1, Size(Coords,1)
-               Value = (Coords(iDoF,1) - 0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
+#if defined PB_2D
+               Value = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2
+#elif defined PB_3D
+               Value = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
+#endif
                Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, iErr); CHKERRQ(iErr)
             End Do
+            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            DeAllocate(Value)
+         Case(3)
+            If (AppCtx%AppParam%verbose) Then
+               Write(IOBuffer, *) 'Solving Test Case 3\n'c
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
+
+            !!! Test of non homogeneous Dirichlet BC
+            Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
             Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            
+            Allocate(Value(1))
+            Do iDoF = 1, Size(Coords,1)
+#if defined PB_2D
+               If ( Coords(iDoF,1) * Coords(iDoF,2) < 0.0_Kr ) Then
+                  Value = -1.0_Kr
+               Else
+                  Value = 1.0_Kr
+               End If
+#elif defined PB_3D
+               If ( Coords(iDoF,1) * Coords(iDoF,2) * Coords(iDoF,3) < 0.0_Kr ) Then
+                  Value = -1.0_Kr
+               Else
+                  Value = 1.0_Kr
+               End If
+#endif
+               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%F, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, iErr); CHKERRQ(iErr)
+            End Do
+            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             DeAllocate(Value)
          End Select            
       End If

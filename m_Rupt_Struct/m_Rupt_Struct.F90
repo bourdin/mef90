@@ -1,60 +1,76 @@
 Module m_Rupt_Struct
+
+#include "finclude/petscdef.h"
+
    Use m_MEF90
+   Use petsc
+
    Implicit NONE
    Private
 
-#include "include/finclude/petsc.h"
-
-   Public :: Read_Rupt_EXO_Params
-   Public :: Write_Rupt_EXO_Params
-   Public :: Read_Rupt_DATA
-   Public :: Write_Rupt_DATA
-      
-   Public :: Rupt_Params2D
-   Public :: Rupt_Params3D
+!!!   Public :: Read_Rupt_EXO_Params
+!!!   Public :: Write_Rupt_EXO_Params
+!!!   Public :: Read_Rupt_DATA
+!!!   Public :: Write_Rupt_DATA
+!!!      
+!!!   Public :: Rupt_Params2D
+!!!   Public :: Rupt_Params3D
    
    Public :: GenHL_Iso3D_Enu
    Public :: GenHL_Iso2D_EnuPlaneStress
    Public :: GenHL_Iso2D_EnuPlaneStrain
    Public :: GenHL_Ortho2D_LambdaMu
+   
+   Interface MatPropWrite
+      Module Procedure MatProp2DWrite, MatProp3DWrite
+   End Interface
   
-   Interface Read_Rupt_EXO_Params
-      Module Procedure Read_Rupt_EXO_Params2D, Read_Rupt_EXO_Params3D
+   Interface MatPropRead
+      Module Procedure MatProp2DRead, MatProp3DRead
    End Interface
    
-   Interface Write_Rupt_EXO_Params
-      Module Procedure Write_Rupt_EXO_Params2D, Write_Rupt_EXO_Params3D
-   End Interface
-   
-   Interface Read_Rupt_DATA
-      Module Procedure Read_Rupt_DATA2D, Read_Rupt_DATA3D
-   End Interface
-   
-   Interface Write_Rupt_DATA
-      Module Procedure Write_Rupt_DATA2D, Write_Rupt_DATA3D
-   End Interface
+!   Interface Read_Rupt_EXO_Params
+!      Module Procedure Read_Rupt_EXO_Params2D, Read_Rupt_EXO_Params3D
+!   End Interface
+!   
+!   Interface Write_Rupt_EXO_Params
+!      Module Procedure Write_Rupt_EXO_Params2D, Write_Rupt_EXO_Params3D
+!   End Interface
+!   
+!   Interface Read_Rupt_DATA
+!      Module Procedure Read_Rupt_DATA2D, Read_Rupt_DATA3D
+!   End Interface
+!   
+!   Interface Write_Rupt_DATA
+!      Module Procedure Write_Rupt_DATA2D, Write_Rupt_DATA3D
+!   End Interface
    
    Interface GenHL_Iso_LambdaMu
       Module Procedure GenHL_Iso2D_LambdaMu, GenHL_Iso3D_LambdaMu
    End Interface
 
-   Integer, Parameter, Public                      :: Init_V_PREV = 0
-   Integer, Parameter, Public                      :: Init_V_ONE = 1
-   Integer, Parameter, Public                      :: Init_V_RND = 2
-   Integer, Parameter, Public                      :: Init_V_SPH = 3
-   
-   Integer, Parameter, Public                      :: Init_U_PREV = 0
-   Integer, Parameter, Public                      :: Init_U_ZERO = 1
-   
    Integer, Parameter, Public                      :: BC_Type_NONE = 0
    Integer, Parameter, Public                      :: BC_Type_DIRI = 1
    
+
+!!! Add Side Set properties
+!!! Add BC to EB and SS
    Integer, Parameter                              :: Num_Prop_EB  = 3
-   Character(len=MXSTLN), Dimension(3), Parameter  :: Prop_Name_EB =          &
-       &     (/ 'Is_Brittle',                                                 &
-       &        'Is_Domain ',                                                 &
-       &        'Has_Force ' /)
+   Character(len=MXSTLN), Dimension(6), Parameter  :: Prop_Name_EB =          &
+       &     (/ 'Is_Brittle    ',                                             &
+       &        'Is_Domain     ',                                             &
+       &        'Has_BodyForce ',                                             &
+       &        'BC_Type_X ',                                                 &
+       &        'BC_Type_Y ',                                                 &
+       &        'BC_Type_Z ' /) 
    
+   Integer, Parameter                              :: Num_Prop_SS  = 3
+   Character(len=MXSTLN), Dimension(4), Parameter  :: Prop_Name_SS =          &
+       &     (/ 'Has_SurfForce ',                                             &
+       &        'BC_Type_X ',                                                 &
+       &        'BC_Type_Y ',                                                 &
+       &        'BC_Type_Z ' /) 
+
    Integer, Parameter                              :: Num_Prop_NS  = 3
    Character(len=MXSTLN), Dimension(3), Parameter  :: Prop_Name_NS =          &
        &     (/ 'BC_Type_X ',                                                 &
@@ -95,10 +111,61 @@ Module m_Rupt_Struct
       &         'Stress YZ',                                                  &
       &         'Stress ZX' /)
 
+   Type MatProp2D_Type
+      PetscReal, Dimension(:), Pointer             :: Toughness
+      Type(Tens4OS2D), Dimension(:), Pointer       :: Hookes_Law
+      PetscReal, Dimension(:), Pointer             :: Therm_Exp      
+   End Type MatProp2D_Type
+   
+   Type MatProp3D_Type
+      PetscReal, Dimension(:), Pointer             :: Toughness
+      Type(Tens4OS3D), Dimension(:), Pointer       :: Hookes_Law
+      PetscReal, Dimension(:), Pointer             :: Therm_Exp      
+   End Type MatProp3D_Type
+   
+   Type SchemeParam_Type
+      PetscInt                                     :: Do_Irrev
+      PetscReal                                    :: IrrevTol
+      
+      Logical                                      :: Do_BackTrack
+      PetscReal                                    :: BTTol
+      PetscInt                                     :: BTInterval
+      
+      PetscInt                                     :: Init_U
+      
+      PetscInt                                     :: Init_V
+      PetscInt                                     :: nbCracks
+      PetscReal                                    :: MaxCrackLength     
+      
+      PetscInt                                     :: RelaxMaxIter
+      PetscReal                                    :: RelaxTol
+
+      PetscReal                                    :: KSPUrtol
+      PetscReal                                    :: KSPVrtol
+      
+      PetscInt                                     :: SaveInt
+      
+      PetscReal                                    :: Epsilon
+      PetscReal                                    :: KEpsilon
+
+       PetscInt                                     :: ATNum
+   End Type SchemeParam_Type
+   
+   PetscInt, Parameter, Public                     :: Init_V_PREV = 0
+   PetscInt, Parameter, Public                     :: Init_V_ONE = 1
+   PetscInt, Parameter, Public                     :: Init_V_RND = 2
+   PetscInt, Parameter, Public                     :: Init_V_SPH = 3
+   
+   PetscInt, Parameter, Public                     :: Init_U_PREV = 0
+   PetscInt, Parameter, Public                     :: Init_U_ZERO = 1
+   
+   PetscInt, Parameter, Public                     :: Irrev_Eq = 0
+   PetscInt, Parameter, Public                     :: Irrev_Ineq = 1
+   
    Type Rupt_Params2D
       !!! STORED IN THE EXODUS DB
       ! GLOBAL PROPERTIES
-          
+      !!! REMOVE    
       Character(len = MXLNLN)                      :: Sim_Str
       Character(len = MXLNLN)                      :: PARAM_Str
       Character(len = MXLNLN)                      :: CST_Str
@@ -108,48 +175,19 @@ Module m_Rupt_Struct
       Logical, Dimension(:), Pointer               :: Is_Domain
       Logical, Dimension(:), Pointer               :: Has_Force
       
-      ! NODE SETS PROPERTIES
+      ! NODE SETS PROPERTIES 
+      !!! Remove and add a BCFlag for U and V of type SectionInt
       Integer, Dimension(:), Pointer               :: BC_Type_X
       Integer, Dimension(:), Pointer               :: BC_Type_Y
       Integer, Dimension(:), Pointer               :: BC_Type_Z
       
       ! GLOBAL PARAMETERS (STORED AS RESULTS)
+      ! Move into AppCtx (?)
       Real(Kind = Kr), Dimension(:), Pointer       :: Load
       
       ! Analysis time 
+      ! Move into AppCtx (?)
       Real(Kind = Kr), Dimension(:), Pointer       :: Time
-      
-      ! ELEMENT PARAMETERS (STORED AS RESULTS)
-      
-      ! NODES PROPERTIES (STORES AS RESULTS)
-      
-      !!! STORED IN THE PARAM FILE
-      ! GLOBAL DATAS
-      ! The following parameter are NOT STORED in the Exodus db
-      Logical                                      :: Do_Irrev
-      
-      Logical                                      :: Do_BackTrack
-      Real(Kind = Kr)                              :: Tol_Ener
-               
-      Integer                                      :: Init_U
-      
-      Integer                                      :: Init_V
-      Integer                                      :: nbCracks
-      Real(Kind = Kr)                              :: MaxCrackLength     
-      
-      Integer                                      :: MaxIterRelax
-      Real(Kind = Kr)                              :: TolRelax
-      Real(Kind = Kr)                              :: TolKSP
-      
-      Real(Kind = Kr)                              :: Epsilon
-      Real(Kind = Kr)                              :: KEpsilon
-      Real(Kind = Kr)                              :: TolIrrev
-      
-      !!! STORED IN THE CST FILE
-      ! ELEMENT BLOCKS PARAMETERS
-      Real(Kind = Kr), Dimension(:), Pointer       :: Toughness
-      Type(Tens4OS2D), Dimension(:), Pointer       :: Hookes_Law
-      Real(Kind = Kr), Dimension(:), Pointer       :: Therm_Exp
    End Type Rupt_Params2D
 
    Type Rupt_Params3D
@@ -175,604 +213,694 @@ Module m_Rupt_Struct
       
       ! Analysis time 
       Real(Kind = Kr), Dimension(:), Pointer       :: Time
-
-      ! ELEMENT PARAMETERS (STORED AS RESULTS)
-      
-      ! NODES PROPERTIES (STORES AS RESULTS)
-      
-      !!! STORED IN THE PARAM FILE
-      ! GLOBAL DATAS
-      ! The following parameter are NOT STORED in the Exodus db
-      Logical                                      :: Do_Irrev
-      
-      Logical                                      :: Do_BackTrack
-      Real(Kind = Kr)                              :: Tol_Ener
-               
-      Integer                                      :: Init_U
-      
-      Integer                                      :: Init_V
-      Integer                                      :: nbCracks
-      Real(Kind = Kr)                              :: MaxCrackLength     
-      
-      Integer                                      :: MaxIterRelax
-      Real(Kind = Kr)                              :: TolRelax
-      Real(Kind = Kr)                              :: TolKSP
-      
-      Real(Kind = Kr)                              :: Epsilon
-      Real(Kind = Kr)                              :: KEpsilon
-      Real(Kind = Kr)                              :: TolIrrev
-      
-      !!! STORED IN THE CST FILE
-      ! ELEMENT BLOCKS PARAMETERS
-      Real(Kind = Kr), Dimension(:), Pointer       :: Toughness
-      Type(Tens4OS3D), Dimension(:), Pointer       :: Hookes_Law
-      Real(Kind = Kr), Dimension(:), Pointer       :: Therm_Exp
    End Type Rupt_Params3D
 
  Contains
-   Subroutine Read_Rupt_EXO_Params2D(Geom, Params)
-      Type (EXO_Geom_Info)                          :: Geom
-      Type (Rupt_Params2D)                          :: Params
+   Subroutine MatProp2DWrite(MeshTopology, MatProp, filename)
+      Type(MeshTopology_Info)                      :: MeshTopology
+      Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
+      Character(len=*)                             :: filename
+      PetscMPIInt                                  :: rank
+      PetscInt                                     :: iBlk, Blk_ID, iErr
       
-      Character(len=MXSTLN), Dimension(:,:), Pointer:: Tmp_QA
-      Integer                                       :: MyRank, iErr
-      Integer                                       :: iTs, iS, iBlk, iSet
-      Integer                                       :: Num_TS
-      Integer                                       :: exo_ver
-      
-      Real(Kind = Kr)                               :: fDum
-      Character                                     :: cDum
-      Integer                                       :: Tmp_EB_Prop
-      Real(Kind = Kr)                               :: Time
-      
-      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
-
-      Allocate(Params%Is_Brittle(Geom%Num_Elem_Blks))
-      Allocate(Params%Is_Domain(Geom%Num_Elem_Blks))
-      Allocate(Params%Has_Force(Geom%Num_Elem_Blks))
-      Allocate(Params%BC_Type_X(Geom%Num_Node_Sets))
-      ! Analysis time 
-      Allocate(Params%BC_Type_Y(Geom%Num_Node_Sets))
-      Allocate(Params%BC_Type_Z(Geom%Num_Node_Sets))
-      
-      If (MyRank == 0) Then
-         Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
-         Do iBlk = 1, Geom%Num_Elem_Blks
-            ! Object Properties
-            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(1), Tmp_EB_Prop, iErr)
-            Params%Is_Brittle(iBlk) = Tmp_EB_Prop
-            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(2), Tmp_EB_Prop, iErr)
-            Params%Is_Domain(iBlk) = Tmp_EB_Prop
-            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(3), Tmp_EB_Prop, iErr)
-            Params%Has_Force(iBlk) = Tmp_EB_Prop
-         End Do    
-         
-         Do iSet = 1, Geom%Num_Node_Sets
-            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(1), Params%BC_Type_X(iSet), iErr)
-            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(2), Params%BC_Type_Y(iSet), iErr)
-            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(3), Params%BC_Type_Z(iSet), iErr)   
-         End Do
-         
-         ! Time Step
-         ! Time has to be monotonically increasing, so we store the number 
-         ! of the time step instead, and store the displacement factor or the 
-         ! temperature as a global result
-         Call EXINQ (Geom%exoid, EXTIMS, Num_TS, fDum, cDum, iErr)    
-         
-         Call EXCLOS(Geom%exoid, iErr)
-         Geom%exoid = 0
-         
-         Allocate (Params%Load(Num_TS))
-         Allocate (Params%Time(Num_TS))
-         Do iTS = 1, Num_TS
-            Call Read_EXO_Result_Global(Geom, 4, iTS, Params%Load(iTS))
-            Call Read_EXO_Result_Global(Geom, 5, iTS, Params%Time(iTS))
-         End Do
-      End If
-
-      Call MPI_Bcast(Num_TS, 1, MPI_INTEGER, 0, Geom%Comm, iErr)
-      If (MyRank /= 0) Then
-         Allocate(Params%Load(Num_TS))
-         Allocate(Params%Time(Num_TS))
-      End If
-      Call MPI_Bcast(Params%Is_Brittle, Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Is_Domain,  Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Has_Force,  Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%BC_Type_X,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%BC_Type_Y,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%BC_Type_Z,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Load,       Num_TS,             MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Time,       Num_TS,             MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-   End Subroutine Read_Rupt_EXO_Params2D
-
-   Subroutine Read_Rupt_EXO_Params3D(Geom, Params)
-      Type (EXO_Geom_Info)                          :: Geom
-      Type (Rupt_Params3D)                          :: Params
-      
-      Character(len=MXSTLN), Dimension(:,:), Pointer:: Tmp_QA
-      Integer                                       :: MyRank, iErr
-      Integer                                       :: iTs, iS, iBlk, iSet
-      Integer                                       :: Num_TS
-      Integer                                       :: exo_ver
-      
-      Real(Kind = Kr)                               :: fDum
-      Character                                     :: cDum
-      Integer                                       :: Tmp_EB_Prop
-      
-      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
-
-      Allocate(Params%Is_Brittle(Geom%Num_Elem_Blks))
-      Allocate(Params%Is_Domain(Geom%Num_Elem_Blks))
-      Allocate(Params%Has_Force(Geom%Num_Elem_Blks))
-      Allocate(Params%BC_Type_X(Geom%Num_Node_Sets))
-      Allocate(Params%BC_Type_Y(Geom%Num_Node_Sets))
-      Allocate(Params%BC_Type_Z(Geom%Num_Node_Sets))
-      
-      If (MyRank == 0) Then
-         Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
-         Do iBlk = 1, Geom%Num_Elem_Blks
-            ! Object Properties
-            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(1), Tmp_EB_Prop, iErr)
-            Params%Is_Brittle(iBlk) = Tmp_EB_Prop
-            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(2), Tmp_EB_Prop, iErr)
-            Params%Is_Domain(iBlk) = Tmp_EB_Prop
-            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(3), Tmp_EB_Prop, iErr)
-            Params%Has_Force(iBlk) = Tmp_EB_Prop
-         End Do    
-         
-         Do iSet = 1, Geom%Num_Node_Sets
-            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(1), Params%BC_Type_X(iSet), iErr)
-            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(2), Params%BC_Type_Y(iSet), iErr)
-            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(3), Params%BC_Type_Z(iSet), iErr)   
-         End Do
-         
-         ! Time Step
-         ! Time has to be monotonically increasing, so we store the number 
-         ! of the time step instead, and store the displacement factor or the 
-         ! temperature as a global result
-         Call EXINQ (Geom%exoid, EXTIMS, Num_TS, fDum, cDum, iErr)    
-         
-         Call EXCLOS(Geom%exoid, iErr)
-         Geom%exoid = 0
-         
-         Allocate (Params%Load(Num_TS))
-         Allocate (Params%Time(Num_TS))
-         Do iTS = 1, Num_TS
-            Call Read_EXO_Result_Global(Geom, 4, iTS, Params%Load(iTS))
-            Call Read_EXO_Result_Global(Geom, 5, iTS, Params%Time(iTS))
-         End Do
-      End If
-
-      Call MPI_Bcast(Num_TS, 1, MPI_INTEGER, 0, Geom%Comm, iErr)
-      If (MyRank /= 0) Then
-         Allocate(Params%Load(Num_TS))
-         Allocate(Params%Time(Num_TS))
-      End If
-      Call MPI_Bcast(Params%Is_Brittle, Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Is_Domain,  Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Has_Force,  Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%BC_Type_X,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%BC_Type_Y,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%BC_Type_Z,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Load,       Num_TS,             MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Time,       Num_TS,             MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-   End Subroutine Read_Rupt_EXO_Params3D
-
-   Subroutine Write_Rupt_EXO_Params2D(Geom, Params)
-      Type (EXO_Geom_Info)                          :: Geom
-      Type (Rupt_Params2D)                          :: Params
-      
-      Character(len=MXSTLN), Dimension(:,:), Pointer:: Tmp_QA
-      Integer                                       :: iErr
-      Integer                                       :: iTs, iS
-      Integer                                       :: Num_TS
-      Integer                                       :: exo_ver
-      
-      Integer, Dimension(:), Pointer                :: Tmp_EB_Prop
-      Integer                                       :: MyRank
-!      PetscScalar                                   :: Junk
-      
-      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
-      If (MyRank /= 0) Then 
-         RETURN
-      End If
-      
-      Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
-      ! Object Properties
-      Call EXPPN(Geom%exoid, EXEBLK, Num_Prop_EB, Prop_Name_EB, iErr)
-      Call EXPPN(Geom%exoid, EXNSET, Num_Prop_NS, Prop_Name_NS, iErr)
-      
-      Allocate (Tmp_EB_Prop(Geom%Num_Elem_Blks))
-      Tmp_EB_Prop = Params%Is_Brittle
-      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(1), Tmp_EB_Prop, iErr)
-      
-      Tmp_EB_Prop = Params%Is_Domain
-      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(2), Tmp_EB_Prop, iErr)
-      
-      Tmp_EB_Prop = Params%Has_Force
-      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(3), Tmp_EB_Prop, iErr)
-      DeAllocate (Tmp_EB_Prop)
-      
-      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(1), Params%BC_Type_X, iErr)
-      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(2), Params%BC_Type_Y, iErr)
-      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(3), Params%BC_Type_Z, iErr)
-      
-      !Result and initial values names
-      Call EXPVP (Geom%exoid, 'g', Num_Res_G, iErr)
-      Call EXPVAN (Geom%exoid, 'g', Num_Res_G, Res_Name_G, iErr)
-      
-      Call EXPVP (Geom%exoid, 'e', Num_Res_E, iErr)
-      Call EXPVAN (Geom%exoid, 'e', Num_Res_E, Res_Name_E, iErr)
-      
-      Call EXPVP (Geom%exoid, 'n', Num_Res_N, iErr)
-      Call EXPVAN (Geom%exoid, 'n', Num_Res_N, Res_Name_N, iErr)
-      
-      Do iTS = 1, Size(Params%Load)
-         Call EXPGV (Geom%exoid, iTS, 5, (/ 0.0_Kr, 0.0_Kr, 0.0_Kr, Params%Load(iTS), Params%Time(iTS)/), iErr)
-      End Do
-
-!!!      Geom%Num_QA = Geom%Num_QA+1
-!!!      Allocate (Tmp_QA(4, Geom%Num_QA))
-!!!      Tmp_QA(:,1:Geom%Num_QA-1) = Geom%QA_rec
-!!!      DeAllocate (Geom%QA_Rec)
-!!!      Allocate (Geom%QA_Rec(4, Geom%Num_QA))
-!!!      Geom%QA_rec = Tmp_QA
-!!!      DeAllocate (Tmp_QA)
-!!!      
-!!!      Geom%QA_Rec(1,Geom%Num_QA) = 'm_Rupt-Struct'
-!!!      Geom%QA_Rec(2,Geom%Num_QA) = ''
-!!!      Call Date_And_Time(date = Geom%QA_Rec(3,Geom%Num_QA))
-!!!      Call Date_And_Time(time = Geom%QA_Rec(4,Geom%Num_QA))
-!!!      Call EXPQA(Geom%exoid, Geom%num_QA, Geom%QA_Rec, iErr)
-      
-      Call EXCLOS(Geom%exoid, iErr)
-      Geom%exoid = 0
-   End Subroutine Write_Rupt_EXO_Params2D
-  
-   Subroutine Write_Rupt_EXO_Params3D(Geom, Params)
-      Type (EXO_Geom_Info)                          :: Geom
-      Type (Rupt_Params3D)                          :: Params
-      
-      Character(len=MXSTLN), Dimension(:,:), Pointer:: Tmp_QA
-      Integer                                       :: iErr
-      Integer                                       :: iTs, iS
-      Integer                                       :: Num_TS
-      Integer                                       :: exo_ver
-      
-      Integer, Dimension(:), Pointer                :: Tmp_EB_Prop
-      Integer                                       :: MyRank
-      
-      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
-      If (MyRank /= 0) Then 
-         RETURN
-      End If
-      
-      Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
-      ! Object Properties
-      Call EXPPN(Geom%exoid, EXEBLK, Num_Prop_EB, Prop_Name_EB, iErr)
-      Call EXPPN(Geom%exoid, EXNSET, Num_Prop_NS, Prop_Name_NS, iErr)
-      
-      Allocate (Tmp_EB_Prop(Geom%Num_Elem_Blks))
-      Tmp_EB_Prop = Params%Is_Brittle
-      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(1), Tmp_EB_Prop, iErr)
-      Tmp_EB_Prop = Params%Is_Domain
-      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(2), Tmp_EB_Prop, iErr)
-      Tmp_EB_Prop = Params%Has_Force
-      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(3), Tmp_EB_Prop, iErr)
-      DeAllocate (Tmp_EB_Prop)
-      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(1), Params%BC_Type_X, iErr)
-      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(2), Params%BC_Type_Y, iErr)
-      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(3), Params%BC_Type_Z, iErr)
-      
-      !Result and initial values names
-      Call EXPVP (Geom%exoid, 'g', Num_Res_G, iErr)
-      Call EXPVAN (Geom%exoid, 'g', Num_Res_G, Res_Name_G, iErr)
-      
-      Call EXPVP (Geom%exoid, 'e', Num_Res_E, iErr)
-      Call EXPVAN (Geom%exoid, 'e', Num_Res_E, Res_Name_E, iErr)
-      
-      Call EXPVP (Geom%exoid, 'n', Num_Res_N, iErr)
-      Call EXPVAN (Geom%exoid, 'n', Num_Res_N, Res_Name_N, iErr)
-      
-      Do iTS = 1, Size(Params%Load)
-         Call EXPGV (Geom%exoid, iTS, 5, (/ 0.0_Kr, 0.0_Kr, 0.0_Kr, Params%Load(iTS), Params%Time(iTS)/), iErr)
-      End Do
-
-      Call EXCLOS(Geom%exoid, iErr)
-      Geom%exoid = 0
-   End Subroutine Write_Rupt_EXO_Params3D
-   
-   Subroutine Write_Rupt_DATA2D(Geom, Params)
-      Type (EXO_Geom_Info)                          :: Geom
-      Type (Rupt_Params2D)                          :: Params
-      
-      Integer                                       :: iBlk, Blk_ID
-      Integer                                       :: MyRank, iErr
-      
-      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
-      If (MyRank /= 0) Then 
-         RETURN
-      End If
-      
-      Open(File = Params%PARAM_Str, Unit = F_OUT, Status = 'Unknown')
+      Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
-      
-      Write(F_OUT, 101) Params%Do_Irrev,     'Do_Irrev [T/F]'
-      If (Params%Do_BackTrack) Then
-         Write(F_OUT, 103) Params%Do_BackTrack, Params%Tol_Ener , 'Do_BackTrack [T/F] &&  Tol_Ener '
-      Else
-         Write(F_OUT, 101) Params%Do_BackTrack,      'Do_BackTrack[T/F]'
-      End If    
-      Write(F_OUT, 100) Params%Init_U, 'Init_U   [0=PREV 1=0]'
-      If (Params%Init_V==2) Then
-         Write(F_OUT, 105) Params%Init_V, Params%nbCracks, Params%MaxCrackLength, 'Init_V   [0=PREV 1=1, 2=RND]  ' // 'nbCracks MaxCrackLength'    
-      Else    
-         Write(F_OUT, 100) Params%Init_V,       'Init_V   [0=PREV 1=1, 2=RND]'
-      End If  
-      Write(F_OUT, 100) Params%MaxIterRelax, 'MaxIterRelax'
-      Write(F_OUT, 102) Params%TolRelax,     'TolRelax'
-      Write(F_OUT, 102) Params%TolKSP,       'TolKSP'
-      Write(F_OUT, 102) Params%Epsilon,      'Epsilon'
-      Write(F_OUT, 102) Params%KEpsilon,     'KEpsilon'
-      Write(F_OUT, 102) Params%TolIrrev,     'TolIrrev'
+      Write(F_OUT, 110) MeshTopology%Num_Elem_Blks
+      Do iBlk = 1, Size(MatProp)
+         Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
+         Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
+      End Do
       Close(F_OUT)
       
-      Open(File = Params%CST_Str, Unit = F_OUT, Status = 'Unknown')
-      Rewind(F_OUT)
-      Write(F_OUT, 110) Geom%Num_Elem_Blks
-      Do iBlk = 1, Geom%Num_Elem_Blks
-         Blk_ID = Geom%Elem_Blk(iBlk)%ID
-         Write(F_OUT,120) Blk_ID, Params%Toughness(iBlk), Params%Hookes_Law(iBlk), Params%Therm_Exp(iBlk)
-      End Do
-      Close(F_OUT)
-
-100   Format(I4,T30,'# ', A)
-101   Format(L1,T30,'# ', A)
-102   Format(ES12.5,T30,'# ', A)
-103   Format(L1,ES12.5,T30,'# ', A)
-105   Format(I4,I4,ES12.5,T30, '# ', A)
 110   Format(I6,'     Toughness    A1111        A1112        A1122        A1212        A1222        A2222        Alpha')
-120   Format(I6, 8(ES12.5,' '))
-   End Subroutine Write_Rupt_DATA2D
+120   Format(I6, 8(ES12.5,' '))   
+   End Subroutine MatProp2DWrite
+ 
+   Subroutine MatProp3DWrite(MeshTopology, MatProp, filename)
+      Type(MeshTopology_Info)                      :: MeshTopology
+      Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
+      Character(len=*)                             :: filename
 
-   Subroutine Write_Rupt_DATA3D(Geom, Params)
-      Type (EXO_Geom_Info)                          :: Geom
-      Type (Rupt_Params3D)                          :: Params
+      PetscMPIInt                                  :: rank
+      PetscInt                                     :: iBlk, Blk_ID, iErr
       
-      Integer                                       :: iBlk, Blk_ID
-      Integer                                       :: MyRank, iErr
-      
-      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
-      If (MyRank /= 0) Then 
-         RETURN
-      End If
-      
-      Open(File = Params%PARAM_Str, Unit = F_OUT, Status = 'Unknown')
+      Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
-      
-      Write(F_OUT, 101) Params%Do_Irrev,     'Do_Irrev [T/F]'
-      If (Params%Do_BackTrack) Then
-         Write(F_OUT, 103) Params%Do_BackTrack, Params%Tol_Ener , 'Do_BackTrack [T/F] &&  Tol_Ener '
-      Else
-         Write(F_OUT, 101) Params%Do_BackTrack,      'Do_BackTrack[T/F]'
-      End If    
-      Write(F_OUT, 100) Params%Init_U, 'Init_U   [0=PREV 1=0]'
-      If (Params%Init_V==2) Then
-         Write(F_OUT, 105) Params%Init_V, Params%nbCracks, Params%MaxCrackLength, 'Init_V   [0=PREV 1=1, 2=RND]  ' // 'nbCracks MaxCrackLength'    
-      Else    
-         Write(F_OUT, 100) Params%Init_V,       'Init_V   [0=PREV 1=1, 2=RND]'
-      End If  
-      Write(F_OUT, 100) Params%MaxIterRelax, 'MaxIterRelax'
-      Write(F_OUT, 102) Params%TolRelax,     'TolRelax'
-      Write(F_OUT, 102) Params%TolKSP,       'TolKSP'
-      Write(F_OUT, 102) Params%Epsilon,      'Epsilon'
-      Write(F_OUT, 102) Params%KEpsilon,     'KEpsilon'
-      Write(F_OUT, 102) Params%TolIrrev,     'TolIrrev'
-      Close(F_OUT)
-      
-      Open(File = Params%CST_Str, Unit = F_OUT, Status = 'Unknown')
-      Rewind(F_OUT)
-      Write(F_OUT, 110) Geom%Num_Elem_Blks
-      Do iBlk = 1, Geom%Num_Elem_Blks
-         Blk_ID = Geom%Elem_Blk(iBlk)%ID
-         Write(F_OUT,120) Blk_ID, Params%Toughness(iBlk), Params%Hookes_Law(iBlk), Params%Therm_Exp(iBlk)
+      Write(F_OUT, 110) MeshTopology%Num_Elem_Blks
+      Do iBlk = 1, Size(MatProp)
+         Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
+         Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
       End Do
       Close(F_OUT)
-
-100   Format(I4,T30,'# ', A)
-101   Format(L1,T30,'# ', A)
-102   Format(ES12.5,T30,'# ', A)
-103   Format(L1,ES12.5,T30,'# ', A)
-105   Format(I4,I4,ES12.5,T30, '# ', A)
+      
 110   Format(I6,' Toughness    A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133      A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333       Alpha')
 120   Format(I6, 23(ES12.5,' '))
-   End Subroutine Write_Rupt_DATA3D
+   End Subroutine MatProp3DWrite
+ 
+ 
+   Subroutine MatProp2DRead(MeshTopology, MatProp, filename)
+      Type(MeshTopology_Info)                      :: MeshTopology
+      Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
+      Character(len=*)                             :: filename
 
-   Subroutine Read_Rupt_DATA2D(Geom, Params)
-      Type (EXO_Geom_Info)                          :: Geom
-      Type (Rupt_Params2D)                          :: Params
+      PetscInt                                     :: iBlk, iErr
       
-      Integer                                       :: iBlk, Blk_ID, Num_Blk
-      Integer                                       :: MyRank, iErr, ErrorCode=0
-      
-      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
-      
-      If (MyRank == 0) Then
-         Open(File = Params%PARAM_Str, Unit = F_IN, Status = 'Old')
-         Rewind(F_IN)
-         
-         Read(F_IN, 101) Params%Do_Irrev
-         Read(F_IN, 101, advance = 'no' ) Params%Do_BackTrack
-         If (Params%Do_BackTrack) Then
-            Read(F_IN, 102) Params%Tol_Ener
-         Else
-            Read(F_In,*)
-         End If   
-         Read(F_IN, 100) Params%Init_U
-         Read(F_IN, 100, advance = 'no' ) Params%Init_V
-         
-         If ((Params%Init_V == Init_V_SPH) .OR. (Params%Init_V == Init_V_RND)) Then
-            Read(F_IN, *) Params%nbCracks, Params%MaxCrackLength
-         Else
-            Read(F_IN,*)
-         End If
-         Read(F_IN, 100) Params%MaxIterRelax     
-         Read(F_IN, 102) Params%TolRelax
-         Read(F_IN, 102) Params%TolKSP
-         Read(F_IN, 102) Params%Epsilon
-         Read(F_IN, 102) Params%KEpsilon
-         Read(F_IN, 102) Params%TolIrrev
-         Close(F_IN)
+      PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
+      Type(Tens4OS2D), Dimension(:), Pointer       :: Hookes_Law
+      PetscReal                                    :: Toughness, Therm_Exp
+   
+      Open(File = filename, Unit = F_IN, Status = 'Unknown')
+      Rewind(F_IN)
+      Read(F_IN, *) NumBlks
+      If (NumBlks /= MeshTopology%Num_Elem_Blks) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
       End If
+      !!! Reading the file once first to get the right number of blocks
+      IdxMin = 0
+      IdxMax = 0
+      Do iBlk = 1, NumBlks
+         Read(F_IN, *) Idx
+         !!! Check that this will work!
+         IdxMin = Min(IdxMin, Idx)
+         IdxMax = Max(IdxMax, Idx)
+      End Do
+      Allocate(MatProp(IdxMin:IdxMax))
+      Rewind(F_IN)
+      Do iBlk = 1, NumBlks
+         Read(F_IN, 120) Idx, Toughness, Hookes_Law, Therm_exp
+         MatProp(Idx)%Toughness  = Toughness
+         MatProp(Idx)%Hookes_Law = Hookes_Law
+         MatProp(Idx)%Therm_Exp  = Therm_Exp
+      End Do
+      Close(F_IN)
       
-      Call MPI_Bcast(Params%Do_Irrev,       1, MPI_LOGICAL,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Do_BackTrack,   1, MPI_LOGICAL,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Tol_Ener,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Init_U,         1, MPI_INTEGER,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Init_V,         1, MPI_INTEGER,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%NBCracks,       1, MPI_INTEGER,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%MaxCrackLength, 1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%MaxIterRelax,   1, MPI_INTEGER,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%TolRelax,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%TolKSP,         1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Epsilon,        1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%KEpsilon,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%TolIrrev,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      
-      If (MyRank == 0) Then
-         Open(File = Params%CST_Str, Unit = F_IN, Status = 'Old')
-         Rewind(F_IN)
-         Read(F_IN, 110) Num_Blk
-         If (Num_Blk /= Geom%Num_Elem_Blks) Then
-            Write(*,*) 'ERROR number of elem blocks in CST file doesn''t match that of the exodus DB\n'
-            ErrorCode = 1
-         End If
-         Allocate(Params%Toughness (Num_Blk))
-         Allocate(Params%Hookes_Law(Num_Blk))
-         Allocate(Params%Therm_Exp (Num_Blk))
+120   Format(I6, 8(ES12.5,' '))   
+   End Subroutine MatProp2DRead
 
-         Do iBlk = 1, Num_Blk
-            Read(F_IN,*) Blk_ID, Params%Toughness(iBlk), Params%Hookes_Law(iBlk), Params%Therm_Exp(iBlk)
-            Call MPI_Bcast(Blk_ID, 1, MPI_INTEGER, 0, Geom%Comm, iErr)
-            If (Blk_ID /= iBlk) Then
-               Write(*,*) 'ERROR: Element Block must be numbered sequentially in the CST file'
-               ErrorCode=2
-            End If
-         End Do
-         Close(F_IN)
-      Else
-         Allocate(Params%Toughness (Num_Blk))
-         Allocate(Params%Hookes_Law(Num_Blk))
-         Allocate(Params%Therm_Exp (Num_Blk))
-      End If
+   Subroutine MatProp3DRead(MeshTopology, MatProp, filename)
+      Type(MeshTopology_Info)                      :: MeshTopology
+      Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
+      Character(len=*)                             :: filename
 
-      If (ErrorCode /=0) Then
-         Call PetscPrintf(Geom%Comm, 'Problem reading parameters file\n'c, iErr)
-         STOP
+      PetscInt                                     :: iBlk, Blk_Id, iErr
+      
+      PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
+      Type(Tens4OS3D), Dimension(:), Pointer       :: Hookes_Law
+      PetscReal                                    :: Toughness, Therm_Exp
+   
+      Open(File = filename, Unit = F_IN, Status = 'Unknown')
+      Rewind(F_IN)
+      Read(F_IN, *) NumBlks
+      If (NumBlks /= MeshTopology%Num_Elem_Blks) Then
+         SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp3DRead: non matching blocks numbers', iErr)
       End If
-      Call MPI_Bcast(Params%Toughness,  Num_Blk, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Hookes_Law, Num_Blk, Tens4OS2D_MPIType,    0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Therm_Exp,  Num_Blk, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+      !!! Reading the file once first to get the right number of blocks
+      IdxMin = 0
+      IdxMax = 0
+      Do iBlk = 1, NumBlks
+         Read(F_IN, *) Idx
+         !!! Check that this will work!
+         IdxMin = Min(IdxMin, Idx)
+         IdxMax = Max(IdxMax, Idx)
+      End Do
+      Allocate(MatProp(IdxMin:IdxMax))
+      Rewind(F_IN)
+      Do iBlk = 1, NumBlks
+         Read(F_IN, 120) Idx, Toughness, Hookes_Law, Therm_exp
+         MatProp(Idx)%Toughness  = Toughness
+         MatProp(Idx)%Hookes_Law = Hookes_Law
+         MatProp(Idx)%Therm_Exp  = Therm_Exp
+      End Do
+      Close(F_IN)
       
-100   Format(I4)
-101   Format(L1)
-102   Format(ES12.5)
-103   Format(I6,' ',ES12.5)
-110   Format(I6)
-   End Subroutine Read_Rupt_DATA2D
-  
-   Subroutine Read_Rupt_DATA3D(Geom, Params)
-      Type (EXO_Geom_Info)                          :: Geom
-      Type (Rupt_Params3D)                          :: Params
-      
-      Integer                                       :: iBlk, Blk_ID, Num_Blk
-      Integer                                       :: MyRank, iErr, ErrorCode=0
-      
-      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
-      
-      If (MyRank == 0) Then
-         Open(File = Params%PARAM_Str, Unit = F_IN, Status = 'Old')
-         Rewind(F_IN)
-         
-         Read(F_IN, 101) Params%Do_Irrev
-         Read(F_IN, 101, advance = 'no' ) Params%Do_BackTrack
-         If (Params%Do_BackTrack) Then
-            Read(F_IN, 102) Params%Tol_Ener
-         Else
-            Read(F_In,*)
-         End If   
-         Read(F_IN, 100) Params%Init_U
-         Read(F_IN, 100, advance = 'no' ) Params%Init_V
-         
-         If ((Params%Init_V == Init_V_SPH) .OR. (Params%Init_V == Init_V_RND)) Then
-            Read(F_IN, *) Params%nbCracks, Params%MaxCrackLength
-         Else
-            Read(F_IN,*)
-         End If
-         Read(F_IN, 100) Params%MaxIterRelax     
-         Read(F_IN, 102) Params%TolRelax
-         Read(F_IN, 102) Params%TolKSP
-         Read(F_IN, 102) Params%Epsilon
-         Read(F_IN, 102) Params%KEpsilon
-         Read(F_IN, 102) Params%TolIrrev
-         Close(F_IN)
-      End If
-      
-      Call MPI_Bcast(Params%Do_Irrev,       1, MPI_LOGICAL,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Do_BackTrack,   1, MPI_LOGICAL,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Tol_Ener,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Init_U,         1, MPI_INTEGER,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Init_V,         1, MPI_INTEGER,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%NBCracks,       1, MPI_INTEGER,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%MaxCrackLength, 1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%MaxIterRelax,   1, MPI_INTEGER,          0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%TolRelax,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%TolKSP,         1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Epsilon,        1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%KEpsilon,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%TolIrrev,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      
-      If (MyRank == 0) Then
-         Open(File = Params%CST_Str, Unit = F_IN, Status = 'Old')
-         Rewind(F_IN)
-         Read(F_IN, 110) Num_Blk
-         If (Num_Blk /= Geom%Num_Elem_Blks) Then
-            Write(*,*) 'ERROR number of elem blocks in CST file doesn''t match that of the exodus DB\n'
-            ErrorCode = 1
-         End If
-         Allocate(Params%Toughness (Num_Blk))
-         Allocate(Params%Hookes_Law(Num_Blk))
-         Allocate(Params%Therm_Exp (Num_Blk))
+120   Format(I6, 23(ES12.5,' '))
+   End Subroutine MatProp3DRead
 
-         Do iBlk = 1, Num_Blk
-            Read(F_IN,*) Blk_ID, Params%Toughness(iBlk), Params%Hookes_Law(iBlk), Params%Therm_Exp(iBlk)
-            Call MPI_Bcast(Blk_ID, 1, MPI_INTEGER, 0, Geom%Comm, iErr)
-            If (Blk_ID /= iBlk) Then
-               Write(*,*) 'ERROR: Element Block must be numbered sequentially in the CST file'
-               ErrorCode=2
-            End If
-         End Do
-         Close(F_IN)
-      Else
-         Allocate(Params%Toughness (Num_Blk))
-         Allocate(Params%Hookes_Law(Num_Blk))
-         Allocate(Params%Therm_Exp (Num_Blk))
-      End If
 
-      If (ErrorCode /=0) Then
-         Call PetscPrintf(Geom%Comm, 'Problem reading parameters file\n'c, iErr)
-         STOP
-      End If
-      Call MPI_Bcast(Params%Toughness,  Num_Blk, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Hookes_Law, Num_Blk, Tens4OS3D_MPIType,    0, Geom%Comm, iErr)
-      Call MPI_Bcast(Params%Therm_Exp,  Num_Blk, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
-      
-100   Format(I4)
-101   Format(L1)
-102   Format(ES12.5)
-103   Format(I6,' ',ES12.5)
-110   Format(I6)
-   End Subroutine Read_Rupt_DATA3D
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+!!!$    Subroutine Read_Rupt_EXO_Params2D(Geom, Params)
+!!!$      Type (EXO_Geom_Info)                          :: Geom
+!!!$      Type (Rupt_Params2D)                          :: Params
+!!!$      
+!!!$      Character(len=MXSTLN), Dimension(:,:), Pointer:: Tmp_QA
+!!!$      Integer                                       :: MyRank, iErr
+!!!$      Integer                                       :: iTs, iS, iBlk, iSet
+!!!$      Integer                                       :: Num_TS
+!!!$      Integer                                       :: exo_ver
+!!!$      
+!!!$      Real(Kind = Kr)                               :: fDum
+!!!$      Character                                     :: cDum
+!!!$      Integer                                       :: Tmp_EB_Prop
+!!!$      Real(Kind = Kr)                               :: Time
+!!!$      
+!!!$      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
+!!!$
+!!!$      Allocate(Params%Is_Brittle(Geom%Num_Elem_Blks))
+!!!$      Allocate(Params%Is_Domain(Geom%Num_Elem_Blks))
+!!!$      Allocate(Params%Has_Force(Geom%Num_Elem_Blks))
+!!!$      Allocate(Params%BC_Type_X(Geom%Num_Node_Sets))
+!!!$      ! Analysis time 
+!!!$      Allocate(Params%BC_Type_Y(Geom%Num_Node_Sets))
+!!!$      Allocate(Params%BC_Type_Z(Geom%Num_Node_Sets))
+!!!$      
+!!!$      If (MyRank == 0) Then
+!!!$         Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
+!!!$         Do iBlk = 1, Geom%Num_Elem_Blks
+!!!$            ! Object Properties
+!!!$            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(1), Tmp_EB_Prop, iErr)
+!!!$            Params%Is_Brittle(iBlk) = Tmp_EB_Prop
+!!!$            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(2), Tmp_EB_Prop, iErr)
+!!!$            Params%Is_Domain(iBlk) = Tmp_EB_Prop
+!!!$            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(3), Tmp_EB_Prop, iErr)
+!!!$            Params%Has_Force(iBlk) = Tmp_EB_Prop
+!!!$         End Do    
+!!!$         
+!!!$         Do iSet = 1, Geom%Num_Node_Sets
+!!!$            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(1), Params%BC_Type_X(iSet), iErr)
+!!!$            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(2), Params%BC_Type_Y(iSet), iErr)
+!!!$            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(3), Params%BC_Type_Z(iSet), iErr)   
+!!!$         End Do
+!!!$         
+!!!$         ! Time Step
+!!!$         ! Time has to be monotonically increasing, so we store the number 
+!!!$         ! of the time step instead, and store the displacement factor or the 
+!!!$         ! temperature as a global result
+!!!$         Call EXINQ (Geom%exoid, EXTIMS, Num_TS, fDum, cDum, iErr)    
+!!!$         
+!!!$         Call EXCLOS(Geom%exoid, iErr)
+!!!$         Geom%exoid = 0
+!!!$         
+!!!$         Allocate (Params%Load(Num_TS))
+!!!$         Allocate (Params%Time(Num_TS))
+!!!$         Do iTS = 1, Num_TS
+!!!$            Call Read_EXO_Result_Global(Geom, 4, iTS, Params%Load(iTS))
+!!!$            Call Read_EXO_Result_Global(Geom, 5, iTS, Params%Time(iTS))
+!!!$         End Do
+!!!$      End If
+!!!$
+!!!$      Call MPI_Bcast(Num_TS, 1, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$      If (MyRank /= 0) Then
+!!!$         Allocate(Params%Load(Num_TS))
+!!!$         Allocate(Params%Time(Num_TS))
+!!!$      End If
+!!!$      Call MPI_Bcast(Params%Is_Brittle, Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Is_Domain,  Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Has_Force,  Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%BC_Type_X,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%BC_Type_Y,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%BC_Type_Z,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Load,       Num_TS,             MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Time,       Num_TS,             MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$   End Subroutine Read_Rupt_EXO_Params2D
+!!!$
+!!!$   Subroutine Read_Rupt_EXO_Params3D(Geom, Params)
+!!!$      Type (EXO_Geom_Info)                          :: Geom
+!!!$      Type (Rupt_Params3D)                          :: Params
+!!!$      
+!!!$      Character(len=MXSTLN), Dimension(:,:), Pointer:: Tmp_QA
+!!!$      Integer                                       :: MyRank, iErr
+!!!$      Integer                                       :: iTs, iS, iBlk, iSet
+!!!$      Integer                                       :: Num_TS
+!!!$      Integer                                       :: exo_ver
+!!!$      
+!!!$      Real(Kind = Kr)                               :: fDum
+!!!$      Character                                     :: cDum
+!!!$      Integer                                       :: Tmp_EB_Prop
+!!!$      
+!!!$      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
+!!!$
+!!!$      Allocate(Params%Is_Brittle(Geom%Num_Elem_Blks))
+!!!$      Allocate(Params%Is_Domain(Geom%Num_Elem_Blks))
+!!!$      Allocate(Params%Has_Force(Geom%Num_Elem_Blks))
+!!!$      Allocate(Params%BC_Type_X(Geom%Num_Node_Sets))
+!!!$      Allocate(Params%BC_Type_Y(Geom%Num_Node_Sets))
+!!!$      Allocate(Params%BC_Type_Z(Geom%Num_Node_Sets))
+!!!$      
+!!!$      If (MyRank == 0) Then
+!!!$         Geom%exoid = EXOPEN(Geom%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
+!!!$         Do iBlk = 1, Geom%Num_Elem_Blks
+!!!$            ! Object Properties
+!!!$            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(1), Tmp_EB_Prop, iErr)
+!!!$            Params%Is_Brittle(iBlk) = Tmp_EB_Prop
+!!!$            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(2), Tmp_EB_Prop, iErr)
+!!!$            Params%Is_Domain(iBlk) = Tmp_EB_Prop
+!!!$            Call EXGP(Geom%exoid, EXEBLK, iBlk, Prop_Name_EB(3), Tmp_EB_Prop, iErr)
+!!!$            Params%Has_Force(iBlk) = Tmp_EB_Prop
+!!!$         End Do    
+!!!$         
+!!!$         Do iSet = 1, Geom%Num_Node_Sets
+!!!$            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(1), Params%BC_Type_X(iSet), iErr)
+!!!$            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(2), Params%BC_Type_Y(iSet), iErr)
+!!!$            Call EXGP(Geom%exoid, EXNSET, iSet, Prop_Name_NS(3), Params%BC_Type_Z(iSet), iErr)   
+!!!$         End Do
+!!!$         
+!!!$         ! Time Step
+!!!$         ! Time has to be monotonically increasing, so we store the number 
+!!!$         ! of the time step instead, and store the displacement factor or the 
+!!!$         ! temperature as a global result
+!!!$         Call EXINQ (Geom%exoid, EXTIMS, Num_TS, fDum, cDum, iErr)    
+!!!$         
+!!!$         Call EXCLOS(Geom%exoid, iErr)
+!!!$         Geom%exoid = 0
+!!!$         
+!!!$         Allocate (Params%Load(Num_TS))
+!!!$         Allocate (Params%Time(Num_TS))
+!!!$         Do iTS = 1, Num_TS
+!!!$            Call Read_EXO_Result_Global(Geom, 4, iTS, Params%Load(iTS))
+!!!$            Call Read_EXO_Result_Global(Geom, 5, iTS, Params%Time(iTS))
+!!!$         End Do
+!!!$      End If
+!!!$
+!!!$      Call MPI_Bcast(Num_TS, 1, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$      If (MyRank /= 0) Then
+!!!$         Allocate(Params%Load(Num_TS))
+!!!$         Allocate(Params%Time(Num_TS))
+!!!$      End If
+!!!$      Call MPI_Bcast(Params%Is_Brittle, Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Is_Domain,  Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Has_Force,  Geom%Num_Elem_Blks, MPI_LOGICAL, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%BC_Type_X,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%BC_Type_Y,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%BC_Type_Z,  Geom%Num_Node_Sets, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Load,       Num_TS,             MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Time,       Num_TS,             MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$   End Subroutine Read_Rupt_EXO_Params3D
+!!!$
+!!!$   Subroutine Write_Rupt_EXO_Params2D(Geom, Params)
+!!!$      Type (EXO_Geom_Info)                          :: Geom
+!!!$      Type (Rupt_Params2D)                          :: Params
+!!!$      
+!!!$      Character(len=MXSTLN), Dimension(:,:), Pointer:: Tmp_QA
+!!!$      Integer                                       :: iErr
+!!!$      Integer                                       :: iTs, iS
+!!!$      Integer                                       :: Num_TS
+!!!$      Integer                                       :: exo_ver
+!!!$      
+!!!$      Integer, Dimension(:), Pointer                :: Tmp_EB_Prop
+!!!$      Integer                                       :: MyRank
+!!!$!      PetscScalar                                   :: Junk
+!!!$      
+!!!$      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
+!!!$      If (MyRank /= 0) Then 
+!!!$         RETURN
+!!!$      End If
+!!!$      
+!!!$      Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
+!!!$      ! Object Properties
+!!!$      Call EXPPN(Geom%exoid, EXEBLK, Num_Prop_EB, Prop_Name_EB, iErr)
+!!!$      Call EXPPN(Geom%exoid, EXNSET, Num_Prop_NS, Prop_Name_NS, iErr)
+!!!$      
+!!!$      Allocate (Tmp_EB_Prop(Geom%Num_Elem_Blks))
+!!!$      Tmp_EB_Prop = Params%Is_Brittle
+!!!$      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(1), Tmp_EB_Prop, iErr)
+!!!$      
+!!!$      Tmp_EB_Prop = Params%Is_Domain
+!!!$      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(2), Tmp_EB_Prop, iErr)
+!!!$      
+!!!$      Tmp_EB_Prop = Params%Has_Force
+!!!$      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(3), Tmp_EB_Prop, iErr)
+!!!$      DeAllocate (Tmp_EB_Prop)
+!!!$      
+!!!$      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(1), Params%BC_Type_X, iErr)
+!!!$      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(2), Params%BC_Type_Y, iErr)
+!!!$      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(3), Params%BC_Type_Z, iErr)
+!!!$      
+!!!$      !Result and initial values names
+!!!$      Call EXPVP (Geom%exoid, 'g', Num_Res_G, iErr)
+!!!$      Call EXPVAN (Geom%exoid, 'g', Num_Res_G, Res_Name_G, iErr)
+!!!$      
+!!!$      Call EXPVP (Geom%exoid, 'e', Num_Res_E, iErr)
+!!!$      Call EXPVAN (Geom%exoid, 'e', Num_Res_E, Res_Name_E, iErr)
+!!!$      
+!!!$      Call EXPVP (Geom%exoid, 'n', Num_Res_N, iErr)
+!!!$      Call EXPVAN (Geom%exoid, 'n', Num_Res_N, Res_Name_N, iErr)
+!!!$      
+!!!$      Do iTS = 1, Size(Params%Load)
+!!!$         Call EXPGV (Geom%exoid, iTS, 5, (/ 0.0_Kr, 0.0_Kr, 0.0_Kr, Params%Load(iTS), Params%Time(iTS)/), iErr)
+!!!$      End Do
+!!!$
+!!!$!!!      Geom%Num_QA = Geom%Num_QA+1
+!!!$!!!      Allocate (Tmp_QA(4, Geom%Num_QA))
+!!!$!!!      Tmp_QA(:,1:Geom%Num_QA-1) = Geom%QA_rec
+!!!$!!!      DeAllocate (Geom%QA_Rec)
+!!!$!!!      Allocate (Geom%QA_Rec(4, Geom%Num_QA))
+!!!$!!!      Geom%QA_rec = Tmp_QA
+!!!$!!!      DeAllocate (Tmp_QA)
+!!!$!!!      
+!!!$!!!      Geom%QA_Rec(1,Geom%Num_QA) = 'm_Rupt-Struct'
+!!!$!!!      Geom%QA_Rec(2,Geom%Num_QA) = ''
+!!!$!!!      Call Date_And_Time(date = Geom%QA_Rec(3,Geom%Num_QA))
+!!!$!!!      Call Date_And_Time(time = Geom%QA_Rec(4,Geom%Num_QA))
+!!!$!!!      Call EXPQA(Geom%exoid, Geom%num_QA, Geom%QA_Rec, iErr)
+!!!$      
+!!!$      Call EXCLOS(Geom%exoid, iErr)
+!!!$      Geom%exoid = 0
+!!!$   End Subroutine Write_Rupt_EXO_Params2D
+!!!$  
+!!!$   Subroutine Write_Rupt_EXO_Params3D(Geom, Params)
+!!!$      Type (EXO_Geom_Info)                          :: Geom
+!!!$      Type (Rupt_Params3D)                          :: Params
+!!!$      
+!!!$      Character(len=MXSTLN), Dimension(:,:), Pointer:: Tmp_QA
+!!!$      Integer                                       :: iErr
+!!!$      Integer                                       :: iTs, iS
+!!!$      Integer                                       :: Num_TS
+!!!$      Integer                                       :: exo_ver
+!!!$      
+!!!$      Integer, Dimension(:), Pointer                :: Tmp_EB_Prop
+!!!$      Integer                                       :: MyRank
+!!!$      
+!!!$      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
+!!!$      If (MyRank /= 0) Then 
+!!!$         RETURN
+!!!$      End If
+!!!$      
+!!!$      Geom%exoid = EXOPEN(Geom%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
+!!!$      ! Object Properties
+!!!$      Call EXPPN(Geom%exoid, EXEBLK, Num_Prop_EB, Prop_Name_EB, iErr)
+!!!$      Call EXPPN(Geom%exoid, EXNSET, Num_Prop_NS, Prop_Name_NS, iErr)
+!!!$      
+!!!$      Allocate (Tmp_EB_Prop(Geom%Num_Elem_Blks))
+!!!$      Tmp_EB_Prop = Params%Is_Brittle
+!!!$      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(1), Tmp_EB_Prop, iErr)
+!!!$      Tmp_EB_Prop = Params%Is_Domain
+!!!$      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(2), Tmp_EB_Prop, iErr)
+!!!$      Tmp_EB_Prop = Params%Has_Force
+!!!$      Call EXPPA(Geom%exoid, EXEBLK, Prop_Name_EB(3), Tmp_EB_Prop, iErr)
+!!!$      DeAllocate (Tmp_EB_Prop)
+!!!$      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(1), Params%BC_Type_X, iErr)
+!!!$      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(2), Params%BC_Type_Y, iErr)
+!!!$      Call EXPPA(Geom%exoid, EXNSET, Prop_Name_NS(3), Params%BC_Type_Z, iErr)
+!!!$      
+!!!$      !Result and initial values names
+!!!$      Call EXPVP (Geom%exoid, 'g', Num_Res_G, iErr)
+!!!$      Call EXPVAN (Geom%exoid, 'g', Num_Res_G, Res_Name_G, iErr)
+!!!$      
+!!!$      Call EXPVP (Geom%exoid, 'e', Num_Res_E, iErr)
+!!!$      Call EXPVAN (Geom%exoid, 'e', Num_Res_E, Res_Name_E, iErr)
+!!!$      
+!!!$      Call EXPVP (Geom%exoid, 'n', Num_Res_N, iErr)
+!!!$      Call EXPVAN (Geom%exoid, 'n', Num_Res_N, Res_Name_N, iErr)
+!!!$      
+!!!$      Do iTS = 1, Size(Params%Load)
+!!!$         Call EXPGV (Geom%exoid, iTS, 5, (/ 0.0_Kr, 0.0_Kr, 0.0_Kr, Params%Load(iTS), Params%Time(iTS)/), iErr)
+!!!$      End Do
+!!!$
+!!!$      Call EXCLOS(Geom%exoid, iErr)
+!!!$      Geom%exoid = 0
+!!!$   End Subroutine Write_Rupt_EXO_Params3D
+!!!$   
+!!!$   Subroutine Write_Rupt_DATA2D(Geom, Params)
+!!!$      Type (EXO_Geom_Info)                          :: Geom
+!!!$      Type (Rupt_Params2D)                          :: Params
+!!!$      
+!!!$      Integer                                       :: iBlk, Blk_ID
+!!!$      Integer                                       :: MyRank, iErr
+!!!$      
+!!!$      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
+!!!$      If (MyRank /= 0) Then 
+!!!$         RETURN
+!!!$      End If
+!!!$      
+!!!$      Open(File = Params%PARAM_Str, Unit = F_OUT, Status = 'Unknown')
+!!!$      Rewind(F_OUT)
+!!!$      
+!!!$      Write(F_OUT, 101) Params%Do_Irrev,     'Do_Irrev [T/F]'
+!!!$      If (Params%Do_BackTrack) Then
+!!!$         Write(F_OUT, 103) Params%Do_BackTrack, Params%Tol_Ener , 'Do_BackTrack [T/F] &&  Tol_Ener '
+!!!$      Else
+!!!$         Write(F_OUT, 101) Params%Do_BackTrack,      'Do_BackTrack[T/F]'
+!!!$      End If    
+!!!$      Write(F_OUT, 100) Params%Init_U, 'Init_U   [0=PREV 1=0]'
+!!!$      If (Params%Init_V==2) Then
+!!!$         Write(F_OUT, 105) Params%Init_V, Params%nbCracks, Params%MaxCrackLength, 'Init_V   [0=PREV 1=1, 2=RND]  ' // 'nbCracks MaxCrackLength'    
+!!!$      Else    
+!!!$         Write(F_OUT, 100) Params%Init_V,       'Init_V   [0=PREV 1=1, 2=RND]'
+!!!$      End If  
+!!!$      Write(F_OUT, 100) Params%MaxIterRelax, 'MaxIterRelax'
+!!!$      Write(F_OUT, 102) Params%TolRelax,     'TolRelax'
+!!!$      Write(F_OUT, 102) Params%TolKSP,       'TolKSP'
+!!!$      Write(F_OUT, 102) Params%Epsilon,      'Epsilon'
+!!!$      Write(F_OUT, 102) Params%KEpsilon,     'KEpsilon'
+!!!$      Write(F_OUT, 102) Params%TolIrrev,     'TolIrrev'
+!!!$      Close(F_OUT)
+!!!$      
+!!!$      Open(File = Params%CST_Str, Unit = F_OUT, Status = 'Unknown')
+!!!$      Rewind(F_OUT)
+!!!$      Write(F_OUT, 110) Geom%Num_Elem_Blks
+!!!$      Do iBlk = 1, Geom%Num_Elem_Blks
+!!!$         Blk_ID = Geom%Elem_Blk(iBlk)%ID
+!!!$         Write(F_OUT,120) Blk_ID, Params%Toughness(iBlk), Params%Hookes_Law(iBlk), Params%Therm_Exp(iBlk)
+!!!$      End Do
+!!!$      Close(F_OUT)
+!!!$
+!!!$100   Format(I4,T30,'# ', A)
+!!!$101   Format(L1,T30,'# ', A)
+!!!$102   Format(ES12.5,T30,'# ', A)
+!!!$103   Format(L1,ES12.5,T30,'# ', A)
+!!!$105   Format(I4,I4,ES12.5,T30, '# ', A)
+!!!$110   Format(I6,'     Toughness    A1111        A1112        A1122        A1212        A1222        A2222        Alpha')
+!!!$120   Format(I6, 8(ES12.5,' '))
+!!!$   End Subroutine Write_Rupt_DATA2D
+!!!$
+!!!$   Subroutine Write_Rupt_DATA3D(Geom, Params)
+!!!$      Type (EXO_Geom_Info)                          :: Geom
+!!!$      Type (Rupt_Params3D)                          :: Params
+!!!$      
+!!!$      Integer                                       :: iBlk, Blk_ID
+!!!$      Integer                                       :: MyRank, iErr
+!!!$      
+!!!$      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
+!!!$      If (MyRank /= 0) Then 
+!!!$         RETURN
+!!!$      End If
+!!!$      
+!!!$      Open(File = Params%PARAM_Str, Unit = F_OUT, Status = 'Unknown')
+!!!$      Rewind(F_OUT)
+!!!$      
+!!!$      Write(F_OUT, 101) Params%Do_Irrev,     'Do_Irrev [T/F]'
+!!!$      If (Params%Do_BackTrack) Then
+!!!$         Write(F_OUT, 103) Params%Do_BackTrack, Params%Tol_Ener , 'Do_BackTrack [T/F] &&  Tol_Ener '
+!!!$      Else
+!!!$         Write(F_OUT, 101) Params%Do_BackTrack,      'Do_BackTrack[T/F]'
+!!!$      End If    
+!!!$      Write(F_OUT, 100) Params%Init_U, 'Init_U   [0=PREV 1=0]'
+!!!$      If (Params%Init_V==2) Then
+!!!$         Write(F_OUT, 105) Params%Init_V, Params%nbCracks, Params%MaxCrackLength, 'Init_V   [0=PREV 1=1, 2=RND]  ' // 'nbCracks MaxCrackLength'    
+!!!$      Else    
+!!!$         Write(F_OUT, 100) Params%Init_V,       'Init_V   [0=PREV 1=1, 2=RND]'
+!!!$      End If  
+!!!$      Write(F_OUT, 100) Params%MaxIterRelax, 'MaxIterRelax'
+!!!$      Write(F_OUT, 102) Params%TolRelax,     'TolRelax'
+!!!$      Write(F_OUT, 102) Params%TolKSP,       'TolKSP'
+!!!$      Write(F_OUT, 102) Params%Epsilon,      'Epsilon'
+!!!$      Write(F_OUT, 102) Params%KEpsilon,     'KEpsilon'
+!!!$      Write(F_OUT, 102) Params%TolIrrev,     'TolIrrev'
+!!!$      Close(F_OUT)
+!!!$      
+!!!$      Open(File = Params%CST_Str, Unit = F_OUT, Status = 'Unknown')
+!!!$      Rewind(F_OUT)
+!!!$      Write(F_OUT, 110) Geom%Num_Elem_Blks
+!!!$      Do iBlk = 1, Geom%Num_Elem_Blks
+!!!$         Blk_ID = Geom%Elem_Blk(iBlk)%ID
+!!!$         Write(F_OUT,120) Blk_ID, Params%Toughness(iBlk), Params%Hookes_Law(iBlk), Params%Therm_Exp(iBlk)
+!!!$      End Do
+!!!$      Close(F_OUT)
+!!!$
+!!!$100   Format(I4,T30,'# ', A)
+!!!$101   Format(L1,T30,'# ', A)
+!!!$102   Format(ES12.5,T30,'# ', A)
+!!!$103   Format(L1,ES12.5,T30,'# ', A)
+!!!$105   Format(I4,I4,ES12.5,T30, '# ', A)
+!!!$110   Format(I6,' Toughness    A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133      A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333       Alpha')
+!!!$120   Format(I6, 23(ES12.5,' '))
+!!!$   End Subroutine Write_Rupt_DATA3D
+!!!$
+!!!$   Subroutine Read_Rupt_DATA2D(Geom, Params)
+!!!$      Type (EXO_Geom_Info)                          :: Geom
+!!!$      Type (Rupt_Params2D)                          :: Params
+!!!$      
+!!!$      Integer                                       :: iBlk, Blk_ID, Num_Blk
+!!!$      Integer                                       :: MyRank, iErr, ErrorCode=0
+!!!$      
+!!!$      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
+!!!$      
+!!!$      If (MyRank == 0) Then
+!!!$         Open(File = Params%PARAM_Str, Unit = F_IN, Status = 'Old')
+!!!$         Rewind(F_IN)
+!!!$         
+!!!$         Read(F_IN, 101) Params%Do_Irrev
+!!!$         Read(F_IN, 101, advance = 'no' ) Params%Do_BackTrack
+!!!$         If (Params%Do_BackTrack) Then
+!!!$            Read(F_IN, 102) Params%Tol_Ener
+!!!$         Else
+!!!$            Read(F_In,*)
+!!!$         End If   
+!!!$         Read(F_IN, 100) Params%Init_U
+!!!$         Read(F_IN, 100, advance = 'no' ) Params%Init_V
+!!!$         
+!!!$         If ((Params%Init_V == Init_V_SPH) .OR. (Params%Init_V == Init_V_RND)) Then
+!!!$            Read(F_IN, *) Params%nbCracks, Params%MaxCrackLength
+!!!$         Else
+!!!$            Read(F_IN,*)
+!!!$         End If
+!!!$         Read(F_IN, 100) Params%MaxIterRelax     
+!!!$         Read(F_IN, 102) Params%TolRelax
+!!!$         Read(F_IN, 102) Params%TolKSP
+!!!$         Read(F_IN, 102) Params%Epsilon
+!!!$         Read(F_IN, 102) Params%KEpsilon
+!!!$         Read(F_IN, 102) Params%TolIrrev
+!!!$         Close(F_IN)
+!!!$      End If
+!!!$      
+!!!$      Call MPI_Bcast(Params%Do_Irrev,       1, MPI_LOGICAL,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Do_BackTrack,   1, MPI_LOGICAL,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Tol_Ener,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Init_U,         1, MPI_INTEGER,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Init_V,         1, MPI_INTEGER,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%NBCracks,       1, MPI_INTEGER,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%MaxCrackLength, 1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%MaxIterRelax,   1, MPI_INTEGER,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%TolRelax,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%TolKSP,         1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Epsilon,        1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%KEpsilon,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%TolIrrev,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      
+!!!$      If (MyRank == 0) Then
+!!!$         Open(File = Params%CST_Str, Unit = F_IN, Status = 'Old')
+!!!$         Rewind(F_IN)
+!!!$         Read(F_IN, 110) Num_Blk
+!!!$         If (Num_Blk /= Geom%Num_Elem_Blks) Then
+!!!$            Write(*,*) 'ERROR number of elem blocks in CST file doesn''t match that of the exodus DB\n'
+!!!$            ErrorCode = 1
+!!!$         End If
+!!!$         Allocate(Params%Toughness (Num_Blk))
+!!!$         Allocate(Params%Hookes_Law(Num_Blk))
+!!!$         Allocate(Params%Therm_Exp (Num_Blk))
+!!!$
+!!!$         Do iBlk = 1, Num_Blk
+!!!$            Read(F_IN,*) Blk_ID, Params%Toughness(iBlk), Params%Hookes_Law(iBlk), Params%Therm_Exp(iBlk)
+!!!$            Call MPI_Bcast(Blk_ID, 1, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$            If (Blk_ID /= iBlk) Then
+!!!$               Write(*,*) 'ERROR: Element Block must be numbered sequentially in the CST file'
+!!!$               ErrorCode=2
+!!!$            End If
+!!!$         End Do
+!!!$         Close(F_IN)
+!!!$      Else
+!!!$         Allocate(Params%Toughness (Num_Blk))
+!!!$         Allocate(Params%Hookes_Law(Num_Blk))
+!!!$         Allocate(Params%Therm_Exp (Num_Blk))
+!!!$      End If
+!!!$
+!!!$      If (ErrorCode /=0) Then
+!!!$         Call PetscPrintf(Geom%Comm, 'Problem reading parameters file\n'c, iErr)
+!!!$         STOP
+!!!$      End If
+!!!$      Call MPI_Bcast(Params%Toughness,  Num_Blk, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Hookes_Law, Num_Blk, Tens4OS2D_MPIType,    0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Therm_Exp,  Num_Blk, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      
+!!!$100   Format(I4)
+!!!$101   Format(L1)
+!!!$102   Format(ES12.5)
+!!!$103   Format(I6,' ',ES12.5)
+!!!$110   Format(I6)
+!!!$   End Subroutine Read_Rupt_DATA2D
+!!!$  
+!!!$   Subroutine Read_Rupt_DATA3D(Geom, Params)
+!!!$      Type (EXO_Geom_Info)                          :: Geom
+!!!$      Type (Rupt_Params3D)                          :: Params
+!!!$      
+!!!$      Integer                                       :: iBlk, Blk_ID, Num_Blk
+!!!$      Integer                                       :: MyRank, iErr, ErrorCode=0
+!!!$      
+!!!$      Call MPI_Comm_rank(Geom%Comm, MyRank, iErr)
+!!!$      
+!!!$      If (MyRank == 0) Then
+!!!$         Open(File = Params%PARAM_Str, Unit = F_IN, Status = 'Old')
+!!!$         Rewind(F_IN)
+!!!$         
+!!!$         Read(F_IN, 101) Params%Do_Irrev
+!!!$         Read(F_IN, 101, advance = 'no' ) Params%Do_BackTrack
+!!!$         If (Params%Do_BackTrack) Then
+!!!$            Read(F_IN, 102) Params%Tol_Ener
+!!!$         Else
+!!!$            Read(F_In,*)
+!!!$         End If   
+!!!$         Read(F_IN, 100) Params%Init_U
+!!!$         Read(F_IN, 100, advance = 'no' ) Params%Init_V
+!!!$         
+!!!$         If ((Params%Init_V == Init_V_SPH) .OR. (Params%Init_V == Init_V_RND)) Then
+!!!$            Read(F_IN, *) Params%nbCracks, Params%MaxCrackLength
+!!!$         Else
+!!!$            Read(F_IN,*)
+!!!$         End If
+!!!$         Read(F_IN, 100) Params%MaxIterRelax     
+!!!$         Read(F_IN, 102) Params%TolRelax
+!!!$         Read(F_IN, 102) Params%TolKSP
+!!!$         Read(F_IN, 102) Params%Epsilon
+!!!$         Read(F_IN, 102) Params%KEpsilon
+!!!$         Read(F_IN, 102) Params%TolIrrev
+!!!$         Close(F_IN)
+!!!$      End If
+!!!$      
+!!!$      Call MPI_Bcast(Params%Do_Irrev,       1, MPI_LOGICAL,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Do_BackTrack,   1, MPI_LOGICAL,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Tol_Ener,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Init_U,         1, MPI_INTEGER,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Init_V,         1, MPI_INTEGER,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%NBCracks,       1, MPI_INTEGER,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%MaxCrackLength, 1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%MaxIterRelax,   1, MPI_INTEGER,          0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%TolRelax,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%TolKSP,         1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Epsilon,        1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%KEpsilon,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%TolIrrev,       1, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      
+!!!$      If (MyRank == 0) Then
+!!!$         Open(File = Params%CST_Str, Unit = F_IN, Status = 'Old')
+!!!$         Rewind(F_IN)
+!!!$         Read(F_IN, 110) Num_Blk
+!!!$         If (Num_Blk /= Geom%Num_Elem_Blks) Then
+!!!$            Write(*,*) 'ERROR number of elem blocks in CST file doesn''t match that of the exodus DB\n'
+!!!$            ErrorCode = 1
+!!!$         End If
+!!!$         Allocate(Params%Toughness (Num_Blk))
+!!!$         Allocate(Params%Hookes_Law(Num_Blk))
+!!!$         Allocate(Params%Therm_Exp (Num_Blk))
+!!!$
+!!!$         Do iBlk = 1, Num_Blk
+!!!$            Read(F_IN,*) Blk_ID, Params%Toughness(iBlk), Params%Hookes_Law(iBlk), Params%Therm_Exp(iBlk)
+!!!$            Call MPI_Bcast(Blk_ID, 1, MPI_INTEGER, 0, Geom%Comm, iErr)
+!!!$            If (Blk_ID /= iBlk) Then
+!!!$               Write(*,*) 'ERROR: Element Block must be numbered sequentially in the CST file'
+!!!$               ErrorCode=2
+!!!$            End If
+!!!$         End Do
+!!!$         Close(F_IN)
+!!!$      Else
+!!!$         Allocate(Params%Toughness (Num_Blk))
+!!!$         Allocate(Params%Hookes_Law(Num_Blk))
+!!!$         Allocate(Params%Therm_Exp (Num_Blk))
+!!!$      End If
+!!!$
+!!!$      If (ErrorCode /=0) Then
+!!!$         Call PetscPrintf(Geom%Comm, 'Problem reading parameters file\n'c, iErr)
+!!!$         STOP
+!!!$      End If
+!!!$      Call MPI_Bcast(Params%Toughness,  Num_Blk, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Hookes_Law, Num_Blk, Tens4OS3D_MPIType,    0, Geom%Comm, iErr)
+!!!$      Call MPI_Bcast(Params%Therm_Exp,  Num_Blk, MPI_DOUBLE_PRECISION, 0, Geom%Comm, iErr)
+!!!$      
+!!!$100   Format(I4)
+!!!$101   Format(L1)
+!!!$102   Format(ES12.5)
+!!!$103   Format(I6,' ',ES12.5)
+!!!$110   Format(I6)
+!!!$   End Subroutine Read_Rupt_DATA3D
   
    Subroutine GenHL_Iso2D_LambdaMu(lambda, mu, A) 
       Real(Kind = Kr), Intent(IN)         :: lambda, mu
