@@ -14,13 +14,13 @@ Program TestSectionInt
 
    Implicit NONE   
 
-   Type (MeshTopology_Info)                     :: MeshTopology
+   Type (MeshTopology_Info)                     :: MeshTopology, InputMeshTopology
    Type (EXO_Info)                              :: EXO, MyEXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    
    PetscTruth                                   :: HasPrefix
    PetscTruth                                   :: verbose
-   PetscErrorCode                               :: iErr, iBlk, iE
+   PetscErrorCode                               :: iErr, iBlk, iE, i
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: viewer, myviewer
@@ -29,6 +29,9 @@ Program TestSectionInt
    PetscReal, Dimension(:), Pointer             :: Values
    PetscInt, Dimension(:), Pointer              :: IntValues
    Type(SectionInt)                             :: Flag_Sec
+   Type(SectionInt)                             :: Internal_Sec
+   Type(Mesh)                                   :: Tmp_Mesh
+   PetscInt                                     :: Junk, Num_Verts, num_Elems
      
    Call MEF90_Initialize()
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr)    
@@ -43,6 +46,27 @@ Program TestSectionInt
    EXO%filename = Trim(prefix)//'.gen'
 
 
+   Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+   
+   Call MeshGetVertexSectionInt(Tmp_Mesh, 1, Internal_Sec, iErr); CHKERRQ(iErr)
+   Call MeshSetSectionInt(Tmp_Mesh, Internal_Sec, iErr); CHKERRQ(iErr)
+
+   !!! Setup and initialize an internal SectionInt
+   Call MeshExodusGetInfo(Tmp_Mesh, Junk, Num_Verts, Num_Elems, Junk, Junk, iErr); CHKERRQ(iErr)
+!   Call MeshTopologyReadEXO(InputMeshTopology, EXO)
+   Allocate(IntValues(1))
+   Do i = 1, num_verts
+      IntValues = i
+      Call MeshUpdateClosureInt(InputMeshTopology%Mesh, Internal_Sec, i -1, IntValues, iErr); CHKERRQ(iErr)
+   End Do 
+   DeAllocate(IntValues)
+   Call SectionIntView(Internal_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   CALL PETSCFINALIZE()
+   STOP
+   
+   
+   Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
