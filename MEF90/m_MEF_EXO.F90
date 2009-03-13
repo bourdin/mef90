@@ -163,7 +163,7 @@ Module m_MEF_EXO
                    offset = (iEloc-1) * dMeshTopology%Elem_Blk(iBlk)%Num_DoF
                    ConnectBlk(offset+1: offset+dMeshTopology%Elem_Blk(iBlk)%Num_DoF) = ConnectMesh(iE, :)
                 End Do
-                Call EXPELC (dEXO%exoid, iBlk, ConnectBlk, iErr)
+                Call EXPELC (dEXO%exoid, dMeshTopology%Elem_Blk(iBlk)%ID, ConnectBlk, iErr)
                 DeAllocate(ConnectBlk)
              End If
           End Do

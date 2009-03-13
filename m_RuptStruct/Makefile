@@ -1,4 +1,4 @@
-PROJ      = m_Rupt_Struct
+PROJ      = m_RuptStruct
 MEF90DIR  = ../MEF90
 MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \

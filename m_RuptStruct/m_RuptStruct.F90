@@ -1,4 +1,4 @@
-Module m_Rupt_Struct
+Module m_RuptStruct
 
 #include "finclude/petscdef.h"
 
@@ -17,6 +17,10 @@ Module m_Rupt_Struct
    Public :: SchemeParamView
    Public :: SchemeParamLoad
    Public :: SchemeParamGetFromOptions
+   
+   Public :: EXO_RuptPropertiesFormat
+   Public :: EXO_RuptPropertiesRead
+   Public :: EXO_RuptPropertiesWrite
 
    Public :: MatProp2D_Type, MatProp3D_Type
    Public :: EXO_RuptProperties_Type
@@ -40,7 +44,7 @@ Module m_Rupt_Struct
 
 !!! Add Side Set properties
 !!! Add BC to EB and SS
-   Integer, Parameter                              :: Num_Prop_EB  = 3
+   Integer, Parameter                              :: Num_Prop_EB  = 6
    Character(len=MXSTLN), Dimension(6), Parameter  :: Prop_Name_EB =          &
        &     (/ 'Is_Brittle    ',                                             &
        &        'Is_Domain     ',                                             &
@@ -49,7 +53,7 @@ Module m_Rupt_Struct
        &        'BC_Type_Y ',                                                 &
        &        'BC_Type_Z ' /) 
    
-   Integer, Parameter                              :: Num_Prop_SS  = 3
+   Integer, Parameter                              :: Num_Prop_SS  = 4
    Character(len=MXSTLN), Dimension(4), Parameter  :: Prop_Name_SS =          &
        &     (/ 'Has_SurfForce ',                                             &
        &        'BC_Type_X ',                                                 &
@@ -96,10 +100,6 @@ Module m_Rupt_Struct
       &         'Stress YZ',                                                  &
       &         'Stress ZX' /)
       
-   Type RuptAppCtx
-   
-   End Type RuptAppCtx
-
    Type MatProp2D_Type
       PetscReal, Dimension(:), Pointer             :: Toughness
       Type(Tens4OS2D), Dimension(:), Pointer       :: Hookes_Law
@@ -297,17 +297,17 @@ Module m_Rupt_Struct
 120   Format(I6, 23(ES12.5,' '))
    End Subroutine MatProp3DRead
 
-   Subroutine EXO_RuptFormat(dEXO)
+   Subroutine EXO_RuptPropertiesFormat(dEXO)
       Type(EXO_Info)                                :: dEXO
       PetscInt                                      :: iErr
       Integer                                       :: exo_ver
       
-      dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
+      dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
       
       !!! Write Property names
-      Call EXPPN(dEXO%exoid, EXEBLK, Num_Prop_EB, Prop_Name_EB, iErr)
-      Call EXPPN(dEXO%exoid, EXSSET, Num_Prop_SS, Prop_Name_SS, iErr)
-      Call EXPPN(dEXO%exoid, EXNSET, Num_Prop_NS, Prop_Name_NS, iErr)
+      Call EXPPN(dEXO%exoid, EXEBLK, Num_Prop_EB, Prop_Name_EB, iErr) ! not really needed
+      !!! Call EXPPN(dEXO%exoid, EXSSET, Num_Prop_SS, Prop_Name_SS, iErr)
+      Call EXPPN(dEXO%exoid, EXNSET, Num_Prop_NS, Prop_Name_NS, iErr) ! not really needed
 
       !!! Write Variable Properties (i.e. create variables in the file)
       Call EXPVP (dEXO%exoid, 'g', Num_Res_G, iErr)
@@ -321,197 +321,237 @@ Module m_Rupt_Struct
 
       Call EXCLOS(dEXO%exoid, iErr)
       dEXO%exoid = 0
-   End Subroutine EXO_RuptFormat
+   End Subroutine EXO_RuptPropertiesFormat
    
-   Subroutine EXO_RuptRead(dEXO, dMeshTopology, dEXO_RuptProperties)
+   Subroutine EXO_RuptPropertiesRead(dEXO, dMeshTopology, dEXO_RuptProperties)
       Type(EXO_Info)                                :: dEXO
       Type(MeshTopology_Info)                       :: dMeshTopology
       Type(EXO_RuptProperties_Type)                 :: dEXO_RuptProperties
       PetscInt                                      :: iErr
       PetscInt                                      :: i, j
       PetscInt                                      :: iRec, NumRec
-      PetscInt, Dimension(:), Pointer               :: Tmp_Prop, Ids, GlobalId
+      PetscInt, Dimension(:), Pointer               :: Tmp_PropArray, Ids, GlobalId
+      PetscInt                                      :: Num_Elem_Blks, Num_Side_Sets, Num_Node_Sets
+      PetscInt                                      :: Tmp_Prop
       Logical                                       :: Do_IO=.FALSE.
       Integer                                       :: exo_ver
       
       
-      If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
-         Do_IO = .TRUE.
+      If ( dEXO%comm == PETSC_COMM_SELF ) Then
          dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
-      End If
-      
-      !!! Element block properties
-      ! Get the number of records on cpu 0 of the communicator, and bcast them
-      NumRec = dMeshTopology%Num_Elem_Blks
-      Call MPI_Bcast(NumRec, 1, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(Tmp_Prop(NumRec))
-      Allocate(IDs(NumRec))
-      Allocate(GlobalId(dMeshTopology%Num_Elem_Blks))
-
-      If (MEF90_MyRank == 0) Then
-         Do iRec = 1, NumRec
-            IDs(iRec) = dMeshTopology%Elem_Blk(iRec)%ID
+         
+         !!! ELEM BLKS
+         Do iRec = 1, dMeshTopology%Num_Elem_Blks
+            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(1), Tmp_Prop, iErr)
+            dEXO_RuptProperties%Is_Brittle(iRec) = Tmp_Prop
+            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(2), Tmp_Prop, iErr)
+            dEXO_RuptProperties%Is_Domain(iRec) = Tmp_Prop
+            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(3), Tmp_Prop, iErr)
+            dEXO_RuptProperties%Has_BodyForce(iRec) = Tmp_Prop
+            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(4), dEXO_RuptProperties%EB_BC_Type_X(iRec), iErr)
+            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(5), dEXO_RuptProperties%EB_BC_Type_Y(iRec), iErr)
+            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(6), dEXO_RuptProperties%EB_BC_Type_Z(iRec), iErr)
          End Do
-      End If
-      Call MPI_Bcast(IDs, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Do i = 1, dMeshTopology%Num_Elem_Blks
-         Do j = 1, NumRec
-               If (dMeshTopology%Elem_blk(i)%ID == IDs(j)) Then
-                  GlobalID(i) = j
-                  EXIT
-               End If
+
+         !!! Side Set properties
+         ! To Do
+         
+         !! Node Sets properties
+         Do iRec = 1, dMeshTopology%Num_Node_Sets
+            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(1), dEXO_RuptProperties%NS_BC_Type_X(iRec), iErr)
+            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(2), dEXO_RuptProperties%NS_BC_Type_Y(iRec), iErr)
+            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(3), dEXO_RuptProperties%NS_BC_Type_Z(iRec), iErr)
          End Do
-      End Do
-      
-      !!! Is_Brittle
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         If (Do_IO) Then
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(1), Tmp_Prop(iRec), iErr)
-         End If
-      End Do
-      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(dEXO_RuptProperties%Is_Brittle(dMeshTopology%Num_Elem_Blks))
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         dEXO_RuptProperties%Is_Brittle(i) = Tmp_Prop(GlobalId(i))
-      End Do
-     
-      !!! Is_Domain
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         If (Do_IO) Then
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(2), Tmp_Prop(iRec), iErr)
-         End If
-      End Do
-      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(dEXO_RuptProperties%Is_Domain(dMeshTopology%Num_Elem_Blks))
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         dEXO_RuptProperties%Is_Domain(i) = Tmp_Prop(GlobalId(i))
-      End Do
 
-      !!! Has_BodyForce
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         If (Do_IO) Then
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(3), Tmp_Prop(iRec), iErr)
-         End If
-      End Do
-      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(dEXO_RuptProperties%Has_BodyForce(dMeshTopology%Num_Elem_Blks))
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         dEXO_RuptProperties%Has_BodyForce(i) = Tmp_Prop(GlobalId(i))
-      End Do
-
-      !!! EB_BC_Type_X
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         If (Do_IO) Then
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(4), Tmp_Prop(iRec), iErr)
-         End If
-      End Do
-      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(dEXO_RuptProperties%EB_BC_Type_X(dMeshTopology%Num_Elem_Blks))
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         dEXO_RuptProperties%EB_BC_Type_X(i) = Tmp_Prop(GlobalId(i))
-      End Do
-      !!! EB_BC_Type_Y
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         If (Do_IO) Then
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(5), Tmp_Prop(iRec), iErr)
-         End If
-      End Do
-      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(dEXO_RuptProperties%EB_BC_Type_Y(dMeshTopology%Num_Elem_Blks))
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         dEXO_RuptProperties%EB_BC_Type_Y(i) = Tmp_Prop(GlobalId(i))
-      End Do
-      !!! EB_BC_Type_Z
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         If (Do_IO) Then
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(6), Tmp_Prop(iRec), iErr)
-         End If
-      End Do
-      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(dEXO_RuptProperties%EB_BC_Type_Z(dMeshTopology%Num_Elem_Blks))
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         dEXO_RuptProperties%EB_BC_Type_Z(i) = Tmp_Prop(GlobalId(i))
-      End Do
-      DeAllocate(Tmp_Prop)
-      DeAllocate(IDs)
-      DeAllocate(GlobalId)
-
-      !!! Side Sets
-      ! To Do
-      
-      !!! Node Sets
-      ! Get the number of records on cpu 0 of the communicator, and bcast them
-      NumRec = dMeshTopology%Num_Node_Sets
-      Call MPI_Bcast(NumRec, 1, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(Tmp_Prop(NumRec))
-      Allocate(IDs(NumRec))
-      Allocate(GlobalId(dMeshTopology%Num_Node_Sets))
-
-      If (MEF90_MyRank == 0) Then
-         Do iRec = 1, NumRec
-            IDs(iRec) = dMeshTopology%Node_Set(iRec)%ID
-         End Do
-      End If
-      Call MPI_Bcast(IDs, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Do i = 1, dMeshTopology%Num_Node_Sets
-         Do j = 1, NumRec
-               If (dMeshTopology%Node_Set(i)%ID == IDs(j)) Then
-                  GlobalID(i) = j
-                  EXIT
-               End If
-         End Do
-      End Do
-      
-      !!! NS_BC_Type_X
-      Do iRec = 1, dMeshTopology%Num_Node_Sets
-         If (Do_IO) Then
-            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_NS(1), Tmp_Prop(iRec), iErr)
-         End If
-      End Do
-      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(dEXO_RuptProperties%NS_BC_Type_X(dMeshTopology%Num_Node_Sets))
-      Do iRec = 1, dMeshTopology%Num_Node_Sets
-         dEXO_RuptProperties%NS_BC_Type_X(i) = Tmp_Prop(GlobalId(i))
-      End Do
-      !!! NS_BC_Type_Y
-      Do iRec = 1, dMeshTopology%Num_Node_Sets
-         If (Do_IO) Then
-            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_NS(2), Tmp_Prop(iRec), iErr)
-         End If
-      End Do
-      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(dEXO_RuptProperties%NS_BC_Type_Y(dMeshTopology%Num_Node_Sets))
-      Do iRec = 1, dMeshTopology%Num_Node_Sets
-         dEXO_RuptProperties%NS_BC_Type_Z(i) = Tmp_Prop(GlobalId(i))
-      End Do
-      !!! NS_BC_Type_Z
-      Do iRec = 1, dMeshTopology%Num_Node_Sets
-         If (Do_IO) Then
-            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_NS(3), Tmp_Prop(iRec), iErr)
-         End If
-      End Do
-      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
-      Allocate(dEXO_RuptProperties%NS_BC_Type_Z(dMeshTopology%Num_Node_Sets))
-      Do iRec = 1, dMeshTopology%Num_Node_Sets
-         dEXO_RuptProperties%NS_BC_Type_Z(i) = Tmp_Prop(GlobalId(i))
-      End Do
-      DeAllocate(Tmp_Prop)
-      DeAllocate(IDs)
-      DeAllocate(GlobalId)
-      
-      
-      If (Do_IO) Then
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
-      End If
-   End Subroutine EXO_RuptRead
+      Else
+         !!! Read all properties then broadcast them
+         If (MEF90_MyRank == 0) Then
+            dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
+            Call EXCLOS(dEXO%exoid, iErr)
+            dEXO%exoid = 0
+         End If
+         Call MPI_Bcast(Num_Elem_Blks, 1, MPI_INTEGER, 0, dEXO%comm, iErr)         
+         Call MPI_Bcast(Num_Side_Sets, 1, MPI_INTEGER, 0, dEXO%comm, iErr)         
+         Call MPI_Bcast(Num_Node_Sets, 1, MPI_INTEGER, 0, dEXO%comm, iErr)         
+      End If    
+!!!      If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
+!!!         Do_IO = .TRUE.
+!!!         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
+!!!      End If
+!!!      
+!!!      !!! Element block properties
+!!!      ! Get the number of records on cpu 0 of the communicator, and bcast them
+!!!      NumRec = dMeshTopology%Num_Elem_Blks
+!!!      Call MPI_Bcast(NumRec, 1, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(Tmp_Prop(NumRec))
+!!!      Allocate(IDs(NumRec))
+!!!      Allocate(GlobalId(dMeshTopology%Num_Elem_Blks))
+!!!
+!!!      If (MEF90_MyRank == 0) Then
+!!!         Do iRec = 1, NumRec
+!!!            IDs(iRec) = dMeshTopology%Elem_Blk(iRec)%ID
+!!!         End Do
+!!!      End If
+!!!      Call MPI_Bcast(IDs, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Do i = 1, dMeshTopology%Num_Elem_Blks
+!!!         Do j = 1, NumRec
+!!!               If (dMeshTopology%Elem_blk(i)%ID == IDs(j)) Then
+!!!                  GlobalID(i) = j
+!!!                  EXIT
+!!!               End If
+!!!         End Do
+!!!      End Do
+!!!      
+!!!      !!! Is_Brittle
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         If (Do_IO) Then
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(1), Tmp_Prop(iRec), iErr)
+!!!         End If
+!!!      End Do
+!!!      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(dEXO_RuptProperties%Is_Brittle(dMeshTopology%Num_Elem_Blks))
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         dEXO_RuptProperties%Is_Brittle(i) = Tmp_Prop(GlobalId(i))
+!!!      End Do
+!!!     
+!!!      !!! Is_Domain
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         If (Do_IO) Then
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(2), Tmp_Prop(iRec), iErr)
+!!!         End If
+!!!      End Do
+!!!      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(dEXO_RuptProperties%Is_Domain(dMeshTopology%Num_Elem_Blks))
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         dEXO_RuptProperties%Is_Domain(i) = Tmp_Prop(GlobalId(i))
+!!!      End Do
+!!!
+!!!      !!! Has_BodyForce
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         If (Do_IO) Then
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(3), Tmp_Prop(iRec), iErr)
+!!!         End If
+!!!      End Do
+!!!      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(dEXO_RuptProperties%Has_BodyForce(dMeshTopology%Num_Elem_Blks))
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         dEXO_RuptProperties%Has_BodyForce(i) = Tmp_Prop(GlobalId(i))
+!!!      End Do
+!!!
+!!!      !!! EB_BC_Type_X
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         If (Do_IO) Then
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(4), Tmp_Prop(iRec), iErr)
+!!!         End If
+!!!      End Do
+!!!      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(dEXO_RuptProperties%EB_BC_Type_X(dMeshTopology%Num_Elem_Blks))
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         dEXO_RuptProperties%EB_BC_Type_X(i) = Tmp_Prop(GlobalId(i))
+!!!      End Do
+!!!      !!! EB_BC_Type_Y
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         If (Do_IO) Then
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(5), Tmp_Prop(iRec), iErr)
+!!!         End If
+!!!      End Do
+!!!      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(dEXO_RuptProperties%EB_BC_Type_Y(dMeshTopology%Num_Elem_Blks))
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         dEXO_RuptProperties%EB_BC_Type_Y(i) = Tmp_Prop(GlobalId(i))
+!!!      End Do
+!!!      !!! EB_BC_Type_Z
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         If (Do_IO) Then
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(6), Tmp_Prop(iRec), iErr)
+!!!         End If
+!!!      End Do
+!!!      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(dEXO_RuptProperties%EB_BC_Type_Z(dMeshTopology%Num_Elem_Blks))
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         dEXO_RuptProperties%EB_BC_Type_Z(i) = Tmp_Prop(GlobalId(i))
+!!!      End Do
+!!!      DeAllocate(Tmp_Prop)
+!!!      DeAllocate(IDs)
+!!!      DeAllocate(GlobalId)
+!!!
+!!!      !!! Side Sets
+!!!      ! To Do
+!!!      
+!!!      !!! Node Sets
+!!!      ! Get the number of records on cpu 0 of the communicator, and bcast them
+!!!      NumRec = dMeshTopology%Num_Node_Sets
+!!!      Call MPI_Bcast(NumRec, 1, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(Tmp_Prop(NumRec))
+!!!      Allocate(IDs(NumRec))
+!!!      Allocate(GlobalId(dMeshTopology%Num_Node_Sets))
+!!!
+!!!      If (MEF90_MyRank == 0) Then
+!!!         Do iRec = 1, NumRec
+!!!            IDs(iRec) = dMeshTopology%Node_Set(iRec)%ID
+!!!         End Do
+!!!      End If
+!!!      Call MPI_Bcast(IDs, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Do i = 1, dMeshTopology%Num_Node_Sets
+!!!         Do j = 1, NumRec
+!!!               If (dMeshTopology%Node_Set(i)%ID == IDs(j)) Then
+!!!                  GlobalID(i) = j
+!!!                  EXIT
+!!!               End If
+!!!         End Do
+!!!      End Do
+!!!      
+!!!      !!! NS_BC_Type_X
+!!!      Do iRec = 1, dMeshTopology%Num_Node_Sets
+!!!         If (Do_IO) Then
+!!!            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_NS(1), Tmp_Prop(iRec), iErr)
+!!!         End If
+!!!      End Do
+!!!      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(dEXO_RuptProperties%NS_BC_Type_X(dMeshTopology%Num_Node_Sets))
+!!!      Do iRec = 1, dMeshTopology%Num_Node_Sets
+!!!         dEXO_RuptProperties%NS_BC_Type_X(i) = Tmp_Prop(GlobalId(i))
+!!!      End Do
+!!!      !!! NS_BC_Type_Y
+!!!      Do iRec = 1, dMeshTopology%Num_Node_Sets
+!!!         If (Do_IO) Then
+!!!            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_NS(2), Tmp_Prop(iRec), iErr)
+!!!         End If
+!!!      End Do
+!!!      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(dEXO_RuptProperties%NS_BC_Type_Y(dMeshTopology%Num_Node_Sets))
+!!!      Do iRec = 1, dMeshTopology%Num_Node_Sets
+!!!         dEXO_RuptProperties%NS_BC_Type_Z(i) = Tmp_Prop(GlobalId(i))
+!!!      End Do
+!!!      !!! NS_BC_Type_Z
+!!!      Do iRec = 1, dMeshTopology%Num_Node_Sets
+!!!         If (Do_IO) Then
+!!!            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_NS(3), Tmp_Prop(iRec), iErr)
+!!!         End If
+!!!      End Do
+!!!      Call MPI_Bcast(Tmp_Prop, NumRec, MPI_INTEGER, 0, dEXO%comm, iErr)
+!!!      Allocate(dEXO_RuptProperties%NS_BC_Type_Z(dMeshTopology%Num_Node_Sets))
+!!!      Do iRec = 1, dMeshTopology%Num_Node_Sets
+!!!         dEXO_RuptProperties%NS_BC_Type_Z(i) = Tmp_Prop(GlobalId(i))
+!!!      End Do
+!!!      DeAllocate(Tmp_Prop)
+!!!      DeAllocate(IDs)
+!!!      DeAllocate(GlobalId)
+!!!      
+!!!      
+!!!      If (Do_IO) Then
+!!!         Call EXCLOS(dEXO%exoid, iErr)
+!!!         dEXO%exoid = 0
+!!!      End If
+   End Subroutine EXO_RuptPropertiesRead
 
-   Subroutine EXO_RuptWrite(dEXO, dMeshTopology, dEXO_RuptProperties)
+   Subroutine EXO_RuptPropertiesWrite(dEXO, dMeshTopology, dEXO_RuptProperties)
       Type(EXO_Info)                                :: dEXO
       Type(MeshTopology_Info)                       :: dMeshTopology
       Type(EXO_RuptProperties_Type)                 :: dEXO_RuptProperties
-      PetscInt                                      :: iErr
-      PetscInt, Dimension(:), Pointer               :: Tmp_Prop
+      PetscInt                                      :: iErr, Tmp_Prop, iRec
 
       If (dEXO%comm == PETSC_COMM_WORLD) Then
          SETERRQ(PETSC_ERR_SUP, 'EXO_RuptWrite: Writing properties on EXO files defined on PETSC_COMM_WORLD not implemented', iErr)
@@ -520,29 +560,30 @@ Module m_Rupt_Struct
       dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
       
       !!! Element block properties
-      Allocate(Tmp_Prop(dMeshTopology%Num_Elem_Blks))
-      Tmp_Prop = dEXO_RuptProperties%Is_Brittle
-      Call EXPPA(dEXO%exoid, EXEBLK, Prop_Name_EB(1), Tmp_Prop, iErr)
-      Tmp_Prop = dEXO_RuptProperties%Is_Domain
-      Call EXPPA(dEXO%exoid, EXEBLK, Prop_Name_EB(2), Tmp_Prop, iErr)
-      Tmp_Prop = dEXO_RuptProperties%Has_BodyForce
-      Call EXPPA(dEXO%exoid, EXEBLK, Prop_Name_EB(3), Tmp_Prop, iErr)
-      Call EXPPA(dEXO%exoid, EXEBLK, Prop_Name_EB(4), dEXO_RuptProperties%EB_BC_Type_X, iErr)
-      Call EXPPA(dEXO%exoid, EXEBLK, Prop_Name_EB(5), dEXO_RuptProperties%EB_BC_Type_Y, iErr)
-      Call EXPPA(dEXO%exoid, EXEBLK, Prop_Name_EB(6), dEXO_RuptProperties%EB_BC_Type_Z, iErr)
-      DeAllocate(Tmp_Prop)
+      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+         Tmp_Prop = dEXO_RuptProperties%Is_Brittle(iRec)
+         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(1), Tmp_Prop, iErr)
+         Tmp_Prop = dEXO_RuptProperties%Is_Domain(iRec)
+         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(2), Tmp_Prop, iErr)
+         Tmp_Prop = dEXO_RuptProperties%Has_BodyForce(iRec)
+         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(3), Tmp_Prop, iErr)
+         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(4), dEXO_RuptProperties%EB_BC_Type_X(iRec), iErr)
+         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(5), dEXO_RuptProperties%EB_BC_Type_Y(iRec), iErr)
+         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(6), dEXO_RuptProperties%EB_BC_Type_Z(iRec), iErr)
+      End Do
 
       !!! Side Set properties
       ! To Do
       
       !! Node Sets properties
-      Call EXPPA(dEXO%exoid, EXNSET, Prop_Name_NS(1), dEXO_RuptProperties%NS_BC_Type_X, iErr)
-      Call EXPPA(dEXO%exoid, EXNSET, Prop_Name_NS(2), dEXO_RuptProperties%NS_BC_Type_Y, iErr)
-      Call EXPPA(dEXO%exoid, EXNSET, Prop_Name_NS(3), dEXO_RuptProperties%NS_BC_Type_Z, iErr)
-
+      Do iRec = 1, dMeshTopology%Num_Node_Sets
+         Call EXPP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(1), dEXO_RuptProperties%NS_BC_Type_X(iRec), iErr)
+         Call EXPP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(2), dEXO_RuptProperties%NS_BC_Type_Y(iRec), iErr)
+         Call EXPP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(3), dEXO_RuptProperties%NS_BC_Type_Z(iRec), iErr)
+      End Do
       Call EXCLOS(dEXO%exoid, iErr)
       dEXO%exoid = 0
-   End Subroutine EXO_RuptWrite
+   End Subroutine EXO_RuptPropertiesWrite
    
    Subroutine SchemeParamView(dSchemeParam, viewer)
       Type(SchemeParam_Type)                       :: dSchemeParam
@@ -756,4 +797,4 @@ Module m_Rupt_Struct
 
       A%YYYY =  A%XXXX
    End Subroutine GenHL_Ortho2D_LambdaMu
-End Module m_Rupt_Struct
+End Module m_RuptStruct

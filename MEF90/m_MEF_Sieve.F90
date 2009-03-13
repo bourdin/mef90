@@ -31,7 +31,6 @@ Contains
       PetscInt                                     :: iErr, iBlk, iSet
       Character(len=256)                           :: CharBuffer
       
-!      Type(Mesh)                                   :: Tmp_mesh
       PetscReal, Dimension(:,:), Pointer           :: array
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
       PetscInt                                     :: embedDim
@@ -39,15 +38,6 @@ Contains
       PetscInt, Dimension(:), Pointer              :: blkIds
       PetscInt, Dimension(:), Pointer              :: setIds
       
-      ! Open File
-!      Call MeshCreateExodus(PETSC_COMM_WORLD, dEXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      !!! reads exo file, stores all information in a Mesh
-
-!      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, dMeshTopology%mesh, ierr); CHKERRQ(iErr)
-      !!! Partitions using a partitioner (currently PETSC_NULL_CHARACTER) 
-     
-!      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-
       ! Read Global Geometric Parameters
       Call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
       !!! Extracts sizes from the Mesh oject
