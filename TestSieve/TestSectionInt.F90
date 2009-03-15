@@ -58,17 +58,17 @@ Program TestSectionInt
    !!! This would be nice, except that it won't work with the fortran types...
 
    !!! Do it the most generic way
-   Call MeshGetSectionInt(MeshTopology%Mesh, prefix, Sec2, iErr); CHKERRQ(iErr)
+   Call MeshGetSectionInt(Tmp_Mesh, prefix, Sec2, iErr); CHKERRQ(iErr)
    Do i = 1, num_verts
       Call SectionIntSetFiberDimension(Sec2, i+Num_Elems-1, 1, iErr); CHKERRQ(iErr)
    End Do 
-
+   Call SectionIntAllocate(Sec2, iErr); CHKERRQ(iErr)
 
    !!! Setup and initialize an internal SectionInt
    Allocate(IntValues(1))
    Do i = 1, num_verts
       IntValues = i
-      Call MeshUpdateClosureInt(Tmp_mesh, Sec1, i+Num_Elems-1, IntValues, iErr); CHKERRQ(iErr)
+!      Call MeshUpdateClosureInt(Tmp_mesh, Sec1, i+Num_Elems-1, IntValues, iErr); CHKERRQ(iErr)
       Call MeshUpdateClosureInt(Tmp_mesh, Sec2, i+Num_Elems-1, IntValues, iErr); CHKERRQ(iErr)
    End Do 
    DeAllocate(IntValues)
