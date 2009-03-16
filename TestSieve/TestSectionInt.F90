@@ -75,12 +75,12 @@ Program TestSectionInt
 
    !!! Create Sec2
    Call MeshGetSectionInt(MeshTopology%mesh, prefix, Sec2, iErr); CHKERRQ(iErr)
-   Do i = 1, MeshTopology%Num_Verts
-      Call SectionIntSetFiberDimension(Sec2, i+MeshTopology%Num_Elems-1, 1, iErr); CHKERRQ(iErr)
-   End Do 
-   Call SectionIntAllocate(Sec2, iErr); CHKERRQ(iErr)
-
-   Call SectionIntDistribute(Sec1, MeshTopology%mesh, Sec2, iErr); CHKERRQ(iErr)
+!!!   Do i = 1, MeshTopology%Num_Verts
+!!!      Call SectionIntSetFiberDimension(Sec2, i+MeshTopology%Num_Elems-1, 1, iErr); CHKERRQ(iErr)
+!!!   End Do 
+!!!   Call SectionIntAllocate(Sec2, iErr); CHKERRQ(iErr)
+!!!
+!!!   Call SectionIntDistribute(Sec1, MeshTopology%mesh, Sec2, iErr); CHKERRQ(iErr)
 
    Call PetscPrintf(PETSC_COMM_WORLD, "Sec2 after SectionIntDistribute\n"c, iErr); CHKERRQ(iErr)
    Call SectionIntView(Sec2, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
