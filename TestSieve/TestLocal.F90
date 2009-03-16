@@ -12,8 +12,8 @@ Program TestLocal
 
    Implicit NONE   
 
-   Type (MeshTopology_Info)                     :: MeshTopology
-   Type (EXO_Info)                              :: EXO, MyEXO
+   Type (MeshTopology_Type)                     :: MeshTopology
+   Type (EXO_Type)                              :: EXO, MyEXO
    Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
    Type (Vect3D), Dimension(:), Pointer         :: Coords
    
@@ -53,7 +53,7 @@ Program TestLocal
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
+      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
    
    If (verbose) Then
@@ -85,7 +85,7 @@ Program TestLocal
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
 
    If (verbose) Then
-      Write(IOBuffer, 300) 'EXO_Info\n'c
+      Write(IOBuffer, 300) 'EXO_Type\n'c
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(EXO, myviewer)
 
