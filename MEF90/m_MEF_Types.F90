@@ -144,15 +144,36 @@ Module m_MEF_Types
       Character(len=MXLNLN)                          :: title     
       ! QA DATAS
       Integer                                        :: num_QA    
-      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    
+      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec
+      ! Properties
+      PetscInt                                       :: Num_EBProperties
+      Type(EXO_Property_Type), Dimension(:), Pointer :: EBProperty
+      PetscInt                                       :: Num_SSProperties
+      Type(EXO_Property_Type), Dimension(:), Pointer :: SSProperty
+      PetscInt                                       :: Num_NSProperties
+      Type(EXO_Property_Type), Dimension(:), Pointer :: NSProperty
+      ! Variables
+      PetscInt                                       :: Num_Variables    
+      Type(EXO_Variable_Type), DImension(:), Pointer :: Variable
    End Type EXO_Type
+   
+   Type EXO_Property_Type
+      Character(MXSTLN)                              :: Name
+      PetscInt                                       :: Value
+   End Type EXO_Property_Type
+   
+   Type EXO_Variable_Type
+      Character(MXSTLN)                              :: Name
+      PetscInt                                       :: Offset
+      !!! the position of the variable in the exo file
+   End Type EXO_Variable_Type   
    
 Contains
    Subroutine EXOView(dEXO, viewer)
       Type(EXO_Type)              :: dEXO
       Type(PetscViewer)           :: viewer
       
-      PetscInt                    :: iErr
+      PetscInt                    :: i, iErr
       Character(len=512)          :: CharBuffer
    
       If (dEXO%comm == PETSC_COMM_WORLD) Then
@@ -170,6 +191,27 @@ Contains
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 103) dEXO%title
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+
+      Write(CharBuffer, 106) dEXO%Num_EBProperties
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do i = 1, dEXO%Num_EBProperties
+         Write(109, *) dEXO%EBProperty(i)%Name, dEXO%EBProperty(i)%Value
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      End Do
+
+      Write(CharBuffer, 107) dEXO%Num_SSProperties
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do i = 1, dEXO%Num_SSProperties
+         Write(109, *) dEXO%SSProperty(i)%Name, dEXO%SSProperty(i)%Value
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      End Do
+
+      Write(CharBuffer, 108) dEXO%Num_NSProperties
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do i = 1, dEXO%Num_NSProperties
+         Write(109, *) dEXO%NSProperty(i)%Name, dEXO%NSProperty(i)%Value
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      End Do
 !      Do i = 1, dEXO%Num_QA
 !         Write(CharBuffer, 104) i, dEXO%QA_rec(i,:)
 !         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
@@ -181,6 +223,12 @@ Contains
  103 Format('title:              ', A, '\n'c)
  104 Format('QA_rec ', I2.2, '         ', A, '\n'c)
  105 Format('Communicator:       ', A, I3, '\n'c)
+ 106 Format('EB Properties: ', I3, '\n'c)
+ 107 Format('SS Properties: ', I3, '\n'c)
+ 108 Format('NS Properties: ', I3, '\n'c)
+ 109 Format(A, t32, I3, '\n'c)
+ 110 Format('Nodal Variables: ', I3, '\n'c)
+ 111 Format('Cell Variables:  ', I3, '\n'c)
    End Subroutine EXOView
 
 

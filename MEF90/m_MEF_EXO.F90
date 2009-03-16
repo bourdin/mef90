@@ -33,6 +33,9 @@ Module m_MEF_EXO
    Public :: Read_EXO_Result_Cell
    Public :: Write_EXO_Result_Cell
 
+   Public :: EXO_Property_Write
+   Public :: EXO_Property_Read
+   
    
    Interface Read_EXO_Result_Vertex
       Module Procedure Read_EXO_Result_VertexPtrInterlaced, Read_EXO_Result_VertexSection, Read_EXO_Result_VertexVec, Read_EXO_Result_VertexVect2D, Read_EXO_Result_VertexVect3D, Read_EXO_Result_VertexMat2D, Read_EXO_Result_VertexMatS2D, Read_EXO_Result_VertexMat3D, Read_EXO_Result_VertexMatS3D
@@ -71,7 +74,123 @@ Module m_MEF_EXO
 101 Format('FILES_PER_TIMESET', I)
 102 Format('TIMESET_TEMPLATE "', A, '-', A, '.gen"')
    End Subroutine Write_EXO_Case
+   
+   Subroutine EXO_Property_Write(dEXO)
+      Type(EXO_Type)                                 :: dEXO
+      PetscInt                                       :: vers
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i
+
+      Character(len=MXSTLN), Dimension(:), Pointer   :: PropName
+      PetscInt, Dimension(:), Pointer                :: PropValue
+
+      If (MEF90_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         !!! EB Properties
+         Allocate(PropName (dEXO%Num_EBProperties))
+         Allocate(PropValue(dEXO%Num_EBProperties))
+         Do i = 1, dEXO%Num_EBProperties
+            PropName(i)  = dEXO%EBProperty(i)%Name
+            PropValue(i) = dEXO%EBProperty(i)%Value
+         End Do
+         !!! Can I vectorize that?
+         Call EXPPA(dEXO%exoid, EXEBLK, PropName, PropValue, iErr)
+         DeAllocate(PropName)
+         DeAllocate(PropValue)
+         
+         !!! SS Properties
+         Allocate(PropName (dEXO%Num_SSProperties))
+         Allocate(PropValue(dEXO%Num_SSProperties))
+         Do i = 1, dEXO%Num_SSProperties
+            PropName(i)  = dEXO%SSProperty(i)%Name
+            PropValue(i) = dEXO%SSProperty(i)%Value
+         End Do
+         !!! Can I vectorize that?
+         Call EXPPA(dEXO%exoid, EXSSET, PropName, PropValue, iErr)
+         DeAllocate(PropName)
+         DeAllocate(PropValue)
+
+         !!! NS Properties
+         Allocate(PropName (dEXO%Num_NSProperties))
+         Allocate(PropValue(dEXO%Num_NSProperties))
+         Do i = 1, dEXO%Num_NSProperties
+            PropName(i)  = dEXO%NSProperty(i)%Name
+            PropValue(i) = dEXO%NSProperty(i)%Value
+         End Do
+         !!! Can I vectorize that?
+         Call EXPPA(dEXO%exoid, EXNSET, PropName, PropValue, iErr)
+         DeAllocate(PropName)
+         DeAllocate(PropValue)
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+   End Subroutine EXO_Property_Write
       
+   Subroutine EXO_Property_Read(dEXO)
+      Type(EXO_Type)                                 :: dEXO
+      PetscInt                                       :: vers
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i
+      PetscInt                                       :: NumProp
+      PetscReal                                      :: rDummy
+      Character                                      :: cDummy
+      
+      Character(len=MXSTLN), Dimension(:), Pointer   :: PropName
+      PetscInt, Dimension(:), Pointer                :: PropValue
+
+      If (MEF90_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         !!! EB Properties
+         Call EXINQ(dEXO%exoid, EXNEBP, NumProp, rDummy, cDummy, iErr)
+         NumProp = NumProp
+         Allocate(PropName (NumProp))
+         Allocate(PropValue(NumProp))
+         Call EXGPA(dEXO%exoid, EXEBLK, PropName, PropValue, iErr)
+         dEXO%Num_EBProperties = NumProp-1
+         Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
+         Do i = 1, dEXO%Num_EBProperties
+            dEXO%EBProperty(i)%Name  = PropName(i+1)
+            dEXO%EBProperty(i)%Value = PropValue(i+1)
+         End Do
+         DeAllocate(PropName)
+         DeAllocate(PropValue)
+         
+         !!! SS Properties
+         Call EXINQ(dEXO%exoid, EXNSSP, NumProp, rDummy, cDummy, iErr)
+         NumProp = NumProp
+         Allocate(PropName (NumProp))
+         Allocate(PropValue(NumProp))
+         Call EXGPA(dEXO%exoid, EXSSET, PropName, PropValue, iErr)
+         dEXO%Num_SSProperties = NumProp-1
+         Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
+         Do i = 1, dEXO%Num_SSProperties
+            dEXO%SSProperty(i)%Name  = PropName(i+1)
+            dEXO%SSProperty(i)%Value = PropValue(i+1)
+         End Do
+         DeAllocate(PropName)
+         DeAllocate(PropValue)
+
+         !!! EB Properties
+         Call EXINQ(dEXO%exoid, EXNNSP, NumProp, rDummy, cDummy, iErr)
+         NumProp = NumProp
+         Allocate(PropName (NumProp))
+         Allocate(PropValue(NumProp))
+         Call EXGPA(dEXO%exoid, EXNSET, PropName, PropValue, iErr)
+         dEXO%Num_NSProperties = NumProp-1
+         Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
+         Do i = 1, dEXO%Num_NSProperties
+            dEXO%NSProperty(i)%Name  = PropName(i+1)
+            dEXO%NSProperty(i)%Value = PropValue(i+1)
+         End Do
+         DeAllocate(PropName)
+         DeAllocate(PropValue)
+         
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+   End Subroutine EXO_Property_Read
+
+
    Subroutine Write_MeshTopology(dMeshTopology, dEXO)
       Type(MeshTopology_Type)                        :: dMeshTopology
       Type(EXO_Type)                                 :: dEXO
