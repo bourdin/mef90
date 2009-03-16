@@ -178,7 +178,7 @@ Module m_RuptStruct
 
  Contains
    Subroutine MatProp2DWrite(MeshTopology, MatProp, filename)
-      Type(MeshTopology_Info)                      :: MeshTopology
+      Type(MeshTopology_Type)                      :: MeshTopology
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
       Character(len=*)                             :: filename
       PetscMPIInt                                  :: rank
@@ -198,7 +198,7 @@ Module m_RuptStruct
    End Subroutine MatProp2DWrite
  
    Subroutine MatProp3DWrite(MeshTopology, MatProp, filename)
-      Type(MeshTopology_Info)                      :: MeshTopology
+      Type(MeshTopology_Type)                      :: MeshTopology
       Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
       Character(len=*)                             :: filename
 
@@ -220,7 +220,7 @@ Module m_RuptStruct
  
  
    Subroutine MatProp2DRead(MeshTopology, MatProp, filename)
-      Type(MeshTopology_Info)                      :: MeshTopology
+      Type(MeshTopology_Type)                      :: MeshTopology
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
       Character(len=*)                             :: filename
 
@@ -259,7 +259,7 @@ Module m_RuptStruct
    End Subroutine MatProp2DRead
    
    Subroutine MatProp3DRead(MeshTopology, MatProp, filename)
-      Type(MeshTopology_Info)                      :: MeshTopology
+      Type(MeshTopology_Type)                      :: MeshTopology
       Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
       Character(len=*)                             :: filename
 
@@ -298,7 +298,7 @@ Module m_RuptStruct
    End Subroutine MatProp3DRead
 
    Subroutine EXO_RuptPropertiesFormat(dEXO)
-      Type(EXO_Info)                                :: dEXO
+      Type(EXO_Type)                                :: dEXO
       PetscInt                                      :: iErr
       Integer                                       :: exo_ver
       
@@ -324,8 +324,8 @@ Module m_RuptStruct
    End Subroutine EXO_RuptPropertiesFormat
    
    Subroutine EXO_RuptPropertiesRead(dEXO, dMeshTopology, dEXO_RuptProperties)
-      Type(EXO_Info)                                :: dEXO
-      Type(MeshTopology_Info)                       :: dMeshTopology
+      Type(EXO_Type)                                :: dEXO
+      Type(MeshTopology_Type)                       :: dMeshTopology
       Type(EXO_RuptProperties_Type)                 :: dEXO_RuptProperties
       PetscInt                                      :: iErr
       PetscInt                                      :: i, j
@@ -548,8 +548,8 @@ Module m_RuptStruct
    End Subroutine EXO_RuptPropertiesRead
 
    Subroutine EXO_RuptPropertiesWrite(dEXO, dMeshTopology, dEXO_RuptProperties)
-      Type(EXO_Info)                                :: dEXO
-      Type(MeshTopology_Info)                       :: dMeshTopology
+      Type(EXO_Type)                                :: dEXO
+      Type(MeshTopology_Type)                       :: dMeshTopology
       Type(EXO_RuptProperties_Type)                 :: dEXO_RuptProperties
       PetscInt                                      :: iErr, Tmp_Prop, iRec
 

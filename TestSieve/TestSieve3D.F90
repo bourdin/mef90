@@ -15,9 +15,9 @@ Program TestSieve3D
    
    Implicit NONE
     
-   Type(MeshTopology_Info)                      :: MeshTopology
+   Type(MeshTopology_Type)                      :: MeshTopology
    Type(Mesh)                                   :: Tmp_Mesh
-   Type(EXO_Info)                               :: EXO
+   Type(EXO_Type)                               :: EXO
    Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
    Type(Vect3D), Dimension(:), Pointer          :: Coords
    PetscReal, Dimension(:,:), Pointer           :: Vertices
@@ -65,7 +65,7 @@ Program TestSieve3D
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
+      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
    If (verbose) Then
       Call MeshTopologyView(MeshTopology, PetscViewer(PETSC_VIEWER_STDOUT_SELF))
@@ -118,7 +118,7 @@ Program TestSieve3D
    Call MatZeroEntries(K, iErr); CHKERRQ(ierr)
    Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
    Call MatAssemblyEnd(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(ierr)
-   Call PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_INFO_DETAIL, ierr); CHKERRQ(ierr)
+   Call PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_Type_DETAIL, ierr); CHKERRQ(ierr)
    Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(ierr)
 
    Call MeshCreateGlobalScatter(MeshTopology%mesh, U, scatter, iErr); CHKERRQ(iErr)

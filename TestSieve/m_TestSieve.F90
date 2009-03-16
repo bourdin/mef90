@@ -21,7 +21,7 @@ Module m_TestSieve
    !!! dU_Loc must be a LOCAL (ghosted) vector 
    
       PetscReal                                     :: dMyObjFunc
-      Type(MeshTopology_Info)                       :: dMyMeshTopology
+      Type(MeshTopology_Type)                       :: dMyMeshTopology
       Type(Element2D_Scal), Dimension(:), Pointer   :: dMyElem
       Type(SectionReal)                             :: dU, dF
       PetscLogEvent                                 :: integrationEvent

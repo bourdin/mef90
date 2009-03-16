@@ -13,7 +13,7 @@ Module m_MEF_Types
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
 
-   Public :: Elem_Blk_Info, Node_Set_Info, MeshTopology_Info, EXO_Info
+   Public :: Elem_Blk_Type, Node_Set_Type, MeshTopology_Type, EXO_Type
    
    Public :: EXOView
    Public :: MeshTopologyDestroy, MeshTopologyView
@@ -41,16 +41,16 @@ Module m_MEF_Types
 !!!      Add parent block information?
 !!!      Can we possibly need to have elements owned by more than one block? I am assuming that we don't
 !!! 
-!!! Elem_Blk_Info
-!!!      Remove Type, replace with Element_Info
+!!! Elem_Blk_Type
+!!!      Remove Type, replace with Element_Type
 
 !!! ADD
-!!! Type Element_Info
+!!! Type Element_Type
 !!!
 !!! Various element names
 
 !!! RENAME
-!!! EXO_Geom_Info is now Geom_Info
+!!! EXO_Geom_Type is now Geom_Type
 
    Type Element1D
       PetscInt, Dimension(:), Pointer            :: ID_DoF
@@ -101,7 +101,7 @@ Module m_MEF_Types
       PetscReal, Dimension(:), Pointer           :: Gauss_C
    End Type Element3D_Elast
  
-   Type Elem_Blk_Info
+   Type Elem_Blk_Type
       Sequence
       PetscInt                                       :: ID
       PetscInt                                       :: Elem_Type
@@ -111,16 +111,16 @@ Module m_MEF_Types
       PetscInt                                       :: Num_DoF !! = sum(DoF_Location)
       PetscInt                                       :: Num_Elems
       PetscInt, Dimension(:), Pointer                :: Elem_ID
-   End Type Elem_Blk_Info
+   End Type Elem_Blk_Type
  
-   Type Node_Set_Info
+   Type Node_Set_Type
       Sequence
       PetscInt                                       :: ID
       PetscInt                                       :: Num_Nodes
       PetscInt, Dimension(:), Pointer                :: Node_ID
-   End Type Node_Set_Info
+   End Type Node_Set_Type
  
-   Type MeshTopology_Info
+   Type MeshTopology_Type
 !      Sequence
       ! Global datas
       PetscInt                                       :: num_dim
@@ -128,16 +128,16 @@ Module m_MEF_Types
       PetscInt                                       :: num_elems
       ! Element Blocks datas
       PetscInt                                       :: num_elem_blks
-      Type(Elem_Blk_Info), Dimension(:), Pointer     :: elem_blk
+      Type(Elem_Blk_Type), Dimension(:), Pointer     :: elem_blk
       ! Node sets datas
       PetscInt                                       :: num_node_sets 
-      Type(Node_Set_Info), Dimension(:), Pointer     :: node_set
+      Type(Node_Set_Type), Dimension(:), Pointer     :: node_set
       ! Side Sets DATAS
       PetscInt                                       :: num_side_sets
       Type(Mesh)                                     :: mesh
-   End Type MeshTopology_Info
+   End Type MeshTopology_Type
    
-   Type EXO_Info
+   Type EXO_Type
       MPI_Comm                                       :: comm      
       Integer                                        :: exoid
       Character(len=MXLNLN)                          :: filename  
@@ -145,11 +145,11 @@ Module m_MEF_Types
       ! QA DATAS
       Integer                                        :: num_QA    
       Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    
-   End Type EXO_Info
+   End Type EXO_Type
    
 Contains
    Subroutine EXOView(dEXO, viewer)
-      Type(EXO_Info)              :: dEXO
+      Type(EXO_Type)              :: dEXO
       Type(PetscViewer)           :: viewer
       
       PetscInt                    :: iErr
@@ -185,7 +185,7 @@ Contains
 
 
    Subroutine MeshTopologyDestroy(dMeshTopology)
-     Type(MeshTopology_Info)         :: dMeshTopology
+     Type(MeshTopology_Type)         :: dMeshTopology
      PetscInt                        :: iSet, iBlk
 
      If (Size(dMeshTopology%Node_set) > 0) Then
@@ -209,7 +209,7 @@ Contains
    End Subroutine MeshTopologyDestroy
 
    Subroutine MeshTopologyView(dMeshTopology, viewer)
-      Type(MeshTopology_Info), Intent(IN)           :: dMeshTopology
+      Type(MeshTopology_Type), Intent(IN)           :: dMeshTopology
       Type(PetscViewer)                             :: viewer
       
       Integer                                        :: iErr

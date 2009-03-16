@@ -26,8 +26,8 @@ Module m_MEF_Sieve
 Contains
    Subroutine MeshTopologyReadEXO(dMeshTopology, dEXO)
       !!! Remove the element and coordinate stuff and move in separate functions
-      Type (MeshTopology_Info)                     :: dMeshTopology
-      Type (EXO_Info)                              :: dEXO
+      Type (MeshTopology_Type)                     :: dMeshTopology
+      Type (EXO_Type)                              :: dEXO
       PetscInt                                     :: iErr, iBlk, iSet
       Character(len=256)                           :: CharBuffer
       
@@ -92,7 +92,7 @@ Contains
    End Subroutine MeshTopologyReadEXO
     
    Subroutine MeshInitCoordinatesVect2D(dMeshTopology, dCoords)
-      Type(MeshTopology_Info)                      :: dMeshTopology
+      Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Vect2D), Dimension(:), Pointer          :: dCoords
       
       PetscReal, Dimension(:,:), Pointer           :: array
@@ -105,7 +105,7 @@ Contains
    End Subroutine MeshInitCoordinatesVect2D 
 
    Subroutine MeshInitCoordinatesVect3D(dMeshTopology, dCoords)
-      Type(MeshTopology_Info)                      :: dMeshTopology
+      Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Vect3D), Dimension(:), Pointer          :: dCoords
 
       PetscReal, Dimension(:,:), Pointer           :: array
@@ -119,7 +119,7 @@ Contains
    End Subroutine MeshInitCoordinatesVect3D 
 
    Subroutine MeshInitElementConnectivity2D_Scal(dMeshTopology, dElem)
-      Type(MeshTopology_Info)                      :: dMeshTopology
+      Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element2D_Scal), Dimension(:), Pointer  :: dElem
       
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
@@ -139,7 +139,7 @@ Contains
     End Subroutine MeshInitElementConnectivity2D_Scal
 
    Subroutine MeshInitElementConnectivity2D(dMeshTopology, dElem)
-      Type(MeshTopology_Info)                      :: dMeshTopology
+      Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element2D), Dimension(:), Pointer       :: dElem
       
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
@@ -159,7 +159,7 @@ Contains
     End Subroutine MeshInitElementConnectivity2D
 
    Subroutine MeshInitElementConnectivity2D_Elast(dMeshTopology, dElem)
-      Type(MeshTopology_Info)                      :: dMeshTopology
+      Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element2D_Elast), Dimension(:), Pointer :: dElem
       
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
@@ -179,7 +179,7 @@ Contains
     End Subroutine MeshInitElementConnectivity2D_Elast
 
    Subroutine MeshInitElementConnectivity3D_Scal(dMeshTopology, dElem)
-      Type(MeshTopology_Info)                      :: dMeshTopology
+      Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element3D_Scal), Dimension(:), Pointer  :: dElem
       
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
@@ -199,7 +199,7 @@ Contains
     End Subroutine MeshInitElementConnectivity3D_Scal
 
    Subroutine MeshInitElementConnectivity3D(dMeshTopology, dElem)
-      Type(MeshTopology_Info)                      :: dMeshTopology
+      Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element3D), Dimension(:), Pointer       :: dElem
       
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
@@ -219,7 +219,7 @@ Contains
     End Subroutine MeshInitElementConnectivity3D
 
    Subroutine MeshInitElementConnectivity3D_Elast(dMeshTopology, dElem)
-      Type(MeshTopology_Info)                      :: dMeshTopology
+      Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element3D_Elast), Dimension(:), Pointer :: dElem
       
       PetscInt, Dimension(:,:), Pointer            :: arrayCon

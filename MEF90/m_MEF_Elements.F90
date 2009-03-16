@@ -13,7 +13,7 @@ Module m_MEF_Elements
    
    Public :: Init_Element
    Public :: Destroy_Element
-   Public :: Init_Elem_Blk_Info
+   Public :: Init_Elem_Blk_Type
    Public :: ElementView
 
 
@@ -36,8 +36,8 @@ Module m_MEF_Elements
 !   PetscInt, Parameter, Public                   :: MEF90_Q2_Lagrange = 4
 
  Contains
-   Subroutine Init_Elem_Blk_Info(dBlk, dDim)
-      Type (Elem_Blk_Info)                   :: dBlk
+   Subroutine Init_Elem_Blk_Type(dBlk, dDim)
+      Type (Elem_Blk_Type)                   :: dBlk
       PetscInt                               :: dDim
       
       Select Case (dDim)
@@ -67,7 +67,7 @@ Module m_MEF_Elements
       End Select
       dBlk%Num_DoF = sum(dBlk%DoF_Location)
 
-   End Subroutine Init_Elem_Blk_Info      
+   End Subroutine Init_Elem_Blk_Type      
       
    
    Subroutine Init_Element2D_Scal(dElem, dCoord, QuadratureOrder, Element_Type)
