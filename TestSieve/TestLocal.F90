@@ -246,6 +246,7 @@ Program TestLocal
    Call SectionRealDestroy(Coords_Sec, iErr); CHKERRQ(iErr)
    Call SectionRealDestroy(U_Sec, iErr)
    DeAllocate(V2D)
+   Call VecScatterDestroy(scatter, iErr); CHKERRQ(iErr)
    
    
    If (verbose) Then
@@ -253,7 +254,6 @@ Program TestLocal
       Call PetscViewerDestroy(myviewer, iErr); CHKERRQ(iErr)
       Call PetscViewerFlush(viewer, iErr); CHKERRQ(iErr)
       Call PetscViewerDestroy(viewer, iErr); CHKERRQ(iErr)
-      Call VecScatterDestroy(scatter, iErr); CHKERRQ(iErr)
    End If
    
 300 Format(A)   

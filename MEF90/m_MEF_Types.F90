@@ -200,7 +200,7 @@ Contains
       Write(CharBuffer, 106) dEXO%Num_EBProperties
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Do i = 1, dEXO%Num_EBProperties
-         Write(CharBuffer, 109) dEXO%EBProperty(i)%Name
+         Write(CharBuffer, 109) dEXO%EBProperty(i)%Name, Size(dEXO%EBProperty(i)%Value)
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, Size(dEXO%EBProperty(i)%Value)
             Write(CharBuffer, 201) j, dEXO%EBProperty(i)%Value(j)
@@ -211,7 +211,7 @@ Contains
       Write(CharBuffer, 107) dEXO%Num_SSProperties
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Do i = 1, dEXO%Num_SSProperties
-         Write(CharBuffer, 109) dEXO%SSProperty(i)%Name
+         Write(CharBuffer, 109) dEXO%SSProperty(i)%Name, Size(dEXO%SSProperty(i)%Value)
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, Size(dEXO%SSProperty(i)%Value)
             Write(CharBuffer, 202) j, dEXO%SSProperty(i)%Value(j)
@@ -222,7 +222,7 @@ Contains
       Write(CharBuffer, 108) dEXO%Num_NSProperties
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Do i = 1, dEXO%Num_NSProperties
-         Write(CharBuffer, 109) dEXO%NSProperty(i)%Name
+         Write(CharBuffer, 109) dEXO%NSProperty(i)%Name, Size(dEXO%NSProperty(i)%Value)
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, Size(dEXO%NSProperty(i)%Value)
             Write(CharBuffer, 203) j, dEXO%NSProperty(i)%Value(j)
@@ -258,7 +258,7 @@ Contains
  106 Format('Number of EB Properties: ', I3, '\n'c)
  107 Format('Number of SS Properties: ', I3, '\n'c)
  108 Format('Number of NS Properties: ', I3, '\n'c)
- 109 Format(A, '\n'c)
+ 109 Format('   ', A, 'num values:', I3, '\n'c)
  110 Format('Global Variables: ', I3, '\n'c)
  111 Format('Cell Variables:   ', I3, '\n'c)
  112 Format('Vertex Variables: ', I3, '\n'c)
@@ -353,10 +353,11 @@ Contains
             Write(CharBuffer, 500) dMeshTopology%Node_Set(i)%Node_ID(j)
             Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          End Do
+         Write(CharBuffer, 600) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       End Do
       
       
-      Write(CharBuffer, 600) '\n'c
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 400)
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
