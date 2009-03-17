@@ -18,12 +18,12 @@ Module m_RuptStruct
    Public :: SchemeParamLoad
    Public :: SchemeParamGetFromOptions
    
-   Public :: EXO_RuptPropertiesFormat
-   Public :: EXO_RuptPropertiesRead
-   Public :: EXO_RuptPropertiesWrite
+!!!   Public :: EXO_RuptPropertiesFormat
+!!!   Public :: EXO_RuptPropertiesRead
+!!!   Public :: EXO_RuptPropertiesWrite
 
    Public :: MatProp2D_Type, MatProp3D_Type
-   Public :: EXO_RuptProperties_Type
+!!!   Public :: EXO_RuptProperties_Type
 
    
    Interface MatPropWrite
@@ -44,61 +44,61 @@ Module m_RuptStruct
 
 !!! Add Side Set properties
 !!! Add BC to EB and SS
-   Integer, Parameter                              :: Num_Prop_EB  = 6
-   Character(len=MXSTLN), Dimension(6), Parameter  :: Prop_Name_EB =          &
-       &     (/ 'Is_Brittle    ',                                             &
-       &        'Is_Domain     ',                                             &
-       &        'Has_BodyForce ',                                             &
-       &        'BC_Type_X ',                                                 &
-       &        'BC_Type_Y ',                                                 &
-       &        'BC_Type_Z ' /) 
-   
-   Integer, Parameter                              :: Num_Prop_SS  = 4
-   Character(len=MXSTLN), Dimension(4), Parameter  :: Prop_Name_SS =          &
-       &     (/ 'Has_SurfForce ',                                             &
-       &        'BC_Type_X ',                                                 &
-       &        'BC_Type_Y ',                                                 &
-       &        'BC_Type_Z ' /) 
-
-   Integer, Parameter                              :: Num_Prop_NS  = 3
-   Character(len=MXSTLN), Dimension(3), Parameter  :: Prop_Name_NS =          &
-       &     (/ 'BC_Type_X ',                                                 &
-       &        'BC_Type_Y ',                                                 &
-       &        'BC_Type_Z ' /)
-   
-   Integer, Parameter                              :: Num_Res_G = 5
-   Character(len=MXSTLN), Dimension(5), Parameter  :: Res_Name_G =            &
-       &     (/ 'Bulk energy   ',                                             &
-       &        'Surface energy',                                             &
-       &        'Total energy  ',                                             &
-       &        'Load          ',                                             &
-       &        'Analysis time '/)
-   
-   Integer, Parameter                              :: Num_Res_N  = 8
-   Character(len=MXSTLN), Dimension(8), Parameter  :: Res_Name_N =            &
-      &      (/ 'Fracture      ',                                             &
-      &         'Displacement X',                                             &
-      &         'Displacement Y',                                             &
-      &         'Displacement Z',                                             &
-      &         'Force X       ',                                             &
-      &         'Force Y       ',                                             &
-      &         'Force Z       ',                                             &
-      &         'Temperature   ' /)
-   
-   Integer, Parameter                              :: Num_Res_E  = 12
-   Character(len=MXSTLN), Dimension(12), Parameter :: Res_Name_E =            &
-      &      (/ 'Strain XX',                                                  &
-      &         'Strain YY',                                                  &
-      &         'Strain ZZ',                                                  &
-      &         'Strain XY',                                                  &
-      &         'Strain YZ',                                                  &
-      &         'Strain XZ',                                                  &
-      &         'Stress XX',                                                  &
-      &         'Stress YY',                                                  &
-      &         'Stress ZZ',                                                  &
-      &         'Stress XY',                                                  &
-      &         'Stress YZ',                                                  &
-      &         'Stress ZX' /)
+!!!   Integer, Parameter                              :: Num_Prop_EB  = 6
+!!!   Character(len=MXSTLN), Dimension(6), Parameter  :: Prop_Name_EB =          &
+!!!       &     (/ 'Is_Brittle    ',                                             &
+!!!       &        'Is_Domain     ',                                             &
+!!!       &        'Has_BodyForce ',                                             &
+!!!       &        'BC_Type_X ',                                                 &
+!!!       &        'BC_Type_Y ',                                                 &
+!!!       &        'BC_Type_Z ' /) 
+!!!   
+!!!   Integer, Parameter                              :: Num_Prop_SS  = 4
+!!!   Character(len=MXSTLN), Dimension(4), Parameter  :: Prop_Name_SS =          &
+!!!       &     (/ 'Has_SurfForce ',                                             &
+!!!       &        'BC_Type_X ',                                                 &
+!!!       &        'BC_Type_Y ',                                                 &
+!!!       &        'BC_Type_Z ' /) 
+!!!
+!!!   Integer, Parameter                              :: Num_Prop_NS  = 3
+!!!   Character(len=MXSTLN), Dimension(3), Parameter  :: Prop_Name_NS =          &
+!!!       &     (/ 'BC_Type_X ',                                                 &
+!!!       &        'BC_Type_Y ',                                                 &
+!!!       &        'BC_Type_Z ' /)
+!!!   
+!!!   Integer, Parameter                              :: Num_Res_G = 5
+!!!   Character(len=MXSTLN), Dimension(5), Parameter  :: Res_Name_G =            &
+!!!       &     (/ 'Bulk energy   ',                                             &
+!!!       &        'Surface energy',                                             &
+!!!       &        'Total energy  ',                                             &
+!!!       &        'Load          ',                                             &
+!!!       &        'Analysis time '/)
+!!!   
+!!!   Integer, Parameter                              :: Num_Res_N  = 8
+!!!   Character(len=MXSTLN), Dimension(8), Parameter  :: Res_Name_N =            &
+!!!      &      (/ 'Fracture      ',                                             &
+!!!      &         'Displacement X',                                             &
+!!!      &         'Displacement Y',                                             &
+!!!      &         'Displacement Z',                                             &
+!!!      &         'Force X       ',                                             &
+!!!      &         'Force Y       ',                                             &
+!!!      &         'Force Z       ',                                             &
+!!!      &         'Temperature   ' /)
+!!!   
+!!!   Integer, Parameter                              :: Num_Res_E  = 12
+!!!   Character(len=MXSTLN), Dimension(12), Parameter :: Res_Name_E =            &
+!!!      &      (/ 'Strain XX',                                                  &
+!!!      &         'Strain YY',                                                  &
+!!!      &         'Strain ZZ',                                                  &
+!!!      &         'Strain XY',                                                  &
+!!!      &         'Strain YZ',                                                  &
+!!!      &         'Strain XZ',                                                  &
+!!!      &         'Stress XX',                                                  &
+!!!      &         'Stress YY',                                                  &
+!!!      &         'Stress ZZ',                                                  &
+!!!      &         'Stress XY',                                                  &
+!!!      &         'Stress YZ',                                                  &
+!!!      &         'Stress ZX' /)
       
    Type MatProp2D_Type
       PetscReal, Dimension(:), Pointer             :: Toughness
@@ -152,29 +152,56 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: irrev_eq   = 1
    PetscInt, Parameter, Public                     :: Irrev_Ineq = 2
    
-   Type EXO_RuptProperties_Type
-      !!! Properties stored in the exodus file
-      
-      ! ELEMENT BLOCK PROPERTIES
-      Logical, Dimension(:), Pointer               :: Is_Brittle
-      Logical, Dimension(:), Pointer               :: Is_Domain
-      Logical, Dimension(:), Pointer               :: Has_BodyForce
-      PetscInt, Dimension(:), Pointer              :: EB_BC_Type_X
-      PetscInt, Dimension(:), Pointer              :: EB_BC_Type_Y
-      PetscInt, Dimension(:), Pointer              :: EB_BC_Type_Z
-      
-      ! SIDE SETS PROPERTIES
-      Logical, Dimension(:), Pointer               :: Has_SurfForce
-      PetscInt, Dimension(:), Pointer              :: SS_BC_Type_X
-      PetscInt, Dimension(:), Pointer              :: SS_BC_Type_Y
-      PetscInt, Dimension(:), Pointer              :: SS_BC_Type_Z
-      
-      
-      ! NODE SETS PROPERTIES 
-      PetscInt, Dimension(:), Pointer              :: NS_BC_Type_X
-      PetscInt, Dimension(:), Pointer              :: NS_BC_Type_Y
-      PetscInt, Dimension(:), Pointer              :: NS_BC_Type_Z
-   End Type EXO_RuptProperties_Type
+!!!   Type EXO_RuptProperties_Type
+!!!      !!! Properties stored in the exodus file
+!!!      
+!!!      ! ELEMENT BLOCK PROPERTIES
+!!!      Logical, Dimension(:), Pointer               :: Is_Brittle
+!!!      Logical, Dimension(:), Pointer               :: Is_Domain
+!!!      Logical, Dimension(:), Pointer               :: Has_BodyForce
+!!!      PetscInt, Dimension(:), Pointer              :: EB_BC_Type_X
+!!!      PetscInt, Dimension(:), Pointer              :: EB_BC_Type_Y
+!!!      PetscInt, Dimension(:), Pointer              :: EB_BC_Type_Z
+!!!      
+!!!      ! SIDE SETS PROPERTIES
+!!!      Logical, Dimension(:), Pointer               :: Has_SurfForce
+!!!      PetscInt, Dimension(:), Pointer              :: SS_BC_Type_X
+!!!      PetscInt, Dimension(:), Pointer              :: SS_BC_Type_Y
+!!!      PetscInt, Dimension(:), Pointer              :: SS_BC_Type_Z
+!!!      
+!!!      
+!!!      ! NODE SETS PROPERTIES 
+!!!      PetscInt, Dimension(:), Pointer              :: NS_BC_Type_X
+!!!      PetscInt, Dimension(:), Pointer              :: NS_BC_Type_Y
+!!!      PetscInt, Dimension(:), Pointer              :: NS_BC_Type_Z
+!!!   End Type EXO_RuptProperties_Type
+   
+   PetscInt, Parameter, Public                     :: Rupt_VertexVar_Fracture      = 1
+   PetscInt, Parameter, Public                     :: Rupt_VertexVar_DisplacementX = 2   
+   PetscInt, Parameter, Public                     :: Rupt_VertexVar_DisplacementY = 3
+   PetscInt, Parameter, Public                     :: Rupt_VertexVar_DisplacementZ = 4   
+   PetscInt, Parameter, Public                     :: Rupt_VertexVar_ForceX        = 5   
+   PetscInt, Parameter, Public                     :: Rupt_VertexVar_ForceY        = 6
+   PetscInt, Parameter, Public                     :: Rupt_VertexVar_ForceZ        = 7   
+   PetscInt, Parameter, Public                     :: Rupt_VertexVar_Temperature   = 8
+   
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXX = 1
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainYY = 2 
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainZZ = 3
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXY = 4
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainYZ = 5
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXZ = 6
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressXX = 7
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressYY = 8
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressZZ = 9
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressXY = 10
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressYZ = 11
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressZX = 12
+
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_BulkEnergy    = 1
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_SurfaceEnergy = 2 
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_TotalEnergy   = 3
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_Load          = 4
 
  Contains
    Subroutine MatProp2DWrite(MeshTopology, MatProp, filename)
@@ -297,85 +324,59 @@ Module m_RuptStruct
 120   Format(I6, 23(ES12.5,' '))
    End Subroutine MatProp3DRead
 
-   Subroutine EXO_RuptPropertiesFormat(dEXO)
-      Type(EXO_Type)                                :: dEXO
-      PetscInt                                      :: iErr
-      Integer                                       :: exo_ver
-      
-      dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
-      
-      !!! Write Property names
-      Call EXPPN(dEXO%exoid, EXEBLK, Num_Prop_EB, Prop_Name_EB, iErr) ! not really needed
-      !!! Call EXPPN(dEXO%exoid, EXSSET, Num_Prop_SS, Prop_Name_SS, iErr)
-      Call EXPPN(dEXO%exoid, EXNSET, Num_Prop_NS, Prop_Name_NS, iErr) ! not really needed
-
-      !!! Write Variable Properties (i.e. create variables in the file)
-      Call EXPVP (dEXO%exoid, 'g', Num_Res_G, iErr)
-      Call EXPVP (dEXO%exoid, 'e', Num_Res_E, iErr)
-      Call EXPVP (dEXO%exoid, 'n', Num_Res_N, iErr)
-
-      !!! Write Variable Names
-      Call EXPVAN (dEXO%exoid, 'g', Num_Res_G, Res_Name_G, iErr)
-      Call EXPVAN (dEXO%exoid, 'e', Num_Res_E, Res_Name_E, iErr)
-      Call EXPVAN (dEXO%exoid, 'n', Num_Res_N, Res_Name_N, iErr)
-
-      Call EXCLOS(dEXO%exoid, iErr)
-      dEXO%exoid = 0
-   End Subroutine EXO_RuptPropertiesFormat
-   
-   Subroutine EXO_RuptPropertiesRead(dEXO, dMeshTopology, dEXO_RuptProperties)
-      Type(EXO_Type)                                :: dEXO
-      Type(MeshTopology_Type)                       :: dMeshTopology
-      Type(EXO_RuptProperties_Type)                 :: dEXO_RuptProperties
-      PetscInt                                      :: iErr
-      PetscInt                                      :: i, j
-      PetscInt                                      :: iRec, NumRec
-      PetscInt, Dimension(:), Pointer               :: Tmp_PropArray, Ids, GlobalId
-      PetscInt                                      :: Num_Elem_Blks, Num_Side_Sets, Num_Node_Sets
-      PetscInt                                      :: Tmp_Prop
-      Logical                                       :: Do_IO=.FALSE.
-      Integer                                       :: exo_ver
+!!!   Subroutine EXO_RuptPropertiesRead(dEXO, dMeshTopology, dEXO_RuptProperties)
+!!!      Type(EXO_Type)                                :: dEXO
+!!!      Type(MeshTopology_Type)                       :: dMeshTopology
+!!!      Type(EXO_RuptProperties_Type)                 :: dEXO_RuptProperties
+!!!      PetscInt                                      :: iErr
+!!!      PetscInt                                      :: i, j
+!!!      PetscInt                                      :: iRec, NumRec
+!!!      PetscInt, Dimension(:), Pointer               :: Tmp_PropArray, Ids, GlobalId
+!!!      PetscInt                                      :: Num_Elem_Blks, Num_Side_Sets, Num_Node_Sets
+!!!      PetscInt                                      :: Tmp_Prop
+!!!      Logical                                       :: Do_IO=.FALSE.
+!!!      Integer                                       :: exo_ver
       
       
-      If ( dEXO%comm == PETSC_COMM_SELF ) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
-         
-         !!! ELEM BLKS
-         Do iRec = 1, dMeshTopology%Num_Elem_Blks
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(1), Tmp_Prop, iErr)
-            dEXO_RuptProperties%Is_Brittle(iRec) = Tmp_Prop
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(2), Tmp_Prop, iErr)
-            dEXO_RuptProperties%Is_Domain(iRec) = Tmp_Prop
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(3), Tmp_Prop, iErr)
-            dEXO_RuptProperties%Has_BodyForce(iRec) = Tmp_Prop
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(4), dEXO_RuptProperties%EB_BC_Type_X(iRec), iErr)
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(5), dEXO_RuptProperties%EB_BC_Type_Y(iRec), iErr)
-            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(6), dEXO_RuptProperties%EB_BC_Type_Z(iRec), iErr)
-         End Do
-
-         !!! Side Set properties
-         ! To Do
-         
-         !! Node Sets properties
-         Do iRec = 1, dMeshTopology%Num_Node_Sets
-            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(1), dEXO_RuptProperties%NS_BC_Type_X(iRec), iErr)
-            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(2), dEXO_RuptProperties%NS_BC_Type_Y(iRec), iErr)
-            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(3), dEXO_RuptProperties%NS_BC_Type_Z(iRec), iErr)
-         End Do
-
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
-      Else
-         !!! Read all properties then broadcast them
-         If (MEF90_MyRank == 0) Then
-            dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
-            Call EXCLOS(dEXO%exoid, iErr)
-            dEXO%exoid = 0
-         End If
-         Call MPI_Bcast(Num_Elem_Blks, 1, MPI_INTEGER, 0, dEXO%comm, iErr)         
-         Call MPI_Bcast(Num_Side_Sets, 1, MPI_INTEGER, 0, dEXO%comm, iErr)         
-         Call MPI_Bcast(Num_Node_Sets, 1, MPI_INTEGER, 0, dEXO%comm, iErr)         
-      End If    
+!!!      If ( dEXO%comm == PETSC_COMM_SELF ) Then
+!!!         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
+!!!         
+!!!         !!! ELEM BLKS
+!!!         Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(1), Tmp_Prop, iErr)
+!!!            dEXO_RuptProperties%Is_Brittle(iRec) = Tmp_Prop
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(2), Tmp_Prop, iErr)
+!!!            dEXO_RuptProperties%Is_Domain(iRec) = Tmp_Prop
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(3), Tmp_Prop, iErr)
+!!!            dEXO_RuptProperties%Has_BodyForce(iRec) = Tmp_Prop
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(4), dEXO_RuptProperties%EB_BC_Type_X(iRec), iErr)
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(5), dEXO_RuptProperties%EB_BC_Type_Y(iRec), iErr)
+!!!            Call EXGP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(6), dEXO_RuptProperties%EB_BC_Type_Z(iRec), iErr)
+!!!         End Do
+!!!
+!!!         !!! Side Set properties
+!!!         ! To Do
+!!!         
+!!!         !! Node Sets properties
+!!!         Do iRec = 1, dMeshTopology%Num_Node_Sets
+!!!            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(1), dEXO_RuptProperties%NS_BC_Type_X(iRec), iErr)
+!!!            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(2), dEXO_RuptProperties%NS_BC_Type_Y(iRec), iErr)
+!!!            Call EXGP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(3), dEXO_RuptProperties%NS_BC_Type_Z(iRec), iErr)
+!!!         End Do
+!!!
+!!!         Call EXCLOS(dEXO%exoid, iErr)
+!!!         dEXO%exoid = 0
+!!!      Else
+!!!         !!! Read all properties then broadcast them
+!!!         If (MEF90_MyRank == 0) Then
+!!!            dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
+!!!            Call EXCLOS(dEXO%exoid, iErr)
+!!!            dEXO%exoid = 0
+!!!         End If
+!!!         Call MPI_Bcast(Num_Elem_Blks, 1, MPI_INTEGER, 0, dEXO%comm, iErr)         
+!!!         Call MPI_Bcast(Num_Side_Sets, 1, MPI_INTEGER, 0, dEXO%comm, iErr)         
+!!!         Call MPI_Bcast(Num_Node_Sets, 1, MPI_INTEGER, 0, dEXO%comm, iErr)         
+!!!      End If    
 !!!      If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
 !!!         Do_IO = .TRUE.
 !!!         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
@@ -545,45 +546,45 @@ Module m_RuptStruct
 !!!         Call EXCLOS(dEXO%exoid, iErr)
 !!!         dEXO%exoid = 0
 !!!      End If
-   End Subroutine EXO_RuptPropertiesRead
+!!!   End Subroutine EXO_RuptPropertiesRead
 
-   Subroutine EXO_RuptPropertiesWrite(dEXO, dMeshTopology, dEXO_RuptProperties)
-      Type(EXO_Type)                                :: dEXO
-      Type(MeshTopology_Type)                       :: dMeshTopology
-      Type(EXO_RuptProperties_Type)                 :: dEXO_RuptProperties
-      PetscInt                                      :: iErr, Tmp_Prop, iRec
-
-      If (dEXO%comm == PETSC_COMM_WORLD) Then
-         SETERRQ(PETSC_ERR_SUP, 'EXO_RuptWrite: Writing properties on EXO files defined on PETSC_COMM_WORLD not implemented', iErr)
-      End If
-      
-      dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
-      
-      !!! Element block properties
-      Do iRec = 1, dMeshTopology%Num_Elem_Blks
-         Tmp_Prop = dEXO_RuptProperties%Is_Brittle(iRec)
-         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(1), Tmp_Prop, iErr)
-         Tmp_Prop = dEXO_RuptProperties%Is_Domain(iRec)
-         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(2), Tmp_Prop, iErr)
-         Tmp_Prop = dEXO_RuptProperties%Has_BodyForce(iRec)
-         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(3), Tmp_Prop, iErr)
-         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(4), dEXO_RuptProperties%EB_BC_Type_X(iRec), iErr)
-         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(5), dEXO_RuptProperties%EB_BC_Type_Y(iRec), iErr)
-         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(6), dEXO_RuptProperties%EB_BC_Type_Z(iRec), iErr)
-      End Do
-
-      !!! Side Set properties
-      ! To Do
-      
-      !! Node Sets properties
-      Do iRec = 1, dMeshTopology%Num_Node_Sets
-         Call EXPP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(1), dEXO_RuptProperties%NS_BC_Type_X(iRec), iErr)
-         Call EXPP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(2), dEXO_RuptProperties%NS_BC_Type_Y(iRec), iErr)
-         Call EXPP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(3), dEXO_RuptProperties%NS_BC_Type_Z(iRec), iErr)
-      End Do
-      Call EXCLOS(dEXO%exoid, iErr)
-      dEXO%exoid = 0
-   End Subroutine EXO_RuptPropertiesWrite
+!!!   Subroutine EXO_RuptPropertiesWrite(dEXO, dMeshTopology, dEXO_RuptProperties)
+!!!      Type(EXO_Type)                                :: dEXO
+!!!      Type(MeshTopology_Type)                       :: dMeshTopology
+!!!      Type(EXO_RuptProperties_Type)                 :: dEXO_RuptProperties
+!!!      PetscInt                                      :: iErr, Tmp_Prop, iRec
+!!!
+!!!      If (dEXO%comm == PETSC_COMM_WORLD) Then
+!!!         SETERRQ(PETSC_ERR_SUP, 'EXO_RuptWrite: Writing properties on EXO files defined on PETSC_COMM_WORLD not implemented', iErr)
+!!!      End If
+!!!      
+!!!      dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
+!!!      
+!!!      !!! Element block properties
+!!!      Do iRec = 1, dMeshTopology%Num_Elem_Blks
+!!!         Tmp_Prop = dEXO_RuptProperties%Is_Brittle(iRec)
+!!!         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(1), Tmp_Prop, iErr)
+!!!         Tmp_Prop = dEXO_RuptProperties%Is_Domain(iRec)
+!!!         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(2), Tmp_Prop, iErr)
+!!!         Tmp_Prop = dEXO_RuptProperties%Has_BodyForce(iRec)
+!!!         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(3), Tmp_Prop, iErr)
+!!!         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(4), dEXO_RuptProperties%EB_BC_Type_X(iRec), iErr)
+!!!         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(5), dEXO_RuptProperties%EB_BC_Type_Y(iRec), iErr)
+!!!         Call EXPP(dEXO%exoid, EXEBLK, dMeshTopology%Elem_Blk(iRec)%ID, Prop_Name_EB(6), dEXO_RuptProperties%EB_BC_Type_Z(iRec), iErr)
+!!!      End Do
+!!!
+!!!      !!! Side Set properties
+!!!      ! To Do
+!!!      
+!!!      !! Node Sets properties
+!!!      Do iRec = 1, dMeshTopology%Num_Node_Sets
+!!!         Call EXPP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(1), dEXO_RuptProperties%NS_BC_Type_X(iRec), iErr)
+!!!         Call EXPP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(2), dEXO_RuptProperties%NS_BC_Type_Y(iRec), iErr)
+!!!         Call EXPP(dEXO%exoid, EXNSET, dMeshTopology%Node_Set(iRec)%ID, Prop_Name_NS(3), dEXO_RuptProperties%NS_BC_Type_Z(iRec), iErr)
+!!!      End Do
+!!!      Call EXCLOS(dEXO%exoid, iErr)
+!!!      dEXO%exoid = 0
+!!!   End Subroutine EXO_RuptPropertiesWrite
    
    Subroutine SchemeParamView(dSchemeParam, viewer)
       Type(SchemeParam_Type)                       :: dSchemeParam

@@ -17,6 +17,7 @@ Program TestLocal
    Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
    Type (Vect3D), Dimension(:), Pointer         :: Coords
    
+   Type(Mesh)                                   :: Tmp_Mesh
    PetscTruth                                   :: HasPrefix
    PetscTruth                                   :: verbose
    PetscErrorCode                               :: iErr
@@ -29,7 +30,6 @@ Program TestLocal
    PetscReal, Dimension(:), Pointer             :: Coords_Ptr
    PetscInt                                     :: VSize
    Type(VecScatter)                             :: scatter
-   PetscInt                                     :: exo_ver
    PetscInt                                     :: i
    PetscReal                                    :: T
    Type(Vect2D), Dimension(:), Pointer          :: V2D
@@ -49,7 +49,12 @@ Program TestLocal
    EXO%filename = Trim(prefix)//'.gen'
 
 
+   Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+   Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call EXO_Property_Read(EXO)
+   Call EXO_Variable_Read(EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
@@ -80,19 +85,28 @@ Program TestLocal
  
    MyEXO%title = trim(EXO%title)
    MyEXO%Num_QA = EXO%Num_QA
-   
+   Call EXO_Property_Copy(EXO, MyEXO)
+   Call EXO_Variable_Copy(EXO, MyEXO)
 
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
+   Call EXO_Property_Write(MyEXO)
+   Call EXO_Variable_Write(MyEXO)
 
    If (verbose) Then
-      Write(IOBuffer, 300) 'EXO_Type\n'c
+      Write(IOBuffer, 300) 'EXO\n'c
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(EXO, myviewer)
+      Write(IOBuffer, 300) 'MyEXO\n'c
+      Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Call EXOView(MyEXO, myviewer)
 
       Write(IOBuffer, 300) '\n\nMeshTopology\n'c
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call MeshTopologyView(MeshTopology, myviewer); CHKERRQ(iErr)
    End If
+   
+      Call MEF90_Finalize()
+      STOP
    
    !!! ****************** PLAYING WITH SECTIONS AND VECS ******************
    Call MeshGetSectionReal(MeshTopology%mesh, 'coordinates', Coords_Sec, iErr); CHKERRQ(ierr) 

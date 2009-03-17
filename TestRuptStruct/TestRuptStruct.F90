@@ -19,8 +19,8 @@ Program TestRuptStruct
    Implicit NONE   
    
    Character(len=MEF90_MXSTRLEN)                :: prefix
-   Type(MeshTopology_Info)                      :: MeshTopology
-   Type(EXO_Info)                               :: EXO, MyEXO
+   Type(MeshTopology_Type)                      :: MeshTopology
+   Type(EXO_Type)                               :: EXO, MyEXO
    Type(Mesh)                                   :: Tmp_Mesh
    PetscTruth                                   :: HasPrefix
    PetscInt                                     :: iErr, i
@@ -39,7 +39,7 @@ Program TestRuptStruct
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    Do i = 1, MeshTopology%Num_Elem_Blks
       MeshTopology%Elem_Blk(i)%Elem_Type = MEF90_P1_Lagrange
-      Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(i), MeshTopology%num_dim)
+      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(i), MeshTopology%num_dim)
    End Do
 
       
