@@ -33,8 +33,13 @@ Module m_MEF_EXO
    Public :: Read_EXO_Result_Cell
    Public :: Write_EXO_Result_Cell
 
+   Public :: EXO_Property_Copy
    Public :: EXO_Property_Write
    Public :: EXO_Property_Read
+   
+   Public :: EXO_Variable_Copy
+   Public :: EXO_Variable_Write
+   Public :: EXO_Variable_Read
    
    
    Interface Read_EXO_Result_Vertex
@@ -75,52 +80,69 @@ Module m_MEF_EXO
 102 Format('TIMESET_TEMPLATE "', A, '-', A, '.gen"')
    End Subroutine Write_EXO_Case
    
+   Subroutine EXO_Property_Copy(dEXO_in, dEXO_out)
+      Type(EXO_Type)                                 :: dEXO_in, dEXO_out
+      PetscInt                                       :: i
+      
+      dEXO_out%Num_EBProperties = dEXO_in%Num_EBProperties
+      dEXO_out%Num_SSProperties = dEXO_in%Num_SSProperties
+      dEXO_out%Num_NSProperties = dEXO_in%Num_NSProperties
+      
+      Allocate(dEXO_out%EBProperty(dEXO_out%Num_EBProperties))
+      Do i = 1, dEXO_out%Num_EBProperties
+         dEXO_out%EBProperty(i)%Name = dEXO_in%EBProperty(i)%Name
+         Allocate(dEXO_out%EBProperty(i)%Value(Size(dEXO_in%EBProperty(i)%Value)))
+         dEXO_out%EBProperty(i)%Value = dEXO_in%EBProperty(i)%Value
+      End Do
+      
+      Allocate(dEXO_out%SSProperty(dEXO_out%Num_SSProperties))
+      Do i = 1, dEXO_out%Num_SSProperties
+         dEXO_out%SSProperty(i)%Name = dEXO_in%SSProperty(i)%Name
+         Allocate(dEXO_out%SSProperty(i)%Value(Size(dEXO_in%SSProperty(i)%Value)))
+         dEXO_out%SSProperty(i)%Value = dEXO_in%SSProperty(i)%Value
+      End Do
+
+      Allocate(dEXO_out%NSProperty(dEXO_out%Num_NSProperties))
+      Do i = 1, dEXO_out%Num_NSProperties
+         dEXO_out%NSProperty(i)%Name = dEXO_in%NSProperty(i)%Name
+         Allocate(dEXO_out%NSProperty(i)%Value(Size(dEXO_in%NSProperty(i)%Value)))
+         dEXO_out%NSProperty(i)%Value = dEXO_in%NSProperty(i)%Value
+      End Do
+
+   End Subroutine EXO_Property_Copy
+   
    Subroutine EXO_Property_Write(dEXO)
       Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
       PetscInt                                       :: iErr
       PetscInt                                       :: i
 
-      Character(len=MXSTLN), Dimension(:), Pointer   :: PropName
-      PetscInt, Dimension(:), Pointer                :: PropValue
+      PetscInt                                       :: EXO_MyRank
 
-      If (MEF90_MyRank == 0) Then
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+      If (EXO_MyRank == 0) Then
          dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
          !!! EB Properties
-         Allocate(PropName (dEXO%Num_EBProperties))
-         Allocate(PropValue(dEXO%Num_EBProperties))
-         Do i = 1, dEXO%Num_EBProperties
-            PropName(i)  = dEXO%EBProperty(i)%Name
-            PropValue(i) = dEXO%EBProperty(i)%Value
-         End Do
-         !!! Can I vectorize that?
-         Call EXPPA(dEXO%exoid, EXEBLK, PropName, PropValue, iErr)
-         DeAllocate(PropName)
-         DeAllocate(PropValue)
-         
+         If (dEXO%Num_EBProperties > 0) Then
+            Call EXPPN(dEXO%exoid, EXEBLK, dEXO%Num_EBProperties, dEXO%EBProperty(:)%Name, iErr)
+            Do i = 1, dEXO%Num_EBProperties
+               Call EXPPA(dEXO%exoid, EXEBLK, dEXO%EBProperty(i)%Name, dEXO%EBProperty(i)%Value, iErr)
+            End Do
+         End If
          !!! SS Properties
-         Allocate(PropName (dEXO%Num_SSProperties))
-         Allocate(PropValue(dEXO%Num_SSProperties))
-         Do i = 1, dEXO%Num_SSProperties
-            PropName(i)  = dEXO%SSProperty(i)%Name
-            PropValue(i) = dEXO%SSProperty(i)%Value
-         End Do
-         !!! Can I vectorize that?
-         Call EXPPA(dEXO%exoid, EXSSET, PropName, PropValue, iErr)
-         DeAllocate(PropName)
-         DeAllocate(PropValue)
-
+         If (dEXO%Num_SSProperties > 0) Then
+            Call EXPPN(dEXO%exoid, EXSSET, dEXO%Num_SSProperties, dEXO%SSProperty(:)%Name, iErr)
+            Do i = 1, dEXO%Num_SSProperties
+               Call EXPPA(dEXO%exoid, EXSSET, dEXO%SSProperty(i)%Name, dEXO%SSProperty(i)%Value, iErr)
+            End Do
+         End If
          !!! NS Properties
-         Allocate(PropName (dEXO%Num_NSProperties))
-         Allocate(PropValue(dEXO%Num_NSProperties))
-         Do i = 1, dEXO%Num_NSProperties
-            PropName(i)  = dEXO%NSProperty(i)%Name
-            PropValue(i) = dEXO%NSProperty(i)%Value
-         End Do
-         !!! Can I vectorize that?
-         Call EXPPA(dEXO%exoid, EXNSET, PropName, PropValue, iErr)
-         DeAllocate(PropName)
-         DeAllocate(PropValue)
+         If (dEXO%Num_NSProperties > 0) Then
+            Call EXPPN(dEXO%exoid, EXNSET, dEXO%Num_NSProperties, dEXO%NSProperty(:)%Name, iErr)         
+            Do i = 1, dEXO%Num_NSProperties
+               Call EXPPA(dEXO%exoid, EXNSET, dEXO%NSProperty(i)%Name, dEXO%NSProperty(i)%Value, iErr)
+            End Do
+         End If
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
       End If
@@ -131,66 +153,203 @@ Module m_MEF_EXO
       PetscInt                                       :: vers
       PetscInt                                       :: iErr
       PetscInt                                       :: i
-      PetscInt                                       :: NumProp
+      PetscInt                                       :: NumProp, NumVal
       PetscReal                                      :: rDummy
       Character                                      :: cDummy
       
       Character(len=MXSTLN), Dimension(:), Pointer   :: PropName
-      PetscInt, Dimension(:), Pointer                :: PropValue
+      Integer                                        :: EXO_MyRank
+      
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
-      If (MEF90_MyRank == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+      If (EXO_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
          !!! EB Properties
          Call EXINQ(dEXO%exoid, EXNEBP, NumProp, rDummy, cDummy, iErr)
-         NumProp = NumProp
          Allocate(PropName (NumProp))
-         Allocate(PropValue(NumProp))
-         Call EXGPA(dEXO%exoid, EXEBLK, PropName, PropValue, iErr)
-         dEXO%Num_EBProperties = NumProp-1
+         Call EXGPN(dEXO%exoid, EXEBLK, PropName, iErr)
+         dEXO%Num_EBProperties = max(0,NumProp-1)
          Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
+         Call EXINQ(dEXO%exoid, EXELBL, NumVal, rDummy, cDummy, iErr)
          Do i = 1, dEXO%Num_EBProperties
+            Allocate(dEXO%EBProperty(i)%Value(NumVal))
+            Call EXGPA(dEXO%exoid, EXEBLK, PropName(i+1), dEXO%EBProperty(i)%Value, iErr)
             dEXO%EBProperty(i)%Name  = PropName(i+1)
-            dEXO%EBProperty(i)%Value = PropValue(i+1)
          End Do
          DeAllocate(PropName)
-         DeAllocate(PropValue)
          
          !!! SS Properties
          Call EXINQ(dEXO%exoid, EXNSSP, NumProp, rDummy, cDummy, iErr)
-         NumProp = NumProp
          Allocate(PropName (NumProp))
-         Allocate(PropValue(NumProp))
-         Call EXGPA(dEXO%exoid, EXSSET, PropName, PropValue, iErr)
-         dEXO%Num_SSProperties = NumProp-1
+         Call EXGPN(dEXO%exoid, EXSSET, PropName, iErr)
+         dEXO%Num_SSProperties = max(0,NumProp-1)
+         Call EXINQ(dEXO%exoid, EXSIDS, NumVal, rDummy, cDummy, iErr)
          Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
          Do i = 1, dEXO%Num_SSProperties
+            Allocate(dEXO%SSProperty(i)%Value(NumVal))
+            Call EXGPA(dEXO%exoid, EXSSET, PropName(i+1), dEXO%SSProperty(i)%Value, iErr)
             dEXO%SSProperty(i)%Name  = PropName(i+1)
-            dEXO%SSProperty(i)%Value = PropValue(i+1)
          End Do
          DeAllocate(PropName)
-         DeAllocate(PropValue)
 
-         !!! EB Properties
+         !!! NS Properties
          Call EXINQ(dEXO%exoid, EXNNSP, NumProp, rDummy, cDummy, iErr)
-         NumProp = NumProp
          Allocate(PropName (NumProp))
-         Allocate(PropValue(NumProp))
-         Call EXGPA(dEXO%exoid, EXNSET, PropName, PropValue, iErr)
-         dEXO%Num_NSProperties = NumProp-1
+         Call EXGPN(dEXO%exoid, EXNSET, PropName, iErr)
+         dEXO%Num_NSProperties = max(0,NumProp-1)
+         Call EXINQ(dEXO%exoid, EXNODS, NumVal, rDummy, cDummy, iErr)
          Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
          Do i = 1, dEXO%Num_NSProperties
+            Allocate(dEXO%NSProperty(i)%Value(NumVal))
+            Call EXGPA(dEXO%exoid, EXNSET, PropName(i+1), dEXO%NSProperty(i)%Value, iErr)
             dEXO%NSProperty(i)%Name  = PropName(i+1)
-            dEXO%NSProperty(i)%Value = PropValue(i+1)
          End Do
          DeAllocate(PropName)
-         DeAllocate(PropValue)
          
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
       End If
+      !!! Broadcast everything now
+      Call MPI_BCast(dEXO%Num_EBProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_SSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_NSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+
+      !!! Element Blocks
+      If (MEF90_MyRank /= 0) Then
+         Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
+         Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
+         Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
+      EndIf
+      Do i = 1, dEXO%Num_EBProperties
+         Call MPI_BCast(dEXO%EBProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+         NumProp = Size(dEXO%EBProperty(i)%Value)
+         Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         If (MEF90_MyRank /= 0) Then
+            Allocate(dEXO%EBProperty(i)%Value(NumProp))
+         End If
+         Call MPI_BCast(dEXO%EBProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      End Do
+      !!! Side Sets
+      Do i = 1, dEXO%Num_SSProperties
+         Call MPI_BCast(dEXO%SSProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+         NumProp = Size(dEXO%SSProperty(i)%Value)
+         Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         If (MEF90_MyRank /= 0) Then
+            Allocate(dEXO%SSProperty(i)%Value(NumProp))
+         End If
+         Call MPI_BCast(dEXO%SSProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      End Do
+      !!! Node Sets
+      Do i = 1, dEXO%Num_NSProperties
+         Call MPI_BCast(dEXO%NSProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+         NumProp = Size(dEXO%NSProperty(i)%Value)
+         Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         If (MEF90_MyRank /= 0) Then
+            Allocate(dEXO%NSProperty(i)%Value(NumProp))
+         End If
+         Call MPI_BCast(dEXO%NSProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      End Do
    End Subroutine EXO_Property_Read
 
+   Subroutine EXO_Variable_Copy(dEXO_in, dEXO_out)
+      Type(EXO_Type)                                 :: dEXO_in, dEXO_out
 
+      dEXO_out%Num_GlobVariables = dEXO_in%Num_GlobVariables
+      dEXO_out%Num_CellVariables = dEXO_in%Num_CellVariables
+      dEXO_out%Num_VertVariables = dEXO_in%Num_VertVariables
+      
+      Allocate(dEXO_out%GlobVariable(dEXO_out%Num_GlobVariables))
+      dEXO_out%GlobVariable(:)%Name   = dEXO_in%GlobVariable(:)%Name
+      dEXO_out%GlobVariable(:)%Offset = dEXO_in%GlobVariable(:)%Offset
+
+      Allocate(dEXO_out%CellVariable(dEXO_out%Num_CellVariables))
+      dEXO_out%CellVariable(:)%Name   = dEXO_in%CellVariable(:)%Name
+      dEXO_out%CellVariable(:)%Offset = dEXO_in%CellVariable(:)%Offset
+      
+      Allocate(dEXO_out%VertVariable(dEXO_out%Num_VertVariables))
+      dEXO_out%VertVariable(:)%Name   = dEXO_in%VertVariable(:)%Name
+      dEXO_out%VertVariable(:)%Offset = dEXO_in%VertVariable(:)%Offset
+   End Subroutine EXO_Variable_Copy
+
+
+   Subroutine EXO_Variable_Write(dEXO)
+      Type(EXO_Type)                                 :: dEXO
+ 
+      PetscInt                                       :: i, iErr
+      Integer                                        :: EXO_MyRank
+      PetscInt                                       :: vers
+      
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+
+      If (EXO_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+
+         Call EXPVP (dEXO%exoid, 'g', dEXO%Num_GlobVariables, iErr)
+         Call EXPVAN(dEXO%exoid, 'g', dEXO%Num_GlobVariables, dEXO%GlobVariable(:)%Name, iErr)
+         Call EXPVP (dEXO%exoid, 'e', dEXO%Num_CellVariables, iErr)
+         Call EXPVAN(dEXO%exoid, 'e', dEXO%Num_CellVariables, dEXO%CellVariable(:)%Name, iErr)
+         Call EXPVP (dEXO%exoid, 'n', dEXO%Num_VertVariables, iErr)
+         Call EXPVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+   End Subroutine EXO_Variable_Write 
+   
+   Subroutine EXO_Variable_Read(dEXO)
+      Type(EXO_Type)                                 :: dEXO
+      PetscInt                                       :: vers
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i
+      PetscInt                                       :: NumProp, NumVal
+      PetscReal                                      :: rDummy
+      Character                                      :: cDummy
+      
+      Integer                                        :: EXO_MyRank
+      
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+
+      If (EXO_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+
+         Call EXGVP (dEXO%exoid, 'g', dEXO%Num_GlobVariables, iErr)
+         Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))      
+         Call EXGVAN(dEXO%exoid, 'g', dEXO%Num_GlobVariables, dEXO%GlobVariable(:)%Name, iErr)
+         
+         Call EXGVP (dEXO%exoid, 'e', dEXO%Num_CellVariables, iErr)
+         Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))      
+         Call EXGVAN(dEXO%exoid, 'e', dEXO%Num_CellVariables, dEXO%CellVariable(:)%Name, iErr)
+
+         Call EXGVP (dEXO%exoid, 'n', dEXO%Num_VertVariables, iErr)
+         Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))      
+         Call EXGVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+
+      Call MPI_BCast(dEXO%Num_GlobVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_CellVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_VertVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+
+      If (EXO_MyRank /= 0) Then
+         Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))      
+         Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))      
+         Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))      
+      End If      
+
+      Call MPI_BCast(dEXO%GlobVariable(:)%Offset, dEXO%Num_GlobVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Do i = 1, dEXO%Num_GlobVariables
+         Call MPI_BCast(dEXO%GlobVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+      End Do
+      Call MPI_BCast(dEXO%CellVariable(:)%Offset, dEXO%Num_CellVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Do i = 1, dEXO%Num_CellVariables
+         Call MPI_BCast(dEXO%CellVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+      End Do
+      Call MPI_BCast(dEXO%VertVariable(:)%Offset, dEXO%Num_VertVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Do i = 1, dEXO%Num_VertVariables
+         Call MPI_BCast(dEXO%VertVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+      End Do
+   End Subroutine EXO_Variable_Read
+   
    Subroutine Write_MeshTopology(dMeshTopology, dEXO)
       Type(MeshTopology_Type)                        :: dMeshTopology
       Type(EXO_Type)                                 :: dEXO

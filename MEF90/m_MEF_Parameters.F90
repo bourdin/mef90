@@ -20,8 +20,8 @@ Module m_MEF_Parameters
    Integer, Parameter, Public           :: F_Out  = 61
    ! Default unit to write files
    
-   Integer, Public                      :: MEF90_GaussOrder
-   Integer, Public                      :: MEF90_MyRank
-   Integer, Public                      :: MEF90_NumProcs
-   Integer, Parameter, Public           :: MEF90_MXSTRLEN = 256
+   PetscInt, Public                     :: MEF90_GaussOrder
+   PetscInt, Public                     :: MEF90_MyRank
+   PetscInt, Public                     :: MEF90_NumProcs
+   PetscInt, Parameter, Public          :: MEF90_MXSTRLEN = 256
 End Module m_MEF_Parameters
