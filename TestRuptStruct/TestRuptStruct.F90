@@ -18,22 +18,56 @@ Program TestRuptStruct
 
    Implicit NONE   
    
-   Character(len=MEF90_MXSTRLEN)                :: prefix
+   Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename
    Type(MeshTopology_Type)                      :: MeshTopology
    Type(EXO_Type)                               :: EXO, MyEXO
    Type(Mesh)                                   :: Tmp_Mesh
-   PetscTruth                                   :: HasPrefix
+   PetscTruth                                   :: HasPrefix, verbose
    PetscInt                                     :: iErr, i
-   Type(EXO_RuptProperties_Type)                :: EXO_RuptProperties
+   Type(PetscViewer)                            :: viewer, myviewer
    
    Call MEF90_Initialize()
+   Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',       prefix, HasPrefix, iErr); CHKERRQ(iErr)
+   If (.NOT. HasPrefix) Then
+      Call PetscPrintf(PETSC_COMM_WORLD, "No input file prefix given\n", iErr)
+      Call MEF90_Finalize()
+      STOP
+   End If
+
+   If (verbose) Then
+      Write(filename, 102) Trim(prefix), MEF90_MyRank
+      Call PetscViewerASCIIOpen(PETSC_COMM_SELF, filename, myviewer, iErr); CHKERRQ(iErr);   
+      Write(IOBuffer, 103) MEF90_MyRank, Trim(filename)
+      Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+
+      Write(filename, 101) Trim(prefix)
+      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, viewer, iErr); CHKERRQ(iErr);   
+      Write(IOBuffer, 104) Trim(filename)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   
+101 Format(A,'.log')
+102 Format(A, '-', I4.4, '.log')
+103 Format('Output from processor ', I4.4, ' redirected to ', A, '\n'c)
+104 Format('Collective output redirected to ', A, '\n'c)
+
 
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
 
    Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'Done reading Sequential EXO file\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+
    Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'Done distributing mesh\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
@@ -41,60 +75,69 @@ Program TestRuptStruct
       MeshTopology%Elem_Blk(i)%Elem_Type = MEF90_P1_Lagrange
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(i), MeshTopology%num_dim)
    End Do
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'Done Initializing EXO data structure\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+
 
       
    MyEXO%comm = PETSC_COMM_SELF
    MyEXO%exoid = EXO%exoid
-   
    Write(MyEXO%filename, 200) trim(prefix), MEF90_MyRank
    200 Format(A, '-', I4.4, '.gen')
-
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
    
-!!!   MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, ierr)
-!!!   Do i = 1, MeshTopology%Num_Elem_Blks
-!!!      Call EXPP(MyEXO%exoid, EXEBLK, MeshTopology%Elem_Blk(i)%ID, 'MeshTopology%Elem_Blk(i)%ID', MeshTopology%Elem_Blk(i)%ID, iErr)
-!!!      Call EXPP(MyEXO%exoid, EXEBLK, MeshTopology%Elem_Blk(i)%ID, 'i', i, iErr)
-!!!   End Do
-!!!   Do i = 1, MeshTopology%Num_Node_Sets
-!!!      Call EXPP(MyEXO%exoid, EXNSET, MeshTopology%Node_Set(i)%ID, 'MeshTopology%Node_Set(i)%ID', MeshTopology%Node_Set(i)%ID, iErr)
-!!!      Call EXPP(MyEXO%exoid, EXNSET, MeshTopology%Node_Set(i)%ID, 'i', i, iErr)
-!!!   End Do
-!!!   
-!!!   Call EXCLOS(MyEXO%exoid, iErr)
-!!!   MyEXO%exoid = 0
-!   Call EXO_RuptFormat(MyEXO)
+   
+   Call RuptEXOProperty_Init(MyEXO)   
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'Done with RuptEXOProperty_Init\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   Call RuptEXOVariable_Init(MyEXO)   
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'Done with RuptEXOVariable_Init\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
 
-   Allocate(EXO_RuptProperties%Is_Brittle(MeshTopology%Num_Elem_Blks))
-   Allocate(EXO_RuptProperties%Is_Domain(MeshTopology%Num_Elem_Blks))
-   Allocate(EXO_RuptProperties%Has_BodyForce(MeshTopology%Num_Elem_Blks))
-   Allocate(EXO_RuptProperties%EB_BC_Type_X(MeshTopology%Num_Elem_Blks))
-   Allocate(EXO_RuptProperties%EB_BC_Type_Y(MeshTopology%Num_Elem_Blks))
-   Allocate(EXO_RuptProperties%EB_BC_Type_Z(MeshTopology%Num_Elem_Blks))
-   Allocate(EXO_RuptProperties%SS_BC_Type_X(MeshTopology%Num_Side_Sets))
-   Allocate(EXO_RuptProperties%SS_BC_Type_Y(MeshTopology%Num_Side_Sets))
-   Allocate(EXO_RuptProperties%SS_BC_Type_Z(MeshTopology%Num_Side_Sets))
-   Allocate(EXO_RuptProperties%NS_BC_Type_X(MeshTopology%Num_Node_Sets))
-   Allocate(EXO_RuptProperties%NS_BC_Type_Y(MeshTopology%Num_Node_Sets))
-   Allocate(EXO_RuptProperties%NS_BC_Type_Z(MeshTopology%Num_Node_Sets))
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'MeshTopology\n'c
+      Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call MeshTopologyView(MeshTopology, myviewer); CHKERRQ(iErr)
 
-   EXO_RuptProperties%Is_Brittle     = PETSC_TRUE
-   EXO_RuptProperties%Is_Domain      = PETSC_TRUE
-   EXO_RuptProperties%Has_BodyForce  = PETSC_FALSE
-   EXO_RuptProperties%EB_BC_Type_X   = -27
-   EXO_RuptProperties%EB_BC_Type_Y   = MeshTopology%Elem_Blk(:)%ID
-   EXO_RuptProperties%EB_BC_Type_Z   = BC_TYPE_DIRI
-   EXO_RuptProperties%SS_BC_Type_X   = BC_TYPE_DIRI
-   EXO_RuptProperties%SS_BC_Type_Y   = BC_TYPE_DIRI
-   EXO_RuptProperties%SS_BC_Type_Z   = BC_TYPE_DIRI
-   EXO_RuptProperties%NS_BC_Type_X   = MeshTopology%Node_Set(:)%ID
-   EXO_RuptProperties%NS_BC_Type_Y   = BC_TYPE_DIRI
-   EXO_RuptProperties%NS_BC_Type_Z   = BC_TYPE_DIRI
+      Write(IOBuffer, '(A)') '\n\nEXO\n'c
+      Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call EXOView(EXO, myviewer)
+
+      Write(IOBuffer, '(A)') '\n\nMyEXO\n'c
+      Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call EXOView(MyEXO, myviewer)
+
+   End If
+
+
+   Call EXO_Variable_Write(MyEXO)
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'Done with EXO_Variable_Write\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   Call EXO_Property_Write(MyEXO)
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'Done with EXO_Property_Write\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    
-   
-   Call  EXO_RuptPropertiesWrite(MyEXO, MeshTopology, EXO_RuptProperties)
-!   Call MeshDestroy(MeshTopology%Mesh, iErr); CHKERRQ(ierr)
-   
+   Call MeshTopologyDestroy(MeshTopology)
+   If (verbose) Then
+      Call PetscViewerFlush(myviewer, iErr); CHKERRQ(iErr)
+      Call PetscViewerDestroy(myviewer, iErr); CHKERRQ(iErr)
+      Call PetscViewerFlush(viewer, iErr); CHKERRQ(iErr)
+      Call PetscViewerDestroy(viewer, iErr); CHKERRQ(iErr)
+   End If
+
    Call MEF90_Finalize()
 
 End Program  TestRuptStruct
