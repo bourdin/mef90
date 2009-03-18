@@ -54,8 +54,15 @@ Program TestRuptStruct
 104 Format('Collective output redirected to ', A, '\n'c)
 
 
+   Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
+
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
+   
+   Call EXO_Check_Numbering(EXO, iErr)
+   If (iErr /= 0) Then
+      SETERRQ(PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n'c, iErr)
+   End If
 
    Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
    If (verbose) Then
@@ -101,18 +108,21 @@ Program TestRuptStruct
    End If
 
    If (verbose) Then
-      Write(IOBuffer, '(A)') 'MeshTopology\n'c
+      Write(IOBuffer, '(A)') '\n\nMeshTopology\n'c
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, '(A)') 'Wrote MeshTopology\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call MeshTopologyView(MeshTopology, myviewer); CHKERRQ(iErr)
 
       Write(IOBuffer, '(A)') '\n\nEXO\n'c
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, '(A)') 'Wrote EXO\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(EXO, myviewer)
 
       Write(IOBuffer, '(A)') '\n\nMyEXO\n'c
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, '(A)') 'Wrote MyEXO\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(MyEXO, myviewer)
 
