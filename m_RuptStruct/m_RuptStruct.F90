@@ -22,6 +22,8 @@ Module m_RuptStruct
    Public :: RuptEXOVariable_Init
    
    Public :: MatProp2D_Type, MatProp3D_Type
+   
+   Public :: EXOProperty_InitBCFlag2DA
 
    Interface MatProp_Write
       Module Procedure MatProp2D_Write, MatProp3D_Write
@@ -142,6 +144,40 @@ Module m_RuptStruct
    End Type RuptSchemeParam_Type
    
  Contains
+   Subroutine EXOProperty_InitBCFlag2DA(dEXO, dMeshTopology, dBCFlag)
+      Type(EXO_Type)                               :: dEXO
+      Type(MeshTopology_Type)                      :: dMeshTopology
+      Type(SectionInt)                             :: dBCFlag 
+      
+      PetscInt                                     :: iErr, NumDoF, i, j
+      PetscInt, Dimension(:), Pointer              :: Flag
+      
+      Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
+      !!! Element Blocks
+      Do i = 1, dMeshTopology%Num_Elem_Blks
+         NumDoF = dMeshTopology%Elem_Blk(i)%Num_DoF
+         Allocate(Flag(NumDoF))
+         Flag = dEXO%EBProperty( Rupt_EBProp_BCTypeZ )%Value( dMeshTopology%Elem_Blk(i)%ID )
+         Do j = 1, dMeshTopology%Elem_Blk(i)%Num_Elems
+            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Elem_Blk(i)%Elem(j)%ID-1, Flag, iErr); CHKERRQ(iErr)
+         End Do
+         DeAllocate(Flag)
+      End Do
+      
+      !!! Side Sets
+      !!! To be implemented
+      
+      !!! Node Sets
+      Do i = 1, dMeshTopology%Num_Node_Sets
+         Allocate(Flag(1))
+         Flag = dEXO%NSProperty( Rupt_NSProp_BCTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+         Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
+            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Elem(j)%ID + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
+         End Do
+         DeAllocate(Flag)
+      End Do
+   End Subroutine EXOProperty_InitBCFlag2DA
+   
    Subroutine MatProp2D_Write(MeshTopology, MatProp, filename)
       Type(MeshTopology_Type)                      :: MeshTopology
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
