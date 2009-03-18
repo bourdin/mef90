@@ -23,6 +23,7 @@ Module m_MEF_EXO
 
    
    Public :: Write_EXO_Case
+   Public :: EXO_Check_Numbering
    Public :: Write_MeshTopology
    Public :: Write_MeshTopologyGlobal
 
@@ -40,7 +41,6 @@ Module m_MEF_EXO
    Public :: EXO_Variable_Copy
    Public :: EXO_Variable_Write
    Public :: EXO_Variable_Read
-   
    
    Interface Read_EXO_Result_Vertex
       Module Procedure Read_EXO_Result_VertexPtrInterlaced, Read_EXO_Result_VertexSection, Read_EXO_Result_VertexVec, Read_EXO_Result_VertexVect2D, Read_EXO_Result_VertexVect3D, Read_EXO_Result_VertexMat2D, Read_EXO_Result_VertexMatS2D, Read_EXO_Result_VertexMat3D, Read_EXO_Result_VertexMatS3D
@@ -80,6 +80,79 @@ Module m_MEF_EXO
 102 Format('TIMESET_TEMPLATE "', A, '-', A, '.gen"')
    End Subroutine Write_EXO_Case
    
+   Subroutine EXO_Check_Numbering(dEXO, ErrorCode)
+      Type(EXO_Type)                                 :: dEXO
+      PetscInt, Intent(OUT)                          :: ErrorCode
+      
+      PetscInt                                       :: iErr
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+      PetscInt                                       :: i
+      PetscInt                                       :: NumEB, NumSS, NumNS
+      PetscInt, Dimension(:), Pointer                :: IDs
+      PetscInt                                       :: EXO_MyRank
+      PetscReal                                      :: rDummy
+      Character                                      :: cDummy
+      PetscInt                                       :: vers
+      
+      ErrorCode = 0
+      
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+      If (EXO_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         Call EXINQ(dEXO%exoid, EXELBL, NumEB, rDummy, cDummy, iErr)
+         Call EXINQ(dEXO%exoid, EXSIDS, NumSS, rDummy, cDummy, iErr)
+         Call EXINQ(dEXO%exoid, EXNODS, NumNS, rDummy, cDummy, iErr)
+         
+         If (NumEB > 0) Then
+            Allocate(IDs(NumEB))
+            Call EXGEBI(dEXO%exoid, IDs, iErr)   
+            Do i = 1, NumEB
+               if (IDs(i) /= i) Then            
+                  ErrorCode = ErrorCode + 1
+                  Write(IOBuffer, 100)  i, IDs(i)
+                  Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+               End If
+            End Do
+            DeAllocate(IDs)
+         End If
+         
+         If (NumSS > 0) Then
+            Allocate(IDs(NumSS))
+            Call EXGSSI(dEXO%exoid, IDs, iErr)   
+            Do i = 1, NumSS
+               if (IDs(i) /= i) Then            
+                  ErrorCode = ErrorCode + 1
+                  Write(IOBuffer, 101)  i, IDs(i)
+                  Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+               End If
+            End Do
+            DeAllocate(IDs)
+         End If
+         
+         If (NumNS > 0) Then         
+            Allocate(IDs(NumNS))
+            Call EXGNSI(dEXO%exoid, IDs, iErr)   
+            Do i = 1, NumSS
+               if (IDs(i) /= i) Then            
+                  ErrorCode = ErrorCode + 1
+                  Write(IOBuffer, 102)  i, IDs(i)
+                  Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+               End If
+            End Do
+            DeAllocate(IDs)
+         End If
+         
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+      Call MPI_BCast(ErrorCode, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+ 100 Format('[ERROR] in MeshTopology_Check Numbering. Element block ', I3, ' index is ', I3, '\n'c)   
+ 101 Format('[ERROR] in MeshTopology_Check Numbering. Side Set ', I3, ' index is ', I3, '\n'c)   
+ 102 Format('[ERROR] in MeshTopology_Check Numbering. Node Set ', I3, ' index is ', I3, '\n'c)   
+   End Subroutine EXO_Check_Numbering
+
+
+   
    Subroutine EXO_Property_Copy(dEXO_in, dEXO_out)
       Type(EXO_Type)                                 :: dEXO_in, dEXO_out
       PetscInt                                       :: i
@@ -117,13 +190,20 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       PetscInt                                       :: i
 
+      PetscInt                                       :: NumEB, NumSS, NumNS
       PetscInt                                       :: EXO_MyRank
+      PetscReal                                      :: rDummy
+      Character                                      :: cDummy
 
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
       If (EXO_MyRank == 0) Then
          dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         Call EXINQ(dEXO%exoid, EXELBL, NumEB, rDummy, cDummy, iErr)
+         Call EXINQ(dEXO%exoid, EXSIDS, NumSS, rDummy, cDummy, iErr)
+         Call EXINQ(dEXO%exoid, EXNODS, NumNS, rDummy, cDummy, iErr)
+
          !!! EB Properties
-         If (dEXO%Num_EBProperties > 0) Then
+         If ((dEXO%Num_EBProperties > 0) .AND. (NumEB > 0)) Then
             Call EXPPN(dEXO%exoid, EXEBLK, dEXO%Num_EBProperties, dEXO%EBProperty(:)%Name, iErr)
             Do i = 1, dEXO%Num_EBProperties
                Call EXPPA(dEXO%exoid, EXEBLK, dEXO%EBProperty(i)%Name, dEXO%EBProperty(i)%Value, iErr)
@@ -131,14 +211,14 @@ Module m_MEF_EXO
          End If
          !!! SS Properties
          !!! Clean that up!
-         If ((dEXO%Num_SSProperties > 0) .AND. (Size(dEXO%SSProperty(1)%Value) > 0)) Then
+         If ((dEXO%Num_SSProperties > 0) .AND. (NumSS > 0)) Then
             Call EXPPN(dEXO%exoid, EXSSET, dEXO%Num_SSProperties, dEXO%SSProperty(:)%Name, iErr)
             Do i = 1, dEXO%Num_SSProperties
                Call EXPPA(dEXO%exoid, EXSSET, dEXO%SSProperty(i)%Name, dEXO%SSProperty(i)%Value, iErr)
             End Do
          End If
          !!! NS Properties
-         If (dEXO%Num_NSProperties > 0) Then
+         If ((dEXO%Num_NSProperties > 0) .AND. (NumNS > 0)) Then
             Call EXPPN(dEXO%exoid, EXNSET, dEXO%Num_NSProperties, dEXO%NSProperty(:)%Name, iErr)         
             Do i = 1, dEXO%Num_NSProperties
                Call EXPPA(dEXO%exoid, EXNSET, dEXO%NSProperty(i)%Name, dEXO%NSProperty(i)%Value, iErr)
@@ -538,8 +618,7 @@ Module m_MEF_EXO
       Call Write_MeshTopology(GlobalMeshTopology, dEXO)
       Call MeshTopologyDestroy(GlobalMeshTopology)
    End Subroutine Write_MeshTopologyGlobal
-
-
+   
 !!!
 !!! RESULT FILES
 !!!

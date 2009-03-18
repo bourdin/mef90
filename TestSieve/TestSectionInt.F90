@@ -86,10 +86,6 @@ Program TestSectionInt
    Call SectionIntView(Sec2, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
 
-   Call MEF90_Finalize()
-   STOP
-
-
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
@@ -115,7 +111,7 @@ Program TestSectionInt
       Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
       iE = 9
       IntValues = 10
-      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
+      Call MeshUpdateAddClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
 !   End Do  
 !!!   Call MeshGetCellSectionInt(MeshTopology%mesh, 1, Flag_Sec, iErr); CHKERRQ(iErr)
 !!!   Do iE = 1, MeshTopology%Num_Elems
