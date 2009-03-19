@@ -159,7 +159,7 @@ Module m_RuptStruct
          Allocate(Flag(NumDoF))
          Flag = dEXO%EBProperty( Rupt_EBProp_BCTypeZ )%Value( dMeshTopology%Elem_Blk(i)%ID )
          Do j = 1, dMeshTopology%Elem_Blk(i)%Num_Elems
-            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Elem_Blk(i)%Elem(j)%ID-1, Flag, iErr); CHKERRQ(iErr)
+            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Elem_Blk(i)%Elem_ID(j)-1, Flag, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
@@ -172,10 +172,12 @@ Module m_RuptStruct
          Allocate(Flag(1))
          Flag = dEXO%NSProperty( Rupt_NSProp_BCTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Elem(j)%ID + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
+            Print*, MEF90_MyRank, i, dMeshTopology%Node_Set(i)%ID, j, dMeshTopology%Node_Set(i)%Node_ID(j), Flag
+            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
+!!      Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
    End Subroutine EXOProperty_InitBCFlag2DA
    
    Subroutine MatProp2D_Write(MeshTopology, MatProp, filename)
