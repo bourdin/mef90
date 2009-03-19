@@ -177,7 +177,7 @@ Module m_RuptStruct
          End Do
          DeAllocate(Flag)
       End Do
-!!      Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
+      Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
    End Subroutine EXOProperty_InitBCFlag2DA
    
    Subroutine MatProp2D_Write(MeshTopology, MatProp, filename)
