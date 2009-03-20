@@ -56,7 +56,7 @@ Module m_MEF_Utils
       ! Very closely based on the routine from Numerical recipes
       ! 
       PetscReal, Dimension(:,:), Pointer          :: A
-      PetscInt, Intent(OUT)                       :: Status
+      PetscTruth, Intent(OUT)                     :: Status
       
       Integer, Dimension(:), Pointer              :: ipiv,indxr,indxc 
       Logical, Dimension(:), Pointer              :: lpiv 
@@ -150,7 +150,7 @@ Module m_MEF_Utils
       ! 
       PetscReal, Dimension(:,:), Pointer          :: A
       PetscReal, Dimension(:), Pointer            :: b
-      PetscInt, Intent(OUT)                       :: Status
+      PetscTruth, Intent(OUT)                     :: Status
       
       Integer, Dimension(:), Pointer              :: ipiv,indxr,indxc 
       Logical, Dimension(:), Pointer              :: lpiv 
