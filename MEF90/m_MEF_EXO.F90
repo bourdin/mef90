@@ -210,7 +210,6 @@ Module m_MEF_EXO
             End Do
          End If
          !!! SS Properties
-         !!! Clean that up!
          If ((dEXO%Num_SSProperties > 0) .AND. (NumSS > 0)) Then
             Call EXPPN(dEXO%exoid, EXSSET, dEXO%Num_SSProperties, dEXO%SSProperty(:)%Name, iErr)
             Do i = 1, dEXO%Num_SSProperties

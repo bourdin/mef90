@@ -10,7 +10,7 @@ all: m_MEF90.o
 
 include ${PETSC_DIR}/conf/base
 
-FFLAGS = ${EXO_CFLAGS}
+#FFLAGS = -module ${PETSC_ARCH}
 
 #Dependencies:
 m_MEF_Parameters.o:    

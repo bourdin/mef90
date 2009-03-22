@@ -98,7 +98,10 @@ Program TestRuptStruct
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
    
    
+   Call RuptEXOProperty_Init(EXO)   
    Call RuptEXOProperty_Init(MyEXO)   
+   Call EXO_Property_Read(EXO)
+   Call EXO_Property_Copy(EXO, MyEXO)
    If (verbose) Then
       Write(IOBuffer, '(A)') 'Done with RuptEXOProperty_Init\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
