@@ -1,8 +1,4 @@
-#if defined PB_2D
-Program  SimplePoisson2D
-#elif defined PB_3D
-Program SimplePoisson3D
-#endif
+Program  SimplePoisson
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -87,8 +83,4 @@ Program SimplePoisson3D
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    
    Call SimplePoissonFinalize(AppCtx)
-#if defined PB_2D
-End Program  SimplePoisson2D
-#elif defined PB_3D
-End Program SimplePoisson3D
-#endif
+End Program  SimplePoisson

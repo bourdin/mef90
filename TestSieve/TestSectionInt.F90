@@ -86,10 +86,6 @@ Program TestSectionInt
    Call SectionIntView(Sec2, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
 
-   Call MEF90_Finalize()
-   STOP
-
-
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
@@ -112,10 +108,13 @@ Program TestSectionInt
 !   Do iE = 1, MeshTopology%Num_Verts
       iE = 5
       IntValues = 1
-      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
+      Call MeshUpdateAddClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
+      IntValues = 34
+      Call SectionIntZero(Flag_Sec, iErr); CHKERRQ(iErr)
+      Call MeshUpdateAddClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
       iE = 9
       IntValues = 10
-      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
+!      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
 !   End Do  
 !!!   Call MeshGetCellSectionInt(MeshTopology%mesh, 1, Flag_Sec, iErr); CHKERRQ(iErr)
 !!!   Do iE = 1, MeshTopology%Num_Elems
@@ -124,7 +123,8 @@ Program TestSectionInt
 !!!   End Do  
    DeAllocate(IntValues)
    Call SectionIntView(Flag_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-
+   Call MEF90_Finalize()
+   STOP
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, U_Sec, iErr); CHKERRQ(iErr)
 
 !   Allocate(Values(1))
