@@ -31,7 +31,6 @@ Program TestAssembly
    PetscReal, Dimension(:), Pointer             :: Kelem
    Type(Mat)                                    :: K
    Type(VecScatter)                             :: scatter
-   PetscInt                                     :: exo_ver
    PetscInt                                     :: i
    PetscReal                                    :: T
    Type(Vect2D), Dimension(:), Pointer          :: V2D
