@@ -18,40 +18,6 @@ Module m_MEF_Types
    Public :: EXOView
    Public :: MeshTopologyDestroy, MeshTopologyView
       
-   ! Defines the basic data structures for nodes, elements and geometry
-   
-   ! Basic element data structure:
-   ! NB_DoF              Number of degree of freedoms in the element
-   ! NB_GAUSS            Number of integration points
-   ! ID_EL               Element Type
-   ! ID_DoF              Index of teh DoF (Dim = NB_DoF)
-   ! BF                  Value of the Basis Fuctions at the integration
-   !                     Type depends on the element
-   !                             BF(i,j) = i^th BF at the  j^th integration point
-   ! DER_BF / rad_BF / GradS_BF Derivative / gradient / symmetrized gradient of the BF
-
-
-!!! mef90-sieve:
-!!! Do I still need to sequence my data structures?
-
-
-!!! MODIFY      
-!!! Type element:
-!!!      Remove NB_DoF, NB_Gauss, ID_EL and add an element type to blocks
-!!!      Add parent block information?
-!!!      Can we possibly need to have elements owned by more than one block? I am assuming that we don't
-!!! 
-!!! Elem_Blk_Type
-!!!      Remove Type, replace with Element_Type
-
-!!! ADD
-!!! Type Element_Type
-!!!
-!!! Various element names
-
-!!! RENAME
-!!! EXO_Geom_Type is now Geom_Type
-
    Type Element1D
       PetscInt, Dimension(:), Pointer            :: ID_DoF
       PetscReal, Dimension(:,:), Pointer         :: BF
@@ -174,11 +140,11 @@ Module m_MEF_Types
    
 Contains
    Subroutine EXOView(dEXO, viewer)
-      Type(EXO_Type)              :: dEXO
-      Type(PetscViewer)           :: viewer
+      Type(EXO_Type)                 :: dEXO
+      Type(PetscViewer)              :: viewer
       
-      PetscInt                    :: i, j, iErr
-      Character(len=512)          :: CharBuffer
+      PetscInt                       :: i, j, iErr
+      Character(len=MEF90_MXSTRLEN)  :: CharBuffer
    
       If (dEXO%comm == PETSC_COMM_WORLD) Then
          Write(CharBuffer, 100) 'PETSC_COMM_WORLD'
@@ -298,7 +264,7 @@ Contains
       Type(PetscViewer)                             :: viewer
       
       Integer                                        :: iErr
-      Character(len=512)                             :: CharBuffer
+      Character(len=MEF90_MXSTRLEN)                  :: CharBuffer
       Integer                                        :: i, j
 
       Write(CharBuffer, 103) dMeshTopology%num_dim
@@ -391,4 +357,5 @@ Contains
 500 Format(I4) 
 600 Format(A)
    End Subroutine MeshTopologyView
+   
 End Module m_MEF_Types

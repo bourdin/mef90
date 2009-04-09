@@ -16,6 +16,7 @@ Program TestSieve
    Implicit NONE
     
    Type(MeshTopology_Type)                      :: MeshTopology
+   Type(Mesh)                                   :: Tmp_Mesh
    Type(EXO_Type)                               :: EXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    Type(Vect3D), Dimension(:), Pointer          :: Coords
@@ -51,7 +52,11 @@ Program TestSieve
 
    EXO%Comm = PETSC_COMM_WORLD
    
+   Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+   Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
+
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)

@@ -25,6 +25,7 @@ Program TestRuptStruct
    PetscTruth                                   :: HasPrefix, verbose
    PetscInt                                     :: iErr, i
    Type(PetscViewer)                            :: viewer, myviewer
+   Type(SectionInt)                             :: BCFlag
    
    Call MEF90_Initialize()
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr)    
@@ -54,8 +55,15 @@ Program TestRuptStruct
 104 Format('Collective output redirected to ', A, '\n'c)
 
 
+   Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
+
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
+   
+   Call EXO_Check_Numbering(EXO, iErr)
+   If (iErr /= 0) Then
+      SETERRQ(PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n'c, iErr)
+   End If
 
    Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
    If (verbose) Then
@@ -71,6 +79,7 @@ Program TestRuptStruct
    Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
+   !!! Sets the type of elements for each block
    Do i = 1, MeshTopology%Num_Elem_Blks
       MeshTopology%Elem_Blk(i)%Elem_Type = MEF90_P1_Lagrange
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(i), MeshTopology%num_dim)
@@ -89,11 +98,26 @@ Program TestRuptStruct
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
    
    
+   Call RuptEXOProperty_Init(EXO)   
    Call RuptEXOProperty_Init(MyEXO)   
+   Call EXO_Property_Read(EXO)
+   Call EXO_Property_Copy(EXO, MyEXO)
    If (verbose) Then
       Write(IOBuffer, '(A)') 'Done with RuptEXOProperty_Init\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
+!!!   Do i = 1, MeshTopology%Num_Elem_Blks
+!!!      MyEXO%EBProperty(Rupt_EBProp_BCTypeX)%Value(i) = 100*i
+!!!      MyEXO%EBProperty(Rupt_EBProp_BCTypeY)%Value(i) = 100*i
+!!!      MyEXO%EBProperty(Rupt_EBProp_BCTypeZ)%Value(i) = 100*i
+!!!   End Do
+!!!   
+!!!!   Do i = 1, size(
+!!!      MyEXO%NSProperty(Rupt_NSProp_BCTypeX)%Value(:) = 1
+!!!      MyEXO%NSProperty(Rupt_NSProp_BCTypeY)%Value(:) = 1
+!!!      MyEXO%NSProperty(Rupt_NSProp_BCTypeZ)%Value(:) = 1
+!!!!   End Do
+
    Call RuptEXOVariable_Init(MyEXO)   
    If (verbose) Then
       Write(IOBuffer, '(A)') 'Done with RuptEXOVariable_Init\n'c
@@ -101,23 +125,25 @@ Program TestRuptStruct
    End If
 
    If (verbose) Then
-      Write(IOBuffer, '(A)') 'MeshTopology\n'c
+      Write(IOBuffer, '(A)') '\n\nMeshTopology\n'c
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, '(A)') 'Wrote MeshTopology\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call MeshTopologyView(MeshTopology, myviewer); CHKERRQ(iErr)
 
       Write(IOBuffer, '(A)') '\n\nEXO\n'c
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, '(A)') 'Wrote EXO\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(EXO, myviewer)
 
       Write(IOBuffer, '(A)') '\n\nMyEXO\n'c
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, '(A)') 'Wrote MyEXO\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(MyEXO, myviewer)
 
    End If
-
 
    Call EXO_Variable_Write(MyEXO)
    If (verbose) Then
@@ -130,6 +156,15 @@ Program TestRuptStruct
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
+
+   Call MeshGetVertexSectionInt(MeshTopology%mesh, 1, BCFlag, iErr); CHKERRQ(iErr)
+   Call SectionIntZero(BCFlag, iErr); CHKERRQ(iErr)
+   Call EXOProperty_InitBCFlag2DA(MyEXO, MeshTopology, BCFlag)
+   Call SectionIntView(BCFlag, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+
+
+
+   !!! Done playing, cleaning up
    Call MeshTopologyDestroy(MeshTopology)
    If (verbose) Then
       Call PetscViewerFlush(myviewer, iErr); CHKERRQ(iErr)

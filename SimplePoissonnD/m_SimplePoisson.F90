@@ -43,8 +43,8 @@ Module m_SimplePoisson3D
    End Type AppParam_Type
 
    Type AppCtx_Type
-      Type (MeshTopology_Info)                     :: MeshTopology
-      Type (EXO_Info)                              :: EXO, MyEXO
+      Type (MeshTopology_Type)                     :: MeshTopology
+      Type (EXO_Type)                              :: EXO, MyEXO
 #if defined PB_2D
       Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
 #elif defined PB_3D
@@ -138,7 +138,7 @@ Contains
       !!! Sets the type of elements for each block
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type = MEF90_P1_Lagrange
-         Call Init_Elem_Blk_Info(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
+         Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
       End Do
       Call PetscLogStagePop(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
    
@@ -154,6 +154,7 @@ Contains
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
              Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
+             !!! WTF? why not reshaping the arguments in Init_Element? 
             Call Init_Element(AppCtx%Elem(iE), Coords, 2, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
