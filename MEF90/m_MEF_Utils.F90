@@ -58,12 +58,12 @@ Module m_MEF_Utils
       PetscReal, Dimension(:,:), Pointer          :: A
       PetscTruth, Intent(OUT)                     :: Status
       
-      Integer, Dimension(:), Pointer              :: ipiv,indxr,indxc 
+      Integer, Dimension(:), Pointer              :: ipiv,indxr,indxc
       Logical, Dimension(:), Pointer              :: lpiv 
       Logical, Dimension(:,:), Pointer            :: lMask
       PetscReal                                   :: pivinv 
       PetscReal, Dimension(:),Pointer             :: dumc 
-      PetscReal, Dimension(:,:), Pointer          :: DumC2
+!      PetscReal, Dimension(:,:), Pointer          :: DumC2
       Integer, Target                             :: irc(2) 
       Integer                                     :: i,l,n 
       Integer, Pointer                            :: irow,icol 

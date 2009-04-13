@@ -1,9 +1,13 @@
+MODULE_OPTS = -module ${PETSC_ARCH}
+
 all: m_MEF90.o ${PETSC_ARCH}
 
 include ${PETSC_DIR}/conf/base
 
-.F90.o: 
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} -module ${PETSC_ARCH} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+.F90.o:
+	cp $< $<.tmp
+	cat $<.tmp | ../buildProcessor.py > $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
 
 debug:
 	@echo FC is ${FC}
@@ -11,9 +15,10 @@ debug:
 	@echo FC_FLAGS is ${FC_FLAGS}
 	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
 	@echo FCPPFLAGS is $FCPPFLAGS}
-	
+
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
+
 m_MEF_Parameters.o: ${PETSC_ARCH}   
 
 m_MEF_LinAlg.o:     m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o
