@@ -1090,7 +1090,8 @@ Module m_MEF_Elements
          Write(CharBuffer, 101) iE
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          
-         Call ElementView(dElems(iE), viewer)
+!! MGK: Something is broken here
+!         Call ElementView(dElems(iE), viewer)
       End Do
 100 Format('    Number of elements =================== ', I9, '\n'c)
 101 Format('*** Element  ', I9, '\n'c)
