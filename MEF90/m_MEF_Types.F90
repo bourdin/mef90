@@ -13,45 +13,11 @@ Module m_MEF_Types
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
 
-   Public :: Elem_Blk_Info, Node_Set_Info, MeshTopology_Info, EXO_Info
+   Public :: Elem_Blk_Type, Node_Set_Type, MeshTopology_Type, EXO_Type
    
    Public :: EXOView
    Public :: MeshTopologyDestroy, MeshTopologyView
       
-   ! Defines the basic data structures for nodes, elements and geometry
-   
-   ! Basic element data structure:
-   ! NB_DoF              Number of degree of freedoms in the element
-   ! NB_GAUSS            Number of integration points
-   ! ID_EL               Element Type
-   ! ID_DoF              Index of teh DoF (Dim = NB_DoF)
-   ! BF                  Value of the Basis Fuctions at the integration
-   !                     Type depends on the element
-   !                             BF(i,j) = i^th BF at the  j^th integration point
-   ! DER_BF / rad_BF / GradS_BF Derivative / gradient / symmetrized gradient of the BF
-
-
-!!! mef90-sieve:
-!!! Do I still need to sequence my data structures?
-
-
-!!! MODIFY      
-!!! Type element:
-!!!      Remove NB_DoF, NB_Gauss, ID_EL and add an element type to blocks
-!!!      Add parent block information?
-!!!      Can we possibly need to have elements owned by more than one block? I am assuming that we don't
-!!! 
-!!! Elem_Blk_Info
-!!!      Remove Type, replace with Element_Info
-
-!!! ADD
-!!! Type Element_Info
-!!!
-!!! Various element names
-
-!!! RENAME
-!!! EXO_Geom_Info is now Geom_Info
-
    Type Element1D
       PetscInt, Dimension(:), Pointer            :: ID_DoF
       PetscReal, Dimension(:,:), Pointer         :: BF
@@ -101,7 +67,7 @@ Module m_MEF_Types
       PetscReal, Dimension(:), Pointer           :: Gauss_C
    End Type Element3D_Elast
  
-   Type Elem_Blk_Info
+   Type Elem_Blk_Type
       Sequence
       PetscInt                                       :: ID
       PetscInt                                       :: Elem_Type
@@ -111,16 +77,16 @@ Module m_MEF_Types
       PetscInt                                       :: Num_DoF !! = sum(DoF_Location)
       PetscInt                                       :: Num_Elems
       PetscInt, Dimension(:), Pointer                :: Elem_ID
-   End Type Elem_Blk_Info
+   End Type Elem_Blk_Type
  
-   Type Node_Set_Info
+   Type Node_Set_Type
       Sequence
       PetscInt                                       :: ID
       PetscInt                                       :: Num_Nodes
       PetscInt, Dimension(:), Pointer                :: Node_ID
-   End Type Node_Set_Info
+   End Type Node_Set_Type
  
-   Type MeshTopology_Info
+   Type MeshTopology_Type
 !      Sequence
       ! Global datas
       PetscInt                                       :: num_dim
@@ -128,32 +94,57 @@ Module m_MEF_Types
       PetscInt                                       :: num_elems
       ! Element Blocks datas
       PetscInt                                       :: num_elem_blks
-      Type(Elem_Blk_Info), Dimension(:), Pointer     :: elem_blk
+      Type(Elem_Blk_Type), Dimension(:), Pointer     :: elem_blk
       ! Node sets datas
       PetscInt                                       :: num_node_sets 
-      Type(Node_Set_Info), Dimension(:), Pointer     :: node_set
+      Type(Node_Set_Type), Dimension(:), Pointer     :: node_set
       ! Side Sets DATAS
       PetscInt                                       :: num_side_sets
       Type(Mesh)                                     :: mesh
-   End Type MeshTopology_Info
+   End Type MeshTopology_Type
    
-   Type EXO_Info
+   Type EXO_Type
       MPI_Comm                                       :: comm      
       Integer                                        :: exoid
       Character(len=MXLNLN)                          :: filename  
       Character(len=MXLNLN)                          :: title     
       ! QA DATAS
       Integer                                        :: num_QA    
-      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec    
-   End Type EXO_Info
+      Character(len=MXSTLN), Dimension(:,:), Pointer :: QA_rec
+      ! Properties
+      PetscInt                                       :: Num_EBProperties
+      Type(EXO_Property_Type), Dimension(:), Pointer :: EBProperty
+      PetscInt                                       :: Num_SSProperties
+      Type(EXO_Property_Type), Dimension(:), Pointer :: SSProperty
+      PetscInt                                       :: Num_NSProperties
+      Type(EXO_Property_Type), Dimension(:), Pointer :: NSProperty
+      ! Variables
+      PetscInt                                       :: Num_GlobVariables    
+      Type(EXO_Variable_Type), Dimension(:), Pointer :: GlobVariable
+      PetscInt                                       :: Num_CellVariables    
+      Type(EXO_Variable_Type), Dimension(:), Pointer :: CellVariable
+      PetscInt                                       :: Num_VertVariables    
+      Type(EXO_Variable_Type), Dimension(:), Pointer :: VertVariable
+   End Type EXO_Type
+   
+   Type EXO_Property_Type
+      Character(MXSTLN)                              :: Name
+      PetscInt, Dimension(:), Pointer                :: Value
+   End Type EXO_Property_Type
+   
+   Type EXO_Variable_Type
+      Character(MXSTLN)                              :: Name
+      PetscInt                                       :: Offset
+      !!! the position of the variable in the exo file
+   End Type EXO_Variable_Type   
    
 Contains
    Subroutine EXOView(dEXO, viewer)
-      Type(EXO_Info)              :: dEXO
-      Type(PetscViewer)           :: viewer
+      Type(EXO_Type)                 :: dEXO
+      Type(PetscViewer)              :: viewer
       
-      PetscInt                    :: iErr
-      Character(len=512)          :: CharBuffer
+      PetscInt                       :: i, j, iErr
+      Character(len=MEF90_MXSTRLEN)  :: CharBuffer
    
       If (dEXO%comm == PETSC_COMM_WORLD) Then
          Write(CharBuffer, 100) 'PETSC_COMM_WORLD'
@@ -168,12 +159,61 @@ Contains
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 102) dEXO%filename
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-      Write(CharBuffer, 103) dEXO%title
+!      Write(CharBuffer, 103) dEXO%title//' '
+!      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+!      Write(CharBuffer, '(A)') '\n'c
+
+      Write(CharBuffer, 106) dEXO%Num_EBProperties
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do i = 1, dEXO%Num_EBProperties
+         Write(CharBuffer, 109) dEXO%EBProperty(i)%Name, Size(dEXO%EBProperty(i)%Value)
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, Size(dEXO%EBProperty(i)%Value)
+            Write(CharBuffer, 201) j, dEXO%EBProperty(i)%Value(j)
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+      End Do
+
+      Write(CharBuffer, 107) dEXO%Num_SSProperties
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do i = 1, dEXO%Num_SSProperties
+         Write(CharBuffer, 109) dEXO%SSProperty(i)%Name, Size(dEXO%SSProperty(i)%Value)
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, Size(dEXO%SSProperty(i)%Value)
+            Write(CharBuffer, 202) j, dEXO%SSProperty(i)%Value(j)
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+      End Do
+
+      Write(CharBuffer, 108) dEXO%Num_NSProperties
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Do i = 1, dEXO%Num_NSProperties
+         Write(CharBuffer, 109) dEXO%NSProperty(i)%Name, Size(dEXO%NSProperty(i)%Value)
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, Size(dEXO%NSProperty(i)%Value)
+            Write(CharBuffer, 203) j, dEXO%NSProperty(i)%Value(j)
+            Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         End Do
+      End Do
 !      Do i = 1, dEXO%Num_QA
 !         Write(CharBuffer, 104) i, dEXO%QA_rec(i,:)
 !         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
 !      End Do
+      Write(CharBuffer, 110) dEXO%Num_GlobVariables
+      Do i = 1, dEXO%Num_GlobVariables
+         Write(CharBuffer, 210) dEXO%GlobVariable(i)%Name, dEXO%GlobVariable(i)%offset
+      End Do
+
+      Write(CharBuffer, 111) dEXO%Num_CellVariables
+      Do i = 1, dEXO%Num_CellVariables
+         Write(CharBuffer, 210) dEXO%CellVariable(i)%Name, dEXO%CellVariable(i)%offset
+      End Do
+
+      Write(CharBuffer, 112) dEXO%Num_VertVariables
+      Do i = 1, dEXO%Num_VertVariables
+         Write(CharBuffer, 210) dEXO%VertVariable(i)%Name, dEXO%VertVariable(i)%offset
+      End Do
+    
       
  100 Format('Communicator:       ', A, '\n'c)
  101 Format('exo ID:             ', I3, '\n'c)
@@ -181,11 +221,22 @@ Contains
  103 Format('title:              ', A, '\n'c)
  104 Format('QA_rec ', I2.2, '         ', A, '\n'c)
  105 Format('Communicator:       ', A, I3, '\n'c)
+ 106 Format('Number of EB Properties: ', I3, '\n'c)
+ 107 Format('Number of SS Properties: ', I3, '\n'c)
+ 108 Format('Number of NS Properties: ', I3, '\n'c)
+ 109 Format('   ', A, 'num values:', I3, '\n'c)
+ 110 Format('Global Variables: ', I3, '\n'c)
+ 111 Format('Cell Variables:   ', I3, '\n'c)
+ 112 Format('Vertex Variables: ', I3, '\n'c)
+ 201 Format('   Element Block ', I3, ' value ', I3, '\n'c)
+ 202 Format('   Side Set      ', I3, ' value ', I3, '\n'c)
+ 203 Format('   Node Set      ', I3, ' value ', I3, '\n'c)
+ 210 Format(A, I3, '\n'c)
    End Subroutine EXOView
 
 
    Subroutine MeshTopologyDestroy(dMeshTopology)
-     Type(MeshTopology_Info)         :: dMeshTopology
+     Type(MeshTopology_Type)         :: dMeshTopology
      PetscInt                        :: iSet, iBlk
 
      If (Size(dMeshTopology%Node_set) > 0) Then
@@ -209,11 +260,11 @@ Contains
    End Subroutine MeshTopologyDestroy
 
    Subroutine MeshTopologyView(dMeshTopology, viewer)
-      Type(MeshTopology_Info), Intent(IN)           :: dMeshTopology
+      Type(MeshTopology_Type), Intent(IN)           :: dMeshTopology
       Type(PetscViewer)                             :: viewer
       
       Integer                                        :: iErr
-      Character(len=512)                             :: CharBuffer
+      Character(len=MEF90_MXSTRLEN)                  :: CharBuffer
       Integer                                        :: i, j
 
       Write(CharBuffer, 103) dMeshTopology%num_dim
@@ -268,10 +319,11 @@ Contains
             Write(CharBuffer, 500) dMeshTopology%Node_Set(i)%Node_ID(j)
             Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          End Do
+         Write(CharBuffer, 600) '\n'c
+         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       End Do
       
       
-      Write(CharBuffer, 600) '\n'c
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 400)
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
@@ -305,4 +357,5 @@ Contains
 500 Format(I4) 
 600 Format(A)
    End Subroutine MeshTopologyView
+   
 End Module m_MEF_Types

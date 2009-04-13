@@ -43,8 +43,8 @@ Module m_SimplePoisson3D
    End Type AppParam_Type
 
    Type AppCtx_Type
-      Type (MeshTopology_Info)                     :: MeshTopology
-      Type (EXO_Info)                              :: EXO, MyEXO
+      Type (MeshTopology_Type)                     :: MeshTopology
+      Type (EXO_Type)                              :: EXO, MyEXO
 #if defined PB_2D
       Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
 #elif defined PB_3D
@@ -120,16 +120,16 @@ Contains
       If (MEF90_NumProcs == 1) Then
          Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
-         Call PetscLogStagePop(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Else
          Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-         Call PetscLogStagePop(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          
          Call PetscLogStagePush(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
          Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
          Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-         Call PetscLogStagePop(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       End If
 
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
@@ -138,9 +138,8 @@ Contains
       !!! Sets the type of elements for each block
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type = MEF90_P1_Lagrange
-         Call Init_Elem_Blk_Info(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
+         Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
       End Do
-      Call PetscLogStagePop(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
    
       !!! Allocate the elements
       Allocate(AppCtx%Elem(AppCtx%MeshTopology%Num_Elems))
@@ -150,17 +149,21 @@ Contains
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(TmpCoords(AppCtx%MeshTopology%Num_Dim * AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
          Allocate(Coords(AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+         !!! WRONG # coords != # DoF
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
              Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
-            Call Init_Element(AppCtx%Elem(iE), Coords, 2, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
+             Write(*,*) iE, TmpCoords
+             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Call ElementInit(AppCtx%Elem(iE), Coords, 2, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
+!            Call ElementView(AppCtx%Elem(iE), PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
          DeAllocate(Coords)
       End Do Do_Elem_iBlk
       Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Allocate the Section for U and F
@@ -199,7 +202,7 @@ Contains
       Call KSPSetInitialGuessNonzero(AppCtx%KSP, PETSC_TRUE, iErr); CHKERRQ(iErr)
       
       Call KSPSetFromOptions(AppCtx%KSP, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       
       !!! Read Force and BC from Data file or reformat it
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
@@ -216,7 +219,7 @@ Contains
          Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
          Call Write_MeshTopologyGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
          Call EXOFormat_SimplePoisson(AppCtx)
-         Call PetscLogStagePop(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          
          Select Case (AppCtx%AppParam%TestCase)
          Case(1)
@@ -347,7 +350,7 @@ Contains
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop (AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n'c)
    End Subroutine Solve
    
@@ -372,7 +375,7 @@ Contains
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
-      Call PetscLogStagePop(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatAssembly
    
    
@@ -434,7 +437,7 @@ Contains
       !!! VERY important! This is the equivalent of a ghost update
       Call SectionRealToVec(RHSSec, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%RHS, ierr); CHKERRQ(ierr)
       Call SectionRealDestroy(RHSSec, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
 
 
@@ -529,7 +532,7 @@ Contains
       Call PetscGlobalSum(MyEnergy, AppCtx%Energy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
                
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
    
    Subroutine ComputeGradient(AppCtx)
@@ -579,7 +582,7 @@ Contains
       End Do Do_Elem_iBlk
       DeAllocate(Grad_Ptr)
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeGradient
    
    

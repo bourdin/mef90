@@ -14,8 +14,8 @@ Program TestSectionInt
 
    Implicit NONE   
 
-   Type (MeshTopology_Info)                     :: MeshTopology
-   Type (EXO_Info)                              :: EXO, MyEXO
+   Type (MeshTopology_Type)                     :: MeshTopology
+   Type (EXO_Type)                              :: EXO, MyEXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    
    PetscTruth                                   :: HasPrefix
@@ -29,7 +29,7 @@ Program TestSectionInt
    PetscReal, Dimension(:), Pointer             :: Values
    PetscInt, Dimension(:), Pointer              :: IntValues
    Type(SectionInt)                             :: Flag_Sec
-   Type(SectionInt)                             :: Sec1, Sec2, Distributed_Sec
+   Type(SectionInt)                             :: Sec1, Sec2
    Type(Mesh)                                   :: Tmp_Mesh
    PetscInt                                     :: Junk, Num_Verts, num_Elems
      
@@ -50,52 +50,47 @@ Program TestSectionInt
    Call MeshExodusGetInfo(Tmp_mesh, Junk, Num_Verts, Num_Elems, Junk, Junk, iErr); CHKERRQ(iErr)
 
 
-   !!! Create the section using a shortcut. How do I set its name?
-!   Call MeshGetVertexSectionInt(Tmp_mesh, 1, Sec1, iErr); CHKERRQ(iErr)
-!   Call MeshSetSectionInt(Tmp_mesh, Sec1, iErr); CHKERRQ(iErr)
-   !!! The fortran bindings don't exist, but it doesn't really matter as there is currently no way to set the section name from fortran!...
-!   Call PetscObjectSetName(Sec1, 'Sec1')
-   !!! This would be nice, except that it won't work with the fortran types...
-
-   !!! Do it the most generic way
-   Call MeshGetSectionInt(Tmp_Mesh, prefix, Sec2, iErr); CHKERRQ(iErr)
+   !!! Create the Section on cpu0 
+   Call MeshGetSectionInt(Tmp_Mesh, prefix, Sec1, iErr); CHKERRQ(iErr)
    Do i = 1, num_verts
-      Call SectionIntSetFiberDimension(Sec2, i+Num_Elems-1, 1, iErr); CHKERRQ(iErr)
+      Call SectionIntSetFiberDimension(Sec1, i+Num_Elems-1, 1, iErr); CHKERRQ(iErr)
    End Do 
-   Call SectionIntAllocate(Sec2, iErr); CHKERRQ(iErr)
+   Call SectionIntAllocate(Sec1, iErr); CHKERRQ(iErr)
 
    !!! Setup and initialize an internal SectionInt
    Allocate(IntValues(1))
    Do i = 1, num_verts
       IntValues = i
-!      Call MeshUpdateClosureInt(Tmp_mesh, Sec1, i+Num_Elems-1, IntValues, iErr); CHKERRQ(iErr)
-      Call MeshUpdateClosureInt(Tmp_mesh, Sec2, i+Num_Elems-1, IntValues, iErr); CHKERRQ(iErr)
+      Call MeshUpdateClosureInt(Tmp_mesh, Sec1, i+Num_Elems-1, IntValues, iErr); CHKERRQ(iErr)
    End Do 
    DeAllocate(IntValues)
    
-!   Call PetscPrintf(PETSC_COMM_WORLD, "Sec1 before MeshDistribute\n"c, iErr); CHKERRQ(iErr)
-!   Call SectionIntView(Sec1, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   Call PetscPrintf(PETSC_COMM_WORLD, "Sec2 before MeshDistribute\n"c, iErr); CHKERRQ(iErr)
-   Call SectionIntView(Sec2, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   Call PetscPrintf(PETSC_COMM_WORLD, "Sec1 before MeshDistribute\n"c, iErr); CHKERRQ(iErr)
+   Call SectionIntView(Sec1, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-   
+  
    Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    
 
-!   Call PetscPrintf(PETSC_COMM_WORLD, "Sec1 after MeshDistribute\n"c, iErr); CHKERRQ(iErr)
-!   Call SectionIntView(Sec1, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   Call PetscPrintf(PETSC_COMM_WORLD, "Sec2 after MeshDistribute\n"c, iErr); CHKERRQ(iErr)
+   !!! Create Sec2
+   Call MeshGetSectionInt(MeshTopology%mesh, prefix, Sec2, iErr); CHKERRQ(iErr)
+!!!   Do i = 1, MeshTopology%Num_Verts
+!!!      Call SectionIntSetFiberDimension(Sec2, i+MeshTopology%Num_Elems-1, 1, iErr); CHKERRQ(iErr)
+!!!   End Do 
+!!!   Call SectionIntAllocate(Sec2, iErr); CHKERRQ(iErr)
+!!!
+!!!   Call SectionIntDistribute(Sec1, MeshTopology%mesh, Sec2, iErr); CHKERRQ(iErr)
+
+   Call PetscPrintf(PETSC_COMM_WORLD, "Sec2 after SectionIntDistribute\n"c, iErr); CHKERRQ(iErr)
    Call SectionIntView(Sec2, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   Call MEF90_Finalize()
-   STOP
 
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
+      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
    
    MyEXO%comm = PETSC_COMM_SELF
@@ -113,10 +108,13 @@ Program TestSectionInt
 !   Do iE = 1, MeshTopology%Num_Verts
       iE = 5
       IntValues = 1
-      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
+      Call MeshUpdateAddClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
+      IntValues = 34
+      Call SectionIntZero(Flag_Sec, iErr); CHKERRQ(iErr)
+      Call MeshUpdateAddClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
       iE = 9
       IntValues = 10
-      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
+!      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
 !   End Do  
 !!!   Call MeshGetCellSectionInt(MeshTopology%mesh, 1, Flag_Sec, iErr); CHKERRQ(iErr)
 !!!   Do iE = 1, MeshTopology%Num_Elems
@@ -125,7 +123,8 @@ Program TestSectionInt
 !!!   End Do  
    DeAllocate(IntValues)
    Call SectionIntView(Flag_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-
+   Call MEF90_Finalize()
+   STOP
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, U_Sec, iErr); CHKERRQ(iErr)
 
 !   Allocate(Values(1))

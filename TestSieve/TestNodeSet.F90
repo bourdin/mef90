@@ -13,8 +13,8 @@ Program TestNodeSet
    Use petscmesh
    Use m_TestSieve
 
-   Type (MeshTopology_Info)                     :: MeshTopology
-   Type (EXO_Info)                              :: EXO, MyEXO
+   Type (MeshTopology_Type)                     :: MeshTopology
+   Type (EXO_Type)                              :: EXO, MyEXO
    Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
    Type (Vect3D), Dimension(:), Pointer         :: Coords
    
@@ -42,7 +42,7 @@ Program TestNodeSet
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
+      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
    
    If (verbose) Then
@@ -68,7 +68,7 @@ Program TestNodeSet
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
 
    If (verbose) Then
-      Write(CharBuffer, 300) 'EXO_Info\n'c
+      Write(CharBuffer, 300) 'EXO_Type\n'c
       Call PetscViewerASCIIPrintf(myviewer, CharBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(EXO, myviewer)
 
@@ -97,7 +97,7 @@ Program TestNodeSet
       Type(Mesh)                                   :: dmesh
       Type(PetscViewer)                            :: viewer
       
-      Type(MeshTopology_Info)                      :: lMeshTopology
+      Type(MeshTopology_Type)                      :: lMeshTopology
       Character(len=512)                           :: CharBuffer, IOBuffer
       PetscInt                                     :: iElem, numIds, blkId, setId, iSet, i
       PetscInt                                     :: iErr
