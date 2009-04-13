@@ -23,6 +23,7 @@ Module m_MEF_EXO
 
    
    Public :: Write_EXO_Case
+   Public :: EXO_Check_Numbering
    Public :: Write_MeshTopology
    Public :: Write_MeshTopologyGlobal
 
@@ -33,6 +34,13 @@ Module m_MEF_EXO
    Public :: Read_EXO_Result_Cell
    Public :: Write_EXO_Result_Cell
 
+   Public :: EXO_Property_Copy
+   Public :: EXO_Property_Write
+   Public :: EXO_Property_Read
+   
+   Public :: EXO_Variable_Copy
+   Public :: EXO_Variable_Write
+   Public :: EXO_Variable_Read
    
    Interface Read_EXO_Result_Vertex
       Module Procedure Read_EXO_Result_VertexPtrInterlaced, Read_EXO_Result_VertexSection, Read_EXO_Result_VertexVec, Read_EXO_Result_VertexVect2D, Read_EXO_Result_VertexVect3D, Read_EXO_Result_VertexMat2D, Read_EXO_Result_VertexMatS2D, Read_EXO_Result_VertexMat3D, Read_EXO_Result_VertexMatS3D
@@ -71,10 +79,360 @@ Module m_MEF_EXO
 101 Format('FILES_PER_TIMESET', I)
 102 Format('TIMESET_TEMPLATE "', A, '-', A, '.gen"')
    End Subroutine Write_EXO_Case
+   
+   Subroutine EXO_Check_Numbering(dEXO, ErrorCode)
+      Type(EXO_Type)                                 :: dEXO
+      PetscInt, Intent(OUT)                          :: ErrorCode
       
+      PetscInt                                       :: iErr
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+      PetscInt                                       :: i
+      PetscInt                                       :: NumEB, NumSS, NumNS
+      PetscInt, Dimension(:), Pointer                :: IDs
+      PetscInt                                       :: EXO_MyRank
+      PetscReal                                      :: rDummy
+      Character                                      :: cDummy
+      PetscInt                                       :: vers
+      
+      ErrorCode = 0
+      
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+      If (EXO_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         Call EXINQ(dEXO%exoid, EXELBL, NumEB, rDummy, cDummy, iErr)
+         Call EXINQ(dEXO%exoid, EXSIDS, NumSS, rDummy, cDummy, iErr)
+         Call EXINQ(dEXO%exoid, EXNODS, NumNS, rDummy, cDummy, iErr)
+         
+         If (NumEB > 0) Then
+            Allocate(IDs(NumEB))
+            Call EXGEBI(dEXO%exoid, IDs, iErr)   
+            Do i = 1, NumEB
+               if (IDs(i) /= i) Then            
+                  ErrorCode = ErrorCode + 1
+                  Write(IOBuffer, 100)  i, IDs(i)
+                  Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+               End If
+            End Do
+            DeAllocate(IDs)
+         End If
+         
+         If (NumSS > 0) Then
+            Allocate(IDs(NumSS))
+            Call EXGSSI(dEXO%exoid, IDs, iErr)   
+            Do i = 1, NumSS
+               if (IDs(i) /= i) Then            
+                  ErrorCode = ErrorCode + 1
+                  Write(IOBuffer, 101)  i, IDs(i)
+                  Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+               End If
+            End Do
+            DeAllocate(IDs)
+         End If
+         
+         If (NumNS > 0) Then         
+            Allocate(IDs(NumNS))
+            Call EXGNSI(dEXO%exoid, IDs, iErr)   
+            Do i = 1, NumSS
+               if (IDs(i) /= i) Then            
+                  ErrorCode = ErrorCode + 1
+                  Write(IOBuffer, 102)  i, IDs(i)
+                  Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+               End If
+            End Do
+            DeAllocate(IDs)
+         End If
+         
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+      Call MPI_BCast(ErrorCode, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+ 100 Format('[ERROR] in MeshTopology_Check Numbering. Element block ', I3, ' index is ', I3, '\n'c)   
+ 101 Format('[ERROR] in MeshTopology_Check Numbering. Side Set ', I3, ' index is ', I3, '\n'c)   
+ 102 Format('[ERROR] in MeshTopology_Check Numbering. Node Set ', I3, ' index is ', I3, '\n'c)   
+   End Subroutine EXO_Check_Numbering
+
+
+   
+   Subroutine EXO_Property_Copy(dEXO_in, dEXO_out)
+      Type(EXO_Type)                                 :: dEXO_in, dEXO_out
+      PetscInt                                       :: i
+      
+      dEXO_out%Num_EBProperties = dEXO_in%Num_EBProperties
+      dEXO_out%Num_SSProperties = dEXO_in%Num_SSProperties
+      dEXO_out%Num_NSProperties = dEXO_in%Num_NSProperties
+      
+      Allocate(dEXO_out%EBProperty(dEXO_out%Num_EBProperties))
+      Do i = 1, dEXO_out%Num_EBProperties
+         dEXO_out%EBProperty(i)%Name = dEXO_in%EBProperty(i)%Name
+         Allocate(dEXO_out%EBProperty(i)%Value(Size(dEXO_in%EBProperty(i)%Value)))
+         dEXO_out%EBProperty(i)%Value = dEXO_in%EBProperty(i)%Value
+      End Do
+      
+      Allocate(dEXO_out%SSProperty(dEXO_out%Num_SSProperties))
+      Do i = 1, dEXO_out%Num_SSProperties
+         dEXO_out%SSProperty(i)%Name = dEXO_in%SSProperty(i)%Name
+         Allocate(dEXO_out%SSProperty(i)%Value(Size(dEXO_in%SSProperty(i)%Value)))
+         dEXO_out%SSProperty(i)%Value = dEXO_in%SSProperty(i)%Value
+      End Do
+
+      Allocate(dEXO_out%NSProperty(dEXO_out%Num_NSProperties))
+      Do i = 1, dEXO_out%Num_NSProperties
+         dEXO_out%NSProperty(i)%Name = dEXO_in%NSProperty(i)%Name
+         Allocate(dEXO_out%NSProperty(i)%Value(Size(dEXO_in%NSProperty(i)%Value)))
+         dEXO_out%NSProperty(i)%Value = dEXO_in%NSProperty(i)%Value
+      End Do
+
+   End Subroutine EXO_Property_Copy
+   
+   Subroutine EXO_Property_Write(dEXO)
+      Type(EXO_Type)                                 :: dEXO
+      PetscInt                                       :: vers
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i
+
+      PetscInt                                       :: NumEB, NumSS, NumNS
+      PetscInt                                       :: EXO_MyRank
+      PetscReal                                      :: rDummy
+      Character                                      :: cDummy
+
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+      If (EXO_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         Call EXINQ(dEXO%exoid, EXELBL, NumEB, rDummy, cDummy, iErr)
+         Call EXINQ(dEXO%exoid, EXSIDS, NumSS, rDummy, cDummy, iErr)
+         Call EXINQ(dEXO%exoid, EXNODS, NumNS, rDummy, cDummy, iErr)
+
+         !!! EB Properties
+         If ((dEXO%Num_EBProperties > 0) .AND. (NumEB > 0)) Then
+            Call EXPPN(dEXO%exoid, EXEBLK, dEXO%Num_EBProperties, dEXO%EBProperty(:)%Name, iErr)
+            Do i = 1, dEXO%Num_EBProperties
+               Call EXPPA(dEXO%exoid, EXEBLK, dEXO%EBProperty(i)%Name, dEXO%EBProperty(i)%Value, iErr)
+            End Do
+         End If
+         !!! SS Properties
+         If ((dEXO%Num_SSProperties > 0) .AND. (NumSS > 0)) Then
+            Call EXPPN(dEXO%exoid, EXSSET, dEXO%Num_SSProperties, dEXO%SSProperty(:)%Name, iErr)
+            Do i = 1, dEXO%Num_SSProperties
+               Call EXPPA(dEXO%exoid, EXSSET, dEXO%SSProperty(i)%Name, dEXO%SSProperty(i)%Value, iErr)
+            End Do
+         End If
+         !!! NS Properties
+         If ((dEXO%Num_NSProperties > 0) .AND. (NumNS > 0)) Then
+            Call EXPPN(dEXO%exoid, EXNSET, dEXO%Num_NSProperties, dEXO%NSProperty(:)%Name, iErr)         
+            Do i = 1, dEXO%Num_NSProperties
+               Call EXPPA(dEXO%exoid, EXNSET, dEXO%NSProperty(i)%Name, dEXO%NSProperty(i)%Value, iErr)
+            End Do
+         End If
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+   End Subroutine EXO_Property_Write
+      
+   Subroutine EXO_Property_Read(dEXO)
+      Type(EXO_Type)                                 :: dEXO
+      PetscInt                                       :: vers
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i
+      PetscInt                                       :: NumProp, NumVal
+      PetscReal                                      :: rDummy
+      Character                                      :: cDummy
+      
+      Character(len=MXSTLN), Dimension(:), Pointer   :: PropName
+      Integer                                        :: EXO_MyRank
+      
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+
+      If (EXO_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         !!! EB Properties
+         Call EXINQ(dEXO%exoid, EXNEBP, NumProp, rDummy, cDummy, iErr)
+         Allocate(PropName (NumProp))
+         Call EXGPN(dEXO%exoid, EXEBLK, PropName, iErr)
+         dEXO%Num_EBProperties = max(0,NumProp-1)
+         Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
+         Call EXINQ(dEXO%exoid, EXELBL, NumVal, rDummy, cDummy, iErr)
+         Do i = 1, dEXO%Num_EBProperties
+            Allocate(dEXO%EBProperty(i)%Value(NumVal))
+            Call EXGPA(dEXO%exoid, EXEBLK, PropName(i+1), dEXO%EBProperty(i)%Value, iErr)
+            dEXO%EBProperty(i)%Name  = PropName(i+1)
+         End Do
+         DeAllocate(PropName)
+         
+         !!! SS Properties
+         Call EXINQ(dEXO%exoid, EXNSSP, NumProp, rDummy, cDummy, iErr)
+         Allocate(PropName (NumProp))
+         Call EXGPN(dEXO%exoid, EXSSET, PropName, iErr)
+         dEXO%Num_SSProperties = max(0,NumProp-1)
+         Call EXINQ(dEXO%exoid, EXSIDS, NumVal, rDummy, cDummy, iErr)
+         Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
+         Do i = 1, dEXO%Num_SSProperties
+            Allocate(dEXO%SSProperty(i)%Value(NumVal))
+            Call EXGPA(dEXO%exoid, EXSSET, PropName(i+1), dEXO%SSProperty(i)%Value, iErr)
+            dEXO%SSProperty(i)%Name  = PropName(i+1)
+         End Do
+         DeAllocate(PropName)
+
+         !!! NS Properties
+         Call EXINQ(dEXO%exoid, EXNNSP, NumProp, rDummy, cDummy, iErr)
+         Allocate(PropName (NumProp))
+         Call EXGPN(dEXO%exoid, EXNSET, PropName, iErr)
+         dEXO%Num_NSProperties = max(0,NumProp-1)
+         Call EXINQ(dEXO%exoid, EXNODS, NumVal, rDummy, cDummy, iErr)
+         Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
+         Do i = 1, dEXO%Num_NSProperties
+            Allocate(dEXO%NSProperty(i)%Value(NumVal))
+            Call EXGPA(dEXO%exoid, EXNSET, PropName(i+1), dEXO%NSProperty(i)%Value, iErr)
+            dEXO%NSProperty(i)%Name  = PropName(i+1)
+         End Do
+         DeAllocate(PropName)
+         
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+      !!! Broadcast everything now
+      Call MPI_BCast(dEXO%Num_EBProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_SSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_NSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+
+      !!! Element Blocks
+      If (MEF90_MyRank /= 0) Then
+         Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
+         Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
+         Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
+      EndIf
+      Do i = 1, dEXO%Num_EBProperties
+         Call MPI_BCast(dEXO%EBProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+         NumProp = Size(dEXO%EBProperty(i)%Value)
+         Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         If (MEF90_MyRank /= 0) Then
+            Allocate(dEXO%EBProperty(i)%Value(NumProp))
+         End If
+         Call MPI_BCast(dEXO%EBProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      End Do
+      !!! Side Sets
+      Do i = 1, dEXO%Num_SSProperties
+         Call MPI_BCast(dEXO%SSProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+         NumProp = Size(dEXO%SSProperty(i)%Value)
+         Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         If (MEF90_MyRank /= 0) Then
+            Allocate(dEXO%SSProperty(i)%Value(NumProp))
+         End If
+         Call MPI_BCast(dEXO%SSProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      End Do
+      !!! Node Sets
+      Do i = 1, dEXO%Num_NSProperties
+         Call MPI_BCast(dEXO%NSProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+         NumProp = Size(dEXO%NSProperty(i)%Value)
+         Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         If (MEF90_MyRank /= 0) Then
+            Allocate(dEXO%NSProperty(i)%Value(NumProp))
+         End If
+         Call MPI_BCast(dEXO%NSProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      End Do
+   End Subroutine EXO_Property_Read
+
+   Subroutine EXO_Variable_Copy(dEXO_in, dEXO_out)
+      Type(EXO_Type)                                 :: dEXO_in, dEXO_out
+
+      dEXO_out%Num_GlobVariables = dEXO_in%Num_GlobVariables
+      dEXO_out%Num_CellVariables = dEXO_in%Num_CellVariables
+      dEXO_out%Num_VertVariables = dEXO_in%Num_VertVariables
+      
+      Allocate(dEXO_out%GlobVariable(dEXO_out%Num_GlobVariables))
+      dEXO_out%GlobVariable(:)%Name   = dEXO_in%GlobVariable(:)%Name
+      dEXO_out%GlobVariable(:)%Offset = dEXO_in%GlobVariable(:)%Offset
+
+      Allocate(dEXO_out%CellVariable(dEXO_out%Num_CellVariables))
+      dEXO_out%CellVariable(:)%Name   = dEXO_in%CellVariable(:)%Name
+      dEXO_out%CellVariable(:)%Offset = dEXO_in%CellVariable(:)%Offset
+      
+      Allocate(dEXO_out%VertVariable(dEXO_out%Num_VertVariables))
+      dEXO_out%VertVariable(:)%Name   = dEXO_in%VertVariable(:)%Name
+      dEXO_out%VertVariable(:)%Offset = dEXO_in%VertVariable(:)%Offset
+   End Subroutine EXO_Variable_Copy
+
+
+   Subroutine EXO_Variable_Write(dEXO)
+      Type(EXO_Type)                                 :: dEXO
+ 
+      PetscInt                                       :: i, iErr
+      Integer                                        :: EXO_MyRank
+      PetscInt                                       :: vers
+      
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+
+      If (EXO_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+
+         Call EXPVP (dEXO%exoid, 'g', dEXO%Num_GlobVariables, iErr)
+         Call EXPVAN(dEXO%exoid, 'g', dEXO%Num_GlobVariables, dEXO%GlobVariable(:)%Name, iErr)
+         Call EXPVP (dEXO%exoid, 'e', dEXO%Num_CellVariables, iErr)
+         Call EXPVAN(dEXO%exoid, 'e', dEXO%Num_CellVariables, dEXO%CellVariable(:)%Name, iErr)
+         Call EXPVP (dEXO%exoid, 'n', dEXO%Num_VertVariables, iErr)
+         Call EXPVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+   End Subroutine EXO_Variable_Write 
+   
+   Subroutine EXO_Variable_Read(dEXO)
+      Type(EXO_Type)                                 :: dEXO
+      PetscInt                                       :: vers
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i
+      PetscInt                                       :: NumProp, NumVal
+      PetscReal                                      :: rDummy
+      Character                                      :: cDummy
+      
+      Integer                                        :: EXO_MyRank
+      
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+
+      If (EXO_MyRank == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+
+         Call EXGVP (dEXO%exoid, 'g', dEXO%Num_GlobVariables, iErr)
+         Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))      
+         Call EXGVAN(dEXO%exoid, 'g', dEXO%Num_GlobVariables, dEXO%GlobVariable(:)%Name, iErr)
+         
+         Call EXGVP (dEXO%exoid, 'e', dEXO%Num_CellVariables, iErr)
+         Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))      
+         Call EXGVAN(dEXO%exoid, 'e', dEXO%Num_CellVariables, dEXO%CellVariable(:)%Name, iErr)
+
+         Call EXGVP (dEXO%exoid, 'n', dEXO%Num_VertVariables, iErr)
+         Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))      
+         Call EXGVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+
+      Call MPI_BCast(dEXO%Num_GlobVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_CellVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_VertVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+
+      If (EXO_MyRank /= 0) Then
+         Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))      
+         Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))      
+         Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))      
+      End If      
+
+      Call MPI_BCast(dEXO%GlobVariable(:)%Offset, dEXO%Num_GlobVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Do i = 1, dEXO%Num_GlobVariables
+         Call MPI_BCast(dEXO%GlobVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+      End Do
+      Call MPI_BCast(dEXO%CellVariable(:)%Offset, dEXO%Num_CellVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Do i = 1, dEXO%Num_CellVariables
+         Call MPI_BCast(dEXO%CellVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+      End Do
+      Call MPI_BCast(dEXO%VertVariable(:)%Offset, dEXO%Num_VertVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Do i = 1, dEXO%Num_VertVariables
+         Call MPI_BCast(dEXO%VertVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
+      End Do
+   End Subroutine EXO_Variable_Read
+   
    Subroutine Write_MeshTopology(dMeshTopology, dEXO)
-      Type(MeshTopology_Info)                        :: dMeshTopology
-      Type(EXO_Info)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
       PetscInt                                       :: iErr
       PetscInt                                       :: iDummy
@@ -179,8 +537,8 @@ Module m_MEF_EXO
    
    Subroutine Write_MeshTopologyGlobal(dMeshTopology, dEXO, dGlobalComm)
       !!! Reconstruct the topology informatins for of all meshes in dGlobalComm then write it
-      Type(MeshTopology_Info)                        :: dMeshTopology
-      Type(EXO_Info)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      Type(EXO_Type)                                 :: dEXO
       MPI_Comm                                       :: dGlobalComm
       
       PetscInt                                       :: iBlk, iSet, i, iErr
@@ -188,7 +546,7 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Attr = 0         
       PetscInt                                       :: Num_Dist_Factor = 0
       
-      Type(MeshTopology_Info)                        :: GlobalMeshTopology
+      Type(MeshTopology_Type)                        :: GlobalMeshTopology
       PetscInt, Dimension(:), Pointer                :: Tmp_GlobalID, Tmp_ID
 
 
@@ -259,8 +617,7 @@ Module m_MEF_EXO
       Call Write_MeshTopology(GlobalMeshTopology, dEXO)
       Call MeshTopologyDestroy(GlobalMeshTopology)
    End Subroutine Write_MeshTopologyGlobal
-
-
+   
 !!!
 !!! RESULT FILES
 !!!
@@ -269,7 +626,7 @@ Module m_MEF_EXO
 !!! In the sequel, we always assume that we are doing distributed I/O when EXO%comm == PETSC_COMM_SELF (i.e. 1 file per CPU) and sequential (i.e. IO operation on a single file on CPU 0) when EXO%comm == PETSC_COM_WORLD
    
    Subroutine Read_EXO_Result_Global(dEXO, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       PetscReal                                      :: dRes
@@ -309,8 +666,8 @@ Module m_MEF_EXO
 !!! READ VERTEX BASED VARIABLES (NODAL VARIABLES)
 !!!
    Subroutine Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       PetscReal, Dimension(:), Pointer               :: dRes
@@ -334,8 +691,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_VertexPtrInterlaced
 
    Subroutine Read_EXO_Result_VertexSection(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (SectionReal)                             :: dRes
@@ -353,8 +710,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_VertexSection
 
    Subroutine Read_EXO_Result_VertexVec(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vec)                                     :: dRes
@@ -369,8 +726,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_VertexVec
 
    Subroutine Read_EXO_Result_VertexVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vect2D), Dimension(:), Pointer           :: dRes
@@ -391,8 +748,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_VertexVect2D
 
    Subroutine Read_EXO_Result_VertexVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vect3D), Dimension(:), Pointer           :: dRes
@@ -415,8 +772,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_VertexVect3D
 
    Subroutine Read_EXO_Result_VertexMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Mat2D), Dimension(:), Pointer            :: dRes
@@ -441,8 +798,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_VertexMat2D
 
    Subroutine Read_EXO_Result_VertexMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (MatS2D), Dimension(:), Pointer           :: dRes
@@ -465,8 +822,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_VertexMatS2D
 
    Subroutine Read_EXO_Result_VertexMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Mat3D), Dimension(:), Pointer            :: dRes
@@ -501,8 +858,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_VertexMat3D
 
    Subroutine Read_EXO_Result_VertexMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (MatS3D), Dimension(:), Pointer           :: dRes
@@ -535,8 +892,8 @@ Module m_MEF_EXO
 !!!
 
    Subroutine Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       PetscReal, Dimension(:), Pointer               :: dRes
@@ -570,8 +927,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellPtrInterlaced
 
    Subroutine Read_EXO_Result_CellSection(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (SectionReal)                             :: dRes
@@ -589,8 +946,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellSection
 
    Subroutine Read_EXO_Result_CellVec(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vec)                                     :: dRes
@@ -605,8 +962,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellVec
 
    Subroutine Read_EXO_Result_CellVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vect2D), Dimension(:), Pointer           :: dRes
@@ -627,8 +984,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellVect2D
 
    Subroutine Read_EXO_Result_CellVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vect3D), Dimension(:), Pointer           :: dRes
@@ -651,8 +1008,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellVect3D
 
    Subroutine Read_EXO_Result_CellMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Mat2D), Dimension(:), Pointer            :: dRes
@@ -677,8 +1034,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellMat2D
 
    Subroutine Read_EXO_Result_CellMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (MatS2D), Dimension(:), Pointer           :: dRes
@@ -701,8 +1058,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellMatS2D
 
    Subroutine Read_EXO_Result_CellMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Mat3D), Dimension(:), Pointer            :: dRes
@@ -737,8 +1094,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellMat3D
 
    Subroutine Read_EXO_Result_CellMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (MatS3D), Dimension(:), Pointer           :: dRes
@@ -768,7 +1125,7 @@ Module m_MEF_EXO
 
 !!! WRITE
    Subroutine Write_EXO_Result_Global(dEXO, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       PetscReal                                      :: dRes
@@ -800,8 +1157,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_Global
 
    Subroutine Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       PetscReal, Dimension(:), Pointer               :: dRes
@@ -824,8 +1181,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_VertexPtrInterlaced
 
    Subroutine Write_EXO_Result_VertexSection(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (SectionReal)                             :: dRes
@@ -842,8 +1199,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_VertexSection
 
    Subroutine Write_EXO_Result_VertexVec(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vec)                                     :: dRes
@@ -857,8 +1214,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_VertexVec
 
    Subroutine Write_EXO_Result_VertexVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vect2D), Dimension(:), Pointer           :: dRes
@@ -878,8 +1235,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_VertexVect2D
 
    Subroutine Write_EXO_Result_VertexVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vect3D), Dimension(:), Pointer           :: dRes
@@ -901,8 +1258,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_VertexVect3D
 
    Subroutine Write_EXO_Result_VertexMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Mat2D), Dimension(:), Pointer            :: dRes
@@ -926,8 +1283,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_VertexMat2D
 
    Subroutine Write_EXO_Result_VertexMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (MatS2D), Dimension(:), Pointer           :: dRes
@@ -949,8 +1306,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_VertexMatS2D
 
    Subroutine Write_EXO_Result_VertexMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Mat3D), Dimension(:), Pointer            :: dRes
@@ -984,8 +1341,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_VertexMat3D
 
    Subroutine Write_EXO_Result_VertexMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (MatS3D), Dimension(:), Pointer           :: dRes
@@ -1016,8 +1373,8 @@ Module m_MEF_EXO
 !!! WRITE CELL BASED VARIABLES (ELEMENTAL)
 !!!   
    Subroutine Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       PetscReal, Dimension(:), Pointer               :: dRes
@@ -1051,8 +1408,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_CellPtrInterlaced
 
    Subroutine Write_EXO_Result_CellSection(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (SectionReal)                             :: dRes
@@ -1069,8 +1426,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_CellSection
 
    Subroutine Write_EXO_Result_CellVec(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vec)                                     :: dRes
@@ -1084,8 +1441,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_CellVec
 
    Subroutine Write_EXO_Result_CellVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vect2D), Dimension(:), Pointer           :: dRes
@@ -1105,8 +1462,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_CellVect2D
 
    Subroutine Write_EXO_Result_CellVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Vect3D), Dimension(:), Pointer           :: dRes
@@ -1128,8 +1485,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_CellVect3D
 
    Subroutine Write_EXO_Result_CellMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Mat2D), Dimension(:), Pointer            :: dRes
@@ -1153,8 +1510,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_CellMat2D
 
    Subroutine Write_EXO_Result_CellMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (MatS2D), Dimension(:), Pointer           :: dRes
@@ -1176,8 +1533,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_CellMatS2D
 
    Subroutine Write_EXO_Result_CellMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (Mat3D), Dimension(:), Pointer            :: dRes
@@ -1211,8 +1568,8 @@ Module m_MEF_EXO
    End Subroutine Write_EXO_Result_CellMat3D
 
    Subroutine Write_EXO_Result_CellMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
-      Type (EXO_Info), Intent(INOUT)                 :: dEXO
-      Type (MeshTopology_Info)                       :: dMeshTopology
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
       PetscInt                                       :: dIdx
       PetscInt                                       :: dTS
       Type (MatS3D), Dimension(:), Pointer           :: dRes

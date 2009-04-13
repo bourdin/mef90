@@ -1,8 +1,4 @@
-#if defined PB_2D
-Program  SimplePoisson2D
-#elif defined PB_3D
-Program SimplePoisson3D
-#endif
+Program  SimplePoisson
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -37,7 +33,7 @@ Program SimplePoisson3D
    If (AppCtx%AppParam%verbose) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
-!      Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
+      Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
 
    If (AppCtx%AppParam%verbose) Then
@@ -46,6 +42,7 @@ Program SimplePoisson3D
    End If
    
    Call MatAssembly(AppCtx)
+!   Call MatView(AppCtx%K, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr);CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'c
@@ -87,8 +84,4 @@ Program SimplePoisson3D
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    
    Call SimplePoissonFinalize(AppCtx)
-#if defined PB_2D
-End Program  SimplePoisson2D
-#elif defined PB_3D
-End Program SimplePoisson3D
-#endif
+End Program  SimplePoisson

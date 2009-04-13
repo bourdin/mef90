@@ -15,10 +15,11 @@ Program TestSieve
    
    Implicit NONE
     
-   Type(MeshTopology_Info)                      :: MeshTopology
-   Type(EXO_Info)                               :: EXO
+   Type(MeshTopology_Type)                      :: MeshTopology
+   Type(Mesh)                                   :: Tmp_Mesh
+   Type(EXO_Type)                               :: EXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
-   Type(Vect3D), Dimension(:), Pointer          :: Coords
+   Type(Vect2D), Dimension(:), Pointer          :: Coords
    PetscReal, Dimension(:,:), Pointer           :: Vertices
    
    PetscReal                                    :: MyObjectiveFunction, ObjectiveFunction
@@ -51,10 +52,14 @@ Program TestSieve
 
    EXO%Comm = PETSC_COMM_WORLD
    
+   Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+   Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
+
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      Call Init_Elem_Blk_Info(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
+      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
    If (verbose) Then
       Call MeshTopologyView(MeshTopology, PetscViewer(PETSC_VIEWER_STDOUT_SELF))
@@ -79,7 +84,8 @@ Program TestSieve
             Vertices(1,iX) = values(2*iX-1)
             Vertices(2,iX) = values(2*iX)
          End Do
-         Call Init_Element(Elem2DA(iE), Vertices, 4, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         Write(*,*) iE, Vertices
+         Call ElementInit(Elem2DA(iE), Vertices, 4, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
       End Do
    End Do
    Deallocate(Vertices)
@@ -122,6 +128,7 @@ Program TestSieve
    
    Allocate(values(dof))
    Allocate(Coords(MeshTopology%Num_Verts))
+   Print*, 'Num_Verts is ', MeshTopology%Num_Verts
    Call MeshInitCoordinates(MeshTopology, Coords)
    Do iV = 1, MeshTopology%Num_Verts
       values = 1.0+Coords(iV)%Y
