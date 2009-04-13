@@ -11,23 +11,23 @@ Module m_MEF_Elements
    IMPLICIT NONE
    Private
    
-   Public :: Init_Element
-   Public :: Destroy_Element
-   Public :: Init_Elem_Blk_Type
+   Public :: ElementInit
+   Public :: ElementDestroy
    Public :: ElementView
+   Public :: Init_Elem_Blk_Type
 
 
-   Interface Init_Element
+   Interface ElementInit
       Module Procedure Init_Element2D_Scal, Init_Element2D, Init_Element2D_Elast, Init_Element3D_Scal
-   End Interface Init_Element
+   End Interface ElementInit
    
-   Interface Destroy_Element
+   Interface ElementDestroy
       Module Procedure Destroy_Element2D_Scal, Destroy_Element2D, Destroy_Element2D_Elast, Destroy_Element3D_Scal, Destroy_Element3D, Destroy_Element3D_Elast
-   End Interface Destroy_Element
+   End Interface ElementDestroy
    
    Interface ElementView
       Module Procedure Element2D_ScalView, Element2D_ScalPtrView, Element2DView, Element2DPtrView, Element2D_ElastView, Element2D_ElastPtrView, Element3D_ScalView, Element3D_ScalPtrView, Element3DView, Element3DPtrView, Element3D_ElastView, Element3D_ElastPtrView
-   End Interface
+   End Interface ElementView
    
    PetscInt, Parameter, Public                   :: MEF90_P1_Lagrange = 1
    PetscInt, Parameter, Public                   :: MEF90_P2_Lagrange = 2
@@ -325,7 +325,7 @@ Module m_MEF_Elements
          dElem%Der_BF(i*dim+2,:)%YX = Elem_Scal%Grad_BF(i+1,:)%X
          dElem%Der_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
-      Call Destroy_Element(Elem_Scal)
+      Call ElementDestroy(Elem_Scal)
    End Subroutine Init_Element_P_Lagrange_2D
 
    Subroutine Init_Element_P_Lagrange_2D_Elast(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
@@ -358,7 +358,7 @@ Module m_MEF_Elements
          dElem%GradS_BF(i*dim+1,:)%XY = (Elem_Scal%Grad_BF(i+1,:)%Y + Elem_Scal%Grad_BF(i+1,:)%X) / 2.0_Kr
          dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
-      Call Destroy_Element(Elem_Scal)
+      Call ElementDestroy(Elem_Scal)
    End Subroutine Init_Element_P_Lagrange_2D_Elast
 
    Subroutine Init_Element_P_Lagrange_3D_Scal(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)

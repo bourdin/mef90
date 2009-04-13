@@ -33,7 +33,7 @@ Program  SimplePoisson
    If (AppCtx%AppParam%verbose) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
-!      Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
+      Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
 
    If (AppCtx%AppParam%verbose) Then
@@ -42,6 +42,7 @@ Program  SimplePoisson
    End If
    
    Call MatAssembly(AppCtx)
+!   Call MatView(AppCtx%K, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr);CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'c
