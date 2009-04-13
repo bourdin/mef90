@@ -19,7 +19,7 @@ Program TestSieve
    Type(Mesh)                                   :: Tmp_Mesh
    Type(EXO_Type)                               :: EXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
-   Type(Vect3D), Dimension(:), Pointer          :: Coords
+   Type(Vect2D), Dimension(:), Pointer          :: Coords
    PetscReal, Dimension(:,:), Pointer           :: Vertices
    
    PetscReal                                    :: MyObjectiveFunction, ObjectiveFunction
@@ -84,7 +84,8 @@ Program TestSieve
             Vertices(1,iX) = values(2*iX-1)
             Vertices(2,iX) = values(2*iX)
          End Do
-         Call Init_Element(Elem2DA(iE), Vertices, 4, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         Write(*,*) iE, Vertices
+         Call ElementInit(Elem2DA(iE), Vertices, 4, MeshTopology%Elem_Blk(iBlk)%Elem_Type)
       End Do
    End Do
    Deallocate(Vertices)
@@ -127,6 +128,7 @@ Program TestSieve
    
    Allocate(values(dof))
    Allocate(Coords(MeshTopology%Num_Verts))
+   Print*, 'Num_Verts is ', MeshTopology%Num_Verts
    Call MeshInitCoordinates(MeshTopology, Coords)
    Do iV = 1, MeshTopology%Num_Verts
       values = 1.0+Coords(iV)%Y
