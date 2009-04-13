@@ -41,7 +41,7 @@ Module m_MEF_MPI
 
    Subroutine MPIType_Initialize()
       PetscInt, Dimension(:), Pointer   :: BlkCounts, Offsets, DataTypes
-      PetscInt                          :: NumBlk, extent, iErr
+      PetscInt                          :: NumBlk, iErr
       
       !!! Vect2D, Vect3D, Mat2D, MatS2D, Mat3D, MatS3D, Tens4OS2D, Tens4OSD3D
       NumBlk=1
