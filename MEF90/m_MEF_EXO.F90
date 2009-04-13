@@ -76,7 +76,7 @@ Module m_MEF_EXO
          Close(F_OUT)
       End If
 100 Format(A)
-101 Format('FILES_PER_TIMESET', I)
+101 Format('FILES_PER_TIMESET', I4)
 102 Format('TIMESET_TEMPLATE "', A, '-', A, '.gen"')
    End Subroutine Write_EXO_Case
    
