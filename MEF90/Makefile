@@ -5,8 +5,9 @@ all: m_MEF90.o ${PETSC_ARCH}
 include ${PETSC_DIR}/conf/base
 
 .F90.o:
-	cp $< $<.tmp
-	cat $<.tmp | ../buildProcessor.py > $<
+	@cp $< $<.tmp
+	@cat $<.tmp | ../buildProcessor.py > $<
+	@rm $<.tmp
 	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
 
 debug:
