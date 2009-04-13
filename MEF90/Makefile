@@ -55,3 +55,5 @@ clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}
 
+restore:
+	@hg revert *.F90
