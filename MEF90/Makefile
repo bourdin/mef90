@@ -6,11 +6,16 @@ MEF90OBJS	=     m_MEF_Parameters.o    m_MEF_LinAlg.o      \
                   m_MEF_MPI.o       m_MEF_Elements.o        \
                   m_MEF_EXO.o       m_MEF_Sieve.o
 
-all: m_MEF90.o
+all: process m_MEF90.o unprocess
 
 include ${PETSC_DIR}/conf/base
 
 FFLAGS = ${EXO_CFLAGS}
+
+process:
+	cat m_MEF_Types.F90 | ../buildProcessor.py > m_MEF_Types.F90
+
+unprocess:
 
 #Dependencies:
 m_MEF_Parameters.o:    
