@@ -5,6 +5,7 @@ Module m_MEF_Sieve
 
    Use m_MEF_LinAlg
    Use m_MEF_Types
+   Use m_MEF_Utils
    Use petsc
    Use petscmesh
    
@@ -37,6 +38,9 @@ Contains
       PetscInt                                     :: iE, iElem, numIds, blkId, setId
       PetscInt, Dimension(:), Pointer              :: blkIds
       PetscInt, Dimension(:), Pointer              :: setIds
+      PetscInt, Dimension(:), Pointer              :: Tmp_ID, Tmp_GlobalID
+
+
       
       ! Read Global Geometric Parameters
       Call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
@@ -69,6 +73,14 @@ Contains
       End If
       Deallocate(blkIds)
       
+      ! Get the overall number of element blocks
+      Allocate(Tmp_ID(dMeshTopology%num_elem_blks))
+      Tmp_ID = dMeshTopology%elem_blk(:)%ID
+      Call Uniq(dEXO%Comm, Tmp_ID, Tmp_GlobalID)            
+      dMeshTopology%Num_elem_blks_global = Size(Tmp_GlobalID)
+      DeAllocate(Tmp_ID)
+      DeAllocate(Tmp_GlobalID)
+      
       ! Read Node set information
       CharBuffer = 'VertexSets'
       Call MeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)
@@ -89,6 +101,15 @@ Contains
          End Do
       End If
       Deallocate(setIds)
+
+      ! Get the overall number of Node Sets
+      Allocate(Tmp_ID(dMeshTopology%num_node_sets))
+      Tmp_ID = dMeshTopology%node_set(:)%ID
+      Call Uniq(dEXO%Comm, Tmp_ID, Tmp_GlobalID)            
+      dMeshTopology%Num_node_sets_global = Size(Tmp_GlobalID)
+      DeAllocate(Tmp_ID)
+      DeAllocate(Tmp_GlobalID)
+      
    End Subroutine MeshTopologyReadEXO
     
    Subroutine MeshInitCoordinatesVect2D(dMeshTopology, dCoords)

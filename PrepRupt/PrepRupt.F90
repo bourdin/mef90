@@ -25,7 +25,7 @@ Program PrepRupt
    
    
    Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename
-   Type(MeshTopology_Type)                      :: MeshTopology
+   Type(MeshTopology_Type)                      :: MeshTopology, GlobalMeshTopology
    Type(EXO_Type)                               :: EXO, MyEXO
    Type(Mesh)                                   :: Tmp_Mesh
    PetscTruth                                   :: HasPrefix, verbose
@@ -61,23 +61,70 @@ Program PrepRupt
    End If
 
    !!! Reading and distributing sequential mesh
-   Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-   Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-   Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
+   If (MEF90_NumProcs == 1) Then
+      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Else
+      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+   End If
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
+   If (verbose) Then
+      Write(IOBuffer, *) "Done reading and partitioning the mesh\n"c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
 
    MyEXO%comm = PETSC_COMM_SELF
    MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 200) trim(prefix), MEF90_MyRank
 200 Format(A, '-', I4.4, '.gen')
 
+   
+
+
+
+   Print*, MEF90_MyRank, MeshTopology%Num_elem_Blks
+
+
+
+
+
+    Call MEF90_Finalize()
+    STOP
+
+
+
+
+
+
+
+
+
+
+
+
+
+   Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
+   If (verbose) Then
+      Write(IOBuffer, *) "Done with Write_MeshTopologyGlobal\n"c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+
+
    Call RuptEXOProperty_Init(MyEXO)   
+   If (verbose) Then
+      Write(IOBuffer, *) "Done with RuptEXOProperty_Init\n"c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    Call RuptEXOVariable_Init(MyEXO)   
+   If (verbose) Then
+      Write(IOBuffer, *) "Done with RuptEXOVariable_Init\n"c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
 
 
    !!! Get Elem_Type first
-!   Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
 !   Call EXO_Variable_Write(MyEXO)
 !   Call EXO_Property_Write(MyEXO)
 !!!
