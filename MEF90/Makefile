@@ -1,4 +1,5 @@
-MODULE_OPTS = -module ${PETSC_ARCH}
+#MODULE_OPTS = -module ${PETSC_ARCH}
+MODULE_OPTS = -fmod=${PETSC_ARCH}
 
 all: m_MEF90.o ${PETSC_ARCH}
 
@@ -8,7 +9,7 @@ include ${PETSC_DIR}/conf/base
 	@cp $< $<.tmp
 	@cat $<.tmp | ../buildProcessor.py > $<
 	@rm $<.tmp
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MODULE_OPTS} ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
 
 debug:
 	@echo FC is ${FC}
@@ -57,3 +58,4 @@ clean::
 
 restore:
 	@hg revert *.F90
+	@rm *.orig
