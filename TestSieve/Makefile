@@ -10,8 +10,8 @@ all: TestSieve TestSieve3D TestNodeSet TestLocal TestAssembly TestSectionInt
 include ${PETSC_DIR}/conf/base
 
 
-#FFLAGS = -module ${PETSC_ARCH} -I. -I${MEF90DIR} -ftrace=full -ffree-line-length-huge
-FFLAGS = -fmod=${PETSC_ARCH} -I. -I${MEF90DIR} -ftrace=full -ffree-line-length-huge
+FFLAGS = -module ${PETSC_ARCH} -I. -I${MEF90DIR}
+#FFLAGS = -fmod=${PETSC_ARCH} -I. -I${MEF90DIR} -ftrace=full -ffree-line-length-huge
 
 .F90.o: 
 	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
