@@ -154,7 +154,7 @@ Contains
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
              Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
-             Write(*,*) iE, TmpCoords
+!             Write(*,*) iE, TmpCoords
              !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(AppCtx%Elem(iE), Coords, 2, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
 !            Call ElementView(AppCtx%Elem(iE), PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
