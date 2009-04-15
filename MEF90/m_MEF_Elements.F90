@@ -1,12 +1,14 @@
 Module m_MEF_Elements
 
 #include "finclude/petscdef.h"
+#include "finclude/petscmeshdef.h"
 #include "finclude/petscviewerdef.h"
 
    Use m_MEF_LinAlg
    Use m_MEF_Types
    Use m_MEF_Utils
    Use petsc
+   Use petscmesh
       
    IMPLICIT NONE
    Private
@@ -18,7 +20,7 @@ Module m_MEF_Elements
 
 
    Interface ElementInit
-      Module Procedure Init_Element2D_Scal, Init_Element2D, Init_Element2D_Elast, Init_Element3D_Scal
+      Module Procedure Init_Element2D_Scal, Init_Element2D, Init_Element2D_Elast, Init_Element3D_Scal, Init_AllElement2D_Scal
    End Interface ElementInit
    
    Interface ElementDestroy
@@ -44,9 +46,15 @@ Module m_MEF_Elements
       Case (2)
          Select Case (dBlk%Elem_Type)
          Case (MEF90_P1_Lagrange)         
-               dBlk%DoF_Location = (/ 0, 0, 0, 3/)
+            dBlk%DoF_Location = (/ 0, 0, 0, 3/)
+            dBlk%Num_Face = 0
+            dBlk%Num_Edge = 3
+            dBlk%Num_Vert = 3
          Case (MEF90_P2_Lagrange)
             dBlk%DoF_Location = (/ 0, 0, 3, 3/)
+            dBlk%Num_Face = 0
+            dBlk%Num_Edge = 3
+            dBlk%Num_Vert = 3
          Case Default
             Print*, 'Unknown element type', dBlk%Elem_Type
             STOP
@@ -54,9 +62,15 @@ Module m_MEF_Elements
       Case (3)
          Select Case (dBlk%Elem_Type)
          Case (MEF90_P1_Lagrange)         
-               dBlk%DoF_Location = (/ 0, 0, 0, 4/)
+            dBlk%DoF_Location = (/ 0, 0, 0, 4/)
+            dBlk%Num_Face = 4
+            dBlk%Num_Edge = 6
+            dBlk%Num_Vert = 4
          Case (MEF90_P2_Lagrange)
             dBlk%DoF_Location = (/ 0, 0, 6, 4/)
+            dBlk%Num_Face = 4
+            dBlk%Num_Edge = 6
+            dBlk%Num_Vert = 4
          Case Default
             Print*, 'Unknown element type', dBlk%Elem_Type
             STOP
@@ -67,7 +81,37 @@ Module m_MEF_Elements
       End Select
       dBlk%Num_DoF = sum(dBlk%DoF_Location)
 
-   End Subroutine Init_Elem_Blk_Type      
+   End Subroutine Init_Elem_Blk_Type     
+   
+   Subroutine Init_AllElement2D_Scal(dMeshTopology, dElem, dQuadratureOrder)
+      Type(MeshTopology_Type)                     :: dMeshTopology
+      Type(Element2D_Scal), Dimension(:), Pointer :: dElem
+      PetscInt, Intent(IN)                        :: dQuadratureOrder
+      
+      PetscInt                                    :: iBlk, iELoc, iE, iErr
+      PetscReal, Dimension(:,:), Pointer          :: Coords
+      PetscReal, Dimension(:), Pointer            :: TmpCoords
+      Type(SectionReal)                           :: CoordSection
+      
+      Allocate(dElem(dMeshTopology%Num_Elems))
+      !!! Initialize the Basis Functions in each element
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+         Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+         Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+
+         Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call MeshRestrictClosure(dMeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Call ElementInit(dElem(iE), Coords, 2, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoords)
+         DeAllocate(Coords)
+      End Do Do_Elem_iBlk
+      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+   End Subroutine Init_AllElement2D_Scal
       
    
    Subroutine Init_Element2D_Scal(dElem, dCoord, QuadratureOrder, Element_Type)
