@@ -20,7 +20,7 @@ Module m_MEF_Elements
 
 
    Interface ElementInit
-      Module Procedure Init_Element2D_Scal, Init_Element2D, Init_Element2D_Elast, Init_Element3D_Scal, Init_AllElement2D_Scal
+      Module Procedure Init_Element2D_Scal, Init_Element2D, Init_Element2D_Elast, Init_Element3D_Scal, Init_Element3D, Init_Element3D_Elast, Init_AllElement2D_Scal, Init_AllElement2D, Init_AllElement2D_Elast, Init_AllElement3D_Scal, Init_AllElement3D, Init_AllElement3D_Elast
    End Interface ElementInit
    
    Interface ElementDestroy
@@ -105,7 +105,7 @@ Module m_MEF_Elements
             Call MeshRestrictClosure(dMeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
              Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
              !!! WTF? why not reshaping the arguments in Init_Element? 
-            Call ElementInit(dElem(iE), Coords, 2, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
+            Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
          DeAllocate(Coords)
@@ -136,6 +136,36 @@ Module m_MEF_Elements
       End Select
    End Subroutine Init_Element2D_Scal                                
    
+   Subroutine Init_AllElement2D(dMeshTopology, dElem, dQuadratureOrder)
+      Type(MeshTopology_Type)                     :: dMeshTopology
+      Type(Element2D), Dimension(:), Pointer      :: dElem
+      PetscInt, Intent(IN)                        :: dQuadratureOrder
+      
+      PetscInt                                    :: iBlk, iELoc, iE, iErr
+      PetscReal, Dimension(:,:), Pointer          :: Coords
+      PetscReal, Dimension(:), Pointer            :: TmpCoords
+      Type(SectionReal)                           :: CoordSection
+      
+      Allocate(dElem(dMeshTopology%Num_Elems))
+      !!! Initialize the Basis Functions in each element
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+         Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+         Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+
+         Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call MeshRestrictClosure(dMeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoords)
+         DeAllocate(Coords)
+      End Do Do_Elem_iBlk
+      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+   End Subroutine Init_AllElement2D
+
    Subroutine Init_Element2D(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element2D)                       :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
@@ -157,6 +187,36 @@ Module m_MEF_Elements
             Print*, 'Element type not implemented yet', Element_Type
       End Select
    End Subroutine Init_Element2D                                
+
+   Subroutine Init_AllElement2D_Elast(dMeshTopology, dElem, dQuadratureOrder)
+      Type(MeshTopology_Type)                      :: dMeshTopology
+      Type(Element2D_Elast), Dimension(:), Pointer :: dElem
+      PetscInt, Intent(IN)                         :: dQuadratureOrder
+      
+      PetscInt                                     :: iBlk, iELoc, iE, iErr
+      PetscReal, Dimension(:,:), Pointer           :: Coords
+      PetscReal, Dimension(:), Pointer             :: TmpCoords
+      Type(SectionReal)                            :: CoordSection
+      
+      Allocate(dElem(dMeshTopology%Num_Elems))
+      !!! Initialize the Basis Functions in each element
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+         Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+         Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+
+         Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call MeshRestrictClosure(dMeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoords)
+         DeAllocate(Coords)
+      End Do Do_Elem_iBlk
+      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+   End Subroutine Init_AllElement2D_Elast
 
    Subroutine Init_Element2D_Elast(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element2D_Elast)                 :: dElem
@@ -181,6 +241,36 @@ Module m_MEF_Elements
    End Subroutine Init_Element2D_Elast
 
 
+   Subroutine Init_AllElement3D_Scal(dMeshTopology, dElem, dQuadratureOrder)
+      Type(MeshTopology_Type)                      :: dMeshTopology
+      Type(Element3D_Scal), Dimension(:), Pointer  :: dElem
+      PetscInt, Intent(IN)                         :: dQuadratureOrder
+      
+      PetscInt                                     :: iBlk, iELoc, iE, iErr
+      PetscReal, Dimension(:,:), Pointer           :: Coords
+      PetscReal, Dimension(:), Pointer             :: TmpCoords
+      Type(SectionReal)                            :: CoordSection
+      
+      Allocate(dElem(dMeshTopology%Num_Elems))
+      !!! Initialize the Basis Functions in each element
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+         Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+         Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+
+         Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call MeshRestrictClosure(dMeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoords)
+         DeAllocate(Coords)
+      End Do Do_Elem_iBlk
+      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+   End Subroutine Init_AllElement3D_Scal
+
    Subroutine Init_Element3D_Scal(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element3D_Scal)                  :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
@@ -202,6 +292,110 @@ Module m_MEF_Elements
             Print*, 'Element type not implemented yet', Element_Type
       End Select
    End Subroutine Init_Element3D_Scal                                
+
+   Subroutine Init_AllElement3D(dMeshTopology, dElem, dQuadratureOrder)
+      Type(MeshTopology_Type)                      :: dMeshTopology
+      Type(Element3D), Dimension(:), Pointer       :: dElem
+      PetscInt, Intent(IN)                         :: dQuadratureOrder
+      
+      PetscInt                                     :: iBlk, iELoc, iE, iErr
+      PetscReal, Dimension(:,:), Pointer           :: Coords
+      PetscReal, Dimension(:), Pointer             :: TmpCoords
+      Type(SectionReal)                            :: CoordSection
+      
+      Allocate(dElem(dMeshTopology%Num_Elems))
+      !!! Initialize the Basis Functions in each element
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+         Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+         Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+
+         Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call MeshRestrictClosure(dMeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoords)
+         DeAllocate(Coords)
+      End Do Do_Elem_iBlk
+      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+   End Subroutine Init_AllElement3D
+
+   Subroutine Init_Element3D(dElem, dCoord, QuadratureOrder, Element_Type)
+      Type (Element3D)                       :: dElem
+      PetscReal, Dimension(:,:), Pointer     :: dCoord
+      PetscInt, Intent(IN)                   :: QuadratureOrder
+      PetscInt, Intent(IN)                   :: Element_Type
+      
+      Select Case (Element_Type)
+         Case (MEF90_P1_Lagrange)
+            Call Init_Element_P_Lagrange_3D(dElem, dCoord, 1, QuadratureOrder)
+
+         Case (MEF90_P2_Lagrange)
+            Call Init_Element_P_Lagrange_3D(dElem, dCoord, 2, QuadratureOrder)
+
+!         Case (MEF90_Q1_Lagrange)
+!            Call Init_Element_Q_Lagrange_3D(dElem, dCoord, 1, QuadratureOrder)
+!         Case (MEF90_Q2_Lagrange)
+!            Call Init_Element_Q_Lagrange_3D(dElem, dCoord, 2, QuadratureOrder)
+         Case Default
+            Print*, 'Element type not implemented yet', Element_Type
+      End Select
+   End Subroutine Init_Element3D                                
+
+   Subroutine Init_AllElement3D_Elast(dMeshTopology, dElem, dQuadratureOrder)
+      Type(MeshTopology_Type)                      :: dMeshTopology
+      Type(Element3D_Elast), Dimension(:), Pointer :: dElem
+      PetscInt, Intent(IN)                         :: dQuadratureOrder
+      
+      PetscInt                                     :: iBlk, iELoc, iE, iErr
+      PetscReal, Dimension(:,:), Pointer           :: Coords
+      PetscReal, Dimension(:), Pointer             :: TmpCoords
+      Type(SectionReal)                            :: CoordSection
+      
+      Allocate(dElem(dMeshTopology%Num_Elems))
+      !!! Initialize the Basis Functions in each element
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+         Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+         Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
+
+         Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call MeshRestrictClosure(dMeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoords)
+         DeAllocate(Coords)
+      End Do Do_Elem_iBlk
+      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+   End Subroutine Init_AllElement3D_Elast
+
+   Subroutine Init_Element3D_Elast(dElem, dCoord, QuadratureOrder, Element_Type)
+      Type (Element3D_Elast)                 :: dElem
+      PetscReal, Dimension(:,:), Pointer     :: dCoord
+      PetscInt, Intent(IN)                   :: QuadratureOrder
+      PetscInt, Intent(IN)                   :: Element_Type
+      
+      Select Case (Element_Type)
+         Case (MEF90_P1_Lagrange)
+            Call Init_Element_P_Lagrange_3D_Elast(dElem, dCoord, 1, QuadratureOrder)
+
+         Case (MEF90_P2_Lagrange)
+            Call Init_Element_P_Lagrange_3D_Elast(dElem, dCoord, 2, QuadratureOrder)
+
+!         Case (MEF90_Q1_Lagrange)
+!            Call Init_Element_Q_Lagrange_3D_Elast(dElem, dCoord, 1, QuadratureOrder)
+!         Case (MEF90_Q2_Lagrange)
+!            Call Init_Element_Q_Lagrange_3D_Elast(dElem, dCoord, 2, QuadratureOrder)
+         Case Default
+            Print*, 'Element type not implemented yet', Element_Type
+      End Select
+   End Subroutine Init_Element3D_Elast                                
 
    Subroutine Init_Element_P_Lagrange_2D_Scal(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
@@ -399,7 +593,8 @@ Module m_MEF_Elements
          dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
          dElem%GradS_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
-         dElem%GradS_BF(i*dim+1,:)%XY = (Elem_Scal%Grad_BF(i+1,:)%Y + Elem_Scal%Grad_BF(i+1,:)%X) / 2.0_Kr
+         dElem%GradS_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X / 2.0_Kr
+         dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y / 2.0_Kr
          dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
       Call ElementDestroy(Elem_Scal)
@@ -427,7 +622,7 @@ Module m_MEF_Elements
       Type (Vect3D), Dimension(:,:), Pointer :: GradPhiHat
       
       
-      Type (Vect3D), Dimension(:), Pointer   :: Xi ! The quadrature points coordinates in the reference element
+      Type (Vect3D), Dimension(:), Pointer   :: Xi          ! The quadrature points coordinates in the reference element
       
       !!! The transformation matrix and the determinant of its inverse
       Bt%XX = dCoord(1,2) - dCoord(1,1) 
@@ -489,7 +684,6 @@ Module m_MEF_Elements
       Do iDoF = 1, Num_DoF
          Do iG = 1, Nb_Gauss
             dElem%Grad_BF(iDoF, iG) = Bt * GradPhiHat(iDoF, iG) 
-            !dElem%Grad_BF(iDoF, iG) = GradPhiHat(iDoF, iG) 
          End Do
       End Do
      
@@ -498,6 +692,100 @@ Module m_MEF_Elements
       DeAllocate(GradPhiHat)
    End Subroutine Init_Element_P_Lagrange_3D_Scal
 
+   Subroutine Init_Element_P_Lagrange_3D(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
+      Type (Element3D)                       :: dElem
+      PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
+      PetscInt                               :: dPolynomialOrder, dQuadratureOrder
+   
+      Type (Element3D_Scal)                  :: Elem_Scal
+      PetscInt                               :: dim = 3 
+      PetscInt                               :: Num_DoF, Nb_Gauss, i
+      
+      
+      Call Init_Element_P_Lagrange_3D_Scal(Elem_Scal, dCoord, dPolynomialOrder, dQuadratureOrder)
+      Num_DoF   = Size(Elem_Scal%BF, 1) 
+      Nb_Gauss = Size(Elem_Scal%BF, 2)
+      Allocate(dElem%Gauss_C(Nb_Gauss))
+      Allocate(dElem%BF(Num_DoF * dim, Nb_Gauss))
+      Allocate(dElem%Der_BF(Num_DoF * dim, Nb_Gauss))
+         
+      dElem%Gauss_C = Elem_Scal%Gauss_C
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
+      dElem%BF(:,:)%Z = 0.0_Kr
+      dElem%Der_BF(:,:)%XX = 0.0_Kr
+      dElem%Der_BF(:,:)%XY = 0.0_Kr
+      dElem%Der_BF(:,:)%XZ = 0.0_Kr
+      dElem%Der_BF(:,:)%YX = 0.0_Kr
+      dElem%Der_BF(:,:)%YY = 0.0_Kr
+      dElem%Der_BF(:,:)%YZ = 0.0_Kr
+      dElem%Der_BF(:,:)%ZX = 0.0_Kr
+      dElem%Der_BF(:,:)%ZY = 0.0_Kr
+      dElem%Der_BF(:,:)%ZZ = 0.0_Kr
+      
+      Do i = 0, Num_DoF-1
+         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
+         dElem%Der_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%Der_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y
+         dElem%Der_BF(i*dim+1,:)%XZ = Elem_Scal%Grad_BF(i+1,:)%Z
+         dElem%Der_BF(i*dim+2,:)%YX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%Der_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
+         dElem%Der_BF(i*dim+2,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Z
+         dElem%Der_BF(i*dim+3,:)%ZX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%Der_BF(i*dim+3,:)%ZY = Elem_Scal%Grad_BF(i+1,:)%Y
+         dElem%Der_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
+      End Do
+      Call ElementDestroy(Elem_Scal)
+   End Subroutine Init_Element_P_Lagrange_3D
+
+   Subroutine Init_Element_P_Lagrange_3D_Elast(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
+      Type (Element3D_Elast)                 :: dElem
+      PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
+      PetscInt                               :: dPolynomialOrder, dQuadratureOrder
+   
+      Type (Element3D_Scal)                  :: Elem_Scal
+      PetscInt                               :: dim = 3 
+      PetscInt                               :: Num_DoF, Nb_Gauss, i
+      
+      
+      Call Init_Element_P_Lagrange_3D_Scal(Elem_Scal, dCoord, dPolynomialOrder, dQuadratureOrder)
+      Num_DoF  = Size(Elem_Scal%BF, 1) 
+      Nb_Gauss = Size(Elem_Scal%BF, 2)
+      Allocate(dElem%Gauss_C(Nb_Gauss))
+      Allocate(dElem%BF(Num_DoF * dim, Nb_Gauss))
+      Allocate(dElem%GradS_BF(Num_DoF * dim, Nb_Gauss))
+         
+      dElem%Gauss_C = Elem_Scal%Gauss_C
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
+      dElem%BF(:,:)%Z = 0.0_Kr
+      dElem%GradS_BF(:,:)%XX = 0.0_Kr
+      dElem%GradS_BF(:,:)%YY = 0.0_Kr
+      dElem%GradS_BF(:,:)%ZZ = 0.0_Kr
+      dElem%GradS_BF(:,:)%YZ = 0.0_Kr
+      dElem%GradS_BF(:,:)%XZ = 0.0_Kr
+      dElem%GradS_BF(:,:)%XY = 0.0_Kr
+      
+      Do i = 0, Num_DoF-1
+         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
+         dElem%GradS_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%GradS_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y * 0.5_Kr
+         dElem%GradS_BF(i*dim+1,:)%XZ = Elem_Scal%Grad_BF(i+1,:)%Z * 0.5_Kr
+
+         dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X * 0.5_Kr
+         dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y 
+         dElem%GradS_BF(i*dim+2,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Z * 0.5_Kr
+         
+         dElem%GradS_BF(i*dim+3,:)%XZ = Elem_Scal%Grad_BF(i+1,:)%X * 0.5_Kr
+         dElem%GradS_BF(i*dim+3,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Y * 0.5_Kr
+         dElem%GradS_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
+      End Do
+      Call ElementDestroy(Elem_Scal)
+   End Subroutine Init_Element_P_Lagrange_3D_Elast
 
    Subroutine Destroy_Element2D_Scal(dElem)
       Type (Element2D_Scal)                  :: dElem
