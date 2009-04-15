@@ -505,19 +505,13 @@ Module m_RuptStruct
 
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
-      If (EXO_MyRank == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
-         
-         NumEB = dMeshTopology%Num_Elem_Blks_Global
-         NumSS = dMeshTopology%Num_Side_Sets_Global
-         NumNS = dMeshTopology%Num_Node_Sets_Global
-         
-         If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
-            Call PetscPrintf(PETSC_COMM_SELF, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n'c, iErr); CHKERRQ(iErr)
-            Call PetscPrintf(PETSC_COMM_SELF, '           Was Write_MeshTopologyGlobal called before RuptEXOProperty_Init?\n'c, iErr); CHKERRQ(iErr)
-         End If
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+      NumEB = dMeshTopology%Num_Elem_Blks_Global
+      NumSS = dMeshTopology%Num_Side_Sets_Global
+      NumNS = dMeshTopology%Num_Node_Sets_Global
+      
+      If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
+         Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n'c, iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before RuptEXOProperty_Init?\n'c, iErr); CHKERRQ(iErr)
       End If
 
       dEXO%Num_EBProperties = Rupt_Num_EBProperties

@@ -81,13 +81,43 @@ Program PrepRupt
 200 Format(A, '-', I4.4, '.gen')
 
    
+   Call RuptEXOProperty_Init(MyEXO, MeshTopology)   
+   If (verbose) Then
+      Write(IOBuffer, *) "Done with RuptEXOProperty_Init\n"c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   
+   Call EXO_Property_Ask(MyEXO, MeshTopology)
+   
+   Do i = 1, MeshTopology%num_elem_blks
+      MeshTopology%elem_blk(i)%Elem_Type = MyEXO%EBProperty( Rupt_EBProp_Elem_Type )%Value( MeshTopology%elem_blk(i)%ID )
+      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(i), MeshTopology%num_dim)
+   End Do
 
 
 
-   Print*, MEF90_MyRank, MeshTopology%Num_elem_Blks
+   Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
+   If (verbose) Then
+      Write(IOBuffer, *) "Done with Write_MeshTopologyGlobal\n"c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+
+   Call EXO_Property_Write(MyEXO)
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'Done with EXO_Property_Write\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
 
 
+   Call RuptEXOVariable_Init(MyEXO)
+   Call EXO_Variable_Write(MyEXO)
+   If (verbose) Then
+      Write(IOBuffer, '(A)') 'Done with EXO_Variable_Write\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
 
+
+!!! Now we are done with the geometry, the variable definition and properties, so we can pre-compute the loads, displacement, time steps etc
 
 
     Call MEF90_Finalize()
@@ -112,7 +142,6 @@ Program PrepRupt
    End If
 
 
-   Call RuptEXOProperty_Init(MyEXO)   
    If (verbose) Then
       Write(IOBuffer, *) "Done with RuptEXOProperty_Init\n"c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -151,4 +180,5 @@ Program PrepRupt
 !!!   End Select
    
    Call MEF90_Finalize()
+   
 End Program PrepRupt
