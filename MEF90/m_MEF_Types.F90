@@ -19,64 +19,66 @@ Module m_MEF_Types
    Public :: MeshTopologyDestroy, MeshTopologyView
       
    Type Element1D
-      PetscInt, Dimension(:), Pointer            :: ID_DoF
-      PetscReal, Dimension(:,:), Pointer         :: BF
-      PetscReal, Dimension(:,:), Pointer         :: Der_BF
-      PetscReal, Dimension(:), Pointer           :: Gauss_C
+      PetscInt, Dimension(:), Pointer                :: ID_DoF
+      PetscReal, Dimension(:,:), Pointer             :: BF
+      PetscReal, Dimension(:,:), Pointer             :: Der_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element1D
  
    Type Element2D_Scal
-      PetscInt, Dimension(:), Pointer            :: ID_DoF
-      PetscReal, Dimension(:,:), Pointer         :: BF
-      Type(Vect2D), Dimension(:,:), Pointer      :: Grad_BF
-      PetscReal, Dimension(:), Pointer           :: Gauss_C
+      PetscInt, Dimension(:), Pointer                :: ID_DoF
+      PetscReal, Dimension(:,:), Pointer             :: BF
+      Type(Vect2D), Dimension(:,:), Pointer          :: Grad_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element2D_Scal
  
    Type Element2D
-      PetscInt, Dimension(:), Pointer            :: ID_DoF
-      Type (Vect2D), Dimension(:,:), Pointer     :: BF
-      Type (Mat2D), Dimension(:,:), Pointer      :: Der_BF
-      PetscReal, Dimension(:), Pointer           :: Gauss_C
+      PetscInt, Dimension(:), Pointer                :: ID_DoF
+      Type (Vect2D), Dimension(:,:), Pointer         :: BF
+      Type (Mat2D), Dimension(:,:), Pointer          :: Der_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element2D
  
    Type Element2D_Elast
-      PetscInt, Dimension(:), Pointer            :: ID_DoF
-      Type (Vect2D), Dimension(:,:), Pointer     :: BF
-      Type (MatS2D), Dimension(:,:), Pointer     :: GradS_BF
-      PetscReal, Dimension(:), Pointer           :: Gauss_C
+      PetscInt, Dimension(:), Pointer                :: ID_DoF
+      Type (Vect2D), Dimension(:,:), Pointer         :: BF
+      Type (MatS2D), Dimension(:,:), Pointer         :: GradS_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element2D_Elast
  
    Type Element3D
-      PetscInt, Dimension(:), Pointer            :: ID_DoF
-      Type (Vect3D), Dimension(:,:), Pointer     :: BF
-      Type (Mat3D), Dimension(:,:), Pointer      :: Der_BF
-      PetscReal, Dimension(:), Pointer           :: Gauss_C
+      PetscInt, Dimension(:), Pointer                :: ID_DoF
+      Type (Vect3D), Dimension(:,:), Pointer         :: BF
+      Type (Mat3D), Dimension(:,:), Pointer          :: Der_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element3D
  
    Type Element3D_Scal
-      PetscInt, Dimension(:), Pointer            :: ID_DoF
-      PetscReal, Dimension(:,:), Pointer         :: BF
-      Type (Vect3D), Dimension(:,:), Pointer     :: Grad_BF
-      PetscReal, Dimension(:), Pointer           :: Gauss_C
+      PetscInt, Dimension(:), Pointer                :: ID_DoF
+      PetscReal, Dimension(:,:), Pointer             :: BF
+      Type (Vect3D), Dimension(:,:), Pointer         :: Grad_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element3D_Scal
  
    Type Element3D_Elast
-      PetscInt, Dimension(:), Pointer            :: ID_DoF
-      Type (Vect3D), Dimension(:,:), Pointer     :: BF
-      Type (MatS3D), Dimension(:,:), Pointer     :: GradS_BF
-      PetscReal, Dimension(:), Pointer           :: Gauss_C
+      PetscInt, Dimension(:), Pointer                :: ID_DoF
+      Type (Vect3D), Dimension(:,:), Pointer         :: BF
+      Type (MatS3D), Dimension(:,:), Pointer         :: GradS_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element3D_Elast
  
    Type Elem_Blk_Type
-      Sequence
       PetscInt                                       :: ID
       PetscInt                                       :: Elem_Type
       PetscInt, Dimension(4)                         :: DoF_Location
-      !!! Edge location is Cells, faces, edges, vertices in 3D and
+      !!! DoF location is Cells, faces, edges, vertices in 3D and
       !!!                  Cell, unused, edges, vertices in2D
       PetscInt                                       :: Num_DoF !! = sum(DoF_Location)
       PetscInt                                       :: Num_Elems
       PetscInt, Dimension(:), Pointer                :: Elem_ID
+      PetscInt                                       :: Num_Face      
+      PetscInt                                       :: Num_Edge
+      PetscInt                                       :: Num_Vert
    End Type Elem_Blk_Type
  
    Type Node_Set_Type
@@ -93,12 +95,15 @@ Module m_MEF_Types
       PetscInt                                       :: num_verts
       PetscInt                                       :: num_elems
       ! Element Blocks datas
+      PetscInt                                       :: num_elem_blks_global
       PetscInt                                       :: num_elem_blks
       Type(Elem_Blk_Type), Dimension(:), Pointer     :: elem_blk
       ! Node sets datas
+      PetscInt                                       :: num_node_sets_global
       PetscInt                                       :: num_node_sets 
       Type(Node_Set_Type), Dimension(:), Pointer     :: node_set
       ! Side Sets DATAS
+      PetscInt                                       :: num_side_sets_global
       PetscInt                                       :: num_side_sets
       Type(Mesh)                                     :: mesh
    End Type MeshTopology_Type
@@ -284,6 +289,8 @@ Contains
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 200)
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 601) dMeshTopology%num_elem_blks_global
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 201) dMeshTopology%num_elem_blks
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Do i = 1, dMeshTopology%Num_Elem_blks
@@ -307,6 +314,8 @@ Contains
       Write(CharBuffer, 600) '\n'c
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 300)
+      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+      Write(CharBuffer, 701) dMeshTopology%num_node_sets_global
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 301) dMeshTopology%num_node_sets
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
@@ -356,6 +365,8 @@ Contains
     
 500 Format(I4) 
 600 Format(A)
+601 Format('    Number of blocks global ========= ', I4, '\n'c)
+701 Format('    Number of sets global =========== ', I4, '\n'c)
    End Subroutine MeshTopologyView
    
 End Module m_MEF_Types

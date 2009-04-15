@@ -36,6 +36,7 @@ Module m_MEF_EXO
 
    Public :: EXO_Property_Copy
    Public :: EXO_Property_Write
+   Public :: EXO_Property_Ask
    Public :: EXO_Property_Read
    
    Public :: EXO_Variable_Copy
@@ -227,6 +228,76 @@ Module m_MEF_EXO
          dEXO%exoid = 0
       End If
    End Subroutine EXO_Property_Write
+   
+   
+   Subroutine EXO_Property_Ask(dEXO, dMeshTopology)
+      Type(EXO_Type)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i, j, IntBuffer
+
+      PetscInt                                       :: NumEB, NumSS, NumNS
+      PetscInt                                       :: EXO_MyRank
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+
+!      Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
+!      Do i = 1, dEXO%Num_EBProperties
+!         Allocate(dEXO%EBProperty(i)%Value(dMeshTopology%Num_Elem_Blks))
+!      End Do
+!      
+!      Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
+!      Do i = 1, dEXO%Num_SSProperties
+!         Allocate(dEXO%SSProperty(i)%Value(dMeshTopology%Num_Side_Sets))
+!      End Do
+!
+!      Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
+!      Do i = 1, dEXO%Num_NSProperties
+!         Allocate(dEXO%NSProperty(i)%Value(dMeshTopology%Num_Node_Sets))
+!      End Do
+
+      Do i = 1, dMeshTopology%Num_Elem_Blks_Global
+         Write(IOBuffer, 100) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_EBProperties
+            Write(IOBuffer, 110) dEXO%EBProperty(j)%Name
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (MEF90_MyRank == 0) Then
+               Read(*,*) dEXO%EBProperty(j)%Value(i)
+            End If
+            Call MPI_BCast(dEXO%EBProperty(j)%Value(i), 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+         End Do
+      End Do
+      
+      Do i = 1, dMeshTopology%Num_Side_Sets_Global
+         Write(IOBuffer, 101) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_SSProperties
+            Write(IOBuffer, 110) dEXO%SSProperty(j)%Name
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (MEF90_MyRank == 0) Then
+               Read(*,*) dEXO%SSProperty(j)%Value(i)
+            End If
+            Call MPI_BCast(dEXO%SSProperty(j)%Value(i), 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+         End Do
+      End Do
+
+      Do i = 1, dMeshTopology%Num_Node_Sets_Global
+         Write(IOBuffer, 102) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_NSProperties
+            Write(IOBuffer, 110) dEXO%NSProperty(j)%Name
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (MEF90_MyRank == 0) Then
+               Read(*,*) dEXO%NSProperty(j)%Value(i)
+            End If
+            Call MPI_BCast(dEXO%NSProperty(j)%Value(i), 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+         End Do
+      End Do
+ 100 Format('*** Element Block ', T24, I3, '\n'c)
+ 101 Format('*** Side Set      ', T24, I3, '\n'c)
+ 102 Format('*** Node Set      ', T24, I3, '\n'c)
+ 110 Format(T24, A, T60, ': ')
+   End Subroutine EXO_Property_Ask
       
    Subroutine EXO_Property_Read(dEXO)
       Type(EXO_Type)                                 :: dEXO
