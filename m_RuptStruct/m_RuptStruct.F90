@@ -87,10 +87,10 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: Rupt_Num_EBProperties  = 7
    PetscInt, Parameter, Public                     :: Rupt_EBProp_IsBrittle  = 1
    PetscInt, Parameter, Public                     :: Rupt_EBProp_IsDomain   = 2
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_HasBForce  = 3
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeX    = 4
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeY    = 5
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeZ    = 6
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeX    = 3
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeY    = 4
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeZ    = 5
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_HasBForce  = 6
    PetscInt, Parameter, Public                     :: Rupt_EBProp_Elem_Type  = 7
    
    PetscInt, Parameter, Public                     :: Rupt_Num_SSProperties  = 5
