@@ -1,4 +1,4 @@
-Program  SimplePoisson
+Program  VectPoisson
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -9,9 +9,9 @@ Program  SimplePoisson
 
    Use m_MEF90
 #if defined PB_2D
-   Use m_SimplePoisson2D
+   Use m_VectPoisson2D
 #elif defined PB_3D 
-   Use m_SimplePoisson3D
+   Use m_VectPoisson3D
 #endif
 
    Use petsc
@@ -28,7 +28,7 @@ Program  SimplePoisson
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    Type(Vec)                                    :: V
 
-   Call SimplePoissonInit(AppCtx)
+   Call VectPoissonInit(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
@@ -42,7 +42,7 @@ Program  SimplePoisson
    End If
    
    Call MatAssembly(AppCtx)
-!   Call MatView(AppCtx%K, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr);CHKERRQ(iErr)
+   Call MatView(AppCtx%K, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr);CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'c
@@ -63,25 +63,25 @@ Program  SimplePoisson
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call ComputeEnergy(AppCtx)
+!   Call ComputeEnergy(AppCtx)
 
-   Write(IOBuffer, 100) AppCtx%Energy
-100 Format('Total energy: ', ES12.5, '\n'c)    
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!   Write(IOBuffer, 100) AppCtx%Energy
+!100 Format('Total energy: ', ES12.5, '\n'c)    
+!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-   Call ComputeGradient(AppCtx)
+!   Call ComputeGradient(AppCtx)
 
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Saving results\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
    Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%Energy)
    Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
    Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
-   Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 
+!   Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    
-   Call SimplePoissonFinalize(AppCtx)
-End Program  SimplePoisson
+   Call VectPoissonFinalize(AppCtx)
+End Program  VectPoisson
