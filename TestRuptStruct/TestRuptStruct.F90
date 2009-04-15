@@ -98,25 +98,21 @@ Program TestRuptStruct
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
    
    
-   Call RuptEXOProperty_Init(EXO)   
-   Call RuptEXOProperty_Init(MyEXO)   
-   Call EXO_Property_Read(EXO)
-   Call EXO_Property_Copy(EXO, MyEXO)
-   If (verbose) Then
-      Write(IOBuffer, '(A)') 'Done with RuptEXOProperty_Init\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-!!!   Do i = 1, MeshTopology%Num_Elem_Blks
-!!!      MyEXO%EBProperty(Rupt_EBProp_BCTypeX)%Value(i) = 100*i
-!!!      MyEXO%EBProperty(Rupt_EBProp_BCTypeY)%Value(i) = 100*i
-!!!      MyEXO%EBProperty(Rupt_EBProp_BCTypeZ)%Value(i) = 100*i
-!!!   End Do
-!!!   
-!!!!   Do i = 1, size(
-!!!      MyEXO%NSProperty(Rupt_NSProp_BCTypeX)%Value(:) = 1
-!!!      MyEXO%NSProperty(Rupt_NSProp_BCTypeY)%Value(:) = 1
-!!!      MyEXO%NSProperty(Rupt_NSProp_BCTypeZ)%Value(:) = 1
-!!!!   End Do
+   Call RuptEXOProperty_Init(EXO, MeshTopology)   
+   Call RuptEXOProperty_Init(MyEXO, MeshTopology)   
+!   Call EXO_Property_Read(EXO)
+!   Call EXO_Property_Copy(EXO, MyEXO)
+!   Do i = 1, MeshTopology%Num_Elem_Blks
+!      MyEXO%EBProperty(Rupt_EBProp_BCTypeX)%Value(i) = 100*i
+!      MyEXO%EBProperty(Rupt_EBProp_BCTypeY)%Value(i) = 100*i
+!      MyEXO%EBProperty(Rupt_EBProp_BCTypeZ)%Value(i) = 100*i
+!   End Do
+   
+!!   Do i = 1, size(
+!      MyEXO%NSProperty(Rupt_NSProp_BCTypeX)%Value(:) = 1
+!      MyEXO%NSProperty(Rupt_NSProp_BCTypeY)%Value(:) = 1
+!      MyEXO%NSProperty(Rupt_NSProp_BCTypeZ)%Value(:) = 1
+!!   End Do
 
    Call RuptEXOVariable_Init(MyEXO)   
    If (verbose) Then

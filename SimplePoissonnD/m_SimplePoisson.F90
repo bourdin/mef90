@@ -141,29 +141,33 @@ Contains
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
       End Do
    
-      !!! Allocate the elements
-      Allocate(AppCtx%Elem(AppCtx%MeshTopology%Num_Elems))
+!!!$$$      !!! Allocate the elements
+!!!$$$      Allocate(AppCtx%Elem(AppCtx%MeshTopology%Num_Elems))
+!!!$$$
+!!!$$$      !!! Initialize the Basis Functions in each element
+!!!$$$      Call MeshGetSectionReal(AppCtx%MeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
+!!!$$$      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+!!!$$$         Allocate(TmpCoords(AppCtx%MeshTopology%Num_Dim * AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Vert))
+!!!$$$         Allocate(Coords(AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Vert))
+!!!$$$
+!!!$$$         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+!!!$$$            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+!!!$$$            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+!!!$$$             Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
+!!!$$$!             Write(*,*) iE, TmpCoords
+!!!$$$             !!! WTF? why not reshaping the arguments in Init_Element? 
+!!!$$$            Call ElementInit(AppCtx%Elem(iE), Coords, 2, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
+!!!$$$!            Call ElementView(AppCtx%Elem(iE), PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
+!!!$$$         End Do Do_Elem_iE
+!!!$$$         DeAllocate(TmpCoords)
+!!!$$$         DeAllocate(Coords)
+!!!$$$      End Do Do_Elem_iBlk
+!!!$$$      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+!!!$$$      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!!!$$$
 
-      !!! Initialize the Basis Functions in each element
-      Call MeshGetSectionReal(AppCtx%MeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
-      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Allocate(TmpCoords(AppCtx%MeshTopology%Num_Dim * AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
-         Allocate(Coords(AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
-         !!! WRONG # coords != # DoF
-         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
-             Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
-!             Write(*,*) iE, TmpCoords
-             !!! WTF? why not reshaping the arguments in Init_Element? 
-            Call ElementInit(AppCtx%Elem(iE), Coords, 2, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
-!            Call ElementView(AppCtx%Elem(iE), PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
-         End Do Do_Elem_iE
-         DeAllocate(TmpCoords)
-         DeAllocate(Coords)
-      End Do Do_Elem_iBlk
-      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
+      
 
       Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Allocate the Section for U and F
@@ -173,7 +177,6 @@ Contains
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHS, iErr); CHKERRQ(iErr)
 
-      
       !!! Allocate and initialize the Section for the flag
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Allocate(TmpFlag(1))

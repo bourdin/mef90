@@ -87,10 +87,10 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: Rupt_Num_EBProperties  = 7
    PetscInt, Parameter, Public                     :: Rupt_EBProp_IsBrittle  = 1
    PetscInt, Parameter, Public                     :: Rupt_EBProp_IsDomain   = 2
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_HasBForce  = 3
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeX    = 4
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeY    = 5
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeZ    = 6
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeX    = 3
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeY    = 4
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeZ    = 5
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_HasBForce  = 6
    PetscInt, Parameter, Public                     :: Rupt_EBProp_Elem_Type  = 7
    
    PetscInt, Parameter, Public                     :: Rupt_Num_SSProperties  = 5
@@ -160,6 +160,7 @@ Module m_RuptStruct
       Do i = 1, dMeshTopology%Num_Elem_Blks
          NumDoF = dMeshTopology%Elem_Blk(i)%Num_DoF
          Allocate(Flag(NumDoF))
+         Write(*,*) 'Blk, NumDoF, ID', i, NumDoF, dMeshTopology%Elem_Blk(i)%ID 
          Flag = dEXO%EBProperty( Rupt_EBProp_BCTypeZ )%Value( dMeshTopology%Elem_Blk(i)%ID )
          Do j = 1, dMeshTopology%Elem_Blk(i)%Num_Elems
             Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Elem_Blk(i)%Elem_ID(j)-1, Flag, iErr); CHKERRQ(iErr)
@@ -488,11 +489,12 @@ Module m_RuptStruct
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-saveint',        dSchemeParam%SaveInt, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',        dSchemeParam%Epsilon, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atum',           dSchemeParam%ATNum, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, iErr); CHKERRQ(iErr)
    End Subroutine RuptSchemeParam_GetFromOptions
    
-   Subroutine RuptEXOProperty_Init(dEXO)
+   Subroutine RuptEXOProperty_Init(dEXO, dMeshTopology)
       Type(EXO_Type)                      :: dEXO
+      Type(MeshTopology_Type)             :: dMeshTopology
       PetscInt                            :: i, vers, iErr
       PetscInt                            :: NumEB, NumSS, NumNS
 
@@ -503,28 +505,15 @@ Module m_RuptStruct
 
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
-      If (EXO_MyRank == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
-         
-         !!! This is ridiculous... 
-         !!! This won't work if the mesh has not be written to disk yet...
-
-         Call EXINQ(dEXO%exoid, EXELBL, NumEB, rDummy, cDummy, iErr)
-         Call EXINQ(dEXO%exoid, EXSIDS, NumSS, rDummy, cDummy, iErr)
-         Call EXINQ(dEXO%exoid, EXNODS, NumNS, rDummy, cDummy, iErr)
-         
-         If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
-            Call PetscPrintf(PETSC_COMM_SELF, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n'c, iErr); CHKERRQ(iErr)
-            Call PetscPrintf(PETSC_COMM_SELF, '           Was Write_MeshTopologyGlobal called before RuptEXOProperty_Init?\n'c, iErr); CHKERRQ(iErr)
-         End If
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+      NumEB = dMeshTopology%Num_Elem_Blks_Global
+      NumSS = dMeshTopology%Num_Side_Sets_Global
+      NumNS = dMeshTopology%Num_Node_Sets_Global
+      
+      If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
+         Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n'c, iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before RuptEXOProperty_Init?\n'c, iErr); CHKERRQ(iErr)
       End If
 
-      Call MPI_BCast(NumEB, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-      Call MPI_BCast(NumSS, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-      Call MPI_BCast(NumNS, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-      
       dEXO%Num_EBProperties = Rupt_Num_EBProperties
       Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
       dEXO%EBProperty(Rupt_EBProp_IsBrittle)%Name = 'Is_Brittle'
@@ -545,7 +534,7 @@ Module m_RuptStruct
       dEXO%SSProperty(Rupt_SSProp_BCTypeY)%Name   = 'BC_Type_Y'
       dEXO%SSProperty(Rupt_SSProp_BCTypeZ)%Name   = 'BC_Type_Z'
       dEXO%SSProperty(Rupt_SSProp_HasSForce)%Name = 'Has_SForce'
-      dEXO%SSProperty(Rupt_SSProp_Elem_Type)%Name = 'Has_Elem_Type'
+      dEXO%SSProperty(Rupt_SSProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_SSProperties
          Allocate(dEXO%SSProperty(i)%Value(NumSS))
          dEXO%SSProperty(i)%Value = 0
