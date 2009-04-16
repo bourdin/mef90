@@ -79,11 +79,8 @@ Program PrepRupt
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Else
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      Write(*,*) 'OK MeshCreateExodus'
       Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Write(*,*) 'OK MeshDistribute'
       Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-      Write(*,*) 'OK MeshDestroy'
    End If
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
