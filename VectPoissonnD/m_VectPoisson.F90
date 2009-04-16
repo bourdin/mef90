@@ -141,28 +141,14 @@ Contains
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
       End Do
    
-      !!! Allocate the elements
-      Allocate(AppCtx%Elem(AppCtx%MeshTopology%Num_Elems))
 
-      !!! Initialize the Basis Functions in each element
-      Call MeshGetSectionReal(AppCtx%MeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
-      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Allocate(TmpCoords(AppCtx%MeshTopology%Num_Dim * AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
-         Allocate(Coords(AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
-         !!! WRONG # coords != # DoF
-         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
-             Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
-!             Write(*,*) iE, TmpCoords
-             !!! WTF? why not reshaping the arguments in Init_Element? 
-			Call ElementInit(AppCtx%Elem(iE), Coords, 2, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
-            Call ElementView(AppCtx%Elem(iE), PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
-         End Do Do_Elem_iE
-         DeAllocate(TmpCoords)
-         DeAllocate(Coords)
-      End Do Do_Elem_iBlk
-      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
+      Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
+      
+      If (AppCtx%AppParam%verbose) Then
+         Do iE = 1, AppCtx%MeshTopology%Num_Elems
+            Call ElementView(AppCtx%Elem(iE), AppCtx%AppParam%MyLogViewer)
+         End Do
+      End If
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
@@ -183,6 +169,7 @@ Contains
 	  !Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Allocate(TmpFlag(AppCtx%MeshTopology%Num_Dim))
 	  !Allocate(TmpFlag(1))	
+
       Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
          Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
             TmpPoint = AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iBlk)%Node_ID(iDoF)-1
@@ -375,10 +362,12 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-		 Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+		 Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MatAssemblyLocal(iE, AppCtx, MatElem)
+            Write(MEF90_MyRank+100, *) 'ELement ', iE
+            Write(MEF90_MyRank+100, *)  MatElem
             Call assembleMatrix(AppCtx%K, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(MatElem)
@@ -409,14 +398,14 @@ Contains
 	  Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
       Do iGauss = 1, NumGauss
          Do iDoF1 = 1, NumDoF
-            If (BCFlag(iDoF1) == 0) Then
+!            If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoF
                 !  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%Der_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Der_BF(iDoF2, iGauss) 
 				  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1)+ AppCtx%Elem(iE)%Gauss_C(iGauss) * (AppCtx%Elem(iE)%Der_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Der_BF(iDoF2, iGauss))
                   Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                   !!! Is that right?
                End Do
-            End If
+!            End If
          End Do
       End Do
       
@@ -437,7 +426,7 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+         Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call RHSAssemblyLocal(iE, AppCtx, RHSElem)
