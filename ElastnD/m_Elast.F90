@@ -62,6 +62,11 @@ Module m_SimplePoisson3D
       Type(KSP)                                    :: KSPU
       Type(PC)                                     :: PCU
       Type(LogInfo_Type)                           :: LogInfo
+#if defined PB_2D
+      Type(MatProp2D_Type)                         :: MatProp      
+#elif defined PB_3D
+      Type(MatProp3D_Type)                         :: MatProp
+#endif
       Type(AppParam_Type)                          :: AppParam
       Type(RuptSchemeParam_Type)                   :; RuptSchemeParam
    End Type AppCtx_Type
