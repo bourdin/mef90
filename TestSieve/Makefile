@@ -47,6 +47,9 @@ TestSectionInt:   ${PETSC_ARCH} TestSectionInt.o ${PETSC_ARCH}/TestSectionInt.o
 TestCoordinates:   ${PETSC_ARCH} TestCoordinates.o ${PETSC_ARCH}/TestCoordinates.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestCoordinates ${PETSC_ARCH}/TestCoordinates.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+TestScatter:   ${PETSC_ARCH} TestScatter.o ${PETSC_ARCH}/TestScatter.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestScatter ${PETSC_ARCH}/TestScatter.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}
