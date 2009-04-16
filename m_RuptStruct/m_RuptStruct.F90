@@ -22,6 +22,7 @@ Module m_RuptStruct
    Public :: RuptEXOVariable_Init
    
    Public :: MatProp2D_Type, MatProp3D_Type
+   Public :: MatProp_Write, MatProp_Read
    
    Public :: EXOProperty_InitBCFlag2DA
    Public :: EXOProperty_InitBCFlag2D
@@ -109,15 +110,15 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: Rupt_NSProp_HasPForce  = 4
    
    Type MatProp2D_Type
-      PetscReal, Dimension(:), Pointer             :: Toughness
-      Type(Tens4OS2D), Dimension(:), Pointer       :: Hookes_Law
-      PetscReal, Dimension(:), Pointer             :: Therm_Exp      
+      PetscReal                                    :: Toughness
+      Type(Tens4OS2D)                              :: Hookes_Law
+      PetscReal                                    :: Therm_Exp      
    End Type MatProp2D_Type
    
    Type MatProp3D_Type
-      PetscReal, Dimension(:), Pointer             :: Toughness
-      Type(Tens4OS3D), Dimension(:), Pointer       :: Hookes_Law
-      PetscReal, Dimension(:), Pointer             :: Therm_Exp      
+      PetscReal                                    :: Toughness
+      Type(Tens4OS3D)                              :: Hookes_Law
+      PetscReal                                    :: Therm_Exp      
    End Type MatProp3D_Type
    
    Type RuptSchemeParam_Type
@@ -316,7 +317,7 @@ Module m_RuptStruct
       PetscInt                                     :: iBlk, iErr
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
-      Type(Tens4OS2D), Dimension(:), Pointer       :: Hookes_Law
+      Type(Tens4OS2D)                              :: Hookes_Law
       PetscReal                                    :: Toughness, Therm_Exp
    
       Open(File = filename, Unit = F_IN, Status = 'Unknown')
@@ -355,7 +356,7 @@ Module m_RuptStruct
       PetscInt                                     :: iBlk, Blk_Id, iErr
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
-      Type(Tens4OS3D), Dimension(:), Pointer       :: Hookes_Law
+      Type(Tens4OS3D)                              :: Hookes_Law
       PetscReal                                    :: Toughness, Therm_Exp
    
       Open(File = filename, Unit = F_IN, Status = 'Unknown')
@@ -460,6 +461,7 @@ Module m_RuptStruct
    Subroutine RuptSchemeParam_GetFromOptions(dSchemeParam)
       Type(RuptSchemeParam_Type)                   :: dSchemeParam
       PetscInt                                     :: iErr
+      PetscTruth                                   :: flag
 
       dSchemeParam%DoIrrev          = Irrev_Eq
       dSchemeParam%IrrevTol         = 1.0D-2
@@ -480,24 +482,24 @@ Module m_RuptStruct
       dSchemeParam%ATNum            = 2
       dSchemeParam%IntegOrder       = 2
 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%DoIrrev, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-dobt',           dSchemeParam%DoBT, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-bttol',          dSchemeParam%BTTol, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',          dSchemeParam%BTInt, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initu',          dSchemeParam%InitU, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-maxcracklength', dSchemeParam%MaxCrackLength, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-relaxmaxiter',   dSchemeParam%RelaxMaxIter, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-relaxtol',       dSchemeParam%RelaxTol, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspurol',        dSchemeParam%KSPUrTol, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspvrol',        dSchemeParam%KSPVrTol, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-saveint',        dSchemeParam%SaveInt, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',        dSchemeParam%Epsilon, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%DoIrrev, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-dobt',           dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-bttol',          dSchemeParam%BTTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',          dSchemeParam%BTInt, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initu',          dSchemeParam%InitU, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-maxcracklength', dSchemeParam%MaxCrackLength, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-relaxmaxiter',   dSchemeParam%RelaxMaxIter, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-relaxtol',       dSchemeParam%RelaxTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspurol',        dSchemeParam%KSPUrTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspvrol',        dSchemeParam%KSPVrTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-saveint',        dSchemeParam%SaveInt, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',        dSchemeParam%Epsilon, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
    End Subroutine RuptSchemeParam_GetFromOptions
    
    Subroutine RuptEXOProperty_Init(dEXO, dMeshTopology)

@@ -52,7 +52,7 @@ Module m_Elast3D
       Type(Element3D_Elast), Dimension(:), Pointer :: ElemU
 !	  Type(Element3D_Scal), Dimension(:), Pointer  :: ElemTheta ! Scalar element for the temperature
 #endif
-	  Type(SectionReal)                            :: U
+      Type(SectionReal)                            :: U
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       Type(SectionReal)                            :: F
@@ -97,6 +97,7 @@ Contains
          Call MEF90_Finalize()
          STOP
       End If
+      Call RuptSchemeParam_GetFromOptions(AppCtx%RuptSchemeParam)
       
       If (AppCtx%AppParam%verbose) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
@@ -142,10 +143,12 @@ Contains
    
       !!! Initializes the values and names of the properties and variables
       Call RuptEXOVariable_Init(AppCtx%MyEXO)
-      Call RuptEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology)   
+!      Call RuptEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology)   
+      Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose) Then
          Write(IOBuffer, *) "Done with RuptEXOVariable_Init and RuptEXOProperty_Init\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
 
       !!! Set the element type for each block so that we can call ElementInit
@@ -187,22 +190,31 @@ Contains
       !!! Create the Section for the BC
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
 #if defined PB_2D
-      Call EXOProperty_InitBCFlag2D(AppCtx%EXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #elif defined PB_3D
-      Call EXOProperty_InitBCFlag3D(AppCtx%EXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #endif
 
+      AppCtx%TimeStep = 1
+      Write(*,*) 'Reading at offset ', AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, ' in ', AppCtx%MyEXO%filename
       !!! Read U, F, and Temperature
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Call Read_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
-      Call Read_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
+      Write(*,*) 'Read U'
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
+      Write(*,*) 'Read F'
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
+      Write(*,*) 'Read Temp'
+!      Call Read_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
+!      Write(*,*) 'Read U'
+!      Call Read_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
+!      Write(*,*) 'Read U'
 
 
-      AppCtx%TimeStep = 1
       !!! BB
    End Subroutine ElastInit
 !----------------------------------------------------------------------------------------!      
 ! Solve (CM)   
+! No changes wrt VectPoisson
 !----------------------------------------------------------------------------------------!      
    
    Subroutine Solve(AppCtx)
@@ -358,6 +370,11 @@ Contains
 #endif
    
       PetscInt                                     :: iE
+#if defined PB_2D
+      Type(MatProp2D_Type)                         :: Mat_Prop
+#elif defined PB_3D
+      Type(MatProp3D_Type)                         :: Mat_Prop
+#endif
       Type(AppCtx_Type)                            :: AppCtx
       PetscReal, Dimension(:), Pointer             :: RHSElem
       PetscReal, Dimension(:), Pointer             :: F

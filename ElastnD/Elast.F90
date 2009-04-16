@@ -54,6 +54,7 @@ Program  Elast
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
+   AppCtx%TimeStep = AppCtx%TimeStep+1
    Call Solve(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then

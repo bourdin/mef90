@@ -34,14 +34,14 @@ Module m_MEF_EXO
    Public :: Read_EXO_Result_Cell
    Public :: Write_EXO_Result_Cell
 
-   Public :: EXO_Property_Copy
-   Public :: EXO_Property_Write
-   Public :: EXO_Property_Ask
-   Public :: EXO_Property_Read
+   Public :: EXOProperty_Copy
+   Public :: EXOProperty_Write
+   Public :: EXOProperty_Ask
+   Public :: EXOProperty_Read
    
-   Public :: EXO_Variable_Copy
-   Public :: EXO_Variable_Write
-   Public :: EXO_Variable_Read
+   Public :: EXOVariable_Copy
+   Public :: EXOVariable_Write
+   Public :: EXOVariable_Read
    
    Interface Read_EXO_Result_Vertex
       Module Procedure Read_EXO_Result_VertexPtrInterlaced, Read_EXO_Result_VertexSection, Read_EXO_Result_VertexVec, Read_EXO_Result_VertexVect2D, Read_EXO_Result_VertexVect3D, Read_EXO_Result_VertexMat2D, Read_EXO_Result_VertexMatS2D, Read_EXO_Result_VertexMat3D, Read_EXO_Result_VertexMatS3D
@@ -154,7 +154,7 @@ Module m_MEF_EXO
 
 
    
-   Subroutine EXO_Property_Copy(dEXO_in, dEXO_out)
+   Subroutine EXOProperty_Copy(dEXO_in, dEXO_out)
       Type(EXO_Type)                                 :: dEXO_in, dEXO_out
       PetscInt                                       :: i
       
@@ -183,9 +183,9 @@ Module m_MEF_EXO
          dEXO_out%NSProperty(i)%Value = dEXO_in%NSProperty(i)%Value
       End Do
 
-   End Subroutine EXO_Property_Copy
+   End Subroutine EXOProperty_Copy
    
-   Subroutine EXO_Property_Write(dEXO)
+   Subroutine EXOProperty_Write(dEXO)
       Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
       PetscInt                                       :: iErr
@@ -227,10 +227,10 @@ Module m_MEF_EXO
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
       End If
-   End Subroutine EXO_Property_Write
+   End Subroutine EXOProperty_Write
    
    
-   Subroutine EXO_Property_Ask(dEXO, dMeshTopology)
+   Subroutine EXOProperty_Ask(dEXO, dMeshTopology)
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
       PetscInt                                       :: iErr
@@ -297,9 +297,9 @@ Module m_MEF_EXO
  101 Format('*** Side Set      ', T24, I3, '\n'c)
  102 Format('*** Node Set      ', T24, I3, '\n'c)
  110 Format(T24, A, T60, ': ')
-   End Subroutine EXO_Property_Ask
+   End Subroutine EXOProperty_Ask
       
-   Subroutine EXO_Property_Read(dEXO)
+   Subroutine EXOProperty_Read(dEXO)
       Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
       PetscInt                                       :: iErr
@@ -400,9 +400,9 @@ Module m_MEF_EXO
          End If
          Call MPI_BCast(dEXO%NSProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
       End Do
-   End Subroutine EXO_Property_Read
+   End Subroutine EXOProperty_Read
 
-   Subroutine EXO_Variable_Copy(dEXO_in, dEXO_out)
+   Subroutine EXOVariable_Copy(dEXO_in, dEXO_out)
       Type(EXO_Type)                                 :: dEXO_in, dEXO_out
 
       dEXO_out%Num_GlobVariables = dEXO_in%Num_GlobVariables
@@ -420,10 +420,10 @@ Module m_MEF_EXO
       Allocate(dEXO_out%VertVariable(dEXO_out%Num_VertVariables))
       dEXO_out%VertVariable(:)%Name   = dEXO_in%VertVariable(:)%Name
       dEXO_out%VertVariable(:)%Offset = dEXO_in%VertVariable(:)%Offset
-   End Subroutine EXO_Variable_Copy
+   End Subroutine EXOVariable_Copy
 
 
-   Subroutine EXO_Variable_Write(dEXO)
+   Subroutine EXOVariable_Write(dEXO)
       Type(EXO_Type)                                 :: dEXO
  
       PetscInt                                       :: i, iErr
@@ -444,9 +444,9 @@ Module m_MEF_EXO
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
       End If
-   End Subroutine EXO_Variable_Write 
+   End Subroutine EXOVariable_Write 
    
-   Subroutine EXO_Variable_Read(dEXO)
+   Subroutine EXOVariable_Read(dEXO)
       Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
       PetscInt                                       :: iErr
@@ -499,7 +499,7 @@ Module m_MEF_EXO
       Do i = 1, dEXO%Num_VertVariables
          Call MPI_BCast(dEXO%VertVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
       End Do
-   End Subroutine EXO_Variable_Read
+   End Subroutine EXOVariable_Read
    
    Subroutine Write_MeshTopology(dMeshTopology, dEXO)
       Type(MeshTopology_Type)                        :: dMeshTopology
