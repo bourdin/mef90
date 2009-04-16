@@ -45,6 +45,9 @@ Program PrepRupt
    PetscInt                                     :: NumSteps
    PetscInt                                     :: Num_DoF
    PetscReal                                    :: RealBuffer
+   Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp2D
+   Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp3D
+   PetscReal                                    :: E, nu, Toughness, Therm_Exp
 
    Call MEF90_Initialize()
    
@@ -76,8 +79,11 @@ Program PrepRupt
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Else
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      Write(*,*) 'OK MeshCreateExodus'
       Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Write(*,*) 'OK MeshDistribute'
       Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+      Write(*,*) 'OK MeshDestroy'
    End If
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
@@ -98,7 +104,7 @@ Program PrepRupt
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call EXO_Property_Ask(MyEXO, MeshTopology)
+   Call EXOProperty_Ask(MyEXO, MeshTopology)
    
    Do i = 1, MeshTopology%num_elem_blks
       MeshTopology%elem_blk(i)%Elem_Type = MyEXO%EBProperty( Rupt_EBProp_Elem_Type )%Value( MeshTopology%elem_blk(i)%ID )
@@ -113,17 +119,17 @@ Program PrepRupt
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
-   Call EXO_Property_Write(MyEXO)
+   Call EXOProperty_Write(MyEXO)
    If (verbose) Then
-      Write(IOBuffer, '(A)') 'Done with EXO_Property_Write\n'c
+      Write(IOBuffer, '(A)') 'Done with EXOProperty_Write\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
 
    Call RuptEXOVariable_Init(MyEXO)
-   Call EXO_Variable_Write(MyEXO)
+   Call EXOVariable_Write(MyEXO)
    If (verbose) Then
-      Write(IOBuffer, '(A)') 'Done with EXO_Variable_Write\n'c
+      Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
@@ -196,6 +202,13 @@ Program PrepRupt
       Allocate(U(MeshTopology%Num_Elem_Blks_Global))
       Allocate(F(MeshTopology%Num_Elem_Blks_Global))
       Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
+      Select Case (MeshTopology%Num_Dim)
+      Case(2)
+         Allocate(MatProp2D(MeshTopology%Num_Elem_Blks_Global))
+      Case(3)
+         Allocate(MatProp3D(MeshTopology%Num_Elem_Blks_Global))
+      End Select
+      
       U%X = 0.0_Kr
       U%Y = 0.0_Kr
       U%Z = 0.0_Kr
@@ -264,6 +277,34 @@ Program PrepRupt
             Read(*,*) Theta(i)
          End If
          Call MPI_BCast(Theta(i), 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+
+         !!! Material Properties
+         If (MEF90_MyRank == 0) Then
+            Write(IOBuffer, 200) 'Toughness'
+            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+            Read(*,*) Toughness
+            Write(IOBuffer, 200) 'Young modulus'
+            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+            Read(*,*) E
+            Write(IOBuffer, 200) 'Poisson ratio'
+            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+            Read(*,*) nu
+            Write(IOBuffer, 200) 'Thermal expansion coefficient'
+            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+            Read(*,*) Therm_Exp
+            
+            Select Case(MeshTopology%Num_Dim)
+            Case(2)
+               MatProp2D(i)%Toughness = Toughness
+               Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
+               MatProp2D(i)%Therm_Exp = Therm_Exp
+            Case(3)
+               MatProp3D(i)%Toughness = Toughness
+               Call GenHL_Iso3D_Enu(E, nu, MatProp3D(i)%Hookes_Law)
+               MatProp3D(i)%Therm_Exp = Therm_Exp
+            End Select 
+         End If        
+
       End Do   
       
       Do iloc = 1, MeshTopology%Num_Elem_Blks
@@ -291,7 +332,7 @@ Program PrepRupt
          End Do
          DeAllocate(Uelem)
          DeAllocate(Felem)
-         DeAllocate(Thetaelem)
+         DeAllocate(Thetaelem)         
       End Do
       DeAllocate(U)
       DeAllocate(F)
@@ -375,17 +416,25 @@ Program PrepRupt
 !!!         DeAllocate(Felem)
 !!!      End Do
 
+      Call SectionRealComplete(USec, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(FSec, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(ThetaSec, iErr); CHKERRQ(iErr)
+      
       ! Save fields ( Sec -> Vec then VecScale then save )
       !That'll be fine for now
-!      Call SectionRealComplete(USec, iErr); CHKERRQ(iErr)
-!      Call SectionRealComplete(FSec, iErr); CHKERRQ(iErr)
-!      Call SectionRealComplete(ThetaSec, iErr); CHKERRQ(iErr)
-      
       step = 1
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, step, USec) 
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, step, FSec) 
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, step, ThetaSec) 
       Call Write_EXO_Result_Global(MyEXO, MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, step, T(step))
+      
+      Select Case(MeshTopology%Num_Dim)
+      Case (2)
+         Call MatProp_Write(MeshTopology, MatProp2D, Trim(prefix)//'.CST')
+      Case(3)
+         Call MatProp_Write(MeshTopology, MatProp3D, Trim(prefix)//'.CST')
+      End Select
+
    Case (2)
 
    Case Default
