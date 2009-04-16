@@ -43,6 +43,7 @@ Program TestCoordinates
    Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Write(*,*) 'OK MeshTopologyReadEXO'
 
    Call MeshGetCoordinatesF90(MeshTopology%mesh, array, iErr); CHKERRQ(iErr)
    Write(MEF90_MyRank + 100, *) 'Size(array)', Size(array,1), Size(Array,2)

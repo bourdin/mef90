@@ -15,35 +15,42 @@ Module m_MEF_Utils
       PetscInt                         :: UniqCount
       PetscMPIInt                      :: rank
       PetscInt                         :: i, j, iErr
+      PetscInt                         :: MySize, MaxSize
 
       Call MPI_Comm_Rank(PETSC_COMM_WORLD, rank, iErr)
 
-      MyMinVal = MinVal(dMyVals)
-      MyMaxVal = MaxVal(dMyVals)
-      Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPI_INTEGER, MPI_MIN, dComm, iErr)
-      Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPI_INTEGER, MPI_MAX, dComm, iErr)
-
-
-      Allocate(ValCount(GlobMinVal:GlobMaxVal))
-      ValCount = .FALSE.
-      Do i = 1, Size(dMyVals)
-         ValCount(dMyVals(i)) = .TRUE.
-      End Do
-
-      Call MPI_AllReduce(MPI_IN_PLACE, ValCount, GlobMaxVal-GlobMinVal+1, MPI_INTEGER, MPI_LOR, dComm, iErr)
-      !!! This is suboptimal. I could gather only to CPU 0 and do everything else on CPU 0 before broadcasting
-      
-      UniqCount = Count(ValCount)
-
-      Allocate(dVals(UniqCount))
-      j = 1
-      Do i = GlobMinVal, GlobMaxVal
-         If (ValCount(i)) Then
-            dVals(j) = i
-            j = j+1
-         End If
-      End Do
-      DeAllocate(ValCount)
+      MySize = Size(dMyVals)
+      Call MPI_AllReduce(MySize, MaxSize, 1, MPI_INTEGER, MPI_MAX, dComm, iErr)
+      If (MaxSize>0) Then
+         MyMinVal = MinVal(dMyVals)
+         MyMaxVal = MaxVal(dMyVals)
+         Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPI_INTEGER, MPI_MIN, dComm, iErr)
+         Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPI_INTEGER, MPI_MAX, dComm, iErr)
+   
+   
+         Allocate(ValCount(GlobMinVal:GlobMaxVal))
+         ValCount = .FALSE.
+         Do i = 1, Size(dMyVals)
+            ValCount(dMyVals(i)) = .TRUE.
+         End Do
+   
+         Call MPI_AllReduce(MPI_IN_PLACE, ValCount, GlobMaxVal-GlobMinVal+1, MPI_INTEGER, MPI_LOR, dComm, iErr)
+         !!! This is suboptimal. I could gather only to CPU 0 and do everything else on CPU 0 before broadcasting
+         
+         UniqCount = Count(ValCount)
+   
+         Allocate(dVals(UniqCount))
+         j = 1
+         Do i = GlobMinVal, GlobMaxVal
+            If (ValCount(i)) Then
+               dVals(j) = i
+               j = j+1
+            End If
+         End Do
+         DeAllocate(ValCount)
+      Else
+         Allocate(dVals(0))
+      End If
    End Subroutine Uniq
    
    Subroutine GaussJordan_Inverse(A, Status)

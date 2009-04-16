@@ -283,8 +283,8 @@ Module m_RuptStruct
       End Do
       Close(F_OUT)
       
-110   Format(I6,'     Toughness    A1111        A1112        A1122        A1212        A1222        A2222        Alpha')
-120   Format(I6, 8(ES12.5,' '))   
+110   Format(I6,'      Toughness    A1111        A1112        A1122        A1212        A1222        A2222        Alpha')
+120   Format(I6, '      ', 8(ES12.5,' '))   
    End Subroutine MatProp2D_Write
  
    Subroutine MatProp3D_Write(MeshTopology, MatProp, filename)
@@ -304,8 +304,8 @@ Module m_RuptStruct
       End Do
       Close(F_OUT)
       
-110   Format(I6,' Toughness    A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133      A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333       Alpha')
-120   Format(I6, 23(ES12.5,' '))
+110   Format(I6,'      Toughness    A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133      A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333       Alpha')
+120   Format(I6, '      ', 23(ES12.5,' '))
    End Subroutine MatProp3D_Write
  
  
@@ -323,7 +323,7 @@ Module m_RuptStruct
       Open(File = filename, Unit = F_IN, Status = 'Unknown')
       Rewind(F_IN)
       Read(F_IN, *) NumBlks
-      If (NumBlks /= MeshTopology%Num_Elem_Blks) Then
+      If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
          SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
       End If
       !!! Reading the file once first to get the right number of blocks
@@ -338,14 +338,15 @@ Module m_RuptStruct
       Allocate(MatProp(IdxMin:IdxMax))
       Rewind(F_IN)
       Do iBlk = 1, NumBlks
-         Read(F_IN, 120) Idx, Toughness, Hookes_Law, Therm_exp
+         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp
       End Do
       Close(F_IN)
       
-120   Format(I6, 8(ES12.5,' '))   
+!120   Format(I6, 8(ES12.5,' '))   
+!120   Format(*)
    End Subroutine MatProp2D_Read
    
    Subroutine MatProp3D_Read(MeshTopology, MatProp, filename)

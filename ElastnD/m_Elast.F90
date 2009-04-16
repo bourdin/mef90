@@ -68,9 +68,9 @@ Module m_Elast3D
       Type(PC)                                     :: PCU
       Type(LogInfo_Type)                           :: LogInfo
 #if defined PB_2D
-      Type(MatProp2D_Type)                         :: MatProp      
+      Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp      
 #elif defined PB_3D
-      Type(MatProp3D_Type)                         :: MatProp
+      Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
 #endif
       Type(AppParam_Type)                          :: AppParam
       Type(RuptSchemeParam_Type)                   :: RuptSchemeParam
@@ -150,6 +150,9 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
+      
+      !!! Read Mat Properties from the CST file
+      Call MatProp_Read(AppCtx%MeshTopology, AppCtx%MatProp, trim(AppCtx%AppParam%prefix)//'.CST')
 
       !!! Set the element type for each block so that we can call ElementInit
       Do i = 1, AppCtx%MeshTopology%num_elem_blks
@@ -175,7 +178,7 @@ Contains
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterU, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHSU, iErr); CHKERRQ(iErr)
 
-      Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
+      Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
       
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -196,21 +199,10 @@ Contains
 #endif
 
       AppCtx%TimeStep = 1
-      Write(*,*) 'Reading at offset ', AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, ' in ', AppCtx%MyEXO%filename
       !!! Read U, F, and Temperature
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Write(*,*) 'Read U'
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
-      Write(*,*) 'Read F'
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
-      Write(*,*) 'Read Temp'
-!      Call Read_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
-!      Write(*,*) 'Read U'
-!      Call Read_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
-!      Write(*,*) 'Read U'
-
-
-      !!! BB
    End Subroutine ElastInit
 !----------------------------------------------------------------------------------------!      
 ! Solve (CM)   
@@ -227,7 +219,7 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       Type(Vec)                                    :: U_Vec
       
-      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, U_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U, AppCtx%ScatterU, SCATTER_FORWARD, U_Vec, ierr); CHKERRQ(ierr)
       Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU, U_Vec, iErr); CHKERRQ(iErr)
@@ -242,32 +234,26 @@ Contains
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n'c)
    End Subroutine Solve
+
 !----------------------------------------------------------------------------------------!      
 ! MatAssembly (CM)  
 !----------------------------------------------------------------------------------------!      
-   
    Subroutine MatAssembly(AppCtx)
-      !!! CM
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iE, iELoc, iErr
       PetscReal, Dimension(:,:), Pointer           :: MatElem
       
-      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-		 Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
+         Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            !---------------------------------------------------
-			Call MatAssemblyLocal(iE, AppCtx%MatProp(iBlk), AppCtx, MatElem)
-			! Is it ok? AppCtx%MatProp(iBlk)
-            !---------------------------------------------------
-			Write(MEF90_MyRank+100, *) 'ELement ', iE
-            Write(MEF90_MyRank+100, *)  MatElem
+            Call MatAssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, MatElem)
             Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(MatElem)
@@ -275,15 +261,13 @@ Contains
       Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatAssembly
+   
 !----------------------------------------------------------------------------------------!      
 ! MatAssemblyLocal (CM)  
 !----------------------------------------------------------------------------------------!      
-   
    Subroutine MatAssemblyLocal(iE, MatProp, AppCtx, MatElem)
-      !!! CM
-
 #if defined PB_2D
       Type(MatProp2D_Type)                         :: MatProp
 #elif defined PB_3D
@@ -298,21 +282,19 @@ Contains
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       
-      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+!      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
 
       MatElem  = 0.0_Kr
       NumDoF   = Size(AppCtx%ElemU(iE)%BF,1)
       NumGauss = Size(AppCtx%ElemU(iE)%BF,2)
       Allocate(BCFlag(NumDoF))
-	  Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
       Do iGauss = 1, NumGauss
          Do iDoF1 = 1, NumDoF
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoF
-			   !-------------------------
-				  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemU(iE)%Gauss_C(iGauss) * ( (MatProp%Hookes_Law * AppCtx%ElemU(iE)%GradS_BF(iDoF1, iGauss) ) .DotP. AppCtx%ElemU(iE)%GradS_BF(iDoF1, iGauss))				  
-               !-------------------------
-			      Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
+                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemU(iE)%Gauss_C(iGauss) * ( (MatProp%Hookes_Law * AppCtx%ElemU(iE)%GradS_BF(iDoF1, iGauss) ) .DotP. AppCtx%ElemU(iE)%GradS_BF(iDoF2, iGauss))				  
+!			      Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                   !!! Is that right?
                End Do
             End If
@@ -320,7 +302,7 @@ Contains
       End Do
       
       DeAllocate(BCFlag)
-      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+!      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatAssemblyLocal
 
 !----------------------------------------------------------------------------------------!      
@@ -338,14 +320,14 @@ Contains
       NumDoFPerVertex = AppCtx%MeshTopology%Num_Dim
       
       !!! Hopefully one day we will use assemble Vector instead of going through a section
-      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             !---------------------------------------------------------------
-			Call RHSAssemblyLocal(iE, AppCtx%MatProp(iBlk),AppCtx, RHSElem)
+			Call RHSAssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
             !---------------------------------------------------------------
 			Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
@@ -355,7 +337,7 @@ Contains
       !!! VERY important! This is the equivalent of a ghost update
       Call SectionRealToVec(RHSSec, AppCtx%ScatterU, SCATTER_FORWARD, AppCtx%RHSU, ierr); CHKERRQ(ierr)
       Call SectionRealDestroy(RHSSec, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
   End Subroutine RHSAssembly
    
 !----------------------------------------------------------------------------------------!      
@@ -401,15 +383,15 @@ Contains
 	  ! To do properly for the temperature
 !!	  Allocate(Theta(NumDoF))
 !!    Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoF, Theta, iErr); CHKERRQ(ierr)
-      Do iGauss = 1, NumGauss
+      DoiGauss: Do iGauss = 1, NumGauss
          TmpRHS = 0.0_Kr
 !!		 Inelastic_Strain_Elem = 0.0_Kr
          Do iDoF2 = 1, NumDoF
-	         TmpRHS = TmpRHS + AppCtx%ElemU(iE)%BF(iDoF2, iGauss) * F(iDoF2)
+            TmpRHS = TmpRHS + AppCtx%ElemU(iE)%BF(iDoF2, iGauss) * F(iDoF2)
 			 !--------------- Inelastic strain 
 !!			 Inelastic_Strain_Elem = Inelastic_Strain_Elem + MatProp%Therm_Exp * AppCtx%ElemU(iE)%BF(iDoF2, iGauss)%X * (IdMat * Theta(iDoF2))
              !--------------- (TO CHECK)
-			 Call PetscLogFlops(2 , iErr);CHKERRQ(iErr)
+            Call PetscLogFlops(2 , iErr);CHKERRQ(iErr)
          End Do
          Do iDoF1 = 1, NumDoF
             If (BCFlag(iDoF1) == 0) Then
@@ -420,10 +402,10 @@ Contains
                Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
             End If
          End Do
-      End Do
+      End Do DoiGauss
       DeAllocate(BCFlag)
       DeAllocate(F)
-      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+!      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSAssemblyLocal
    
 !----------------------------------------------------------------------------------------!      
@@ -454,7 +436,7 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
-      MyEnergy = 0.0_Kr
+      MyBulkEnergy = 0.0_Kr
      	   
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -482,7 +464,7 @@ Contains
                   Call PetscLogFlops(4*AppCtx%MeshTopology%Num_Dim+4, iErr)
                End Do			   
 			   Effective_Strain_Elem  = Strain_Elem - Inelastic_Strain_Elem;
-			   Stress_Elem			  = AppCtx%MatProp(iBlk)%Hookes_Law * Effective_Strain_Elem
+			   Stress_Elem			  = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
                MyBulkEnergy			  = MyBulkEnergy + AppCtx%ElemU(iE)%Gauss_C(iGauss) * ( (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr - (F_Elem .DotP. U_Elem))
 			   Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
@@ -515,7 +497,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: U
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
-	  PetscReal, Dimension(:), Pointer             :: Stress_Pt, Strain_Ptr
+	  PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
 	  	 
 	  	  
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
@@ -536,7 +518,7 @@ Contains
             Vol  = 0.0_Kr
             Do iGauss = 1, NumGauss
                Do iDoF = 1, NumDoF
-				  Strain_Elem = Strain_Elem + AppCtx%ElemU(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF)
+				  Strain_Elem = Strain_Elem + AppCtx%ElemU(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
 !				  Inelastic_Strain_Elem = Inelastic_Strain_Elem + AppCtx%MatProp(iBlk)%Therm_Exp * AppCtx%ElemU(iE)%BF(iDoF2, iGauss)%X * (IdMat*Theta(iDoF2)) 
                   ! TO CHECK the Vol, also in VectPoisson (the BFs are now vectors ... should I use BF(iDoF, iGauss)%X ????)
 				  Vol = Vol + AppCtx%ElemU(iE)%Gauss_C(iGauss) * (AppCtx%ElemU(iE)%BF(iDoF, iGauss).DotP.AppCtx%ElemU(iE)%BF(iDoF, iGauss))**0.5_Kr
@@ -546,22 +528,22 @@ Contains
             End Do
 			Strain_Elem = Strain_Elem / Vol
 			Effective_Strain_Elem = Strain_Elem - Inelastic_Strain_Elem
-			Stress_Elem = AppCtx%MatProp(iBlk)%Hookes_Law * Effective_Strain_Elem
+			Stress_Elem = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
             Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
 #if defined PB_2D
-            Stress_Pt = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%XY /)
-			Strain_Pt = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%XY /)
+            Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%XY /)
+			Strain_Ptr = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%XY /)
 #elif defined PB_3D
-            Stress_Pt = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%ZZ, Stress_Elem%YZ, Stress_Elem%XZ, Stress_Elem%XY,  /)
-            Strain_Pt = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%ZZ, Strain_Elem%YZ, Strain_Elem%XZ, Strain_Elem%XY,  /)
+            Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%ZZ, Stress_Elem%YZ, Stress_Elem%XZ, Stress_Elem%XY,  /)
+            Strain_Ptr = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%ZZ, Strain_Elem%YZ, Strain_Elem%XZ, Strain_Elem%XY,  /)
 #endif
             ! Update the Sections with the local values
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%StressU, iE-1, Stress_Ptr, iErr)
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%StrainU, iE-1, Strain_Ptr, iErr)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
-      DeAllocate(Stress_Pt)
-      DeAllocate(Strain_Pt)
+      DeAllocate(Stress_Ptr)
+      DeAllocate(Strain_Ptr)
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeStrainStress
