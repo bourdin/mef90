@@ -222,7 +222,7 @@ Contains
                Write(IOBuffer, *) 'Reading U and F from the mesh\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
-            !!! U = 0, F=1
+            !!! U = (0,0), F=(1,1)
             Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
             Call SectionRealSet(AppCtx%U, 0.0_Kr, iErr); CHKERRQ(iErr);
          Case(2)
@@ -398,14 +398,14 @@ Contains
 	  Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
       Do iGauss = 1, NumGauss
          Do iDoF1 = 1, NumDoF
-!            If (BCFlag(iDoF1) == 0) Then
+            If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoF
                 !  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%Der_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Der_BF(iDoF2, iGauss) 
 				  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1)+ AppCtx%Elem(iE)%Gauss_C(iGauss) * (AppCtx%Elem(iE)%Der_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Der_BF(iDoF2, iGauss))
                   Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                   !!! Is that right?
                End Do
-!            End If
+            End If
          End Do
       End Do
       
@@ -420,7 +420,9 @@ Contains
       Type(SectionReal)                            :: RHSSec
       PetscInt                                     :: iBlk, iE, iELoc
       PetscReal, Dimension(:), Pointer             :: RHSElem
-      PetscInt                                     :: NumDoFPerVertex = 1
+      PetscInt                                     :: NumDoFPerVertex 
+      
+      NumDoFPerVertex = AppCtx%MeshTopology%Num_Dim
       
       !!! Hopefully one day we will use assemble Vector instead of going through a section
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
