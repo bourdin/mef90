@@ -25,6 +25,8 @@ Module m_RuptStruct
    
    Public :: EXOProperty_InitBCFlag2DA
    Public :: EXOProperty_InitBCFlag2D
+   
+   Public :: RuptSchemeParam_Type
 
    Interface MatProp_Write
       Module Procedure MatProp2D_Write, MatProp3D_Write
@@ -144,6 +146,7 @@ Module m_RuptStruct
       PetscReal                                    :: KEpsilon
 
       PetscInt                                     :: ATNum
+      PetscInt                                     :: IntegOrder
    End Type RuptSchemeParam_Type
    
  Contains
@@ -423,6 +426,8 @@ Module m_RuptStruct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I1,T32, 'ATNum')")               dSchemeParam%ATNum
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "(I1,T32, 'IntegOrder')")          dSchemeParam%IntegOrder
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine RuptSchemeParam_View
 
    Subroutine RuptSchemeParam_Load(dSchemeParam, filename)
@@ -448,6 +453,7 @@ Module m_RuptStruct
       Read(F_IN, *) dSchemeParam%Epsilon
       Read(F_IN, *) dSchemeParam%KEpsilon
       Read(F_IN, *) dSchemeParam%ATNum
+      Read(F_IN, *) dSchemeParam%IntegOrder
       Close(F_IN)
    End Subroutine RuptSchemeParam_Load
    
@@ -455,23 +461,24 @@ Module m_RuptStruct
       Type(RuptSchemeParam_Type)                   :: dSchemeParam
       PetscInt                                     :: iErr
 
-      dSchemeParam%DoIrrev        = Irrev_Eq
-      dSchemeParam%IrrevTol       = 1.0D-2
-      dSchemeParam%DoBT           = PETSC_FALSE
-      dSchemeParam%BTTol          = 0.0D0
-      dSchemeParam%BTInt          = 0
-      dSchemeParam%InitU          = Init_U_PREV
-      dSchemeParam%InitV          = Init_V_PREV
-      dSchemeParam%nbCracks       = 0
-      dSchemeParam%MaxCrackLength = 0.0D0  
-      dSchemeParam%RelaxMaxIter   = 1000
-      dSchemeParam%RelaxTol       = 1.0D-4
-      dSchemeParam%KSPUrtol       = 1.0D-6
-      dSchemeParam%KSPVrtol       = 1.0D-6
-      dSchemeParam%SaveInt        = 25
-      dSchemeParam%Epsilon        = .1
-      dSchemeParam%KEpsilon       = 1.0E-6
-      dSchemeParam%ATNum          = 2
+      dSchemeParam%DoIrrev          = Irrev_Eq
+      dSchemeParam%IrrevTol         = 1.0D-2
+      dSchemeParam%DoBT             = PETSC_FALSE
+      dSchemeParam%BTTol            = 0.0D0
+      dSchemeParam%BTInt            = 0
+      dSchemeParam%InitU            = Init_U_PREV
+      dSchemeParam%InitV            = Init_V_PREV
+      dSchemeParam%nbCracks         = 0
+      dSchemeParam%MaxCrackLength   = 0.0D0  
+      dSchemeParam%RelaxMaxIter     = 1000
+      dSchemeParam%RelaxTol         = 1.0D-4
+      dSchemeParam%KSPUrtol         = 1.0D-6
+      dSchemeParam%KSPVrtol         = 1.0D-6
+      dSchemeParam%SaveInt          = 25
+      dSchemeParam%Epsilon          = .1
+      dSchemeParam%KEpsilon         = 1.0E-6
+      dSchemeParam%ATNum            = 2
+      dSchemeParam%IntegOrder       = 2
 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%DoIrrev, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, iErr); CHKERRQ(iErr)
@@ -490,6 +497,7 @@ Module m_RuptStruct
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',        dSchemeParam%Epsilon, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, iErr); CHKERRQ(iErr)
    End Subroutine RuptSchemeParam_GetFromOptions
    
    Subroutine RuptEXOProperty_Init(dEXO, dMeshTopology)
