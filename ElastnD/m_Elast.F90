@@ -37,7 +37,6 @@ Module m_SimplePoisson3D
    Type AppParam_Type
       PetscTruth                                   :: Restart
       PetscTruth                                   :: Verbose
-      PetscInt                                     :: TestCase
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
    End Type AppParam_Type
@@ -46,22 +45,25 @@ Module m_SimplePoisson3D
       Type (MeshTopology_Type)                     :: MeshTopology
       Type (EXO_Type)                              :: EXO, MyEXO
 #if defined PB_2D
-      Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
+      Type(Element2D_Elast), Dimension(:), Pointer  :: ElemU
 #elif defined PB_3D
-      Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
+      Type(Element3D_Elast), Dimension(:), Pointer  :: ElemU
 #endif
       Type(SectionReal)                            :: U
-      Type(SectionReal)                            :: GradU
+      Type(SectionReal)                            :: Stress
+      Type(SectionReal)                            :: Strain
       Type(SectionReal)                            :: F
-      PetscReal                                    :: Energy
-      Type(VecScatter)                             :: Scatter
-      Type(SectionInt)                             :: BCFlag
-      Type(Mat)                                    :: K
-      Type(Vec)                                    :: RHS
-      Type(KSP)                                    :: KSP
-      Type(PC)                                     :: PC
+      Type(SectionReal)                            :: Theta
+      PetscReal                                    :: BulkEnergy
+      Type(VecScatter)                             :: ScatterU
+      Type(SectionInt)                             :: BCFlagU
+      Type(Mat)                                    :: KU
+      Type(Vec)                                    :: RHSU
+      Type(KSP)                                    :: KSPU
+      Type(PC)                                     :: PCU
       Type(LogInfo_Type)                           :: LogInfo
       Type(AppParam_Type)                          :: AppParam
+      Type(RuptSchemeParam_Type)                   :; RuptSchemeParam
    End Type AppCtx_Type
    
    
@@ -94,6 +96,10 @@ Contains
    Subroutine ComputeEnergy(AppCtx)
       !!! CM
    End Subroutine ComputeEnergy
+   
+   Subroutine ComputeStrainStress(AppCtx)
+      !!! CM
+   End ComputeStrainStress
    
    Subroutine Save(AppCtx)
       !!! BB

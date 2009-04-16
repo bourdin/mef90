@@ -57,17 +57,17 @@ Program  Elast
    Call Solve(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Computing energy and gradient\n'c
+      Write(IOBuffer, *) 'Computing bulk energy, strains and stresses\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call ComputeEnergy(AppCtx)
 
-   Write(IOBuffer, 100) AppCtx%Energy
+   Write(IOBuffer, 100) AppCtx%BulkEnergy
 100 Format('Total energy: ', ES12.5, '\n'c)    
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-   Call ComputeGradient(AppCtx)
+   Call ComputeStrainStress(AppCtx)
 
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Saving results\n'c
