@@ -1,7 +1,7 @@
 #if defined PB_2D
-Module m_SimplePoisson2D
+Module m_2D
 #elif defined PB_3D
-Module m_SimplePoisson3D
+Module m_Elast3D
 #endif
 
 #include "finclude/petscdef.h"
@@ -12,6 +12,7 @@ Module m_SimplePoisson3D
 #include "finclude/petscviewerdef.h"
 
    Use m_MEF90
+   Use m_RuptStruct
    Use petsc
    Use petscvec
    Use petscmat
@@ -116,7 +117,7 @@ Contains
    
    
 #if defined PB_2D
-End Module m_SimplePoisson2D
+End Module m_Elast2D
 #elif defined PB_3D
-End Module m_SimplePoisson3D
+End Module m_Elast3D
 #endif
