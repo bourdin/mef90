@@ -541,7 +541,7 @@ Module m_MEF_Elements
       
       
       Call Init_Element_P_Lagrange_2D_Scal(Elem_Scal, dCoord, dPolynomialOrder, dQuadratureOrder)
-      Num_DoF   = Size(Elem_Scal%BF, 1) 
+      Num_DoF  = Size(Elem_Scal%BF, 1) 
       Nb_Gauss = Size(Elem_Scal%BF, 2)
       Allocate(dElem%Gauss_C(Nb_Gauss))
       Allocate(dElem%BF(Num_DoF * dim, Nb_Gauss))
