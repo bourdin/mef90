@@ -363,9 +363,9 @@ Contains
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscReal                                    :: Theta_Elem
 #if defined PB_2D
-      Type (Vect2D)             				         :: TmpRHS
+      Type (Vect2D)             				   :: TmpRHS
 #elif defined PB_3D  
-      Type (Vect3D)             				         :: TmpRHS    
+      Type (Vect3D)             				   :: TmpRHS    
 #endif
 
       RHSElem  = 0.0_Kr
@@ -390,7 +390,7 @@ Contains
                ! RHS terms due to forces
                RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. TmpRHS ) 
                ! RHS terms due to inelastic strains
-   			   RHSElem(iDoF1) = RHSElem(iDoF1) + Theta_Elem * ((MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
+   			   RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
 !               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
             End If
          End Do
@@ -412,15 +412,16 @@ Contains
       PetscReal, Dimension(:), Pointer             :: F, U, Theta
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
+      PetscReal                                    :: Theta_Elem
 #if defined PB_2D
-	  Type(MatS2D)                                  :: Strain_Elem, Stress_Elem 
-	  Type(MatS2D)								            :: Inelastic_Strain_Elem, Effective_Strain_Elem!, IdMat  = (/ 1.0_Kr,  1.0_Kr,  0.0_Kr/)
-	  Type(Vect2D)								            :: F_Elem, U_Elem  
+	  Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
+	  Type(MatS2D)								   :: Effective_Strain_Elem
+	  Type(Vect2D)								   :: F_Elem, U_Elem  
 
 #elif defined PB_3D
-	  Type(MatS3D)                                  :: Strain_Elem, Stress_Elem 
-	  Type(MatS3D)							               :: Inelastic_Strain_Elem, Effective_Strain_Elem!, IdMat = (/ 1.0_Kr,  1.0_Kr, 1.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr/)
-	  Type(Vect3D)								            :: F_Elem, U_Elem  
+	  Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
+	  Type(MatS3D)					               :: Effective_Strain_Elem
+	  Type(Vect3D)						           :: F_Elem, U_Elem  
 #endif
       PetscReal                                    :: MyBulkEnergy
 	  
@@ -439,24 +440,24 @@ Contains
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
             Allocate(U(NumDoF))
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
-!!          Allocate(Theta(NumDoF))
-!!          Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoF, Theta, iErr); CHKERRQ(ierr)
+            Allocate(Theta(NumDoF))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoF, Theta, iErr); CHKERRQ(ierr)
             Do iGauss = 1, NumGauss
                Strain_Elem           = 0.0_Kr
                Stress_Elem           = 0.0_Kr
-               Inelastic_Strain_Elem = 0.0_Kr
+               Theta_Elem            = 0.0_Kr
                Effective_Strain_Elem = 0.0_Kr
                F_Elem                = 0.0_Kr
                U_Elem                = 0.0_Kr
                Do iDoF = 1, NumDoF
-                  Strain_Elem           = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
-!				  Inelastic_Strain_Elem = Inelastic_Strain_Elem + AppCtx%MatProp(iBlk)%Therm_Exp * AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * (IdMat*Theta(iDoF)) 
-                  F_Elem                = F_Elem + F(iDoF)* AppCtx%ElemVect(iE)%BF(iDoF, iGauss) 
-                  U_Elem                = U_Elem + U(iDoF)*AppCtx%ElemVect(iE)%BF(iDoF, iGauss) 
+                  Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
+                  F_Elem     = F_Elem + F(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss) 
+                  U_Elem     = U_Elem + U(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss) 
                   Call PetscLogFlops(4*AppCtx%MeshTopology%Num_Dim+4, iErr)
                End Do			   
-               Effective_Strain_Elem  = Strain_Elem - Inelastic_Strain_Elem;
-               Stress_Elem			     = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
+               Effective_Strain_Elem  = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp   ;
+               Stress_Elem			  = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
                MyBulkEnergy			  = MyBulkEnergy + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr - (F_Elem .DotP. U_Elem))
 			   Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
@@ -476,20 +477,21 @@ Contains
       
       PetscInt                                     :: iErr
 #if defined PB_2D
-	  Type(MatS2D)                                  :: Strain_Elem, Stress_Elem 
-	  Type(MatS2D)								            :: Inelastic_Strain_Elem, Effective_Strain_Elem!, IdMat = (/ 1.0_Kr,  1.0_Kr,  0.0_Kr/)
-	  Type(Vect2D)								            :: F_Elem, U_Elem  
-#elif defined PB_3D
-	  Type(MatS3D)                                  :: Strain_Elem, Stress_Elem 
-	  Type(MatS3D)							               :: Inelastic_Strain_Elem, Effective_Strain_Elem!, IdMat = (/ 1.0_Kr,  1.0_Kr, 1.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr/)
-	  Type(Vect3D)								            :: F_Elem, U_Elem  
+	  Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
+	  Type(MatS2D)	    				           :: Effective_Strain_Elem
+	  Type(Vect2D)                                 :: F_Elem, U_Elem  
+#elif defined PB_3D 
+	  Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
+	  Type(MatS3D)		   			               :: Effective_Strain_Elem
+	  Type(Vect3D)							       :: F_Elem, U_Elem  
 #endif
+      PetscReal                                    :: Theta_Elem
       PetscReal                                    :: Vol
       PetscInt                                     :: NumDoF, NumGauss
-      PetscReal, Dimension(:), Pointer             :: U
+      PetscReal, Dimension(:), Pointer             :: U, Theta
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
-	   PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
+      PetscReal, Dimension(:), Pointer            :: Stress_Ptr, Strain_Ptr
 	  	 
 	  	  
 !      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
@@ -503,23 +505,24 @@ Contains
             NumGauss = Size(AppCtx%ElemVect(iE)%BF,2)
             Allocate(U(NumDoF))
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
+            Allocate(Theta(NumDoF))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoF, Theta, iErr); CHKERRQ(ierr)
+
             Strain_Elem           = 0.0_Kr
             Stress_Elem           = 0.0_Kr
-            Inelastic_Strain_Elem = 0.0_Kr
+            Theta_Elem            = 0.0_Kr
             Effective_Strain_Elem = 0.0_Kr
             Vol  = 0.0_Kr
             Do iGauss = 1, NumGauss
                Do iDoF = 1, NumDoF
-                 Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
-!				  Inelastic_Strain_Elem = Inelastic_Strain_Elem + AppCtx%MatProp(iBlk)%Therm_Exp * AppCtx%ElemVect(iE)%BF(iDoF2, iGauss)%X * (IdMat*Theta(iDoF2)) 
-                  ! TO CHECK the Vol, also in VectPoisson (the BFs are now vectors ... should I use BF(iDoF, iGauss)%X ????)
-                 Vol = Vol + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)%X
-				  !
+                  Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
+                  Theta_Elem  = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss)* Theta(iDoF)
+                  Vol = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
 !				  Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
                End Do
             End Do
             Strain_Elem = Strain_Elem / Vol
-            Effective_Strain_Elem = Strain_Elem - Inelastic_Strain_Elem
+            Effective_Strain_Elem  = Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp)   ;
             Stress_Elem = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
             Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
 #if defined PB_2D
