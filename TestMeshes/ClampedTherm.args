@@ -47,8 +47,8 @@
 0                                  nu
 0                                  alpha
 
-0                                  theta
+1                                  theta
 1                                  k
 1                                  E
 0                                  nu
-1e-5                               alpha
+1                                  alpha
