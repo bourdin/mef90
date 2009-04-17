@@ -312,20 +312,34 @@ Program PrepRupt
          Allocate(Felem(3*Num_DoF))
          Allocate(Thetaelem(Num_DoF))
          
-         !!! Update 
-         Do k = 0, Num_DoF-1
-            Uelem(3*k+1) = U(i)%X
-            Uelem(3*k+2) = U(i)%Y
-            Uelem(3*k+3) = U(i)%Z
-            Felem(3*k+1) = F(i)%X
-            Felem(3*k+2) = F(i)%Y
-            Felem(3*k+3) = F(i)%Z
-         End Do
+         !!! Update U 
+         If ( (MyEXO%EBProperty(Rupt_EBProp_BCTypeX)%Value(iloc) /= 0 ) .OR. (MyEXO%EBProperty(Rupt_EBProp_BCTypeY)%Value(iloc) /= 0 ) .OR. (MyEXO%EBProperty(Rupt_EBProp_BCTypeZ)%Value(iloc) /= 0 ) ) Then
+            Do k = 0, Num_DoF-1
+               Uelem(3*k+1) = U(i)%X
+               Uelem(3*k+2) = U(i)%Y
+               Uelem(3*k+3) = U(i)%Z
+            End Do
+            Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+               Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
+            End Do
+         End If
+         
+         !!! Update F
+         If ( MyEXO%EBProperty(Rupt_EBProp_HasBForce)%Value(iloc) /= 0 ) Then
+            Do k = 0, Num_DoF-1
+               Felem(3*k+1) = F(i)%X
+               Felem(3*k+2) = F(i)%Y
+               Felem(3*k+3) = F(i)%Z
+            End Do
+            Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+               Call MeshUpdateClosure(MeshTopology%Mesh, FSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, iErr); CHKERRQ(iErr)            
+            End Do
+         End If
+
+         !!! Update Theta
          Thetaelem = Theta(i)
          Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
-               Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
-               Call MeshUpdateClosure(MeshTopology%Mesh, FSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, iErr); CHKERRQ(iErr)            
-               Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
+            Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
          End Do
          DeAllocate(Uelem)
          DeAllocate(Felem)
