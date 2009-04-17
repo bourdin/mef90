@@ -164,7 +164,6 @@ Module m_RuptStruct
       Do i = 1, dMeshTopology%Num_Elem_Blks
          NumDoF = dMeshTopology%Elem_Blk(i)%Num_DoF
          Allocate(Flag(NumDoF))
-         Write(*,*) 'Blk, NumDoF, ID', i, NumDoF, dMeshTopology%Elem_Blk(i)%ID 
          Flag = dEXO%EBProperty( Rupt_EBProp_BCTypeZ )%Value( dMeshTopology%Elem_Blk(i)%ID )
          Do j = 1, dMeshTopology%Elem_Blk(i)%Num_Elems
             Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Elem_Blk(i)%Elem_ID(j)-1, Flag, iErr); CHKERRQ(iErr)
@@ -276,7 +275,7 @@ Module m_RuptStruct
       
       Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
-      Write(F_OUT, *) MeshTopology%Num_Elem_Blks
+      Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
          Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
          Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
@@ -297,7 +296,7 @@ Module m_RuptStruct
       
       Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
-      Write(F_OUT, *) MeshTopology%Num_Elem_Blks
+      Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
          Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
          Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
@@ -321,7 +320,7 @@ Module m_RuptStruct
       PetscReal                                    :: Toughness
       Type(MatS2D)                                 :: Therm_Exp
    
-      Open(File = filename, Unit = F_IN, Status = 'Unknown')
+      Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
       Rewind(F_IN)
       Read(F_IN, *) NumBlks
       If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
@@ -345,7 +344,7 @@ Module m_RuptStruct
          MatProp(Idx)%Therm_Exp  = Therm_Exp
       End Do
       Close(F_IN)
-      
+      Return
 120   Format(I6, 8(ES12.5,' '))   
 !120   Format(*)
    End Subroutine MatProp2D_Read

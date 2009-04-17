@@ -432,9 +432,9 @@ Program PrepRupt
 !!!         DeAllocate(Felem)
 !!!      End Do
 
-      Call SectionRealComplete(USec, iErr); CHKERRQ(iErr)
-      Call SectionRealComplete(FSec, iErr); CHKERRQ(iErr)
-      Call SectionRealComplete(ThetaSec, iErr); CHKERRQ(iErr)
+!      Call SectionRealComplete(USec, iErr); CHKERRQ(iErr)
+!      Call SectionRealComplete(FSec, iErr); CHKERRQ(iErr)
+!      Call SectionRealComplete(ThetaSec, iErr); CHKERRQ(iErr)
       
       ! Save fields ( Sec -> Vec then VecScale then save )
       !That'll be fine for now
