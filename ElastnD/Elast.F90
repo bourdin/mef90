@@ -50,7 +50,8 @@ Program  Elast
    End If
    
    Call RHSAssembly(AppCtx)
-   Call VecView(APpCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Calling KSPSolve\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
