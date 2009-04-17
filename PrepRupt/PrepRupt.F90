@@ -47,7 +47,7 @@ Program PrepRupt
    PetscReal                                    :: RealBuffer
    Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp2D
    Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp3D
-   PetscReal                                    :: E, nu, Toughness, Therm_Exp
+   PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
 
    Call MEF90_Initialize()
    
@@ -288,17 +288,22 @@ Program PrepRupt
             Read(*,*) nu
             Write(IOBuffer, 200) 'Thermal expansion coefficient'
             Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
-            Read(*,*) Therm_Exp
+            Read(*,*) Therm_ExpScal
             
             Select Case(MeshTopology%Num_Dim)
             Case(2)
                MatProp2D(i)%Toughness = Toughness
                Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
-               MatProp2D(i)%Therm_Exp = Therm_Exp
+               MatProp2D(i)%Therm_Exp    = 0.0_Kr
+               MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
+               MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
             Case(3)
                MatProp3D(i)%Toughness = Toughness
                Call GenHL_Iso3D_Enu(E, nu, MatProp3D(i)%Hookes_Law)
-               MatProp3D(i)%Therm_Exp = Therm_Exp
+               MatProp3D(i)%Therm_Exp    = 0.0_Kr
+               MatProp3D(i)%Therm_Exp%XX = Therm_ExpScal
+               MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
+               MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
             End Select 
          End If        
 
