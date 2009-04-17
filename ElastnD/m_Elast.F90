@@ -147,13 +147,18 @@ Contains
 !      Call RuptEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology)   
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose) Then
-         Write(IOBuffer, *) "Done with RuptEXOVariable_Init and RuptEXOProperty_Init\n"c
+         Write(IOBuffer, *) "Done with RuptEXOVariable_Init and RuptEXOProperty_Read\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
+!         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
       
       !!! Read Mat Properties from the CST file
       Call MatProp_Read(AppCtx%MeshTopology, AppCtx%MatProp, trim(AppCtx%AppParam%prefix)//'.CST')
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) "Done with MatProp_Read\n"c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
+      End If
 
       !!! Set the element type for each block so that we can call ElementInit
       Do i = 1, AppCtx%MeshTopology%num_elem_blks
