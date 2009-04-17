@@ -1461,7 +1461,7 @@ Module m_MEF_EXO
          SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
       End If
       Num_Rec = Size(dRes) / dMeshTopology%Num_Elems
-
+      
       Do_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks      
          If (dMeshTopology%Elem_Blk(iBlk)%Num_elems > 0) Then
             Allocate(Res_Tmp(dMeshTopology%Elem_Blk(iBlk)%Num_elems))
@@ -1469,7 +1469,7 @@ Module m_MEF_EXO
                Do_iE: Do iE = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
                   Res_Tmp(iE) = dRes(iRec +  Num_Rec * (dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)-1))
                End Do Do_iE
-               Call EXPEV(dEXO%exoid, dTS, dIdx + iRec-1, dMeshTopology%Elem_Blk(iBlk)%ID, dMeshTopology%Elem_Blk(iBlk)%Num_Elems, Res_Tmp, iErr); CHKERRQ(iErr)
+               Call EXPEV(dEXO%exoid, dTS, dIdx + iRec-1, iBlk, dMeshTopology%Elem_Blk(iBlk)%Num_Elems, Res_Tmp, iErr); CHKERRQ(iErr)
             End Do Do_iRec
             DeAllocate(Res_Tmp)
          End If
