@@ -276,7 +276,7 @@ Module m_RuptStruct
       
       Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
-      Write(F_OUT, 110) MeshTopology%Num_Elem_Blks
+      Write(F_OUT, *) MeshTopology%Num_Elem_Blks
       Do iBlk = 1, Size(MatProp)
          Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
          Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
@@ -297,7 +297,7 @@ Module m_RuptStruct
       
       Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
-      Write(F_OUT, 110) MeshTopology%Num_Elem_Blks
+      Write(F_OUT, *) MeshTopology%Num_Elem_Blks
       Do iBlk = 1, Size(MatProp)
          Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
          Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
@@ -345,7 +345,7 @@ Module m_RuptStruct
       End Do
       Close(F_IN)
       
-!120   Format(I6, 8(ES12.5,' '))   
+120   Format(I6, 8(ES12.5,' '))   
 !120   Format(*)
    End Subroutine MatProp2D_Read
    
@@ -481,7 +481,7 @@ Module m_RuptStruct
       dSchemeParam%Epsilon          = .1
       dSchemeParam%KEpsilon         = 1.0E-6
       dSchemeParam%ATNum            = 2
-      dSchemeParam%IntegOrder       = 2
+      dSchemeParam%IntegOrder       = 3
 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%DoIrrev, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)

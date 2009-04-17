@@ -593,8 +593,8 @@ Module m_MEF_Elements
          dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
          dElem%GradS_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
-         dElem%GradS_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X / 2.0_Kr
-         dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y / 2.0_Kr
+         dElem%GradS_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y / 2.0_Kr
+         dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X / 2.0_Kr
          dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
       Call ElementDestroy(Elem_Scal)
