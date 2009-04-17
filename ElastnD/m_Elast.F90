@@ -397,6 +397,7 @@ Contains
       End Do DoiGauss
       DeAllocate(BCFlag)
       DeAllocate(F)
+      DeAllocate(Theta)
 !      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSAssemblyLocal
    
