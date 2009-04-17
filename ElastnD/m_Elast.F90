@@ -173,8 +173,8 @@ Contains
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
 
       NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
+      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
+      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
 
       !!! Create the Scatter, Vec, Mat, KSP, PC
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
@@ -551,13 +551,13 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Write(*,*) 'Wrote Result'
-!!!      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
-!!!      Write(*,*) 'Wrote Strains'
-!!!      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
-!!!      Write(*,*) 'Wrote Stresses'
+      Write(*,*) 'Wrote Result at offset ', AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
+      Write(*,*) 'Wrote Strains at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
+      Write(*,*) 'Wrote Stresses at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%BulkEnergy)
-      Write(*,*) 'Wrote Energy'
+      Write(*,*) 'Wrote Energy at offset ', AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset
    End Subroutine Save
    
    Subroutine ElastFinalize(AppCtx)
