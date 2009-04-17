@@ -112,13 +112,13 @@ Module m_RuptStruct
    Type MatProp2D_Type
       PetscReal                                    :: Toughness
       Type(Tens4OS2D)                              :: Hookes_Law
-      PetscReal                                    :: Therm_Exp      
+      Type(MatS2D)                                 :: Therm_Exp      
    End Type MatProp2D_Type
    
    Type MatProp3D_Type
       PetscReal                                    :: Toughness
       Type(Tens4OS3D)                              :: Hookes_Law
-      PetscReal                                    :: Therm_Exp      
+      Type(MatS3D)                                 :: Therm_Exp      
    End Type MatProp3D_Type
    
    Type RuptSchemeParam_Type
@@ -284,7 +284,7 @@ Module m_RuptStruct
       Close(F_OUT)
       
 110   Format(I6,'      Toughness    A1111        A1112        A1122        A1212        A1222        A2222        Alpha')
-120   Format(I6, '      ', 8(ES12.5,' '))   
+120   Format(I6, '      ', 10(ES12.5,' '))   
    End Subroutine MatProp2D_Write
  
    Subroutine MatProp3D_Write(MeshTopology, MatProp, filename)
@@ -305,7 +305,7 @@ Module m_RuptStruct
       Close(F_OUT)
       
 110   Format(I6,'      Toughness    A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133      A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333       Alpha')
-120   Format(I6, '      ', 23(ES12.5,' '))
+120   Format(I6, '      ', 31(ES12.5,' '))
    End Subroutine MatProp3D_Write
  
  
@@ -318,7 +318,8 @@ Module m_RuptStruct
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
       Type(Tens4OS2D)                              :: Hookes_Law
-      PetscReal                                    :: Toughness, Therm_Exp
+      PetscReal                                    :: Toughness
+      Type(MatS2D)                                 :: Therm_Exp
    
       Open(File = filename, Unit = F_IN, Status = 'Unknown')
       Rewind(F_IN)
@@ -358,7 +359,8 @@ Module m_RuptStruct
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
       Type(Tens4OS3D)                              :: Hookes_Law
-      PetscReal                                    :: Toughness, Therm_Exp
+      PetscReal                                    :: Toughness
+      Type(MatS3D)                                 :: Therm_Exp
    
       Open(File = filename, Unit = F_IN, Status = 'Unknown')
       Rewind(F_IN)
