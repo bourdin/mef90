@@ -330,6 +330,7 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call RHSAssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
+            Write(MEF90_MyRank +100, *) iE, RHSElem
             Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(RHSElem)
@@ -363,9 +364,9 @@ Contains
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscReal                                    :: Theta_Elem
 #if defined PB_2D
-      Type (Vect2D)             				   :: TmpRHS
+      Type (Vect2D)             				         :: TmpRHS
 #elif defined PB_3D  
-      Type (Vect3D)             				   :: TmpRHS    
+      Type (Vect3D)             				         :: TmpRHS    
 #endif
 
       RHSElem  = 0.0_Kr
@@ -462,6 +463,9 @@ Contains
                MyBulkEnergy			  = MyBulkEnergy + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr - (F_Elem .DotP. U_Elem))
 			   Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
+            DeAllocate(F)
+            DeAllocate(U)
+            DeAllocate(Theta)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       Call PetscGlobalSum(MyBulkEnergy, AppCtx%BulkEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
@@ -536,6 +540,8 @@ Contains
             ! Update the Sections with the local values
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%StressU, iE-1, Stress_Ptr, iErr)
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%StrainU, iE-1, Strain_Ptr, iErr)
+            DeAllocate(U)
+            DeAllocate(Theta)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       DeAllocate(Stress_Ptr)
