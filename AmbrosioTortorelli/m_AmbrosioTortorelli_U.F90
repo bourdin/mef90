@@ -25,7 +25,7 @@ Module m_AmbrosioTortorelli_U3D
 
    Implicit NONE   
    
-
+Contains
 
    !----------------------------------------------------------------------------------------!      
    ! MatAssembly (CM)  
@@ -42,24 +42,17 @@ Module m_AmbrosioTortorelli_U3D
          Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            !--------------------------------------------------------
+
             Call MatAssembly_U_Local(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, MatElem)
-            !--------------------------------------------------------
             Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+
          End Do Do_Elem_iE
          DeAllocate(MatElem)
       End Do Do_Elem_iBlk
       Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine MatAssembly
-
-Subroutine MatAssemblyU(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
-      
-      PetscInt                                     :: iBlk, iE, iELoc, iErr
-      PetscReal, Dimension(:,:), Pointer           :: MatElem
-End Subroutine MatAssembly
+   End Subroutine MatAssembly_U
 
 !----------------------------------------------------------------------------------------!      
 ! MatAssembly_U_Local (CM)
@@ -105,7 +98,7 @@ End Subroutine MatAssembly
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoFVect
-                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
+                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2+AppCtx%RuptSchemeParam%KEpsilon)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
 !			      Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                   !!! Is that right?
                End Do
@@ -249,7 +242,7 @@ End Subroutine MatAssembly
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n'c)
+100 Format('KSP for U converged in ', I5, ' iterations. KSPConvergedReason for U is ', I2, '\n'c)
    End Subroutine Solve_U
       
 #if defined PB_2D

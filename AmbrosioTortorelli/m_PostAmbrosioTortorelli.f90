@@ -91,11 +91,11 @@
 #endif
       PetscReal                                    :: Theta_Elem
       PetscReal                                    :: Vol
-      PetscInt                                     :: NumDoF, NumGauss
+      PetscInt                                     :: NumDoFVect, NumDofScal, NumGauss
       PetscReal, Dimension(:), Pointer             :: U, Theta
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
-      PetscReal, Dimension(:), Pointer            :: Stress_Ptr, Strain_Ptr
+      PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
 	  	 
 	  	  
 !      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
@@ -117,11 +117,13 @@
             Theta_Elem            = 0.0_Kr
             Effective_Strain_Elem = 0.0_Kr
             Vol  = 0.0_Kr
-            Do iGauss = 1, NumGauss
-               Do iDoF = 1, NumDoF
-                  Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
-                  Theta_Elem  = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss)* Theta(iDoF)
+            Do iDof = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
                   Vol = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
+               End Do
+            Do iGauss = 1, NumGauss
+               Do iDoF = 1, NumDoFVect
+                  Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
 !				  Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
                End Do
             End Do
