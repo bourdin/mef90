@@ -212,9 +212,9 @@ Contains
       !!! Create the Section for the BC
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
 #if defined PB_2D
-      Call EXOProperty_InitBCFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCFlagU2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #elif defined PB_3D
-      Call EXOProperty_InitBCFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCFlagU3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #endif
 
       AppCtx%TimeStep = 1
@@ -555,7 +555,7 @@ Contains
             Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%XY /)
             Strain_Ptr = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%XY /)
 #elif defined PB_3D
-            Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%ZZ, Stress_Elem%YZ, Stress_Elem%XZ, Stress_Elem%XY /)
+            Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%ZZ, Stress_Elem%YZ, Stress_Elem%XZ, Stress_Elem%XY  /)
             Strain_Ptr = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%ZZ, Strain_Elem%YZ, Strain_Elem%XZ, Strain_Elem%XY  /)
 #endif
             ! Update the Sections with the local values
@@ -594,9 +594,10 @@ Contains
       Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%Theta, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%STressU, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(AppCtx%StressU, iErr); CHKERRQ(iErr)
       
       Call VecScatterDestroy(AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
+      Call VecScatterDestroy(AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
       Call VecDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
