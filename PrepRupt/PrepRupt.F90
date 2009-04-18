@@ -318,7 +318,7 @@ Program PrepRupt
          Allocate(Thetaelem(Num_DoF))
          
          !!! Update U 
-         If ( (MyEXO%EBProperty(Rupt_EBProp_BCTypeX)%Value(iloc) /= 0 ) .OR. (MyEXO%EBProperty(Rupt_EBProp_BCTypeY)%Value(iloc) /= 0 ) .OR. (MyEXO%EBProperty(Rupt_EBProp_BCTypeZ)%Value(iloc) /= 0 ) ) Then
+         If ( (MyEXO%EBProperty(Rupt_EBProp_BCTypeX)%Value(i) /= 0 ) .OR. (MyEXO%EBProperty(Rupt_EBProp_BCTypeY)%Value(i) /= 0 ) .OR. (MyEXO%EBProperty(Rupt_EBProp_BCTypeZ)%Value(i) /= 0 ) ) Then
             Do k = 0, Num_DoF-1
                Uelem(3*k+1) = U(i)%X
                Uelem(3*k+2) = U(i)%Y
@@ -330,7 +330,7 @@ Program PrepRupt
          End If
          
          !!! Update F
-         If ( MyEXO%EBProperty(Rupt_EBProp_HasBForce)%Value(iloc) /= 0 ) Then
+         If ( MyEXO%EBProperty(Rupt_EBProp_HasBForce)%Value(i) /= 0 ) Then
             Do k = 0, Num_DoF-1
                Felem(3*k+1) = F(i)%X
                Felem(3*k+2) = F(i)%Y

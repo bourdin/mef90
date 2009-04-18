@@ -144,12 +144,12 @@ Contains
    
       !!! Initializes the values and names of the properties and variables
       Call RuptEXOVariable_Init(AppCtx%MyEXO)
-!      Call RuptEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology)   
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose) Then
          Write(IOBuffer, *) "Done with RuptEXOVariable_Init and RuptEXOProperty_Read\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
+         Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
+         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
       
       !!! Read Mat Properties from the CST file
@@ -157,7 +157,7 @@ Contains
       If (AppCtx%AppParam%verbose) Then
          Write(IOBuffer, *) "Done with MatProp_Read\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
+!         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
 
       !!! Set the element type for each block so that we can call ElementInit
@@ -165,10 +165,20 @@ Contains
          AppCtx%MeshTopology%elem_blk(i)%Elem_Type = AppCtx%MyEXO%EBProperty( Rupt_EBProp_Elem_Type )%Value( AppCtx%MeshTopology%elem_blk(i)%ID )
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(i), AppCtx%MeshTopology%num_dim)
       End Do
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) "Done with Init_Elem_Blk_Type\n"c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      
+      
       Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemVect, AppCtx%RuptSchemeParam%IntegOrder)
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) "Done with ElementInit Vect\n"c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
       Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemScal, AppCtx%RuptSchemeParam%IntegOrder)
       If (AppCtx%AppParam%verbose) Then
-         Write(IOBuffer, *) "Done with ElementInit\n"c
+         Write(IOBuffer, *) "Done with ElementInit Scal\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
@@ -335,7 +345,6 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call RHSAssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
-            Write(MEF90_MyRank +100, *) iE, RHSElem
             Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(RHSElem)
@@ -364,7 +373,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: F
       PetscReal, Dimension(:), Pointer             :: Theta
       PetscInt                                     :: iErr
-      PetscInt                                     :: NumDoF, NumGauss
+      PetscInt                                     :: NumDoFScal, NumDoFVect, NumGauss
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscReal                                    :: Theta_Elem
@@ -374,24 +383,26 @@ Contains
       Type (Vect3D)             				         :: TmpRHS    
 #endif
 
-      RHSElem  = 0.0_Kr
-      NumDoF   = Size(AppCtx%ElemVect(iE)%BF,1)
-      NumGauss = Size(AppCtx%ElemVect(iE)%BF,2)
-      Allocate(BCFlag(NumDoF))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
-      Allocate(F(NumDoF))
-      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
-      Allocate(Theta(NumDoF))
-      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoF, Theta, iErr); CHKERRQ(ierr)
-      DoiGauss: Do iGauss = 1, NumGauss
+      RHSElem    = 0.0_Kr
+      NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
+      NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
+      NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
+      Allocate(BCFlag(NumDoFVect))
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
+      Allocate(F(NumDoFVect))
+      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoFVect, F, iErr); CHKERRQ(ierr)
+      Allocate(Theta(NumDoFScal))
+      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+      Do_iGauss: Do iGauss = 1, NumGauss
          TmpRHS = 0.0_Kr
          Theta_Elem = 0.0_Kr
-         Do iDoF2 = 1, NumDoF
+         Do iDoF2 = 1, NumDoFVect
             TmpRHS = TmpRHS + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F(iDoF2)
-            Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)* Theta(iDoF2)
-!            Call PetscLogFlops(2 , iErr);CHKERRQ(iErr)
          End Do
-         Do iDoF1 = 1, NumDoF
+         Do iDoF2 = 1, NumDoFScal
+            Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)* Theta(iDoF2)
+         End Do
+         Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
                ! RHS terms due to forces
                RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. TmpRHS ) 
@@ -400,7 +411,7 @@ Contains
 !               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
             End If
          End Do
-      End Do DoiGauss
+      End Do Do_iGauss
       DeAllocate(BCFlag)
       DeAllocate(F)
       DeAllocate(Theta)
@@ -415,20 +426,20 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
-      PetscInt                                     :: NumDoF, NumGauss
+      PetscInt                                     :: NumDoFVect, NumDoFScal, NumGauss
       PetscReal, Dimension(:), Pointer             :: F, U, Theta
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
       PetscReal                                    :: Theta_Elem
 #if defined PB_2D
-	  Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(MatS2D)								   :: Effective_Strain_Elem
-	  Type(Vect2D)								   :: F_Elem, U_Elem  
+	  Type(MatS2D)                                  :: Strain_Elem, Stress_Elem 
+	  Type(MatS2D)								            :: Effective_Strain_Elem
+	  Type(Vect2D)								            :: F_Elem, U_Elem  
 
 #elif defined PB_3D
-	  Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(MatS3D)					               :: Effective_Strain_Elem
-	  Type(Vect3D)						           :: F_Elem, U_Elem  
+	  Type(MatS3D)                                  :: Strain_Elem, Stress_Elem 
+	  Type(MatS3D)					                     :: Effective_Strain_Elem
+	  Type(Vect3D)						                  :: F_Elem, U_Elem  
 #endif
       PetscReal                                    :: MyBulkEnergy
 	  
@@ -441,14 +452,15 @@ Contains
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            NumDoF   = Size(AppCtx%ElemVect(iE)%BF,1)
-            NumGauss = Size(AppCtx%ElemVect(iE)%BF,2)
-            Allocate(F(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
-            Allocate(U(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
-            Allocate(Theta(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoF, Theta, iErr); CHKERRQ(ierr)
+            NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
+            NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
+            NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
+            Allocate(F(NumDoFVect))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoFVect, F, iErr); CHKERRQ(ierr)
+            Allocate(U(NumDoFVect))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
+            Allocate(Theta(NumDoFScal))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
             Do iGauss = 1, NumGauss
                Strain_Elem           = 0.0_Kr
                Stress_Elem           = 0.0_Kr
@@ -456,15 +468,16 @@ Contains
                Effective_Strain_Elem = 0.0_Kr
                F_Elem                = 0.0_Kr
                U_Elem                = 0.0_Kr
-               Do iDoF = 1, NumDoF
-                  Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
+               Do iDof = 1, NumDoFScal
                   Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
+               End Do
+               Do iDoF = 1, NumDoFVect
+                  Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
                   F_Elem     = F_Elem + F(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss) 
                   U_Elem     = U_Elem + U(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss) 
-                  Call PetscLogFlops(4*AppCtx%MeshTopology%Num_Dim+4, iErr)
                End Do			   
                Effective_Strain_Elem  = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp   ;
-               Stress_Elem			  = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
+               Stress_Elem			     = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
                MyBulkEnergy			  = MyBulkEnergy + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr - (F_Elem .DotP. U_Elem))
 			   Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
@@ -564,12 +577,12 @@ Contains
 
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
       Write(*,*) 'Wrote Result at offset ', AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
-      Write(*,*) 'Wrote Strains at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
-      Write(*,*) 'Wrote Stresses at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%BulkEnergy)
-      Write(*,*) 'Wrote Energy at offset ', AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset
+!!!      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
+!!!      Write(*,*) 'Wrote Strains at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset
+!!!      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
+!!!      Write(*,*) 'Wrote Stresses at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset
+!!!      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%BulkEnergy)
+!!!      Write(*,*) 'Wrote Energy at offset ', AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset
    End Subroutine Save
    
    Subroutine ElastFinalize(AppCtx)

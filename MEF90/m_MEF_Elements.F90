@@ -208,8 +208,8 @@ Module m_MEF_Elements
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MeshRestrictClosure(dMeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
-             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
-             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+            !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
