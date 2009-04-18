@@ -317,13 +317,15 @@ Module m_MEF_EXO
          dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
          !!! EB Properties
          Call EXINQ(dEXO%exoid, EXNEBP, NumProp, rDummy, cDummy, iErr)
-         Allocate(PropName (NumProp))
+         Allocate(PropName(NumProp))
          Call EXGPN(dEXO%exoid, EXEBLK, PropName, iErr)
+         !!!! id is always property 1, but we don.t want to count it
          dEXO%Num_EBProperties = max(0,NumProp-1)
          Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
          Call EXINQ(dEXO%exoid, EXELBL, NumVal, rDummy, cDummy, iErr)
          Do i = 1, dEXO%Num_EBProperties
             Allocate(dEXO%EBProperty(i)%Value(NumVal))
+            dEXO%EBProperty(i)%Value(NumVal) = -1
             Call EXGPA(dEXO%exoid, EXEBLK, PropName(i+1), dEXO%EBProperty(i)%Value, iErr)
             dEXO%EBProperty(i)%Name  = PropName(i+1)
          End Do
@@ -338,6 +340,7 @@ Module m_MEF_EXO
          Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
          Do i = 1, dEXO%Num_SSProperties
             Allocate(dEXO%SSProperty(i)%Value(NumVal))
+            dEXO%SSProperty(i)%Value(NumVal) = -1
             Call EXGPA(dEXO%exoid, EXSSET, PropName(i+1), dEXO%SSProperty(i)%Value, iErr)
             dEXO%SSProperty(i)%Name  = PropName(i+1)
          End Do
@@ -361,21 +364,24 @@ Module m_MEF_EXO
          dEXO%exoid = 0
       End If
       !!! Broadcast everything now
+      Write(MEF90_MyRank+100, *) MEF90_MyRank, 'dEXO%Num_EBProperties', dEXO%Num_EBProperties
+      Write(MEF90_MyRank+100, *) MEF90_MyRank, 'dEXO%Num_SSProperties', dEXO%Num_SSProperties
+      Write(MEF90_MyRank+100, *) MEF90_MyRank, 'dEXO%Num_NSProperties', dEXO%Num_NSProperties
       Call MPI_BCast(dEXO%Num_EBProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
       Call MPI_BCast(dEXO%Num_SSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
       Call MPI_BCast(dEXO%Num_NSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
 
-      !!! Element Blocks
-      If (MEF90_MyRank /= 0) Then
+      If (EXO_MyRank /= 0) Then
          Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
          Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
          Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
       EndIf
+      !!! Element Blocks
       Do i = 1, dEXO%Num_EBProperties
          Call MPI_BCast(dEXO%EBProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
          NumProp = Size(dEXO%EBProperty(i)%Value)
          Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-         If (MEF90_MyRank /= 0) Then
+         If (EXO_MyRank /= 0) Then
             Allocate(dEXO%EBProperty(i)%Value(NumProp))
          End If
          Call MPI_BCast(dEXO%EBProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
@@ -385,7 +391,7 @@ Module m_MEF_EXO
          Call MPI_BCast(dEXO%SSProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
          NumProp = Size(dEXO%SSProperty(i)%Value)
          Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-         If (MEF90_MyRank /= 0) Then
+         If (EXO_MyRank /= 0) Then
             Allocate(dEXO%SSProperty(i)%Value(NumProp))
          End If
          Call MPI_BCast(dEXO%SSProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
@@ -395,7 +401,7 @@ Module m_MEF_EXO
          Call MPI_BCast(dEXO%NSProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
          NumProp = Size(dEXO%NSProperty(i)%Value)
          Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-         If (MEF90_MyRank /= 0) Then
+         If (EXO_MyRank /= 0) Then
             Allocate(dEXO%NSProperty(i)%Value(NumProp))
          End If
          Call MPI_BCast(dEXO%NSProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
