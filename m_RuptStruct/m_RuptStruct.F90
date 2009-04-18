@@ -69,14 +69,14 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: Rupt_Num_CellVar      = 12
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXX = 1
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainYY = 2 
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainZZ = 3
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXY = 4
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXY = 3
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainZZ = 4
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainYZ = 5
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXZ = 6
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StressXX = 7
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StressYY = 8
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressZZ = 9
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressXY = 10
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressXY = 9
+   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressZZ = 10
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StressYZ = 11
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StressZX = 12
 

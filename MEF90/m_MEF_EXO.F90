@@ -1475,7 +1475,7 @@ Module m_MEF_EXO
                Do_iE: Do iE = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
                   Res_Tmp(iE) = dRes(iRec +  Num_Rec * (dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iE)-1))
                End Do Do_iE
-               Call EXPEV(dEXO%exoid, dTS, dIdx + iRec-1, iBlk, dMeshTopology%Elem_Blk(iBlk)%Num_Elems, Res_Tmp, iErr); CHKERRQ(iErr)
+               Call EXPEV(dEXO%exoid, dTS, dIdx + iRec-1, dMeshTopology%Elem_Blk(iBlk)%ID, dMeshTopology%Elem_Blk(iBlk)%Num_Elems, Res_Tmp, iErr); CHKERRQ(iErr)
             End Do Do_iRec
             DeAllocate(Res_Tmp)
          End If
