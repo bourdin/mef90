@@ -207,6 +207,7 @@ Contains
 
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
+      Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
 
       !!! Create the Section for the BC
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
@@ -444,8 +445,8 @@ Contains
       PetscReal                                    :: MyBulkEnergy
 	  
 
-      Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
-      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+!      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
       MyBulkEnergy = 0.0_Kr
      	   
@@ -488,8 +489,8 @@ Contains
       End Do Do_Elem_iBlk
       Call PetscGlobalSum(MyBulkEnergy, AppCtx%BulkEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
                
-      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
    
 !----------------------------------------------------------------------------------------!      
@@ -500,36 +501,37 @@ Contains
       
       PetscInt                                     :: iErr
 #if defined PB_2D
-	  Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(MatS2D)	    				           :: Effective_Strain_Elem
-	  Type(Vect2D)                                 :: F_Elem, U_Elem  
+	  Type(MatS2D)                                  :: Strain_Elem, Stress_Elem 
+	  Type(MatS2D)	    				                  :: Effective_Strain_Elem
+	  Type(Vect2D)                                  :: F_Elem, U_Elem  
 #elif defined PB_3D 
-	  Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(MatS3D)		   			               :: Effective_Strain_Elem
-	  Type(Vect3D)							       :: F_Elem, U_Elem  
+	  Type(MatS3D)                                  :: Strain_Elem, Stress_Elem 
+	  Type(MatS3D)		   			                  :: Effective_Strain_Elem
+	  Type(Vect3D)							               :: F_Elem, U_Elem  
 #endif
       PetscReal                                    :: Theta_Elem
       PetscReal                                    :: Vol
-      PetscInt                                     :: NumDoF, NumGauss
+      PetscInt                                     :: NumDoFScal, NumDoFVect, NumGauss
       PetscReal, Dimension(:), Pointer             :: U, Theta
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
-      PetscReal, Dimension(:), Pointer            :: Stress_Ptr, Strain_Ptr
+      PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
 	  	 
 	  	  
 !      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
-      Allocate(Stress_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
-      Allocate(Strain_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
+      Allocate(Stress_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim+1 ) / 2))
+      Allocate(Strain_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim+1 ) / 2))
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            NumDoF   = Size(AppCtx%ElemVect(iE)%BF,1)
-            NumGauss = Size(AppCtx%ElemVect(iE)%BF,2)
-            Allocate(U(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
-            Allocate(Theta(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoF, Theta, iErr); CHKERRQ(ierr)
+            NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
+            NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
+            NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
+            Allocate(U(NumDoFVect))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
+            Allocate(Theta(NumDoFScal))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
 
             Strain_Elem           = 0.0_Kr
             Stress_Elem           = 0.0_Kr
@@ -537,17 +539,18 @@ Contains
             Effective_Strain_Elem = 0.0_Kr
             Vol  = 0.0_Kr
             Do iGauss = 1, NumGauss
-               Do iDoF = 1, NumDoF
+               Do iDoF = 1, NumDoFVect
                   Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
+               End Do
+               Do iDoF = 1, NumDoFScal
                   Theta_Elem  = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss)* Theta(iDoF)
                   Vol = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-!				  Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
                End Do
             End Do
             Strain_Elem = Strain_Elem / Vol
-            Effective_Strain_Elem  = Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp)   ;
+            Effective_Strain_Elem  = Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp) 
             Stress_Elem = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
-            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
+!            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
 #if defined PB_2D
             Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%XY /)
             Strain_Ptr = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%XY /)
@@ -576,13 +579,9 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Write(*,*) 'Wrote Result at offset ', AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset
-!!!      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
-!!!      Write(*,*) 'Wrote Strains at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset
-!!!      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
-!!!      Write(*,*) 'Wrote Stresses at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset
-!!!      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%BulkEnergy)
-!!!      Write(*,*) 'Wrote Energy at offset ', AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_BulkEnergy)%Offset, AppCtx%TimeStep, AppCtx%BulkEnergy)
    End Subroutine Save
    
    Subroutine ElastFinalize(AppCtx)

@@ -35,7 +35,7 @@
 0                                  theta
 1                                  k
 1                                  E
-0                                  nu
+.3                                  nu
 0                                  alpha
 
 1                                  Ux
@@ -44,11 +44,11 @@
 0                                  theta
 1                                  k
 1                                  E
-0                                  nu
+.3                                  nu
 0                                  alpha
 
 0                                  theta
 1                                  k
 1                                  E
-0                                  nu
+.3                                  nu
 0                                  alpha
