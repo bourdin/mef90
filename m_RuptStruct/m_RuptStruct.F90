@@ -24,8 +24,9 @@ Module m_RuptStruct
    Public :: MatProp2D_Type, MatProp3D_Type
    Public :: MatProp_Write, MatProp_Read
    
-   Public :: EXOProperty_InitBCFlag2DA
-   Public :: EXOProperty_InitBCFlag2D
+   Public :: EXOProperty_InitBCFlagU2DA
+   Public :: EXOProperty_InitBCFlagU2D
+   Public :: EXOProperty_InitBCFlagU3D
    
    Public :: RuptSchemeParam_Type
 
@@ -151,7 +152,7 @@ Module m_RuptStruct
    End Type RuptSchemeParam_Type
    
  Contains
-   Subroutine EXOProperty_InitBCFlag2DA(dEXO, dMeshTopology, dBCFlag)
+   Subroutine EXOProperty_InitBCFlagU2DA(dEXO, dMeshTopology, dBCFlag)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(SectionInt)                             :: dBCFlag 
@@ -184,9 +185,9 @@ Module m_RuptStruct
          DeAllocate(Flag)
       End Do
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
-   End Subroutine EXOProperty_InitBCFlag2DA
+   End Subroutine EXOProperty_InitBCFlagU2DA
    
-   Subroutine EXOProperty_InitBCFlag2D(dEXO, dMeshTopology, dBCFlag)
+   Subroutine EXOProperty_InitBCFlagU2D(dEXO, dMeshTopology, dBCFlag)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(SectionInt)                             :: dBCFlag 
@@ -223,9 +224,9 @@ Module m_RuptStruct
          DeAllocate(Flag)
       End Do
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
-   End Subroutine EXOProperty_InitBCFlag2D
+   End Subroutine EXOProperty_InitBCFlagU2D
    
-   Subroutine EXOProperty_InitBCFlag3D(dEXO, dMeshTopology, dBCFlag)
+   Subroutine EXOProperty_InitBCFlagU3D(dEXO, dMeshTopology, dBCFlag)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(SectionInt)                             :: dBCFlag 
@@ -264,7 +265,7 @@ Module m_RuptStruct
          DeAllocate(Flag)
       End Do
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
-   End Subroutine EXOProperty_InitBCFlag3D
+   End Subroutine EXOProperty_InitBCFlagU3D
 
    Subroutine MatProp2D_Write(MeshTopology, MatProp, filename)
       Type(MeshTopology_Type)                      :: MeshTopology
@@ -304,7 +305,7 @@ Module m_RuptStruct
       Close(F_OUT)
       
 110   Format(I6,'      Toughness    A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133      A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333       Alpha')
-120   Format(I6, '      ', 31(ES12.5,' '))
+120   Format(I6, '      ', 28(ES12.5,' '))
    End Subroutine MatProp3D_Write
  
  
@@ -379,14 +380,14 @@ Module m_RuptStruct
       Allocate(MatProp(IdxMin:IdxMax))
       Rewind(F_IN)
       Do iBlk = 1, NumBlks
-         Read(F_IN, 120) Idx, Toughness, Hookes_Law, Therm_exp
+         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp
       End Do
       Close(F_IN)
       
-120   Format(I6, 23(ES12.5,' '))
+120   Format(I6, 28(ES12.5,' '))
    End Subroutine MatProp3D_Read
 
    Subroutine RuptSchemeParam_View(dSchemeParam, viewer)
