@@ -1,54 +1,36 @@
 
-1                                  brittle
-1                                  domain
-1                                  bc x
-1                                  bc y
-1                                  bc z
-0                                  force
-1                                  elem type
+1                                        Brittle?
+0                                        Force?
+1                                        Element type
 
-1                                  brittle
-1                                  domain
-1                                  bc x
-1                                  bc y
-1                                  bc z
-0                                  force
-1                                  elem type
+1                                        BCUx
+1                                        BCUy
+1                                        BCUz
+0                                        BCV
+0                                        Force?
 
-1                                  brittle
-1                                  domain
-0                                  bc x
-0                                  bc y
-0                                  bc z
-0                                  force
-1                                  emen type
+1                                        BCUx
+1                                        BCUy
+1                                        BCUz
+0                                        BCV
+0                                        Force
 
 
-1                                  testcase
-0                                  tmin
-1                                  tmax
-1                                  numsteps
+1                                        Problem
+0.                                       TMin
+1.                                       TMax
+1                                        Num STeps
 
-0                                  Ux
-0                                  Uy
-0                                  Uz
-0                                  theta
-1                                  k
-1                                  E
-.3                                  nu
-0                                  alpha
+0.                                       Theta
+1.                                       Toughness
+1.                                       E
+.3                                       nu
+0.                                       alpha
 
-1                                  Ux
-0                                  Uy
-0                                  Uz
-0                                  theta
-1                                  k
-1                                  E
-.3                                  nu
-0                                  alpha
+0.                                       Ux
+0.                                       Uy
+0.                                       Uz
 
-0                                  theta
-1                                  k
-1                                  E
-.3                                  nu
-0                                  alpha
+1.                                       Ux
+0.                                       Uy
+0.                                       Uz

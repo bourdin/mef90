@@ -42,7 +42,9 @@ Program  Elast
    
    Call MatAssembly(AppCtx)
    
-!   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   If (AppCtx%AppParam%verbose) Then
+      Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   End If
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'c
@@ -50,7 +52,10 @@ Program  Elast
    End If
    
    Call RHSAssembly(AppCtx)
-!   Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
+   If (AppCtx%AppParam%verbose) Then
+      Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   End If
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Calling KSPSolve\n'c

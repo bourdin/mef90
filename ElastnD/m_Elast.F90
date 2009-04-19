@@ -212,17 +212,18 @@ Contains
       !!! Create the Section for the BC
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
 #if defined PB_2D
-      Call EXOProperty_InitBCFlagU2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #elif defined PB_3D
-      Call EXOProperty_InitBCFlagU3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCUFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #endif
+!      Call SectionIntView(AppCtx%BCFlagU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
       AppCtx%TimeStep = 1
       !!! Read U, F, and Temperature
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
-      Call SectionRealView(AppCtx%U, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+!      Call SectionRealView(AppCtx%U, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End Subroutine ElastInit
 !----------------------------------------------------------------------------------------!      
 ! Solve (CM)   
@@ -266,11 +267,19 @@ Contains
       
       PetscInt                                     :: iBlk, iE, iELoc, iErr
       PetscReal, Dimension(:,:), Pointer           :: MatElem
+      PetscInt, Dimension(:), Pointer              :: BCFlag
+      PetscInt                                     :: iDoF, i
       
 !      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
+
+      Call MatZeroEntries(AppCtx%KU, iErr); CHKERRQ(iErr)
       
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
+         Write(MEF90_MyRank+100, *) 'iBlk: ', iBlk, AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+         Write(MEF90_MyRank+100, *) 'Toughness:  ', AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Toughness
+         Write(MEF90_MyRank+100, *) 'Hookes_Law: ', AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law
+         Write(MEF90_MyRank+100, *) 'Therm_Exp:  ', AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Therm_Exp
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MatAssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, MatElem)
@@ -278,6 +287,20 @@ Contains
          End Do Do_Elem_iE
          DeAllocate(MatElem)
       End Do Do_Elem_iBlk
+
+!!!      Allocate(BCFlag(AppCtx%MeshTopology%Num_Verts * AppCtx%MeshTopology%Num_Dim))
+!!!      Allocate(MatElem(AppCtx%MeshTopology%Num_Dim,AppCtx%MeshTopology%Num_Dim))
+!!!      Do iDoF = 1, AppCtx%MeshTopology%Num_Verts
+!!!         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iDoF + AppCtx%MeshTopology%Num_Elems-1, AppCtx%MeshTopology%Num_Dim, BCFlag, iErr); CHKERRQ(ierr)
+!!!         MatElem = 0.0_Kr
+!!!         Do i = 1, AppCtx%MeshTopology%Num_Dim
+!!!            If (BCFlag(i) /= 0) Then
+!!!               MatElem(i,i) = 1.0_Kr
+!!!            End If
+!!!         End Do
+!!!         Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U, iDoF + AppCtx%MeshTopology%Num_Elems-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)         
+!!!      End Do
+      
       Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
