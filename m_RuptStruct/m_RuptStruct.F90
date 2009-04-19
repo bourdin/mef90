@@ -322,15 +322,17 @@ Module m_RuptStruct
       End Do
       Allocate(MatProp(IdxMin:IdxMax))
       Rewind(F_IN)
+      Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
          Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
+
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp
       End Do
       Close(F_IN)
       Return
-120   Format(I6, 8(ES12.5,' '))   
+!120   Format(I6, '      ', 10(ES12.5,' '))   
 !120   Format(*)
    End Subroutine MatProp2D_Read
    
@@ -363,15 +365,16 @@ Module m_RuptStruct
       End Do
       Allocate(MatProp(IdxMin:IdxMax))
       Rewind(F_IN)
+      Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
+         Read(F_IN, 220) Idx, Toughness, Hookes_Law, Therm_exp
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp
       End Do
       Close(F_IN)
       
-120   Format(I6, 28(ES12.5,' '))
+220   Format(I6, 28(ES12.5,' '))
    End Subroutine MatProp3D_Read
 
    Subroutine RuptSchemeParam_View(dSchemeParam, viewer)

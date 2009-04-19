@@ -317,8 +317,7 @@ Program PrepRupt
       Allocate(U(MeshTopology%Num_Node_Sets_Global))
 !      Allocate(F(MeshTopology%Num_Node_Sets_Global))
       Allocate(V(MeshTopology%Num_Node_Sets_Global))
-      Allocate(Uelem(3))
-      Allocate(Velem(1))
+
      !!! NS BC and Variables
       Do i = 1, MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 102) i
@@ -328,7 +327,7 @@ Program PrepRupt
          U%X = 0.0_Kr
          U%Y = 0.0_Kr
          U%Z = 0.0_Kr
-         V   = 0.0_Kr
+         V   = 1.0_Kr
          If (MyEXO%NSProperty(Rupt_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'Ux'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -388,8 +387,13 @@ Program PrepRupt
 !!!         End If
 !!!         
       End Do
+      
+      Write(IOBuffer, *) '   \n\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       !!! Initialize the Section
 !         Allocate(Felem(3))
+      Allocate(Uelem(3))
+      Allocate(Velem(3))
       Do iloc = 1, MeshTopology%Num_Node_Sets         
          i = MeshTopology%Node_Set(iloc)%ID
          !!! Update 
@@ -400,10 +404,9 @@ Program PrepRupt
 !         Felem(1) = F%X
 !         Felem(2) = F%Y
 !         Felem(3) = F%Z
-
-         Do j = 1, MeshTopology%Node_Set(i)%Num_Nodes
-            Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(i)%Node_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
-            Call MeshUpdateClosure(MeshTopology%Mesh, VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(i)%Node_ID(j)-1, Velem, iErr); CHKERRQ(iErr)            
+         Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+            Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
+            Call MeshUpdateClosure(MeshTopology%Mesh, VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, iErr); CHKERRQ(iErr)            
             !!! We will need to do a restrict then update here!
          End Do
       End Do
@@ -427,13 +430,14 @@ Program PrepRupt
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, step, ThetaSec) 
       Call Write_EXO_Result_Global(MyEXO, MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, step, T(step))
       
-      Select Case(MeshTopology%Num_Dim)
-      Case (2)
-         Call MatProp_Write(MeshTopology, MatProp2D, Trim(prefix)//'.CST')
-      Case(3)
-         Call MatProp_Write(MeshTopology, MatProp3D, Trim(prefix)//'.CST')
-      End Select
-
+      If (MEF90_MyRank == 0) Then
+         Select Case(MeshTopology%Num_Dim)
+         Case (2)
+            Call MatProp_Write(MeshTopology, MatProp2D, Trim(prefix)//'.CST')
+         Case(3)
+            Call MatProp_Write(MeshTopology, MatProp3D, Trim(prefix)//'.CST')
+         End Select
+      End If
    Case (2)
 
    Case Default
