@@ -1,4 +1,30 @@
+#if defined PB_2D
+module m_PostAmbrosioTortorelli2D
+#elif defined PB_3D
+Module m_PostAmbrosioTortorelli3D
+#endif
 
+#include "finclude/petscdef.h"
+#include "finclude/petscmeshdef.h"
+#include "finclude/petscviewerdef.h"
+
+#if defined PB_2D
+   Use m_AmbrosioTortorelli_Types2D
+   Use m_AmbrosioTortorelli_U2D
+   Use m_AmbrosioTortorelli_V2D
+#elif defined PB_3D
+   Use m_AmbrosioTortorelli_Types3D   
+   Use m_AmbrosioTortorelli_U3D
+   Use m_AmbrosioTortorelli_V3D
+#endif   
+   Use m_MEF90
+   Use m_RuptStruct
+   Use petsc
+   Use petscmesh
+
+   Implicit NONE   
+   
+Contains
 !----------------------------------------------------------------------------------------!      
 ! ComputeEnergy (CM)  
 !----------------------------------------------------------------------------------------!      
@@ -13,23 +39,23 @@
       PetscInt                                     :: iDoF, iGauss
       PetscReal                                    :: Theta_Elem
 #if defined PB_2D
-	  Type(MatS2D)                                  :: Strain_Elem, Stress_Elem 
-	  Type(MatS2D)								            :: Effective_Strain_Elem
-	  Type(Vect2D)								            :: F_Elem, U_Elem  
+     Type(MatS2D)                                  :: Strain_Elem, Stress_Elem 
+     Type(MatS2D)                                  :: Effective_Strain_Elem
+     Type(Vect2D)                                  :: F_Elem, U_Elem  
 
 #elif defined PB_3D
-	  Type(MatS3D)                                  :: Strain_Elem, Stress_Elem 
-	  Type(MatS3D)					                     :: Effective_Strain_Elem
-	  Type(Vect3D)						                  :: F_Elem, U_Elem  
+     Type(MatS3D)                                  :: Strain_Elem, Stress_Elem 
+     Type(MatS3D)                                  :: Effective_Strain_Elem
+     Type(Vect3D)                                  :: F_Elem, U_Elem  
 #endif
       PetscReal                                    :: MyBulkEnergy
-	  
+     
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
       MyBulkEnergy = 0.0_Kr
-     	   
+         
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -56,11 +82,11 @@
                   Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
                   F_Elem     = F_Elem + F(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss) 
                   U_Elem     = U_Elem + U(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss) 
-               End Do			   
+               End Do            
                Effective_Strain_Elem  = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp   ;
-               Stress_Elem			     = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
-               MyBulkEnergy			  = MyBulkEnergy + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr - (F_Elem .DotP. U_Elem))
-			   Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
+               Stress_Elem            = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
+               MyBulkEnergy           = MyBulkEnergy + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr - (F_Elem .DotP. U_Elem))
+            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
             DeAllocate(F)
             DeAllocate(U)
@@ -77,17 +103,17 @@
 ! ComputeStrainStress (CM)  
 !----------------------------------------------------------------------------------------!      
    Subroutine ComputeStrainStress(AppCtx)
-     Type(AppCtx_Type)                             :: AppCtx
+      Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
 #if defined PB_2D
-	  Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(MatS2D)	    				           :: Effective_Strain_Elem
-	  Type(Vect2D)                                 :: F_Elem, U_Elem  
+      Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
+      Type(MatS2D)                                 :: Effective_Strain_Elem
+      Type(Vect2D)                                 :: F_Elem, U_Elem  
 #elif defined PB_3D 
-	  Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(MatS3D)		   			               :: Effective_Strain_Elem
-	  Type(Vect3D)							       :: F_Elem, U_Elem  
+      Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
+      Type(MatS3D)                                 :: Effective_Strain_Elem
+      Type(Vect3D)                                 :: F_Elem, U_Elem  
 #endif
       PetscReal                                    :: Theta_Elem
       PetscReal                                    :: Vol
@@ -96,8 +122,8 @@
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
-	  	 
-	  	  
+       
+        
 !      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Allocate(Stress_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
@@ -105,12 +131,13 @@
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            NumDoF   = Size(AppCtx%ElemVect(iE)%BF,1)
-            NumGauss = Size(AppCtx%ElemVect(iE)%BF,2)
-            Allocate(U(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
-            Allocate(Theta(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoF, Theta, iErr); CHKERRQ(ierr)
+            NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
+            NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
+            NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
+            Allocate(U(NumDoFVect))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
+            Allocate(Theta(NumDoFScal))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
 
             Strain_Elem           = 0.0_Kr
             Stress_Elem           = 0.0_Kr
@@ -124,7 +151,7 @@
             Do iGauss = 1, NumGauss
                Do iDoF = 1, NumDoFVect
                   Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
-!				  Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
+!             Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
                End Do
             End Do
             Strain_Elem = Strain_Elem / Vol
@@ -154,3 +181,9 @@
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeStrainStress
 !----------------------------------------------------------------------------------------!
+
+#if defined PB_2D
+End Module m_PostAmbrosioTortorelli2D
+#elif defined PB_3D
+End Module m_PostAmbrosioTortorelli3D
+#endif

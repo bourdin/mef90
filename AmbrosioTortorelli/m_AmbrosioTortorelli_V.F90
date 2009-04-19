@@ -1,7 +1,7 @@
 #if defined PB_2D
-Module m_AmbrosioTortorelli_U2D
+Module m_AmbrosioTortorelli_V2D
 #elif defined PB_3D
-Module m_AmbrosioTortorelli_U3D
+Module m_AmbrosioTortorelli_V3D
 #endif
 
 #include "finclude/petscdef.h"
@@ -15,7 +15,7 @@ Module m_AmbrosioTortorelli_U3D
    Use m_AmbrosioTortorelli_Types2D
 #elif defined PB_3D
    Use m_AmbrosioTortorelli_Types3D
-#endif   Use m_AmbrosioTortorelli_Types
+#endif   
    Use m_MEF90
    Use m_RuptStruct
    Use petsc
@@ -75,15 +75,18 @@ End Subroutine MatAssembly_V
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       
-      PetscReal, Dimension(:), Pointer             :: U
+      PetscReal, Dimension(:), Pointer             :: U, Theta
       PetscReal                                    :: Theta_Elem, ElasEnDens_Elem
       PetscReal                                    :: C2_V, C2_GradV
-      PetscReal, Dimension(:)                      :: Strain_Elem, Effective_Strain_Elem
-      
+#if defined PB_2D
+      Type(MatS2D)                                 :: Strain_Elem, Effective_Strain_Elem
+#elif defined PB_3D
+      Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
+#endif      
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr),
 
       MatElem  = 0.0_Kr
-      NumDoFVec  = Size(AppCtx%ElemVect(iE)%BF,1)
+      NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       
@@ -93,25 +96,25 @@ End Subroutine MatAssembly_V
       Allocate(Theta(NumDoFScal))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
       Allocate(BCFlag(NumDoFScal))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
       
       Do iGauss = 1, NumGauss
       !! Calculate the strain at the gauss point
          Strain_Elem = 0.0_Kr
          Theta_Elem  = 0.0_Kr
          Do iDoF1 = 1, NumDoFVect
-                  Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1)
-!				  Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
+            Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
+!             Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
          End Do
       !! Calculate the temperature at the gauss point
          Do iDoF1 = 1, NumDoFScal
-                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss)* Theta(iDoF1)
+            Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
          End Do
       !! Calculate the Effective Strain at the gauss point
-        Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * MatProp%Therm_Exp)   
+         Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * MatProp%Therm_Exp)   
       !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
-        C2_V     = 0.5_Kr / AppCtx%RuptSchemeParam%Epsilon + (MatProp%Hookes_Law * Effective_Strain_Elem) * Effective_Strain_Elem
-        C2_GradV = 2.0_Kr * AppCtx%RuptSchemeParam%Epsilon
+         C2_V     = 0.5_Kr / AppCtx%RuptSchemeParam%Epsilon + ( (MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem )
+         C2_GradV = 2.0_Kr * AppCtx%RuptSchemeParam%Epsilon
       !! Assemble the element stiffness
          Do iDoF1 = 1, NumDoFScal
             If (BCFlag(iDoF1) == 0) Then
@@ -119,8 +122,8 @@ End Subroutine MatAssembly_V
                !! Terms in V^2
                   MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_V * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
                !! Terms in GradV^2
-                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradV * AppCtx%ElemScal(iE)%Grad_BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss)                
-!			      Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
+                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradV * (AppCtx%ElemScal(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss) )               
+!              Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                   !!! Is that right?
                End Do
             End If
@@ -153,7 +156,7 @@ End Subroutine MatAssembly_V
          Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call RHS_U_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
+            Call RHS_V_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
             Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(RHSElem)
@@ -180,13 +183,14 @@ End Subroutine MatAssembly_V
       Type(AppCtx_Type)                            :: AppCtx
       PetscReal, Dimension(:), Pointer             :: RHSElem
       PetscInt                                     :: iErr
-      PetscInt                                     :: NumDoFScal, NumGauss
+      PetscInt                                     :: NumDoFScal, NumDoFVect, NumGauss
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iGauss
       PetscReal                                    :: C1_V
 
       RHSElem    = 0.0_Kr
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
+      NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       Allocate(BCFlag(NumDoFVect))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
@@ -241,7 +245,7 @@ End Subroutine MatAssembly_V
    
    
 #if defined PB_2D
-End Module m_ m_AmbrosioTortorelli_V2D
+End Module m_AmbrosioTortorelli_V2D
 #elif defined PB_3D
-End Module m_ m_AmbrosioTortorelli_V3D
+End Module m_AmbrosioTortorelli_V3D
 #endif

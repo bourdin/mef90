@@ -36,10 +36,11 @@ Program PrepRupt
    PetscInt, Parameter                          :: NumTestCase=2
    Type(TestCase_Type), Dimension(NumTestCase)  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
-   Type(SectionReal)                            :: USec, FSec, ThetaSec
+   Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec
    Type(Vect3D), Dimension(:), Pointer          :: U, F
+   PetscReal, DImension(:), Pointer             :: V
    PetscReal, Dimension(:), Pointer             :: Theta
-   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Thetaelem
+   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
    PetscInt                                     :: NumSteps
@@ -148,6 +149,7 @@ Program PrepRupt
 !!! Initialize Sections   
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 3, USec, iErr); CHKERRQ(iErr)
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 3, FSec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, VSec, iErr); CHKERRQ(iErr)
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, ThetaSec, iErr); CHKERRQ(iErr)
    If (verbose) Then
       Write(IOBuffer, '(A)') 'Done with Initializing Sections\n'c
@@ -196,7 +198,6 @@ Program PrepRupt
       T(NumSteps) = TMax
          
      !!! Elem Blocks BC and Variables
-      Allocate(U(MeshTopology%Num_Elem_Blks_Global))
       Allocate(F(MeshTopology%Num_Elem_Blks_Global))
       Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
       Select Case (MeshTopology%Num_Dim)
@@ -216,32 +217,6 @@ Program PrepRupt
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-
-         !!! Displacement
-         If (MyEXO%EBProperty(Rupt_EBProp_BCTypeX)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'Ux'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) U(i)%X
-            End If
-            Call MPI_BCast(U(i)%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-         End If
-         If (MyEXO%EBProperty(Rupt_EBProp_BCTypeY)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'Uy'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) U(i)%Y
-            End If
-            Call MPI_BCast(U(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-         End If
-         If (MyEXO%EBProperty(Rupt_EBProp_BCTypeZ)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'Uz'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) U(i)%Z
-            End If
-            Call MPI_BCast(U(i)%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-         End If
 
          !!! Force
          If (MyEXO%EBProperty(Rupt_EBProp_HasBForce)%Value(i) /= 0 ) Then
@@ -313,21 +288,8 @@ Program PrepRupt
          i = MeshTopology%Elem_Blk(iLoc)%ID
          !!! Initialize the Section
          Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
-         Allocate(Uelem(3*Num_DoF))
          Allocate(Felem(3*Num_DoF))
          Allocate(Thetaelem(Num_DoF))
-         
-         !!! Update U 
-         If ( (MyEXO%EBProperty(Rupt_EBProp_BCTypeX)%Value(i) /= 0 ) .OR. (MyEXO%EBProperty(Rupt_EBProp_BCTypeY)%Value(i) /= 0 ) .OR. (MyEXO%EBProperty(Rupt_EBProp_BCTypeZ)%Value(i) /= 0 ) ) Then
-            Do k = 0, Num_DoF-1
-               Uelem(3*k+1) = U(i)%X
-               Uelem(3*k+2) = U(i)%Y
-               Uelem(3*k+3) = U(i)%Z
-            End Do
-            Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
-               Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
-            End Do
-         End If
          
          !!! Update F
          If ( MyEXO%EBProperty(Rupt_EBProp_HasBForce)%Value(i) /= 0 ) Then
@@ -346,45 +308,59 @@ Program PrepRupt
          Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
             Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
          End Do
-         DeAllocate(Uelem)
          DeAllocate(Felem)
          DeAllocate(Thetaelem)         
       End Do
-      DeAllocate(U)
       DeAllocate(F)
       DeAllocate(Theta)
       
-!!!     !!! NS BC and Variables
-!!!      Do i = 1, MeshTopology%Num_Node_Sets_Global
-!!!         Write(IOBuffer, 102) i
-!!!         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!
-!!!         !!! Displacement
-!!!         U     = 0.0_Kr
-!!!         If (MyEXO%NSProperty(Rupt_NSProp_BCTypeX)%Value(i) /= 0 ) Then
-!!!            Write(IOBuffer, 200) 'Ux'
-!!!            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!            If (MEF90_MyRank == 0) Then
-!!!               Read(*,*) U%X
-!!!            End If
-!!!            Call MPI_BCast(U%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-!!!         End If
-!!!         If (MyEXO%NSProperty(Rupt_NSProp_BCTypeY)%Value(i) /= 0 ) Then
-!!!            Write(IOBuffer, 200) 'Uy'
-!!!            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!            If (MEF90_MyRank == 0) Then
-!!!               Read(*,*) U%Y
-!!!            End If
-!!!            Call MPI_BCast(U%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-!!!         End If
-!!!         If (MyEXO%NSProperty(Rupt_NSProp_BCTypeZ)%Value(i) /= 0 ) Then
-!!!            Write(IOBuffer, 200) 'Uz'
-!!!            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!            If (MEF90_MyRank == 0) Then
-!!!               Read(*,*) U%Z
-!!!            End If
-!!!            Call MPI_BCast(U%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-!!!         End If
+      Allocate(U(MeshTopology%Num_Node_Sets_Global))
+!      Allocate(F(MeshTopology%Num_Node_Sets_Global))
+      Allocate(V(MeshTopology%Num_Node_Sets_Global))
+      Allocate(Uelem(3))
+      Allocate(Velem(1))
+     !!! NS BC and Variables
+      Do i = 1, MeshTopology%Num_Node_Sets_Global
+         Write(IOBuffer, 102) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+         !!! Displacement
+         U%X = 0.0_Kr
+         U%Y = 0.0_Kr
+         U%Z = 0.0_Kr
+         V   = 0.0_Kr
+         If (MyEXO%NSProperty(Rupt_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 200) 'Ux'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (MEF90_MyRank == 0) Then
+               Read(*,*) U(i)%X
+            End If
+            Call MPI_BCast(U(i)%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+         End If
+         If (MyEXO%NSProperty(Rupt_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 200) 'Uy'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (MEF90_MyRank == 0) Then
+               Read(*,*) U(i)%Y
+            End If
+            Call MPI_BCast(U(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+         End If
+         If (MyEXO%NSProperty(Rupt_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 200) 'Uz'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (MEF90_MyRank == 0) Then
+               Read(*,*) U(i)%Z
+            End If
+            Call MPI_BCast(U(i)%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+         End If
+         If (MyEXO%NSProperty(Rupt_NSProp_BCVType)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 200) 'V'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (MEF90_MyRank == 0) Then
+               Read(*,*) V(i)
+            End If
+            Call MPI_BCast(V(i), 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+         End If
 !!!
 !!!         !!! Force
 !!!         F     = 0.0_Kr
@@ -392,48 +368,54 @@ Program PrepRupt
 !!!            Write(IOBuffer, 200) 'Fx'
 !!!            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 !!!            If (MEF90_MyRank == 0) Then
-!!!               Read(*,*) F%X
+!!!               Read(*,*) F(i)%X
 !!!            End If
-!!!            Call MPI_BCast(F%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+!!!            Call MPI_BCast(F(i)%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
 !!!
 !!!            Write(IOBuffer, 200) 'Fy'
 !!!            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 !!!            If (MEF90_MyRank == 0) Then
-!!!               Read(*,*) F%Y
+!!!               Read(*,*) F(i)%Y
 !!!            End If
-!!!            Call MPI_BCast(F%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+!!!            Call MPI_BCast(F(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
 !!!
 !!!            Write(IOBuffer, 200) 'Fz'
 !!!            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 !!!            If (MEF90_MyRank == 0) Then
-!!!               Read(*,*) F%Z
+!!!               Read(*,*) F(i)%Z
 !!!            End If
-!!!            Call MPI_BCast(F%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+!!!            Call MPI_BCast(F(i)%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
 !!!         End If
 !!!         
-!!!         !!! Initialize the Section
-!!!         Allocate(Uelem(3))
-!!!         Allocate(Felem(3))
-!!!         
-!!!         !!! Update 
-!!!         Uelem(1) = U%X
-!!!         Uelem(2) = U%Y
-!!!         Uelem(3) = U%Z
-!!!         Felem(1) = F%X
-!!!         Felem(2) = F%Y
-!!!         Felem(3) = F%Z
-!!!
-!!!         Do j = 1, MeshTopology%Node_Set(i)%Num_Nodes
-!!!!            Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(i)%Node_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
-!!!!            Call MeshUpdateClosure(MeshTopology%Mesh, FSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(i)%Node_ID(j)-1, Felem, iErr); CHKERRQ(iErr)            
-!!!            !!! We will need to do a restrict then update here!
-!!!         End Do
-!!!         DeAllocate(Uelem)
-!!!         DeAllocate(Felem)
-!!!      End Do
+      End Do
+      !!! Initialize the Section
+!         Allocate(Felem(3))
+      Do iloc = 1, MeshTopology%Num_Node_Sets         
+         i = MeshTopology%Node_Set(iloc)%ID
+         !!! Update 
+         Uelem(1) = U(i)%X
+         Uelem(2) = U(i)%Y
+         Uelem(3) = U(i)%Z
+         Velem    = V(i)
+!         Felem(1) = F%X
+!         Felem(2) = F%Y
+!         Felem(3) = F%Z
 
+         Do j = 1, MeshTopology%Node_Set(i)%Num_Nodes
+            Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(i)%Node_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
+            Call MeshUpdateClosure(MeshTopology%Mesh, VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(i)%Node_ID(j)-1, Velem, iErr); CHKERRQ(iErr)            
+            !!! We will need to do a restrict then update here!
+         End Do
+      End Do
+      DeAllocate(Uelem)
+!      DeAllocate(Felem)
+      DeAllocate(Velem)
+      DeAllocate(U)
+!      DeAllocate(F)
+      DeAllocate(V)
 !      Call SectionRealComplete(USec, iErr); CHKERRQ(iErr)
 !      Call SectionRealComplete(FSec, iErr); CHKERRQ(iErr)
+!      Call SectionRealComplete(VSec, iErr); CHKERRQ(iErr)
 !      Call SectionRealComplete(ThetaSec, iErr); CHKERRQ(iErr)
       
       ! Save fields ( Sec -> Vec then VecScale then save )
@@ -441,6 +423,7 @@ Program PrepRupt
       step = 1
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, step, USec) 
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, step, FSec) 
+      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_Fracture)%Offset, step, VSec) 
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, step, ThetaSec) 
       Call Write_EXO_Result_Global(MyEXO, MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, step, T(step))
       

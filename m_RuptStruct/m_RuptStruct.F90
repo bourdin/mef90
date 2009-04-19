@@ -24,9 +24,10 @@ Module m_RuptStruct
    Public :: MatProp2D_Type, MatProp3D_Type
    Public :: MatProp_Write, MatProp_Read
    
-   Public :: EXOProperty_InitBCFlagU2DA
-   Public :: EXOProperty_InitBCFlagU2D
-   Public :: EXOProperty_InitBCFlagU3D
+   Public :: EXOProperty_InitBCVFlag
+   Public :: EXOProperty_InitBCUFlag2DA
+   Public :: EXOProperty_InitBCUFlag2D
+   Public :: EXOProperty_InitBCUFlag3D
    
    Public :: RuptSchemeParam_Type
 
@@ -88,27 +89,26 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: Rupt_GlobVar_TotalEnergy   = 4
    PetscInt, Parameter, Public                     :: Rupt_GlobVar_Load          = 5
    
-   PetscInt, Parameter, Public                     :: Rupt_Num_EBProperties  = 7
+   PetscInt, Parameter, Public                     :: Rupt_Num_EBProperties  = 3
    PetscInt, Parameter, Public                     :: Rupt_EBProp_IsBrittle  = 1
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_IsDomain   = 2
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeX    = 3
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeY    = 4
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_BCTypeZ    = 5
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_HasBForce  = 6
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_Elem_Type  = 7
+!   PetscInt, Parameter, Public                     :: Rupt_EBProp_IsDomain   = 2
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_HasBForce  = 2
+   PetscInt, Parameter, Public                     :: Rupt_EBProp_Elem_Type  = 3
    
-   PetscInt, Parameter, Public                     :: Rupt_Num_SSProperties  = 5
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCTypeX    = 1
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCTypeY    = 2
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCTypeZ    = 3
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_HasSForce  = 4
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_Elem_Type  = 5
+   PetscInt, Parameter, Public                     :: Rupt_Num_SSProperties  = 6
+   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCUTypeX   = 1
+   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCUTypeY   = 2
+   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCUTypeZ   = 3
+   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCVType    = 4
+   PetscInt, Parameter, Public                     :: Rupt_SSProp_HasSForce  = 5
+   PetscInt, Parameter, Public                     :: Rupt_SSProp_Elem_Type  = 6
 
-   PetscInt, Parameter, Public                     :: Rupt_Num_NSProperties  = 4
-   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCTypeX    = 1
-   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCTypeY    = 2
-   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCTypeZ    = 3
-   PetscInt, Parameter, Public                     :: Rupt_NSProp_HasPForce  = 4
+   PetscInt, Parameter, Public                     :: Rupt_Num_NSProperties  = 5
+   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCUTypeX   = 1
+   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCUTypeY   = 2
+   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCUTypeZ   = 3
+   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCVType    = 4
+   PetscInt, Parameter, Public                     :: Rupt_NSProp_HasPForce  = 5
    
    Type MatProp2D_Type
       PetscReal                                    :: Toughness
@@ -152,7 +152,7 @@ Module m_RuptStruct
    End Type RuptSchemeParam_Type
    
  Contains
-   Subroutine EXOProperty_InitBCFlagU2DA(dEXO, dMeshTopology, dBCFlag)
+   Subroutine EXOProperty_InitBCVFlag(dEXO, dMeshTopology, dBCFlag)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(SectionInt)                             :: dBCFlag 
@@ -161,33 +161,22 @@ Module m_RuptStruct
       PetscInt, Dimension(:), Pointer              :: Flag
       
       Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
-      !!! Element Blocks
-      Do i = 1, dMeshTopology%Num_Elem_Blks
-         NumDoF = dMeshTopology%Elem_Blk(i)%Num_DoF
-         Allocate(Flag(NumDoF))
-         Flag = dEXO%EBProperty( Rupt_EBProp_BCTypeZ )%Value( dMeshTopology%Elem_Blk(i)%ID )
-         Do j = 1, dMeshTopology%Elem_Blk(i)%Num_Elems
-            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Elem_Blk(i)%Elem_ID(j)-1, Flag, iErr); CHKERRQ(iErr)
-         End Do
-         DeAllocate(Flag)
-      End Do
-      
       !!! Side Sets
       !!! To be implemented
       
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
          Allocate(Flag(1))
-         Flag = dEXO%NSProperty( Rupt_NSProp_BCTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag = dEXO%NSProperty( Rupt_NSProp_BCVType )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
             Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
-   End Subroutine EXOProperty_InitBCFlagU2DA
+   End Subroutine EXOProperty_InitBCVFlag
    
-   Subroutine EXOProperty_InitBCFlagU2D(dEXO, dMeshTopology, dBCFlag)
+   Subroutine EXOProperty_InitBCUFlag2DA(dEXO, dMeshTopology, dBCFlag)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(SectionInt)                             :: dBCFlag 
@@ -196,37 +185,47 @@ Module m_RuptStruct
       PetscInt, Dimension(:), Pointer              :: Flag
       
       Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
-      !!! Element Blocks
-      Do i = 1, dMeshTopology%Num_Elem_Blks
-         NumDoF = dMeshTopology%Elem_Blk(i)%Num_DoF
-         Allocate(Flag(NumDoF * 2))
-         Do j = 1, NumDoF
-            Flag(2*j-1) = dEXO%EBProperty( Rupt_EBProp_BCTypeX )%Value( dMeshTopology%Elem_Blk(i)%ID )
-            Flag(2*j)   = dEXO%EBProperty( Rupt_EBProp_BCTypeY )%Value( dMeshTopology%Elem_Blk(i)%ID )
-         End Do
-         Do j = 1, dMeshTopology%Elem_Blk(i)%Num_Elems
-            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Elem_Blk(i)%Elem_ID(j)-1, Flag, iErr); CHKERRQ(iErr)
+      !!! Side Sets
+      !!! To be implemented
+      
+      !!! Node Sets
+      Do i = 1, dMeshTopology%Num_Node_Sets
+         Allocate(Flag(1))
+         Flag = dEXO%NSProperty( Rupt_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+         Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
+            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
+      Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
+   End Subroutine EXOProperty_InitBCUFlag2DA
+   
+   Subroutine EXOProperty_InitBCUFlag2D(dEXO, dMeshTopology, dBCFlag)
+      Type(EXO_Type)                               :: dEXO
+      Type(MeshTopology_Type)                      :: dMeshTopology
+      Type(SectionInt)                             :: dBCFlag 
       
+      PetscInt                                     :: iErr, NumDoF, i, j
+      PetscInt, Dimension(:), Pointer              :: Flag
+      
+      Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
       !!! Side Sets
       !!! To be implemented
       
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
          Allocate(Flag(2))
-         Flag(1) = dEXO%NSProperty( Rupt_NSProp_BCTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(2) = dEXO%NSProperty( Rupt_NSProp_BCTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(1) = dEXO%NSProperty( Rupt_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(2) = dEXO%NSProperty( Rupt_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
             Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
-   End Subroutine EXOProperty_InitBCFlagU2D
+   End Subroutine EXOProperty_InitBCUFlag2D
    
-   Subroutine EXOProperty_InitBCFlagU3D(dEXO, dMeshTopology, dBCFlag)
+   Subroutine EXOProperty_InitBCUFlag3D(dEXO, dMeshTopology, dBCFlag)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(SectionInt)                             :: dBCFlag 
@@ -235,37 +234,22 @@ Module m_RuptStruct
       PetscInt, Dimension(:), Pointer              :: Flag
       
       Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
-      !!! Element Blocks
-      Do i = 1, dMeshTopology%Num_Elem_Blks
-         NumDoF = dMeshTopology%Elem_Blk(i)%Num_DoF
-         Allocate(Flag(NumDoF * 3))
-         Do j = 1, NumDoF
-            Flag(2*j-2) = dEXO%EBProperty( Rupt_EBProp_BCTypeX )%Value( dMeshTopology%Elem_Blk(i)%ID )
-            Flag(2*j-1) = dEXO%EBProperty( Rupt_EBProp_BCTypeY )%Value( dMeshTopology%Elem_Blk(i)%ID )
-            Flag(2*j)   = dEXO%EBProperty( Rupt_EBProp_BCTypeZ )%Value( dMeshTopology%Elem_Blk(i)%ID )
-         End Do
-         Do j = 1, dMeshTopology%Elem_Blk(i)%Num_Elems
-            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Elem_Blk(i)%Elem_ID(j)-1, Flag, iErr); CHKERRQ(iErr)
-         End Do
-         DeAllocate(Flag)
-      End Do
-      
       !!! Side Sets
       !!! To be implemented
       
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
          Allocate(Flag(3))
-         Flag(1) = dEXO%NSProperty( Rupt_NSProp_BCTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(2) = dEXO%NSProperty( Rupt_NSProp_BCTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(3) = dEXO%NSProperty( Rupt_NSProp_BCTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(1) = dEXO%NSProperty( Rupt_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(2) = dEXO%NSProperty( Rupt_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(3) = dEXO%NSProperty( Rupt_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
             Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
-   End Subroutine EXOProperty_InitBCFlagU3D
+   End Subroutine EXOProperty_InitBCUFlag3D
 
    Subroutine MatProp2D_Write(MeshTopology, MatProp, filename)
       Type(MeshTopology_Type)                      :: MeshTopology
@@ -530,11 +514,8 @@ Module m_RuptStruct
       dEXO%Num_EBProperties = Rupt_Num_EBProperties
       Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
       dEXO%EBProperty(Rupt_EBProp_IsBrittle)%Name = 'Is_Brittle'
-      dEXO%EBProperty(Rupt_EBProp_IsDomain)%Name  = 'Is_Domain'
+!      dEXO%EBProperty(Rupt_EBProp_IsDomain)%Name  = 'Is_Domain'
       dEXO%EBProperty(Rupt_EBProp_HasBForce)%Name = 'Has_BForce'
-      dEXO%EBProperty(Rupt_EBProp_BCTypeX)%Name   = 'BC_Type_X'
-      dEXO%EBProperty(Rupt_EBProp_BCTypeY)%Name   = 'BC_Type_Y'
-      dEXO%EBProperty(Rupt_EBProp_BCTypeZ)%Name   = 'BC_Type_Z'
       dEXO%EBProperty(Rupt_EBProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_EBProperties
          Allocate(dEXO%EBProperty(i)%Value(NumEB))
@@ -543,9 +524,10 @@ Module m_RuptStruct
       
       dEXO%Num_SSProperties = Rupt_Num_SSProperties
       Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
-      dEXO%SSProperty(Rupt_SSProp_BCTypeX)%Name   = 'BC_Type_X'
-      dEXO%SSProperty(Rupt_SSProp_BCTypeY)%Name   = 'BC_Type_Y'
-      dEXO%SSProperty(Rupt_SSProp_BCTypeZ)%Name   = 'BC_Type_Z'
+      dEXO%SSProperty(Rupt_SSProp_BCUTypeX)%Name  = 'BCU_Type_X'
+      dEXO%SSProperty(Rupt_SSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
+      dEXO%SSProperty(Rupt_SSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
+      dEXO%SSProperty(Rupt_SSProp_BCVType)%Name   = 'BCV_Type'
       dEXO%SSProperty(Rupt_SSProp_HasSForce)%Name = 'Has_SForce'
       dEXO%SSProperty(Rupt_SSProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_SSProperties
@@ -555,9 +537,10 @@ Module m_RuptStruct
       
       dEXO%Num_NSProperties = Rupt_Num_NSProperties
       Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
-      dEXO%NSProperty(Rupt_NSProp_BCTypeX)%Name   = 'BC_Type_X'
-      dEXO%NSProperty(Rupt_NSProp_BCTypeY)%Name   = 'BC_Type_Y'
-      dEXO%NSProperty(Rupt_NSProp_BCTypeZ)%Name   = 'BC_Type_Z'
+      dEXO%NSProperty(Rupt_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
+      dEXO%NSProperty(Rupt_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
+      dEXO%NSProperty(Rupt_NSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
+      dEXO%NSProperty(Rupt_NSProp_BCVType)%Name   = 'BCV_Type'
       dEXO%NSProperty(Rupt_NSProp_HasPForce)%Name = 'Has_PForce'
       Do i = 1, dEXO%Num_NSProperties
          Allocate(dEXO%NSProperty(i)%Value(NumNS))

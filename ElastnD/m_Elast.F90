@@ -222,6 +222,7 @@ Contains
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
+      Call SectionRealView(AppCtx%U, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End Subroutine ElastInit
 !----------------------------------------------------------------------------------------!      
 ! Solve (CM)   

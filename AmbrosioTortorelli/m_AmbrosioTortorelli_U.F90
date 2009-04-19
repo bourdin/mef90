@@ -15,7 +15,8 @@ Module m_AmbrosioTortorelli_U3D
    Use m_AmbrosioTortorelli_Types2D
 #elif defined PB_3D
    Use m_AmbrosioTortorelli_Types3D
-#endif   Use m_MEF90
+#endif   
+   Use m_MEF90
    Use m_RuptStruct
    Use petsc
    Use petscvec
@@ -78,7 +79,7 @@ Contains
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
 
       MatElem  = 0.0_Kr
-      NumDoFVec  = Size(AppCtx%ElemVect(iE)%BF,1)
+      NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       
@@ -86,7 +87,7 @@ Contains
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
 
       Allocate(BCFlag(NumDoFVect))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
       
       Do iGauss = 1, NumGauss
       !! Calculate V at the gauss point
@@ -159,13 +160,13 @@ Contains
       PetscInt                                     :: iE
       Type(AppCtx_Type)                            :: AppCtx
       PetscReal, Dimension(:), Pointer             :: RHSElem
-      PetscReal, Dimension(:), Pointer             :: F
+      PetscReal, Dimension(:), Pointer             :: F, V
       PetscReal, Dimension(:), Pointer             :: Theta
       PetscInt                                     :: iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect, NumGauss
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
-      PetscReal                                    :: Theta_Elem
+      PetscReal                                    :: Theta_Elem, V_Elem
 #if defined PB_2D
       Type (Vect2D)             				         :: TmpRHS
 #elif defined PB_3D  
@@ -193,7 +194,7 @@ Contains
          End Do
          Do iDoF2 = 1, NumDoFScal
             Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)* Theta(iDoF2)
-            V_Elem = V_Elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F(iDoF2)
+            V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V(iDoF2)
          End Do
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
@@ -246,7 +247,7 @@ Contains
    End Subroutine Solve_U
       
 #if defined PB_2D
-End Module m_ m_AmbrosioTortorelli_U2D
+End Module m_AmbrosioTortorelli_U2D
 #elif defined PB_3D
-End Module m_ m_AmbrosioTortorelli_U3D
+End Module m_AmbrosioTortorelli_U3D
 #endif

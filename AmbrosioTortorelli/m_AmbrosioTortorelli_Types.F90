@@ -64,7 +64,7 @@ Module m_AmbrosioTortorelli_Types3D
       PetscReal                                    :: BulkEnergy
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
-      Type(SectionInt)                             :: BCFlagU,BCFlagU
+      Type(SectionInt)                             :: BCFlagU, BCFlagV
       Type(Mat)                                    :: KU, KV
       Type(Vec)                                    :: RHSU, RHSV
       Type(KSP)                                    :: KSPU, KSPV
@@ -81,7 +81,7 @@ Module m_AmbrosioTortorelli_Types3D
       
    
 #if defined PB_2D
-End Module m_ m_AmbrosioTortorelli_Types2D
+End Module m_AmbrosioTortorelli_Types2D
 #elif defined PB_3D
-End Module m_ m_AmbrosioTortorelli_Types3D
+End Module m_AmbrosioTortorelli_Types3D
 #endif

@@ -19,7 +19,8 @@ Module m_AmbrosioTortorelli3D
    Use m_AmbrosioTortorelli_Types3D   
    Use m_AmbrosioTortorelli_U3D
    Use m_AmbrosioTortorelli_V3D
-#endif   Use m_MEF90
+#endif   
+   Use m_MEF90
    Use m_RuptStruct
    Use petsc
    Use petscvec
@@ -28,27 +29,6 @@ Module m_AmbrosioTortorelli3D
    Use petscmesh
 
    Implicit NONE   
-   
-   Type LogInfo_Type
-      PetscLogStage               :: IO_Stage
-      PetscLogStage               :: Distribute_Stage
-      PetscLogStage               :: DataSetup_Stage
-      PetscLogStage               :: MatAssembly_Stage
-      PetscLogStage               :: RHSAssembly_Stage
-      PetscLogStage               :: KSPSolve_Stage
-      PetscLogStage               :: PostProc_Stage
-      
-      PetscLogEvent               :: MatAssemblyLocal_Event
-      PetscLogEvent               :: RHSAssemblyLocal_Event
-      PetscLogEvent               :: PostProc_Event
-   End Type LogInfo_Type
-
-   Type AppParam_Type
-      PetscTruth                                   :: Restart
-      PetscTruth                                   :: Verbose
-      Character(len=MEF90_MXSTRLEN)                :: prefix
-      Type(PetscViewer)                            :: LogViewer, MyLogViewer
-   End Type AppParam_Type   
    
 Contains
 
@@ -201,10 +181,11 @@ Contains
       !!! Create the Section for the BC
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
 #if defined PB_2D
-      Call EXOProperty_InitBCFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #elif defined PB_3D
-      Call EXOProperty_InitBCFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCUFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #endif
+      Call EXOProperty_InitBCVFlag(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagV)
 
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlagV, iErr); CHKERRQ(iErr)
 #if defined PB_2D
@@ -218,7 +199,7 @@ Contains
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_V)%Offset, AppCtx%TimeStep, AppCtx%V) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
    End Subroutine AmbrosioTortorelliInit
          
    
@@ -227,7 +208,7 @@ Contains
 
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
       Write(*,*) 'Wrote U Result at offset ', AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_VertVar_V)%Offset, AppCtx%TimeStep, AppCtx%V) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
       Write(*,*) 'Wrote V Result at offset ', AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset
       Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
       Write(*,*) 'Wrote Strains at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset
@@ -279,7 +260,7 @@ Contains
    
    
 #if defined PB_2D
-End Module m_ m_AmbrosioTortorelli2D
+End Module m_AmbrosioTortorelli2D
 #elif defined PB_3D
-End Module m_ m_AmbrosioTortorelli3D
+End Module m_AmbrosioTortorelli3D
 #endif
