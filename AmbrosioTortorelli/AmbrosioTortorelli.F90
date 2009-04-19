@@ -8,14 +8,17 @@ Program  Elast
 #include "finclude/petscmeshdef.h"
 
 #if defined PB_2D
+   Use m_AmbrosioTortorelli2D
    Use m_AmbrosioTortorelli_Types2D
    Use m_AmbrosioTortorelli_U2D
    Use m_AmbrosioTortorelli_V2D
 #elif defined PB_3D
+   Use m_AmbrosioTortorelli2D
    Use m_AmbrosioTortorelli_Types3D   
    Use m_AmbrosioTortorelli_U3D
    Use m_AmbrosioTortorelli_V3D
-#endif   Use m_MEF90
+#endif   
+   Use m_MEF90
    Use m_RuptStruct
    Use petsc
    Use petscvec
@@ -43,7 +46,7 @@ Program  Elast
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call MatAssembly(AppCtx)
+!   Call MatAssembly(AppCtx)
    
 !   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
@@ -52,7 +55,7 @@ Program  Elast
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call RHSAssembly(AppCtx)
+!   Call RHSAssembly(AppCtx)
 !   Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then

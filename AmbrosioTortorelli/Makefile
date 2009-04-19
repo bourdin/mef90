@@ -1,4 +1,4 @@
-PROJ      = Elast
+PROJ      = AmbrosioTortorelli
 MEF90DIR  = ../MEF90/${PETSC_ARCH}
 MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
@@ -8,7 +8,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 M_RUPTSTRUCTDIR  = ../m_RuptStruct/${PETSC_ARCH}
 M_RUPTSTRUCTOBJS = ${M_RUPTSTRUCTDIR}/m_RuptStruct.o
 
-all: ${PROJ}${DIM}
+all: AmbrosioTortorelli${DIM}
 
 include ${PETSC_DIR}/conf/base
 
@@ -21,13 +21,25 @@ FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR} -I${M_RUPTSTRUCTDIR
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 	
-${PROJ}${DIM}: ${PETSC_ARCH} ${PROJ}.o   ${PETSC_ARCH/${DIM}${PROJ}.o \
-                             m_${PROJ}.o ${PETSC_ARCH}/${DIM}m_${PROJ}.o
-	${FLINKER} -o ${PETSC_ARCH}/${PROJ}${DIM} ${PETSC_ARCH}/${DIM}${PROJ}.o  ${PETSC_ARCH}/${DIM}m_${PROJ}.o  ${MEF90OBJS} ${M_RUPTSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+AmbrosioTortorelli${DIM}: ${PETSC_ARCH} AmbrosioTortorelli.o   ${PETSC_ARCH}/${DIM}AmbrosioTortorelli.o \
+                                      m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o \
+                                      m_AmbrosioTortorelli_U.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_U.o \
+                                      m_AmbrosioTortorelli_V.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_V.o \
+                                      m_AmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli.o \
+                                      m_PostAmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_PostAmbrosioTortorelli.o
+	${FLINKER} -o ${PETSC_ARCH}/AmbrosioTortorelli${DIM} ${PETSC_ARCH}/${DIM}AmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_U.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_V.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli.o  ${PETSC_ARCH}/${DIM}m_PostAmbrosioTortorelli.o ${MEF90OBJS} ${M_RUPTSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 	
-${PROJ}.o:   ${PETSC_ARCH} m_${PROJ}.o ${PETSC_ARCH}/${DIM}m_${PROJ}.o
+AmbrosioTortorelli.o:   ${PETSC_ARCH} m_AmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli.o
 
-m_${PROJ}.o: ${PETSC_ARCH}
+m_AmbrosioTortorelli.o: ${PETSC_ARCH} m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o \
+                                      m_AmbrosioTortorelli_U.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_U.o \
+                                      m_AmbrosioTortorelli_V.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_V.o \
+                                      m_PostAmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_PostAmbrosioTortorelli.o
+m_AmbrosioTortorelli_U.o:  ${PETSC_ARCH} m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o
+m_AmbrosioTortorelli_V.o:  ${PETSC_ARCH} m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o
+m_PostAmbrosioTortorelli.o:  ${PETSC_ARCH} m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o
+m_AmbrosioTortorelli_Types.o: ${PETSC_ARCH}
+
 
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
