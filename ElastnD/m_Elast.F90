@@ -267,8 +267,6 @@ Contains
       
       PetscInt                                     :: iBlk, iE, iELoc, iErr
       PetscReal, Dimension(:,:), Pointer           :: MatElem
-      PetscInt, Dimension(:), Pointer              :: BCFlag
-      PetscInt                                     :: iDoF, i
       
 !      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
 
@@ -288,19 +286,6 @@ Contains
          DeAllocate(MatElem)
       End Do Do_Elem_iBlk
 
-!!!      Allocate(BCFlag(AppCtx%MeshTopology%Num_Verts * AppCtx%MeshTopology%Num_Dim))
-!!!      Allocate(MatElem(AppCtx%MeshTopology%Num_Dim,AppCtx%MeshTopology%Num_Dim))
-!!!      Do iDoF = 1, AppCtx%MeshTopology%Num_Verts
-!!!         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iDoF + AppCtx%MeshTopology%Num_Elems-1, AppCtx%MeshTopology%Num_Dim, BCFlag, iErr); CHKERRQ(ierr)
-!!!         MatElem = 0.0_Kr
-!!!         Do i = 1, AppCtx%MeshTopology%Num_Dim
-!!!            If (BCFlag(i) /= 0) Then
-!!!               MatElem(i,i) = 1.0_Kr
-!!!            End If
-!!!         End Do
-!!!         Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U, iDoF + AppCtx%MeshTopology%Num_Elems-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)         
-!!!      End Do
-      
       Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
