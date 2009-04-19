@@ -52,7 +52,9 @@ End Module m_AmbrosioTortorelli_Post3D
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
-      MyBulkEnergy = 0.0_Kr
+      MyBulkEnergy     = 0.0_Kr
+      MyElasticEnergy  = 0.0_Kr
+      MyWorkBodyForces = 0.0_Kr
       !!!!!!!!!!!!!!!!!!!!!
       ! Surface Energy      : 1/ (4 eps) (1-v)^2 + eps GradV * GradV
       ! Elastic energy      : 1/2 v^2 (A*EffectiveStrain) * EffectiveStrain 
@@ -150,12 +152,13 @@ End Module m_AmbrosioTortorelli_Post3D
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            NumDoF   = Size(AppCtx%ElemVect(iE)%BF,1)
+            NumDoFScal   = Size(AppCtx%ElemScal(iE)%BF,1)
+            NumDoFVect   = Size(AppCtx%ElemVect(iE)%BF,1)
             NumGauss = Size(AppCtx%ElemVect(iE)%BF,2)
-            Allocate(U(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
-            Allocate(Theta(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoF, Theta, iErr); CHKERRQ(ierr)
+            Allocate(U(NumDoFVect))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
+            Allocate(Theta(NumDoFScal))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
             V_Elem                = 0.0_K
             Strain_Elem           = 0.0_Kr
             Stress_Elem           = 0.0_Kr
@@ -170,7 +173,7 @@ End Module m_AmbrosioTortorelli_Post3D
                Do iDoF = 1, NumDoFVect
                   Strain_Elem            = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
                   Stress_Elem            = Stress_Elem + (V_Elem**2) * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * ( Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp) )
-!				  Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
+!             Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
                End Do
             End Do
             Strain_Elem = Strain_Elem / Vol

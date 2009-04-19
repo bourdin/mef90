@@ -12,11 +12,13 @@ Program  Elast
    Use m_AmbrosioTortorelli_Types2D
    Use m_AmbrosioTortorelli_U2D
    Use m_AmbrosioTortorelli_V2D
+   Use m_AmbrosioTortorelli_Post2D
 #elif defined PB_3D
    Use m_AmbrosioTortorelli2D
    Use m_AmbrosioTortorelli_Types3D   
    Use m_AmbrosioTortorelli_U3D
    Use m_AmbrosioTortorelli_V3D
+   Use m_AmbrosioTortorelli_Post3D
 #endif   
    Use m_MEF90
    Use m_RuptStruct
@@ -33,7 +35,7 @@ Program  Elast
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
 
-   Call ElastInit(AppCtx)
+   Call AmbrosioTortorelliInit(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
@@ -42,29 +44,29 @@ Program  Elast
    End If   
 
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the matrix\n'c
+      Write(IOBuffer, *) 'Assembling the matrix of the U problem\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-!   Call MatAssembly(AppCtx)
+   Call MatAssembly_U(AppCtx)
    
 !   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the RHS\n'c
+      Write(IOBuffer, *) 'Assembling the RHS of the U problem \n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-!   Call RHSAssembly(AppCtx)
-!   Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   Call RHSAssembly_U(AppCtx)
+   Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Calling KSPSolve\n'c
+      Write(IOBuffer, *) 'Calling KSPSolve for the U problem\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    AppCtx%TimeStep = AppCtx%TimeStep+1
-   Call Solve(AppCtx)
+   Call Solve_U(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Computing bulk energy, strains and stresses\n'c
@@ -86,5 +88,5 @@ Program  Elast
    
    Call Save(AppCtx)
 
-   Call ElastFinalize(AppCtx)
+   Call AmbrosioTortorelliFinalize(AppCtx)
 End Program  Elast
