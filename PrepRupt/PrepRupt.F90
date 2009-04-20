@@ -339,15 +339,16 @@ Program PrepRupt
      !!! Variables Initialized at NS
       Allocate(U(MeshTopology%Num_Node_Sets_Global))
       Allocate(V(MeshTopology%Num_Node_Sets_Global))
+      U%X = 0.0_Kr
+      U%Y = 0.0_Kr
+      U%Z = 0.0_Kr
+      V   = 1.0_Kr
       Do i = 1, MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 102) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
          !!! Displacement
-         U%X = 0.0_Kr
-         U%Y = 0.0_Kr
-         U%Z = 0.0_Kr
-         V   = 1.0_Kr
+         !!! WTF I can bcast the entire arrays
          If (MyEXO%NSProperty(Rupt_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'Ux'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -402,6 +403,7 @@ Program PrepRupt
                Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
                Call MeshUpdateClosure(MeshTopology%Mesh, VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, iErr); CHKERRQ(iErr)            
                !!! We will need to do a restrict then update here!
+               !!! Write V only if MyEXO%NSProperty(Rupt_NSProp_BCVType)%Value(i) /= 0
             End Do
          End Do
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_Fracture)%Offset, iStep, VSec) 
