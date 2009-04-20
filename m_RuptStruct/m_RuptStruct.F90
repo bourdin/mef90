@@ -367,7 +367,7 @@ Module m_RuptStruct
       Rewind(F_IN)
       Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
-         Read(F_IN, 220) Idx, Toughness, Hookes_Law, Therm_exp
+         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp

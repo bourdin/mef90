@@ -1,7 +1,7 @@
 #if defined PB_2D
-End Module m_AmbrosioTortorelli_Post2D
+Module m_AmbrosioTortorelli_Post2D
 #elif defined PB_3D
-End Module m_AmbrosioTortorelli_Post3D
+Module m_AmbrosioTortorelli_Post3D
 #endif
 
 #include "finclude/petscdef.h"
