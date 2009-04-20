@@ -55,10 +55,11 @@ End Module m_AmbrosioTortorelli_Post3D
       MyBulkEnergy     = 0.0_Kr
       MyElasticEnergy  = 0.0_Kr
       MyWorkBodyForces = 0.0_Kr
-      !!!!!!!!!!!!!!!!!!!!!
-      ! Surface Energy      : 1/ (4 eps) (1-v)^2 + eps GradV * GradV
+      !---------------------------------------------------------------------
+      ! Surface Energy      : Gc (1/ (4 eps) (1-v)^2 + eps GradV * GradV)
       ! Elastic energy      : 1/2 v^2 (A*EffectiveStrain) * EffectiveStrain 
       ! Work of body forces : - F*U   
+      !---------------------------------------------------------------------
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             ! Define the indices
@@ -103,7 +104,7 @@ End Module m_AmbrosioTortorelli_Post3D
             ! Calculate the work of body forces
                MyWorkBodyForces = MyWorkBodyForces + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (F_Elem .DotP. U_Elem)
             ! Calculate the suface energy
-               MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  0.25_Kr / AppCtx%RuptSchemeParam%Epsilon *  ( 1- V_Elem)**2 +  AppCtx%RuptSchemeParam%Epsilon * GradV_Elem . DotP .AppCtx%RuptSchemeParam%Epsilon        
+               MySurfaceEnergy  = MySurfaceEnergy  + MatProp%Toughness * ( AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  0.25_Kr / AppCtx%RuptSchemeParam%Epsilon *  ( 1- V_Elem)**2 +  AppCtx%RuptSchemeParam%Epsilon * GradV_Elem . DotP . GradV_Elem )       
  			   Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
             ! Calculate the bulk energy
@@ -118,6 +119,7 @@ End Module m_AmbrosioTortorelli_Post3D
       ! Global sum among  
       Call PetscGlobalSum(MyBulkEnergy,    AppCtx%BulkEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Call PetscGlobalSum(MySurfaceEnergy, AppCtx%SurfaceEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)           
+      Call PetscGlobalSum(MyWorkBodyForces, AppCtx%WorkBodyForces, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)           
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
