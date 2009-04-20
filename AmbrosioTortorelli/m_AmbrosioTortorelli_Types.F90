@@ -63,7 +63,7 @@ Module m_AmbrosioTortorelli_Types3D
       PetscInt                                     :: TimeStep
       PetscReal                                    :: BulkEnergy
       PetscReal                                    :: SurfaceEnergy
-      PetscReal                                    :: LoadWork
+      PetscReal                                    :: WorkBodyForces
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
       Type(SectionInt)                             :: BCFlagU, BCFlagV
