@@ -199,22 +199,29 @@ Contains
    End Subroutine AmbrosioTortorelliInit
          
    
-   Subroutine Save(AppCtx)
+   Subroutine Save_U(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Write(*,*) 'Wrote U Result at offset ', AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
-      Write(*,*) 'Wrote V Result at offset ', AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
-      Write(*,*) 'Wrote Strains at offset ', AppCtx%MyEXO%VertVariable(Rupt_CellVar_StrainXX)%Offset
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
-      Write(*,*) 'Wrote Stresses at offset ', AppCtx%MyEXO%CellVariable(Rupt_CellVar_StressXX)%Offset  
-       
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%BulkEnergy)
-      Write(*,*) 'Wrote Energy at offset ', AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset
-   End Subroutine Save
+   End Subroutine Save_U
 
+   
+   Subroutine Save_V(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+   End Subroutine Save_V
+
+
+   Subroutine Save_Ener(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_SurfaceEnergy)%Offset, AppCtx%TimeStep, AppCtx%SurfaceEnergy)
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy)
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_ExtForcesWork)%Offset, AppCtx%TimeStep, AppCtx%ExtForcesWork)
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_TotalEnergy)%Offset, AppCtx%TimeStep, AppCtx%TotalEnergy)
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
+   End Subroutine Save_Ener
+   
    
    Subroutine AmbrosioTortorelliFinalize(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx

@@ -156,7 +156,8 @@ End Subroutine MatV_Assembly
          Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call RHS_V_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
+            Call RHSV_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, RHSElem)
+            Write(MEF90_MyRank+100, *) iE, RHSElem
             Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(RHSElem)
@@ -171,7 +172,7 @@ End Subroutine MatV_Assembly
 !----------------------------------------------------------------------------------------!      
 ! RHSAssemblyLocal (CM)  
 !----------------------------------------------------------------------------------------!      
-   Subroutine RHS_V_AssemblyLocal(iE, MatProp, AppCtx, RHSElem)
+   Subroutine RHSV_AssemblyLocal(iE, MatProp, AppCtx, RHSElem)
 
 #if defined PB_2D
       Type(MatProp2D_Type)                         :: MatProp
@@ -183,17 +184,16 @@ End Subroutine MatV_Assembly
       Type(AppCtx_Type)                            :: AppCtx
       PetscReal, Dimension(:), Pointer             :: RHSElem
       PetscInt                                     :: iErr
-      PetscInt                                     :: NumDoFScal, NumDoFVect, NumGauss
+      PetscInt                                     :: NumDoFScal, NumGauss
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iGauss
       PetscReal                                    :: C1_V
 
       RHSElem    = 0.0_Kr
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
-      NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
-      Allocate(BCFlag(NumDoFVect))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
+      Allocate(BCFlag(NumDoFScal))
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
       C1_V = - 2.0_Kr / AppCtx%RuptSchemeParam%Epsilon * MatProp%Toughness 
       Do_iGauss: Do iGauss = 1, NumGauss
@@ -207,7 +207,7 @@ End Subroutine MatV_Assembly
       End Do Do_iGauss
       DeAllocate(BCFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
-   End Subroutine RHS_V_AssemblyLocal
+   End Subroutine RHSV_AssemblyLocal
       
 
    !----------------------------------------------------------------------------------------!      

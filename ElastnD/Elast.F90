@@ -42,9 +42,9 @@ Program  Elast
    
    Call MatAssembly(AppCtx)
    
-   If (AppCtx%AppParam%verbose) Then
-      Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   End If
+!   If (AppCtx%AppParam%verbose) Then
+!      Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+!   End If
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'c
@@ -53,9 +53,9 @@ Program  Elast
    
    Call RHSAssembly(AppCtx)
    
-   If (AppCtx%AppParam%verbose) Then
-      Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   End If
+!   If (AppCtx%AppParam%verbose) Then
+!      Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+!   End If
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Calling KSPSolve\n'c
@@ -66,13 +66,13 @@ Program  Elast
    Call Solve(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Computing bulk energy, strains and stresses\n'c
+      Write(IOBuffer, *) 'Computing Elastic energy, strains and stresses\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call ComputeEnergy(AppCtx)
 
-   Write(IOBuffer, 100) AppCtx%BulkEnergy
+   Write(IOBuffer, 100) AppCtx%ElasticEnergy
 100 Format('Total energy: ', ES12.5, '\n'c)    
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
