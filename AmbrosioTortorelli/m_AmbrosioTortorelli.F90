@@ -15,10 +15,12 @@ Module m_AmbrosioTortorelli3D
    Use m_AmbrosioTortorelli_Types2D
    Use m_AmbrosioTortorelli_U2D
    Use m_AmbrosioTortorelli_V2D
+   Use m_AmbrosioTortorelli_Post2D
 #elif defined PB_3D
    Use m_AmbrosioTortorelli_Types3D   
    Use m_AmbrosioTortorelli_U3D
    Use m_AmbrosioTortorelli_V3D
+   Use m_AmbrosioTortorelli_Post3D
 #endif   
    Use m_MEF90
    Use m_RuptStruct
@@ -180,19 +182,13 @@ Contains
 
       !!! Create the Section for the BC
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlagV, iErr); CHKERRQ(iErr)
 #if defined PB_2D
       Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #elif defined PB_3D
       Call EXOProperty_InitBCUFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #endif
       Call EXOProperty_InitBCVFlag(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagV)
-
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlagV, iErr); CHKERRQ(iErr)
-#if defined PB_2D
-      Call EXOProperty_InitBCFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagV)
-#elif defined PB_3D
-      Call EXOProperty_InitBCFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagV)
-#endif
 
       AppCtx%TimeStep = 1
       !!! Read U, F, and Temperature

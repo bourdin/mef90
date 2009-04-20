@@ -1,7 +1,7 @@
 #if defined PB_2D
-module m_PostAmbrosioTortorelli2D
+module m_AmbrosioTortorelli2D_Post
 #elif defined PB_3D
-Module m_PostAmbrosioTortorelli3D
+Module m_AmbrosioTortorelli3D_Post
 #endif
 
 #include "finclude/petscdef.h"
@@ -12,12 +12,10 @@ Module m_PostAmbrosioTortorelli3D
    Use m_AmbrosioTortorelli_Types2D
    Use m_AmbrosioTortorelli_U2D
    Use m_AmbrosioTortorelli_V2D
-   Use m_AmbrosioTortorelli_Post2D
 #elif defined PB_3D
    Use m_AmbrosioTortorelli_Types3D   
    Use m_AmbrosioTortorelli_U3D
    Use m_AmbrosioTortorelli_V3D
-   Use m_AmbrosioTortorelli_Post3D
 #endif   
    Use m_MEF90
    Use m_RuptStruct
@@ -185,7 +183,7 @@ Contains
 !----------------------------------------------------------------------------------------!
 
 #if defined PB_2D
-End Module m_PostAmbrosioTortorelli2D
+End Module m_AmbrosioTortorelli2D_Post
 #elif defined PB_3D
-End Module m_PostAmbrosioTortorelli3D
+End Module m_AmbrosioTortorelli3D_Post
 #endif

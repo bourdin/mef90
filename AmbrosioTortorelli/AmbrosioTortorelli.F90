@@ -10,7 +10,7 @@ Program  Elast
 #if defined PB_2D
    Use m_AmbrosioTortorelli2D
 #elif defined PB_3D
-   Use m_AmbrosioTortorelli2D
+   Use m_AmbrosioTortorelli3D
 #endif   
    Use m_MEF90
    Use m_RuptStruct
@@ -40,7 +40,7 @@ Program  Elast
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call MatAssembly_U(AppCtx)
+   Call MatU_Assembly(AppCtx)
    
 !   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
@@ -49,7 +49,7 @@ Program  Elast
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call RHSAssembly_U(AppCtx)
+   Call RHSU_Assembly(AppCtx)
    Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
