@@ -71,7 +71,7 @@ Program  Elast
    ! Problem for V
    !-------------------------------------------------------------------
    
-   Call MatAssembly_V(AppCtx)
+   Call MatV_Assembly(AppCtx)
    
 !   Call MatView(AppCtx%KV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
@@ -80,7 +80,7 @@ Program  Elast
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call RHSAssembly_V(AppCtx)
+   Call RHSV_Assembly(AppCtx)
    Call VecView(AppCtx%RHSV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then

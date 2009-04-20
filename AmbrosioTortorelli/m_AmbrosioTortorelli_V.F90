@@ -113,7 +113,7 @@ End Subroutine MatV_Assembly
       !! Calculate the Effective Strain at the gauss point
          Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * MatProp%Therm_Exp)   
       !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
-         C2_V     = 0.5_Kr / AppCtx%RuptSchemeParam%Epsilon * MatProp%Toughness +  (MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem 
+         C2_V     = 0.5_Kr / AppCtx%RuptSchemeParam%Epsilon * MatProp%Toughness + ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
          C2_GradV = 2.0_Kr * AppCtx%RuptSchemeParam%Epsilon * MatProp%Toughness
       !! Assemble the element stiffness
          Do iDoF1 = 1, NumDoFScal
