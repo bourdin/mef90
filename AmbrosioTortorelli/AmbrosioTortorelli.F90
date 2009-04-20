@@ -62,8 +62,9 @@ Program  Elast
    
    AppCtx%TimeStep = AppCtx%TimeStep+1
    Call Solve_U(AppCtx)
+   Call Save_U(AppCtx)
    
-      If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the matrix of the U-subproblem\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
@@ -90,6 +91,7 @@ Program  Elast
    
    AppCtx%TimeStep = AppCtx%TimeStep+1
    Call Solve_V(AppCtx)
+   Call Save_V(AppCtx)
    !-------------------------------------------------------------------
    
    If (AppCtx%AppParam%verbose) Then
@@ -98,9 +100,16 @@ Program  Elast
    End If
    
    Call ComputeEnergy(AppCtx)
+   Call Save_Ener(AppCtx)
 
-   Write(IOBuffer, 100) AppCtx%BulkEnergy
-100 Format('Total energy: ', ES12.5, '\n'c)    
+   Write(IOBuffer, 100) AppCtx%ElasticEnergy
+   Write(IOBuffer, 101) AppCtx%ExtForcesWork
+   Write(IOBuffer, 102) AppCtx%SurfaceEnergy
+   Write(IOBuffer, 103) AppCtx%TotalEnergy
+100 Format('Elastic energy:       ', ES12.5, '\n'c)    
+101 Format('External Forces Work: ', ES12.5, '\n'c)    
+102 Format('Surface energy:       ', ES12.5, '\n'c)    
+103 Format('Total energy:         ', ES12.5, '\n'c)    
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
    Call ComputeStrainStress(AppCtx)
@@ -110,7 +119,5 @@ Program  Elast
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call Save(AppCtx)
-
    Call AmbrosioTortorelliFinalize(AppCtx)
 End Program  Elast

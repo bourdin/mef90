@@ -55,7 +55,7 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: Init_U_ZERO = 1
    
    PetscInt, Parameter, Public                     :: Irrev_NONE = 0
-   PetscInt, Parameter, Public                     :: irrev_eq   = 1
+   PetscInt, Parameter, Public                     :: irrev_Eq   = 1
    PetscInt, Parameter, Public                     :: Irrev_Ineq = 2
    
    PetscInt, Parameter, Public                     :: Rupt_Num_VertVar           = 8
@@ -82,16 +82,17 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StressYZ = 11
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StressZX = 12
 
-   PetscInt, Parameter, Public                     :: Rupt_Num_GlobVar           = 5
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_BulkEnergy    = 1
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_SurfaceEnergy = 2 
+   PetscInt, Parameter, Public                     :: Rupt_Num_GlobVar           = 7
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_ElasticEnergy = 1
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_ExtForcesWork = 2
    PetscInt, Parameter, Public                     :: Rupt_GlobVar_KineticEnergy = 3 
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_TotalEnergy   = 4
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_Load          = 5
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_SurfaceEnergy = 4 
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_TotalEnergy   = 5
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_Load          = 6
+   PetscInt, Parameter, Public                     :: Rupt_GlobVar_AnalysisTime  = 7
    
    PetscInt, Parameter, Public                     :: Rupt_Num_EBProperties  = 3
    PetscInt, Parameter, Public                     :: Rupt_EBProp_IsBrittle  = 1
-!   PetscInt, Parameter, Public                     :: Rupt_EBProp_IsDomain   = 2
    PetscInt, Parameter, Public                     :: Rupt_EBProp_HasBForce  = 2
    PetscInt, Parameter, Public                     :: Rupt_EBProp_Elem_Type  = 3
    
@@ -557,9 +558,10 @@ Module m_RuptStruct
       
       dEXO%Num_GlobVariables = Rupt_Num_GlobVar
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
-      dEXO%GlobVariable(Rupt_GlobVar_BulkEnergy)%Name    = 'Bulk energy'
       dEXO%GlobVariable(Rupt_GlobVar_SurfaceEnergy)%Name = 'Surface energy'
+      dEXO%GlobVariable(Rupt_GlobVar_ElasticEnergy)%Name = 'Elastic energy'
       dEXO%GlobVariable(Rupt_GlobVar_KineticEnergy)%Name = 'Kinetic energy'
+      dEXO%GlobVariable(Rupt_GlobVar_ExtForcesWork)%Name = 'External Forces Work'
       dEXO%GlobVariable(Rupt_GlobVar_TotalEnergy)%Name   = 'Total energy'
       dEXO%GlobVariable(Rupt_GlobVar_Load)%Name          = 'Load'
       dEXO%GlobVariable(:)%Offset = (/ (i, i=1,dEXO%Num_GlobVariables) /)

@@ -61,9 +61,10 @@ Module m_AmbrosioTortorelli_Types3D
       Type(SectionReal)                            :: Theta
       PetscReal                                    :: Load
       PetscInt                                     :: TimeStep
-      PetscReal                                    :: BulkEnergy
       PetscReal                                    :: SurfaceEnergy
-      PetscReal                                    :: WorkBodyForces
+      PetscReal                                    :: ElasticEnergy
+      PetscReal                                    :: ExtForcesWork
+      PetscReal                                    :: TotalEnergy
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
       Type(SectionInt)                             :: BCFlagU, BCFlagV

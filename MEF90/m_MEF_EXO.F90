@@ -29,6 +29,7 @@ Module m_MEF_EXO
 
    Public :: Read_EXO_Result_Global
    Public :: Write_EXO_Result_Global   
+   Public :: Write_EXO_AllResult_Global   
    Public :: Read_EXO_Result_Vertex
    Public :: Write_EXO_Result_Vertex
    Public :: Read_EXO_Result_Cell
@@ -1201,6 +1202,29 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellMatS3D
 
 !!! WRITE
+   Subroutine Write_EXO_AllResult_Global(dEXO, dTS, dRes)
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      PetscInt                                       :: dTS
+      PetscReal, DImension(:), Pointer               :: dRes
+      
+      PetscInt                                       :: iErr
+      PetscReal                                      :: Vers
+      PetscInt                                       :: Num_Vars
+      PetscReal                                      :: fDum
+      Character                                      :: cDum
+      
+      If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
+         If (Num_Vars /= Size(dRes)) Then
+            SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_AllResult_Global: The argument does not match the number of global variables in the mesh', iErr)
+         End If
+         Call EXPGV(dEXO%exoid, dTS, Num_Vars, dRes, iErr)
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
+   End Subroutine Write_EXO_AllResult_Global
+
    Subroutine Write_EXO_Result_Global(dEXO, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       PetscInt                                       :: dIdx
@@ -1210,7 +1234,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       PetscReal                                      :: Vers
       PetscReal, Dimension(:), Pointer               :: Tmp_Res
-      PetscInt                                       :: Num_Vars, Num_TS
+      PetscInt                                       :: Num_Vars
       PetscReal                                      :: fDum
       Character                                      :: cDum
       

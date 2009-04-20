@@ -48,15 +48,15 @@ Contains
       Type(MatS3D)                                 :: Effective_Strain_Elem
       Type(Vect3D)                                 :: F_Elem, U_Elem,  GradV_Elem  
 #endif
-      PetscReal                                    :: MyBulkEnergy, MyWorkBodyForces, MyElasticEnergy, MySurfaceEnergy
+      PetscReal                                    :: MyExtForcesWork, MyElasticEnergy, MySurfaceEnergy
      
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
-      MyBulkEnergy     = 0.0_Kr
-      MyElasticEnergy  = 0.0_Kr
-      MyWorkBodyForces = 0.0_Kr
+      MyElasticEnergy = 0.0_Kr
+      MyExtForcesWork = 0.0_Kr
+      MySUrfaceEnergy = 0.0_Kr
       !---------------------------------------------------------------------
       ! Surface Energy      : Gc (1/ (4 eps) (1-v)^2 + eps GradV * GradV)
       ! Elastic energy      : 1/2 v^2 (A*EffectiveStrain) * EffectiveStrain 
@@ -100,17 +100,15 @@ Contains
                   U_Elem              = U_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * U(iDoF)
                End Do            
                Effective_Strain_Elem  = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp   ;
-               Stress_Elem         = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
+               Stress_Elem            = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
             ! Calculate the elastic energy
                MyElasticEnergy  = MyElasticEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  V_Elem**2 * (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr
             ! Calculate the work of body forces
-               MyWorkBodyForces = MyWorkBodyForces + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (F_Elem .DotP. U_Elem)
+               MyExtForcesWork = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (F_Elem .DotP. U_Elem)
             ! Calculate the suface energy
                MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  0.25_Kr / AppCtx%RuptSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%RuptSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)
             Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
-            ! Calculate the bulk energy
-               MyBulkEnergy     =  MyElasticEnergy - MyWorkBodyForces      
             ! DeAllocate the variables
             DeAllocate(F)
             DeAllocate(U)
@@ -119,8 +117,10 @@ Contains
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       ! Global sum among  
-      Call PetscGlobalSum(MyBulkEnergy,    AppCtx%BulkEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Call PetscGlobalSum(MySurfaceEnergy, AppCtx%SurfaceEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)           
+      Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)           
+      Call PetscGlobalSum(MySurfaceEnergy, AppCtx%SurfaceEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)    
+      AppCtx%TotalEnergy = AppCtx%ElasticEnergy - AppCtx%ExtForcesWork + AppCtx%SurfaceEnergy
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy

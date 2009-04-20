@@ -25,9 +25,9 @@ Program TestScatter
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: viewer, myviewer
-   Type(SectionReal)                            :: S
-   Type(Vec)                                    :: V
-   Type(VecScatter)                             :: scatter
+   Type(SectionReal)                            :: Sscal, Svect
+   Type(Vec)                                    :: Vscal, Vvect
+   Type(VecScatter)                             :: ScatterScal, ScatterVect
    PetscInt                                     :: dof = 2
    PetscReal, Dimension(:), Pointer             :: Val
      
@@ -50,30 +50,34 @@ Program TestScatter
    Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
 
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, S, ierr); CHKERRQ(iErr)
-   Call MeshCreateGlobalScatter(MeshTopology%mesh, S, scatter, iErr); CHKERRQ(iErr)
-   Call MeshCreateVector(MeshTopology%mesh, S, V, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, SVect, ierr); CHKERRQ(iErr)
+   Call MeshCreateGlobalScatter(MeshTopology%mesh, SVect, ScatterVect, iErr); CHKERRQ(iErr)
+   Call MeshCreateVector(MeshTopology%mesh, SVect, VVect, iErr); CHKERRQ(iErr)
 
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, SScal, ierr); CHKERRQ(iErr)
+   Call MeshCreateGlobalScatter(MeshTopology%mesh, SScal, ScatterScal, iErr); CHKERRQ(iErr)
+   Call MeshCreateVector(MeshTopology%mesh, SScal, VScal, iErr); CHKERRQ(iErr)
+   
+   Call VecScatterView(ScatterScal, PETSC_COMM_WORLD, iErr)
 
    Allocate(Val(dof))
    
-   Call SectionRealSet(S, 2.0_Kr, iErr); CHKERRQ(iErr);
 !   Do i = 1, MeshTopology%Num_Verts
 !      Val = i
 !      Call MeshUpdateClosure(MeshTopology%mesh, S, MeshTopology%Num_Elems+i-1, Val, iErr); CHKERRQ(iErr)
 !   End Do
+   Call SectionRealSet(SScal, 2.0_Kr, iErr); CHKERRQ(iErr);
+   Call SectionRealComplete(SScal, iErr); CHKERRQ(iErr)
    
-   Call SectionRealComplete(S, iErr); CHKERRQ(iErr)
-   
-   Write(IOBuffer, *) '\n\nSec: \n'c
+   Write(IOBuffer, *) '\n\nSec Scal: \n'c
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Call SectionRealView(S, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   Call SectionRealView(SScal, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-   Call SectionRealToVec(S, scatter, SCATTER_FORWARD, V, iErr); CHKERRQ(iErr)
+   Call SectionRealToVec(SScal, ScatterScal, SCATTER_FORWARD, VScal, iErr); CHKERRQ(iErr)
 
-   Write(IOBuffer, *) '\n\nVec: \n'c
+   Write(IOBuffer, *) '\n\nVec Scal: \n'c
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   Call VecView(VScal, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    
    Call MEF90_Finalize()
