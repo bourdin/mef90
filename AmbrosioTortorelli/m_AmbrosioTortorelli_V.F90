@@ -31,7 +31,7 @@ Contains
 !----------------------------------------------------------------------------------------!      
 ! MatAssembly V (CM)  
 !----------------------------------------------------------------------------------------!      
-   Subroutine MatAssembly_V(AppCtx)
+   Subroutine MatV_Assembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iE, iELoc, iErr
@@ -45,7 +45,7 @@ Contains
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             !--------------------------------------------------------
             ! The only line to change as a function of the problem.
-            Call MatAssembly_V_Local(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, MatElem)
+            Call MatV_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, MatElem)
             !--------------------------------------------------------
             Call assembleMatrix(AppCtx%KV, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
@@ -55,12 +55,12 @@ Contains
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-End Subroutine MatAssembly_V
+End Subroutine MatV_Assembly
 
 !----------------------------------------------------------------------------------------!      
 ! MatAssembly_V_Local (CM)
 !----------------------------------------------------------------------------------------!      
-   Subroutine MatAssembly_V_Local(iE, MatProp, AppCtx, MatElem)
+   Subroutine MatV_AssemblyLocal(iE, MatProp, AppCtx, MatElem)
 #if defined PB_2D
       Type(MatProp2D_Type)                         :: MatProp
 #elif defined PB_3D
@@ -133,12 +133,12 @@ End Subroutine MatAssembly_V
       DeAllocate(Theta)
       DeAllocate(BCFlag)
 !      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
-   End Subroutine MatAssembly_V_Local
+   End Subroutine MatV_AssemblyLocal
 
 !----------------------------------------------------------------------------------------!      
 ! RHSAssembly (CM)  
 !----------------------------------------------------------------------------------------!      
-   Subroutine RHS_V_Assembly(AppCtx)
+   Subroutine RHSV_Assembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
@@ -166,7 +166,7 @@ End Subroutine MatAssembly_V
       Call SectionRealToVec(RHSSec, AppCtx%ScatterScal, SCATTER_FORWARD, AppCtx%RHSV, ierr); CHKERRQ(ierr)
       Call SectionRealDestroy(RHSSec, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-  End Subroutine RHS_V_Assembly
+  End Subroutine RHSV_Assembly
    
 !----------------------------------------------------------------------------------------!      
 ! RHSAssemblyLocal (CM)  

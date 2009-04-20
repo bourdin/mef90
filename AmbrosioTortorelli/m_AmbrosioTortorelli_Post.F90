@@ -23,6 +23,8 @@ Module m_AmbrosioTortorelli_Post3D
    Use petscmesh
 
    Implicit NONE   
+   
+Contains
 !----------------------------------------------------------------------------------------!      
 ! ComputeEnergy (CM)  
 !----------------------------------------------------------------------------------------!      
@@ -32,22 +34,22 @@ Module m_AmbrosioTortorelli_Post3D
       
       PetscInt                                     :: iErr
       PetscInt                                     :: NumDoFVect, NumDoFScal, NumGauss
-      PetscReal, Dimension(:), Pointer             :: F, U, Theta
+      PetscReal, Dimension(:), Pointer             :: F, U, V, Theta
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
-      PetscReal                                    :: Theta_Elem
+      PetscReal                                    :: Theta_Elem, V_Elem
 #if defined PB_2D
-	  Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(MatS2D)								   :: Effective_Strain_Elem
-	  Type(Vect2D)								   :: F_Elem, U_Elem, GradV_Elem 
+      Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
+      Type(MatS2D)                                 :: Effective_Strain_Elem
+      Type(Vect2D)                                 :: F_Elem, U_Elem, GradV_Elem 
 
 #elif defined PB_3D
-	  Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(MatS3D)					               :: Effective_Strain_Elem
-	  Type(Vect3D)						           :: F_Elem, U_Elem, GradV_Elem  
+      Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
+      Type(MatS3D)                                 :: Effective_Strain_Elem
+      Type(Vect3D)                                 :: F_Elem, U_Elem,  GradV_Elem  
 #endif
       PetscReal                                    :: MyBulkEnergy, MyWorkBodyForces, MyElasticEnergy, MySurfaceEnergy
-	  
+     
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
@@ -95,16 +97,16 @@ Module m_AmbrosioTortorelli_Post3D
                   Strain_Elem         = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
                   F_Elem              = F_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * F(iDoF) 
                   U_Elem              = U_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * U(iDoF)
-               End Do			   
+               End Do            
                Effective_Strain_Elem  = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp   ;
-               Stress_Elem			  = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
+               Stress_Elem         = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
             ! Calculate the elastic energy
-               MyElasticEnergy  = MyElasticEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (V_Elem**2 * (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr
+               MyElasticEnergy  = MyElasticEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  V_Elem**2 * (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr
             ! Calculate the work of body forces
                MyWorkBodyForces = MyWorkBodyForces + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (F_Elem .DotP. U_Elem)
             ! Calculate the suface energy
-               MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  0.25_Kr / AppCtx%RuptSchemeParam%Epsilon *  ( 1- V_Elem)**2 +  AppCtx%RuptSchemeParam%Epsilon * GradV_Elem . DotP .AppCtx%RuptSchemeParam%Epsilon        
- 			   Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
+               MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  0.25_Kr / AppCtx%RuptSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%RuptSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)
+            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
             ! Calculate the bulk energy
                MyBulkEnergy     =  MyElasticEnergy - MyWorkBodyForces      
@@ -130,21 +132,21 @@ Module m_AmbrosioTortorelli_Post3D
       
       PetscInt                                     :: iErr
 #if defined PB_2D
-	  Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(Vect2D)                                 :: F_Elem, U_Elem  
+     Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
+     Type(Vect2D)                                 :: F_Elem, U_Elem  
 #elif defined PB_3D 
-	  Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
-	  Type(Vect3D)							       :: F_Elem, U_Elem  
+     Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
+     Type(Vect3D)                          :: F_Elem, U_Elem  
 #endif
       PetscReal                                    :: Theta_Elem, V_Elem
       PetscReal                                    :: Vol
       PetscInt                                     :: NumDoFVect, NumDofScal, NumGauss
-      PetscReal, Dimension(:), Pointer             :: U, Theta
+      PetscReal, Dimension(:), Pointer             :: U, Theta, V
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
-	  	 
-	  	  
+       
+        
 !      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Allocate(Stress_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
@@ -159,7 +161,9 @@ Module m_AmbrosioTortorelli_Post3D
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
             Allocate(Theta(NumDoFScal))
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
-            V_Elem                = 0.0_K
+            Allocate(V(NumDoFScal))
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
+            V_Elem                = 0.0_Kr
             Strain_Elem           = 0.0_Kr
             Stress_Elem           = 0.0_Kr
             Theta_Elem            = 0.0_Kr

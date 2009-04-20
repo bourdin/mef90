@@ -31,7 +31,7 @@ Contains
    !----------------------------------------------------------------------------------------!      
    ! MatAssembly (CM)  
    !----------------------------------------------------------------------------------------!      
-   Subroutine MatAssembly_U(AppCtx)
+   Subroutine MatU_Assembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iE, iELoc, iErr
@@ -44,7 +44,7 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
 
-            Call MatAssembly_U_Local(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, MatElem)
+            Call MatU_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, MatElem)
             Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
 
          End Do Do_Elem_iE
@@ -53,12 +53,12 @@ Contains
       Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine MatAssembly_U
+   End Subroutine MatU_Assembly
 
 !----------------------------------------------------------------------------------------!      
 ! MatAssembly_U_Local (CM)
 !----------------------------------------------------------------------------------------!      
-   Subroutine MatAssembly_U_Local(iE, MatProp, AppCtx, MatElem)
+   Subroutine MatU_AssemblyLocal(iE, MatProp, AppCtx, MatElem)
 #if defined PB_2D
       Type(MatProp2D_Type)                         :: MatProp
 #elif defined PB_3D
@@ -109,12 +109,12 @@ Contains
       DeAllocate(V)
       DeAllocate(BCFlag)
 !      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
-   End Subroutine MatAssembly_U_Local
+   End Subroutine MatU_AssemblyLocal
 
    !----------------------------------------------------------------------------------------!      
    ! RHSAssembly (CM)  
    !----------------------------------------------------------------------------------------!      
-   Subroutine RHS_U_Assembly(AppCtx)
+   Subroutine RHSU_Assembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
@@ -133,7 +133,7 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             !--------------------------------------------------------
-            Call RHS_U_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
+            Call RHSU_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
             !--------------------------------------------------------
             Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
@@ -144,12 +144,12 @@ Contains
       Call SectionRealToVec(RHSSec, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%RHSU, ierr); CHKERRQ(ierr)
       Call SectionRealDestroy(RHSSec, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-  End Subroutine RHS_U_Assembly
+  End Subroutine RHSU_Assembly
    
    !----------------------------------------------------------------------------------------!      
    ! RHSAssemblyLocal (CM)  
    !----------------------------------------------------------------------------------------!      
-   Subroutine RHS_U_AssemblyLocal(iE, MatProp, AppCtx, RHSElem)
+   Subroutine RHSU_AssemblyLocal(iE, MatProp, AppCtx, RHSElem)
 
 #if defined PB_2D
       Type(MatProp2D_Type)                         :: MatProp
@@ -211,7 +211,7 @@ Contains
       DeAllocate(Theta)
       DeAllocate(V)
 !      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
-   End Subroutine RHS_U_AssemblyLocal
+   End Subroutine RHSU_AssemblyLocal
    
    
    !----------------------------------------------------------------------------------------!      
