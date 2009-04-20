@@ -12,10 +12,12 @@ Module m_PostAmbrosioTortorelli3D
    Use m_AmbrosioTortorelli_Types2D
    Use m_AmbrosioTortorelli_U2D
    Use m_AmbrosioTortorelli_V2D
+   Use m_AmbrosioTortorelli_Post2D
 #elif defined PB_3D
    Use m_AmbrosioTortorelli_Types3D   
    Use m_AmbrosioTortorelli_U3D
    Use m_AmbrosioTortorelli_V3D
+   Use m_AmbrosioTortorelli_Post3D
 #endif   
    Use m_MEF90
    Use m_RuptStruct

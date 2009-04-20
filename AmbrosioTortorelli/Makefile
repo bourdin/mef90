@@ -26,18 +26,18 @@ AmbrosioTortorelli${DIM}: ${PETSC_ARCH} AmbrosioTortorelli.o   ${PETSC_ARCH}/${D
                                       m_AmbrosioTortorelli_U.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_U.o \
                                       m_AmbrosioTortorelli_V.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_V.o \
                                       m_AmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli.o \
-                                      m_PostAmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_PostAmbrosioTortorelli.o
-	${FLINKER} -o ${PETSC_ARCH}/AmbrosioTortorelli${DIM} ${PETSC_ARCH}/${DIM}AmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_U.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_V.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli.o  ${PETSC_ARCH}/${DIM}m_PostAmbrosioTortorelli.o ${MEF90OBJS} ${M_RUPTSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+                                      m_AmbrosioTortorelli_Post.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Post.o
+	${FLINKER} -o ${PETSC_ARCH}/AmbrosioTortorelli${DIM} ${PETSC_ARCH}/${DIM}AmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_U.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_V.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli.o  ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Post.o ${MEF90OBJS} ${M_RUPTSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 	
 AmbrosioTortorelli.o:   ${PETSC_ARCH} m_AmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli.o
 
 m_AmbrosioTortorelli.o: ${PETSC_ARCH} m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o \
                                       m_AmbrosioTortorelli_U.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_U.o \
                                       m_AmbrosioTortorelli_V.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_V.o \
-                                      m_PostAmbrosioTortorelli.o ${PETSC_ARCH}/${DIM}m_PostAmbrosioTortorelli.o
+                                      m_AmbrosioTortorelli_Post.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Post.o
 m_AmbrosioTortorelli_U.o:  ${PETSC_ARCH} m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o
 m_AmbrosioTortorelli_V.o:  ${PETSC_ARCH} m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o
-m_PostAmbrosioTortorelli.o:  ${PETSC_ARCH} m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o
+m_AmbrosioTortorelli_Post.o:  ${PETSC_ARCH} m_AmbrosioTortorelli_Types.o ${PETSC_ARCH}/${DIM}m_AmbrosioTortorelli_Types.o
 m_AmbrosioTortorelli_Types.o: ${PETSC_ARCH}
 
 
