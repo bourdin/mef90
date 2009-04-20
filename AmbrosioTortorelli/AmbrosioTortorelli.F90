@@ -34,9 +34,12 @@ Program  Elast
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
+   !-------------------------------------------------------------------
+   ! Problem for U
+   !-------------------------------------------------------------------
 
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the matrix of the U problem\n'c
+      Write(IOBuffer, *) 'Assembling the matrix of the U-problem\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
@@ -45,7 +48,7 @@ Program  Elast
 !   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the RHS of the U problem \n'c
+      Write(IOBuffer, *) 'Assembling the RHS of the U-subproblem \n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
@@ -53,12 +56,41 @@ Program  Elast
    Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Calling KSPSolve for the U problem\n'c
+      Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    AppCtx%TimeStep = AppCtx%TimeStep+1
    Call Solve_U(AppCtx)
+   
+      If (AppCtx%AppParam%verbose) Then
+      Write(IOBuffer, *) 'Assembling the matrix of the U-subproblem\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   !-------------------------------------------------------------------
+   ! Problem for V
+   !-------------------------------------------------------------------
+   
+   Call MatAssembly_V(AppCtx)
+   
+!   Call MatView(AppCtx%KV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
+   If (AppCtx%AppParam%verbose) Then
+      Write(IOBuffer, *) 'Assembling the RHS of the V-subproblem \n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   
+   Call RHSAssembly_V(AppCtx)
+   Call VecView(AppCtx%RHSV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
+   If (AppCtx%AppParam%verbose) Then
+      Write(IOBuffer, *) 'Calling KSPSolve for the V-subproblem\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   
+   AppCtx%TimeStep = AppCtx%TimeStep+1
+   Call Solve_V(AppCtx)
+   !-------------------------------------------------------------------
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Computing bulk energy, strains and stresses\n'c
