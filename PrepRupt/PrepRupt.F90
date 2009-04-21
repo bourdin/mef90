@@ -147,10 +147,10 @@ Program PrepRupt
    End If
    
 !!! Initialize Sections   
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 3, USec, iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 3, FSec, iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, VSec, iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, ThetaSec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'F', 3, FSec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
    
    If (verbose) Then
       Write(IOBuffer, '(A)') 'Done with Initializing Sections\n'c

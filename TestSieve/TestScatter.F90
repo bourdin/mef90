@@ -4,11 +4,13 @@ Program TestScatter
 #include "finclude/petscvecdef.h"
 #include "finclude/petscviewerdef.h"
 #include "finclude/petscmeshdef.h"
+#include "finclude/petscmatdef.h"
 
    Use m_MEF90
    Use petsc
    Use petscvec
    Use petscmesh
+   Use petscmat
 
    Implicit NONE   
 
@@ -28,6 +30,7 @@ Program TestScatter
    Type(SectionReal)                            :: Sscal, Svect
    Type(Vec)                                    :: Vscal, Vvect
    Type(VecScatter)                             :: ScatterScal, ScatterVect
+   Type(Mat)                                    :: KScal, KVect
    PetscInt                                     :: dof = 2
    PetscReal, Dimension(:), Pointer             :: Val
      
@@ -58,8 +61,16 @@ Program TestScatter
    Call MeshCreateGlobalScatter(MeshTopology%mesh, SScal, ScatterScal, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, SScal, VScal, iErr); CHKERRQ(iErr)
 
+   Call MeshCreateMatrix(MeshTopology%mesh, SVect, MATMPIAIJ, KVect, iErr); CHKERRQ(iErr)
+   Call MeshCreateMatrix(MeshTopology%mesh, SScal, MATMPIAIJ, KScal, iErr); CHKERRQ(iErr)
+
+   Call MatAssemblyBegin(KScal, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+   Call MatAssemblyEnd  (KScal, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+   Call MatAssemblyBegin(KVect, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+   Call MatAssemblyEnd  (KVect, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+!   Call MatView(KScal, PetscViewer(PETSC_VIEWER_ASCII_INFO), iErr); CHKERRQ(iErr)
    
-   Call VecScatterView(ScatterScal, PETSC_NULL_OBJECT, iErr)
+!   Call VecScatterView(ScatterScal, PETSC_NULL_OBJECT, iErr)
 
    Allocate(Val(dof))
    
@@ -68,7 +79,7 @@ Program TestScatter
 !      Call MeshUpdateClosure(MeshTopology%mesh, S, MeshTopology%Num_Elems+i-1, Val, iErr); CHKERRQ(iErr)
 !   End Do
    Call SectionRealSet(SScal, 2.0_Kr, iErr); CHKERRQ(iErr);
-   Call SectionRealComplete(SScal, iErr); CHKERRQ(iErr)
+!   Call SectionRealComplete(SScal, iErr); CHKERRQ(iErr)
    
    Write(IOBuffer, *) '\n\nSec Scal: \n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
