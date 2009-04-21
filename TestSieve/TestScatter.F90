@@ -32,7 +32,8 @@ Program TestScatter
    Type(VecScatter)                             :: ScatterScal, ScatterVect
    Type(Mat)                                    :: KScal, KVect
    PetscInt                                     :: dof = 2
-   PetscReal, Dimension(:), Pointer             :: Val
+   PetscReal, Dimension(:), Pointer           :: ValScal, ValVect
+   PetscInt                                     :: NumDofScal, NumDofVect
      
    Call MEF90_Initialize()
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr); CHKERRQ(iErr)
@@ -61,18 +62,36 @@ Program TestScatter
    Call MeshCreateGlobalScatter(MeshTopology%mesh, SScal, ScatterScal, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, SScal, VScal, iErr); CHKERRQ(iErr)
 
-   Call MeshCreateMatrix(MeshTopology%mesh, SVect, MATMPIAIJ, KVect, iErr); CHKERRQ(iErr)
-   Call MeshCreateMatrix(MeshTopology%mesh, SScal, MATMPIAIJ, KScal, iErr); CHKERRQ(iErr)
+   Call MeshSetMaxDof(MeshTopology%Mesh, dof+1, iErr); CHKERRQ(iErr) 
 
-   Call MatAssemblyBegin(KScal, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-   Call MatAssemblyEnd  (KScal, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+!   MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
+!   Do iBlk = 1, MeshTopology%Num_Elem_Blks
+!      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
+!   End Do
+
+   Call MeshCreateMatrix(MeshTopology%mesh, SVect, MATMPIAIJ, KVect, iErr); CHKERRQ(iErr)
+   Allocate(ValVect( (3 * dof)**2))
+   ValVect = 1.0_Kr
+   Do i = 1, MeshTopology%Num_Elems
+      Call assembleMatrix(KVect, MeshTopology%mesh, SVect, i-1, ValVect, ADD_VALUES, iErr); CHKERRQ(iErr)
+   End Do
    Call MatAssemblyBegin(KVect, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
    Call MatAssemblyEnd  (KVect, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-!   Call MatView(KScal, PetscViewer(PETSC_VIEWER_ASCII_INFO), iErr); CHKERRQ(iErr)
+   Call MatView(KVect, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
+
+   Call MeshCreateMatrix(MeshTopology%mesh, SScal, MATMPIAIJ, KScal, iErr); CHKERRQ(iErr)
+   Allocate(ValScal(9))
+   ValScal = 1.0_Kr
+   Do i = 1, MeshTopology%Num_Elems
+      Call assembleMatrix(KScal, MeshTopology%mesh, Sscal, i-1, ValScal, ADD_VALUES, iErr); CHKERRQ(iErr)
+   End Do
+   Call MatAssemblyBegin(KScal, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+   Call MatAssemblyEnd  (KScal, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+   Call MatView(KScal, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
+
    
 !   Call VecScatterView(ScatterScal, PETSC_NULL_OBJECT, iErr)
 
-   Allocate(Val(dof))
    
 !   Do i = 1, MeshTopology%Num_Verts
 !      Val = i
@@ -82,14 +101,14 @@ Program TestScatter
 !   Call SectionRealComplete(SScal, iErr); CHKERRQ(iErr)
    
    Write(IOBuffer, *) '\n\nSec Scal: \n'
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Call SectionRealView(SScal, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!   Call SectionRealView(SScal, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    Call SectionRealToVec(SScal, ScatterScal, SCATTER_FORWARD, VScal, iErr); CHKERRQ(iErr)
 
    Write(IOBuffer, *) '\n\nVec Scal: \n'
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Call VecView(VScal, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!   Call VecView(VScal, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    
    Call MEF90_Finalize()
