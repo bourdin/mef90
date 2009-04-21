@@ -82,14 +82,13 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StressYZ = 11
    PetscInt, Parameter, Public                     :: Rupt_CellVar_StressZX = 12
 
-   PetscInt, Parameter, Public                     :: Rupt_Num_GlobVar           = 7
+   PetscInt, Parameter, Public                     :: Rupt_Num_GlobVar           = 6
    PetscInt, Parameter, Public                     :: Rupt_GlobVar_ElasticEnergy = 1
    PetscInt, Parameter, Public                     :: Rupt_GlobVar_ExtForcesWork = 2
    PetscInt, Parameter, Public                     :: Rupt_GlobVar_KineticEnergy = 3 
    PetscInt, Parameter, Public                     :: Rupt_GlobVar_SurfaceEnergy = 4 
    PetscInt, Parameter, Public                     :: Rupt_GlobVar_TotalEnergy   = 5
    PetscInt, Parameter, Public                     :: Rupt_GlobVar_Load          = 6
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_AnalysisTime  = 7
    
    PetscInt, Parameter, Public                     :: Rupt_Num_EBProperties  = 3
    PetscInt, Parameter, Public                     :: Rupt_EBProp_IsBrittle  = 1

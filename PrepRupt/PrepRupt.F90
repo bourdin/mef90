@@ -198,8 +198,8 @@ Program PrepRupt
       Do i = 1, NumSteps-1
          T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
          GlobVars(Rupt_GlobVar_Load)         = T(i)
-         GlobVars(Rupt_GlobVar_AnalysisTime) = T(i)
          Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
+         !!! Put a call to EXPTIM here
       End Do
       T(NumSteps) = TMax
 

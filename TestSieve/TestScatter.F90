@@ -50,6 +50,10 @@ Program TestScatter
    Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
 
+   Call MeshSetMaxDof(MeshTopology%Mesh, MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
+
+!!!   Creating the sections and scatter in this order will give a vec SScal of length 2 * num vertices. 
+!!!   creating them the other way around will crash
    Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, SVect, ierr); CHKERRQ(iErr)
    Call MeshCreateGlobalScatter(MeshTopology%mesh, SVect, ScatterVect, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, SVect, VVect, iErr); CHKERRQ(iErr)
@@ -57,8 +61,9 @@ Program TestScatter
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, SScal, ierr); CHKERRQ(iErr)
    Call MeshCreateGlobalScatter(MeshTopology%mesh, SScal, ScatterScal, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, SScal, VScal, iErr); CHKERRQ(iErr)
+
    
-   Call VecScatterView(ScatterScal, PETSC_COMM_WORLD, iErr)
+!   Call VecScatterView(ScatterScal, PETSC_COMM_WORLD, iErr)
 
    Allocate(Val(dof))
    
