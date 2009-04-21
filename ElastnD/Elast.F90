@@ -46,6 +46,10 @@ Program  Elast
 !      Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 !   End If
    
+   !!!call exinq (idexo, EXTIMS, num_time_steps, fdum, cdum, ierr) 
+   !!!call exgatm (idexo, time_values, ierr)
+   !!! Add a loop over times 
+
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
