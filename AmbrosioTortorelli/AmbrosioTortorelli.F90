@@ -29,19 +29,6 @@ Program  Elast
 
    Call AmbrosioTortorelliInit(AppCtx)
    
-   Call MatU_Assembly(AppCtx)
-!   Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr)
-!   Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr)
-!   Call MatView(AppCtx%KU, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr)
-   
-   Call MatV_Assembly(AppCtx)
-   Call MatAssemblyBegin(AppCtx%KV, MAT_FINAL_ASSEMBLY, iErr)
-   Call MatAssemblyEnd  (AppCtx%KV, MAT_FINAL_ASSEMBLY, iErr)
-   Call MatView(AppCtx%KV, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr)
-   
-   Call MEF90_FInalize()
-   STOP
-   
    If (AppCtx%AppParam%verbose) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
@@ -73,7 +60,7 @@ Program  Elast
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   AppCtx%TimeStep = AppCtx%TimeStep+1
+   AppCtx%TimeStep = 1
    Call Solve_U(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
@@ -102,7 +89,6 @@ Program  Elast
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   AppCtx%TimeStep = AppCtx%TimeStep+1
    Call Solve_V(AppCtx)
    Call Save_V(AppCtx)
    !-------------------------------------------------------------------

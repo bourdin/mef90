@@ -202,14 +202,14 @@ Contains
    Subroutine Save_U(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
    End Subroutine Save_U
 
    
    Subroutine Save_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
    End Subroutine Save_V
 
 

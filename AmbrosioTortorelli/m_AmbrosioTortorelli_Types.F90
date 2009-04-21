@@ -65,6 +65,7 @@ Module m_AmbrosioTortorelli_Types3D
       PetscReal                                    :: ElasticEnergy
       PetscReal                                    :: ExtForcesWork
       PetscReal                                    :: TotalEnergy
+      PetscReal                                    :: ErrV
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
       Type(SectionInt)                             :: BCFlagU, BCFlagV

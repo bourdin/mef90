@@ -236,14 +236,19 @@ Contains
       Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, U_Vec, ierr); CHKERRQ(ierr)
       !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%U
       
-      Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
       Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 100) KSPNumIter, reason
+      If ( reason > 0) Then
+         Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
+         Write(IOBuffer, 100) KSPNumIter
+      Else
+         Write(IOBuffer, 101) reason
+      End If
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('KSP for U converged in ', I5, ' iterations. KSPConvergedReason for U is ', I2, '\n'c)
+100 Format('     KSP for U converged in ', I5, ' iterations \n'c)
+101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n'c)
    End Subroutine Solve_U
       
 #if defined PB_2D
