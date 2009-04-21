@@ -195,12 +195,12 @@ End Subroutine MatV_Assembly
       Allocate(BCFlag(NumDoFScal))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
-      C1_V = - 2.0_Kr / AppCtx%RuptSchemeParam%Epsilon * MatProp%Toughness 
+      C1_V =  0.5_Kr / AppCtx%RuptSchemeParam%Epsilon * MatProp%Toughness 
       Do_iGauss: Do iGauss = 1, NumGauss
           Do iDoF1 = 1, NumDoFScal
             If (BCFlag(iDoF1) == 0) Then
                ! RHS terms due to forces
-               RHSElem(iDoF1) = RHSElem(iDoF1) - C1_V * AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) 
+               RHSElem(iDoF1) = RHSElem(iDoF1) + C1_V * AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) 
 !               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
             End If
          End Do
@@ -221,7 +221,8 @@ End Subroutine MatV_Assembly
       KSPConvergedReason                           :: reason
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      Type(Vec)                                    :: V_Vec
+      Type(Vec)                                    :: V_Vec, V_Old
+      PetscReal                                    :: VMin, VMax
       
 !      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, V_Vec, iErr); CHKERRQ(iErr)
@@ -230,16 +231,40 @@ End Subroutine MatV_Assembly
       !!! Solve and store the solution in AppCtx%RHS
       
       Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, ierr); CHKERRQ(ierr)
+      Call VecDuplicate(V_Vec, V_Old, iErr); CHKERRQ(iErr)
+      Call VecCopy(V_Vec, V_Old, iErr); CHKERRQ(iErr)
+      
       !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%V
       
-      Call KSPGetIterationNumber(AppCtx%KSPV, KSPNumIter, iErr); CHKERRQ(iErr)
       Call KSPGetConvergedReason(AppCtx%KSPV, reason, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 100) KSPNumIter, reason
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      If ( reason > 0) Then
+         Call KSPGetIterationNumber(AppCtx%KSPV, KSPNumIter, iErr); CHKERRQ(iErr)
+         Write(IOBuffer, 100) KSPNumIter
+      Else
+         Write(IOBuffer, 101) reason
+      End If
       
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+      Call VecMin(V_Vec, PETSC_NULL_INTEGER, VMin, iErr); CHKERRQ(iErr)
+      Call VecMax(V_Vec, PETSC_NULL_INTEGER, VMax, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, 700) VMin, VMax
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+       Call VecAxPy(V_Vec, -1.0_Kr, V_Old, iErr)
+       Call VecNorm(V_Old, NORM_INFINITY, AppCtx%ErrV, iErr)
+
+      Write(IOBuffer, 800) AppCtx%ErrV
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+      
+      Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('KSP for V converged in ', I5, ' iterations. KSPConvergedReason for V is ', I2, '\n'c)
+100 Format('     KSP for V converged in ', I5, ' iterations \n'c)
+101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n'c)
+700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n'c)
+800 Format('     Max change V: ', T24, ES12.5, '\n'c)
    End Subroutine Solve_V
 
    

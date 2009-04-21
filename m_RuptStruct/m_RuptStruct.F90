@@ -495,7 +495,7 @@ Module m_RuptStruct
    Subroutine RuptEXOProperty_Init(dEXO, dMeshTopology)
       Type(EXO_Type)                      :: dEXO
       Type(MeshTopology_Type)             :: dMeshTopology
-      PetscInt                            :: i, vers, iErr
+      PetscInt                            :: i, iErr
       PetscInt                            :: NumEB, NumSS, NumNS
 
       Integer                             :: EXO_MyRank
@@ -517,7 +517,6 @@ Module m_RuptStruct
       dEXO%Num_EBProperties = Rupt_Num_EBProperties
       Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
       dEXO%EBProperty(Rupt_EBProp_IsBrittle)%Name = 'Is_Brittle'
-!      dEXO%EBProperty(Rupt_EBProp_IsDomain)%Name  = 'Is_Domain'
       dEXO%EBProperty(Rupt_EBProp_HasBForce)%Name = 'Has_BForce'
       dEXO%EBProperty(Rupt_EBProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_EBProperties

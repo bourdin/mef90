@@ -58,8 +58,10 @@ Module m_Elast3D
       Type(SectionReal)                            :: StrainU
       Type(SectionReal)                            :: F
       Type(SectionReal)                            :: Theta
-      PetscReal                                    :: Load
+      PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
+      PetscReal                                    :: Load
+      PetscReal                                    :: Time
       PetscReal                                    :: ElasticEnergy
       PetscReal                                    :: ExtForcesWork
       Type(VecScatter)                             :: ScatterVect
@@ -90,6 +92,11 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename
       PetscInt                                     :: NumComponents
       PetscTruth                                   :: HasPrefix
+      
+      PetscReal                                    :: rDummy
+      Character                                    :: cDummy
+      PetscInt                                     :: vers
+
 
       
       Call MEF90_Initialize()
@@ -132,7 +139,7 @@ Contains
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
 
-         !!! Reading and distributing sequential mesh
+      !!! Reading and distributing sequential mesh
       If (MEF90_NumProcs == 1) Then
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
       Else
@@ -193,13 +200,13 @@ Contains
       End If
 
       !!! Create the Sections for the variables
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Theta', 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
 
       NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
+      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
+      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Stress', NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
 
       !!! Create the Scatter, Vec, Mat, KSP, PC
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
@@ -220,20 +227,21 @@ Contains
       Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
 
       !!! Create the Section for the BC
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCU', AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
 #if defined PB_2D
       Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #elif defined PB_3D
       Call EXOProperty_InitBCUFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
 #endif
-!      Call SectionIntView(AppCtx%BCFlagU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+
+      !!! Get the number of time steps
+      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
+      Call EXINQ(AppCtx%MyEXO%exoid, EXTIMS, AppCtx%NumTimeSteps, rDummy, cDummy, iErr)
+      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+      AppCtx%MyEXO%exoid = 0
+      Write(*,*) 'NumTimeSteps is ', AppCtx%NumTimeSteps
 
       AppCtx%TimeStep = 1
-      !!! Read U, F, and Temperature
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
-!      Call SectionRealView(AppCtx%U, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End Subroutine ElastInit
 !----------------------------------------------------------------------------------------!      
 ! Solve (CM)   
@@ -259,14 +267,19 @@ Contains
       Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, U_Vec, ierr); CHKERRQ(ierr)
       !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%U
       
-      Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
       Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 100) KSPNumIter, reason
+      If ( reason > 0) Then
+         Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
+         Write(IOBuffer, 100) KSPNumIter
+      Else
+         Write(IOBuffer, 101) reason
+      End If
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n'c)
+100 Format('     KSP for U converged in ', I5, ' iterations \n'c)
+101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n'c)      
    End Subroutine Solve
 
 !----------------------------------------------------------------------------------------!      
@@ -284,10 +297,6 @@ Contains
       
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
-         Write(MEF90_MyRank+100, *) 'iBlk: ', iBlk, AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-         Write(MEF90_MyRank+100, *) 'Toughness:  ', AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Toughness
-         Write(MEF90_MyRank+100, *) 'Hookes_Law: ', AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law
-         Write(MEF90_MyRank+100, *) 'Therm_Exp:  ', AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Therm_Exp
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MatAssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, MatElem)
@@ -359,7 +368,7 @@ Contains
       
       !!! Hopefully one day we will use assemble Vector instead of going through a section
 !      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHS', NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems

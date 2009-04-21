@@ -24,7 +24,7 @@ Program  Elast
 
 
    Type(AppCtx_Type)                            :: AppCtx
-   PetscInt                                     :: iErr
+   PetscInt                                     :: i, iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
 
    Call ElastInit(AppCtx)
@@ -35,64 +35,53 @@ Program  Elast
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
 
+
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the matrix\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-   
+   End If   
    Call MatAssembly(AppCtx)
    
-!   If (AppCtx%AppParam%verbose) Then
-!      Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!   End If
+   Do i = 1, AppCtx%NumTimeSteps
+      AppCtx%TimeStep = i
+      !!! Read U, F, and Temperature
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
    
-   !!!call exinq (idexo, EXTIMS, num_time_steps, fdum, cdum, ierr) 
-   !!!call exgatm (idexo, time_values, ierr)
-   !!! Add a loop over times 
-
-   If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the RHS\n'c
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) 'Assembling the RHS\n'c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call RHSAssembly(AppCtx)
+   
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) 'Calling KSPSolve\n'c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call Solve(AppCtx)
+   
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) 'Computing Elastic energy, strains and stresses\n'c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call ComputeEnergy(AppCtx)
+      Call ComputeStrainStress(AppCtx)
+      
+      Write(IOBuffer, 108) AppCtx%TimeStep, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
+108 Format('TS ',G, ' Elast ', G, ' Work ', G, ' Total ', G, '\n'c)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-   
-   Call RHSAssembly(AppCtx)
-   
-!   If (AppCtx%AppParam%verbose) Then
-!      Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!   End If
-   
-   If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Calling KSPSolve\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-   
-   AppCtx%TimeStep = AppCtx%TimeStep+1
-   Call Solve(AppCtx)
-   
-   If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Computing Elastic energy, strains and stresses\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-   
-   Call ComputeEnergy(AppCtx)
 
-   Write(IOBuffer, 108) 1, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
-   Write(*,108) 1, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
-   
-   Call PetscViewerASCIIPrintf(AppCtx%AppParam%EnergyViewer, IOBuffer, iErr); CHKERRQ(iErr)
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-107 Format(4(G))
-108 Format('#TS',G, 'Elast', G, 'Work', G, 'Total', G, '\n'c)
+      Write(IOBuffer, 110) AppCtx%TimeStep, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
+110 Format(4(G), '\n'c)
+      Call PetscViewerASCIIPrintf(AppCtx%AppParam%EnergyViewer, IOBuffer, iErr); CHKERRQ(iErr)
 
-
-   Call ComputeStrainStress(AppCtx)
-
-   If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Saving results\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-   
-   Call Save(AppCtx)
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) 'Saving results\n'c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If      
+      Call Save(AppCtx)
+   End Do
 
    Call ElastFinalize(AppCtx)
 End Program  Elast
