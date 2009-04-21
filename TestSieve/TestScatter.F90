@@ -50,15 +50,15 @@ Program TestScatter
    Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
 
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, SVect, ierr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'u', dof, SVect, ierr); CHKERRQ(iErr)
    Call MeshCreateGlobalScatter(MeshTopology%mesh, SVect, ScatterVect, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, SVect, VVect, iErr); CHKERRQ(iErr)
 
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, SScal, ierr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 's', 1, SScal, ierr); CHKERRQ(iErr)
    Call MeshCreateGlobalScatter(MeshTopology%mesh, SScal, ScatterScal, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, SScal, VScal, iErr); CHKERRQ(iErr)
    
-   Call VecScatterView(ScatterScal, PETSC_COMM_WORLD, iErr)
+   Call VecScatterView(ScatterScal, PETSC_NULL_OBJECT, iErr)
 
    Allocate(Val(dof))
    
@@ -69,13 +69,13 @@ Program TestScatter
    Call SectionRealSet(SScal, 2.0_Kr, iErr); CHKERRQ(iErr);
    Call SectionRealComplete(SScal, iErr); CHKERRQ(iErr)
    
-   Write(IOBuffer, *) '\n\nSec Scal: \n'c
+   Write(IOBuffer, *) '\n\nSec Scal: \n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionRealView(SScal, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    Call SectionRealToVec(SScal, ScatterScal, SCATTER_FORWARD, VScal, iErr); CHKERRQ(iErr)
 
-   Write(IOBuffer, *) '\n\nVec Scal: \n'c
+   Write(IOBuffer, *) '\n\nVec Scal: \n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call VecView(VScal, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
