@@ -76,9 +76,14 @@ Program  Elast
    
    Call ComputeEnergy(AppCtx)
 
-   Write(IOBuffer, 100) AppCtx%ElasticEnergy
-100 Format('Total energy: ', ES12.5, '\n'c)    
+   Write(IOBuffer, 108) 1, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
+   Write(*,108) 1, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
+   
+   Call PetscViewerASCIIPrintf(AppCtx%AppParam%EnergyViewer, IOBuffer, iErr); CHKERRQ(iErr)
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+107 Format(4(G))
+108 Format('#TS',G, 'Elast', G, 'Work', G, 'Total', G, '\n'c)
+
 
    Call ComputeStrainStress(AppCtx)
 
