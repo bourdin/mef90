@@ -1,7 +1,7 @@
 #if defined PB_2D
-Module m_AmbrosioTortorelli_Post2D
+Module m_VarFracQS_Post2D
 #elif defined PB_3D
-Module m_AmbrosioTortorelli_Post3D
+Module m_VarFracQS_Post3D
 #endif
 
 #include "finclude/petscdef.h"
@@ -9,16 +9,16 @@ Module m_AmbrosioTortorelli_Post3D
 #include "finclude/petscviewerdef.h"
 
 #if defined PB_2D
-   Use m_AmbrosioTortorelli_Types2D
-   Use m_AmbrosioTortorelli_U2D
-   Use m_AmbrosioTortorelli_V2D
+   Use m_VarFracQS_Types2D
+   Use m_VarFracQS_U2D
+   Use m_VarFracQS_V2D
 #elif defined PB_3D
-   Use m_AmbrosioTortorelli_Types3D   
-   Use m_AmbrosioTortorelli_U3D
-   Use m_AmbrosioTortorelli_V3D
+   Use m_VarFracQS_Types3D   
+   Use m_VarFracQS_U3D
+   Use m_VarFracQS_V3D
 #endif   
    Use m_MEF90
-   Use m_RuptStruct
+   Use m_VarFrac_Struct
    Use petsc
    Use petscmesh
 
@@ -106,7 +106,7 @@ Contains
             ! Calculate the work of body forces
                MyExtForcesWork = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (F_Elem .DotP. U_Elem)
             ! Calculate the suface energy
-               MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  0.25_Kr / AppCtx%RuptSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%RuptSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)
+               MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  0.25_Kr / AppCtx%VarFracSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)
             Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
             ! DeAllocate the variables
@@ -209,7 +209,7 @@ Contains
 !----------------------------------------------------------------------------------------!
 
 #if defined PB_2D
-End Module m_AmbrosioTortorelli_Post2D
+End Module m_VarFracQS_Post2D
 #elif defined PB_3D
-End Module m_AmbrosioTortorelli_Post3D
+End Module m_VarFracQS_Post3D
 #endif
