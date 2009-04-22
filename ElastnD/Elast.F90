@@ -26,6 +26,9 @@ Program  Elast
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: i, iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+   PetscReal                                    :: rDummy
+   Character                                    :: cDummy
+   PetscInt                                     :: vers
 
    Call ElastInit(AppCtx)
    
@@ -44,6 +47,12 @@ Program  Elast
    
    Do i = 1, AppCtx%NumTimeSteps
       AppCtx%TimeStep = i
+      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
+      Call EXGTIM(AppCtx%MyEXO%exoid, i, AppCtx%Time, iErr)
+      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+      AppCtx%MyEXO%exoid = 0
+      Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
+
       !!! Read U, F, and Temperature
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
@@ -68,12 +77,12 @@ Program  Elast
       Call ComputeEnergy(AppCtx)
       Call ComputeStrainStress(AppCtx)
       
-      Write(IOBuffer, 108) AppCtx%TimeStep, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
-108 Format('TS ',G, ' Elast ', G, ' Work ', G, ' Total ', G, '\n'c)
+      Write(IOBuffer, 108) AppCtx%TimeStep, AppCtx%Time, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
+108 Format('TS ',I4, ' Time:', ES10.3, ' Load:', ES10.3, ' Elast:', ES10.3, ' Work:', ES10.3, ' Total:', ES10.3, '\n'c)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-      Write(IOBuffer, 110) AppCtx%TimeStep, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
-110 Format(4(G), '\n'c)
+      Write(IOBuffer, 110) AppCtx%TimeStep, AppCtx%Time, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
+110 Format(I4, 5(ES13.5, '   '), '\n'c)
       Call PetscViewerASCIIPrintf(AppCtx%AppParam%EnergyViewer, IOBuffer, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose) Then
