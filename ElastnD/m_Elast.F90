@@ -131,9 +131,6 @@ Contains
       Write(IOBuffer, 105) Trim(filename)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 105 Format('Energies saved in file ', A, '\n'c)
-      Write(IOBuffer, 106)
-      Call PetscViewerASCIIPrintf(AppCtx%AppParam%EnergyViewer, IOBuffer, iErr); CHKERRQ(iErr)
-106 Format('#\n#TS', T16, 'Elast', T16, 'Work', T16, 'Total\n#\n'c)
 
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
@@ -239,7 +236,6 @@ Contains
       Call EXINQ(AppCtx%MyEXO%exoid, EXTIMS, AppCtx%NumTimeSteps, rDummy, cDummy, iErr)
       Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
       AppCtx%MyEXO%exoid = 0
-      Write(*,*) 'NumTimeSteps is ', AppCtx%NumTimeSteps
 
       AppCtx%TimeStep = 1
    End Subroutine ElastInit
@@ -518,7 +514,7 @@ Contains
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Call PetscGlobalSum(MyExtFOrcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
                
 !      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
