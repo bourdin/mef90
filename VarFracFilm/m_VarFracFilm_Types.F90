@@ -80,7 +80,7 @@ Module m_VarFracFilm_Types3D
       Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
 #endif
       Type(AppParam_Type)                          :: AppParam
-      Type(RuptSchemeParam_Type)                   :: RuptSchemeParam
+      Type(VarFracFilmSchemeParam_Type)                   :: VarFracFilmSchemeParam
    End Type AppCtx_Type
       
    

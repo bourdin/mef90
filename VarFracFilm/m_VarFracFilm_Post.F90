@@ -106,7 +106,7 @@ Contains
             ! Calculate the work of body forces
                MyExtForcesWork = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (F_Elem .DotP. U_Elem)
             ! Calculate the suface energy
-               MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  0.25_Kr / AppCtx%RuptSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%RuptSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)
+               MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  0.25_Kr / AppCtx%VarFracFilmSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%VarFracFilmSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)
             Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
             ! DeAllocate the variables
