@@ -39,7 +39,8 @@ Contains
       
 !      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
 
-	     Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+      Call MatZeroEntries(AppCtx%KV, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -152,6 +153,7 @@ End Subroutine MatV_Assembly
       
       !!! Hopefully one day we will use assemble Vector instead of going through a section
 !      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
+      Call VecSet(AppCtx%RHSV, 0.0_Kr, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSSec', NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
@@ -255,7 +257,7 @@ End Subroutine MatV_Assembly
       Write(IOBuffer, 700) VMin, VMax
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-       Call VecAxPy(V_Vec, -1.0_Kr, V_Old, iErr)
+       Call VecAxPy(V_Old, -1.0_Kr, V_Vec, iErr)
        Call VecNorm(V_Old, NORM_INFINITY, AppCtx%ErrV, iErr)
 
       Write(IOBuffer, 800) AppCtx%ErrV
