@@ -37,7 +37,7 @@ Program  Elast
    End If   
    
    AppCtx%TimeStep = 1
-   Do iter=1, AppCtx%RuptSchemeParam%RelaxMaxIter
+   Do iter=1, AppCtx%RuptSchemeParam%AltMinMaxIter
       Write(IOBuffer, "('Iteration ', I4,A)") iter, '\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
@@ -80,10 +80,10 @@ Program  Elast
       !------------------------------------------------------------------- 
       ! Check the exit condition: tolerance on the error in V 
       !------------------------------------------------------------------- 
-      If (AppCtx.ErrV.LT.AppCtx%RuptSchemeParam%RelaxTol) then 
+      If (AppCtx.ErrV.LT.AppCtx%RuptSchemeParam%AltMinTol) then 
          EXIT 
       End If
-      If (Mod(iter, AppCtx%RuptSchemeParam%SaveInt) == 0) Then
+      If (Mod(iter, AppCtx%RuptSchemeParam%AltMinSaveInt) == 0) Then
          If (AppCtx%AppParam%verbose) Then
             Write(IOBuffer, *) 'Saving U and V\n'c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
