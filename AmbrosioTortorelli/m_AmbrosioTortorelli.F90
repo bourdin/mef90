@@ -212,6 +212,13 @@ Contains
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
    End Subroutine Save_V
 
+   Subroutine Save_StrainStress(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+   
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
+   End Subroutine Save_StrainStress
+
 
    Subroutine Save_Ener(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
