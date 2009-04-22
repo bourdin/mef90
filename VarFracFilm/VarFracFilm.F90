@@ -1,4 +1,4 @@
-Program  Elast
+Program  VarFracFilm
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -136,4 +136,4 @@ Program  Elast
    Call ComputeStrainStress(AppCtx)
 
    Call VarFracFilmFinalize(AppCtx)
-End Program  Elast
+End Program  VarFracFilm
