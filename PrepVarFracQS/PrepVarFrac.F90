@@ -1,4 +1,4 @@
-Program PrepRupt
+Program PrepVarFrac
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -8,7 +8,7 @@ Program PrepRupt
 #include "finclude/petscmeshdef.h"
 
    Use m_MEF90
-   Use m_RuptStruct
+   Use m_VarFrac_Struct
 
    Use petsc
    Use petscvec
@@ -103,16 +103,16 @@ Program PrepRupt
  99  Format(A, '-', I4.4, '.gen')
 
    
-   Call RuptEXOProperty_Init(MyEXO, MeshTopology)   
+   Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
    If (verbose) Then
-      Write(IOBuffer, *) "Done with RuptEXOProperty_Init\n"c
+      Write(IOBuffer, *) "Done with VarFracEXOProperty_Init\n"c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call EXOProperty_Ask(MyEXO, MeshTopology)
    
    Do i = 1, MeshTopology%num_elem_blks
-      MeshTopology%elem_blk(i)%Elem_Type = MyEXO%EBProperty( Rupt_EBProp_Elem_Type )%Value( MeshTopology%elem_blk(i)%ID )
+      MeshTopology%elem_blk(i)%Elem_Type = MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( MeshTopology%elem_blk(i)%ID )
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(i), MeshTopology%num_dim)
    End Do
 
@@ -128,7 +128,7 @@ Program PrepRupt
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
-   Call RuptEXOVariable_Init(MyEXO)
+   Call VarFracEXOVariable_Init(MyEXO)
    Call EXOVariable_Write(MyEXO)
    If (verbose) Then
       Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'c
@@ -176,7 +176,7 @@ Program PrepRupt
 
    Select Case(iCase)
    Case (1)! MIL
-      Allocate(GlobVars(Rupt_Num_GlobVar))
+      Allocate(GlobVars(VarFrac_Num_GlobVar))
       GlobVars = 0.0_Kr
       !!! Time Steps
       Write(IOBuffer, 200) 'TMin'
@@ -201,7 +201,7 @@ Program PrepRupt
       Allocate(T(NumSteps))
       Do i = 1, NumSteps
          T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
-         GlobVars(Rupt_GlobVar_Load) = T(i)
+         GlobVars(VarFrac_GlobVar_Load) = T(i)
          Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
 
          MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
@@ -274,7 +274,7 @@ Program PrepRupt
          Theta = 0.0_Kr
 
          !!! Force
-         If (MyEXO%EBProperty(Rupt_EBProp_HasBForce)%Value(i) /= 0 ) Then
+         If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'Fx'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
@@ -317,7 +317,7 @@ Program PrepRupt
             Allocate(Thetaelem(Num_DoF))
             
             !!! Update F
-            If ( MyEXO%EBProperty(Rupt_EBProp_HasBForce)%Value(i) /= 0 ) Then
+            If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
                Do k = 0, Num_DoF-1
                   Felem(3*k+1) = T(iStep) * F(i)%X
                   Felem(3*k+2) = T(iStep) * F(i)%Y
@@ -336,8 +336,8 @@ Program PrepRupt
             DeAllocate(Felem)
             DeAllocate(Thetaelem)         
          End Do
-         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, iStep, FSec) 
-         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, iStep, ThetaSec) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, iStep, FSec) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, iStep, ThetaSec) 
       End Do
       DeAllocate(F)
       DeAllocate(Theta)
@@ -356,7 +356,7 @@ Program PrepRupt
 
          !!! Displacement
          !!! WTF I can bcast the entire arrays
-         If (MyEXO%NSProperty(Rupt_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'Ux'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
@@ -364,7 +364,7 @@ Program PrepRupt
             End If
             Call MPI_BCast(U(i)%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
          End If
-         If (MyEXO%NSProperty(Rupt_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'Uy'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
@@ -372,7 +372,7 @@ Program PrepRupt
             End If
             Call MPI_BCast(U(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
          End If
-         If (MyEXO%NSProperty(Rupt_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'Uz'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
@@ -380,7 +380,7 @@ Program PrepRupt
             End If
             Call MPI_BCast(U(i)%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
          End If
-         If (MyEXO%NSProperty(Rupt_NSProp_BCVType)%Value(i) /= 0 ) Then
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'V'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
@@ -410,11 +410,11 @@ Program PrepRupt
                Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
                Call MeshUpdateClosure(MeshTopology%Mesh, VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, iErr); CHKERRQ(iErr)            
                !!! We will need to do a restrict then update here!
-               !!! Write V only if MyEXO%NSProperty(Rupt_NSProp_BCVType)%Value(i) /= 0
+               !!! Write V only if MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0
             End Do
          End Do
-         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_Fracture)%Offset, iStep, VSec) 
-         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, iStep, USec) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, iStep, USec) 
       End Do
       
       DeAllocate(Uelem)
@@ -434,4 +434,4 @@ Program PrepRupt
  102 Format('*** Node Set      ', T24, I3, '\n'c)
  200 Format(A,t60, ': ')
    
-End Program PrepRupt
+End Program PrepVarFrac
