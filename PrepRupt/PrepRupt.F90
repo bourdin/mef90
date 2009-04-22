@@ -50,6 +50,10 @@ Program PrepRupt
    Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp3D
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
    PetscReal, Dimension(:), Pointer             :: GlobVars
+   PetscReal                                    :: rDummy
+   Character                                    :: cDummy
+   PetscInt                                     :: vers
+
 
    Call MEF90_Initialize()
    
@@ -195,13 +199,16 @@ Program PrepRupt
       Call MPI_BCast(NumSteps, 1, MPI_INTEGER, 0, EXO%Comm, iErr)
       
       Allocate(T(NumSteps))
-      Do i = 1, NumSteps-1
+      Do i = 1, NumSteps
          T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
-         GlobVars(Rupt_GlobVar_Load)         = T(i)
+         GlobVars(Rupt_GlobVar_Load) = T(i)
          Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
-         !!! Put a call to EXPTIM here
+
+         MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
+         Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
+         Call EXCLOS(MyEXO%exoid, iErr)
+         MyEXO%exoid = 0
       End Do
-      T(NumSteps) = TMax
 
      !!! Elem Blocks BC and Variables
       Select Case (MeshTopology%Num_Dim)
