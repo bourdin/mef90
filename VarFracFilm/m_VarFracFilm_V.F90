@@ -115,8 +115,8 @@ End Subroutine MatV_Assembly
       !! Calculate the Effective Strain at the gauss point
          Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * MatProp%Therm_Exp)   
       !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
-         C2_V     = 0.5_Kr / AppCtx%RuptSchemeParam%Epsilon * MatProp%Toughness + ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
-         C2_GradV = 2.0_Kr * AppCtx%RuptSchemeParam%Epsilon * MatProp%Toughness
+         C2_V     = 0.5_Kr / AppCtx%VarFracFilmSchemeParam%Epsilon * MatProp%Toughness + ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
+         C2_GradV = 2.0_Kr * AppCtx%VarFracFilmSchemeParam%Epsilon * MatProp%Toughness
       !! Assemble the element stiffness
          Do iDoF1 = 1, NumDoFScal
             If (BCFlag(iDoF1) == 0) Then
@@ -198,7 +198,7 @@ End Subroutine MatV_Assembly
       Allocate(BCFlag(NumDoFScal))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
-      C1_V =  0.5_Kr / AppCtx%RuptSchemeParam%Epsilon * MatProp%Toughness 
+      C1_V =  0.5_Kr / AppCtx%VarFracFilmSchemeParam%Epsilon * MatProp%Toughness 
       Do_iGauss: Do iGauss = 1, NumGauss
           Do iDoF1 = 1, NumDoFScal
             If (BCFlag(iDoF1) == 0) Then
