@@ -136,13 +136,13 @@ Module m_RuptStruct
       PetscInt                                     :: nbCracks
       PetscReal                                    :: MaxCrackLength     
       
-      PetscInt                                     :: RelaxMaxIter
-      PetscReal                                    :: RelaxTol
+      PetscInt                                     :: AltMinMaxIter
+      PetscReal                                    :: AltMinTol
+      PetscInt                                     :: AltMinSaveInt
 
       PetscReal                                    :: KSPUrtol
       PetscReal                                    :: KSPVrtol
       
-      PetscInt                                     :: SaveInt
       
       PetscReal                                    :: Epsilon
       PetscReal                                    :: KEpsilon
@@ -401,15 +401,15 @@ Module m_RuptStruct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'MaxCrackLength')")  dSchemeParam%MaxCrackLength
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "(I5,T32, 'RelaxMaxIter')")        dSchemeParam%RelaxMaxIter
+      Write(IOBuffer, "(I5,T32, 'AltMinMaxIter')")       dSchemeParam%AltMinMaxIter
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "(ES12.5,T32, 'RelaxTol')")        dSchemeParam%RelaxTol
+      Write(IOBuffer, "(ES12.5,T32, 'AltMinTol')")        dSchemeParam%AltMinTol
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'KSPUrTol')")        dSchemeParam%KSPUrTol
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "(ES12.5,T32, 'KSPVrTol')")        dSchemeParam%KSPVrTol
+      Write(IOBuffer, "(I5,T32, 'AltMinSaveInt')")       dSchemeParam%AltMinSaveInt
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "(I5,T32, 'SaveInt')")             dSchemeParam%SaveInt
+      Write(IOBuffer, "(ES12.5,T32, 'KSPVrTol')")        dSchemeParam%KSPVrTol
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'Epsilon')")         dSchemeParam%Epsilon
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -436,11 +436,11 @@ Module m_RuptStruct
       Read(F_IN, *) dSchemeParam%InitV 
       Read(F_IN, *) dSchemeParam%NbCracks
       Read(F_IN, *) dSchemeParam%MaxCrackLength
-      Read(F_IN, *) dSchemeParam%RelaxMaxIter
-      Read(F_IN, *) dSchemeParam%RelaxTol
+      Read(F_IN, *) dSchemeParam%AltMinMaxIter
+      Read(F_IN, *) dSchemeParam%AltMinTol
+      Read(F_IN, *) dSchemeParam%AltMinSaveInt
       Read(F_IN, *) dSchemeParam%KSPUrTol
       Read(F_IN, *) dSchemeParam%KSPVrTol
-      Read(F_IN, *) dSchemeParam%SaveInt
       Read(F_IN, *) dSchemeParam%Epsilon
       Read(F_IN, *) dSchemeParam%KEpsilon
       Read(F_IN, *) dSchemeParam%ATNum
@@ -462,11 +462,11 @@ Module m_RuptStruct
       dSchemeParam%InitV            = Init_V_PREV
       dSchemeParam%nbCracks         = 0
       dSchemeParam%MaxCrackLength   = 0.0D0  
-      dSchemeParam%RelaxMaxIter     = 1000
-      dSchemeParam%RelaxTol         = 1.0D-4
+      dSchemeParam%AltMinMaxIter    = 1000
+      dSchemeParam%AltMinTol        = 1.0D-4
+      dSchemeParam%AltMinSaveInt    = 25
       dSchemeParam%KSPUrtol         = 1.0D-6
       dSchemeParam%KSPVrtol         = 1.0D-6
-      dSchemeParam%SaveInt          = 25
       dSchemeParam%Epsilon          = .1
       dSchemeParam%KEpsilon         = 1.0E-6
       dSchemeParam%ATNum            = 2
@@ -481,11 +481,11 @@ Module m_RuptStruct
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-maxcracklength', dSchemeParam%MaxCrackLength, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-relaxmaxiter',   dSchemeParam%RelaxMaxIter, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-relaxtol',       dSchemeParam%RelaxTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminmaxiter',  dSchemeParam%AltMinMaxIter, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-altmintol',      dSchemeParam%AltMinTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminsaveint',  dSchemeParam%AltMinSaveInt, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspurol',        dSchemeParam%KSPUrTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspvrol',        dSchemeParam%KSPVrTol, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-saveint',        dSchemeParam%SaveInt, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',        dSchemeParam%Epsilon, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)
