@@ -1,4 +1,4 @@
-Program  Elast
+Program  VarFracQS
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -136,4 +136,4 @@ Program  Elast
    Call ComputeStrainStress(AppCtx)
 
    Call VarFracQSFinalize(AppCtx)
-End Program  Elast
+End Program  VarFracQS
