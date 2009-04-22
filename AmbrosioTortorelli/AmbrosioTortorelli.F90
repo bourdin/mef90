@@ -26,29 +26,32 @@ Program  Elast
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+   PetscInt                                     :: iter
 
    Call AmbrosioTortorelliInit(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
-      Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
-      Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
+      Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer) 
+      Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer) 
    End If   
-   !-------------------------------------------------------------------
-   ! Problem for U
+   
+   DO iter=1, AppCtx%RuptSchemeParam%RelaxMaxIter
+   
+   !------------------------------------------------------------------- ! Problem for U
    !-------------------------------------------------------------------
 
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the matrix of the U-subproblem\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
+      Write(IOBuffer, *) 'Assembling the matrix of the U-subproblem\n'c 
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+    End If
    
    Call MatU_Assembly(AppCtx)
    
 !   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the RHS of the U-subproblem \n'c
+      Write(IOBuffer, *) 'Assembling the RHS of the U-subproblem \n'c 
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
@@ -56,8 +59,8 @@ Program  Elast
 !   Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n'c 
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
    End If
    
    AppCtx%TimeStep = 1
@@ -65,11 +68,10 @@ Program  Elast
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Saving U\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
    End If
-   Call Save_U(AppCtx)
-   !-------------------------------------------------------------------
-   ! Problem for V
+
+   !------------------------------------------------------------------- ! Problem for V
    !-------------------------------------------------------------------
    
    Call MatV_Assembly(AppCtx)
@@ -77,25 +79,33 @@ Program  Elast
 !   Call MatView(AppCtx%KV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the RHS of the V-subproblem \n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, *) 'Assembling the RHS of the V-subproblem \n'c 
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
    End If
    
    Call RHSV_Assembly(AppCtx)
 !   Call VecView(AppCtx%RHSV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Calling KSPSolve for the V-subproblem\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, *) 'Calling KSPSolve for the V-subproblem\n'c 
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
    End If
    
    Call Solve_V(AppCtx)
+   !------------------------------------------------------------------- ! Check the exit condition: tollerance on the error in V 
+   if (AppCtx.ErrV.LT.AppCtx%RuptSchemeParam%RelaxTol) then 
+   EXIT 
+   End if
+   End DO
+   
+   !------------------------------------------------------------------- ! Save the results
+   Call Save_U(AppCtx)
    Call Save_V(AppCtx)
    !-------------------------------------------------------------------
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Computing bulk energy, strains and stresses\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, *) 'Computing bulk energy, strains and stresses\n'c 
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
    End If
    
    Call ComputeEnergy(AppCtx)
@@ -115,7 +125,7 @@ Program  Elast
 
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Saving results\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
    End If
    
    Call AmbrosioTortorelliFinalize(AppCtx)

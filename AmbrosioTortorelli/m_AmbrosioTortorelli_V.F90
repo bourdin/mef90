@@ -38,8 +38,8 @@ Contains
       PetscReal, Dimension(:,:), Pointer           :: MatElem
       
 !      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
-      
-      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+
+	     Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -84,6 +84,7 @@ End Subroutine MatV_Assembly
       Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
 #endif      
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr),
+
 
       MatElem  = 0.0_Kr
       NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
@@ -225,15 +226,18 @@ End Subroutine MatV_Assembly
       PetscReal                                    :: VMin, VMax
       
 !      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
+  
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, V_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_FORWARD, V_Vec, ierr); CHKERRQ(ierr)
+
+      Call VecDuplicate(V_Vec, V_Old, iErr); CHKERRQ(iErr)
+      Call VecCopy(V_Vec, V_Old, iErr); CHKERRQ(iErr)
+
       Call KSPSolve(AppCtx%KSPV, AppCtx%RHSV, V_Vec, iErr); CHKERRQ(iErr)
       !!! Solve and store the solution in AppCtx%RHS
       
       Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, ierr); CHKERRQ(ierr)
-      Call VecDuplicate(V_Vec, V_Old, iErr); CHKERRQ(iErr)
-      Call VecCopy(V_Vec, V_Old, iErr); CHKERRQ(iErr)
-      
+       
       !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%V
       
       Call KSPGetConvergedReason(AppCtx%KSPV, reason, iErr); CHKERRQ(iErr)
