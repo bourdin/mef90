@@ -1,4 +1,4 @@
-Module m_RuptStruct
+Module m_VarFrac_Struct
 
 #include "finclude/petscdef.h"
 
@@ -14,12 +14,12 @@ Module m_RuptStruct
    Public :: GenHL_Iso2D_EnuPlaneStrain
    Public :: GenHL_Ortho2D_LambdaMu
    
-   Public :: RuptSchemeParam_View
-   Public :: RuptSchemeParam_Load
-   Public :: RuptSchemeParam_GetFromOptions
+   Public :: VarFracSchemeParam_View
+   Public :: VarFracSchemeParam_Load
+   Public :: VarFracSchemeParam_GetFromOptions
    
-   Public :: RuptEXOProperty_Init
-   Public :: RuptEXOVariable_Init
+   Public :: VarFracEXOProperty_Init
+   Public :: VarFracEXOVariable_Init
    
    Public :: MatProp2D_Type, MatProp3D_Type
    Public :: MatProp_Write, MatProp_Read
@@ -29,7 +29,7 @@ Module m_RuptStruct
    Public :: EXOProperty_InitBCUFlag2D
    Public :: EXOProperty_InitBCUFlag3D
    
-   Public :: RuptSchemeParam_Type
+   Public :: VarFracSchemeParam_Type
 
    Interface MatProp_Write
       Module Procedure MatProp2D_Write, MatProp3D_Write
@@ -58,57 +58,57 @@ Module m_RuptStruct
    PetscInt, Parameter, Public                     :: irrev_Eq   = 1
    PetscInt, Parameter, Public                     :: Irrev_Ineq = 2
    
-   PetscInt, Parameter, Public                     :: Rupt_Num_VertVar           = 8
-   PetscInt, Parameter, Public                     :: Rupt_VertVar_Fracture      = 1
-   PetscInt, Parameter, Public                     :: Rupt_VertVar_DisplacementX = 2   
-   PetscInt, Parameter, Public                     :: Rupt_VertVar_DisplacementY = 3
-   PetscInt, Parameter, Public                     :: Rupt_VertVar_DisplacementZ = 4   
-   PetscInt, Parameter, Public                     :: Rupt_VertVar_ForceX        = 5   
-   PetscInt, Parameter, Public                     :: Rupt_VertVar_ForceY        = 6
-   PetscInt, Parameter, Public                     :: Rupt_VertVar_ForceZ        = 7   
-   PetscInt, Parameter, Public                     :: Rupt_VertVar_Temperature   = 8
+   PetscInt, Parameter, Public                     :: VarFrac_Num_VertVar           = 8
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_Fracture      = 1
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_DisplacementX = 2   
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_DisplacementY = 3
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_DisplacementZ = 4   
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_ForceX        = 5   
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_ForceY        = 6
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_ForceZ        = 7   
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_Temperature   = 8
    
-   PetscInt, Parameter, Public                     :: Rupt_Num_CellVar      = 12
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXX = 1
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainYY = 2 
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXY = 3
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainZZ = 4
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainYZ = 5
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StrainXZ = 6
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressXX = 7
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressYY = 8
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressXY = 9
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressZZ = 10
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressYZ = 11
-   PetscInt, Parameter, Public                     :: Rupt_CellVar_StressZX = 12
+   PetscInt, Parameter, Public                     :: VarFrac_Num_CellVar      = 12
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StrainXX = 1
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StrainYY = 2 
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StrainXY = 3
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StrainZZ = 4
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StrainYZ = 5
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StrainXZ = 6
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StressXX = 7
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StressYY = 8
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StressXY = 9
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StressZZ = 10
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StressYZ = 11
+   PetscInt, Parameter, Public                     :: VarFrac_CellVar_StressZX = 12
 
-   PetscInt, Parameter, Public                     :: Rupt_Num_GlobVar           = 6
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_ElasticEnergy = 1
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_ExtForcesWork = 2
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_KineticEnergy = 3 
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_SurfaceEnergy = 4 
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_TotalEnergy   = 5
-   PetscInt, Parameter, Public                     :: Rupt_GlobVar_Load          = 6
+   PetscInt, Parameter, Public                     :: VarFrac_Num_GlobVar           = 6
+   PetscInt, Parameter, Public                     :: VarFrac_GlobVar_ElasticEnergy = 1
+   PetscInt, Parameter, Public                     :: VarFrac_GlobVar_ExtForcesWork = 2
+   PetscInt, Parameter, Public                     :: VarFrac_GlobVar_KineticEnergy = 3 
+   PetscInt, Parameter, Public                     :: VarFrac_GlobVar_SurfaceEnergy = 4 
+   PetscInt, Parameter, Public                     :: VarFrac_GlobVar_TotalEnergy   = 5
+   PetscInt, Parameter, Public                     :: VarFrac_GlobVar_Load          = 6
    
-   PetscInt, Parameter, Public                     :: Rupt_Num_EBProperties  = 3
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_IsBrittle  = 1
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_HasBForce  = 2
-   PetscInt, Parameter, Public                     :: Rupt_EBProp_Elem_Type  = 3
+   PetscInt, Parameter, Public                     :: VarFrac_Num_EBProperties  = 3
+   PetscInt, Parameter, Public                     :: VarFrac_EBProp_IsBrittle  = 1
+   PetscInt, Parameter, Public                     :: VarFrac_EBProp_HasBForce  = 2
+   PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type  = 3
    
-   PetscInt, Parameter, Public                     :: Rupt_Num_SSProperties  = 6
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCUTypeX   = 1
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCUTypeY   = 2
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCUTypeZ   = 3
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_BCVType    = 4
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_HasSForce  = 5
-   PetscInt, Parameter, Public                     :: Rupt_SSProp_Elem_Type  = 6
+   PetscInt, Parameter, Public                     :: VarFrac_Num_SSProperties  = 6
+   PetscInt, Parameter, Public                     :: VarFrac_SSProp_BCUTypeX   = 1
+   PetscInt, Parameter, Public                     :: VarFrac_SSProp_BCUTypeY   = 2
+   PetscInt, Parameter, Public                     :: VarFrac_SSProp_BCUTypeZ   = 3
+   PetscInt, Parameter, Public                     :: VarFrac_SSProp_BCVType    = 4
+   PetscInt, Parameter, Public                     :: VarFrac_SSProp_HasSForce  = 5
+   PetscInt, Parameter, Public                     :: VarFrac_SSProp_Elem_Type  = 6
 
-   PetscInt, Parameter, Public                     :: Rupt_Num_NSProperties  = 5
-   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCUTypeX   = 1
-   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCUTypeY   = 2
-   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCUTypeZ   = 3
-   PetscInt, Parameter, Public                     :: Rupt_NSProp_BCVType    = 4
-   PetscInt, Parameter, Public                     :: Rupt_NSProp_HasPForce  = 5
+   PetscInt, Parameter, Public                     :: VarFrac_Num_NSProperties  = 5
+   PetscInt, Parameter, Public                     :: VarFrac_NSProp_BCUTypeX   = 1
+   PetscInt, Parameter, Public                     :: VarFrac_NSProp_BCUTypeY   = 2
+   PetscInt, Parameter, Public                     :: VarFrac_NSProp_BCUTypeZ   = 3
+   PetscInt, Parameter, Public                     :: VarFrac_NSProp_BCVType    = 4
+   PetscInt, Parameter, Public                     :: VarFrac_NSProp_HasPForce  = 5
    
    Type MatProp2D_Type
       PetscReal                                    :: Toughness
@@ -122,7 +122,7 @@ Module m_RuptStruct
       Type(MatS3D)                                 :: Therm_Exp      
    End Type MatProp3D_Type
    
-   Type RuptSchemeParam_Type
+   Type VarFracSchemeParam_Type
       PetscInt                                     :: DoIrrev
       PetscReal                                    :: IrrevTol
       
@@ -149,7 +149,7 @@ Module m_RuptStruct
 
       PetscInt                                     :: ATNum
       PetscInt                                     :: IntegOrder
-   End Type RuptSchemeParam_Type
+   End Type VarFracSchemeParam_Type
    
  Contains
    Subroutine EXOProperty_InitBCVFlag(dEXO, dMeshTopology, dBCFlag)
@@ -167,7 +167,7 @@ Module m_RuptStruct
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
          Allocate(Flag(1))
-         Flag = dEXO%NSProperty( Rupt_NSProp_BCVType )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag = dEXO%NSProperty( VarFrac_NSProp_BCVType )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
             Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
          End Do
@@ -191,7 +191,7 @@ Module m_RuptStruct
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
          Allocate(Flag(1))
-         Flag = dEXO%NSProperty( Rupt_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
             Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
          End Do
@@ -215,8 +215,8 @@ Module m_RuptStruct
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
          Allocate(Flag(2))
-         Flag(1) = dEXO%NSProperty( Rupt_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(2) = dEXO%NSProperty( Rupt_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(1) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(2) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
             Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
          End Do
@@ -240,9 +240,9 @@ Module m_RuptStruct
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
          Allocate(Flag(3))
-         Flag(1) = dEXO%NSProperty( Rupt_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(2) = dEXO%NSProperty( Rupt_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(3) = dEXO%NSProperty( Rupt_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(1) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(2) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(3) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
             Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
          End Do
@@ -377,8 +377,8 @@ Module m_RuptStruct
 220   Format(I6, 28(ES12.5,' '))
    End Subroutine MatProp3D_Read
 
-   Subroutine RuptSchemeParam_View(dSchemeParam, viewer)
-      Type(RuptSchemeParam_Type)                   :: dSchemeParam
+   Subroutine VarFracSchemeParam_View(dSchemeParam, viewer)
+      Type(VarFracSchemeParam_Type)                   :: dSchemeParam
       Type(PetscViewer)                            :: viewer
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
@@ -419,10 +419,10 @@ Module m_RuptStruct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I1,T32, 'IntegOrder')")          dSchemeParam%IntegOrder
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-   End Subroutine RuptSchemeParam_View
+   End Subroutine VarFracSchemeParam_View
 
-   Subroutine RuptSchemeParam_Load(dSchemeParam, filename)
-      Type(RuptSchemeParam_Type)                   :: dSchemeParam
+   Subroutine VarFracSchemeParam_Load(dSchemeParam, filename)
+      Type(VarFracSchemeParam_Type)                   :: dSchemeParam
       Character(len=*)                             :: filename
       
       Open(File = filename, status='old', Unit = F_IN)
@@ -446,10 +446,10 @@ Module m_RuptStruct
       Read(F_IN, *) dSchemeParam%ATNum
       Read(F_IN, *) dSchemeParam%IntegOrder
       Close(F_IN)
-   End Subroutine RuptSchemeParam_Load
+   End Subroutine VarFracSchemeParam_Load
    
-   Subroutine RuptSchemeParam_GetFromOptions(dSchemeParam)
-      Type(RuptSchemeParam_Type)                   :: dSchemeParam
+   Subroutine VarFracSchemeParam_GetFromOptions(dSchemeParam)
+      Type(VarFracSchemeParam_Type)                   :: dSchemeParam
       PetscInt                                     :: iErr
       PetscTruth                                   :: flag
 
@@ -490,9 +490,9 @@ Module m_RuptStruct
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
-   End Subroutine RuptSchemeParam_GetFromOptions
+   End Subroutine VarFracSchemeParam_GetFromOptions
    
-   Subroutine RuptEXOProperty_Init(dEXO, dMeshTopology)
+   Subroutine VarFracEXOProperty_Init(dEXO, dMeshTopology)
       Type(EXO_Type)                      :: dEXO
       Type(MeshTopology_Type)             :: dMeshTopology
       PetscInt                            :: i, iErr
@@ -511,87 +511,87 @@ Module m_RuptStruct
       
       If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
          Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n'c, iErr); CHKERRQ(iErr)
-         Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before RuptEXOProperty_Init?\n'c, iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracEXOProperty_Init?\n'c, iErr); CHKERRQ(iErr)
       End If
 
-      dEXO%Num_EBProperties = Rupt_Num_EBProperties
+      dEXO%Num_EBProperties = VarFrac_Num_EBProperties
       Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
-      dEXO%EBProperty(Rupt_EBProp_IsBrittle)%Name = 'Is_Brittle'
-      dEXO%EBProperty(Rupt_EBProp_HasBForce)%Name = 'Has_BForce'
-      dEXO%EBProperty(Rupt_EBProp_Elem_Type)%Name = 'Elem_Type'
+      dEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Name = 'Is_Brittle'
+      dEXO%EBProperty(VarFrac_EBProp_HasBForce)%Name = 'Has_BForce'
+      dEXO%EBProperty(VarFrac_EBProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_EBProperties
          Allocate(dEXO%EBProperty(i)%Value(NumEB))
          dEXO%EBProperty(i)%Value = 0
       End Do
       
-      dEXO%Num_SSProperties = Rupt_Num_SSProperties
+      dEXO%Num_SSProperties = VarFrac_Num_SSProperties
       Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
-      dEXO%SSProperty(Rupt_SSProp_BCUTypeX)%Name  = 'BCU_Type_X'
-      dEXO%SSProperty(Rupt_SSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
-      dEXO%SSProperty(Rupt_SSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
-      dEXO%SSProperty(Rupt_SSProp_BCVType)%Name   = 'BCV_Type'
-      dEXO%SSProperty(Rupt_SSProp_HasSForce)%Name = 'Has_SForce'
-      dEXO%SSProperty(Rupt_SSProp_Elem_Type)%Name = 'Elem_Type'
+      dEXO%SSProperty(VarFrac_SSProp_BCUTypeX)%Name  = 'BCU_Type_X'
+      dEXO%SSProperty(VarFrac_SSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
+      dEXO%SSProperty(VarFrac_SSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
+      dEXO%SSProperty(VarFrac_SSProp_BCVType)%Name   = 'BCV_Type'
+      dEXO%SSProperty(VarFrac_SSProp_HasSForce)%Name = 'Has_SForce'
+      dEXO%SSProperty(VarFrac_SSProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_SSProperties
          Allocate(dEXO%SSProperty(i)%Value(NumSS))
          dEXO%SSProperty(i)%Value = 0
       End Do
       
-      dEXO%Num_NSProperties = Rupt_Num_NSProperties
+      dEXO%Num_NSProperties = VarFrac_Num_NSProperties
       Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
-      dEXO%NSProperty(Rupt_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
-      dEXO%NSProperty(Rupt_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
-      dEXO%NSProperty(Rupt_NSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
-      dEXO%NSProperty(Rupt_NSProp_BCVType)%Name   = 'BCV_Type'
-      dEXO%NSProperty(Rupt_NSProp_HasPForce)%Name = 'Has_PForce'
+      dEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
+      dEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
+      dEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
+      dEXO%NSProperty(VarFrac_NSProp_BCVType)%Name   = 'BCV_Type'
+      dEXO%NSProperty(VarFrac_NSProp_HasPForce)%Name = 'Has_PForce'
       Do i = 1, dEXO%Num_NSProperties
          Allocate(dEXO%NSProperty(i)%Value(NumNS))
          dEXO%NSProperty(i)%Value = 0
       End Do
-   End Subroutine RuptEXOProperty_Init   
+   End Subroutine VarFracEXOProperty_Init   
 
-   Subroutine RuptEXOVariable_Init(dEXO)
+   Subroutine VarFracEXOVariable_Init(dEXO)
       Type(EXO_Type)                      :: dEXO
       PetscInt                            :: i
       
-      dEXO%Num_GlobVariables = Rupt_Num_GlobVar
+      dEXO%Num_GlobVariables = VarFrac_Num_GlobVar
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
-      dEXO%GlobVariable(Rupt_GlobVar_SurfaceEnergy)%Name = 'Surface energy'
-      dEXO%GlobVariable(Rupt_GlobVar_ElasticEnergy)%Name = 'Elastic energy'
-      dEXO%GlobVariable(Rupt_GlobVar_KineticEnergy)%Name = 'Kinetic energy'
-      dEXO%GlobVariable(Rupt_GlobVar_ExtForcesWork)%Name = 'External Forces Work'
-      dEXO%GlobVariable(Rupt_GlobVar_TotalEnergy)%Name   = 'Total energy'
-      dEXO%GlobVariable(Rupt_GlobVar_Load)%Name          = 'Load'
+      dEXO%GlobVariable(VarFrac_GlobVar_SurfaceEnergy)%Name = 'Surface energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Name = 'Elastic energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_KineticEnergy)%Name = 'Kinetic energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_ExtForcesWork)%Name = 'External Forces Work'
+      dEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Name   = 'Total energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_Load)%Name          = 'Load'
       dEXO%GlobVariable(:)%Offset = (/ (i, i=1,dEXO%Num_GlobVariables) /)
       
-      dEXO%Num_CellVariables = Rupt_Num_CellVar
+      dEXO%Num_CellVariables = VarFrac_Num_CellVar
       Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))
-      dEXO%CellVariable(Rupt_CellVar_StrainXX)%Name = 'Strain XX'
-      dEXO%CellVariable(Rupt_CellVar_StrainYY)%Name = 'Strain YY' 
-      dEXO%CellVariable(Rupt_CellVar_StrainZZ)%Name = 'Strain ZZ'
-      dEXO%CellVariable(Rupt_CellVar_StrainXY)%Name = 'Strain XY'
-      dEXO%CellVariable(Rupt_CellVar_StrainYZ)%Name = 'Strain YZ'
-      dEXO%CellVariable(Rupt_CellVar_StrainXZ)%Name = 'Strain XZ'
-      dEXO%CellVariable(Rupt_CellVar_StressXX)%Name = 'Stress XX'
-      dEXO%CellVariable(Rupt_CellVar_StressYY)%Name = 'Stress YY'
-      dEXO%CellVariable(Rupt_CellVar_StressZZ)%Name = 'Stress ZZ'
-      dEXO%CellVariable(Rupt_CellVar_StressXY)%Name = 'Stress XY'
-      dEXO%CellVariable(Rupt_CellVar_StressYZ)%Name = 'Stress YZ'
-      dEXO%CellVariable(Rupt_CellVar_StressZX)%Name = 'Stress ZX'
+      dEXO%CellVariable(VarFrac_CellVar_StrainXX)%Name = 'Strain XX'
+      dEXO%CellVariable(VarFrac_CellVar_StrainYY)%Name = 'Strain YY' 
+      dEXO%CellVariable(VarFrac_CellVar_StrainZZ)%Name = 'Strain ZZ'
+      dEXO%CellVariable(VarFrac_CellVar_StrainXY)%Name = 'Strain XY'
+      dEXO%CellVariable(VarFrac_CellVar_StrainYZ)%Name = 'Strain YZ'
+      dEXO%CellVariable(VarFrac_CellVar_StrainXZ)%Name = 'Strain XZ'
+      dEXO%CellVariable(VarFrac_CellVar_StressXX)%Name = 'Stress XX'
+      dEXO%CellVariable(VarFrac_CellVar_StressYY)%Name = 'Stress YY'
+      dEXO%CellVariable(VarFrac_CellVar_StressZZ)%Name = 'Stress ZZ'
+      dEXO%CellVariable(VarFrac_CellVar_StressXY)%Name = 'Stress XY'
+      dEXO%CellVariable(VarFrac_CellVar_StressYZ)%Name = 'Stress YZ'
+      dEXO%CellVariable(VarFrac_CellVar_StressZX)%Name = 'Stress ZX'
       dEXO%CellVariable(:)%Offset = (/ (i, i=1,dEXO%Num_CellVariables) /)
 
-      dEXO%Num_VertVariables = Rupt_Num_VertVar
+      dEXO%Num_VertVariables = VarFrac_Num_VertVar
       Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))
-      dEXO%VertVariable(Rupt_VertVar_Fracture)%Name      = 'Fracture'
-      dEXO%VertVariable(Rupt_VertVar_DisplacementX)%Name = 'Displacement X'   
-      dEXO%VertVariable(Rupt_VertVar_DisplacementY)%Name = 'Displacement Y'
-      dEXO%VertVariable(Rupt_VertVar_DisplacementZ)%Name = 'Displacement Z'   
-      dEXO%VertVariable(Rupt_VertVar_ForceX)%Name        = 'Force X'   
-      dEXO%VertVariable(Rupt_VertVar_ForceY)%Name        = 'Force Y'
-      dEXO%VertVariable(Rupt_VertVar_ForceZ)%Name        = 'Force Z'   
-      dEXO%VertVariable(Rupt_VertVar_Temperature)%Name   = 'Temperature'
+      dEXO%VertVariable(VarFrac_VertVar_Fracture)%Name      = 'Fracture'
+      dEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Name = 'Displacement X'   
+      dEXO%VertVariable(VarFrac_VertVar_DisplacementY)%Name = 'Displacement Y'
+      dEXO%VertVariable(VarFrac_VertVar_DisplacementZ)%Name = 'Displacement Z'   
+      dEXO%VertVariable(VarFrac_VertVar_ForceX)%Name        = 'Force X'   
+      dEXO%VertVariable(VarFrac_VertVar_ForceY)%Name        = 'Force Y'
+      dEXO%VertVariable(VarFrac_VertVar_ForceZ)%Name        = 'Force Z'   
+      dEXO%VertVariable(VarFrac_VertVar_Temperature)%Name   = 'Temperature'
       dEXO%VertVariable(:)%Offset = (/ (i, i=1,dEXO%Num_VertVariables) /)
-   End Subroutine RuptEXOVariable_Init
+   End Subroutine VarFracEXOVariable_Init
   
    Subroutine GenHL_Iso2D_LambdaMu(lambda, mu, A) 
       PetscReal, Intent(IN)               :: lambda, mu
@@ -695,4 +695,4 @@ Module m_RuptStruct
 
       A%YYYY =  A%XXXX
    End Subroutine GenHL_Ortho2D_LambdaMu
-End Module m_RuptStruct
+End Module m_VarFrac_Struct

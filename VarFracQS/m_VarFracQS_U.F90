@@ -1,7 +1,7 @@
 #if defined PB_2D
-Module m_AmbrosioTortorelli_U2D
+Module m_VarFracQS_U2D
 #elif defined PB_3D
-Module m_AmbrosioTortorelli_U3D
+Module m_VarFracQS_U3D
 #endif
 
 #include "finclude/petscdef.h"
@@ -12,12 +12,12 @@ Module m_AmbrosioTortorelli_U3D
 #include "finclude/petscviewerdef.h"
 
 #if defined PB_2D
-   Use m_AmbrosioTortorelli_Types2D
+   Use m_VarFracQS_Types2D
 #elif defined PB_3D
-   Use m_AmbrosioTortorelli_Types3D
+   Use m_VarFracQS_Types3D
 #endif   
    Use m_MEF90
-   Use m_RuptStruct
+   Use m_VarFrac_Struct
    Use petsc
    Use petscvec
    Use petscmat
@@ -100,7 +100,7 @@ Contains
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoFVect
-                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2+AppCtx%RuptSchemeParam%KEpsilon)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
+                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2+AppCtx%VarFracSchemeParam%KEpsilon)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
 !			      Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                   !!! Is that right?
                End Do
@@ -254,7 +254,7 @@ Contains
    End Subroutine Solve_U
       
 #if defined PB_2D
-End Module m_AmbrosioTortorelli_U2D
+End Module m_VarFracQS_U2D
 #elif defined PB_3D
-End Module m_AmbrosioTortorelli_U3D
+End Module m_VarFracQS_U3D
 #endif

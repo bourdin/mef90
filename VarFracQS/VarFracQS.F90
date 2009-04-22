@@ -8,12 +8,12 @@ Program  Elast
 #include "finclude/petscmeshdef.h"
 
 #if defined PB_2D
-   Use m_AmbrosioTortorelli2D
+   Use m_VarFracQS2D
 #elif defined PB_3D
-   Use m_AmbrosioTortorelli3D
+   Use m_VarFracQS3D
 #endif   
    Use m_MEF90
-   Use m_RuptStruct
+   Use m_VarFrac_Struct
    Use petsc
    Use petscvec
    Use petscmat
@@ -28,7 +28,7 @@ Program  Elast
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: iter
 
-   Call AmbrosioTortorelliInit(AppCtx)
+   Call VarFracQSInit(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
@@ -37,7 +37,7 @@ Program  Elast
    End If   
    
    AppCtx%TimeStep = 1
-   Do iter=1, AppCtx%RuptSchemeParam%AltMinMaxIter
+   Do iter=1, AppCtx%VarFracSchemeParam%AltMinMaxIter
       Write(IOBuffer, "('Iteration ', I4,A)") iter, '\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
@@ -80,10 +80,10 @@ Program  Elast
       !------------------------------------------------------------------- 
       ! Check the exit condition: tolerance on the error in V 
       !------------------------------------------------------------------- 
-      If (AppCtx.ErrV.LT.AppCtx%RuptSchemeParam%AltMinTol) then 
+      If (AppCtx.ErrV.LT.AppCtx%VarFracSchemeParam%AltMinTol) then 
          EXIT 
       End If
-      If (Mod(iter, AppCtx%RuptSchemeParam%AltMinSaveInt) == 0) Then
+      If (Mod(iter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) Then
          If (AppCtx%AppParam%verbose) Then
             Write(IOBuffer, *) 'Saving U and V\n'c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
@@ -135,5 +135,5 @@ Program  Elast
 
    Call ComputeStrainStress(AppCtx)
 
-   Call AmbrosioTortorelliFinalize(AppCtx)
+   Call VarFracQSFinalize(AppCtx)
 End Program  Elast

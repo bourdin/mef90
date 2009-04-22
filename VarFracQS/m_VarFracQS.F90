@@ -1,7 +1,7 @@
 #if defined PB_2D
-Module m_AmbrosioTortorelli2D
+Module m_VarFracQS2D
 #elif defined PB_3D
-Module m_AmbrosioTortorelli3D
+Module m_VarFracQS3D
 #endif
 
 #include "finclude/petscdef.h"
@@ -12,18 +12,18 @@ Module m_AmbrosioTortorelli3D
 #include "finclude/petscviewerdef.h"
 
 #if defined PB_2D
-   Use m_AmbrosioTortorelli_Types2D
-   Use m_AmbrosioTortorelli_U2D
-   Use m_AmbrosioTortorelli_V2D
-   Use m_AmbrosioTortorelli_Post2D
+   Use m_VarFracQS_Types2D
+   Use m_VarFracQS_U2D
+   Use m_VarFracQS_V2D
+   Use m_VarFracQS_Post2D
 #elif defined PB_3D
-   Use m_AmbrosioTortorelli_Types3D   
-   Use m_AmbrosioTortorelli_U3D
-   Use m_AmbrosioTortorelli_V3D
-   Use m_AmbrosioTortorelli_Post3D
+   Use m_VarFracQS_Types3D   
+   Use m_VarFracQS_U3D
+   Use m_VarFracQS_V3D
+   Use m_VarFracQS_Post3D
 #endif   
    Use m_MEF90
-   Use m_RuptStruct
+   Use m_VarFrac_Struct
    Use petsc
    Use petscvec
    Use petscmat
@@ -34,7 +34,7 @@ Module m_AmbrosioTortorelli3D
    
 Contains
 
-   Subroutine AmbrosioTortorelliInit(AppCtx)
+   Subroutine VarFracQSInit(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr, i
@@ -52,7 +52,7 @@ Contains
          Call MEF90_Finalize()
          STOP
       End If
-      Call RuptSchemeParam_GetFromOptions(AppCtx%RuptSchemeParam)
+      Call VarFracSchemeParam_GetFromOptions(AppCtx%VarFracSchemeParam)
       
       If (AppCtx%AppParam%verbose) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
@@ -97,10 +97,10 @@ Contains
  99  Format(A, '-', I4.4, '.gen')
    
       !!! Initializes the values and names of the properties and variables
-      Call RuptEXOVariable_Init(AppCtx%MyEXO)
+      Call VarFracEXOVariable_Init(AppCtx%MyEXO)
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose) Then
-         Write(IOBuffer, *) "Done with RuptEXOVariable_Init and RuptEXOProperty_Read\n"c
+         Write(IOBuffer, *) "Done with VarFracQSEXOVariable_Init and VarFracQSEXOProperty_Read\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
          Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
@@ -116,7 +116,7 @@ Contains
 
       !!! Set the element type for each block so that we can call ElementInit
       Do i = 1, AppCtx%MeshTopology%num_elem_blks
-         AppCtx%MeshTopology%elem_blk(i)%Elem_Type = AppCtx%MyEXO%EBProperty( Rupt_EBProp_Elem_Type )%Value( AppCtx%MeshTopology%elem_blk(i)%ID )
+         AppCtx%MeshTopology%elem_blk(i)%Elem_Type = AppCtx%MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( AppCtx%MeshTopology%elem_blk(i)%ID )
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(i), AppCtx%MeshTopology%num_dim)
       End Do
       If (AppCtx%AppParam%verbose) Then
@@ -125,12 +125,12 @@ Contains
       End If
       
       
-      Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemVect, AppCtx%RuptSchemeParam%IntegOrder)
+      Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemVect, AppCtx%VarFracSchemeParam%IntegOrder)
       If (AppCtx%AppParam%verbose) Then
          Write(IOBuffer, *) "Done with ElementInit Vect\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemScal, AppCtx%RuptSchemeParam%IntegOrder)
+      Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemScal, AppCtx%VarFracSchemeParam%IntegOrder)
       If (AppCtx%AppParam%verbose) Then
          Write(IOBuffer, *) "Done with ElementInit Scal\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -192,45 +192,45 @@ Contains
 
       AppCtx%TimeStep = 1
       !!! Read U, F, and Temperature
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
-   End Subroutine AmbrosioTortorelliInit
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+   End Subroutine VarFracQSInit
          
    
    Subroutine Save_U(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
    End Subroutine Save_U
 
    
    Subroutine Save_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
    End Subroutine Save_V
 
    Subroutine Save_StrainStress(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
    
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFrac_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFrac_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
    End Subroutine Save_StrainStress
 
 
    Subroutine Save_Ener(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_SurfaceEnergy)%Offset, AppCtx%TimeStep, AppCtx%SurfaceEnergy)
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy)
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_ExtForcesWork)%Offset, AppCtx%TimeStep, AppCtx%ExtForcesWork)
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_TotalEnergy)%Offset, AppCtx%TimeStep, AppCtx%TotalEnergy)
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_SurfaceEnergy)%Offset, AppCtx%TimeStep, AppCtx%SurfaceEnergy)
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy)
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ExtForcesWork)%Offset, AppCtx%TimeStep, AppCtx%ExtForcesWork)
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Offset, AppCtx%TimeStep, AppCtx%TotalEnergy)
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
    End Subroutine Save_Ener
    
    
-   Subroutine AmbrosioTortorelliFinalize(AppCtx)
+   Subroutine VarFracQSFinalize(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr
@@ -266,11 +266,11 @@ Contains
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
 103 Format(A,'.log')
-   End Subroutine AmbrosioTortorelliFinalize
+   End Subroutine VarFracQSFinalize
    
    
 #if defined PB_2D
-End Module m_AmbrosioTortorelli2D
+End Module m_VarFracQS2D
 #elif defined PB_3D
-End Module m_AmbrosioTortorelli3D
+End Module m_VarFracQS3D
 #endif

@@ -1,7 +1,7 @@
 #if defined PB_2D
-Module m_AmbrosioTortorelli_Types2D
+Module m_VarFracQS_Types2D
 #elif defined PB_3D
-Module m_AmbrosioTortorelli_Types3D
+Module m_VarFracQS_Types3D
 #endif
 
 #include "finclude/petscdef.h"
@@ -12,7 +12,7 @@ Module m_AmbrosioTortorelli_Types3D
 #include "finclude/petscviewerdef.h"
 
    Use m_MEF90
-   Use m_RuptStruct
+   Use m_VarFrac_Struct
    Use petsc
    Use petscvec
    Use petscmat
@@ -80,12 +80,12 @@ Module m_AmbrosioTortorelli_Types3D
       Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
 #endif
       Type(AppParam_Type)                          :: AppParam
-      Type(RuptSchemeParam_Type)                   :: RuptSchemeParam
+      Type(VarFracSchemeParam_Type)                   :: VarFracSchemeParam
    End Type AppCtx_Type
       
    
 #if defined PB_2D
-End Module m_AmbrosioTortorelli_Types2D
+End Module m_VarFracQS_Types2D
 #elif defined PB_3D
-End Module m_AmbrosioTortorelli_Types3D
+End Module m_VarFracQS_Types3D
 #endif
