@@ -199,7 +199,7 @@ Program PrepVarFrac
       Call MPI_BCast(NumSteps, 1, MPI_INTEGER, 0, EXO%Comm, iErr)
       
       Allocate(T(NumSteps))
-      Do i = 1, NumSteps
+      Do i = 1, NumSteps-1
          T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
          GlobVars(VarFrac_GlobVar_Load) = T(i)
          Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
@@ -209,6 +209,14 @@ Program PrepVarFrac
          Call EXCLOS(MyEXO%exoid, iErr)
          MyEXO%exoid = 0
       End Do
+      T(NumSteps) = Tmax
+      GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
+      Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
+
+      MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
+      Call EXPTIM(MyEXO%exoid, NumSteps, T(NumSteps), iErr)
+      Call EXCLOS(MyEXO%exoid, iErr)
+      MyEXO%exoid = 0
 
      !!! Elem Blocks BC and Variables
       Select Case (MeshTopology%Num_Dim)
