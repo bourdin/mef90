@@ -55,17 +55,20 @@ Module m_VarFracFilm_Types3D
       Type(SectionReal)                            :: U
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
-      Type(SectionReal)                            :: F
       Type(SectionReal)                            :: V
+      Type(SectionReal)                            :: PHI
       Type(SectionReal)                            :: GradV
       Type(SectionReal)                            :: Theta
+      Type(SectionReal)                            :: U0
       PetscReal                                    :: Load
       PetscInt                                     :: TimeStep
-      PetscReal                                    :: SurfaceEnergy
-      PetscReal                                    :: ElasticEnergy
-      PetscReal                                    :: ExtForcesWork
+      PetscReal                                    :: SurfaceEnergyT
+      PetscReal                                    :: SurfaceEnergyD
+      PetscReal                                    :: ElasticBulkEnergy
+      PetscReal                                    :: ElasticInterEnergy
       PetscReal                                    :: TotalEnergy
       PetscReal                                    :: ErrV
+      PetscReal                                    :: ErrPHI
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
       Type(SectionInt)                             :: BCFlagU, BCFlagV
@@ -80,7 +83,7 @@ Module m_VarFracFilm_Types3D
       Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
 #endif
       Type(AppParam_Type)                          :: AppParam
-      Type(VarFracFilmSchemeParam_Type)                   :: VarFracFilmSchemeParam
+      Type(VarFracFilmSchemeParam_Type)            :: VarFracFilmSchemeParam
    End Type AppCtx_Type
       
    
