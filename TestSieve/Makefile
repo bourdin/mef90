@@ -50,6 +50,9 @@ TestCoordinates:   ${PETSC_ARCH} TestCoordinates.o ${PETSC_ARCH}/TestCoordinates
 TestScatter:   ${PETSC_ARCH} TestScatter.o ${PETSC_ARCH}/TestScatter.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestScatter ${PETSC_ARCH}/TestScatter.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+TestUpdate:   ${PETSC_ARCH} TestUpdate.o ${PETSC_ARCH}/TestUpdate.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestUpdate ${PETSC_ARCH}/TestUpdate.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}

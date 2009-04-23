@@ -145,11 +145,11 @@ Contains
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Theta', 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'V', 1, AppCtx%V, iErr); CHKERRQ(iErr)
 
-      NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Stress', NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'GradV', AppCtx%MeshTopology%Num_Dim, AppCtx%GradV, iErr); CHKERRQ(iErr)
-
+      If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
+         NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
+         Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
+         Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Stress', NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
+      End If
 
       !!! Create the Scatter, Vec, Mat, KSP, PC
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
@@ -272,9 +272,10 @@ Contains
       Call SectionRealDestroy(AppCtx%V, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%Theta, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%StressU, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%GradV, iErr); CHKERRQ(iErr)
+      If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
+         Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
+         Call SectionRealDestroy(AppCtx%StressU, iErr); CHKERRQ(iErr)
+      End If
       
       Call VecScatterDestroy(AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
       Call VecScatterDestroy(AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
