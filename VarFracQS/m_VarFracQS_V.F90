@@ -29,66 +29,54 @@ Module m_VarFracQS_V3D
 Contains
    Subroutine Init_TS_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
-      Type(Vec)                                    :: V_Vec
       PetscReal, Dimension(:), Pointer             :: V_Ptr
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: i, iErr
-      
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
       !!! WTF? 
       !!! Why not using restrict / update instead of the mess?
       
       !!! Update the BC from the current V
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case(Irrev_Eq)
+         If (AppCtx%AppParam%verbose) Then
+            Write(IOBuffer, *) "Irreversibility with Irrev_EQ:", Irrev_Eq, "\n"c
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
          !!! Update the BCFlag Section
          !!! If I'd understand how to use SectionGetArrayF90 I'd use it
          Allocate(BCFlag(1))
          BCFlag = 1
-         Call SectionRealCreateLocalVector(AppCtx%V, V_Vec, ierr); CHKERRQ(ierr)
-         Call VecGetArrayF90(V_Vec, V_Ptr, iErr); CHKERRQ(iErr)
-         !!! #$%^&*( this is not going to work when we use higher order elements
+         Allocate(V_Ptr(1))
          Do i = 1, AppCtx%MeshTopology%Num_Verts
-            If (V_Ptr(i) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-               Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%BCVFlag, i + AppCtx%MeshTopology%Num_Elems-1, BCFlag, iErr); CHKERRQ(iErr)
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
+            If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
+               Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCFlag, iErr); CHKERRQ(iErr)
             End If
          End Do
-         Call VecRestoreArrayF90(V_Vec, V_Ptr, iErr)
-         Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
+         DeAllocate(V_Ptr)
          DeAllocate(BCFlag)
       Case(Irrev_Ineq)   
          SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n'c, iErr)
       End Select
       
       Select Case(AppCtx%VarFracSchemeParam%InitV)
-      Case(INIT_V_PREV)
-         !!! Setting the blocked values of V to 0
-         !!! Is this realy the right thing to do?
-         Call SectionRealCreateLocalVector(AppCtx%V, V_Vec, ierr); CHKERRQ(ierr)
-         Call VecGetArrayF90(V_Vec, V_Ptr, iErr); CHKERRQ(iErr)
-         Allocate(BCFlag(1))
-         Do i = 1, AppCtx%MeshTopology%Num_Verts       
-            Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, i + AppCtx%MeshTopology%Num_Elems-1, 1, BCFlag, iErr); CHKERRQ(ierr)
-            If (BCFlag(1) /= 0) Then
-               V_Ptr(i) = 0.0_Kr               
-            End If
-         End Do
-         DeAllocate(BCFlag)
-         Call VecRestoreArrayF90(V_Vec, V_Ptr, iErr)
-         Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
       Case(INIT_V_ONE)
-         Call SectionRealSet(AppCtx%V, 1.0_Kr, ierr); CHKERRQ(iErr)
-         Call SectionRealCreateLocalVector(AppCtx%V, V_Vec, ierr); CHKERRQ(ierr)
-         Call VecGetArrayF90(V_Vec, V_Ptr, iErr); CHKERRQ(iErr)
+         If (AppCtx%AppParam%verbose) Then
+            Write(IOBuffer, *) "Initializing V with Init_V_One:", Init_V_Prev, "\n"c
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
          Allocate(BCFlag(1))
-         Do i = 1, AppCtx%MeshTopology%Num_Verts         
-            Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, i + AppCtx%MeshTopology%Num_Elems-1, 1, BCFlag, iErr); CHKERRQ(ierr)
-            If (BCFlag(1) /= 0) Then
-               V_Ptr(i) = 0.0_Kr               
+         Allocate(V_Ptr(1))
+         V_Ptr(1) = 1.0_Kr               
+         Do i = 1, AppCtx%MeshTopology%Num_Verts       
+            Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, 1, BCFlag, iErr); CHKERRQ(ierr)
+            If (BCFlag(1) == 0) Then
+               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)
             End If
          End Do
+         DeAllocate(V_Ptr)
          DeAllocate(BCFlag)
-         Call VecRestoreArrayF90(V_Vec, V_Ptr, iErr)
-         Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
       End Select
    End Subroutine Init_TS_V
    
@@ -224,7 +212,6 @@ End Subroutine MatV_Assembly
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call RHSV_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, RHSElem)
-            Write(MEF90_MyRank+100, *) iE, RHSElem
             Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(RHSElem)

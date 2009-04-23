@@ -43,7 +43,7 @@ Contains
       Allocate(UBC_Ptr(AppCtx%MeshTopology%Num_Dim))
 
       Do i = 1, AppCtx%MeshTopology%Num_Verts
-         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, BCFlag, iErr); CHKERRQ(ierr)      
+         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, BCFlag, iErr); CHKERRQ(ierr)
          If (Sum(BCFlag) /= 0) Then
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, U_Ptr, iErr); CHKERRQ(ierr)      
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, UBC, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, UBC_Ptr, iErr); CHKERRQ(ierr)
@@ -52,7 +52,7 @@ Contains
                   U_Ptr(j) = UBC_Ptr(j)
                End If
             End Do
-            Call MeshUpdateClosure(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems-1, UBC_Ptr, iErr); CHKERRQ(ierr)
+            Call MeshUpdateClosure(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems + i-1, UBC_Ptr, iErr); CHKERRQ(ierr)
          End If
       End Do
       DeAllocate(BCFlag)
