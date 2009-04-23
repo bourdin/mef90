@@ -12,7 +12,7 @@ Module m_Elast3D
 #include "finclude/petscviewerdef.h"
 
    Use m_MEF90
-   Use m_RuptStruct
+   Use m_VarFrac_Struct
    Use petsc
    Use petscvec
    Use petscmat
@@ -78,7 +78,7 @@ Module m_Elast3D
       Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
 #endif
       Type(AppParam_Type)                          :: AppParam
-      Type(RuptSchemeParam_Type)                   :: RuptSchemeParam
+      Type(VarFracSchemeParam_Type)                   :: VarFracSchemeParam
    End Type AppCtx_Type
    
    
@@ -105,7 +105,7 @@ Contains
          Call MEF90_Finalize()
          STOP
       End If
-      Call RuptSchemeParam_GetFromOptions(AppCtx%RuptSchemeParam)
+      Call VarFracSchemeParam_GetFromOptions(AppCtx%VarFracSchemeParam)
       
       If (AppCtx%AppParam%verbose) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
@@ -155,10 +155,10 @@ Contains
  99  Format(A, '-', I4.4, '.gen')
    
       !!! Initializes the values and names of the properties and variables
-      Call RuptEXOVariable_Init(AppCtx%MyEXO)
+      Call VarFracEXOVariable_Init(AppCtx%MyEXO)
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose) Then
-         Write(IOBuffer, *) "Done with RuptEXOVariable_Init and RuptEXOProperty_Read\n"c
+         Write(IOBuffer, *) "Done with VarFracEXOVariable_Init and VarFracEXOProperty_Read\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
          Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
@@ -174,7 +174,7 @@ Contains
 
       !!! Set the element type for each block so that we can call ElementInit
       Do i = 1, AppCtx%MeshTopology%num_elem_blks
-         AppCtx%MeshTopology%elem_blk(i)%Elem_Type = AppCtx%MyEXO%EBProperty( Rupt_EBProp_Elem_Type )%Value( AppCtx%MeshTopology%elem_blk(i)%ID )
+         AppCtx%MeshTopology%elem_blk(i)%Elem_Type = AppCtx%MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( AppCtx%MeshTopology%elem_blk(i)%ID )
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(i), AppCtx%MeshTopology%num_dim)
       End Do
       If (AppCtx%AppParam%verbose) Then
@@ -183,12 +183,12 @@ Contains
       End If
       
       
-      Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemVect, AppCtx%RuptSchemeParam%IntegOrder)
+      Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemVect, AppCtx%VarFracSchemeParam%IntegOrder)
       If (AppCtx%AppParam%verbose) Then
          Write(IOBuffer, *) "Done with ElementInit Vect\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemScal, AppCtx%RuptSchemeParam%IntegOrder)
+      Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemScal, AppCtx%VarFracSchemeParam%IntegOrder)
       If (AppCtx%AppParam%verbose) Then
          Write(IOBuffer, *) "Done with ElementInit Scal\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -603,10 +603,10 @@ Contains
    Subroutine Save(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(Rupt_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(Rupt_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Rupt_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy)
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFrac_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFrac_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy)
    End Subroutine Save
    
    Subroutine ElastFinalize(AppCtx)
