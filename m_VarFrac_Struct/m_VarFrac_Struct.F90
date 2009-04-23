@@ -144,6 +144,9 @@ Module m_VarFrac_Struct
 
       PetscInt                                     :: ATNum
       PetscInt                                     :: IntegOrder
+      
+      PetscTruth                                   :: SaveStress
+      PetscTruth                                   :: SaveStrain
    End Type VarFracSchemeParam_Type
    
  Contains
@@ -373,7 +376,7 @@ Module m_VarFrac_Struct
    End Subroutine MatProp3D_Read
 
    Subroutine VarFracSchemeParam_View(dSchemeParam, viewer)
-      Type(VarFracSchemeParam_Type)                   :: dSchemeParam
+      Type(VarFracSchemeParam_Type)                :: dSchemeParam
       Type(PetscViewer)                            :: viewer
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
@@ -412,6 +415,10 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I1,T32, 'IntegOrder')")          dSchemeParam%IntegOrder
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "(L1,T32, 'SaveStress')")          dSchemeParam%SaveStress
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "(L1,T32, 'SaveStrain')")          dSchemeParam%SaveStrain
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine VarFracSchemeParam_View
 
    Subroutine VarFracSchemeParam_Load(dSchemeParam, filename)
@@ -437,6 +444,8 @@ Module m_VarFrac_Struct
       Read(F_IN, *) dSchemeParam%KEpsilon
       Read(F_IN, *) dSchemeParam%ATNum
       Read(F_IN, *) dSchemeParam%IntegOrder
+      Read(F_IN, *) dSchemeParam%SaveStress
+      Read(F_IN, *) dSchemeParam%SaveStrain
       Close(F_IN)
    End Subroutine VarFracSchemeParam_Load
    
@@ -462,6 +471,8 @@ Module m_VarFrac_Struct
       dSchemeParam%KEpsilon         = 1.0E-6
       dSchemeParam%ATNum            = 2
       dSchemeParam%IntegOrder       = 3
+      dSchemeParam%SaveStress       = PETSC_FALSE
+      dSchemeParam%SaveStrain       = PETSC_FALSE
 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
@@ -480,6 +491,8 @@ Module m_VarFrac_Struct
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
    End Subroutine VarFracSchemeParam_GetFromOptions
    
    Subroutine VarFracEXOProperty_Init(dEXO, dMeshTopology)

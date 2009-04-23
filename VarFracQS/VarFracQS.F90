@@ -154,8 +154,10 @@ Program  VarFracQS
 
       Call Save_U(AppCtx)
       Call Save_V(AppCtx)
-      Call ComputeStrainStress(AppCtx)
-      Call Save_StrainStress(AppCtx)
+      If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
+         Call ComputeStrainStress(AppCtx)
+         Call Save_StrainStress(AppCtx)
+      End If
    End Do TimeStep
 
    Call VarFracQSFinalize(AppCtx)
