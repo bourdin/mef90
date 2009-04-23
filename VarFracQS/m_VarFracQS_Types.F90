@@ -57,7 +57,6 @@ Module m_VarFracQS_Types3D
       Type(SectionReal)                            :: StrainU
       Type(SectionReal)                            :: F
       Type(SectionReal)                            :: V
-      Type(SectionReal)                            :: GradV
       Type(SectionReal)                            :: Theta
       PetscReal                                    :: Load
       PetscInt                                     :: NumTimeSteps
@@ -81,7 +80,7 @@ Module m_VarFracQS_Types3D
       Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
 #endif
       Type(AppParam_Type)                          :: AppParam
-      Type(VarFracSchemeParam_Type)                   :: VarFracSchemeParam
+      Type(VarFracSchemeParam_Type)                :: VarFracSchemeParam
    End Type AppCtx_Type
       
    
