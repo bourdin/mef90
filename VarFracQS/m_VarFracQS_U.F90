@@ -27,6 +27,40 @@ Module m_VarFracQS_U3D
    Implicit NONE   
    
 Contains
+   Subroutine Init_TS_U(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      Type(SectionReal)                            :: UBC
+      PetscReal, Dimension(:), Pointer             :: U_Ptr, UBC_Ptr
+      PetscInt, Dimension(:), Pointer              :: BCFlag
+      PetscInt                                     :: i, j, iErr
+      
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'UBC', AppCtx%MeshTopology%Num_Dim, UBC, iErr); CHKERRQ(iErr)
+      !!! Using SectionRealDuplicate would make more sense
+      
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, UBC)
+      Allocate(BCFlag(AppCtx%MeshTopology%Num_Dim))
+      Allocate(U_Ptr(AppCtx%MeshTopology%Num_Dim))
+      Allocate(UBC_Ptr(AppCtx%MeshTopology%Num_Dim))
+
+      Do i = 1, AppCtx%MeshTopology%Num_Verts
+         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, BCFlag, iErr); CHKERRQ(ierr)      
+         If (Sum(BCFlag) /= 0) Then
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, U_Ptr, iErr); CHKERRQ(ierr)      
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, UBC, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, UBC_Ptr, iErr); CHKERRQ(ierr)
+            Do j = 1, AppCtx%MeshTopology%Num_Dim      
+               If (BCFlag(j) /= 0) Then
+                  U_Ptr(j) = UBC_Ptr(j)
+               End If
+            End Do
+            Call MeshUpdateClosure(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems-1, UBC_Ptr, iErr); CHKERRQ(ierr)
+         End If
+      End Do
+      DeAllocate(BCFlag)
+      DeAllocate(U_Ptr)
+      DeAllocate(UBC_Ptr)
+      
+      Call SectionRealDestroy(UBC, iErr); CHKERRQ(iErr)
+   End Subroutine Init_TS_U
 
    !----------------------------------------------------------------------------------------!      
    ! MatAssembly (CM)  
@@ -88,7 +122,7 @@ Contains
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
 
       Allocate(BCFlag(NumDoFVect))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
       
       Do iGauss = 1, NumGauss
       !! Calculate V at the gauss point
@@ -180,7 +214,7 @@ Contains
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       Allocate(BCFlag(NumDoFVect))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
       Allocate(F(NumDoFVect))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoFVect, F, iErr); CHKERRQ(ierr)
       Allocate(Theta(NumDoFScal))

@@ -96,8 +96,6 @@ Contains
       PetscReal                                    :: rDummy
       Character                                    :: cDummy
       PetscInt                                     :: vers
-
-
       
       Call MEF90_Initialize()
       Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, iErr)    

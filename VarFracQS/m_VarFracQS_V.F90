@@ -27,7 +27,71 @@ Module m_VarFracQS_V3D
    Implicit NONE   
 
 Contains
-
+   Subroutine Init_TS_V(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      Type(Vec)                                    :: V_Vec
+      PetscReal, Dimension(:), Pointer             :: V_Ptr
+      PetscInt, Dimension(:), Pointer              :: BCFlag
+      PetscInt                                     :: i, iErr
+      
+      !!! WTF? 
+      !!! Why not using restrict / update instead of the mess?
+      
+      !!! Update the BC from the current V
+      Select Case(AppCtx%VarFracSchemeParam%IrrevType)
+      Case(Irrev_Eq)
+         !!! Update the BCFlag Section
+         !!! If I'd understand how to use SectionGetArrayF90 I'd use it
+         Allocate(BCFlag(1))
+         BCFlag = 1
+         Call SectionRealCreateLocalVector(AppCtx%V, V_Vec, ierr); CHKERRQ(ierr)
+         Call VecGetArrayF90(V_Vec, V_Ptr, iErr); CHKERRQ(iErr)
+         !!! #$%^&*( this is not going to work when we use higher order elements
+         Do i = 1, AppCtx%MeshTopology%Num_Verts
+            If (V_Ptr(i) < AppCtx%VarFracSchemeParam%IrrevTol) Then
+               Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%BCVFlag, i + AppCtx%MeshTopology%Num_Elems-1, BCFlag, iErr); CHKERRQ(iErr)
+            End If
+         End Do
+         Call VecRestoreArrayF90(V_Vec, V_Ptr, iErr)
+         Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
+         DeAllocate(BCFlag)
+      Case(Irrev_Ineq)   
+         SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n'c, iErr)
+      End Select
+      
+      Select Case(AppCtx%VarFracSchemeParam%InitV)
+      Case(INIT_V_PREV)
+         !!! Setting the blocked values of V to 0
+         !!! Is this realy the right thing to do?
+         Call SectionRealCreateLocalVector(AppCtx%V, V_Vec, ierr); CHKERRQ(ierr)
+         Call VecGetArrayF90(V_Vec, V_Ptr, iErr); CHKERRQ(iErr)
+         Allocate(BCFlag(1))
+         Do i = 1, AppCtx%MeshTopology%Num_Verts       
+            Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, i + AppCtx%MeshTopology%Num_Elems-1, 1, BCFlag, iErr); CHKERRQ(ierr)
+            If (BCFlag(1) /= 0) Then
+               V_Ptr(i) = 0.0_Kr               
+            End If
+         End Do
+         DeAllocate(BCFlag)
+         Call VecRestoreArrayF90(V_Vec, V_Ptr, iErr)
+         Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
+      Case(INIT_V_ONE)
+         Call SectionRealSet(AppCtx%V, 1.0_Kr, ierr); CHKERRQ(iErr)
+         Call SectionRealCreateLocalVector(AppCtx%V, V_Vec, ierr); CHKERRQ(ierr)
+         Call VecGetArrayF90(V_Vec, V_Ptr, iErr); CHKERRQ(iErr)
+         Allocate(BCFlag(1))
+         Do i = 1, AppCtx%MeshTopology%Num_Verts         
+            Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, i + AppCtx%MeshTopology%Num_Elems-1, 1, BCFlag, iErr); CHKERRQ(ierr)
+            If (BCFlag(1) /= 0) Then
+               V_Ptr(i) = 0.0_Kr               
+            End If
+         End Do
+         DeAllocate(BCFlag)
+         Call VecRestoreArrayF90(V_Vec, V_Ptr, iErr)
+         Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
+      End Select
+   End Subroutine Init_TS_V
+   
 !----------------------------------------------------------------------------------------!      
 ! MatAssembly V (CM)  
 !----------------------------------------------------------------------------------------!      
@@ -98,7 +162,7 @@ End Subroutine MatV_Assembly
       Allocate(Theta(NumDoFScal))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
       Allocate(BCFlag(NumDoFScal))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
       
       Do iGauss = 1, NumGauss
       !! Calculate the strain at the gauss point
@@ -196,7 +260,7 @@ End Subroutine MatV_Assembly
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       Allocate(BCFlag(NumDoFScal))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
       C1_V =  0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * MatProp%Toughness 
       Do_iGauss: Do iGauss = 1, NumGauss

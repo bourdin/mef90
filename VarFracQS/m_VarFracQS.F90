@@ -42,6 +42,9 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename
       PetscInt                                     :: NumComponents
       PetscTruth                                   :: HasPrefix
+      PetscReal                                    :: rDummy
+      Character                                    :: cDummy
+      PetscInt                                     :: vers
 
       
       Call MEF90_Initialize()
@@ -178,24 +181,39 @@ Contains
 
       Call KSPGetPC(AppCtx%KSPV, AppCtx%PCV, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCV, PCBJACOBI, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) "Done Creating fields Section, Vec, KSP and Mat\n"c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
 
 
       !!! Create the Section for the BC
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlagU', AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlagV', 1, AppCtx%BCFlagV, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCUFlag', AppCtx%MeshTopology%Num_Dim, AppCtx%BCUFlag, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCVFlag', 1, AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
 #if defined PB_2D
-      Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCUFlag)
 #elif defined PB_3D
-      Call EXOProperty_InitBCUFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagU)
+      Call EXOProperty_InitBCUFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCUFlag)
 #endif
-      Call EXOProperty_InitBCVFlag(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagV)
+      Call EXOProperty_InitBCVFlag(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCVFlag)
 
-      AppCtx%TimeStep = 1
-      !!! Read U, F, and Temperature
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) "Done Initializing BC Sections\n"c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+
+      !!! Get the number of time steps
+      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
+      Call EXINQ(AppCtx%MyEXO%exoid, EXTIMS, AppCtx%NumTimeSteps, rDummy, cDummy, iErr)
+      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+      AppCtx%MyEXO%exoid = 0
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      
+      !!! Set V=1
+      Call SectionRealSet(AppCtx%V, 1.0_Kr, iErr); CHKERRQ(iErr)
    End Subroutine VarFracQSInit
          
    
@@ -222,6 +240,7 @@ Contains
 
    Subroutine Save_Ener(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
+
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_SurfaceEnergy)%Offset, AppCtx%TimeStep, AppCtx%SurfaceEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ExtForcesWork)%Offset, AppCtx%TimeStep, AppCtx%ExtForcesWork)
@@ -229,6 +248,15 @@ Contains
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
    End Subroutine Save_Ener
    
+   Subroutine Init_TS_Loads(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
+
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
+
+      Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
+   End Subroutine Init_TS_Loads   
    
    Subroutine VarFracQSFinalize(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
@@ -246,8 +274,8 @@ Contains
       
       Call VecScatterDestroy(AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
       Call VecScatterDestroy(AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
-      Call SectionIntDestroy(AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
-      Call SectionIntDestroy(AppCtx%BCFlagV, iErr); CHKERRQ(iErr)
+      Call SectionIntDestroy(AppCtx%BCUFlag, iErr); CHKERRQ(iErr)
+      Call SectionIntDestroy(AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
       Call VecDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
