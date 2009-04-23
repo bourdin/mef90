@@ -76,11 +76,23 @@ Program  VarFracFilm
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
       End If
       Call Solve_V(AppCtx)
+      
+      !------------------------------------------------------------------- 
+      ! Problem for phi
+      !-------------------------------------------------------------------
+
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) 'Calling the Solver for the PHI-subproblem\n'c 
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+      End If
+      Call Solve_PHI(AppCtx)
+   
+      
 
       !------------------------------------------------------------------- 
       ! Check the exit condition: tolerance on the error in V 
       !------------------------------------------------------------------- 
-      If (AppCtx.ErrV.LT.AppCtx%VarFracFilmSchemeParam%AltMinTol) then 
+      If (AppCtx.ErrV.LT.AppCtx%VarFracFilmSchemeParam%AltMinTol).AND?(AppCtx.ErrPHI.LT.AppCtx%VarFracFilmSchemeParam%AltMinTol) then 
          EXIT 
       End If
       If (Mod(iter, AppCtx%VarFracFilmSchemeParam%AltMinSaveInt) == 0) Then
@@ -90,6 +102,7 @@ Program  VarFracFilm
          End If   
          Call Save_U(AppCtx)
          Call Save_V(AppCtx)
+         Call Save_PHI(AppCtx)
          Call ComputeEnergy(AppCtx)
       
          Write(IOBuffer, 100) AppCtx%ElasticEnergy
@@ -109,6 +122,7 @@ Program  VarFracFilm
    !------------------------------------------------------------------- ! Save the results
    Call Save_U(AppCtx)
    Call Save_V(AppCtx)
+   Call Save_PHI(AppCtx)
    !-------------------------------------------------------------------
    
    If (AppCtx%AppParam%verbose) Then

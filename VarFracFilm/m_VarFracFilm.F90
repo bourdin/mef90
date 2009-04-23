@@ -136,25 +136,29 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
-      !!! Create the Sections for the variables
+      !!! Create the Sections for the NODAL variables
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U0', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Theta', 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'V', 1, AppCtx%V, iErr); CHKERRQ(iErr)
-
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'V', 1, AppCtx%V, iErr); CHKERRQ(iErr)      
+      
+      !!! Create the Sections for the ELEMENT variables
+      ! Should the CellSection dimensions be multiplied by the associated number of Gauss points???? (CM)
       NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
       Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
       Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Stress', NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
       Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'GradV', AppCtx%MeshTopology%Num_Dim, AppCtx%GradV, iErr); CHKERRQ(iErr)
+      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Phi', 1, AppCtx%Phi, iErr); CHKERRQ(iErr)
 
 
       !!! Create the Scatter, Vec, Mat, KSP, PC
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
+!      Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%Phi, AppCtx%ScatterPhi, iErr); CHKERRQ(iErr)
 
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%RHSV, iErr); CHKERRQ(iErr)
-
+      
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
@@ -191,11 +195,12 @@ Contains
       Call EXOProperty_InitBCVFlag(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCFlagV)
 
       AppCtx%TimeStep = 1
-      !!! Read U, F, and Temperature
+      !!! Read U, U0, V, PHI, and Temperature
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U0) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%PHI) 
    End Subroutine VarFracFilmInit
          
    
@@ -211,6 +216,12 @@ Contains
 
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
    End Subroutine Save_V
+ 
+   Subroutine Save_PHI(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%PHI) 
+   End Subroutine Save_PHI
 
    Subroutine Save_StrainStress(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
@@ -222,6 +233,7 @@ Contains
 
    Subroutine Save_Ener(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFracFilm_GlobVar_SurfaceEnergy)%Offset, AppCtx%TimeStep, AppCtx%SurfaceEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFracFilm_GlobVar_SurfaceEnergy)%Offset, AppCtx%TimeStep, AppCtx%SurfaceEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFracFilm_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFracFilm_GlobVar_ExtForcesWork)%Offset, AppCtx%TimeStep, AppCtx%ExtForcesWork)
@@ -238,7 +250,8 @@ Contains
    
       Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%V, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(AppCtx%Phi, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(AppCtx%U0, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%Theta, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%StressU, iErr); CHKERRQ(iErr)

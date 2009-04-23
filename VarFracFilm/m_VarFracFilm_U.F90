@@ -1,8 +1,4 @@
-#if defined PB_2D
 Module m_VarFracFilm_U2D
-#elif defined PB_3D
-Module m_VarFracFilm_U3D
-#endif
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -11,11 +7,7 @@ Module m_VarFracFilm_U3D
 #include "finclude/petscmeshdef.h"
 #include "finclude/petscviewerdef.h"
 
-#if defined PB_2D
    Use m_VarFracFilm_Types2D
-#elif defined PB_3D
-   Use m_VarFracFilm_Types3D
-#endif   
    Use m_MEF90
    Use m_VarFracFilm_Struct
    Use petsc
@@ -60,11 +52,7 @@ Contains
 ! MatAssembly_U_Local (CM)
 !----------------------------------------------------------------------------------------!      
    Subroutine MatU_AssemblyLocal(iE, MatProp, AppCtx, MatElem)
-#if defined PB_2D
       Type(MatProp2D_Type)                         :: MatProp
-#elif defined PB_3D
-      Type(MatProp3D_Type)                         :: MatProp
-#endif
       Type(AppCtx_Type)                            :: AppCtx
       PetscReal, Dimension(:,:), Pointer           :: MatElem      
       PetscInt                                     :: iE
@@ -75,6 +63,7 @@ Contains
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       
       PetscReal, Dimension(:), Pointer             :: V
+      PetscReal, pointer                           :: Phi
       PetscReal                                    :: V_Elem
       
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
@@ -86,6 +75,8 @@ Contains
       
       Allocate(V(NumDoFScal))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
+      Allocate(Phi(1))
+      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Phi, iE-1, 1, Phi, iErr); CHKERRQ(ierr)
 
       Allocate(BCFlag(NumDoFVect))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
@@ -96,11 +87,15 @@ Contains
          Do iDoF1 = 1, NumDoFScal
             V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss)* V(iDoF1)
          End Do
-      !! Assemble the element stiffness
+    
+     !! Assemble the element stiffness
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoFVect
-                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2+AppCtx%VarFracFilmSchemeParam%KEpsilon)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
+               !Bulk contribution v^2(1/2*A(eps-eps0)^2)
+                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2+AppCtx%VarFracFilmSchemeParam%KEpsilonV)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
+               !Interface contribution phi*(1/2*K_interface*(u-u0)^2)
+                   MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  ((Phi(1)+AppCtx%VarFracFilmSchemeParam%KEpsilonPhi)*(MatProp%K_interface * AppCtx%ElemVect(iE)%BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%BF(iDoF2, iGauss))  
 !			      Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                   !!! Is that right?
                End Do
@@ -108,6 +103,7 @@ Contains
          End Do
       End Do
       DeAllocate(V)
+      DeAllocate(Phi)
       DeAllocate(BCFlag)
 !      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatU_AssemblyLocal
@@ -153,27 +149,20 @@ Contains
    !----------------------------------------------------------------------------------------!      
    Subroutine RHSU_AssemblyLocal(iE, MatProp, AppCtx, RHSElem)
 
-#if defined PB_2D
       Type(MatProp2D_Type)                         :: MatProp
-#elif defined PB_3D
-      Type(MatProp3D_Type)                         :: MatProp
-#endif
    
       PetscInt                                     :: iE
       Type(AppCtx_Type)                            :: AppCtx
       PetscReal, Dimension(:), Pointer             :: RHSElem
-      PetscReal, Dimension(:), Pointer             :: F, V
+      PetscReal, pointer                           :: Phi
+      PetscReal, Dimension(:), Pointer             :: V
       PetscReal, Dimension(:), Pointer             :: Theta
       PetscInt                                     :: iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect, NumGauss
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscReal                                    :: Theta_Elem, V_Elem
-#if defined PB_2D
-      Type (Vect2D)             				         :: TmpRHS
-#elif defined PB_3D  
-      Type (Vect3D)             				         :: TmpRHS    
-#endif
+      Type (Vect2D)             				   :: U0_Elem
 
       RHSElem    = 0.0_Kr
       NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
@@ -181,18 +170,20 @@ Contains
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       Allocate(BCFlag(NumDoFVect))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
-      Allocate(F(NumDoFVect))
-      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoFVect, F, iErr); CHKERRQ(ierr)
+      Allocate(U0(NumDoFVect))
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%U0, iE-1, NumDoFVect, U0, iErr); CHKERRQ(ierr)
       Allocate(Theta(NumDoFScal))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
       Allocate(V(NumDoFScal))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
+      Allocate(Phi(1))
+      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Phi, iE-1, 1, Phi, iErr); CHKERRQ(ierr)
       Do_iGauss: Do iGauss = 1, NumGauss
-         TmpRHS     = 0.0_Kr
-         Theta_Elem = 0.0_Kr
-         V_Elem     = 0.0_Kr
+         U0_Elem     = 0.0_Kr
+         Theta_Elem  = 0.0_Kr
+         V_Elem      = 0.0_Kr
          Do iDoF2 = 1, NumDoFVect
-            TmpRHS = TmpRHS + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F(iDoF2)
+            U0_Elem = U0elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * U0(iDoF2)
          End Do
          Do iDoF2 = 1, NumDoFScal
             Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)* Theta(iDoF2)
@@ -200,16 +191,16 @@ Contains
          End Do
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
-               ! RHS terms due to forces
-               RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. TmpRHS ) 
-               ! RHS terms due to inelastic strains
+               ! RHS terms due to U0
+               RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( MatProp%K_interface * Phi(1) * (AppCtx%ElemVect(iE)%BF(iDoF1, iGauss)) .DotP. U0_Elem ) 
+               ! RHS terms due to eps0
    			   RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((V_Elem**2)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
 !               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
             End If
          End Do
       End Do Do_iGauss
       DeAllocate(BCFlag)
-      DeAllocate(F)
+      DeAllocate(U0)
       DeAllocate(Theta)
       DeAllocate(V)
 !      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
@@ -253,8 +244,4 @@ Contains
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n'c)
    End Subroutine Solve_U
       
-#if defined PB_2D
-End Module m_VarFracFilm_U2D
-#elif defined PB_3D
-End Module m_VarFracFilm_U3D
-#endif
+End Module m_VarFracFilm
