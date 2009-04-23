@@ -77,7 +77,7 @@ End Subroutine MatV_Assembly
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       
       PetscReal, Dimension(:), Pointer             :: U, Theta
-      PetscReal                                    :: Theta_Elem, ElasEnDens_Elem
+      PetscReal                                    :: Theta_Elem
       PetscReal                                    :: C2_V, C2_GradV
 #if defined PB_2D
       Type(MatS2D)                                 :: Strain_Elem, Effective_Strain_Elem

@@ -58,15 +58,16 @@ Module m_VarFracFilm_Struct
    PetscInt, Parameter, Public                     :: irrev_Eq   = 1
    PetscInt, Parameter, Public                     :: Irrev_Ineq = 2
    
-   PetscInt, Parameter, Public                     :: VarFracFilm_Num_VertVar           = 8
+   PetscInt, Parameter, Public                     :: VarFracFilm_Num_VertVar           = 9
    PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_Fracture      = 1
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementX = 2   
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementY = 3
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementZ = 4   
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_ForceX        = 5   
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_ForceY        = 6
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_ForceZ        = 7   
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_Temperature   = 8
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_Delamination  = 2
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementX = 3   
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementY = 4
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementZ = 5   
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_ForceX        = 6   
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_ForceY        = 7
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_ForceZ        = 8   
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_Temperature   = 9
    
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_CellVar      = 12
    PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StrainXX = 1
@@ -82,13 +83,14 @@ Module m_VarFracFilm_Struct
    PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StressYZ = 11
    PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StressZX = 12
 
-   PetscInt, Parameter, Public                     :: VarFracFilm_Num_GlobVar           = 6
-   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_ElasticEnergy = 1
-   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_ExtForcesWork = 2
-   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_KineticEnergy = 3 
-   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_SurfaceEnergy = 4 
-   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_TotalEnergy   = 5
-   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_Load          = 6
+   PetscInt, Parameter, Public                     :: VarFracFilm_Num_GlobVar                    = 7       
+   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_ElasticBulkEnergy      = 1   
+   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_ElasticInterfaceEnergy = 2
+   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_KineticEnergy          = 3       
+   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_SurfaceEnergyT         = 4      
+   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_SurfaceEnergyD         = 5      
+   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_TotalEnergy            = 6       
+   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_Load                   = 7       
    
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_EBProperties  = 3
    PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_IsBrittle  = 1
@@ -111,17 +113,13 @@ Module m_VarFracFilm_Struct
    PetscInt, Parameter, Public                     :: VarFracFilm_NSProp_HasPForce  = 5
    
    Type MatProp2D_Type
-      PetscReal                                    :: Toughness
+      PetscReal                                    :: ToughnessT
+      PetscReal                                    :: ToughnessD
+      Type(MatS2D)                                 :: K_interface
       Type(Tens4OS2D)                              :: Hookes_Law
       Type(MatS2D)                                 :: Therm_Exp      
    End Type MatProp2D_Type
-   
-   Type MatProp3D_Type
-      PetscReal                                    :: Toughness
-      Type(Tens4OS3D)                              :: Hookes_Law
-      Type(MatS3D)                                 :: Therm_Exp      
-   End Type MatProp3D_Type
-   
+      
    Type VarFracFilmSchemeParam_Type
       PetscInt                                     :: DoIrrev
       PetscReal                                    :: IrrevTol
@@ -152,7 +150,9 @@ Module m_VarFracFilm_Struct
    End Type VarFracFilmSchemeParam_Type
    
  Contains
-   Subroutine EXOProperty_InitBCVFlag(dEXO, dMeshTopology, dBCFlag)
+ !! For Blaise: to complete with the reading/writing of th modified material properties
+ 
+    Subroutine EXOProperty_InitBCVFlag(dEXO, dMeshTopology, dBCFlag)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(SectionInt)                             :: dBCFlag 
@@ -460,6 +460,7 @@ Module m_VarFracFilm_Struct
       dSchemeParam%BTInt            = 0
       dSchemeParam%InitU            = Init_U_PREV
       dSchemeParam%InitV            = Init_V_PREV
+      dSchemeParam%InitPhi          = Init_Phi_PREV
       dSchemeParam%nbCracks         = 0
       dSchemeParam%MaxCrackLength   = 0.0D0  
       dSchemeParam%AltMinMaxIter    = 1000
@@ -468,7 +469,8 @@ Module m_VarFracFilm_Struct
       dSchemeParam%KSPUrtol         = 1.0D-6
       dSchemeParam%KSPVrtol         = 1.0D-6
       dSchemeParam%Epsilon          = .1
-      dSchemeParam%KEpsilon         = 1.0E-6
+      dSchemeParam%KEpsilonU        = 1.0E-6
+      dSchemeParam%KEpsilonPhi      = 1.0E-6
       dSchemeParam%ATNum            = 2
       dSchemeParam%IntegOrder       = 3
 
@@ -487,7 +489,8 @@ Module m_VarFracFilm_Struct
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspurol',        dSchemeParam%KSPUrTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspvrol',        dSchemeParam%KSPVrTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',        dSchemeParam%Epsilon, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilonV',      dSchemeParam%KEpsilonV, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilonPhi',       dSchemeParam%KEpsilonPhi, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
    End Subroutine VarFracFilmSchemeParam_GetFromOptions
@@ -556,12 +559,14 @@ Module m_VarFracFilm_Struct
       
       dEXO%Num_GlobVariables = VarFracFilm_Num_GlobVar
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
-      dEXO%GlobVariable(VarFracFilm_GlobVar_SurfaceEnergy)%Name = 'Surface energy'
-      dEXO%GlobVariable(VarFracFilm_GlobVar_ElasticEnergy)%Name = 'Elastic energy'
-      dEXO%GlobVariable(VarFracFilm_GlobVar_KineticEnergy)%Name = 'Kinetic energy'
-      dEXO%GlobVariable(VarFracFilm_GlobVar_ExtForcesWork)%Name = 'External Forces Work'
-      dEXO%GlobVariable(VarFracFilm_GlobVar_TotalEnergy)%Name   = 'Total energy'
-      dEXO%GlobVariable(VarFracFilm_GlobVar_Load)%Name          = 'Load'
+      dEXO%GlobVariable(VarFracFilm_GlobVar_SurfaceEnergyT)%Name      = 'Surface energy T'
+      dEXO%GlobVariable(VarFracFilm_GlobVar_SurfaceEnergyD)%Name      = 'Surface energy D'
+      dEXO%GlobVariable(VarFracFilm_GlobVar_ElasticBulkEnergyT)%Name  = 'Bulk elastic energy'
+      dEXO%GlobVariable(VarFracFilm_GlobVar_ElasticInterEnergy )%Name = 'Interface elastic energy '
+      dEXO%GlobVariable(VarFracFilm_GlobVar_KineticEnergy)%Name       = 'Kinetic energy'
+!     dEXO%GlobVariable(VarFracFilm_GlobVar_ExtForcesWork)%Name       = 'External Forces Work'
+      dEXO%GlobVariable(VarFracFilm_GlobVar_TotalEnergy)%Name         = 'Total energy'
+      dEXO%GlobVariable(VarFracFilm_GlobVar_Load)%Name                = 'Load'
       dEXO%GlobVariable(:)%Offset = (/ (i, i=1,dEXO%Num_GlobVariables) /)
       
       dEXO%Num_CellVariables = VarFracFilm_Num_CellVar
@@ -583,6 +588,7 @@ Module m_VarFracFilm_Struct
       dEXO%Num_VertVariables = VarFracFilm_Num_VertVar
       Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))
       dEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Name      = 'Fracture'
+      dEXO%VertVariable(VarFracFilm_VertVar_Delamination)%Name  = 'Delamination'
       dEXO%VertVariable(VarFracFilm_VertVar_DisplacementX)%Name = 'Displacement X'   
       dEXO%VertVariable(VarFracFilm_VertVar_DisplacementY)%Name = 'Displacement Y'
       dEXO%VertVariable(VarFracFilm_VertVar_DisplacementZ)%Name = 'Displacement Z'   
