@@ -60,6 +60,7 @@ Module m_VarFracQS_Types3D
       Type(SectionReal)                            :: GradV
       Type(SectionReal)                            :: Theta
       PetscReal                                    :: Load
+      PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
       PetscReal                                    :: SurfaceEnergy
       PetscReal                                    :: ElasticEnergy
@@ -68,7 +69,7 @@ Module m_VarFracQS_Types3D
       PetscReal                                    :: ErrV
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
-      Type(SectionInt)                             :: BCFlagU, BCFlagV
+      Type(SectionInt)                             :: BCUFlag, BCVFlag
       Type(Mat)                                    :: KU, KV
       Type(Vec)                                    :: RHSU, RHSV
       Type(KSP)                                    :: KSPU, KSPV

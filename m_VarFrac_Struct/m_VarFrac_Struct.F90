@@ -51,11 +51,8 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: Init_V_RND  = 2
    PetscInt, Parameter, Public                     :: Init_V_SPH  = 3
    
-   PetscInt, Parameter, Public                     :: Init_U_PREV = 0
-   PetscInt, Parameter, Public                     :: Init_U_ZERO = 1
-   
    PetscInt, Parameter, Public                     :: Irrev_NONE = 0
-   PetscInt, Parameter, Public                     :: irrev_Eq   = 1
+   PetscInt, Parameter, Public                     :: Irrev_Eq   = 1
    PetscInt, Parameter, Public                     :: Irrev_Ineq = 2
    
    PetscInt, Parameter, Public                     :: VarFrac_Num_VertVar           = 8
@@ -123,14 +120,12 @@ Module m_VarFrac_Struct
    End Type MatProp3D_Type
    
    Type VarFracSchemeParam_Type
-      PetscInt                                     :: DoIrrev
+      PetscInt                                     :: IrrevType
       PetscReal                                    :: IrrevTol
       
       PetscTruth                                   :: DoBT
       PetscReal                                    :: BTTol
       PetscInt                                     :: BTInt
-      
-      PetscInt                                     :: InitU
       
       PetscInt                                     :: InitV
       PetscInt                                     :: nbCracks
@@ -383,7 +378,7 @@ Module m_VarFrac_Struct
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
-      Write(IOBuffer, "(I1,T32, 'DoIrrev')")             dSchemeParam%DoIrrev 
+      Write(IOBuffer, "(I1,T32, 'IrrevType')")             dSchemeParam%IrrevType 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'IrrevTol')")        dSchemeParam%IrrevTol
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -392,8 +387,6 @@ Module m_VarFrac_Struct
       Write(IOBuffer, "(ES12.5,T32, 'BTTol')")           dSchemeParam%BTTol
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I5,T32, 'BTInt')")               dSchemeParam%BTInt 
-      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "(I1,T32, 'InitU')")               dSchemeParam%InitU 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I1,T32, 'InitV')")               dSchemeParam%InitV 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -427,12 +420,11 @@ Module m_VarFrac_Struct
       
       Open(File = filename, status='old', Unit = F_IN)
       Rewind(F_IN)
-      Read(F_IN, *) dSchemeParam%DoIrrev 
+      Read(F_IN, *) dSchemeParam%IrrevType 
       Read(F_IN, *) dSchemeParam%IrrevTol
       Read(F_IN, *) dSchemeParam%DoBT 
       Read(F_IN, *) dSchemeParam%BTTol
       Read(F_IN, *) dSchemeParam%BTInt 
-      Read(F_IN, *) dSchemeParam%InitU 
       Read(F_IN, *) dSchemeParam%InitV 
       Read(F_IN, *) dSchemeParam%NbCracks
       Read(F_IN, *) dSchemeParam%MaxCrackLength
@@ -453,12 +445,11 @@ Module m_VarFrac_Struct
       PetscInt                                     :: iErr
       PetscTruth                                   :: flag
 
-      dSchemeParam%DoIrrev          = Irrev_Eq
+      dSchemeParam%IrrevType        = Irrev_Eq
       dSchemeParam%IrrevTol         = 1.0D-2
       dSchemeParam%DoBT             = PETSC_FALSE
       dSchemeParam%BTTol            = 0.0D0
       dSchemeParam%BTInt            = 0
-      dSchemeParam%InitU            = Init_U_PREV
       dSchemeParam%InitV            = Init_V_PREV
       dSchemeParam%nbCracks         = 0
       dSchemeParam%MaxCrackLength   = 0.0D0  
@@ -472,12 +463,11 @@ Module m_VarFrac_Struct
       dSchemeParam%ATNum            = 2
       dSchemeParam%IntegOrder       = 3
 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%DoIrrev, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-dobt',           dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-bttol',          dSchemeParam%BTTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',          dSchemeParam%BTInt, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initu',          dSchemeParam%InitU, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-maxcracklength', dSchemeParam%MaxCrackLength, flag, iErr); CHKERRQ(iErr)
@@ -502,7 +492,6 @@ Module m_VarFrac_Struct
       PetscReal                           :: rDummy
       Character                           :: cDummy
           
-
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
       NumEB = dMeshTopology%Num_Elem_Blks_Global
