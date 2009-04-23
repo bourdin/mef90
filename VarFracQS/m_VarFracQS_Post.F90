@@ -92,7 +92,7 @@ Contains
                Do iDof = 1, NumDoFScal
                   Theta_Elem          = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
                   V_Elem              = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V(iDoF)
-                  GradV_Elem          = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V(iDoF)
+                  GradV_Elem          = GradV_Elem + AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss) * V(iDoF)
                End Do
                Do iDoF = 1, NumDoFVect
                   Strain_Elem         = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
