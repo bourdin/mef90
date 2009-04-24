@@ -32,7 +32,24 @@ Program  VarFracFilm
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer) 
    End If   
    
+   Call SectionRealSet(AppCtx%Phi, 1.0_Kr, iErr); CHKERRQ(iErr)
+   Call SectionRealSet(AppCtx%V, 1.0_Kr, iErr); CHKERRQ(iErr)
+!   Call SectionRealSet(AppCtx%Theta, 1.0_Kr, iErr); CHKERRQ(iErr)
    AppCtx%TimeStep = 1
+!!!   Call RHSU_Assembly(AppCtx)
+!!!   Call MatU_Assembly(AppCtx)
+!!!   Call Solve_U(AppCtx)
+!!!   Call Save_U(AppCtx)
+!!!
+!!!   Call RHSV_Assembly(AppCtx)
+!!!   Call MatV_Assembly(AppCtx)
+!!!   Call Solve_V(AppCtx)
+!!!   Call Save_V(AppCtx)
+!!!
+!!!   Call MEF90_Finalize()
+!!!   STOP
+
+
    Do iter=1, AppCtx%VarFracFilmSchemeParam%AltMinMaxIter
       Write(IOBuffer, "('Iteration ', I4,A)") iter, '\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -93,7 +110,7 @@ Program  VarFracFilm
       End If
       If (Mod(iter, AppCtx%VarFracFilmSchemeParam%AltMinSaveInt) == 0) Then
          If (AppCtx%AppParam%verbose) Then
-            Write(IOBuffer, *) 'Saving U and V\n'c
+            Write(IOBuffer, *) 'Saving U, V and Phi\n'c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If   
          Call Save_U(AppCtx)
@@ -107,7 +124,7 @@ Program  VarFracFilm
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Write(IOBuffer, 102) AppCtx%SurfaceEnergyT
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Write(IOBuffer, 102) AppCtx%SurfaceEnergyD
+         Write(IOBuffer, 104) AppCtx%SurfaceEnergyD
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Write(IOBuffer, 103) AppCtx%TotalEnergy
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -137,15 +154,16 @@ Program  VarFracFilm
     Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
     Write(IOBuffer, 102) AppCtx%SurfaceEnergyT
     Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-    Write(IOBuffer, 102) AppCtx%SurfaceEnergyD
+    Write(IOBuffer, 104) AppCtx%SurfaceEnergyD
     Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
     Write(IOBuffer, 103) AppCtx%TotalEnergy
     Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-100 Format('Elastic energy:       ', ES12.5, '\n'c)    
-101 Format('External Forces Work: ', ES12.5, '\n'c)    
-102 Format('Surface energy:       ', ES12.5, '\n'c)    
-103 Format('Total energy:         ', ES12.5, '\n'c)    
+100 Format('Elastic Bulk Energy:         ', ES12.5, '\n'c)    
+101 Format('Elastic Interfacial Energy:  ', ES12.5, '\n'c)    
+102 Format('Transverse Surface energy:   ', ES12.5, '\n'c)    
+104 Format('Delamination Surface energy: ', ES12.5, '\n'c)    
+103 Format('Total energy:                ', ES12.5, '\n'c)    
 
 !   Call ComputeStrainStress(AppCtx)
 

@@ -36,11 +36,13 @@ Contains
       PetscReal, Dimension(:), Pointer             :: U, U0
       Type(Vect2D)                                 :: DU
       PetscReal                                    :: NormKU
-      PetscReal, Dimension(:), Pointer             :: Zero
+      PetscReal, Dimension(:), Pointer             :: Zero, One
       PetscReal                                    :: D_cond, ErrPhi
       PetscInt                                     :: iDoF, iGauss, iBlk, iE
       PetscInt                                     :: NumDoFVect, NumGauss
- 
+      PetscInt                                     :: numdec
+      
+      numdec = 0
       AppCtx%ErrPhi = 0
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iE = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -49,6 +51,9 @@ Contains
            NormKU = 0.0_Kr
            Allocate(Zero(1))
            Zero = 0.0_Kr
+           Allocate(One(1))
+           One = 1.0_Kr
+!           AppCtx%ErrPhi = 0
            Allocate(U(NumDoFVect))
            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
            Allocate(U0(NumDoFVect))
@@ -64,18 +69,19 @@ Contains
            D_cond =  NormKU - 2 * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%ToughnessD 
            If (D_cond >= 0.0_Kr) Then
               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Zero, iErr); CHKERRQ(iErr)
+              numdec = numdec+1
+            Else
+              Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, One, iErr); CHKERRQ(iErr)
               ! SectionRealUpdate should work as well
-              AppCtx%ErrPhi = AppCtx%ErrPhi + 1  !If there is one (or more) update(s) the error is greater than 1!!!!!!!!!
+!              AppCtx%ErrPhi = AppCtx%ErrPhi + 1  !If there is one (or more) update(s) the error is greater than 1!!!!!!!!!
            End If
          End Do Do_Elem_iE
        End Do Do_Elem_iBlk
        DeAllocate(U)
        DeAllocate(U0)
        DeAllocate(Zero) 
-       
-      Write(IOBuffer, 100) AppCtx%ErrPhi
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-100 Format('     Number of changed values for phi: ', I5, '\n'c)
+      
+      Write(*,*) 'Number of debonded elements ', numdec 
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Solve_Phi
 End Module m_VarFracFilm_Phi

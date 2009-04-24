@@ -109,6 +109,8 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
+   Write(IOBuffer, *) '\nElement Block and Node Set Properties\n'c
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    Call EXOProperty_Ask(MyEXO, MeshTopology)
    
    Do i = 1, MeshTopology%num_elem_blks
@@ -176,9 +178,10 @@ Program PrepVarFrac
 
    Select Case(iCase)
    Case (1)! MIL
-      Allocate(GlobVars(VarFrac_Num_GlobVar))
-      GlobVars = 0.0_Kr
+
       !!! Time Steps
+      Write(IOBuffer, *) '\nGlobal Variables\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       Write(IOBuffer, 200) 'TMin'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       If (MEF90_MyRank == 0) Then
@@ -210,6 +213,9 @@ Program PrepVarFrac
          MyEXO%exoid = 0
       End Do
       T(NumSteps) = Tmax
+
+      Allocate(GlobVars(VarFrac_Num_GlobVar))
+      GlobVars = 0.0_Kr
       GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
       Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
 
@@ -219,7 +225,8 @@ Program PrepVarFrac
       MyEXO%exoid = 0
 
      !!! Elem Blocks BC and Variables
-      Select Case (MeshTopology%Num_Dim)
+   
+      Select Case(MeshTopology%Num_Dim)
       Case(2)
          Allocate(MatProp2D(MeshTopology%Num_Elem_Blks_Global))
       Case(3)
@@ -227,6 +234,8 @@ Program PrepVarFrac
       End Select
       
       !!! Material Properties
+      Write(IOBuffer, *) '\nMaterial Properties\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -277,13 +286,13 @@ Program PrepVarFrac
       !!! Variable initialized on EB: F and Theta
       Allocate(F(MeshTopology%Num_Elem_Blks_Global))
       Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
+      F%X = 0.0_Kr
+      F%Y = 0.0_Kr
+      F%Z = 0.0_Kr
+      Theta = 0.0_Kr
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         F%X = 0.0_Kr
-         F%Y = 0.0_Kr
-         F%Z = 0.0_Kr
-         Theta = 0.0_Kr
 
          !!! Force
          If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then

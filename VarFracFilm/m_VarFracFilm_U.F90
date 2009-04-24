@@ -197,7 +197,7 @@ Contains
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscReal                                    :: Theta_Elem, V_Elem
-      Type (Vect2D)             				   :: U0_Elem
+      Type (Vect2D)                                :: U0_Elem
 
       RHSElem    = 0.0_Kr
       NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
@@ -205,31 +205,36 @@ Contains
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       Allocate(BCFlag(NumDoFVect))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
+      
       Allocate(U0(NumDoFVect))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U0, iE-1, NumDoFVect, U0, iErr); CHKERRQ(ierr)
+      
       Allocate(Theta(NumDoFScal))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+      
       Allocate(V(NumDoFScal))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
+      
       Allocate(Phi(1))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Phi, iE-1, 1, Phi, iErr); CHKERRQ(ierr)
+      
       Do_iGauss: Do iGauss = 1, NumGauss
          U0_Elem     = 0.0_Kr
          Theta_Elem  = 0.0_Kr
          V_Elem      = 0.0_Kr
          Do iDoF2 = 1, NumDoFVect
-            U0_Elem = U0_elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * U0(iDoF2)
+            U0_Elem = U0_Elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * U0(iDoF2)
          End Do
          Do iDoF2 = 1, NumDoFScal
-            Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)* Theta(iDoF2)
-            V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V(iDoF2)
+            Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta(iDoF2)
+            V_Elem     = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V(iDoF2)
          End Do
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
                ! RHS terms due to U0
                RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( MatProp%K_interface * Phi(1) * (AppCtx%ElemVect(iE)%BF(iDoF1, iGauss)) .DotP. U0_Elem ) 
                ! RHS terms due to eps0
-   			   RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((V_Elem**2)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
+   			   RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((V_Elem**2) * (MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
 !               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
             End If
          End Do
