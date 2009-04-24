@@ -25,19 +25,22 @@ VarFracFilm${DIM}: ${PETSC_ARCH} VarFracFilm.o   ${PETSC_ARCH}/${DIM}VarFracFilm
                                       m_VarFracFilm_Types.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Types.o \
                                       m_VarFracFilm_U.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_U.o \
                                       m_VarFracFilm_V.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_V.o \
+                                      m_VarFracFilm_Phi.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Phi.o \
                                       m_VarFracFilm.o ${PETSC_ARCH}/${DIM}m_VarFracFilm.o \
                                       m_VarFracFilm_Post.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Post.o
-	${FLINKER} -o ${PETSC_ARCH}/VarFracFilm${DIM} ${PETSC_ARCH}/${DIM}VarFracFilm.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Types.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_U.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_V.o ${PETSC_ARCH}/${DIM}m_VarFracFilm.o  ${PETSC_ARCH}/${DIM}m_VarFracFilm_Post.o ${MEF90OBJS} ${M_VARFRACFILMOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	${FLINKER} -o ${PETSC_ARCH}/VarFracFilm${DIM} ${PETSC_ARCH}/${DIM}VarFracFilm.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Types.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_U.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_V.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Phi.o ${PETSC_ARCH}/${DIM}m_VarFracFilm.o  ${PETSC_ARCH}/${DIM}m_VarFracFilm_Post.o ${MEF90OBJS} ${M_VARFRACFILMOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 	
 VarFracFilm.o:   ${PETSC_ARCH} m_VarFracFilm.o ${PETSC_ARCH}/${DIM}m_VarFracFilm.o \
                                       m_VarFracFilm_Types.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Types.o \
                                       m_VarFracFilm_U.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_U.o \
                                       m_VarFracFilm_V.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_V.o \
+                                      m_VarFracFilm_Phi.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Phi.o \
                                       m_VarFracFilm_Post.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Post.o
 
 m_VarFracFilm.o: ${PETSC_ARCH} m_VarFracFilm_Types.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Types.o \
                                       m_VarFracFilm_U.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_U.o \
                                       m_VarFracFilm_V.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_V.o \
+                                      m_VarFracFilm_Phi.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Phi.o \
                                       m_VarFracFilm_Post.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Post.o
 m_VarFracFilm_U.o:  ${PETSC_ARCH} m_VarFracFilm_Types.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Types.o
 m_VarFracFilm_V.o:  ${PETSC_ARCH} m_VarFracFilm_Types.o ${PETSC_ARCH}/${DIM}m_VarFracFilm_Types.o

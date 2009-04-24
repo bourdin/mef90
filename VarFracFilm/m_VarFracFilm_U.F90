@@ -1,4 +1,4 @@
-Module m_VarFracFilm_U2D
+Module m_VarFracFilm_U
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -7,7 +7,7 @@ Module m_VarFracFilm_U2D
 #include "finclude/petscmeshdef.h"
 #include "finclude/petscviewerdef.h"
 
-   Use m_VarFracFilm_Types2D
+   Use m_VarFracFilm_Types
    Use m_MEF90
    Use m_VarFracFilm_Struct
    Use petsc
@@ -63,7 +63,7 @@ Contains
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       
       PetscReal, Dimension(:), Pointer             :: V
-      PetscReal, pointer                           :: Phi
+      PetscReal,Dimension(:), Pointer              :: Phi
       PetscReal                                    :: V_Elem
       
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
@@ -154,7 +154,8 @@ Contains
       PetscInt                                     :: iE
       Type(AppCtx_Type)                            :: AppCtx
       PetscReal, Dimension(:), Pointer             :: RHSElem
-      PetscReal, pointer                           :: Phi
+      PetscReal, Dimension(:), pointer             :: Phi
+      PetscReal, Dimension(:), Pointer             :: U0
       PetscReal, Dimension(:), Pointer             :: V
       PetscReal, Dimension(:), Pointer             :: Theta
       PetscInt                                     :: iErr
@@ -171,7 +172,7 @@ Contains
       Allocate(BCFlag(NumDoFVect))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
       Allocate(U0(NumDoFVect))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%U0, iE-1, NumDoFVect, U0, iErr); CHKERRQ(ierr)
+      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U0, iE-1, NumDoFVect, U0, iErr); CHKERRQ(ierr)
       Allocate(Theta(NumDoFScal))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
       Allocate(V(NumDoFScal))
@@ -183,7 +184,7 @@ Contains
          Theta_Elem  = 0.0_Kr
          V_Elem      = 0.0_Kr
          Do iDoF2 = 1, NumDoFVect
-            U0_Elem = U0elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * U0(iDoF2)
+            U0_Elem = U0_elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * U0(iDoF2)
          End Do
          Do iDoF2 = 1, NumDoFScal
             Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)* Theta(iDoF2)
@@ -244,4 +245,4 @@ Contains
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n'c)
    End Subroutine Solve_U
       
-End Module m_VarFracFilm
+End Module m_VarFracFilm_U
