@@ -85,11 +85,10 @@ Module m_VarFracFilm_Struct
    PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_TotalEnergy            = 5       
    PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_Load                   = 6       
    
-   PetscInt, Parameter, Public                     :: VarFracFilm_Num_EBProperties    = 4
+   PetscInt, Parameter, Public                     :: VarFracFilm_Num_EBProperties    = 3
    PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_IsBrittle    = 1
    PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_HasSubstrate = 2
    PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_Elem_Type    = 3
-   PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_HasU0        = 4
    
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_SSProperties  = 4
    PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCUTypeX   = 1
@@ -410,7 +409,6 @@ Module m_VarFracFilm_Struct
       dEXO%EBProperty(VarFracFilm_EBProp_IsBrittle)%Name    = 'Is_Brittle'
       dEXO%EBProperty(VarFracFilm_EBProp_HasSubstrate)%Name = 'HasSubstrate'
       dEXO%EBProperty(VarFracFilm_EBProp_Elem_Type)%Name    = 'Elem_Type'
-      dEXO%EBProperty(VarFracFilm_EBProp_HasU0)%Name        = 'HasU0'
       Do i = 1, dEXO%Num_EBProperties
          Allocate(dEXO%EBProperty(i)%Value(NumEB))
          dEXO%EBProperty(i)%Value = 0

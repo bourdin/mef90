@@ -147,7 +147,7 @@ Program  VarFracFilm
 102 Format('Surface energy:       ', ES12.5, '\n'c)    
 103 Format('Total energy:         ', ES12.5, '\n'c)    
 
-   Call ComputeStrainStress(AppCtx)
+!   Call ComputeStrainStress(AppCtx)
 
    Call VarFracFilmFinalize(AppCtx)
 End Program  VarFracFilm
