@@ -89,12 +89,23 @@ Module m_VarFracFilm_Struct
    PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_IsBrittle    = 1
    PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_HasSubstrate = 2
    PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_Elem_Type    = 3
+   PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_HasU0        = 4
    
+<<<<<<< /Network/Servers/xserve.schur.math.lsu.edu/Volumes/VTrak1/Users/corrado/mef90-sieve/m_VarFracFilm_Struct/m_VarFracFilm_Struct.F90
+   PetscInt, Parameter, Public                     :: VarFracFilm_Num_SSProperties  = 5
+=======
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_SSProperties  = 4
+>>>>>>> /tmp/m_VarFracFilm_Struct.F90~other.ofhtF5
    PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCUTypeX   = 1
    PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCUTypeY   = 2
+<<<<<<< /Network/Servers/xserve.schur.math.lsu.edu/Volumes/VTrak1/Users/corrado/mef90-sieve/m_VarFracFilm_Struct/m_VarFracFilm_Struct.F90
+   PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCUTypeZ   = 3
+   PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCVType    = 4
+   PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_Elem_Type  = 5
+=======
    PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCVType    = 3
    PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_Elem_Type  = 4
+>>>>>>> /tmp/m_VarFracFilm_Struct.F90~other.ofhtF5
 
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_NSProperties  = 4
    PetscInt, Parameter, Public                     :: VarFracFilm_NSProp_BCUTypeX   = 1
