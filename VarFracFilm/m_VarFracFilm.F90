@@ -188,6 +188,7 @@ Contains
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U0) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
+      Call SectionRealSet(AppCtx%V, 0.0_Kr, iErr); CHKERRQ(iErr)
 !      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
 !      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%PHI) 
    End Subroutine VarFracFilmInit

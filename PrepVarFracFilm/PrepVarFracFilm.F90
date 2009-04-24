@@ -109,6 +109,8 @@ Program PrepVarFracFilm
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
+   Write(IOBuffer, *) '\nElement Block and Node Set Properties\n'c
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    Call EXOProperty_Ask(MyEXO, MeshTopology)
    
    Do i = 1, MeshTopology%num_elem_blks
@@ -179,6 +181,8 @@ Program PrepVarFracFilm
       Allocate(GlobVars(VarFracFilm_Num_GlobVar))
       GlobVars = 0.0_Kr
       !!! Time Steps
+      Write(IOBuffer, *) '\nGlobal Variables\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       Write(IOBuffer, 200) 'TMin'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       If (MEF90_MyRank == 0) Then
@@ -241,7 +245,6 @@ Program PrepVarFracFilm
             Write(IOBuffer, 200) 'Thermal expansion coefficient'
             Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
             Read(*,*) Therm_ExpScal
-            MatProp2D(i)%ToughnessT = ToughnessT
             Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)   
             MatProp2D(i)%Therm_Exp    = 0.0_Kr
             MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
@@ -253,6 +256,7 @@ Program PrepVarFracFilm
              Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
              Read(*,*) ToughnessT
             End if
+            MatProp2D(i)%ToughnessT = ToughnessT
             
             !If there is a (brittle) substrate
             If (MyEXO%EBProperty(VarFracFilm_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
@@ -280,12 +284,13 @@ Program PrepVarFracFilm
       !!! Variable initialized on EB: U0 and Theta
       Allocate(U0(MeshTopology%Num_Elem_Blks_Global))
       Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
+
+      U0%X = 0.0_Kr
+      U0%Y = 0.0_Kr
+      Theta = 0.0_Kr
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         U0%X = 0.0_Kr
-         U0%Y = 0.0_Kr
-         Theta = 0.0_Kr
 
          !!! U0
          If (MyEXO%EBProperty(VarFracFilm_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
@@ -323,7 +328,7 @@ Program PrepVarFracFilm
             Allocate(U0elem(2*Num_DoF))
             Allocate(Thetaelem(Num_DoF))
             
-            !!! Update F
+            !!! Update U0
             If ( MyEXO%EBProperty(VarFracFilm_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
                Do k = 0, Num_DoF-1
                   U0elem(2*k+1) = T(iStep) * U0(i)%X

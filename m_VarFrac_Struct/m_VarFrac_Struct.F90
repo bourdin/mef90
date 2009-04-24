@@ -310,11 +310,10 @@ Module m_VarFrac_Struct
          SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
       End If
       !!! Reading the file once first to get the right number of blocks
-      IdxMin = 0
-      IdxMax = 0
+      IdxMin =  100000000
+      IdxMax = -100000000
       Do iBlk = 1, NumBlks
          Read(F_IN, *) Idx
-         !!! Check that this will work!
          IdxMin = Min(IdxMin, Idx)
          IdxMax = Max(IdxMax, Idx)
       End Do
@@ -353,11 +352,10 @@ Module m_VarFrac_Struct
          SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp3DRead: non matching blocks numbers', iErr)
       End If
       !!! Reading the file once first to get the right number of blocks
-      IdxMin = 0
-      IdxMax = 0
+      IdxMin =  100000000
+      IdxMax = -100000000
       Do iBlk = 1, NumBlks
          Read(F_IN, *) Idx
-         !!! Check that this will work!
          IdxMin = Min(IdxMin, Idx)
          IdxMax = Max(IdxMax, Idx)
       End Do

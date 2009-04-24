@@ -235,8 +235,8 @@ Module m_VarFracFilm_Struct
          SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
       End If
       !!! Reading the file once first to get the right number of blocks
-      IdxMin = 0
-      IdxMax = 0
+      IdxMin =  100000
+      IdxMax = -100000
       Do iBlk = 1, NumBlks
          Read(F_IN, *) Idx
          !!! Check that this will work!
