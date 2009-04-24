@@ -57,7 +57,7 @@ Module m_VarFracFilm_Struct
    PetscInt, Parameter, Public                     :: Init_U_ZERO = 1
    
    PetscInt, Parameter, Public                     :: Irrev_NONE = 0
-   PetscInt, Parameter, Public                     :: irrev_Eq   = 1
+   PetscInt, Parameter, Public                     :: Irrev_Eq   = 1
    PetscInt, Parameter, Public                     :: Irrev_Ineq = 2
    
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_VertVar           = 6
@@ -110,14 +110,12 @@ Module m_VarFracFilm_Struct
    End Type MatProp2D_Type                                           ! Total: 14 PetscReals
       
    Type VarFracFilmSchemeParam_Type
-      PetscInt                                     :: DoIrrev
+      PetscInt                                     :: IrrevType
       PetscReal                                    :: IrrevTol
       
       PetscTruth                                   :: DoBT
       PetscReal                                    :: BTTol
       PetscInt                                     :: BTInt
-      
-      PetscInt                                     :: InitU
       
       PetscInt                                     :: InitV
       PetscInt                                     :: InitPHI
@@ -138,6 +136,9 @@ Module m_VarFracFilm_Struct
 
       PetscInt                                     :: ATNum
       PetscInt                                     :: IntegOrder
+      
+      PetscTruth                                   :: SaveStress
+      PetscTruth                                   :: SaveStrain
    End Type VarFracFilmSchemeParam_Type
    
  Contains
@@ -265,7 +266,7 @@ Module m_VarFracFilm_Struct
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
-      Write(IOBuffer, "(I1,T32, 'DoIrrev')")             dSchemeParam%DoIrrev 
+      Write(IOBuffer, "(I1,T32, 'IrrevType')")           dSchemeParam%IrrevType 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'IrrevTol')")        dSchemeParam%IrrevTol
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -274,8 +275,6 @@ Module m_VarFracFilm_Struct
       Write(IOBuffer, "(ES12.5,T32, 'BTTol')")           dSchemeParam%BTTol
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I5,T32, 'BTInt')")               dSchemeParam%BTInt 
-      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "(I1,T32, 'InitU')")               dSchemeParam%InitU 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I1,T32, 'InitV')")               dSchemeParam%InitV 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -313,12 +312,11 @@ Module m_VarFracFilm_Struct
       
       Open(File = filename, status='old', Unit = F_IN)
       Rewind(F_IN)
-      Read(F_IN, *) dSchemeParam%DoIrrev 
+      Read(F_IN, *) dSchemeParam%IrrevType
       Read(F_IN, *) dSchemeParam%IrrevTol
       Read(F_IN, *) dSchemeParam%DoBT 
       Read(F_IN, *) dSchemeParam%BTTol
       Read(F_IN, *) dSchemeParam%BTInt 
-      Read(F_IN, *) dSchemeParam%InitU 
       Read(F_IN, *) dSchemeParam%InitV 
       Read(F_IN, *) dSchemeParam%InitPhi 
       Read(F_IN, *) dSchemeParam%NbCracks
@@ -333,6 +331,8 @@ Module m_VarFracFilm_Struct
       Read(F_IN, *) dSchemeParam%KEpsilonPhi
       Read(F_IN, *) dSchemeParam%ATNum
       Read(F_IN, *) dSchemeParam%IntegOrder
+      Read(F_IN, *) dSchemeParam%SaveStress
+      Read(F_IN, *) dSchemeParam%SaveStrain
       Close(F_IN)
    End Subroutine VarFracFilmSchemeParam_Load
    
@@ -341,12 +341,11 @@ Module m_VarFracFilm_Struct
       PetscInt                                     :: iErr
       PetscTruth                                   :: flag
 
-      dSchemeParam%DoIrrev          = Irrev_Eq
+      dSchemeParam%IrrevType        = Irrev_Eq
       dSchemeParam%IrrevTol         = 1.0D-2
       dSchemeParam%DoBT             = PETSC_FALSE
       dSchemeParam%BTTol            = 0.0D0
       dSchemeParam%BTInt            = 0
-      dSchemeParam%InitU            = Init_U_PREV
       dSchemeParam%InitV            = Init_V_PREV
       dSchemeParam%InitPhi          = Init_Phi_PREV
       dSchemeParam%nbCracks         = 0
@@ -362,12 +361,11 @@ Module m_VarFracFilm_Struct
       dSchemeParam%ATNum            = 2
       dSchemeParam%IntegOrder       = 3
 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%DoIrrev, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-irrevtype',      dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-dobt',           dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-bttol',          dSchemeParam%BTTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',          dSchemeParam%BTInt, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initu',          dSchemeParam%InitU, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initphi',        dSchemeParam%InitPhi, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
@@ -375,8 +373,8 @@ Module m_VarFracFilm_Struct
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminmaxiter',  dSchemeParam%AltMinMaxIter, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-altmintol',      dSchemeParam%AltMinTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminsaveint',  dSchemeParam%AltMinSaveInt, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspurol',        dSchemeParam%KSPUrTol, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspvrol',        dSchemeParam%KSPVrTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspurtol',       dSchemeParam%KSPUrTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspvrtol',       dSchemeParam%KSPVrTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',        dSchemeParam%Epsilon, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilonv',      dSchemeParam%KEpsilonV, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilonphi',    dSchemeParam%KEpsilonPhi, flag, iErr); CHKERRQ(iErr)
