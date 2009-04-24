@@ -62,7 +62,7 @@ Module m_VarFracFilm_Types
       PetscInt                                     :: ErrPHI
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
-      Type(SectionInt)                             :: BCFlagU, BCFlagV
+      Type(SectionInt)                             :: BCUFlag, BCVFlag
       Type(Mat)                                    :: KU, KV
       Type(Vec)                                    :: RHSU, RHSV
       Type(KSP)                                    :: KSPU, KSPV

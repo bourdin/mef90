@@ -79,7 +79,7 @@ Contains
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
 
-         !!! Reading and distributing sequential mesh
+      !!! Reading and distributing sequential mesh
       If (MEF90_NumProcs == 1) Then
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
       Else
@@ -139,7 +139,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
-      !!! Create the Sections for the variables
+      !!! Create the Sections for the NODAL variables
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Theta', 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
