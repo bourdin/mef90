@@ -272,10 +272,14 @@ Program PrepVarFrac
       End If
 
 
+      Write(IOBuffer, *) '\nFields and Loads\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       !!! Variable initialized on EB: F and Theta
       Allocate(F(MeshTopology%Num_Elem_Blks_Global))
       Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
+         Write(IOBuffer, 100) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          F%X = 0.0_Kr
          F%Y = 0.0_Kr
          F%Z = 0.0_Kr

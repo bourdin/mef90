@@ -209,7 +209,7 @@ Contains
    Subroutine Save_PHI(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFracFilm_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%PHI) 
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFracFilm_CellVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%PHI) 
    End Subroutine Save_PHI
 
    Subroutine Save_StrainStress(AppCtx)

@@ -72,7 +72,10 @@ Contains
        DeAllocate(U)
        DeAllocate(U0)
        DeAllocate(Zero) 
-      
+       
+      Write(IOBuffer, 100) AppCtx%ErrPhi
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+100 Format('     Number of changed values for phi: ', I5, '\n'c)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Solve_Phi
 End Module m_VarFracFilm_Phi

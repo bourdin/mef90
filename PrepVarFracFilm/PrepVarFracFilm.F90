@@ -224,6 +224,8 @@ Program PrepVarFracFilm
          Allocate(MatProp2D(MeshTopology%Num_Elem_Blks_Global))
       End Select
       
+      Write(IOBuffer, *) '\nMaterial properties\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       !!! Material Properties
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
@@ -273,10 +275,14 @@ Program PrepVarFracFilm
       End If
 
 
+      Write(IOBuffer, *) '\nFields and Loads\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       !!! Variable initialized on EB: U0 and Theta
       Allocate(U0(MeshTopology%Num_Elem_Blks_Global))
       Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
+         Write(IOBuffer, 100) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          U0%X = 0.0_Kr
          U0%Y = 0.0_Kr
          Theta = 0.0_Kr
