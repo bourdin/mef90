@@ -9,7 +9,6 @@ Module m_VarFracFilm_Struct
    Private
 
    
-   Public :: GenHL_Iso3D_Enu
    Public :: GenHL_Iso2D_EnuPlaneStress
    Public :: GenHL_Iso2D_EnuPlaneStrain
    Public :: GenHL_Ortho2D_LambdaMu
@@ -21,26 +20,25 @@ Module m_VarFracFilm_Struct
    Public :: VarFracFilmEXOProperty_Init
    Public :: VarFracFilmEXOVariable_Init
    
-   Public :: MatProp2D_Type, MatProp3D_Type
+   Public :: MatProp2D_Type
    Public :: MatProp_Write, MatProp_Read
    
    Public :: EXOProperty_InitBCVFlag
    Public :: EXOProperty_InitBCUFlag2DA
    Public :: EXOProperty_InitBCUFlag2D
-   Public :: EXOProperty_InitBCUFlag3D
    
    Public :: VarFracFilmSchemeParam_Type
 
    Interface MatProp_Write
-      Module Procedure MatProp2D_Write, MatProp3D_Write
+      Module Procedure MatProp2D_Write
    End Interface
   
    Interface MatProp_Read
-      Module Procedure MatProp2D_Read, MatProp3D_Read
+      Module Procedure MatProp2D_Read
    End Interface
    
    Interface GenHL_Iso_LambdaMu
-      Module Procedure GenHL_Iso2D_LambdaMu, GenHL_Iso3D_LambdaMu
+      Module Procedure GenHL_Iso2D_LambdaMu
    End Interface
 
    PetscInt, Parameter, Public                     :: BC_Type_NONE = 0
@@ -50,6 +48,11 @@ Module m_VarFracFilm_Struct
    PetscInt, Parameter, Public                     :: Init_V_ONE  = 1
    PetscInt, Parameter, Public                     :: Init_V_RND  = 2
    PetscInt, Parameter, Public                     :: Init_V_SPH  = 3
+   
+   PetscInt, Parameter, Public                     :: Init_PHI_PREV = 0
+   PetscInt, Parameter, Public                     :: Init_PHI_ONE  = 1
+   PetscInt, Parameter, Public                     :: Init_PHI_RND  = 2
+   PetscInt, Parameter, Public                     :: Init_PHI_SPH  = 3
    
    PetscInt, Parameter, Public                     :: Init_U_PREV = 0
    PetscInt, Parameter, Public                     :: Init_U_ZERO = 1
@@ -85,32 +88,32 @@ Module m_VarFracFilm_Struct
 
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_GlobVar                    = 7       
    PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_ElasticBulkEnergy      = 1   
-   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_ElasticInterfaceEnergy = 2
+   PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_ElasticInterEnergy     = 2
    PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_KineticEnergy          = 3       
    PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_SurfaceEnergyT         = 4      
    PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_SurfaceEnergyD         = 5      
    PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_TotalEnergy            = 6       
    PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_Load                   = 7       
    
-   PetscInt, Parameter, Public                     :: VarFracFilm_Num_EBProperties  = 3
-   PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_IsBrittle  = 1
-   PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_HasBForce  = 2
-   PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_Elem_Type  = 3
+   PetscInt, Parameter, Public                     :: VarFracFilm_Num_EBProperties    = 3
+   PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_IsBrittle    = 1
+   PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_HasSubstrate = 2
+   PetscInt, Parameter, Public                     :: VarFracFilm_EBProp_Elem_Type    = 3
    
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_SSProperties  = 6
    PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCUTypeX   = 1
    PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCUTypeY   = 2
    PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCUTypeZ   = 3
    PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_BCVType    = 4
-   PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_HasSForce  = 5
-   PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_Elem_Type  = 6
+!   PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_HasSForce  = 5
+   PetscInt, Parameter, Public                     :: VarFracFilm_SSProp_Elem_Type  = 5
 
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_NSProperties  = 5
    PetscInt, Parameter, Public                     :: VarFracFilm_NSProp_BCUTypeX   = 1
    PetscInt, Parameter, Public                     :: VarFracFilm_NSProp_BCUTypeY   = 2
    PetscInt, Parameter, Public                     :: VarFracFilm_NSProp_BCUTypeZ   = 3
    PetscInt, Parameter, Public                     :: VarFracFilm_NSProp_BCVType    = 4
-   PetscInt, Parameter, Public                     :: VarFracFilm_NSProp_HasPForce  = 5
+!   PetscInt, Parameter, Public                     :: VarFracFilm_NSProp_HasPForce  = 5
    
    Type MatProp2D_Type
       PetscReal                                    :: ToughnessT
@@ -131,6 +134,7 @@ Module m_VarFracFilm_Struct
       PetscInt                                     :: InitU
       
       PetscInt                                     :: InitV
+      PetscInt                                     :: InitPHI
       PetscInt                                     :: nbCracks
       PetscReal                                    :: MaxCrackLength     
       
@@ -143,7 +147,8 @@ Module m_VarFracFilm_Struct
       
       
       PetscReal                                    :: Epsilon
-      PetscReal                                    :: KEpsilon
+      PetscReal                                    :: KEpsilonV
+      PetscReal                                    :: KEpsilonPhi
 
       PetscInt                                     :: ATNum
       PetscInt                                     :: IntegOrder
@@ -224,32 +229,7 @@ Module m_VarFracFilm_Struct
       End Do
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
    End Subroutine EXOProperty_InitBCUFlag2D
-   
-   Subroutine EXOProperty_InitBCUFlag3D(dEXO, dMeshTopology, dBCFlag)
-      Type(EXO_Type)                               :: dEXO
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(SectionInt)                             :: dBCFlag 
-      
-      PetscInt                                     :: iErr, NumDoF, i, j
-      PetscInt, Dimension(:), Pointer              :: Flag
-      
-      Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
-      !!! Side Sets
-      !!! To be implemented
-      
-      !!! Node Sets
-      Do i = 1, dMeshTopology%Num_Node_Sets
-         Allocate(Flag(3))
-         Flag(1) = dEXO%NSProperty( VarFracFilm_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(2) = dEXO%NSProperty( VarFracFilm_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(3) = dEXO%NSProperty( VarFracFilm_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
-         Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
-         End Do
-         DeAllocate(Flag)
-      End Do
-      Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
-   End Subroutine EXOProperty_InitBCUFlag3D
+
 
    Subroutine MatProp2D_Write(MeshTopology, MatProp, filename)
       Type(MeshTopology_Type)                      :: MeshTopology
@@ -263,35 +243,14 @@ Module m_VarFracFilm_Struct
       Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
          Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
-         Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
+         Write(F_OUT,120) Blk_ID, MatProp(iBlk)%ToughnessT, MatProp(iBlk)%ToughnessD, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp, MatProp(iBlk)%K_Interface
       End Do
       Close(F_OUT)
       
-110   Format(I6,'      Toughness    A1111        A1112        A1122        A1212        A1222        A2222        Alpha')
+110   Format(I6,'      ToughnessT    ToughnessD    A1111        A1112        A1122        A1212        A1222        A2222        Alpha     K')
 120   Format(I6, '      ', 10(ES12.5,' '))   
    End Subroutine MatProp2D_Write
- 
-   Subroutine MatProp3D_Write(MeshTopology, MatProp, filename)
-      Type(MeshTopology_Type)                      :: MeshTopology
-      Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
-      Character(len=*)                             :: filename
-
-      PetscMPIInt                                  :: rank
-      PetscInt                                     :: iBlk, Blk_ID
-      
-      Open(File = filename, Unit = F_OUT, Status = 'Unknown')
-      Rewind(F_OUT)
-      Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
-      Do iBlk = 1, Size(MatProp)
-         Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
-         Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
-      End Do
-      Close(F_OUT)
-      
-110   Format(I6,'      Toughness    A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133      A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333       Alpha')
-120   Format(I6, '      ', 28(ES12.5,' '))
-   End Subroutine MatProp3D_Write
- 
+  
  
    Subroutine MatProp2D_Read(MeshTopology, MatProp, filename)
       Type(MeshTopology_Type)                      :: MeshTopology
@@ -302,8 +261,10 @@ Module m_VarFracFilm_Struct
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
       Type(Tens4OS2D)                              :: Hookes_Law
-      PetscReal                                    :: Toughness
+      PetscReal                                    :: ToughnessT
+      PetscReal                                    :: ToughnessD
       Type(MatS2D)                                 :: Therm_Exp
+      Type(MatS2D)                                 :: K_interface
    
       Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
       Rewind(F_IN)
@@ -324,11 +285,12 @@ Module m_VarFracFilm_Struct
       Rewind(F_IN)
       Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
-
-         MatProp(Idx)%Toughness  = Toughness
-         MatProp(Idx)%Hookes_Law = Hookes_Law
-         MatProp(Idx)%Therm_Exp  = Therm_Exp
+         Read(F_IN, *) Idx, ToughnessT, ToughnessD, Hookes_Law, Therm_exp, K_interface
+         MatProp(Idx)%ToughnessT   = ToughnessT
+         MatProp(Idx)%ToughnessD   = ToughnessD
+         MatProp(Idx)%Hookes_Law   = Hookes_Law
+         MatProp(Idx)%Therm_Exp    = Therm_Exp
+         MatProp(Idx)%K_interface  = K_interface
       End Do
       Close(F_IN)
       Return
@@ -336,49 +298,10 @@ Module m_VarFracFilm_Struct
 !120   Format(*)
    End Subroutine MatProp2D_Read
    
-   Subroutine MatProp3D_Read(MeshTopology, MatProp, filename)
-      Type(MeshTopology_Type)                      :: MeshTopology
-      Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
-      Character(len=*)                             :: filename
 
-      PetscInt                                     :: iBlk, Blk_Id, iErr
-      
-      PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
-      Type(Tens4OS3D)                              :: Hookes_Law
-      PetscReal                                    :: Toughness
-      Type(MatS3D)                                 :: Therm_Exp
-   
-      Open(File = filename, Unit = F_IN, Status = 'Unknown')
-      Rewind(F_IN)
-      Read(F_IN, *) NumBlks
-      If (NumBlks /= MeshTopology%Num_Elem_Blks) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp3DRead: non matching blocks numbers', iErr)
-      End If
-      !!! Reading the file once first to get the right number of blocks
-      IdxMin = 0
-      IdxMax = 0
-      Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx
-         !!! Check that this will work!
-         IdxMin = Min(IdxMin, Idx)
-         IdxMax = Max(IdxMax, Idx)
-      End Do
-      Allocate(MatProp(IdxMin:IdxMax))
-      Rewind(F_IN)
-      Read(F_IN, *) Idx
-      Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
-         MatProp(Idx)%Toughness  = Toughness
-         MatProp(Idx)%Hookes_Law = Hookes_Law
-         MatProp(Idx)%Therm_Exp  = Therm_Exp
-      End Do
-      Close(F_IN)
-      
-220   Format(I6, 28(ES12.5,' '))
-   End Subroutine MatProp3D_Read
 
    Subroutine VarFracFilmSchemeParam_View(dSchemeParam, viewer)
-      Type(VarFracFilmSchemeParam_Type)                   :: dSchemeParam
+      Type(VarFracFilmSchemeParam_Type)            :: dSchemeParam
       Type(PetscViewer)                            :: viewer
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
@@ -397,6 +320,8 @@ Module m_VarFracFilm_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I1,T32, 'InitV')")               dSchemeParam%InitV 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "(I1,T32, 'InitPhi')")               dSchemeParam%InitPhi 
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I5,T32, 'NbCracks')")            dSchemeParam%NbCracks
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'MaxCrackLength')")  dSchemeParam%MaxCrackLength
@@ -413,7 +338,9 @@ Module m_VarFracFilm_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'Epsilon')")         dSchemeParam%Epsilon
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "(ES12.5,T32, 'KEpsilon')")        dSchemeParam%KEpsilon
+      Write(IOBuffer, "(ES12.5,T32, 'KEpsilonV')")        dSchemeParam%KEpsilonV
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "(ES12.5,T32, 'KEpsilonPhi')")        dSchemeParam%KEpsilonPhi
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I1,T32, 'ATNum')")               dSchemeParam%ATNum
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -434,6 +361,7 @@ Module m_VarFracFilm_Struct
       Read(F_IN, *) dSchemeParam%BTInt 
       Read(F_IN, *) dSchemeParam%InitU 
       Read(F_IN, *) dSchemeParam%InitV 
+      Read(F_IN, *) dSchemeParam%InitPhi 
       Read(F_IN, *) dSchemeParam%NbCracks
       Read(F_IN, *) dSchemeParam%MaxCrackLength
       Read(F_IN, *) dSchemeParam%AltMinMaxIter
@@ -442,7 +370,8 @@ Module m_VarFracFilm_Struct
       Read(F_IN, *) dSchemeParam%KSPUrTol
       Read(F_IN, *) dSchemeParam%KSPVrTol
       Read(F_IN, *) dSchemeParam%Epsilon
-      Read(F_IN, *) dSchemeParam%KEpsilon
+      Read(F_IN, *) dSchemeParam%KEpsilonV
+      Read(F_IN, *) dSchemeParam%KEpsilonPhi
       Read(F_IN, *) dSchemeParam%ATNum
       Read(F_IN, *) dSchemeParam%IntegOrder
       Close(F_IN)
@@ -469,7 +398,7 @@ Module m_VarFracFilm_Struct
       dSchemeParam%KSPUrtol         = 1.0D-6
       dSchemeParam%KSPVrtol         = 1.0D-6
       dSchemeParam%Epsilon          = .1
-      dSchemeParam%KEpsilonU        = 1.0E-6
+      dSchemeParam%KEpsilonV        = 1.0E-6
       dSchemeParam%KEpsilonPhi      = 1.0E-6
       dSchemeParam%ATNum            = 2
       dSchemeParam%IntegOrder       = 3
@@ -481,6 +410,7 @@ Module m_VarFracFilm_Struct
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',          dSchemeParam%BTInt, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initu',          dSchemeParam%InitU, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initphi',          dSchemeParam%InitPhi, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-maxcracklength', dSchemeParam%MaxCrackLength, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminmaxiter',  dSchemeParam%AltMinMaxIter, flag, iErr); CHKERRQ(iErr)
@@ -520,7 +450,7 @@ Module m_VarFracFilm_Struct
       dEXO%Num_EBProperties = VarFracFilm_Num_EBProperties
       Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
       dEXO%EBProperty(VarFracFilm_EBProp_IsBrittle)%Name = 'Is_Brittle'
-      dEXO%EBProperty(VarFracFilm_EBProp_HasBForce)%Name = 'Has_BForce'
+      dEXO%EBProperty(VarFracFilm_EBProp_HasSubstrate)%Name = 'Has_Substrate'
       dEXO%EBProperty(VarFracFilm_EBProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_EBProperties
          Allocate(dEXO%EBProperty(i)%Value(NumEB))
@@ -533,7 +463,7 @@ Module m_VarFracFilm_Struct
       dEXO%SSProperty(VarFracFilm_SSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
       dEXO%SSProperty(VarFracFilm_SSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
       dEXO%SSProperty(VarFracFilm_SSProp_BCVType)%Name   = 'BCV_Type'
-      dEXO%SSProperty(VarFracFilm_SSProp_HasSForce)%Name = 'Has_SForce'
+!      dEXO%SSProperty(VarFracFilm_SSProp_HasSForce)%Name = 'Has_SForce'
       dEXO%SSProperty(VarFracFilm_SSProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_SSProperties
          Allocate(dEXO%SSProperty(i)%Value(NumSS))
@@ -546,7 +476,7 @@ Module m_VarFracFilm_Struct
       dEXO%NSProperty(VarFracFilm_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
       dEXO%NSProperty(VarFracFilm_NSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
       dEXO%NSProperty(VarFracFilm_NSProp_BCVType)%Name   = 'BCV_Type'
-      dEXO%NSProperty(VarFracFilm_NSProp_HasPForce)%Name = 'Has_PForce'
+!      dEXO%NSProperty(VarFracFilm_NSProp_HasPForce)%Name = 'Has_PForce'
       Do i = 1, dEXO%Num_NSProperties
          Allocate(dEXO%NSProperty(i)%Value(NumNS))
          dEXO%NSProperty(i)%Value = 0
@@ -561,7 +491,7 @@ Module m_VarFracFilm_Struct
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
       dEXO%GlobVariable(VarFracFilm_GlobVar_SurfaceEnergyT)%Name      = 'Surface energy T'
       dEXO%GlobVariable(VarFracFilm_GlobVar_SurfaceEnergyD)%Name      = 'Surface energy D'
-      dEXO%GlobVariable(VarFracFilm_GlobVar_ElasticBulkEnergyT)%Name  = 'Bulk elastic energy'
+      dEXO%GlobVariable(VarFracFilm_GlobVar_ElasticBulkEnergy)%Name   = 'Bulk elastic energy'
       dEXO%GlobVariable(VarFracFilm_GlobVar_ElasticInterEnergy )%Name = 'Interface elastic energy '
       dEXO%GlobVariable(VarFracFilm_GlobVar_KineticEnergy)%Name       = 'Kinetic energy'
 !     dEXO%GlobVariable(VarFracFilm_GlobVar_ExtForcesWork)%Name       = 'External Forces Work'
@@ -639,54 +569,7 @@ Module m_VarFracFilm_Struct
       A%XYXY = mu
       A%YYYY = lambda + 2.0_Kr * mu
    End Subroutine GenHL_Iso2D_EnuPlaneStrain         
-
-   Subroutine GenHL_Iso3D_LambdaMu(lambda, mu, A)
-      PetscReal, Intent(IN)               :: Lambda, Mu
-      Type(Tens4OS3D), Intent(OUT)        :: A
    
-      A = 0.0_Kr
-      A%XXXX = lambda + mu * 2.0_Kr
-      A%XXYY = lambda
-      A%XXZZ = lambda
-      
-      A%XYXY = mu
-      
-      A%XZXZ = mu
-      
-      A%YYYY = lambda + mu * 2.0_Kr
-      A%YYZZ = lambda
-      
-      A%YZYZ = mu
-      
-      A%ZZZZ = lambda + mu * 2.0_Kr
-   End Subroutine GenHL_Iso3D_LambdaMu
-
-   Subroutine GenHL_Iso3D_Enu(E, nu, A)
-      PetscReal, Intent(IN)               :: E, nu
-      Type(Tens4OS3D), Intent(OUT)        :: A
-      
-      Real(Kind = Kr)                     :: Lambda, mu
-   
-      lambda = E * nu / (1.0_Kr + nu) / (1 - 2.0_Kr * nu)
-      mu     = E / (1.0_Kr + nu) * .5_Kr      
-   
-      A = 0.0_Kr
-      A%XXXX = lambda + mu * 2.0_Kr
-      A%XXYY = lambda
-      A%XXZZ = lambda
-      
-      A%XYXY = mu
-      
-      A%XZXZ = mu
-      
-      A%YYYY = lambda + mu * 2.0_Kr
-      A%YYZZ = lambda
-      
-      A%YZYZ = mu
-      
-      A%ZZZZ = lambda + mu * 2.0_Kr
-   End Subroutine GenHL_Iso3D_Enu
-
    Subroutine GenHL_Ortho2D_LambdaMu(lambda, mu1, mu2, theta, A)
       PetscReal, Intent(IN)               :: Lambda, mu1, mu2, theta
       Type(Tens4OS2D), Intent(OUT)        :: A

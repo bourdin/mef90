@@ -1,8 +1,4 @@
-#if defined PB_2D
-Module m_VarFracFilm_Types2D
-#elif defined PB_3D
-Module m_VarFracFilm_Types3D
-#endif
+Module m_VarFracFilm_Types
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -45,13 +41,8 @@ Module m_VarFracFilm_Types3D
    Type AppCtx_Type
       Type (MeshTopology_Type)                     :: MeshTopology
       Type (EXO_Type)                              :: EXO, MyEXO
-#if defined PB_2D
       Type(Element2D_Elast), Dimension(:), Pointer :: ElemVect
       Type(Element2D_Scal), Dimension(:), Pointer  :: ElemScal
-#elif defined PB_3D
-      Type(Element3D_Elast), Dimension(:), Pointer :: ElemVect
-      Type(Element3D_Scal), Dimension(:), Pointer  :: ElemScal
-#endif
       Type(SectionReal)                            :: U
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
@@ -77,18 +68,10 @@ Module m_VarFracFilm_Types3D
       Type(KSP)                                    :: KSPU, KSPV
       Type(PC)                                     :: PCU, PCV
       Type(LogInfo_Type)                           :: LogInfo
-#if defined PB_2D
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp      
-#elif defined PB_3D
-      Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
-#endif
       Type(AppParam_Type)                          :: AppParam
       Type(VarFracFilmSchemeParam_Type)            :: VarFracFilmSchemeParam
    End Type AppCtx_Type
       
    
-#if defined PB_2D
-End Module m_VarFracFilm_Types2D
-#elif defined PB_3D
-End Module m_VarFracFilm_Types3D
-#endif
+End Module m_VarFracFilm_Types

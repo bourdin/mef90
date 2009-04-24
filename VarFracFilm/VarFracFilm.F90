@@ -7,11 +7,7 @@ Program  VarFracFilm
 #include "finclude/petscviewerdef.h"
 #include "finclude/petscmeshdef.h"
 
-#if defined PB_2D
-   Use m_VarFracFilm2D
-#elif defined PB_3D
-   Use m_VarFracFilm3D
-#endif   
+   Use m_VarFracFilm
    Use m_MEF90
    Use m_VarFracFilm_Struct
    Use petsc
@@ -92,7 +88,7 @@ Program  VarFracFilm
       !------------------------------------------------------------------- 
       ! Check the exit condition: tolerance on the error in V 
       !------------------------------------------------------------------- 
-      If (AppCtx.ErrV.LT.AppCtx%VarFracFilmSchemeParam%AltMinTol).AND?(AppCtx.ErrPHI.LT.AppCtx%VarFracFilmSchemeParam%AltMinTol) then 
+      If ((AppCtx%ErrV.LT.AppCtx%VarFracFilmSchemeParam%AltMinTol).AND.(AppCtx%ErrPHI.LT.AppCtx%VarFracFilmSchemeParam%AltMinTol)) then 
          EXIT 
       End If
       If (Mod(iter, AppCtx%VarFracFilmSchemeParam%AltMinSaveInt) == 0) Then
@@ -105,17 +101,19 @@ Program  VarFracFilm
          Call Save_PHI(AppCtx)
          Call ComputeEnergy(AppCtx)
       
-         Write(IOBuffer, 100) AppCtx%ElasticEnergy
+         Write(IOBuffer, 100) AppCtx%ElasticBulkEnergy
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Write(IOBuffer, 101) AppCtx%ExtForcesWork
+         Write(IOBuffer, 101) AppCtx%ElasticInterEnergy
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Write(IOBuffer, 102) AppCtx%SurfaceEnergy
+         Write(IOBuffer, 102) AppCtx%SurfaceEnergyT
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Write(IOBuffer, 102) AppCtx%SurfaceEnergyD
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Write(IOBuffer, 103) AppCtx%TotalEnergy
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-         Call ComputeStrainStress(AppCtx)
-         Call Save_StrainStress(AppCtx)
+!         Call ComputeStrainStress(AppCtx)
+!         Call Save_StrainStress(AppCtx)
       End If
    End Do
    
@@ -133,14 +131,16 @@ Program  VarFracFilm
    Call ComputeEnergy(AppCtx)
    Call Save_Ener(AppCtx)
 
-   Write(IOBuffer, 100) AppCtx%ElasticEnergy
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Write(IOBuffer, 101) AppCtx%ExtForcesWork
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Write(IOBuffer, 102) AppCtx%SurfaceEnergy
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Write(IOBuffer, 103) AppCtx%TotalEnergy
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+    Write(IOBuffer, 100) AppCtx%ElasticBulkEnergy
+    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+    Write(IOBuffer, 101) AppCtx%ElasticInterEnergy
+    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+    Write(IOBuffer, 102) AppCtx%SurfaceEnergyT
+    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+    Write(IOBuffer, 102) AppCtx%SurfaceEnergyD
+    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+    Write(IOBuffer, 103) AppCtx%TotalEnergy
+    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
 100 Format('Elastic energy:       ', ES12.5, '\n'c)    
 101 Format('External Forces Work: ', ES12.5, '\n'c)    

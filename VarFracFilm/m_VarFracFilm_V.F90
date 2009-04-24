@@ -1,8 +1,4 @@
-#if defined PB_2D
-Module m_VarFracFilm_V2D
-#elif defined PB_3D
-Module m_VarFracFilm_V3D
-#endif
+Module m_VarFracFilm_V
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -11,11 +7,7 @@ Module m_VarFracFilm_V3D
 #include "finclude/petscmeshdef.h"
 #include "finclude/petscviewerdef.h"
 
-#if defined PB_2D
-   Use m_VarFracFilm_Types2D
-#elif defined PB_3D
-   Use m_VarFracFilm_Types3D
-#endif   
+   Use m_VarFracFilm_Types
    Use m_MEF90
    Use m_VarFracFilm_Struct
    Use petsc
@@ -28,10 +20,11 @@ Module m_VarFracFilm_V3D
 
 Contains
 
+   Subroutine MatV_Assembly(AppCtx)
+
 !----------------------------------------------------------------------------------------!      
 ! MatAssembly V (CM)  
 !----------------------------------------------------------------------------------------!      
-   Subroutine MatV_Assembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iE, iELoc, iErr
@@ -45,7 +38,6 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             !--------------------------------------------------------
-            ! The only line to change as a function of the problem.
             Call MatV_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, MatElem)
             !--------------------------------------------------------
             Call assembleMatrix(AppCtx%KV, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
@@ -62,11 +54,7 @@ End Subroutine MatV_Assembly
 ! MatAssembly_V_Local (CM)
 !----------------------------------------------------------------------------------------!      
    Subroutine MatV_AssemblyLocal(iE, MatProp, AppCtx, MatElem)
-#if defined PB_2D
       Type(MatProp2D_Type)                         :: MatProp
-#elif defined PB_3D
-      Type(MatProp3D_Type)                         :: MatProp
-#endif
       Type(AppCtx_Type)                            :: AppCtx
       PetscReal, Dimension(:,:), Pointer           :: MatElem      
       PetscInt                                     :: iE
@@ -79,11 +67,7 @@ End Subroutine MatV_Assembly
       PetscReal, Dimension(:), Pointer             :: U, Theta
       PetscReal                                    :: Theta_Elem
       PetscReal                                    :: C2_V, C2_GradV
-#if defined PB_2D
       Type(MatS2D)                                 :: Strain_Elem, Effective_Strain_Elem
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
-#endif      
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr),
 
 
@@ -115,8 +99,8 @@ End Subroutine MatV_Assembly
       !! Calculate the Effective Strain at the gauss point
          Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * MatProp%Therm_Exp)   
       !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
-         C2_V     = 0.5_Kr / AppCtx%VarFracFilmSchemeParam%Epsilon * MatProp%Toughness + ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
-         C2_GradV = 2.0_Kr * AppCtx%VarFracFilmSchemeParam%Epsilon * MatProp%Toughness
+         C2_V     = 0.5_Kr / AppCtx%VarFracFilmSchemeParam%Epsilon * MatProp%ToughnessT + ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
+         C2_GradV = 2.0_Kr * AppCtx%VarFracFilmSchemeParam%Epsilon * MatProp%ToughnessT
       !! Assemble the element stiffness
          Do iDoF1 = 1, NumDoFScal
             If (BCFlag(iDoF1) == 0) Then
@@ -177,11 +161,7 @@ End Subroutine MatV_Assembly
 !----------------------------------------------------------------------------------------!      
    Subroutine RHSV_AssemblyLocal(iE, MatProp, AppCtx, RHSElem)
 
-#if defined PB_2D
       Type(MatProp2D_Type)                         :: MatProp
-#elif defined PB_3D
-      Type(MatProp3D_Type)                         :: MatProp
-#endif
    
       PetscInt                                     :: iE
       Type(AppCtx_Type)                            :: AppCtx
@@ -198,7 +178,7 @@ End Subroutine MatV_Assembly
       Allocate(BCFlag(NumDoFScal))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagV, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
-      C1_V =  0.5_Kr / AppCtx%VarFracFilmSchemeParam%Epsilon * MatProp%Toughness 
+      C1_V =  0.5_Kr / AppCtx%VarFracFilmSchemeParam%Epsilon * MatProp%ToughnessT 
       Do_iGauss: Do iGauss = 1, NumGauss
           Do iDoF1 = 1, NumDoFScal
             If (BCFlag(iDoF1) == 0) Then
@@ -275,8 +255,5 @@ End Subroutine MatV_Assembly
 
    
    
-#if defined PB_2D
-End Module m_VarFracFilm_V2D
-#elif defined PB_3D
-End Module m_VarFracFilm_V3D
-#endif
+
+End Module m_VarFracFilm_V
