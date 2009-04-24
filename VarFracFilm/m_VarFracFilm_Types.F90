@@ -59,7 +59,7 @@ Module m_VarFracFilm_Types
       PetscReal                                    :: ElasticInterEnergy
       PetscReal                                    :: TotalEnergy
       PetscReal                                    :: ErrV
-      PetscReal                                    :: ErrPHI
+      PetscInt                                     :: ErrPHI
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
       Type(SectionInt)                             :: BCFlagU, BCFlagV

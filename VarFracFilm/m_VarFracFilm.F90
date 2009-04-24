@@ -66,7 +66,7 @@ Contains
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
 
-         !!! Reading and distributing sequential mesh
+      !!! Reading and distributing sequential mesh
       If (MEF90_NumProcs == 1) Then
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
       Else
