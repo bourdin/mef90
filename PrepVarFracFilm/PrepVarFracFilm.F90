@@ -1,4 +1,4 @@
-Program PrepVarFrac
+Program PrepVarFracFilm
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -36,19 +36,19 @@ Program PrepVarFrac
    PetscInt, Parameter                          :: NumTestCase=2
    Type(TestCase_Type), Dimension(NumTestCase)  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
-   Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec
-   Type(Vect3D), Dimension(:), Pointer          :: U, F
+   Type(SectionReal)                            :: USec, PhiSec, VSec, ThetaSec
+   Type(Vect2D), Dimension(:), Pointer          :: U, U0
    PetscReal, DImension(:), Pointer             :: V
    PetscReal, Dimension(:), Pointer             :: Theta
-   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem
+   PetscReal, Dimension(:), Pointer             :: Phi
+   PetscReal, Dimension(:), Pointer             :: Uelem, Velem, Thetaelem, U0elem
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
    PetscInt                                     :: NumSteps
    PetscInt                                     :: Num_DoF
    PetscReal                                    :: RealBuffer
    Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp2D
-   Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp3D
-   PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
+   PetscReal                                    :: E, nu, ToughnessT, ToughnessD , Therm_ExpScal, K_InterfaceScal
    PetscReal, Dimension(:), Pointer             :: GlobVars
    PetscReal                                    :: rDummy
    Character                                    :: cDummy
@@ -140,10 +140,8 @@ Program PrepVarFrac
    Select Case (MeshTopology%Num_Dim)
    Case (2) 
       Call ElementInit(MeshTopology, Elem2D, QuadOrder)
-   Case(3)
-      Call ElementInit(MeshTopology, Elem3D, QuadOrder)   
    Case Default
-      SETERRQ(PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
+      SETERRQ(PETSC_ERR_SUP, 'Only 2 dimensional elements are supported', iErr)
    End Select
    If (verbose) Then
       Write(IOBuffer, '(A)') 'Done with ElementInit\n'c
@@ -151,10 +149,12 @@ Program PrepVarFrac
    End If
    
 !!! Initialize Sections   
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'F', 3, FSec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 2, USec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U0', 2, U0Sec, iErr); CHKERRQ(iErr)
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
+
+   Call MeshGetCellSectionReal(MeshTopology%mesh, 'Phi', 1, PhiSec, iErr); CHKERRQ(iErr)
    
    If (verbose) Then
       Write(IOBuffer, '(A)') 'Done with Initializing Sections\n'c
@@ -222,8 +222,6 @@ Program PrepVarFrac
       Select Case (MeshTopology%Num_Dim)
       Case(2)
          Allocate(MatProp2D(MeshTopology%Num_Elem_Blks_Global))
-      Case(3)
-         Allocate(MatProp3D(MeshTopology%Num_Elem_Blks_Global))
       End Select
       
       !!! Material Properties
@@ -232,9 +230,6 @@ Program PrepVarFrac
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
          If (MEF90_MyRank == 0) Then
-            Write(IOBuffer, 200) 'Toughness'
-            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
-            Read(*,*) Toughness
             Write(IOBuffer, 200) 'Young modulus'
             Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
             Read(*,*) E
@@ -244,65 +239,63 @@ Program PrepVarFrac
             Write(IOBuffer, 200) 'Thermal expansion coefficient'
             Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
             Read(*,*) Therm_ExpScal
-               
-            Select Case(MeshTopology%Num_Dim)
-            Case(2)
-               MatProp2D(i)%Toughness = Toughness
-               Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
-               MatProp2D(i)%Therm_Exp    = 0.0_Kr
-               MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
-               MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
-            Case(3)
-               MatProp3D(i)%Toughness = Toughness
-               Call GenHL_Iso3D_Enu(E, nu, MatProp3D(i)%Hookes_Law)
-               MatProp3D(i)%Therm_Exp    = 0.0_Kr
-               MatProp3D(i)%Therm_Exp%XX = Therm_ExpScal
-               MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
-               MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
-            End Select 
-         End If        
+            MatProp2D(i)%ToughnessT = ToughnessT
+            Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)   
+            MatProp2D(i)%Therm_Exp    = 0.0_Kr
+            MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
+            MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
+            
+            ! If Brittle
+            If (MyEXO%EBProperty(VarFrac_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
+             Write(IOBuffer, 200) 'Transverse Toughness'
+             Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+             Read(*,*) ToughnessT
+            End if
+            
+            !If there is a (brittle) substrate
+            If (MyEXO%EBProperty(VarFrac_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
+              Write(IOBuffer, 200) 'Delamination Toughness'
+              Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+              Read(*,*) ToughnessD
+              MatProp2D(i)%ToughnessD = ToughnessD
+
+              Write(IOBuffer, 200) 'Interface stiffness'
+              Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+              Read(*,*) K_interfaceScal   
+                MatProp2D(i)%K_interface    = 0.0_Kr
+                MatProp2D(i)%K_interface%XX = K_interfaceScal
+                MatProp2D(i)%K_interface%YY = K_interfaceScal
+             End if
+           End If        
       End Do
       If (MEF90_MyRank == 0) Then
-         Select Case(MeshTopology%Num_Dim)
-         Case (2)
-            Call MatProp_Write(MeshTopology, MatProp2D, Trim(prefix)//'.CST')
-         Case(3)
-            Call MatProp_Write(MeshTopology, MatProp3D, Trim(prefix)//'.CST')
-         End Select
+         Call MatProp_Write(MeshTopology, MatProp2D, Trim(prefix)//'.CST')
       End If
 
 
-      !!! Variable initialized on EB: F and Theta
+      !!! Variable initialized on EB: U0 and Theta
       Allocate(F(MeshTopology%Num_Elem_Blks_Global))
       Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
-         F%X = 0.0_Kr
-         F%Y = 0.0_Kr
-         F%Z = 0.0_Kr
+         U0%X = 0.0_Kr
+         U0%Y = 0.0_Kr
          Theta = 0.0_Kr
 
-         !!! Force
-         If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'Fx'
+         !!! U0
+         If (MyEXO%EBProperty(VarFrac_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 200) 'U0x'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
-               Read(*,*) F(i)%X
+               Read(*,*) U0(i)%X
             End If
-            Call MPI_BCast(F(i)%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+            Call MPI_BCast(U0(i)%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
 
-            Write(IOBuffer, 200) 'Fy'
+            Write(IOBuffer, 200) 'U0y'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
-               Read(*,*) F(i)%Y
+               Read(*,*) U0(i)%Y
             End If
-            Call MPI_BCast(F(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-
-            Write(IOBuffer, 200) 'Fz'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) F(i)%Z
-            End If
-            Call MPI_BCast(F(i)%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+            Call MPI_BCast(U0(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
          End If
          
          !!! Temperature
@@ -315,21 +308,20 @@ Program PrepVarFrac
       End Do   
       
       Do iStep = 1, NumSteps
-         Call SectionRealSet(FSec, 0.0_Kr, iErr); CHKERRQ(iErr)
+         Call SectionRealSet(U0Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
          Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
          Do iloc = 1, MeshTopology%Num_Elem_Blks
             i = MeshTopology%Elem_Blk(iLoc)%ID
             !!! Initialize the Section
             Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
-            Allocate(Felem(3*Num_DoF))
+            Allocate(U0elem(2*Num_DoF))
             Allocate(Thetaelem(Num_DoF))
             
             !!! Update F
-            If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
+            If ( MyEXO%EBProperty(VarFrac_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
                Do k = 0, Num_DoF-1
-                  Felem(3*k+1) = T(iStep) * F(i)%X
-                  Felem(3*k+2) = T(iStep) * F(i)%Y
-                  Felem(3*k+3) = T(iStep) * F(i)%Z
+                  U0elem(2*k+1) = T(iStep) * U0(i)%X
+                  U0elem(2*k+2) = T(iStep) * U0(i)%Y
                End Do
                Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
                   Call MeshUpdateClosure(MeshTopology%Mesh, FSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, iErr); CHKERRQ(iErr)            
@@ -347,7 +339,7 @@ Program PrepVarFrac
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, iStep, FSec) 
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, iStep, ThetaSec) 
       End Do
-      DeAllocate(F)
+      DeAllocate(U0)
       DeAllocate(Theta)
       
 
@@ -356,7 +348,6 @@ Program PrepVarFrac
       Allocate(V(MeshTopology%Num_Node_Sets_Global))
       U%X = 0.0_Kr
       U%Y = 0.0_Kr
-      U%Z = 0.0_Kr
       V   = 1.0_Kr
       Do i = 1, MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 102) i
@@ -380,14 +371,6 @@ Program PrepVarFrac
             End If
             Call MPI_BCast(U(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
          End If
-         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'Uz'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) U(i)%Z
-            End If
-            Call MPI_BCast(U(i)%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-         End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'V'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -401,7 +384,7 @@ Program PrepVarFrac
       Write(IOBuffer, *) '   \n\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       !!! Initialize the Section
-      Allocate(Uelem(3))
+      Allocate(Uelem(2))
       Allocate(Velem(1))
       
       Do iStep = 1, NumSteps
@@ -412,7 +395,6 @@ Program PrepVarFrac
             !!! Update 
             Uelem(1) = T(iStep) * U(i)%X
             Uelem(2) = T(iStep) * U(i)%Y
-            Uelem(3) = T(iStep) * U(i)%Z
             Velem    = V(i)
             Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
                Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
@@ -442,4 +424,4 @@ Program PrepVarFrac
  102 Format('*** Node Set      ', T24, I3, '\n'c)
  200 Format(A,t60, ': ')
    
-End Program PrepVarFrac
+End Program PrepVarFracFilm
