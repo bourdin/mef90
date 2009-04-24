@@ -8,7 +8,7 @@ Program PrepVarFracFilm
 #include "finclude/petscmeshdef.h"
 
    Use m_MEF90
-   Use m_VarFrac_Struct
+   Use m_VarFracFilm_Struct
 
    Use petsc
    Use petscvec
@@ -36,7 +36,7 @@ Program PrepVarFracFilm
    PetscInt, Parameter                          :: NumTestCase=2
    Type(TestCase_Type), Dimension(NumTestCase)  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
-   Type(SectionReal)                            :: USec, PhiSec, VSec, ThetaSec
+   Type(SectionReal)                            :: USec, U0Sec, PhiSec, VSec, ThetaSec
    Type(Vect2D), Dimension(:), Pointer          :: U, U0
    PetscReal, DImension(:), Pointer             :: V
    PetscReal, Dimension(:), Pointer             :: Theta
@@ -103,7 +103,7 @@ Program PrepVarFracFilm
  99  Format(A, '-', I4.4, '.gen')
 
    
-   Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
+   Call VarFracFilmEXOProperty_Init(MyEXO, MeshTopology)   
    If (verbose) Then
       Write(IOBuffer, *) "Done with VarFracEXOProperty_Init\n"c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -112,7 +112,7 @@ Program PrepVarFracFilm
    Call EXOProperty_Ask(MyEXO, MeshTopology)
    
    Do i = 1, MeshTopology%num_elem_blks
-      MeshTopology%elem_blk(i)%Elem_Type = MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( MeshTopology%elem_blk(i)%ID )
+      MeshTopology%elem_blk(i)%Elem_Type = MyEXO%EBProperty( VarFracFilm_EBProp_Elem_Type )%Value( MeshTopology%elem_blk(i)%ID )
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(i), MeshTopology%num_dim)
    End Do
 
@@ -128,7 +128,7 @@ Program PrepVarFracFilm
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
-   Call VarFracEXOVariable_Init(MyEXO)
+   Call VarFracFilmEXOVariable_Init(MyEXO)
    Call EXOVariable_Write(MyEXO)
    If (verbose) Then
       Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'c
@@ -176,7 +176,7 @@ Program PrepVarFracFilm
 
    Select Case(iCase)
    Case (1)! MIL
-      Allocate(GlobVars(VarFrac_Num_GlobVar))
+      Allocate(GlobVars(VarFracFilm_Num_GlobVar))
       GlobVars = 0.0_Kr
       !!! Time Steps
       Write(IOBuffer, 200) 'TMin'
@@ -201,7 +201,7 @@ Program PrepVarFracFilm
       Allocate(T(NumSteps))
       Do i = 1, NumSteps-1
          T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
-         GlobVars(VarFrac_GlobVar_Load) = T(i)
+         GlobVars(VarFracFilm_GlobVar_Load) = T(i)
          Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
 
          MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
@@ -210,7 +210,7 @@ Program PrepVarFracFilm
          MyEXO%exoid = 0
       End Do
       T(NumSteps) = Tmax
-      GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
+      GlobVars(VarFracFilm_GlobVar_Load) = T(NumSteps)
       Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
 
       MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
@@ -246,14 +246,14 @@ Program PrepVarFracFilm
             MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
             
             ! If Brittle
-            If (MyEXO%EBProperty(VarFrac_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
+            If (MyEXO%EBProperty(VarFracFilm_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
              Write(IOBuffer, 200) 'Transverse Toughness'
              Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
              Read(*,*) ToughnessT
             End if
             
             !If there is a (brittle) substrate
-            If (MyEXO%EBProperty(VarFrac_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
+            If (MyEXO%EBProperty(VarFracFilm_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
               Write(IOBuffer, 200) 'Delamination Toughness'
               Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
               Read(*,*) ToughnessD
@@ -274,7 +274,7 @@ Program PrepVarFracFilm
 
 
       !!! Variable initialized on EB: U0 and Theta
-      Allocate(F(MeshTopology%Num_Elem_Blks_Global))
+      Allocate(U0(MeshTopology%Num_Elem_Blks_Global))
       Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          U0%X = 0.0_Kr
@@ -282,7 +282,7 @@ Program PrepVarFracFilm
          Theta = 0.0_Kr
 
          !!! U0
-         If (MyEXO%EBProperty(VarFrac_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
+         If (MyEXO%EBProperty(VarFracFilm_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'U0x'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
@@ -318,13 +318,13 @@ Program PrepVarFracFilm
             Allocate(Thetaelem(Num_DoF))
             
             !!! Update F
-            If ( MyEXO%EBProperty(VarFrac_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
+            If ( MyEXO%EBProperty(VarFracFilm_EBProp_HasSubstrate)%Value(i) /= 0 ) Then
                Do k = 0, Num_DoF-1
                   U0elem(2*k+1) = T(iStep) * U0(i)%X
                   U0elem(2*k+2) = T(iStep) * U0(i)%Y
                End Do
                Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
-                  Call MeshUpdateClosure(MeshTopology%Mesh, FSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, iErr); CHKERRQ(iErr)            
+                  Call MeshUpdateClosure(MeshTopology%Mesh, U0Sec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, U0elem, iErr); CHKERRQ(iErr)            
                End Do
             End If
    
@@ -333,11 +333,11 @@ Program PrepVarFracFilm
             Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
                Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
             End Do
-            DeAllocate(Felem)
+            DeAllocate(U0elem)
             DeAllocate(Thetaelem)         
          End Do
-         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, iStep, FSec) 
-         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, iStep, ThetaSec) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFracFilm_VertVar_U0X)%Offset, iStep, U0Sec) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFracFilm_VertVar_Temperature)%Offset, iStep, ThetaSec) 
       End Do
       DeAllocate(U0)
       DeAllocate(Theta)
@@ -355,7 +355,7 @@ Program PrepVarFracFilm
 
          !!! Displacement
          !!! WTF I can bcast the entire arrays
-         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
+         If (MyEXO%NSProperty(VarFracFilm_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'Ux'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
@@ -363,7 +363,7 @@ Program PrepVarFracFilm
             End If
             Call MPI_BCast(U(i)%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
          End If
-         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
+         If (MyEXO%NSProperty(VarFracFilm_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'Uy'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
@@ -371,7 +371,7 @@ Program PrepVarFracFilm
             End If
             Call MPI_BCast(U(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
          End If
-         If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
+         If (MyEXO%NSProperty(VarFracFilm_NSProp_BCVType)%Value(i) /= 0 ) Then
             Write(IOBuffer, 200) 'V'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (MEF90_MyRank == 0) Then
@@ -400,11 +400,11 @@ Program PrepVarFracFilm
                Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
                Call MeshUpdateClosure(MeshTopology%Mesh, VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, iErr); CHKERRQ(iErr)            
                !!! We will need to do a restrict then update here!
-               !!! Write V only if MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0
+               !!! Write V only if MyEXO%NSProperty(VarFracFilm_NSProp_BCVType)%Value(i) /= 0
             End Do
          End Do
-         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
-         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, iStep, USec) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Offset, iStep, VSec) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFracFilm_VertVar_DisplacementX)%Offset, iStep, USec) 
       End Do
       
       DeAllocate(Uelem)
