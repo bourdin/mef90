@@ -141,44 +141,18 @@ Contains
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
       End Do
    
-!!!$$$      !!! Allocate the elements
-!!!$$$      Allocate(AppCtx%Elem(AppCtx%MeshTopology%Num_Elems))
-!!!$$$
-!!!$$$      !!! Initialize the Basis Functions in each element
-!!!$$$      Call MeshGetSectionReal(AppCtx%MeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
-!!!$$$      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-!!!$$$         Allocate(TmpCoords(AppCtx%MeshTopology%Num_Dim * AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Vert))
-!!!$$$         Allocate(Coords(AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Vert))
-!!!$$$
-!!!$$$         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-!!!$$$            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-!!!$$$            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSection, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
-!!!$$$             Coords = Reshape(TmpCoords, (/AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF /) )
-!!!$$$!             Write(*,*) iE, TmpCoords
-!!!$$$             !!! WTF? why not reshaping the arguments in Init_Element? 
-!!!$$$            Call ElementInit(AppCtx%Elem(iE), Coords, 2, AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type)
-!!!$$$!            Call ElementView(AppCtx%Elem(iE), PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
-!!!$$$         End Do Do_Elem_iE
-!!!$$$         DeAllocate(TmpCoords)
-!!!$$$         DeAllocate(Coords)
-!!!$$$      End Do Do_Elem_iBlk
-!!!$$$      Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
-!!!$$$      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-!!!$$$
-
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
-      
 
       Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Allocate the Section for U and F
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%U, iErr); CHKERRQ(iErr)
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%F, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', 1, AppCtx%U, iErr); CHKERRQ(iErr)
+      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'GradU', AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', 1, AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHS, iErr); CHKERRQ(iErr)
 
       !!! Allocate and initialize the Section for the flag
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlag', 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Allocate(TmpFlag(1))
       Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
          Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
@@ -426,7 +400,7 @@ Contains
       
       !!! Hopefully one day we will use assembleVector instead of going through a section
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSec', NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems

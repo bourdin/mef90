@@ -13,16 +13,16 @@ Module m_MEF_Sieve
    Private
    
    Public :: MeshTopologyReadEXO
-   Public :: MeshInitElementConnectivity
+!!!$   Public :: MeshInitElementConnectivity
    Public :: MeshInitCoordinates
    
    Interface MeshInitCoordinates
       Module Procedure MeshInitCoordinatesVect2D, MeshInitCoordinatesVect3D
    End Interface MeshInitCoordinates
    
-   Interface MeshInitElementConnectivity
-      Module Procedure MeshInitElementConnectivity2D_Scal, MeshInitElementConnectivity2D, MeshInitElementConnectivity2D_Elast, MeshInitElementConnectivity3D_Scal, MeshInitElementConnectivity3D, MeshInitElementConnectivity3D_Elast
-   End Interface MeshInitElementConnectivity
+!!!$   Interface MeshInitElementConnectivity
+!!!$      Module Procedure MeshInitElementConnectivity2D_Scal, MeshInitElementConnectivity2D, MeshInitElementConnectivity2D_Elast, MeshInitElementConnectivity3D_Scal, MeshInitElementConnectivity3D, MeshInitElementConnectivity3D_Elast
+!!!$   End Interface MeshInitElementConnectivity
       
 Contains
    Subroutine MeshTopologyReadEXO(dMeshTopology, dEXO)
@@ -139,124 +139,124 @@ Contains
       Call MeshRestoreCoordinatesF90(dMeshTopology%mesh, array, iErr); CHKERRQ(iErr)
    End Subroutine MeshInitCoordinatesVect3D 
 
-   Subroutine MeshInitElementConnectivity2D_Scal(dMeshTopology, dElem)
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(Element2D_Scal), Dimension(:), Pointer  :: dElem
-      
-      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      PetscInt                                     :: iBlk, iE, iEloc
-      PetscInt                                     :: iErr
-      
-      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-      !!! What would happen if the number of dof per  element wasn't constant?
-      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-            dElem(iE)%ID_DoF = arrayCon(iE,:)
-         End Do
-      End Do
-      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-    End Subroutine MeshInitElementConnectivity2D_Scal
-
-   Subroutine MeshInitElementConnectivity2D(dMeshTopology, dElem)
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(Element2D), Dimension(:), Pointer       :: dElem
-      
-      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      PetscInt                                     :: iBlk, iE, iEloc
-      PetscInt                                     :: iErr
-      
-      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-      !!! What would happen if the number of dof per  element wasn't constant?
-      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-            dElem(iE)%ID_DoF = arrayCon(iE,:)
-         End Do
-      End Do
-      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-    End Subroutine MeshInitElementConnectivity2D
-
-   Subroutine MeshInitElementConnectivity2D_Elast(dMeshTopology, dElem)
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(Element2D_Elast), Dimension(:), Pointer :: dElem
-      
-      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      PetscInt                                     :: iBlk, iE, iEloc
-      PetscInt                                     :: iErr
-      
-      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-      !!! What would happen if the number of dof per  element wasn't constant?
-      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-            dElem(iE)%ID_DoF = arrayCon(iE,:)
-         End Do
-      End Do
-      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-    End Subroutine MeshInitElementConnectivity2D_Elast
-
-   Subroutine MeshInitElementConnectivity3D_Scal(dMeshTopology, dElem)
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(Element3D_Scal), Dimension(:), Pointer  :: dElem
-      
-      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      PetscInt                                     :: iBlk, iE, iEloc
-      PetscInt                                     :: iErr
-      
-      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-      !!! What would happen if the number of dof per  element wasn't constant?
-      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-            dElem(iE)%ID_DoF = arrayCon(iE,:)
-         End Do
-      End Do
-      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-    End Subroutine MeshInitElementConnectivity3D_Scal
-
-   Subroutine MeshInitElementConnectivity3D(dMeshTopology, dElem)
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(Element3D), Dimension(:), Pointer       :: dElem
-      
-      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      PetscInt                                     :: iBlk, iE, iEloc
-      PetscInt                                     :: iErr
-      
-      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-      !!! What would happen if the number of dof per  element wasn't constant?
-      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-            dElem(iE)%ID_DoF = arrayCon(iE,:)
-         End Do
-      End Do
-      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-    End Subroutine MeshInitElementConnectivity3D
-
-   Subroutine MeshInitElementConnectivity3D_Elast(dMeshTopology, dElem)
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(Element3D_Elast), Dimension(:), Pointer :: dElem
-      
-      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      PetscInt                                     :: iBlk, iE, iEloc
-      PetscInt                                     :: iErr
-      
-      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-      !!! What would happen if the number of dof per  element wasn't constant?
-      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-            dElem(iE)%ID_DoF = arrayCon(iE,:)
-         End Do
-      End Do
-      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-    End Subroutine MeshInitElementConnectivity3D_Elast
+!!!$   Subroutine MeshInitElementConnectivity2D_Scal(dMeshTopology, dElem)
+!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
+!!!$      Type(Element2D_Scal), Dimension(:), Pointer  :: dElem
+!!!$      
+!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
+!!!$      PetscInt                                     :: iBlk, iE, iEloc
+!!!$      PetscInt                                     :: iErr
+!!!$      
+!!!$      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$      !!! What would happen if the number of dof per  element wasn't constant?
+!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
+!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
+!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
+!!!$         End Do
+!!!$      End Do
+!!!$      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$    End Subroutine MeshInitElementConnectivity2D_Scal
+!!!$
+!!!$   Subroutine MeshInitElementConnectivity2D(dMeshTopology, dElem)
+!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
+!!!$      Type(Element2D), Dimension(:), Pointer       :: dElem
+!!!$      
+!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
+!!!$      PetscInt                                     :: iBlk, iE, iEloc
+!!!$      PetscInt                                     :: iErr
+!!!$      
+!!!$      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$      !!! What would happen if the number of dof per  element wasn't constant?
+!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
+!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
+!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
+!!!$         End Do
+!!!$      End Do
+!!!$      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$    End Subroutine MeshInitElementConnectivity2D
+!!!$
+!!!$   Subroutine MeshInitElementConnectivity2D_Elast(dMeshTopology, dElem)
+!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
+!!!$      Type(Element2D_Elast), Dimension(:), Pointer :: dElem
+!!!$      
+!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
+!!!$      PetscInt                                     :: iBlk, iE, iEloc
+!!!$      PetscInt                                     :: iErr
+!!!$      
+!!!$      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$      !!! What would happen if the number of dof per  element wasn't constant?
+!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
+!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
+!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
+!!!$         End Do
+!!!$      End Do
+!!!$      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$    End Subroutine MeshInitElementConnectivity2D_Elast
+!!!$
+!!!$   Subroutine MeshInitElementConnectivity3D_Scal(dMeshTopology, dElem)
+!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
+!!!$      Type(Element3D_Scal), Dimension(:), Pointer  :: dElem
+!!!$      
+!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
+!!!$      PetscInt                                     :: iBlk, iE, iEloc
+!!!$      PetscInt                                     :: iErr
+!!!$      
+!!!$      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$      !!! What would happen if the number of dof per  element wasn't constant?
+!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
+!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
+!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
+!!!$         End Do
+!!!$      End Do
+!!!$      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$    End Subroutine MeshInitElementConnectivity3D_Scal
+!!!$
+!!!$   Subroutine MeshInitElementConnectivity3D(dMeshTopology, dElem)
+!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
+!!!$      Type(Element3D), Dimension(:), Pointer       :: dElem
+!!!$      
+!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
+!!!$      PetscInt                                     :: iBlk, iE, iEloc
+!!!$      PetscInt                                     :: iErr
+!!!$      
+!!!$      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$      !!! What would happen if the number of dof per  element wasn't constant?
+!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
+!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
+!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
+!!!$         End Do
+!!!$      End Do
+!!!$      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$    End Subroutine MeshInitElementConnectivity3D
+!!!$
+!!!$   Subroutine MeshInitElementConnectivity3D_Elast(dMeshTopology, dElem)
+!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
+!!!$      Type(Element3D_Elast), Dimension(:), Pointer :: dElem
+!!!$      
+!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
+!!!$      PetscInt                                     :: iBlk, iE, iEloc
+!!!$      PetscInt                                     :: iErr
+!!!$      
+!!!$      Call MeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$      !!! What would happen if the number of dof per  element wasn't constant?
+!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
+!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
+!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
+!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
+!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
+!!!$         End Do
+!!!$      End Do
+!!!$      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
+!!!$    End Subroutine MeshInitElementConnectivity3D_Elast
 
 End Module m_MEF_Sieve

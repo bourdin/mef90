@@ -42,7 +42,6 @@ Program  SimplePoisson
    End If
    
    Call MatAssembly(AppCtx)
-!   Call MatView(AppCtx%K, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr);CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'c
