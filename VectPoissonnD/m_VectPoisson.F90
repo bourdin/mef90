@@ -153,22 +153,15 @@ Contains
 
       Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Allocate the Section for U and F
-!! Modified for the vectorial case
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim**2, AppCtx%GradU, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
-	  !Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%U, iErr); CHKERRQ(iErr)
-	  !Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
-	  !Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 1, AppCtx%F, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
+      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'GradU', AppCtx%MeshTopology%Num_Dim**2, AppCtx%GradU, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHS, iErr); CHKERRQ(iErr)
-	  
+     
       !!! Allocate and initialize the Section for the flag 
-!! Modified for the vectorial case
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
-	  !Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlag', AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Allocate(TmpFlag(AppCtx%MeshTopology%Num_Dim))
-	  !Allocate(TmpFlag(1))	
 
       Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
          Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
@@ -180,10 +173,7 @@ Contains
       DeAllocate(TmpFlag)
 
       !!! Initialize the matrix and vector for the linear system
-!! Modified for the vectorial case
-	  Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
-!	  Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
-      !Max DoF per point is 1 (Should it be 3?)
+      Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
       
       !!! Create the KSP and PCs
@@ -362,7 +352,7 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-		 Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
+       Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MatAssemblyLocal(iE, AppCtx, MatElem)
@@ -395,13 +385,12 @@ Contains
       NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
       NumGauss = Size(AppCtx%Elem(iE)%BF,2)
       Allocate(BCFlag(NumDoF))
-	  Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
+     Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
       Do iGauss = 1, NumGauss
          Do iDoF1 = 1, NumDoF
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoF
-                !  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%Der_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Der_BF(iDoF2, iGauss) 
-				  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1)+ AppCtx%Elem(iE)%Gauss_C(iGauss) * (AppCtx%Elem(iE)%Der_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Der_BF(iDoF2, iGauss))
+                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1)+ AppCtx%Elem(iE)%Gauss_C(iGauss) * (AppCtx%Elem(iE)%Der_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Der_BF(iDoF2, iGauss))
                   Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                   !!! Is that right?
                End Do
@@ -426,7 +415,7 @@ Contains
       
       !!! Hopefully one day we will use assemble Vector instead of going through a section
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSSec', 0NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -456,9 +445,9 @@ Contains
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       !PetscReal                                    :: TmpRHS 
 #if defined PB_2D
-	  Type (Vect2D)             				   :: TmpRHS
+     Type (Vect2D)                           :: TmpRHS
 #elif defined PB_3D  
-	  Type (Vect3D)             				   :: TmpRHS    
+     Type (Vect3D)                           :: TmpRHS    
 #endif      
       RHSElem  = 0.0_Kr
       NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
@@ -470,7 +459,7 @@ Contains
       Do iGauss = 1, NumGauss
          TmpRHS = 0.0_Kr
          Do iDoF2 = 1, NumDoF
-	         TmpRHS = TmpRHS + AppCtx%Elem(iE)%BF(iDoF2, iGauss) * F(iDoF2)
+            TmpRHS = TmpRHS + AppCtx%Elem(iE)%BF(iDoF2, iGauss) * F(iDoF2)
              Call PetscLogFlops(2 , iErr);CHKERRQ(iErr)
          End Do
          Do iDoF1 = 1, NumDoF
@@ -493,18 +482,13 @@ Contains
       PetscReal, Dimension(:), Pointer             :: F, U
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
-!! Modified for the vectorial case
 #if defined PB_2D
-	  Type(Mat2D)                                  :: Strain_Elem, Stress_Elem    
-	  Type(Vect2D)								   :: F_Elem, U_Elem  
-      !Type(Vect2D)                                 :: Strain_Elem, Stress_Elem      
+     Type(Mat2D)                                   :: Strain_Elem, Stress_Elem    
+     Type(Vect2D)                                  :: F_Elem, U_Elem  
 #elif defined PB_3D
-	  Type(Mat3D)                                 :: Strain_Elem, Stress_Elem
-	  Type(Vect3D)								   :: F_Elem, U_Elem  
-      
-      !Type(Vect3D)                                 :: Strain_Elem, Stress_Elem      
+     Type(Mat3D)                                   :: Strain_Elem, Stress_Elem
+     Type(Vect3D)                                  :: F_Elem, U_Elem  
 #endif
-!      PetscReal                                    :: F_Elem, U_Elem
       PetscReal                                    :: MyEnergy
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
@@ -548,24 +532,20 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
-!!Modified for the vectorial case
 #if defined PB_2D
       Type(Mat2D)                                 :: Grad
-      !Type(Vect2D)                                 :: Grad
 #elif defined PB_3D
       Type(Mat3D)                                 :: Grad
-      !Type(Vect3D)                                 :: Grad
 #endif
       PetscReal                                    :: Vol
       PetscInt                                     :: NumDoF, NumGauss
       PetscReal, Dimension(:), Pointer             :: U
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
-	  PetscReal, Dimension(:), Pointer             :: Grad_Ptr
-	  	  
+      PetscReal, Dimension(:), Pointer             :: Grad_Ptr
+        
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
-!!Modified for the vetorial case
       Allocate(Grad_Ptr(AppCtx%MeshTopology%Num_Dim**2))
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems

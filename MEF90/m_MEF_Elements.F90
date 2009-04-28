@@ -798,9 +798,9 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-      If (Associated(dElem%ID_DoF)) Then
-         DeAllocate(dElem%ID_DoF)
-      End If
+!      If (Associated(dElem%ID_DoF)) Then
+!         DeAllocate(dElem%ID_DoF)
+!      End If
    End Subroutine Destroy_Element2D_Scal
 
    Subroutine Destroy_Element2D(dElem)
@@ -814,9 +814,9 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-      If (Associated(dElem%ID_DoF)) Then
-         DeAllocate(dElem%ID_DoF)
-      End If
+!      If (Associated(dElem%ID_DoF)) Then
+!         DeAllocate(dElem%ID_DoF)
+!      End If
    End Subroutine Destroy_Element2D
    
    Subroutine Destroy_Element2D_Elast(dElem)
@@ -830,9 +830,9 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-      If (Associated(dElem%ID_DoF)) Then
-         DeAllocate(dElem%ID_DoF)
-      End If
+!      If (Associated(dElem%ID_DoF)) Then
+!         DeAllocate(dElem%ID_DoF)
+!      End If
    End Subroutine Destroy_Element2D_Elast
    
    Subroutine Destroy_Element3D_Scal(dElem)
@@ -846,9 +846,9 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-      If (Associated(dElem%ID_DoF)) Then
-         DeAllocate(dElem%ID_DoF)
-      End If
+!      If (Associated(dElem%ID_DoF)) Then
+!         DeAllocate(dElem%ID_DoF)
+!      End If
    End Subroutine Destroy_Element3D_Scal
 
    Subroutine Destroy_Element3D(dElem)
@@ -862,9 +862,9 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-      If (Associated(dElem%ID_DoF)) Then
-         DeAllocate(dElem%ID_DoF)
-      End If
+!      If (Associated(dElem%ID_DoF)) Then
+!         DeAllocate(dElem%ID_DoF)
+!      End If
    End Subroutine Destroy_Element3D
    
    Subroutine Destroy_Element3D_Elast(dElem)
@@ -878,9 +878,9 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-      If (Associated(dElem%ID_DoF)) Then
-         DeAllocate(dElem%ID_DoF)
-      End If
+!      If (Associated(dElem%ID_DoF)) Then
+!         DeAllocate(dElem%ID_DoF)
+!      End If
    End Subroutine Destroy_Element3D_Elast
 
 !!!
