@@ -71,6 +71,7 @@ Module m_VarFracFilm_Types
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp      
       Type(AppParam_Type)                          :: AppParam
       Type(VarFracFilmSchemeParam_Type)            :: VarFracFilmSchemeParam
+      PetscReal                                    :: Reg !!! REMOVE AFTER USE
    End Type AppCtx_Type
       
    
