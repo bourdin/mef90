@@ -133,7 +133,7 @@ Module m_VarFracFilm_Struct
       PetscReal                                    :: Epsilon
       PetscReal                                    :: KEpsilonV
       PetscReal                                    :: KEpsilonPhi
-
+      
       PetscInt                                     :: ATNum
       PetscInt                                     :: IntegOrder
       
@@ -142,8 +142,6 @@ Module m_VarFracFilm_Struct
    End Type VarFracFilmSchemeParam_Type
    
  Contains
- !! For Blaise: to complete with the reading/writing of th modified material properties
- 
     Subroutine EXOProperty_InitBCVFlag(dEXO, dMeshTopology, dBCFlag)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology

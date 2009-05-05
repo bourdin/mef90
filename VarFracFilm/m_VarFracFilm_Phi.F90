@@ -36,7 +36,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: U, U0
       Type(Vect2D)                                 :: DU
       PetscReal                                    :: NormKU
-      PetscReal, Dimension(:), Pointer             :: Zero, One
+      PetscReal, Dimension(:), Pointer             :: Zero, One, Val
       PetscReal                                    :: D_cond, ErrPhi
       PetscInt                                     :: iDoF, iGauss, iBlk, iE
       PetscInt                                     :: NumDoFVect, NumGauss
@@ -53,7 +53,7 @@ Contains
            Zero = 0.0_Kr
            Allocate(One(1))
            One = 1.0_Kr
-!           AppCtx%ErrPhi = 0
+           Allocate(Val(1))
            Allocate(U(NumDoFVect))
            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
            Allocate(U0(NumDoFVect))
@@ -66,20 +66,23 @@ Contains
               End Do   
               NormKU = NormKU + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%K_Interface * DU ) .DotP. DU)
            End Do Do_iGauss
-           D_cond =  NormKU - 2 * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%ToughnessD 
-           If (D_cond >= 0.0_Kr) Then
-              Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Zero, iErr); CHKERRQ(iErr)
-              numdec = numdec+1
-            Else
-              Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, One, iErr); CHKERRQ(iErr)
-              ! SectionRealUpdate should work as well
-!              AppCtx%ErrPhi = AppCtx%ErrPhi + 1  !If there is one (or more) update(s) the error is greater than 1!!!!!!!!!
-           End If
+           D_cond =  NormKU - 2.0_Kr * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%ToughnessD 
+!!!           If (D_cond >= 0.0_Kr) Then
+!!!              Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Zero, iErr); CHKERRQ(iErr)
+!!!              numdec = numdec+1
+!!!            Else
+!!!              Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, One, iErr); CHKERRQ(iErr)
+!!!              ! SectionRealUpdate should work as well
+!!!               AppCtx%ErrPhi = AppCtx%ErrPhi + 1  !If there is one (or more) update(s) the error is greater than 1!!!!!!!!!
+!!!           End If
+            Val(1) = atan( -D_cond * AppCtx%Reg / 2.0_Kr / AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%ToughnessD)  / 3.1415926_Kr + .5_Kr
+            Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Val, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
        End Do Do_Elem_iBlk
        DeAllocate(U)
        DeAllocate(U0)
        DeAllocate(Zero) 
+       DeAllocate(Val)
       
       Write(*,*) 'Number of debonded elements ', numdec 
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)

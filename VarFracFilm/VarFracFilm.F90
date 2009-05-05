@@ -23,8 +23,13 @@ Program  VarFracFilm
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: iter
+      PetscTruth                                   :: flag
 
    Call VarFracFilmInit(AppCtx)
+   
+   
+   Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-reg',       AppCtx%Reg, flag, iErr); CHKERRQ(iErr)
+
    
    If (AppCtx%AppParam%verbose) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
