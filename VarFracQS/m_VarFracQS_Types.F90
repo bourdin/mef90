@@ -40,6 +40,7 @@ Module m_VarFracQS_Types3D
       PetscTruth                                   :: Verbose
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
+      Integer                                      :: Ener_Unit
    End Type AppParam_Type
 
    Type AppCtx_Type

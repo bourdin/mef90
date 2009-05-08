@@ -40,9 +40,9 @@ Contains
       PetscReal                                    :: D_cond, ErrPhi
       PetscInt                                     :: iDoF, iGauss, iBlk, iE
       PetscInt                                     :: NumDoFVect, NumGauss
-      PetscInt                                     :: numdec
-      
-      numdec = 0
+      PetscInt                                     :: MyNumDec, NumDec
+            
+      MyNumDec = 0
       AppCtx%ErrPhi = 0
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iE = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -67,15 +67,14 @@ Contains
               NormKU = NormKU + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%K_Interface * DU ) .DotP. DU)
            End Do Do_iGauss
            D_cond =  NormKU - 2.0_Kr * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%ToughnessD 
-!!!           If (D_cond >= 0.0_Kr) Then
-!!!              Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Zero, iErr); CHKERRQ(iErr)
-!!!              numdec = numdec+1
-!!!            Else
-!!!              Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, One, iErr); CHKERRQ(iErr)
-!!!              ! SectionRealUpdate should work as well
-!!!               AppCtx%ErrPhi = AppCtx%ErrPhi + 1  !If there is one (or more) update(s) the error is greater than 1!!!!!!!!!
-!!!           End If
-            Val(1) = atan( -D_cond * AppCtx%Reg / 2.0_Kr / AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%ToughnessD)  / 3.1415926_Kr + .5_Kr
+           If (D_cond >= 0.0_Kr) Then
+              Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Zero, iErr); CHKERRQ(iErr)
+              MyNumDec = MyNumDec + 1
+            Else
+              Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, One, iErr); CHKERRQ(iErr)
+              ! SectionRealUpdate should work as well
+!               AppCtx%ErrPhi = AppCtx%ErrPhi + 1  !If there is one (or more) update(s) the error is greater than 1!!!!!!!!!
+           End If
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Val, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
        End Do Do_Elem_iBlk
@@ -84,7 +83,9 @@ Contains
        DeAllocate(Zero) 
        DeAllocate(Val)
       
-      Write(*,*) 'Number of debonded elements ', numdec 
+      Call PetscGlobalSum(MyNumDec, NumDec, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Write(IOBuffer,*) 'Number of debonded elements ', numdec, '\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Solve_Phi
 End Module m_VarFracFilm_Phi
