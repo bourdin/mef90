@@ -201,6 +201,8 @@ Program PrepVarFrac
       End If
       Call MPI_BCast(NumSteps, 1, MPI_INTEGER, 0, EXO%Comm, iErr)
       
+      Allocate(GlobVars(VarFrac_Num_GlobVar))
+      GlobVars = 0.0_Kr
       Allocate(T(NumSteps))
       Do i = 1, NumSteps-1
          T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
@@ -212,10 +214,8 @@ Program PrepVarFrac
          Call EXCLOS(MyEXO%exoid, iErr)
          MyEXO%exoid = 0
       End Do
-      T(NumSteps) = Tmax
 
-      Allocate(GlobVars(VarFrac_Num_GlobVar))
-      GlobVars = 0.0_Kr
+      T(NumSteps) = Tmax
       GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
       Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
 

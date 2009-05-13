@@ -69,7 +69,12 @@ Contains
          Write(IOBuffer, 104) Trim(filename)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-   
+      AppCtx%AppParam%Ener_Unit = 71
+      If (MEF90_MyRank == 0) Then
+         Open(File = Trim(AppCtx%AppParam%Prefix)//'.ener', Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
+         Rewind(AppCtx%AppParam%Ener_Unit)
+      End If
+      
 101 Format(A, '-', I4.4, '.log')
 102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n'c)
 103 Format(A,'.log')
@@ -250,6 +255,11 @@ Contains
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ExtForcesWork)%Offset, AppCtx%TimeStep, AppCtx%ExtForcesWork)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Offset, AppCtx%TimeStep, AppCtx%TotalEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
+      
+      If (MEF90_MyRank == 0) Then
+         Write(AppCtx%AppParam%Ener_Unit, 71) AppCtx%TimeStep, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%SurfaceEnergy, AppCtx%TotalEnergy
+      End If
+71    Format(I6, 5(ES13.5,'  '))  
    End Subroutine Save_Ener
    
    Subroutine Init_TS_Loads(AppCtx)
@@ -295,6 +305,11 @@ Contains
          Call PetscViewerDestroy(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerDestroy(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
+      
+      If (MEF90_MyRank == 0) Then
+         Close(AppCtx%AppParam%Ener_Unit)
+      End If
+      
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()

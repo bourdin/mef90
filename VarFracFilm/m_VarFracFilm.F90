@@ -32,6 +32,9 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename
       PetscInt                                     :: NumComponents
       PetscTruth                                   :: HasPrefix
+      PetscReal                                    :: rDummy
+      Character                                    :: cDummy
+      PetscInt                                     :: vers
 
       
       Call MEF90_Initialize()
@@ -55,6 +58,12 @@ Contains
          Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr);   
          Write(IOBuffer, 104) Trim(filename)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      
+      AppCtx%AppParam%Ener_Unit = 71
+      If (MEF90_MyRank == 0) Then
+         Open(File = Trim(AppCtx%AppParam%Prefix)//'.ener', Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
+         Rewind(AppCtx%AppParam%Ener_Unit)
       End If
    
 101 Format(A, '-', I4.4, '.log')
@@ -180,17 +189,25 @@ Contains
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCVFlag', 1, AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
       Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCUFlag)
       Call EXOProperty_InitBCVFlag(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCVFlag)
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) "Done Initializing BC Sections\n"c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
 
-
-      !!! Initialize fields
-      AppCtx%TimeStep = 1
-      !!! Read U, U0, V, PHI, and Temperature
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U0) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
-      Call SectionRealSet(AppCtx%V, 0.0_Kr, iErr); CHKERRQ(iErr)
-!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
-!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%PHI) 
+      !!! Get the number of time steps
+      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
+      Call EXINQ(AppCtx%MyEXO%exoid, EXTIMS, AppCtx%NumTimeSteps, rDummy, cDummy, iErr)
+      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+      AppCtx%MyEXO%exoid = 0
+      If (AppCtx%AppParam%verbose) Then
+         Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      
+      !!! Set V=1
+      Call SectionRealSet(AppCtx%V, 1.0_Kr, iErr); CHKERRQ(iErr)
+      !!! Set PHI=1
+      Call SectionRealSet(AppCtx%Phi, 1.0_Kr, iErr); CHKERRQ(iErr)
    End Subroutine VarFracFilmInit
          
    
@@ -233,9 +250,24 @@ Contains
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFracFilm_GlobVar_ElasticInterEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticInterEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFracFilm_GlobVar_TotalEnergy)%Offset, AppCtx%TimeStep, AppCtx%TotalEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFracFilm_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
+      If (MEF90_MyRank == 0) Then
+         Write(AppCtx%AppParam%Ener_Unit, 71) AppCtx%TimeStep, AppCtx%Load, AppCtx%ElasticBulkEnergy, AppCtx%ElasticInterEnergy, AppCtx%SurfaceEnergyT, AppCtx%SurfaceEnergyT, AppCtx%TotalEnergy
+      End If
+71    Format(I6, 6(ES13.5,'  '))  
    End Subroutine Save_Ener
    
    
+   Subroutine Init_TS_Loads(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
+
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_U0X)%Offset, AppCtx%TimeStep, AppCtx%U0) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
+
+      Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFracFilm_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
+   End Subroutine Init_TS_Loads   
+   
+
    Subroutine VarFracFilmFinalize(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
@@ -270,6 +302,11 @@ Contains
          Call PetscViewerDestroy(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerDestroy(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
+      
+      If (MEF90_MyRank == 0) Then
+         Close(AppCtx%AppParam%Ener_Unit)
+      End If
+      
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()

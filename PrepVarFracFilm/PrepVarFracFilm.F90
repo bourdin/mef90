@@ -214,7 +214,6 @@ Program PrepVarFracFilm
          MyEXO%exoid = 0
       End Do
       T(NumSteps) = Tmax
-      GlobVars(VarFracFilm_GlobVar_Load) = T(NumSteps)
       Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
 
       MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
