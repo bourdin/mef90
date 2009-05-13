@@ -36,6 +36,7 @@ Module m_VarFracFilm_Types
       PetscTruth                                   :: Verbose
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
+      Integer                                      :: Ener_Unit
    End Type AppParam_Type
 
    Type AppCtx_Type
@@ -52,6 +53,7 @@ Module m_VarFracFilm_Types
       Type(SectionReal)                            :: Theta
       Type(SectionReal)                            :: U0
       PetscReal                                    :: Load
+      PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
       PetscReal                                    :: SurfaceEnergyT
       PetscReal                                    :: SurfaceEnergyD
@@ -71,7 +73,6 @@ Module m_VarFracFilm_Types
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp      
       Type(AppParam_Type)                          :: AppParam
       Type(VarFracFilmSchemeParam_Type)            :: VarFracFilmSchemeParam
-      PetscReal                                    :: Reg !!! REMOVE AFTER USE
    End Type AppCtx_Type
       
    

@@ -104,7 +104,7 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Check the exit condition: tolerance on the error in V 
          !------------------------------------------------------------------- 
-         If (AppCtx.ErrV.LT.AppCtx%VarFracSchemeParam%AltMinTol) then 
+         If (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) then 
             EXIT 
          End If
          If (Mod(iter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) Then
@@ -115,6 +115,7 @@ Program  VarFracQS
             Call Save_U(AppCtx)
             Call Save_V(AppCtx)
             Call ComputeEnergy(AppCtx)
+            Call Save_Ener(AppCtx)
          
             Write(IOBuffer, 100) AppCtx%ElasticEnergy
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)

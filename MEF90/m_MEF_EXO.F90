@@ -365,9 +365,6 @@ Module m_MEF_EXO
          dEXO%exoid = 0
       End If
       !!! Broadcast everything now
-      Write(MEF90_MyRank+100, *) MEF90_MyRank, 'dEXO%Num_EBProperties', dEXO%Num_EBProperties
-      Write(MEF90_MyRank+100, *) MEF90_MyRank, 'dEXO%Num_SSProperties', dEXO%Num_SSProperties
-      Write(MEF90_MyRank+100, *) MEF90_MyRank, 'dEXO%Num_NSProperties', dEXO%Num_NSProperties
       Call MPI_BCast(dEXO%Num_EBProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
       Call MPI_BCast(dEXO%Num_SSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
       Call MPI_BCast(dEXO%Num_NSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)

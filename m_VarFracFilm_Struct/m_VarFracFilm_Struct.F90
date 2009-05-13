@@ -302,6 +302,10 @@ Module m_VarFracFilm_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I1,T32, 'IntegOrder')")          dSchemeParam%IntegOrder
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "(L1,T32, 'SaveStress')")          dSchemeParam%SaveStress
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "(L1,T32, 'SaveStrain')")          dSchemeParam%SaveStrain
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine VarFracFilmSchemeParam_View
 
    Subroutine VarFracFilmSchemeParam_Load(dSchemeParam, filename)
@@ -358,6 +362,8 @@ Module m_VarFracFilm_Struct
       dSchemeParam%KEpsilonPhi      = 1.0E-6
       dSchemeParam%ATNum            = 2
       dSchemeParam%IntegOrder       = 3
+      dSchemeParam%SaveStress       = PETSC_FALSE
+      dSchemeParam%SaveStrain       = PETSC_FALSE
 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-irrevtype',      dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
@@ -378,6 +384,8 @@ Module m_VarFracFilm_Struct
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilonphi',    dSchemeParam%KEpsilonPhi, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
    End Subroutine VarFracFilmSchemeParam_GetFromOptions
    
    Subroutine VarFracFilmEXOProperty_Init(dEXO, dMeshTopology)
