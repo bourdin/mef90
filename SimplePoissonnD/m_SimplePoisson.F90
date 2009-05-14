@@ -117,7 +117,7 @@ Contains
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
       !!! Read and partition the mesh
-      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       If (MEF90_NumProcs == 1) Then
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
       Else
@@ -128,7 +128,6 @@ Contains
       End If
 
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
       !!! Sets the type of elements for each block
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
@@ -136,7 +135,6 @@ Contains
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
       End Do
    
-      Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
 
       !!! Allocate the Section for U and F
