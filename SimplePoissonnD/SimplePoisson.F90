@@ -30,34 +30,34 @@ Program  SimplePoisson
 
    Call SimplePoissonInit(AppCtx)
    
-   If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose > 1) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
 
-   If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Assembling the matrix\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call MatAssembly(AppCtx)
    
-   If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call RHSAssembly(AppCtx)
    
-   If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Calling KSPSolve\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call Solve(AppCtx)
    
-   If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Computing energy and gradient\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
@@ -70,7 +70,7 @@ Program  SimplePoisson
 
    Call ComputeGradient(AppCtx)
 
-   If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Saving results\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
