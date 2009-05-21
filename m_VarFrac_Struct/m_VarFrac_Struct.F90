@@ -137,6 +137,8 @@ Module m_VarFrac_Struct
 
       PetscReal                                    :: KSPUrtol
       PetscReal                                    :: KSPVrtol
+      PetscInt                                     :: KSPUmaxit
+      PetscInt                                     :: KSPVmaxit
       
       
       PetscReal                                    :: Epsilon
@@ -401,9 +403,13 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'KSPUrTol')")        dSchemeParam%KSPUrTol
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "(I5,T32, 'KSPUmaxit')")           dSchemeParam%KSPUmaxit
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(I5,T32, 'AltMinSaveInt')")       dSchemeParam%AltMinSaveInt
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'KSPVrTol')")        dSchemeParam%KSPVrTol
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "(I5,T32, 'KSPVmaxit')")           dSchemeParam%KSPVmaxit
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "(ES12.5,T32, 'Epsilon')")         dSchemeParam%Epsilon
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -437,7 +443,9 @@ Module m_VarFrac_Struct
       Read(F_IN, *) dSchemeParam%AltMinTol
       Read(F_IN, *) dSchemeParam%AltMinSaveInt
       Read(F_IN, *) dSchemeParam%KSPUrTol
+      Read(F_IN, *) dSchemeParam%KSPUmaxit
       Read(F_IN, *) dSchemeParam%KSPVrTol
+      Read(F_IN, *) dSchemeParam%KSPVmaxit
       Read(F_IN, *) dSchemeParam%Epsilon
       Read(F_IN, *) dSchemeParam%KEpsilon
       Read(F_IN, *) dSchemeParam%ATNum
@@ -464,7 +472,10 @@ Module m_VarFrac_Struct
       dSchemeParam%AltMinTol        = 1.0D-4
       dSchemeParam%AltMinSaveInt    = 25
       dSchemeParam%KSPUrtol         = 1.0D-6
+      dSchemeParam%KSPUmaxit        = 10000
       dSchemeParam%KSPVrtol         = 1.0D-6
+      dSchemeParam%KSPVmaxit        = 10000
+
       dSchemeParam%Epsilon          = .1
       dSchemeParam%KEpsilon         = 1.0E-6
       dSchemeParam%ATNum            = 2
@@ -484,7 +495,9 @@ Module m_VarFrac_Struct
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-altmintol',      dSchemeParam%AltMinTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminsaveint',  dSchemeParam%AltMinSaveInt, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspurtol',       dSchemeParam%KSPUrTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-kspumaxit',      dSchemeParam%KSPUmaxit, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kspvrtol',       dSchemeParam%KSPVrTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-kspvmaxit',      dSchemeParam%KSPVmaxit, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',        dSchemeParam%Epsilon, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)

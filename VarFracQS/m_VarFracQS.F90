@@ -172,6 +172,7 @@ Contains
       Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
+      Call KSPSetTolerances(AppCtx%KSPU, AppCtx%VarFracSchemeParam%KSPUrtol, PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION, AppCtx%VarFracSchemeParam%KSPUmaxit, iErr)
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
@@ -182,6 +183,7 @@ Contains
       Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPV, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
+      Call KSPSetTolerances(AppCtx%KSPV, AppCtx%VarFracSchemeParam%KSPVrtol, PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION, AppCtx%VarFracSchemeParam%KSPVmaxit, iErr)
       Call KSPSetFromOptions(AppCtx%KSPV, iErr); CHKERRQ(iErr)
 
       Call KSPGetPC(AppCtx%KSPV, AppCtx%PCV, iErr); CHKERRQ(iErr)
