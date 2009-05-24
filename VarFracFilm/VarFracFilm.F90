@@ -106,6 +106,7 @@ Program  VarFracFilm
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call Solve_PHI(AppCtx)
+        ! Call SectionRealSet(AppCtx%Phi, 1.0_Kr, iErr); CHKERRQ(iErr)
 
 
          !------------------------------------------------------------------- 
