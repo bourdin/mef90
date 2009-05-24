@@ -35,7 +35,7 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       PetscReal, Dimension(:), Pointer             :: U, U0
       Type(Vect2D)                                 :: DU
-      PetscReal                                    :: NormKU
+      PetscReal                                    :: NormKU, Vol
       PetscReal, Dimension(:), Pointer             :: Zero, One, Val
       PetscReal                                    :: D_cond, ErrPhi
       PetscInt                                     :: iDoF, iGauss, iBlk, iE
@@ -53,6 +53,7 @@ Contains
            Zero = 0.0_Kr
            Allocate(One(1))
            One = 1.0_Kr
+           Vol = 0.0_Kr
            Allocate(Val(1))
            Allocate(U(NumDoFVect))
            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
@@ -62,11 +63,12 @@ Contains
               DU = 0.0_Kr
               Do iDoF = 1, NumDoFVect
                    DU = DU + (U(iDof)-U0(iDof)) * AppCtx%ElemVect(iE)%BF(iE, iGauss)
+                   Vol  = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss)
                  ! Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
               End Do   
               NormKU = NormKU + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%K_Interface * DU ) .DotP. DU)
            End Do Do_iGauss
-           D_cond =  NormKU - 2.0_Kr * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%ToughnessD 
+           D_cond =  NormKU - 2.0_Kr * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%ToughnessD * Vol
            If (D_cond >= 0.0_Kr) Then
               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Zero, iErr); CHKERRQ(iErr)
               MyNumDec = MyNumDec + 1
@@ -75,7 +77,7 @@ Contains
               ! SectionRealUpdate should work as well
 !               AppCtx%ErrPhi = AppCtx%ErrPhi + 1  !If there is one (or more) update(s) the error is greater than 1!!!!!!!!!
            End If
-            Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Val, iErr); CHKERRQ(iErr)
+           ! Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%Phi, iE-1, Val, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
        End Do Do_Elem_iBlk
        DeAllocate(U)
