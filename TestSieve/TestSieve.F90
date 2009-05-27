@@ -109,8 +109,8 @@ Program TestSieve
    
 !   Call Show_Elem2D_Scal(Elem2DA)
 
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, U, ierr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, dof, F, ierr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', dof, U, ierr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'F', dof, F, ierr); CHKERRQ(iErr)
    !!! Unlike the coordinate section, it is not stored in the mesh hence doesn't have a name
    !!! It would not be redistributed if we'd repartition the mesh whereas the coordinate section does
 
