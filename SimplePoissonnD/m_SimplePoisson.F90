@@ -21,12 +21,14 @@ Module m_SimplePoisson3D
    Implicit NONE   
    
    Type LogInfo_Type
-      PetscLogStage               :: IO_Stage         
-      PetscLogStage               :: Setup_Stage      
+      PetscLogStage               :: IO_Stage             ! All IO
+      PetscLogStage               :: Setup_Stage      ! ?
+      PetscLogStage               :: MeshCreateExodus_Stage
+      PetscLogStage               :: MeshDistribute_Stage
       PetscLogStage               :: MatAssembly_Stage    
       PetscLogStage               :: RHSAssembly_Stage
       PetscLogStage               :: KSPSolve_Stage
-      PetscLogStage               :: PostProc_Stage   
+      PetscLogStage               :: PostProc_Stage       ! Computation of the strains and stresses
       
       PetscLogEvent               :: MatAssemblyLocal_Event
       PetscLogEvent               :: RHSAssemblyLocal_Event
@@ -35,7 +37,7 @@ Module m_SimplePoisson3D
 
    Type AppParam_Type
       PetscTruth                                   :: Restart
-      PetscInt                                     :: Verbose
+      PetscTruth                                   :: Verbose
       PetscInt                                     :: TestCase
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
@@ -85,15 +87,14 @@ Contains
       Type(Vec)                                    :: F
 
       Call MEF90_Initialize()
-      AppCtx%AppParam%verbose = 0
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-restart', AppCtx%AppParam%restart, Flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',       AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       AppCtx%AppParam%TestCase = 1
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-test',       AppCtx%AppParam%TestCase, Flag, iErr); CHKERRQ(iErr)
       
       Call InitLog(AppCtx)
-      If (AppCtx%AppParam%verbose > 0) Then
+      If (AppCtx%AppParam%verbose) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
          Call PetscViewerASCIIOpen(PETSC_COMM_SELF, filename, AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr);   
          Write(IOBuffer, 102) MEF90_MyRank, Trim(filename)
@@ -117,16 +118,22 @@ Contains
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
       !!! Read and partition the mesh
-      Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       If (MEF90_NumProcs == 1) Then
+         Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Else
+         Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-         
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      
+         Call PetscLogStagePush(AppCtx%LogInfo%MeshDistribute_Stage, iErr); CHKERRQ(iErr)
          Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
          Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       End If
 
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
 
       !!! Sets the type of elements for each block
@@ -196,7 +203,7 @@ Contains
          
          Select Case (AppCtx%AppParam%TestCase)
          Case(1)
-            If (AppCtx%AppParam%verbose > 0) Then
+            If (AppCtx%AppParam%verbose) Then
                Write(IOBuffer, *) 'Reading U and F from the mesh\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
@@ -204,7 +211,7 @@ Contains
             Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
             Call SectionRealSet(AppCtx%U, 0.0_Kr, iErr); CHKERRQ(iErr);
          Case(2)
-            If (AppCtx%AppParam%verbose > 0) Then
+            If (AppCtx%AppParam%verbose) Then
                Write(IOBuffer, *) 'Solving Test Case 2\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
@@ -225,7 +232,7 @@ Contains
             Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             DeAllocate(Value)
          Case(3)
-            If (AppCtx%AppParam%verbose > 0) Then
+            If (AppCtx%AppParam%verbose) Then
                Write(IOBuffer, *) 'Solving Test Case 3\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
@@ -292,6 +299,8 @@ Contains
       Call PetscLogEventRegister('RHSAssembly Local', 0, AppCtx%LogInfo%RHSAssemblyLocal_Event, ierr); CHKERRQ(ierr)
       Call PetscLogEventRegister('Post Processing',   0, AppCtx%LogInfo%PostProc_Event,         ierr); CHKERRQ(ierr)
 
+      Call PetscLogStageRegister("MeshCreateExodus", AppCtx%LogInfo%MeshCreateExodus_Stage, iErr)
+      Call PetscLogStageRegister("MeshDistribute", AppCtx%LogInfo%MeshDistribute_Stage, iErr)
       Call PetscLogStageRegister("IO Stage",     AppCtx%LogInfo%IO_Stage,          iErr)
       Call PetscLogStageRegister("Setup",        AppCtx%LogInfo%Setup_Stage,   iErr)
       Call PetscLogStageRegister("Mat Assembly", AppCtx%LogInfo%MatAssembly_Stage, iErr)
@@ -362,10 +371,9 @@ Contains
       PetscInt                                     :: NumDoF, NumGauss
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
-      PetscLogDouble                               :: flops
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
-      flops = 0
+      
       MatElem  = 0.0_Kr
       NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
       NumGauss = Size(AppCtx%Elem(iE)%BF,2)
@@ -376,14 +384,13 @@ Contains
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoF
                   MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) )
-                  flops = flops + AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1
+                  Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                End Do
             End If
          End Do
       End Do
       
       DeAllocate(BCFlag)
-      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatAssemblyLocal
    
@@ -428,10 +435,9 @@ Contains
       PetscReal, Dimension(:), Pointer             :: F
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscReal                                    :: TmpRHS
-      PetscLogDouble                               :: flops
       
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
-      flops = 0      
+      
       RHSElem  = 0.0_Kr
       NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
       NumGauss = Size(AppCtx%Elem(iE)%BF,2)
@@ -443,19 +449,18 @@ Contains
          TmpRHS = 0.0_Kr
          Do iDoF2 = 1, NumDoF
             TmpRHS = TmpRHS + AppCtx%Elem(iE)%BF(iDoF2, iGauss) * F(iDoF2)
-            flops = flops + 2 * AppCtx%MeshTopology%num_dim
+            Call PetscLogFlops(2 * AppCtx%MeshTopology%num_dim , iErr);CHKERRQ(iErr)
          End Do
          Do iDoF1 = 1, NumDoF
             If (BCFlag(iDoF1) == 0) Then
                RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%BF(iDoF1, iGauss) * TmpRHS
-               flops = flops + 3
+               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
             End If
          End Do
       End Do
       
       DeAllocate(BCFlag)
       DeAllocate(F)
-      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSAssemblyLocal
 
@@ -474,10 +479,10 @@ Contains
 #endif
       PetscReal                                    :: F_Elem, U_Elem
       PetscReal                                    :: MyEnergy
-      PetscLogDouble                               :: flops
+
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      flops = 0      
+      
       MyEnergy = 0.0_Kr
       
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
@@ -499,16 +504,15 @@ Contains
                   Strain_Elem = Strain_Elem + AppCtx%Elem(iE)%Grad_BF(iDoF, iGauss) * U(iDoF)
                   F_Elem = F_Elem + AppCtx%Elem(iE)%BF(iDoF, iGauss) * F(iDoF)
                   U_Elem = U_Elem + AppCtx%Elem(iE)%BF(iDoF, iGauss) * U(iDoF)
-                  flops = flops + 2*AppCtx%MeshTopology%Num_Dim + 6
+                  Call PetscLogFlops(4*AppCtx%MeshTopology%Num_Dim+4, iErr)
                End Do
                MyEnergy = MyEnergy + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * U_Elem)
-               flops = flops + AppCtx%MeshTopology%Num_Dim + 4
+               Call PetscLogFlops(2*AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       Call PetscGlobalSum(MyEnergy, AppCtx%Energy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
                
-      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
@@ -528,12 +532,9 @@ Contains
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Grad_Ptr
-      PetscLogDouble                               :: flops
-
 
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
-      flops = 0
       Allocate(Grad_Ptr(AppCtx%MeshTopology%Num_Dim))
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -548,11 +549,11 @@ Contains
                Do iDoF = 1, NumDoF
                   Grad = Grad + (AppCtx%Elem(iE)%Gauss_C(iGauss) * U(iDoF) ) * AppCtx%Elem(iE)%Grad_BF(iDoF, iGauss) 
                   Vol = Vol + AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%BF(iDoF, iGauss)
-                  flops = flops + 2*AppCtx%MeshTopology%Num_Dim + 3
+                  Call PetscLogFlops(2*AppCtx%MeshTopology%Num_Dim+3, iErr)
                End Do
             End Do
             Grad = Grad / Vol
-            flops = flops + AppCtx%MeshTopology%Num_Dim
+            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
 #if defined PB_2D
             Grad_Ptr = (/ Grad%X, Grad%Y /)
 #elif defined PB_3D
@@ -562,7 +563,6 @@ Contains
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       DeAllocate(Grad_Ptr)
-      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeGradient
@@ -584,7 +584,7 @@ Contains
       Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
       
-      If (AppCtx%AppParam%verbose > 0) Then
+      If (AppCtx%AppParam%verbose) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerFlush(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerDestroy(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
