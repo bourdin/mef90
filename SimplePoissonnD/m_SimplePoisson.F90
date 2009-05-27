@@ -23,6 +23,8 @@ Module m_SimplePoisson3D
    Type LogInfo_Type
       PetscLogStage               :: IO_Stage             ! All IO
       PetscLogStage               :: Setup_Stage      ! ?
+      PetscLogStage               :: MeshCreateExodus_Stage
+      PetscLogStage               :: MeshDistribute_Stage
       PetscLogStage               :: MatAssembly_Stage    
       PetscLogStage               :: RHSAssembly_Stage
       PetscLogStage               :: KSPSolve_Stage
@@ -116,16 +118,22 @@ Contains
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
       !!! Read and partition the mesh
-      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       If (MEF90_NumProcs == 1) Then
+         Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Else
+         Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-         
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      
+         Call PetscLogStagePush(AppCtx%LogInfo%MeshDistribute_Stage, iErr); CHKERRQ(iErr)
          Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
          Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       End If
 
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
 
       !!! Sets the type of elements for each block
@@ -291,6 +299,8 @@ Contains
       Call PetscLogEventRegister('RHSAssembly Local', 0, AppCtx%LogInfo%RHSAssemblyLocal_Event, ierr); CHKERRQ(ierr)
       Call PetscLogEventRegister('Post Processing',   0, AppCtx%LogInfo%PostProc_Event,         ierr); CHKERRQ(ierr)
 
+      Call PetscLogStageRegister("MeshCreateExodus", AppCtx%LogInfo%MeshCreateExodus_Stage, iErr)
+      Call PetscLogStageRegister("MeshDistribute", AppCtx%LogInfo%MeshDistribute_Stage, iErr)
       Call PetscLogStageRegister("IO Stage",     AppCtx%LogInfo%IO_Stage,          iErr)
       Call PetscLogStageRegister("Setup",        AppCtx%LogInfo%Setup_Stage,   iErr)
       Call PetscLogStageRegister("Mat Assembly", AppCtx%LogInfo%MatAssembly_Stage, iErr)
