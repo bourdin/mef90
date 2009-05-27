@@ -36,6 +36,11 @@ Program TestSieve
    Character(len=256)                           :: CharBuffer
    Type(VecScatter)                             :: scatter
    
+   
+   PetscLogStage                                :: MeshCreateExodus_Stage
+   PetscLogStage                                :: MeshTopologyReadEXO_Stage
+   PetscLogStage                                :: MeshDistribute_Stage
+
      
    Call MEF90_Initialize()
    dof = 1
@@ -49,13 +54,24 @@ Program TestSieve
    End If
 
    call PetscLogEventRegister('ElemInteg', 0, integrationEvent, ierr); CHKERRQ(ierr)
+   Call PetscLogStageRegister("MeshCreateExodus", MeshCreateExodus_Stage, iErr)
+   Call PetscLogStageRegister("MeshDistribute", MeshDistribute_Stage, iErr)
+   Call PetscLogStageRegister("MeshTopologyReadEXO", MeshTopologyReadEXO_Stage, iErr)
 
    EXO%Comm = PETSC_COMM_WORLD
    
+   Call PetscLogStagePush(MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
    Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+   Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+
+   Call PetscLogStagePush(MeshDistribute_Stage, iErr); CHKERRQ(iErr)
    Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+
    Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+   Call PetscLogStagePush(MeshTopologyReadEXO_Stage, iErr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks

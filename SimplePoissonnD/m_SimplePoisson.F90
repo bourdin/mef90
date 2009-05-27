@@ -94,6 +94,7 @@ Contains
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-test',       AppCtx%AppParam%TestCase, Flag, iErr); CHKERRQ(iErr)
       
       Call InitLog(AppCtx)
+      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
          Call PetscViewerASCIIOpen(PETSC_COMM_SELF, filename, AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr);   
@@ -179,7 +180,7 @@ Contains
       Call KSPSetInitialGuessNonzero(AppCtx%KSP, PETSC_TRUE, iErr); CHKERRQ(iErr)
       
       Call KSPSetFromOptions(AppCtx%KSP, iErr); CHKERRQ(iErr)
-!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       
       
       !!! Read Force and BC from Data file or reformat it
