@@ -37,7 +37,7 @@ Module m_SimplePoisson3D
 
    Type AppParam_Type
       PetscTruth                                   :: Restart
-      PetscTruth                                   :: Verbose
+      PetscInt                                     :: Verbose
       PetscInt                                     :: TestCase
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
@@ -87,7 +87,7 @@ Contains
       Type(Vec)                                    :: F
 
       Call MEF90_Initialize()
-      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-restart', AppCtx%AppParam%restart, Flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',       AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       AppCtx%AppParam%TestCase = 1
@@ -95,7 +95,7 @@ Contains
       
       Call InitLog(AppCtx)
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
          Call PetscViewerASCIIOpen(PETSC_COMM_SELF, filename, AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr);   
          Write(IOBuffer, 102) MEF90_MyRank, Trim(filename)
@@ -204,7 +204,7 @@ Contains
          
          Select Case (AppCtx%AppParam%TestCase)
          Case(1)
-            If (AppCtx%AppParam%verbose) Then
+            If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Reading U and F from the mesh\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
@@ -212,7 +212,7 @@ Contains
             Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
             Call SectionRealSet(AppCtx%U, 0.0_Kr, iErr); CHKERRQ(iErr);
          Case(2)
-            If (AppCtx%AppParam%verbose) Then
+            If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Solving Test Case 2\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
@@ -233,7 +233,7 @@ Contains
             Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             DeAllocate(Value)
          Case(3)
-            If (AppCtx%AppParam%verbose) Then
+            If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Solving Test Case 3\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
@@ -585,7 +585,7 @@ Contains
       Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
       
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerFlush(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerDestroy(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
