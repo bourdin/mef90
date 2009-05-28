@@ -205,7 +205,7 @@ Contains
          Select Case (AppCtx%AppParam%TestCase)
          Case(1)
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Reading U and F from the mesh\n'c
+               Write(IOBuffer, *) 'Setting U to 0 and F to 1\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             !!! U = 0, F=1
@@ -534,8 +534,8 @@ Contains
       PetscInt                                     :: iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Grad_Ptr
 
-      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Allocate(Grad_Ptr(AppCtx%MeshTopology%Num_Dim))
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
