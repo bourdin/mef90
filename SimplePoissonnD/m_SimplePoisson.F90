@@ -305,13 +305,13 @@ Contains
       Call PetscLogEventRegister('Post Processing',   0, AppCtx%LogInfo%PostProc_Event,         ierr); CHKERRQ(ierr)
 
       Call PetscLogStageRegister("MeshCreateExodus", AppCtx%LogInfo%MeshCreateExodus_Stage, iErr)
-      Call PetscLogStageRegister("MeshDistribute", AppCtx%LogInfo%MeshDistribute_Stage, iErr)
-      Call PetscLogStageRegister("IO Stage",     AppCtx%LogInfo%IO_Stage,          iErr)
-      Call PetscLogStageRegister("Setup",        AppCtx%LogInfo%Setup_Stage,   iErr)
-      Call PetscLogStageRegister("Mat Assembly", AppCtx%LogInfo%MatAssembly_Stage, iErr)
-      Call PetscLogStageRegister("RHS Assembly", AppCtx%LogInfo%RHSAssembly_Stage, iErr)
-      Call PetscLogStageRegister("KSP Solve",    AppCtx%LogInfo%KSPSolve_Stage,    iErr)
-      Call PetscLogStageRegister("Post Proc",    AppCtx%LogInfo%PostProc_Stage,  iErr)
+      Call PetscLogStageRegister("MeshDistribute",   AppCtx%LogInfo%MeshDistribute_Stage,   iErr)
+      Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
+      Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
+      Call PetscLogStageRegister("Mat Assembly",     AppCtx%LogInfo%MatAssembly_Stage,      iErr)
+      Call PetscLogStageRegister("RHS Assembly",     AppCtx%LogInfo%RHSAssembly_Stage,      iErr)
+      Call PetscLogStageRegister("KSP Solve",        AppCtx%LogInfo%KSPSolve_Stage,         iErr)
+      Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
    End Subroutine InitLog
    
    Subroutine Solve(AppCtx)
