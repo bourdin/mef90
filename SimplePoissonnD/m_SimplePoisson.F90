@@ -608,7 +608,7 @@ Contains
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
-103 Format(A,'.log')
+103 Format(A,'.log.txt')
    End Subroutine SimplePoissonFinalize
 
 #if defined PB_2D
