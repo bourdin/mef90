@@ -352,7 +352,7 @@ Contains
          Call MatAssemblyBlock(iBlk, AppCtx)
          Call MatAssemblyBegin(AppCtx%K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
          Call MatAssemblyEnd  (AppCtx%K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
-      End Do
+      End Do Do_ELem_iBlk
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
