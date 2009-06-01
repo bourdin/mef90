@@ -99,7 +99,7 @@ Contains
       
       Call InitLog(AppCtx)
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%verbose > 0) Then
+      If (AppCtx%AppParam%verbose > 1) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
          Call PetscViewerASCIIOpen(PETSC_COMM_SELF, filename, AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr);   
          Write(IOBuffer, 102) MEF90_MyRank, Trim(filename)
@@ -343,7 +343,62 @@ Contains
    End Subroutine Solve
    
       
-   Subroutine MatAssembly(AppCtx)
+   Subroutine MatAssembly_Blockwise(AppCtx)   
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iBlk, iErr
+      
+      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Call MatAssemblyBlock(iBlk, AppCtx)
+         Call MatAssemblyBegin(AppCtx%K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+         Call MatAssemblyEnd  (AppCtx%K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+      End Do
+      Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   End Subroutine MatAssembly_Blockwise
+   
+   Subroutine MatAssemblyBlock(iBlk, AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iBlk
+      
+      PetscInt                                     :: iE, iELoc, iErr
+      PetscReal, Dimension(:,:), Pointer           :: MatElem
+      PetscInt, Dimension(:), Pointer              :: BCFlag
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscLogDouble                               :: flops = 0
+      
+      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+      
+      Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+      Allocate(BCFlag(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+      MatElem = 0.0_Kr
+      BCFlag = 0
+   
+      Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
+         Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
+            Do iDoF1 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+               If (BCFlag(iDoF1) == 0) Then
+                  Do iDoF2 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+                     MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) )
+                     flops = flops + AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) + 1
+                  End Do
+               End If
+            End Do
+         End Do
+         Call assembleMatrix(AppCtx%K, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_Elem_iE
+   
+      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      DeAllocate(BCFlag)
+      DeAllocate(MatElem)
+      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+   End Subroutine MatAssemblyBlock
+
+   Subroutine MatAssembly_Elementwise(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iE, iELoc, iErr
@@ -364,7 +419,7 @@ Contains
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine MatAssembly
+   End Subroutine MatAssembly_Elementwise
    
    
    Subroutine MatAssemblyLocal(iE, AppCtx, MatElem)
@@ -599,7 +654,7 @@ Contains
       Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
       
-      If (AppCtx%AppParam%verbose > 0) Then
+      If (AppCtx%AppParam%verbose > 1) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerFlush(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerDestroy(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
