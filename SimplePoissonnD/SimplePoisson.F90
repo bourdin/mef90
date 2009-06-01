@@ -40,8 +40,7 @@ Program  SimplePoisson
       Write(IOBuffer, *) 'Assembling the matrix\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   
-   Call MatAssembly(AppCtx)
+   Call MatAssemblyElementwise(AppCtx)
    
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'c

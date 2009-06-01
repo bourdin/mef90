@@ -80,7 +80,6 @@ Module m_MEF_Elements
          STOP
       End Select
       dBlk%Num_DoF = sum(dBlk%DoF_Location)
-
    End Subroutine Init_Elem_Blk_Type     
    
    Subroutine Init_AllElement2D_Scal(dMeshTopology, dElem, dQuadratureOrder)
