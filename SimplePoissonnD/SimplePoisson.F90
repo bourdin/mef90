@@ -40,7 +40,7 @@ Program  SimplePoisson
       Write(IOBuffer, *) 'Assembling the matrix\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call MatAssembly_Elementwise(AppCtx)
+   Call MatAssembly_Blockwise(AppCtx)
    If (AppCtx%AppParam%verbose > 1) Then
       Write(IOBuffer, *) 'Matrix\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
