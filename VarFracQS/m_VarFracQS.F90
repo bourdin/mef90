@@ -46,7 +46,9 @@ Contains
       Character                                    :: cDummy
       PetscInt                                     :: vers
       PetscTruth                                   :: flag
-
+      
+      PetscReal                                    :: KSP_Default_rtol = 1.0D-6
+      PetscInt                                     :: KSP_Default_MaxIt = 10000
       
       Call MEF90_Initialize()
       Call InitLog(AppCtx)
@@ -180,10 +182,11 @@ Contains
       
       !! Solver context for U      
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
+      Call KSPAppendOptionsPrefix(AppCtx%KSPU,"U_", iErr); CHKERRQ(iErr)
       Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
-      Call KSPSetTolerances(AppCtx%KSPU, AppCtx%VarFracSchemeParam%KSPUrtol, PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION, AppCtx%VarFracSchemeParam%KSPUmaxit, iErr)
+      Call KSPSetTolerances(AppCtx%KSPU, KSP_Default_rtol, PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
@@ -191,10 +194,11 @@ Contains
    
       !! Solver context for V      
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
+      Call KSPAppendOptionsPrefix(AppCtx%KSPV,"V_", iErr); CHKERRQ(iErr)
       Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPV, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
-      Call KSPSetTolerances(AppCtx%KSPV, AppCtx%VarFracSchemeParam%KSPVrtol, PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION, AppCtx%VarFracSchemeParam%KSPVmaxit, iErr)
+      Call KSPSetTolerances(AppCtx%KSPV, KSP_Default_rtol, PETSC_DEFAULT_DOUBLE_PRECISION, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
       Call KSPSetFromOptions(AppCtx%KSPV, iErr); CHKERRQ(iErr)
 
       Call KSPGetPC(AppCtx%KSPV, AppCtx%PCV, iErr); CHKERRQ(iErr)
