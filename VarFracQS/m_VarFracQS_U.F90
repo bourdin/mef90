@@ -71,7 +71,7 @@ Contains
       PetscInt                                     :: iBlk, iE, iELoc, iErr
       PetscReal, Dimension(:,:), Pointer           :: MatElem
       
-!      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyU_Stage, iErr); CHKERRQ(iErr)
       
       Call MatZeroEntries(AppCtx%KU, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
@@ -87,7 +87,7 @@ Contains
       End Do Do_Elem_iBlk
       Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatU_Assembly
 
 !----------------------------------------------------------------------------------------!      
@@ -110,8 +110,9 @@ Contains
       
       PetscReal, Dimension(:), Pointer             :: V
       PetscReal                                    :: V_Elem
+      PetscLogDouble                               :: flops = 0
       
-!      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
       MatElem  = 0.0_Kr
       NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
@@ -136,14 +137,13 @@ Contains
                Do iDoF2 = 1, NumDoFVect
                   MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2+AppCtx%VarFracSchemeParam%KEpsilon)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
 !			      Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
-                  !!! Is that right?
                End Do
             End If
          End Do
       End Do
       DeAllocate(V)
       DeAllocate(BCFlag)
-!      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatU_AssemblyLocal
 
    !----------------------------------------------------------------------------------------!      
@@ -161,7 +161,7 @@ Contains
       NumDoFPerVertex = AppCtx%MeshTopology%Num_Dim
       
       !!! Hopefully one day we will use assemble Vector instead of going through a section
-!      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
       Call VecSet(AppCtx%RHSU, 0.0_Kr, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSSec', NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
@@ -179,7 +179,7 @@ Contains
       !!! VERY important! This is the equivalent of a ghost update
       Call SectionRealToVec(RHSSec, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%RHSU, ierr); CHKERRQ(ierr)
       Call SectionRealDestroy(RHSSec, iErr); CHKERRQ(iErr)
-!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
   End Subroutine RHSU_Assembly
    
    !----------------------------------------------------------------------------------------!      
@@ -208,6 +208,10 @@ Contains
 #elif defined PB_3D  
       Type (Vect3D)             				         :: TmpRHS    
 #endif
+      PetscLogDouble                               :: flops = 0
+      
+      
+      Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
       RHSElem    = 0.0_Kr
       NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
@@ -246,7 +250,7 @@ Contains
       DeAllocate(F)
       DeAllocate(Theta)
       DeAllocate(V)
-!      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSU_AssemblyLocal
    
    
@@ -263,7 +267,7 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       Type(Vec)                                    :: U_Vec
       
-!      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolveU_Stage, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, U_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_FORWARD, U_Vec, ierr); CHKERRQ(ierr)
       Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU, U_Vec, iErr); CHKERRQ(iErr)
@@ -282,7 +286,7 @@ Contains
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
-!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('     KSP for U converged in ', I5, ' iterations \n'c)
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n'c)
    End Subroutine Solve_U

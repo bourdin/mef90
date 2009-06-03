@@ -30,7 +30,7 @@ Program  VarFracQS
 
    Call VarFracQSInit(AppCtx)
    
-   If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose > 1) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer) 
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer) 
@@ -44,19 +44,19 @@ Program  VarFracQS
 
       !!! Init the fields:
       Call Init_TS_Loads(AppCtx)      
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Done with Init_TS_Loads \n'c 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
       Call Init_TS_U(AppCtx)
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Done with Init_TS_U \n'c 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
       Call Init_TS_V(AppCtx)
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Done with Init_TS_V \n'c 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
@@ -68,16 +68,22 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Problem for U
          !-------------------------------------------------------------------
-         If (AppCtx%AppParam%verbose) Then
+         If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Assembling the Matrix and RHS for  the U-subproblem \n'c 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          Call RHSU_Assembly(AppCtx)
-      !   Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-         Call MatU_Assembly(AppCtx)
-      !   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+         If (AppCtx%AppParam%verbose > 2) Then
+            Call VecView(AppCtx%RHSU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+         End If
          
-         If (AppCtx%AppParam%verbose) Then
+         
+         Call MatU_Assembly(AppCtx)
+         If (AppCtx%AppParam%verbose > 2) Then
+            Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+         End If
+               
+         If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n'c 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
@@ -86,16 +92,20 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Problem for V
          !-------------------------------------------------------------------
-         If (AppCtx%AppParam%verbose) Then
+         If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n'c 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call RHSV_Assembly(AppCtx)
-      !   Call VecView(AppCtx%RHSV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+         If (AppCtx%AppParam%verbose > 2) Then
+            Call VecView(AppCtx%RHSV, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+         End If
          Call MatV_Assembly(AppCtx)
-      !   Call MatView(AppCtx%KV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+         If (AppCtx%AppParam%verbose > 2) Then
+            Call MatView(AppCtx%KV, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+         End If
          
-         If (AppCtx%AppParam%verbose) Then
+         If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling KSPSolve for the V-subproblem\n'c 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
@@ -108,7 +118,7 @@ Program  VarFracQS
             EXIT 
          End If
          If (Mod(iter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) Then
-            If (AppCtx%AppParam%verbose) Then
+            If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Saving U and V\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If   
@@ -132,7 +142,7 @@ Program  VarFracQS
       ! Save the results
       !-------------------------------------------------------------------
       
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n'c 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
       End If

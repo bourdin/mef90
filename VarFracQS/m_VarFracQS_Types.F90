@@ -23,21 +23,26 @@ Module m_VarFracQS_Types3D
    
    Type LogInfo_Type
       PetscLogStage               :: IO_Stage
-      PetscLogStage               :: Distribute_Stage
-      PetscLogStage               :: DataSetup_Stage
-      PetscLogStage               :: MatAssembly_Stage
-      PetscLogStage               :: RHSAssembly_Stage
-      PetscLogStage               :: KSPSolve_Stage
+      PetscLogStage               :: Setup_Stage      
+      PetscLogStage               :: MeshDistribute_Stage
+      PetscLogStage               :: MatAssemblyU_Stage
+      PetscLogStage               :: RHSAssemblyU_Stage
+      PetscLogStage               :: KSPSolveU_Stage
+      PetscLogStage               :: MatAssemblyV_Stage
+      PetscLogStage               :: RHSAssemblyV_Stage
+      PetscLogStage               :: KSPSolveV_Stage
       PetscLogStage               :: PostProc_Stage
       
-      PetscLogEvent               :: MatAssemblyLocal_Event
-      PetscLogEvent               :: RHSAssemblyLocal_Event
+      PetscLogEvent               :: MatAssemblyLocalU_Event
+      PetscLogEvent               :: RHSAssemblyLocalU_Event
+      PetscLogEvent               :: MatAssemblyLocalV_Event
+      PetscLogEvent               :: RHSAssemblyLocalV_Event
       PetscLogEvent               :: PostProc_Event
    End Type LogInfo_Type
 
    Type AppParam_Type
-      PetscTruth                                   :: Restart
-      PetscTruth                                   :: Verbose
+      PetscInt                                     :: Restart
+      PetscInt                                     :: Verbose
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
       Integer                                      :: Ener_Unit
