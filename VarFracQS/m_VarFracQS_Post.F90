@@ -49,6 +49,7 @@ Contains
       Type(Vect3D)                                 :: F_Elem, U_Elem,  GradV_Elem  
 #endif
       PetscReal                                    :: MyExtForcesWork, MyElasticEnergy, MySurfaceEnergy
+      PetscLogDouble                               :: flops = 0
      
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
@@ -107,7 +108,7 @@ Contains
                MyExtForcesWork = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (F_Elem .DotP. U_Elem)
             ! Calculate the suface energy
                MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( 0.25_Kr / AppCtx%VarFracSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem))
-            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
+!            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             End Do
             ! DeAllocate the variables
             DeAllocate(F)
@@ -121,7 +122,8 @@ Contains
       Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)           
       Call PetscGlobalSum(MySurfaceEnergy, AppCtx%SurfaceEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)    
       AppCtx%TotalEnergy = AppCtx%ElasticEnergy - AppCtx%ExtForcesWork + AppCtx%SurfaceEnergy
-      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+
+      Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
    
@@ -146,10 +148,10 @@ Contains
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
-       
+      PetscLogDouble                               :: flops = 0       
         
-!      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-!      Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Allocate(Stress_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
       Allocate(Strain_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
@@ -183,7 +185,7 @@ Contains
             End Do
             Strain_Elem = Strain_Elem / Vol
             Stress_Elem = Stress_Elem / Vol
-            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
+!            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
 #if defined PB_2D
             Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%XY /)
             Strain_Ptr = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%XY /)
@@ -203,10 +205,9 @@ Contains
       Call SectionRealComplete(AppCtx%StressU, iErr); CHKERRQ(iErr)
       Call SectionRealComplete(AppCtx%StrainU, iErr); CHKERRQ(iErr)
 
-!      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeStrainStress
-!----------------------------------------------------------------------------------------!
 
 #if defined PB_2D
 End Module m_VarFracQS_Post2D

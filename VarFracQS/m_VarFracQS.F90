@@ -45,11 +45,16 @@ Contains
       PetscReal                                    :: rDummy
       Character                                    :: cDummy
       PetscInt                                     :: vers
+      PetscTruth                                   :: flag
 
       
       Call MEF90_Initialize()
-      Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, iErr)    
-      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',     AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
+      Call InitLog(AppCtx)
+
+      Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
+      AppCtx%AppParam%Verbose = 0
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, flag, iErr)    
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       If (.NOT. HasPrefix) Then
          Call PetscPrintf(PETSC_COMM_WORLD, "No input file prefix given\n", iErr)
          Call MEF90_Finalize()
@@ -57,7 +62,7 @@ Contains
       End If
       Call VarFracSchemeParam_GetFromOptions(AppCtx%VarFracSchemeParam)
       
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 1) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
          Call PetscViewerASCIIOpen(PETSC_COMM_SELF, filename, AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr);   
          Write(IOBuffer, 102) MEF90_MyRank, Trim(filename)
@@ -89,12 +94,14 @@ Contains
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
       Else
          Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call PetscLogStagePush(AppCtx%LogInfo%MeshDistribute_Stage, iErr); CHKERRQ(iErr)
          Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
       End If
    
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done reading and partitioning the mesh\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
@@ -107,19 +114,23 @@ Contains
       !!! Initializes the values and names of the properties and variables
       Call VarFracEXOVariable_Init(AppCtx%MyEXO)
       Call EXOProperty_Read(AppCtx%MyEXO)   
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with VarFracQSEXOVariable_Init and VarFracQSEXOProperty_Read\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      If (AppCtx%AppParam%verbose > 1) Then
          Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
          Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
       
       !!! Read Mat Properties from the CST file
       Call MatProp_Read(AppCtx%MeshTopology, AppCtx%MatProp, trim(AppCtx%AppParam%prefix)//'.CST')
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with MatProp_Read\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
+      End If
+      If (AppCtx%AppParam%verbose > 2) Then
+         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
 
       !!! Set the element type for each block so that we can call ElementInit
@@ -127,19 +138,19 @@ Contains
          AppCtx%MeshTopology%elem_blk(i)%Elem_Type = AppCtx%MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( AppCtx%MeshTopology%elem_blk(i)%ID )
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(i), AppCtx%MeshTopology%num_dim)
       End Do
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with Init_Elem_Blk_Type\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
       
       Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemVect, AppCtx%VarFracSchemeParam%IntegOrder)
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with ElementInit Vect\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemScal, AppCtx%VarFracSchemeParam%IntegOrder)
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with ElementInit Scal\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
@@ -188,7 +199,7 @@ Contains
 
       Call KSPGetPC(AppCtx%KSPV, AppCtx%PCV, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCV, PCBJACOBI, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done Creating fields Section, Vec, KSP and Mat\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
@@ -204,7 +215,7 @@ Contains
 #endif
       Call EXOProperty_InitBCVFlag(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCVFlag)
 
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done Initializing BC Sections\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
@@ -214,44 +225,79 @@ Contains
       Call EXINQ(AppCtx%MyEXO%exoid, EXTIMS, AppCtx%NumTimeSteps, rDummy, cDummy, iErr)
       Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
       AppCtx%MyEXO%exoid = 0
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
       !!! Set V=1
       Call SectionRealSet(AppCtx%V, 1.0_Kr, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine VarFracQSInit
+   
+   Subroutine InitLog(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
+      
+      Call PetscLogEventRegister('MatAssembly Local U', 0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
+      Call PetscLogEventRegister('RHSAssembly Local U', 0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
+      Call PetscLogEventRegister('MatAssembly Local V', 0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+      Call PetscLogEventRegister('RHSAssembly Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+      Call PetscLogEventRegister('Post Processing',     0, AppCtx%LogInfo%PostProc_Event,          ierr); CHKERRQ(ierr)
+
+      Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
+      Call PetscLogStageRegister("MeshDistribute",   AppCtx%LogInfo%MeshDistribute_Stage,   iErr)
+      Call PetscLogStageRegister("Mat Assembly U",   AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
+      Call PetscLogStageRegister("RHS Assembly U",   AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
+      Call PetscLogStageRegister("KSP Solve U",      AppCtx%LogInfo%KSPSolveU_Stage,        iErr)
+      Call PetscLogStageRegister("Mat Assembly V",   AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
+      Call PetscLogStageRegister("RHS Assembly V",   AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
+      Call PetscLogStageRegister("KSP Solve V",      AppCtx%LogInfo%KSPSolveV_Stage,        iErr)
+      Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
+      Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
+   End Subroutine InitLog
+
          
    
    Subroutine Save_U(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
 
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_U
 
    
    Subroutine Save_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
 
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_V
 
    Subroutine Save_StrainStress(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
    
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       If (AppCtx%VarFracSchemeParam%SaveStress) Then
          Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFrac_CellVar_StressXX)%Offset, AppCtx%TimeStep, AppCtx%StressU) 
       End If
       If (AppCtx%VarFracSchemeParam%SaveStrain) Then
          Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFrac_CellVar_StrainXX)%Offset, AppCtx%TimeStep, AppCtx%StrainU) 
       End If
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_StrainStress
 
 
    Subroutine Save_Ener(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
 
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_SurfaceEnergy)%Offset, AppCtx%TimeStep, AppCtx%SurfaceEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ExtForcesWork)%Offset, AppCtx%TimeStep, AppCtx%ExtForcesWork)
@@ -261,6 +307,7 @@ Contains
       If (MEF90_MyRank == 0) Then
          Write(AppCtx%AppParam%Ener_Unit, 71) AppCtx%TimeStep, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%SurfaceEnergy, AppCtx%TotalEnergy
       End If
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 71    Format(I6, 5(ES13.5,'  '))  
    End Subroutine Save_Ener
    
@@ -268,10 +315,12 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
 
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
 
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Init_TS_Loads   
    
    Subroutine VarFracQSFinalize(AppCtx)
@@ -280,6 +329,7 @@ Contains
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename
    
+      Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%V, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
@@ -301,7 +351,7 @@ Contains
       Call KSPDestroy(AppCtx%KSPV, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 1) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerFlush(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerDestroy(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
@@ -312,10 +362,11 @@ Contains
          Close(AppCtx%AppParam%Ener_Unit)
       End If
       
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
-103 Format(A,'.log')
+103 Format(A,'-logsummary.txt')
    End Subroutine VarFracQSFinalize
    
    
