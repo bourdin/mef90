@@ -1688,7 +1688,7 @@ Contains
       VPTemp%Y = (M%XX + M%YY  - SQRT(Tmp1)) * 0.5_Kr
       
       ValP2DS= VPTemp
-      flops = 12=3.0
+      flops = 13.0
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
    End Function ValP2DS
    
