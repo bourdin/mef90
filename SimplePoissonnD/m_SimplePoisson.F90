@@ -384,7 +384,7 @@ Contains
                If (BCFlag(iDoF1) == 0) Then
                   Do iDoF2 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
                      MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) )
-                     flops = flops + AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) + 1
+                     flops = flops + 1
                   End Do
                End If
             End Do
@@ -431,22 +431,20 @@ Contains
       PetscInt                                     :: NumDoF, NumGauss
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
-      PetscLogDouble                               :: flops
+      PetscLogDouble                               :: flops = 0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocal_Event, iErr); CHKERRQ(iErr)
-      
       MatElem  = 0.0_Kr
       NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
       NumGauss = Size(AppCtx%Elem(iE)%BF,2)
       Allocate(BCFlag(NumDoF))
-      flops = 0
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
       Do iGauss = 1, NumGauss
          Do iDoF1 = 1, NumDoF
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoF
                   MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) )
-                  flops = flops + AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1
+                  flops = flops + 1
                End Do
             End If
          End Do
@@ -498,10 +496,9 @@ Contains
       PetscReal, Dimension(:), Pointer             :: F
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscReal                                    :: TmpRHS
-      PetscLogDouble                               :: flops
+      PetscLogDouble                               :: flops = 0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
-      flops    = 0
       RHSElem  = 0.0_Kr
       NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
       NumGauss = Size(AppCtx%Elem(iE)%BF,2)
@@ -513,7 +510,7 @@ Contains
          TmpRHS = 0.0_Kr
          Do iDoF2 = 1, NumDoF
             TmpRHS = TmpRHS + AppCtx%Elem(iE)%BF(iDoF2, iGauss) * F(iDoF2)
-            flops = flops + 2 * AppCtx%MeshTopology%num_dim
+            flops = flops + 2 
          End Do
          Do iDoF1 = 1, NumDoF
             If (BCFlag(iDoF1) == 0) Then
@@ -544,13 +541,12 @@ Contains
 #endif
       PetscReal                                    :: F_Elem, U_Elem
       PetscReal                                    :: MyEnergy
-      PetscLogDouble                               :: flops
+      PetscLogDouble                               :: flops = 0
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
       MyEnergy = 0.0_Kr
-      flops    = 0
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -570,10 +566,10 @@ Contains
                   Strain_Elem = Strain_Elem + AppCtx%Elem(iE)%Grad_BF(iDoF, iGauss) * U(iDoF)
                   F_Elem = F_Elem + AppCtx%Elem(iE)%BF(iDoF, iGauss) * F(iDoF)
                   U_Elem = U_Elem + AppCtx%Elem(iE)%BF(iDoF, iGauss) * U(iDoF)
-                  flops = flops + 4*AppCtx%MeshTopology%Num_Dim+4
+                  flops = flops + 4
                End Do
                MyEnergy = MyEnergy + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * U_Elem)
-               flops = flops + 2*AppCtx%MeshTopology%Num_Dim+4
+               flops = flops + 4
             End Do
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
@@ -599,11 +595,10 @@ Contains
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Grad_Ptr
-      PetscLogDouble                               :: flops
+      PetscLogDouble                               :: flops = 0
 
       Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      flops = 0
       Allocate(Grad_Ptr(AppCtx%MeshTopology%Num_Dim))
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -618,11 +613,10 @@ Contains
                Do iDoF = 1, NumDoF
                   Grad = Grad + (AppCtx%Elem(iE)%Gauss_C(iGauss) * U(iDoF) ) * AppCtx%Elem(iE)%Grad_BF(iDoF, iGauss) 
                   Vol = Vol + AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%BF(iDoF, iGauss)
-                  flops = flops + 2*AppCtx%MeshTopology%Num_Dim+3
+                  flops = flops + 3
                End Do
             End Do
             Grad = Grad / Vol
-            flops = flops + AppCtx%MeshTopology%Num_Dim
 #if defined PB_2D
             Grad_Ptr = (/ Grad%X, Grad%Y /)
 #elif defined PB_3D

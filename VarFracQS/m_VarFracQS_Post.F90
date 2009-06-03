@@ -94,21 +94,24 @@ Contains
                   Theta_Elem          = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
                   V_Elem              = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V(iDoF)
                   GradV_Elem          = GradV_Elem + AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss) * V(iDoF)
+                  flops = flops + 4
                End Do
                Do iDoF = 1, NumDoFVect
                   Strain_Elem         = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
                   F_Elem              = F_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * F(iDoF) 
                   U_Elem              = U_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * U(iDoF)
                End Do            
-               Effective_Strain_Elem  = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp   ;
+               Effective_Strain_Elem  = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp   
                Stress_Elem            = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
             ! Calculate the elastic energy
-               MyElasticEnergy  = MyElasticEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  V_Elem**2 * (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr
+               MyElasticEnergy  = MyElasticEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * V_Elem**2 * (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr
+               flops = flops + 4
             ! Calculate the work of body forces
-               MyExtForcesWork = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (F_Elem .DotP. U_Elem)
+               MyExtForcesWork = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (F_Elem .DotP. U_Elem)
+               flops = flops + 2
             ! Calculate the suface energy
-               MySurfaceEnergy  = MySurfaceEnergy  + AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( 0.25_Kr / AppCtx%VarFracSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem))
-!            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
+               MySurfaceEnergy  = MySurfaceEnergy + AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( 0.25_Kr / AppCtx%VarFracSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem))
+               flops = flops + 8
             End Do
             ! DeAllocate the variables
             DeAllocate(F)
@@ -122,7 +125,8 @@ Contains
       Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)           
       Call PetscGlobalSum(MySurfaceEnergy, AppCtx%SurfaceEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)    
       AppCtx%TotalEnergy = AppCtx%ElasticEnergy - AppCtx%ExtForcesWork + AppCtx%SurfaceEnergy
-
+      flops = flops + 2
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
@@ -148,7 +152,7 @@ Contains
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
-      PetscLogDouble                               :: flops = 0       
+      PetscLogDouble                               :: flops = 0.       
         
       Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
@@ -175,17 +179,17 @@ Contains
                   V_Elem          = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V(iDoF)
                   Theta_Elem      = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
                   Vol             = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
+                  flops = flops + 6.
             End Do
             Do iGauss = 1, NumGauss
                Do iDoF = 1, NumDoFVect
                   Strain_Elem            = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
                   Stress_Elem            = Stress_Elem + (V_Elem**2) * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * ( Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp) )
-!             Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
+                  flops = flops + 1.
                End Do
             End Do
             Strain_Elem = Strain_Elem / Vol
             Stress_Elem = Stress_Elem / Vol
-!            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
 #if defined PB_2D
             Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%XY /)
             Strain_Ptr = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%XY /)
@@ -205,6 +209,7 @@ Contains
       Call SectionRealComplete(AppCtx%StressU, iErr); CHKERRQ(iErr)
       Call SectionRealComplete(AppCtx%StrainU, iErr); CHKERRQ(iErr)
 
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeStrainStress

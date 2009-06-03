@@ -136,7 +136,7 @@ End Subroutine MatV_Assembly
 #elif defined PB_3D
       Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
 #endif      
-      PetscLogDouble                               :: flops
+      PetscLogDouble                               :: flops = 0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
 
@@ -159,31 +159,34 @@ End Subroutine MatV_Assembly
          Theta_Elem  = 0.0_Kr
          Do iDoF1 = 1, NumDoFVect
             Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
-!             Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
          End Do
       !! Calculate the temperature at the gauss point
          Do iDoF1 = 1, NumDoFScal
             Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
+            flops = flops + 2
          End Do
       !! Calculate the Effective Strain at the gauss point
          Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * MatProp%Therm_Exp)   
       !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
-         C2_V     = 0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * MatProp%Toughness + ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
-         C2_GradV = 2.0_Kr * AppCtx%VarFracSchemeParam%Epsilon * MatProp%Toughness
+         C2_V = 0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * MatProp%Toughness + ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
+         flops = flops + 3
+         C2_GradV = 2.0_Kr * MatProp%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
+         flops = flops + 2
       !! Assemble the element stiffness
          Do iDoF1 = 1, NumDoFScal
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoFScal
                !! Terms in V^2
                   MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_V * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
+                  flops = flops + 4
                !! Terms in GradV^2
                   MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradV * (AppCtx%ElemScal(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss) )               
-!              Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
-                  !!! Is that right?
+                  flops = flops + 3
                End Do
             End If
          End Do
       End Do
+      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       DeAllocate(U)      
       DeAllocate(Theta)
       DeAllocate(BCFlag)
@@ -243,7 +246,7 @@ End Subroutine MatV_Assembly
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iGauss
       PetscReal                                    :: C1_V
-      PetscLogDouble                               :: flops
+      PetscLogDouble                               :: flops = 0
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
       RHSElem    = 0.0_Kr
@@ -253,15 +256,17 @@ End Subroutine MatV_Assembly
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
       C1_V =  0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * MatProp%Toughness 
+      flops = flops + 2
       Do_iGauss: Do iGauss = 1, NumGauss
           Do iDoF1 = 1, NumDoFScal
             If (BCFlag(iDoF1) == 0) Then
                ! RHS terms due to forces
                RHSElem(iDoF1) = RHSElem(iDoF1) + C1_V * AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) 
-!               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
+               flops = flops + 3
             End If
          End Do
       End Do Do_iGauss
+      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       DeAllocate(BCFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSV_AssemblyLocal
