@@ -129,18 +129,20 @@ Contains
       !! Calculate V at the gauss point
          V_Elem = 0.0_Kr        
          Do iDoF1 = 1, NumDoFScal
-            V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss)* V(iDoF1)
+            V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * V(iDoF1)
+            flops = flops + 2
          End Do
       !! Assemble the element stiffness
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoFVect
-                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2+AppCtx%VarFracSchemeParam%KEpsilon)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
-!			      Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
+                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * (MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
+                  flops = flops + 5
                End Do
             End If
          End Do
       End Do
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(V)
       DeAllocate(BCFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
@@ -233,19 +235,21 @@ Contains
             TmpRHS = TmpRHS + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F(iDoF2)
          End Do
          Do iDoF2 = 1, NumDoFScal
-            Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)* Theta(iDoF2)
+            Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta(iDoF2)
             V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V(iDoF2)
+            flops = flops + 4
          End Do
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
                ! RHS terms due to forces
                RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. TmpRHS ) 
                ! RHS terms due to inelastic strains
-   			   RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((V_Elem**2)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
-!               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
+   			   RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((V_Elem**2) * (MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
+   			   flops = flops + 5
             End If
          End Do
       End Do Do_iGauss
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(BCFlag)
       DeAllocate(F)
       DeAllocate(Theta)
