@@ -51,10 +51,14 @@ Program TestAssembly
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-   Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-   Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-
+   If (MEF90_NumProcs == 1) Then
+      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Else
+      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+   End If
+   
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
@@ -72,17 +76,16 @@ Program TestAssembly
    
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
 
+   i = 1
+   Call MeshSetMaxDof(MeshTopology%Mesh, i, iErr); CHKERRQ(iErr) 
+
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 1, U_Sec, iErr); CHKERRQ(iErr)
    Call MeshCreateGlobalScatter(MeshTopology%mesh, U_Sec, scatter, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, U_Sec, U_VecG, iErr); CHKERRQ(iErr)
    Call SectionRealCreateLocalVector(U_Sec, U_VecL, iErr); CHKERRQ(iErr)
 
    Call VecSet(U_VecG, 1.0_Kr, iErr); CHKERRQ(iErr)
-!   Call VecView(U_VecG, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
-   
-   i = 1
-   Call MeshSetMaxDof(MeshTopology%Mesh, i, iErr); CHKERRQ(iErr) 
-
+   Call VecView(U_VecG, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
 
    Call MeshCreateMatrix(MeshTopology%mesh, U_Sec, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
 
@@ -91,15 +94,19 @@ Program TestAssembly
    val = 1.0_Kr
    Kelem = 1.0_Kr
    Do i = 0, MeshTopology%Num_Elems-1
-!      Call assemblevector(U_VecG, i, val, ADD_VALUES, iErr); CHKERRQ(iErr)
+      Call assemblevector(U_VecG, i, val, ADD_VALUES, iErr); CHKERRQ(iErr)
       Call assembleMatrix(K, MeshTopology%mesh, U_Sec, i, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
    End Do
    DeAllocate(val)
    DeAllocate(Kelem)
-!   Call VecView(U_VecG, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
    Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
    Call MatAssemblyEnd(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
    Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+
+   Call VecAssemblyBegin(U_VecG, iErr); CHKERRQ(iErr)
+   Call VecAssemblyEnd  (U_VecG, iErr); CHKERRQ(iErr)
+   Call VecView(U_VecG, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
+
    Call VecDestroy(U_VecG, iErr); CHKERRQ(iErr)
    Call VecDestroy(U_VecL, iErr); CHKERRQ(iErr)
 
