@@ -74,7 +74,7 @@ Module m_VarFracQS_Types3D
       PetscReal                                    :: ErrV
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
-      Type(SectionInt)                             :: BCUFlag, BCVFlag
+      Type(SectionInt)                             :: BCUFlag, BCVFlag, IrrevFlag
       Type(Mat)                                    :: KU, KV
       Type(Vec)                                    :: RHSU, RHSV
       Type(KSP)                                    :: KSPU, KSPV

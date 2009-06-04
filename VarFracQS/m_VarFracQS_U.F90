@@ -129,7 +129,7 @@ Contains
             End If
             !! Assemble the element stiffness
             Do iDoF1 = 1, NumDoFVect
-               If (BCFlag(iDoF1) == 0) Then
+               If (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) Then
                   Do iDoF2 = 1, NumDoFVect
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (CoefV * (AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
                      flops = flops + 3
@@ -239,7 +239,7 @@ Contains
             flops = flops + 4
          End Do
          Do iDoF1 = 1, NumDoFVect
-            If (BCFlag(iDoF1) == 0) Then
+            If (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) Then
                ! RHS terms due to forces
                RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. TmpRHS ) 
                ! RHS terms due to inelastic strains

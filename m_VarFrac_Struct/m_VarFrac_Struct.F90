@@ -43,17 +43,17 @@ Module m_VarFrac_Struct
       Module Procedure GenHL_Iso2D_LambdaMu, GenHL_Iso3D_LambdaMu
    End Interface
 
-   PetscInt, Parameter, Public                     :: BC_Type_NONE = 0
-   PetscInt, Parameter, Public                     :: BC_Type_DIRI = 1
+   PetscInt, Parameter, Public                     :: VarFrac_BC_Type_NONE = 0
+   PetscInt, Parameter, Public                     :: VarFrac_BC_Type_DIRI = 1
 
-   PetscInt, Parameter, Public                     :: Init_V_PREV = 0
-   PetscInt, Parameter, Public                     :: Init_V_ONE  = 1
-   PetscInt, Parameter, Public                     :: Init_V_RND  = 2
-   PetscInt, Parameter, Public                     :: Init_V_SPH  = 3
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_PREV = 0
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_ONE  = 1
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_RND  = 2
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_SPH  = 3
    
-   PetscInt, Parameter, Public                     :: Irrev_NONE = 0
-   PetscInt, Parameter, Public                     :: Irrev_Eq   = 1
-   PetscInt, Parameter, Public                     :: Irrev_Ineq = 2
+   PetscInt, Parameter, Public                     :: VarFrac_Irrev_NONE = 0
+   PetscInt, Parameter, Public                     :: VarFrac_Irrev_Eq   = 1
+   PetscInt, Parameter, Public                     :: VarFrac_Irrev_Ineq = 2
    
    PetscInt, Parameter, Public                     :: VarFrac_Num_VertVar           = 8
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_Fracture      = 1
@@ -442,12 +442,12 @@ Module m_VarFrac_Struct
       PetscInt                                     :: iErr
       PetscTruth                                   :: flag
 
-      dSchemeParam%IrrevType        = Irrev_Eq
+      dSchemeParam%IrrevType        = VarFrac_Irrev_Eq
       dSchemeParam%IrrevTol         = 1.0D-2
       dSchemeParam%DoBT             = PETSC_FALSE
       dSchemeParam%BTTol            = 0.0D0
       dSchemeParam%BTInt            = 0
-      dSchemeParam%InitV            = Init_V_PREV
+      dSchemeParam%InitV            = VarFrac_Init_V_PREV
       dSchemeParam%nbCracks         = 0
       dSchemeParam%MaxCrackLength   = 0.0D0  
       dSchemeParam%AltMinMaxIter    = 1000
