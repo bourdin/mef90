@@ -211,7 +211,6 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
-
       !!! Create the Section for the BC
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCUFlag', AppCtx%MeshTopology%Num_Dim, AppCtx%BCUFlag, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCVFlag', 1, AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
@@ -241,6 +240,10 @@ Contains
       
       !!! Set V=1
       Call SectionRealSet(AppCtx%V, 1.0_Kr, iErr); CHKERRQ(iErr)
+      
+      !!! We are not backTracking
+      AppCtx%IsBT = PETSC_FALSE
+
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine VarFracQSInit
    

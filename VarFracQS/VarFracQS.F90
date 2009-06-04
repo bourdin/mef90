@@ -61,7 +61,7 @@ Program  VarFracQS
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
-      AltMin: Do iter=1, AppCtx%VarFracSchemeParam%AltMinMaxIter
+      AltMin: Do !iter=1, AppCtx%VarFracSchemeParam%AltMinMaxIter
          Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") iTS, iter,'\n'c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    
@@ -114,19 +114,20 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Check the exit condition: tolerance on the error in V 
          !------------------------------------------------------------------- 
-         If (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) then 
-            EXIT 
-         End If
-         If (Mod(iter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) Then
+         If ( (Mod(iter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) .OR. (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol)) Then
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Saving U and V\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If   
             Call Save_U(AppCtx)
             Call Save_V(AppCtx)
+
+            If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n'c 
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+            End If
             Call ComputeEnergy(AppCtx)
             Call Save_Ener(AppCtx)
-         
             Write(IOBuffer, 100) AppCtx%ElasticEnergy
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 101) AppCtx%ExtForcesWork
@@ -135,40 +136,28 @@ Program  VarFracQS
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 103) AppCtx%TotalEnergy
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
+               Call ComputeStrainStress(AppCtx)
+               Call Save_StrainStress(AppCtx)
+            End If
          End If
+         If (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) then 
+            EXIT 
+         End If
+         iter = iter + 1
       End Do AltMin
       
       !------------------------------------------------------------------- 
       ! Save the results
       !-------------------------------------------------------------------
       
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n'c 
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-      End If
       
-      Call ComputeEnergy(AppCtx)
-      Call Save_Ener(AppCtx)
-      Write(IOBuffer, 100) AppCtx%ElasticEnergy
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 101) AppCtx%ExtForcesWork
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 102) AppCtx%SurfaceEnergy
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 103) AppCtx%TotalEnergy
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
 100   Format('Elastic energy:       ', ES12.5, '\n'c)    
 101   Format('External Forces Work: ', ES12.5, '\n'c)    
 102   Format('Surface energy:       ', ES12.5, '\n'c)    
 103   Format('Total energy:         ', ES12.5, '\n'c)    
 
-      Call Save_U(AppCtx)
-      Call Save_V(AppCtx)
-      If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
-         Call ComputeStrainStress(AppCtx)
-         Call Save_StrainStress(AppCtx)
-      End If
    End Do TimeStep
 
    Call VarFracQSFinalize(AppCtx)
