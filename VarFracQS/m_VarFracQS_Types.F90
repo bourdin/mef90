@@ -80,6 +80,7 @@ Module m_VarFracQS_Types3D
       Type(KSP)                                    :: KSPU, KSPV
       Type(PC)                                     :: PCU, PCV
       Type(LogInfo_Type)                           :: LogInfo
+      PetscTruth                                   :: IsBT
 #if defined PB_2D
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp      
 #elif defined PB_3D

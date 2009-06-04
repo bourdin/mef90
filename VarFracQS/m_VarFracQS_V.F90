@@ -29,21 +29,22 @@ Module m_VarFracQS_V3D
 Contains
    Subroutine Init_TS_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
-      Type(SectionReal)                            :: VBC
+      Type(SectionReal)                            :: VBC, VBT
       PetscReal, Dimension(:), Pointer             :: V_Ptr, VBC_Ptr
       PetscInt, Dimension(:), Pointer              :: BCVFlag, IrrevFlag
       PetscInt                                     :: i, iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
+      PetscReal                                    :: MyIrrevEQ_Counter  = 0.0
+      PetscReal                                    :: IrrevEQ_Counter
       
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBC', 1, VBC, iErr); CHKERRQ(iErr)
-
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, VBC)
             
       !!! Update the BC Flag from the current V
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case(VarFrac_Irrev_Eq)
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Irreversibility with Irrev_EQ:", VarFrac_Irrev_Eq, "\n"c
+            Write(IOBuffer, *) "Irreversibility with Irrev_EQ\n"c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          !!! Update the IrrevFlag Section
@@ -51,20 +52,42 @@ Contains
          Allocate(IrrevFlag(1))
          IrrevFlag = VarFrac_BC_Type_DIRI
          Allocate(V_Ptr(1))
-         Do i = 1, AppCtx%MeshTopology%Num_Verts
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
-            If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-               Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(iErr)
+         If (AppCtx%IsBT) Then
+            Call SectionIntZero(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
+            If (AppCtx%TimeStep > 1) Then
+               Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBT', 1, VBT, iErr); CHKERRQ(iErr)      
+               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, VBT)
+               Do i = 1, AppCtx%MeshTopology%Num_Verts
+                  Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, VBT, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
+                  If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
+                     Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(iErr)
+                     MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
+                  End If
+               End Do
+               Call SectionRealDestroy(VBT, iErr); CHKERRQ(iErr)
             End If
-         End Do
+         Else
+            Do i = 1, AppCtx%MeshTopology%Num_Verts
+               Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
+               If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
+                  Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(iErr)
+                  MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
+               End If
+            End Do
+         End If
          DeAllocate(V_Ptr)
          DeAllocate(IrrevFlag)
+         If (AppCtx%AppParam%verbose > 0) Then
+            Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+            Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"c
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If      
       Case(VarFrac_Irrev_Ineq)   
          SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n'c, iErr)
       End Select
       
       Select Case(AppCtx%VarFracSchemeParam%InitV)
-      Case(VarFrac_INIT_V_ONE, VarFrac_INIT_V_PREV)
+      Case(VarFrac_INIT_V_PREV)
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -192,7 +215,7 @@ Contains
             End If
             !! Assemble the element stiffness
             Do iDoF1 = 1, NumDoFScal
-               If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE)) Then
+               If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
                   Do iDoF2 = 1, NumDoFScal
                   !! Terms in V^2
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_V * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
@@ -265,7 +288,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: RHSElem
       PetscInt                                     :: iErr
       PetscInt                                     :: NumDoFScal, NumGauss
-      PetscInt, Dimension(:), Pointer              :: BCFlag
+      PetscInt, Dimension(:), Pointer              :: BCFlag, IrrevFlag
       PetscInt                                     :: iDoF1, iGauss
       PetscReal                                    :: C1_V
       PetscLogDouble                               :: flops = 0
@@ -276,12 +299,14 @@ Contains
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       Allocate(BCFlag(NumDoFScal))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+      Allocate(IrrevFlag(NumDoFScal))
+      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%IrrevFlag, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
       C1_V =  0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * MatProp%Toughness 
       flops = flops + 2
       Do_iGauss: Do iGauss = 1, NumGauss
           Do iDoF1 = 1, NumDoFScal
-            If (BCFlag(iDoF1) == 0) Then
+            If  ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
                ! RHS terms due to forces
                RHSElem(iDoF1) = RHSElem(iDoF1) + C1_V * AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) 
                flops = flops + 3
@@ -290,6 +315,7 @@ Contains
       End Do Do_iGauss
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       DeAllocate(BCFlag)
+      DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSV_AssemblyLocal
       
