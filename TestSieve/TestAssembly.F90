@@ -14,8 +14,9 @@ Program TestAssembly
 
    Implicit NONE   
 
-   Type (MeshTopology_Type)                     :: MeshTopology
-   Type (EXO_Type)                              :: EXO, MyEXO
+   Type(MeshTopology_Type)                      :: MeshTopology
+   Type(Mesh)                                   :: Tmp_Mesh
+   Type(EXO_Type)                               :: EXO, MyEXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    
    PetscTruth                                   :: HasPrefix
@@ -50,6 +51,10 @@ Program TestAssembly
    EXO%filename = Trim(prefix)//'.gen'
 
 
+   Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+   Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
@@ -67,7 +72,7 @@ Program TestAssembly
    
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
 
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, U_Sec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 1, U_Sec, iErr); CHKERRQ(iErr)
    Call MeshCreateGlobalScatter(MeshTopology%mesh, U_Sec, scatter, iErr); CHKERRQ(iErr)
    Call MeshCreateVector(MeshTopology%mesh, U_Sec, U_VecG, iErr); CHKERRQ(iErr)
    Call SectionRealCreateLocalVector(U_Sec, U_VecL, iErr); CHKERRQ(iErr)
