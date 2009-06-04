@@ -101,6 +101,7 @@ Contains
       
       Call SectionRealDestroy(VBC, iErr); CHKERRQ(iErr)
    End Subroutine Init_TS_V
+
    
 !----------------------------------------------------------------------------------------!      
 ! MatAssembly V (CM)  
@@ -132,7 +133,7 @@ Contains
    
       PetscInt                                     :: iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
-      PetscInt, Dimension(:), Pointer              :: BCFlag
+      PetscInt, Dimension(:), Pointer              :: BCFlag, IrrevFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       
       PetscReal, Dimension(:), Pointer             :: U, Theta
@@ -154,6 +155,7 @@ Contains
       Allocate(U(NumDoFVect))
       Allocate(Theta(NumDoFScal))
       Allocate(BCFlag(NumDoFScal))
+      Allocate(IrrevFlag(NumDoFScal))
       Allocate(MatElem(NumDoFScal, NumDoFScal))
       
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -163,6 +165,7 @@ Contains
          Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
          Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
          Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%IrrevFlag, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
@@ -192,7 +195,7 @@ Contains
             End If
             !! Assemble the element stiffness
             Do iDoF1 = 1, NumDoFScal
-               If (BCFlag(iDoF1) == 0) Then
+               If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE)) Then
                   Do iDoF2 = 1, NumDoFScal
                   !! Terms in V^2
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_V * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
@@ -211,6 +214,7 @@ Contains
       DeAllocate(U)      
       DeAllocate(Theta)
       DeAllocate(BCFlag)
+      DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk
 
