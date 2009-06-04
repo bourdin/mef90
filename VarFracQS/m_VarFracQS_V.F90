@@ -63,9 +63,6 @@ Contains
          SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n'c, iErr)
       End Select
       
-      If (AppCtx%VarFracSchemeParam%InitV == VarFrac_INIT_V_ONE) Then
-         Call SectionRealSet(AppCtx%V, 1.0_Kr, iErr); CHKERRQ(iErr)
-      End If
       Select Case(AppCtx%VarFracSchemeParam%InitV)
       Case(VarFrac_INIT_V_ONE, VarFrac_INIT_V_PREV)
          If (AppCtx%AppParam%verbose > 0) Then
