@@ -121,10 +121,10 @@ Contains
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       ! Global sum among  
-      Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)           
-      Call PetscGlobalSum(MySurfaceEnergy, AppCtx%SurfaceEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)    
-      AppCtx%TotalEnergy = AppCtx%ElasticEnergy - AppCtx%ExtForcesWork + AppCtx%SurfaceEnergy
+      Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy(AppCtx%TimeStep), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork(AppCtx%TimeStep), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)           
+      Call PetscGlobalSum(MySurfaceEnergy, AppCtx%SurfaceEnergy(AppCtx%TimeStep), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)    
+      AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
       flops = flops + 2
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
