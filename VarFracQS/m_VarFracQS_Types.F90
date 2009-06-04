@@ -64,13 +64,13 @@ Module m_VarFracQS_Types3D
       Type(SectionReal)                            :: F
       Type(SectionReal)                            :: V
       Type(SectionReal)                            :: Theta
-      PetscReal                                    :: Load
       PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
-      PetscReal                                    :: SurfaceEnergy
-      PetscReal                                    :: ElasticEnergy
-      PetscReal                                    :: ExtForcesWork
-      PetscReal                                    :: TotalEnergy
+      PetscReal, Dimension(:), Pointer             :: Load
+      PetscReal, Dimension(:), Pointer             :: SurfaceEnergy
+      PetscReal, Dimension(:), Pointer             :: ElasticEnergy
+      PetscReal, Dimension(:), Pointer             :: ExtForcesWork
+      PetscReal, Dimension(:), Pointer             :: TotalEnergy
       PetscReal                                    :: ErrV
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal

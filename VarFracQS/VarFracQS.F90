@@ -26,7 +26,8 @@ Program  VarFracQS
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   PetscInt                                     :: iter, iTS
+   PetscInt                                     :: AltMinIter, iBTStep
+   PetscReal                                    :: EnerBT
 
    Call VarFracQSInit(AppCtx)
    
@@ -36,8 +37,8 @@ Program  VarFracQS
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer) 
    End If   
    
-   TimeStep: Do iTS = 1, AppCtx%NumTimeSteps
-      AppCtx%TimeStep = iTS
+   AppCtx%TimeStep = 1
+   TimeStep: Do 
       Write(IOBuffer, 99) AppCtx%TimeStep
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 99    Format('\n=== Solving time step ', I4, '\n\n'c)
@@ -61,8 +62,9 @@ Program  VarFracQS
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
-      AltMin: Do !iter=1, AppCtx%VarFracSchemeParam%AltMinMaxIter
-         Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") iTS, iter,'\n'c
+      AltMinIter = 1
+      AltMin: Do 
+         Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") AppCtx%TimeStep, AltMinIter,'\n'c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    
          !------------------------------------------------------------------- 
@@ -110,11 +112,44 @@ Program  VarFracQS
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call Solve_V(AppCtx)
+         
+         !------------------------------------------------------------------- 
+         ! Check For BackTracking 
+         !------------------------------------------------------------------- 
+         If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) ) Then
+            AppCtx%IsBT = PETSC_FALSE
+            !!! Check the BT condition
+            If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer, *) 'Doing BackTracking\n'c 
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+            End If
+            Do iBTStep = 1, AppCtx%TimeStep-1
+               EnerBT = AppCtx%Load(iBTStep)**2 / AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%ElasticEnergy(AppCtx%TimeStep) + AppCtx%Load(iBTStep) / AppCtx%Load(AppCtx%TimeStep) * AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+               If ( (AppCtx%TotalEnergy(iBTStep) - EnerBT ) / EnerBT > AppCtx%VarFracSchemeParam%BTTol ) Then
+                  Write(IOBuffer, *) '*********** BackTracking to step', iBTStep, '\n'c 
+                  Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+   
+                  !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
+                  Write(AppCtx%AppParam%Ener_Unit, *)
+                  Write(AppCtx%AppParam%Ener_Unit, *)
+
+                  AppCtx%TimeStep = iBTStep - 1
+                  ! Since AppCtx%TimeStep is going to be incremented
+                  AppCtx%IsBT = PETSC_TRUE
+                  !!! Exit the BT loop
+                  EXIT
+               End If
+            End Do
+            If (AppCtx%IsBT) Then
+               !!! Exit the AltMin loop
+               EXIT
+            End If
+         End If
    
          !------------------------------------------------------------------- 
          ! Check the exit condition: tolerance on the error in V 
          !------------------------------------------------------------------- 
-         If ( (Mod(iter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) .OR. (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol)) Then
+         If ( (Mod(AltMinIter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) .OR. (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR. (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter)) Then
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Saving U and V\n'c
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
@@ -128,37 +163,43 @@ Program  VarFracQS
             End If
             Call ComputeEnergy(AppCtx)
             Call Save_Ener(AppCtx)
-            Write(IOBuffer, 100) AppCtx%ElasticEnergy
+            Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 101) AppCtx%ExtForcesWork
+            Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 102) AppCtx%SurfaceEnergy
+            Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 103) AppCtx%TotalEnergy
+            Write(IOBuffer, 102) AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
                Call ComputeStrainStress(AppCtx)
                Call Save_StrainStress(AppCtx)
             End If
          End If
-         If (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) then 
+         If ( (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR. (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter) ) then 
             EXIT 
          End If
-         iter = iter + 1
+         AltMinIter = AltMinIter + 1
       End Do AltMin
       
       !------------------------------------------------------------------- 
       ! Save the results
       !-------------------------------------------------------------------
       
-      
+      If ( AppCtx%TimeStep == AppCtx%NumTimeSteps ) Then
+         EXIT
+      End If
+      AppCtx%TimeStep = AppCtx%TimeStep + 1
+   End Do TimeStep
 
 100   Format('Elastic energy:       ', ES12.5, '\n'c)    
 101   Format('External Forces Work: ', ES12.5, '\n'c)    
 102   Format('Surface energy:       ', ES12.5, '\n'c)    
 103   Format('Total energy:         ', ES12.5, '\n'c)    
+104   Format('Load:                 ', ES12.5, '\n'c)    
 
-   End Do TimeStep
 
    Call VarFracQSFinalize(AppCtx)
 End Program  VarFracQS

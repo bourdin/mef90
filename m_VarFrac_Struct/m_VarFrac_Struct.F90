@@ -126,7 +126,6 @@ Module m_VarFrac_Struct
       PetscTruth                                   :: DoBT
       PetscReal                                    :: BTTol
       PetscInt                                     :: BTInt
-      PetscTruth                                   :: IsBT
       
       PetscInt                                     :: InitV
       PetscInt                                     :: nbCracks
