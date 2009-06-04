@@ -182,7 +182,7 @@ Contains
       
       !! Solver context for U      
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
-      Call KSPAppendOptionsPrefix(AppCtx%KSPU,"U_", iErr); CHKERRQ(iErr)
+      Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
@@ -191,10 +191,11 @@ Contains
 
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
-   
+      Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
+         
       !! Solver context for V      
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
-      Call KSPAppendOptionsPrefix(AppCtx%KSPV,"V_", iErr); CHKERRQ(iErr)
+      Call KSPAppendOptionsPrefix(AppCtx%KSPV, "V_", iErr); CHKERRQ(iErr)
       Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPV, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
@@ -203,6 +204,8 @@ Contains
 
       Call KSPGetPC(AppCtx%KSPV, AppCtx%PCV, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCV, PCBJACOBI, iErr); CHKERRQ(iErr)
+      Call PCSetFromOptions(AppCtx%PCV, iErr); CHKERRQ(iErr)
+
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done Creating fields Section, Vec, KSP and Mat\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -212,12 +215,14 @@ Contains
       !!! Create the Section for the BC
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCUFlag', AppCtx%MeshTopology%Num_Dim, AppCtx%BCUFlag, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCVFlag', 1, AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'IrrevVFlag', 1, AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
 #if defined PB_2D
       Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCUFlag)
 #elif defined PB_3D
       Call EXOProperty_InitBCUFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCUFlag)
 #endif
       Call EXOProperty_InitBCVFlag(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCVFlag)
+      Call SectionIntZero(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done Initializing BC Sections\n"c
@@ -347,6 +352,7 @@ Contains
       Call VecScatterDestroy(AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCUFlag, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
+      Call SectionIntDestroy(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
       Call VecDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)

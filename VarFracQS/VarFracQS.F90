@@ -62,7 +62,7 @@ Program  VarFracQS
       End If
       
       AltMin: Do iter=1, AppCtx%VarFracSchemeParam%AltMinMaxIter
-         Write(IOBuffer, "('Iteration ', I4,A)") iter, '\n'c
+         Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") iTS, iter,'\n'c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    
          !------------------------------------------------------------------- 

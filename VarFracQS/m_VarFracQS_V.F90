@@ -29,55 +29,77 @@ Module m_VarFracQS_V3D
 Contains
    Subroutine Init_TS_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
-      PetscReal, Dimension(:), Pointer             :: V_Ptr
-      PetscInt, Dimension(:), Pointer              :: BCFlag
+      Type(SectionReal)                            :: VBC
+      PetscReal, Dimension(:), Pointer             :: V_Ptr, VBC_Ptr
+      PetscInt, Dimension(:), Pointer              :: BCVFlag, IrrevFlag
       PetscInt                                     :: i, iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
-      !!! WTF? 
-      !!! Why not using restrict / update instead of the mess?
       
-      !!! Update the BC from the current V
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBC', 1, VBC, iErr); CHKERRQ(iErr)
+
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, VBC)
+            
+      !!! Update the BC Flag from the current V
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
-      Case(Irrev_Eq)
+      Case(VarFrac_Irrev_Eq)
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Irreversibility with Irrev_EQ:", Irrev_Eq, "\n"c
+            Write(IOBuffer, *) "Irreversibility with Irrev_EQ:", VarFrac_Irrev_Eq, "\n"c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
-         !!! Update the BCFlag Section
+         !!! Update the IrrevFlag Section
          !!! If I'd understand how to use SectionGetArrayF90 I'd use it
-         Allocate(BCFlag(1))
-         BCFlag = 1
+         Allocate(IrrevFlag(1))
+         IrrevFlag = VarFrac_BC_Type_DIRI
          Allocate(V_Ptr(1))
          Do i = 1, AppCtx%MeshTopology%Num_Verts
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
             If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-               Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCFlag, iErr); CHKERRQ(iErr)
+               Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(iErr)
             End If
          End Do
          DeAllocate(V_Ptr)
-         DeAllocate(BCFlag)
-      Case(Irrev_Ineq)   
+         DeAllocate(IrrevFlag)
+      Case(VarFrac_Irrev_Ineq)   
          SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n'c, iErr)
       End Select
       
+      If (AppCtx%VarFracSchemeParam%InitV == VarFrac_INIT_V_ONE) Then
+         Call SectionRealSet(AppCtx%V, 1.0_Kr, iErr); CHKERRQ(iErr)
+      End If
       Select Case(AppCtx%VarFracSchemeParam%InitV)
-      Case(INIT_V_ONE)
+      Case(VarFrac_INIT_V_ONE, VarFrac_INIT_V_PREV)
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Initializing V with Init_V_One:", Init_V_Prev, "\n"c
+            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If
-         Allocate(BCFlag(1))
+         End If      
+         Allocate(IrrevFlag(1))
+         Allocate(BCVFlag(1))
          Allocate(V_Ptr(1))
-         V_Ptr(1) = 1.0_Kr               
          Do i = 1, AppCtx%MeshTopology%Num_Verts       
-            Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, 1, BCFlag, iErr); CHKERRQ(ierr)
-            If (BCFlag(1) == 0) Then
+            !!! Take care of potential BC on V
+            Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, 1, BCVFlag, iErr); CHKERRQ(ierr)
+            If (BCVFlag(1) /= VarFrac_BC_Type_NONE) Then
+               Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr);                
                Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)
             End If
-         End Do
+
+            If (AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_Eq ) Then
+               !!! Take care of Irreversibility 
+               Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, 1, IrrevFlag, iErr); CHKERRQ(ierr)
+               If (IrrevFlag(1) /= VarFrac_BC_TYPE_NONE) Then
+                  V_Ptr = 0.0_Kr
+                  Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)
+               End If
+            End If
+         End Do      
+         DeAllocate(IrrevFlag)
+         DeAllocate(BCVFlag)
          DeAllocate(V_Ptr)
-         DeAllocate(BCFlag)
+      Case default   
+         SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n'c, iErr)
       End Select
+      
+      Call SectionRealDestroy(VBC, iErr); CHKERRQ(iErr)
    End Subroutine Init_TS_V
    
 !----------------------------------------------------------------------------------------!      
