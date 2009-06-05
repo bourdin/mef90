@@ -392,7 +392,41 @@ Contains
       Call MEF90_Finalize()
 103 Format(A,'-logsummary.txt')
    End Subroutine VarFracQSFinalize
+
+
+   ! Bactracking subroutine
+   !    - Assumes that the energies have been computed
+   !    - Returns iBTStep
+   Subroutine BackTracking(AppCtx, iBTStep)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt, Intent(OUT)                        :: iBTStep
+      
+      PetscInt                                     :: iErr
+      PetscReal                                    :: EnerBT
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    
+      !!! Check the BT condition
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Doing BackTracking\n'c 
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+      End If
+      Do iBTStep = 1, AppCtx%TimeStep-1
+         EnerBT = AppCtx%Load(iBTStep)**2 * AppCtx%ElasticEnergy(AppCtx%TimeStep) + AppCtx%Load(iBTStep) * AppCtx%Load(AppCtx%TimeStep) * AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) 'Checking against timestep', iBTStep, ':', AppCtx%TotalEnergy(iBTStep) - EnerBT * AppCtx%Load(AppCtx%TimeStep)**2, AppCtx%VarFracSchemeParam%BTTol * AppCtx%TotalEnergy(iBTStep) * AppCtx%Load(AppCtx%TimeStep)**2, '\n'c 
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+         End If
+         
+         If ( EnerBT < AppCtx%Load(AppCtx%TimeStep)**2 * (1.0_Kr - AppCtx%VarFracSchemeParam%BTTol) * AppCtx%TotalEnergy(iBTStep) ) Then
+            If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer, *) 'BackTracking to step', iBTStep, '\n'c 
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+            End If
+            EXIT
+         End If
+      End Do
+
+   End Subroutine BackTracking   
    
 #if defined PB_2D
 End Module m_VarFracQS2D

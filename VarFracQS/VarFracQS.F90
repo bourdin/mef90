@@ -25,9 +25,9 @@ Program  VarFracQS
 
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
+   PetscInt                                     :: iBTStep
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   PetscInt                                     :: AltMinIter, iBTStep
-   PetscReal                                    :: EnerBT
+   PetscInt                                     :: AltMinIter
 
    Call VarFracQSInit(AppCtx)
    
@@ -116,33 +116,21 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Check For BackTracking 
          !------------------------------------------------------------------- 
+         AppCtx%IsBT = PETSC_FALSE
          If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) ) Then
-            AppCtx%IsBT = PETSC_FALSE
-            !!! Check the BT condition
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Doing BackTracking\n'c 
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-            End If
-            Do iBTStep = 1, AppCtx%TimeStep-1
-               EnerBT = AppCtx%Load(iBTStep)**2 / AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%ElasticEnergy(AppCtx%TimeStep) + AppCtx%Load(iBTStep) / AppCtx%Load(AppCtx%TimeStep) * AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
-               If ( (AppCtx%TotalEnergy(iBTStep) - EnerBT ) / EnerBT > AppCtx%VarFracSchemeParam%BTTol ) Then
-                  Write(IOBuffer, *) '*********** BackTracking to step', iBTStep, '\n'c 
-                  Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-   
-                  !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
-                  Write(AppCtx%AppParam%Ener_Unit, *)
-                  Write(AppCtx%AppParam%Ener_Unit, *)
+            Call ComputeEnergy(AppCtx)
+            Call BackTracking(AppCtx, iBTStep)
+            
+            If (iBTStep < AppCtx%TimeStep) Then
+               AppCtx%IsBT = PETSC_TRUE
+               AppCtx%TimeStep = iBTStep - 1
 
-                  AppCtx%TimeStep = iBTStep - 1
-                  ! Since AppCtx%TimeStep is going to be incremented
-                  AppCtx%IsBT = PETSC_TRUE
-                  !!! Exit the BT loop
-                  EXIT
-               End If
-            End Do
-            If (AppCtx%IsBT) Then
+               !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
+               Write(AppCtx%AppParam%Ener_Unit, *)
+               Write(AppCtx%AppParam%Ener_Unit, *)
+               
                !!! Exit the AltMin loop
-               EXIT
+               EXIT 
             End If
          End If
    
@@ -183,6 +171,24 @@ Program  VarFracQS
          End If
          AltMinIter = AltMinIter + 1
       End Do AltMin
+      !------------------------------------------------------------------- 
+      ! Check For BackTracking again
+      !------------------------------------------------------------------- 
+      If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT) ) Then
+         Call ComputeEnergy(AppCtx)
+         Call BackTracking(AppCtx, iBTStep)
+         
+         If (iBTStep < AppCtx%TimeStep) Then
+            AppCtx%IsBT = PETSC_TRUE
+            AppCtx%TimeStep = iBTStep - 1
+
+            !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
+            Write(AppCtx%AppParam%Ener_Unit, *)
+            Write(AppCtx%AppParam%Ener_Unit, *)
+         Else
+            AppCtx%IsBT = PETSC_FALSE
+         End If
+      End If
       
       !------------------------------------------------------------------- 
       ! Save the results
