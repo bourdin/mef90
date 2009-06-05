@@ -457,7 +457,7 @@ Module m_VarFrac_Struct
       dSchemeParam%Epsilon          = .1
       dSchemeParam%KEpsilon         = 1.0E-6
       dSchemeParam%ATNum            = 2
-      dSchemeParam%IntegOrder       = 3
+      dSchemeParam%IntegOrder       = 2
       dSchemeParam%SaveStress       = PETSC_FALSE
       dSchemeParam%SaveStrain       = PETSC_FALSE
 
