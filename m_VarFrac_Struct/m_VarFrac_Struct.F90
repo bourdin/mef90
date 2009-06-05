@@ -250,14 +250,13 @@ Module m_VarFrac_Struct
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
       Character(len=*)                             :: filename
       PetscMPIInt                                  :: rank
-      PetscInt                                     :: iBlk, Blk_ID
+      PetscInt                                     :: iBlk
       
       Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
       Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
-         Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
-         Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
+         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
       End Do
       Close(F_OUT)
       
@@ -271,14 +270,13 @@ Module m_VarFrac_Struct
       Character(len=*)                             :: filename
 
       PetscMPIInt                                  :: rank
-      PetscInt                                     :: iBlk, Blk_ID
+      PetscInt                                     :: iBlk
       
       Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
       Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
-         Blk_ID = MeshTopology%Elem_Blk(iBlk)%ID
-         Write(F_OUT,120) Blk_ID, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
+         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
       End Do
       Close(F_OUT)
       
@@ -445,7 +443,7 @@ Module m_VarFrac_Struct
       dSchemeParam%IrrevType        = VarFrac_Irrev_Eq
       dSchemeParam%IrrevTol         = 1.0D-2
       dSchemeParam%DoBT             = PETSC_FALSE
-      dSchemeParam%BTTol            = 0.0D0
+      dSchemeParam%BTTol            = 1.0D-2
       dSchemeParam%BTInt            = 10
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
       dSchemeParam%nbCracks         = 0
