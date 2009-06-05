@@ -446,7 +446,7 @@ Module m_VarFrac_Struct
       dSchemeParam%IrrevTol         = 1.0D-2
       dSchemeParam%DoBT             = PETSC_FALSE
       dSchemeParam%BTTol            = 0.0D0
-      dSchemeParam%BTInt            = 0
+      dSchemeParam%BTInt            = 10
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
       dSchemeParam%nbCracks         = 0
       dSchemeParam%MaxCrackLength   = 0.0D0  

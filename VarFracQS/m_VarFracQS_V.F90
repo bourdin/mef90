@@ -58,19 +58,23 @@ Contains
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             Call SectionIntZero(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
-!!!            If (AppCtx%TimeStep > 1) Then
-!!!               Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBT', 1, VBT, iErr); CHKERRQ(iErr)      
-!!!               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, VBT)
-!!!               Do i = 1, AppCtx%MeshTopology%Num_Verts
-!!!                  Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, VBT, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
-!!!                  If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-!!!                     Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(iErr)
-!!!                     MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
-!!!                  End If
-!!!               End Do
-!!!               Call SectionRealDestroy(VBT, iErr); CHKERRQ(iErr)
-!!!            End If
+            If (AppCtx%TimeStep > 1) Then
+               Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBT', 1, VBT, iErr); CHKERRQ(iErr)      
+               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, VBT)
+               Do i = 1, AppCtx%MeshTopology%Num_Verts
+                  Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, VBT, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
+                  If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
+                     Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(iErr)
+                     MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
+                  End If
+               End Do
+               Call SectionRealDestroy(VBT, iErr); CHKERRQ(iErr)
+            End If
          Else
+            If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer, *) "Not Backtracking, so getting blocked nodes from V\n"c
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
             Do i = 1, AppCtx%MeshTopology%Num_Verts
                Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
                If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
@@ -82,7 +86,7 @@ Contains
          DeAllocate(V_Ptr)
          DeAllocate(IrrevFlag)
          If (AppCtx%AppParam%verbose > 0) Then
-!            Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+            Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
             Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
