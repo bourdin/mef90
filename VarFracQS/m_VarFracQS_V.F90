@@ -237,7 +237,7 @@ Contains
          End Do
          Call assembleMatrix(AppCtx%KV, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
-      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(MatElem)
       DeAllocate(U)      
       DeAllocate(Theta)
@@ -321,7 +321,7 @@ Contains
             End If
          End Do
       End Do Do_iGauss
-      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
