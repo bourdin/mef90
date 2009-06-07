@@ -49,6 +49,7 @@ Contains
       
       PetscReal                                    :: KSP_Default_rtol = 1.0D-6
       PetscInt                                     :: KSP_Default_MaxIt = 10000
+      Type(PetscViewer)                            :: flgviewer
       
       Call MEF90_Initialize()
       Call InitLog(AppCtx)
@@ -62,9 +63,19 @@ Contains
          Call MEF90_Finalize()
          STOP
       End If
+
       Call VarFracSchemeParam_GetFromOptions(AppCtx%VarFracSchemeParam)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Call VarFracSchemeParam_View(AppCtx%VarFracSchemeParam, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
+      End If
       
-      If (AppCtx%AppParam%verbose > 1) Then
+      Write(filename, 100) Trim(AppCtx%AppParam%prefix)
+      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, flgviewer, iErr); CHKERRQ(iErr);   
+      Call VarFracSchemeParam_View(AppCtx%VarFracSchemeParam, flgviewer)
+      Call PetscViewerFlush(flgviewer, iErr); CHKERRQ(iErr)
+      Call PetscViewerDestroy(flgviewer, iErr); CHKERRQ(iErr)
+      
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
          Call PetscViewerASCIIOpen(PETSC_COMM_SELF, filename, AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr);   
          Write(IOBuffer, 102) MEF90_MyRank, Trim(filename)
@@ -82,6 +93,7 @@ Contains
          Rewind(AppCtx%AppParam%Ener_Unit)
       End If
       
+100 Format(A, '.flg')      
 101 Format(A, '-', I4.4, '.log')
 102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n'c)
 103 Format(A,'.log')
