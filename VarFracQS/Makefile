@@ -12,7 +12,7 @@ all: VarFracQS${DIM}
 
 include ${PETSC_DIR}/conf/base
 
-FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR} -I${M_VARFRACDIR}
+FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR} -I${M_VARFRACDIR} -vec-report0
 # -ftrace=full -ffree-line-length-huge
 
 .F90.o: 
