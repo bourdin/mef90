@@ -53,7 +53,6 @@ Program PrepVarFrac
    PetscReal                                    :: rDummy
    Character                                    :: cDummy
    PetscInt                                     :: vers
-   PetscReal                                    :: Therm_K
 
 
    Call MEF90_Initialize()
@@ -292,14 +291,6 @@ Program PrepVarFrac
       F%Z = 0.0_Kr
       Theta = 0.0_Kr
       
-      If (iCase == 2) Then
-         Write(IOBuffer, 200) 'K (Temperature field diffusion parameter)'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         If (MEF90_MyRank == 0) Then
-            Read(*,*) Therm_K
-         End If
-      End If
-      
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -370,7 +361,7 @@ Program PrepVarFrac
                Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
                   Call MeshRestrictClosure(MeshTopology%mesh, CoordSec, j-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
                   Do k = 1, Num_DoF
-                     ThetaElem(k) = Theta(i) * (1.0 - exp(-Therm_K * CoordElem((k-1) * MeshTopology%Num_Dim + 2) / T(iSTep)))
+                     ThetaElem(k) = Theta(i) * (1.0 - exp(-CoordElem((k-1) * MeshTopology%Num_Dim + 2) / T(iSTep)))
                   End Do
                   Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
                End Do
@@ -387,7 +378,6 @@ Program PrepVarFrac
       End Do
       DeAllocate(F)
       DeAllocate(Theta)
-      DeAllocate(Coordelem)
       
 
      !!! Variables Initialized at NS
