@@ -36,11 +36,11 @@ Program PrepVarFrac
    PetscInt, Parameter                          :: NumTestCase=2
    Type(TestCase_Type), Dimension(NumTestCase)  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
-   Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec
+   Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec, CoordSec
    Type(Vect3D), Dimension(:), Pointer          :: U, F
    PetscReal, DImension(:), Pointer             :: V
    PetscReal, Dimension(:), Pointer             :: Theta
-   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem
+   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
    PetscInt                                     :: NumSteps
@@ -53,6 +53,7 @@ Program PrepVarFrac
    PetscReal                                    :: rDummy
    Character                                    :: cDummy
    PetscInt                                     :: vers
+   PetscReal                                    :: Therm_K
 
 
    Call MEF90_Initialize()
@@ -69,7 +70,7 @@ Program PrepVarFrac
       TestCase(i)%Index = i
    End Do
    TestCase(1)%Description = "MIL 2D/3D elasticity    "
-   TestCase(2)%Description = "MIL antiplane elasticity"
+   TestCase(2)%Description = "Geothermal thermal cracks: proof of concept"
    
    
 
@@ -101,7 +102,7 @@ Program PrepVarFrac
    MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 99) trim(prefix), MEF90_MyRank
  99  Format(A, '-', I4.4, '.gen')
-
+   Call MeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
    
    Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
    If (verbose) Then
@@ -177,7 +178,7 @@ Program PrepVarFrac
    Call MPI_BCast(iCase, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
 
    Select Case(iCase)
-   Case (1)! MIL
+   Case (1,2)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'c
@@ -290,6 +291,15 @@ Program PrepVarFrac
       F%Y = 0.0_Kr
       F%Z = 0.0_Kr
       Theta = 0.0_Kr
+      
+      If (iCase == 2) Then
+         Write(IOBuffer, 200) 'K (Temperature field diffusion parameter)'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         If (MEF90_MyRank == 0) Then
+            Read(*,*) Therm_K
+         End If
+      End If
+      
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -336,6 +346,7 @@ Program PrepVarFrac
             Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
             Allocate(Felem(3*Num_DoF))
             Allocate(Thetaelem(Num_DoF))
+            Allocate(Coordelem(Num_DoF * MeshTopology%Num_Dim))
             
             !!! Update F
             If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
@@ -350,18 +361,33 @@ Program PrepVarFrac
             End If
    
             !!! Update Theta
-            Thetaelem = T(iSTep) * Theta(i)
-            Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
-               Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
-            End Do
+            If (iCase == 1) Then
+               Thetaelem = T(iSTep) * Theta(i)
+               Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+                  Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
+               End Do
+            ElseIf (iCase == 2) Then
+               Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+                  Call MeshRestrictClosure(MeshTopology%mesh, CoordSec, j-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
+                  Do k = 1, Num_DoF
+                     ThetaElem(k) = Theta(i) * (1.0 - exp(-Therm_K * CoordElem((k-1) * MeshTopology%Num_Dim + 2) / T(iSTep)))
+                  End Do
+                  Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
+               End Do
+               
+            End If
             DeAllocate(Felem)
             DeAllocate(Thetaelem)         
+            DeAllocate(CoordElem)
          End Do
+         
+
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, iStep, FSec) 
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, iStep, ThetaSec) 
       End Do
       DeAllocate(F)
       DeAllocate(Theta)
+      DeAllocate(Coordelem)
       
 
      !!! Variables Initialized at NS
