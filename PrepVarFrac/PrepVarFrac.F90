@@ -40,7 +40,7 @@ Program PrepVarFrac
    Type(Vect3D), Dimension(:), Pointer          :: U, F
    PetscReal, DImension(:), Pointer             :: V
    PetscReal, Dimension(:), Pointer             :: Theta
-   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem
+   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem, Z
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
    PetscInt                                     :: NumSteps
@@ -338,6 +338,7 @@ Program PrepVarFrac
             Allocate(Felem(3*Num_DoF))
             Allocate(Thetaelem(Num_DoF))
             Allocate(Coordelem(Num_DoF * MeshTopology%Num_Dim))
+            Allocate(Z(Num_DoF))
             
             !!! Update F
             If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
@@ -361,8 +362,10 @@ Program PrepVarFrac
                Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
                   Call MeshRestrictClosure(MeshTopology%mesh, CoordSec, j-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
                   Do k = 1, Num_DoF
-                     ThetaElem(k) = Theta(i) * (1.0 - exp(-CoordElem((k-1) * MeshTopology%Num_Dim + 2) / T(iSTep)))
+                     Z(k) = CoordElem((k-1) * MeshTopology%Num_Dim + 2)**2 / T(iStep)
                   End Do
+                  Call VDERF(Num_DoF, Z, ThetaELem)
+                  ThetaElem = Theta(i) * 1-ThetaElem
                   Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
                End Do
                
@@ -370,6 +373,7 @@ Program PrepVarFrac
             DeAllocate(Felem)
             DeAllocate(Thetaelem)         
             DeAllocate(CoordElem)
+            DeAllocate(Z)
          End Do
          
 
