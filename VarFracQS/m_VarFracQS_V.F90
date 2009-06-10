@@ -62,7 +62,7 @@ Contains
                Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBT', 1, VBT, iErr); CHKERRQ(iErr)      
                Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, VBT)
                Do i = 1, AppCtx%MeshTopology%Num_Verts
-                  Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, VBT, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
+                  Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, VBT, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr); CHKERRQ(ierr)      
                   If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
                      Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(iErr)
                      MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
