@@ -95,10 +95,11 @@ Contains
       
       PetscReal, Dimension(:), Pointer             :: V
       PetscReal                                    :: V_Elem, CoefV
-      PetscLogDouble                               :: flops = 0
+      PetscLogDouble                               :: flops
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
+      flops = 0.0
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
@@ -122,10 +123,10 @@ Contains
                V_Elem = 0.0_Kr        
                Do iDoF1 = 1, NumDoFScal
                   V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * V(iDoF1)
-                  flops = flops + 2
+                  flops = flops + 2.0
                End Do
                CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
-               flops = flops + 2
+               flops = flops + 2.0
             Else
                CoefV = 1.0_Kr
             End If
@@ -134,7 +135,7 @@ Contains
                If (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) Then
                   Do iDoF2 = 1, NumDoFVect
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * CoefV * ((AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
-                     flops = flops + 3
+                     flops = flops + 3.0
                   End Do
                End If
             End Do
@@ -210,11 +211,12 @@ Contains
 #elif defined PB_3D  
       Type (Vect3D)             				         :: TmpRHS    
 #endif
-      PetscLogDouble                               :: flops = 0
+      PetscLogDouble                               :: flops
       
       
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
+      flops      = 0.0
       RHSElem    = 0.0_Kr
       NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
@@ -237,7 +239,7 @@ Contains
          Do iDoF2 = 1, NumDoFScal
             Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta(iDoF2)
             V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V(iDoF2)
-            flops = flops + 4
+            flops = flops + 4.0
          End Do
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) Then
@@ -245,7 +247,7 @@ Contains
                RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. TmpRHS ) 
                ! RHS terms due to inelastic strains
    			   RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((V_Elem**2) * (MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
-   			   flops = flops + 5
+   			   flops = flops + 5.0
             End If
          End Do
       End Do Do_iGauss
@@ -282,7 +284,7 @@ Contains
       Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
       If ( reason > 0) Then
          Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
-         Write(IOBuffer, 100) KSPNumIter
+         Write(IOBuffer, 100) KSPNumIter, reason
       Else
          Write(IOBuffer, 101) reason
       End If
@@ -290,7 +292,7 @@ Contains
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('     KSP for U converged in ', I5, ' iterations \n'c)
+100 Format('     KSP for U converged in ', I5, ' iterations. KSPConvergedReason is', I3, '\n'c)
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n'c)
    End Subroutine Solve_U
       

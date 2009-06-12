@@ -172,10 +172,11 @@ Contains
 #elif defined PB_3D
       Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
 #endif      
-      PetscLogDouble                               :: flops = 0
+      PetscLogDouble                               :: flops
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
 
+      flops = 0.0
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
@@ -206,20 +207,20 @@ Contains
                !! Calculate the temperature at the gauss point
                Do iDoF1 = 1, NumDoFScal
                   Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
-                  flops = flops + 2
+                  flops = flops + 2.0
                End Do
                !! Calculate the Effective Strain at the gauss point
                Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
                !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
                C2_V = 0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * AppCtx%MatProp(iBlkID)%Toughness + ((AppCtx%MatProp(iBlkID)%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
-               flops = flops + 3
+               flops = flops + 3.0
                C2_GradV = 2.0_Kr * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
-               flops = flops + 2
+               flops = flops + 2.0
             Else
                C2_V = 0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * AppCtx%MatProp(iBlkID)%Toughness 
-               flops = flops + 2
+               flops = flops + 2.0
                C2_GradV = 2.0_Kr * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
-               flops = flops + 2
+               flops = flops + 2.0
             End If
             !! Assemble the element stiffness
             Do iDoF1 = 1, NumDoFScal
@@ -227,10 +228,10 @@ Contains
                   Do iDoF2 = 1, NumDoFScal
                   !! Terms in V^2
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_V * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
-                     flops = flops + 4
+                     flops = flops + 4.0
                   !! Terms in GradV^2
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradV * (AppCtx%ElemScal(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss) )               
-                     flops = flops + 3
+                     flops = flops + 3.0
                   End Do
                End If
             End Do
@@ -299,9 +300,10 @@ Contains
       PetscInt, Dimension(:), Pointer              :: BCFlag, IrrevFlag
       PetscInt                                     :: iDoF1, iGauss
       PetscReal                                    :: C1_V
-      PetscLogDouble                               :: flops = 0
+      PetscLogDouble                               :: flops
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+      flops      = 0.0
       RHSElem    = 0.0_Kr
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
@@ -311,13 +313,13 @@ Contains
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%IrrevFlag, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
       C1_V =  0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * MatProp%Toughness 
-      flops = flops + 2
+      flops = flops + 2.0
       Do_iGauss: Do iGauss = 1, NumGauss
           Do iDoF1 = 1, NumDoFScal
             If  ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
                ! RHS terms due to forces
                RHSElem(iDoF1) = RHSElem(iDoF1) + C1_V * AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) 
-               flops = flops + 3
+               flops = flops + 3.0
             End If
          End Do
       End Do Do_iGauss
@@ -360,7 +362,7 @@ Contains
       Call KSPGetConvergedReason(AppCtx%KSPV, reason, iErr); CHKERRQ(iErr)
       If ( reason > 0) Then
          Call KSPGetIterationNumber(AppCtx%KSPV, KSPNumIter, iErr); CHKERRQ(iErr)
-         Write(IOBuffer, 100) KSPNumIter
+         Write(IOBuffer, 100) KSPNumIter, reason
       Else
          Write(IOBuffer, 101) reason
       End If
@@ -382,7 +384,7 @@ Contains
       Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('     KSP for V converged in ', I5, ' iterations \n'c)
+100 Format('     KSP for V converged in ', I5, ' iterations. KSPConvergedReason is ', I3, '\n'c)
 101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n'c)
 700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n'c)
 800 Format('     Max change V: ', T24, ES12.5, '\n'c)
