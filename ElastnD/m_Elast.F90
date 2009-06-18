@@ -565,14 +565,15 @@ Contains
             Vol  = 0.0_Kr
             Do iGauss = 1, NumGauss
                Do iDoF = 1, NumDoFVect
-                  Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
+                  Strain_Elem = Strain_Elem + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
                End Do
                Do iDoF = 1, NumDoFScal
-                  Theta_Elem  = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss)* Theta(iDoF)
+                  Theta_Elem  = Theta_Elem +  AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)* Theta(iDoF)
                   Vol = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
                End Do
             End Do
-            Strain_Elem = Strain_Elem / Vol
+            Strain_Elem = Strain_Elem/Vol
+            Theta_Elem = Theta_Elem/Vol
             Effective_Strain_Elem  = Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp) 
             Stress_Elem = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
 !            Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim, iErr)
