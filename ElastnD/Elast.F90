@@ -32,18 +32,21 @@ Program  Elast
 
    Call ElastInit(AppCtx)
    
-   If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose > 1) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
 
 
-   If (AppCtx%AppParam%verbose) Then
+   If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Assembling the matrix\n'c
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If   
    Call MatAssembly(AppCtx)
+   If (AppCtx%AppParam%verbose > 2) Then
+      Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+   End If
    
    Do i = 1, AppCtx%NumTimeSteps
       AppCtx%TimeStep = i
@@ -58,19 +61,22 @@ Program  Elast
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
    
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Assembling the RHS\n'c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call RHSAssembly(AppCtx)
+      If (AppCtx%AppParam%verbose > 2) Then
+         Call VecView(AppCtx%RHSU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+      End If
    
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Calling KSPSolve\n'c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call Solve(AppCtx)
    
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Computing Elastic energy, strains and stresses\n'c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
@@ -86,7 +92,7 @@ Program  Elast
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. ( AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          Call ComputeStrainStress(AppCtx)
       End If   
-      If (AppCtx%AppParam%verbose) Then
+      If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Saving results\n'c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If      
