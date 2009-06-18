@@ -140,18 +140,17 @@ Contains
       
       PetscInt                                     :: iErr
 #if defined PB_2D
-     Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
-     Type(Vect2D)                                 :: F_Elem, U_Elem  
+     Type(MatS2D)                                  :: Strain_Elem, Stress_Elem 
+     Type(Vect2D)                                  :: F_Elem, U_Elem  
 #elif defined PB_3D 
-     Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
-     Type(Vect3D)                          :: F_Elem, U_Elem  
+     Type(MatS3D)                                  :: Strain_Elem, Stress_Elem 
+     Type(Vect3D)                                  :: F_Elem, U_Elem  
 #endif
-      PetscReal                                    :: Theta_Elem, V_Elem
+      PetscReal                                    :: Theta_Elem
       PetscReal                                    :: Vol
-      PetscInt                                     :: NumDoFVect, NumDofScal, NumGauss
-      PetscReal, Dimension(:), Pointer             :: U, Theta, V
-      PetscInt                                     :: iBlk, iELoc, iE
-      PetscInt                                     :: iDoF, iGauss
+      PetscInt                                     :: NumDoFVect, NumDofScal
+      PetscReal, Dimension(:), Pointer             :: U, Theta
+      PetscInt                                     :: iBlk, iBlkID, iELoc, iE, iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
       PetscLogDouble                               :: flops       
         
@@ -162,37 +161,36 @@ Contains
       Allocate(Stress_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
       Allocate(Strain_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+         NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+         iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+         
+         Allocate(U(NumDoFVect))
+         Allocate(Theta(NumDoFScal))
+
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            NumDoFScal   = Size(AppCtx%ElemScal(iE)%BF,1)
-            NumDoFVect   = Size(AppCtx%ElemVect(iE)%BF,1)
-            NumGauss = Size(AppCtx%ElemVect(iE)%BF,2)
-            Allocate(U(NumDoFVect))
+
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
-            Allocate(Theta(NumDoFScal))
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
-            Allocate(V(NumDoFScal))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
-            V_Elem                = 0.0_Kr
-            Strain_Elem           = 0.0_Kr
-            Stress_Elem           = 0.0_Kr
-            Theta_Elem            = 0.0_Kr
-            Vol  = 0.0_Kr
-            Do iDof = 1, NumDoFScal
-                  V_Elem          = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V(iDoF)
-                  Theta_Elem      = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
-                  Vol             = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-                  flops = flops + 6.0
-            End Do
-            Do iGauss = 1, NumGauss
+            Strain_Elem       = 0.0_Kr
+            Stress_Elem       = 0.0_Kr
+            Theta_Elem        = 0.0_Kr
+            Vol               = 0.0_Kr
+            Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
+               Do iDof = 1, NumDoFScal
+                     Theta_Elem  = Theta_Elem + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
+                     Vol         = Vol        + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
+                     flops = flops + 5.0
+               End Do
                Do iDoF = 1, NumDoFVect
-                  Strain_Elem            = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
-                  Stress_Elem            = Stress_Elem + (V_Elem**2) * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * ( Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp) )
-                  flops = flops + 1.0
+                  Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
                End Do
             End Do
             Strain_Elem = Strain_Elem / Vol
-            Stress_Elem = Stress_Elem / Vol
+            Theta_Elem  = Theta_Elem / Vol
+            Stress_Elem = AppCtx%MatProp(iBlkID)%Hookes_Law * ( Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp) )
+            flops = flops + 2.0
 #if defined PB_2D
             Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%XY /)
             Strain_Ptr = (/ Strain_Elem%XX, Strain_Elem%YY, Strain_Elem%XY /)
@@ -203,9 +201,9 @@ Contains
             ! Update the Sections with the local values
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%StressU, iE-1, Stress_Ptr, iErr)
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%StrainU, iE-1, Strain_Ptr, iErr)
-            DeAllocate(U)
-            DeAllocate(Theta)
          End Do Do_Elem_iE
+         DeAllocate(U)
+         DeAllocate(Theta)
       End Do Do_Elem_iBlk
       DeAllocate(Stress_Ptr)
       DeAllocate(Strain_Ptr)
