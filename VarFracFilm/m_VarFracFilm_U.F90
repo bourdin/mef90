@@ -111,12 +111,11 @@ Contains
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
       Allocate(Phi(1))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Phi, iE-1, 1, Phi, iErr); CHKERRQ(ierr)
-
       Allocate(BCFlag(NumDoFVect))
       Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
       
       Do iGauss = 1, NumGauss
-      !! Calculate V at the gauss point
+      !! Calculate V at the gauss points
          V_Elem = 0.0_Kr        
          Do iDoF1 = 1, NumDoFScal
             V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss)* V(iDoF1)
@@ -127,9 +126,9 @@ Contains
             If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, NumDoFVect
                !Bulk contribution v^2(1/2*A(eps-eps0)^2)
-                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2+AppCtx%VarFracFilmSchemeParam%KEpsilonV)*(MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
+                 MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2+AppCtx%VarFracFilmSchemeParam%KEpsilonV)*((MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
                !Interface contribution phi*(1/2*K_interface*(u-u0)^2)
-                   MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  ((Phi(1)+AppCtx%VarFracFilmSchemeParam%KEpsilonPhi)*(MatProp%K_interface * AppCtx%ElemVect(iE)%BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%BF(iDoF2, iGauss))  
+                   MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) +  AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((Phi(1)+AppCtx%VarFracFilmSchemeParam%KEpsilonPhi)*(MatProp%K_interface * AppCtx%ElemVect(iE)%BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%BF(iDoF2, iGauss))  
 !			      Call PetscLogFlops(AppCtx%MeshTopology%num_dim * (AppCtx%MeshTopology%num_dim-1) +1 , iErr);CHKERRQ(iErr)
                   !!! Is that right?
                End Do
@@ -232,7 +231,7 @@ Contains
          Do iDoF1 = 1, NumDoFVect
             If (BCFlag(iDoF1) == 0) Then
                ! RHS terms due to U0
-               RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( MatProp%K_interface * Phi(1) * (AppCtx%ElemVect(iE)%BF(iDoF1, iGauss)) .DotP. U0_Elem ) 
+             !  RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( MatProp%K_interface * Phi(1) * (AppCtx%ElemVect(iE)%BF(iDoF1, iGauss)) .DotP. U0_Elem ) 
                ! RHS terms due to eps0
    			   RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((V_Elem**2) * (MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
 !               Call PetscLogFlops(3 , iErr);CHKERRQ(iErr)
@@ -264,8 +263,7 @@ Contains
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, U_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_FORWARD, U_Vec, ierr); CHKERRQ(ierr)
       Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU, U_Vec, iErr); CHKERRQ(iErr)
-      !!! Solve and store the solution in AppCtx%RHS
-      
+      !!! Solve and store the solution in AppCtx%RHS     
       Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, U_Vec, ierr); CHKERRQ(ierr)
       !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%U
       
