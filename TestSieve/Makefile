@@ -53,6 +53,9 @@ TestScatter:   ${PETSC_ARCH} TestScatter.o ${PETSC_ARCH}/TestScatter.o
 TestUpdate:   ${PETSC_ARCH} TestUpdate.o ${PETSC_ARCH}/TestUpdate.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestUpdate ${PETSC_ARCH}/TestUpdate.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+Partitioner:   ${PETSC_ARCH} Partitioner.o ${PETSC_ARCH}/Partitioner.o
+	-${FLINKER} -o ${PETSC_ARCH}/Partitioner ${PETSC_ARCH}/Partitioner.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}
