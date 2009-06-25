@@ -365,7 +365,7 @@ Program PrepVarFrac
                      Z(k) = CoordElem((k-1) * MeshTopology%Num_Dim + 2)**2 / T(iStep)
                   End Do
                   Call VDERF(Num_DoF, Z, ThetaELem)
-                  ThetaElem = Theta(i) * 1-ThetaElem
+                  ThetaElem = Theta(i) * (1.0-ThetaElem)
                   Call MeshUpdateClosure(MeshTopology%Mesh, ThetaSec, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, iErr); CHKERRQ(iErr) 
                End Do
                

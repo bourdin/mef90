@@ -1,4 +1,4 @@
-Program TestAssembly
+Program Partitioner
 
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
@@ -22,21 +22,9 @@ Program TestAssembly
    PetscTruth                                   :: HasPrefix
    PetscTruth                                   :: verbose
    PetscErrorCode                               :: iErr
-   PetscInt                                     :: iBlk
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: viewer, myviewer
-   Type(SectionReal)                            :: U_Sec
-   Type(Vec)                                    :: U_VecG, U_VecL
-   PetscReal, Dimension(:), Pointer             :: val
-   PetscReal, Dimension(:), Pointer             :: Kelem
-   Type(Mat)                                    :: K
-   Type(VecScatter)                             :: scatter
-   PetscInt                                     :: i
-   PetscReal                                    :: T
-   Type(Vect2D), Dimension(:), Pointer          :: V2D
-   Type(Vect3D), Dimension(:), Pointer          :: V3D
-   PetscReal, Dimension(:), Pointer             :: V_Ptr
      
    Call MEF90_Initialize()
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr)    
@@ -88,4 +76,4 @@ Program TestAssembly
    
 300 Format(A)   
    Call MEF90_Finalize()
-End Program TestAssembly
+End Program Partitioner
