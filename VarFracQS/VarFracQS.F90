@@ -150,7 +150,6 @@ Program  VarFracQS
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If
             Call ComputeEnergy(AppCtx)
-            Call Save_Ener(AppCtx)
             Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
@@ -167,6 +166,7 @@ Program  VarFracQS
             End If
          End If
          If ( (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR. (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter) ) then 
+            Call Save_Ener(AppCtx)
             EXIT 
          End If
          AltMinIter = AltMinIter + 1
