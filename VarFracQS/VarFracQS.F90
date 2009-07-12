@@ -28,6 +28,7 @@ Program  VarFracQS
    PetscInt                                     :: iBTStep
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: AltMinIter
+   Character(len=MEF90_MXSTRLEN)                :: filename
 
    Call VarFracQSInit(AppCtx)
    
@@ -198,6 +199,8 @@ Program  VarFracQS
          EXIT
       End If
       AppCtx%TimeStep = AppCtx%TimeStep + 1
+      Write(filename, 105) Trim(AppCtx%AppParam%prefix)
+      Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
    End Do TimeStep
 
 100   Format('Elastic energy:       ', ES12.5, '\n'c)    
@@ -206,6 +209,7 @@ Program  VarFracQS
 103   Format('Total energy:         ', ES12.5, '\n'c)    
 104   Format('Load:                 ', ES12.5, '\n'c)    
 
+105   Format(A,'-logsummary.txt')
 
    Call VarFracQSFinalize(AppCtx)
 End Program  VarFracQS
