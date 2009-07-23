@@ -96,9 +96,9 @@ Contains
       
 100 Format(A, '.flg')      
 101 Format(A, '-', I4.4, '.log')
-102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n'c)
+102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
 103 Format(A,'.log')
-104 Format('Collective output redirected to file ', A, '\n'c)
+104 Format('Collective output redirected to file ', A, '\n')
 
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
@@ -247,7 +247,7 @@ Contains
       Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
       AppCtx%MyEXO%exoid = 0
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'c
+         Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
@@ -420,19 +420,19 @@ Contains
    
       !!! Check the BT condition
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Doing BackTracking\n'c 
+         Write(IOBuffer, *) 'Doing BackTracking\n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
       End If
       Do iBTStep = 1, AppCtx%TimeStep-1
          EnerBT = AppCtx%Load(iBTStep)**2 * AppCtx%ElasticEnergy(AppCtx%TimeStep) + AppCtx%Load(iBTStep) * AppCtx%Load(AppCtx%TimeStep) * AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%SurfaceEnergy(AppCtx%TimeStep)
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Checking against timestep', iBTStep, ':', AppCtx%TotalEnergy(iBTStep) - EnerBT * AppCtx%Load(AppCtx%TimeStep)**2, AppCtx%VarFracSchemeParam%BTTol * AppCtx%TotalEnergy(iBTStep) * AppCtx%Load(AppCtx%TimeStep)**2, '\n'c 
+            Write(IOBuffer, *) 'Checking against timestep', iBTStep, ':', AppCtx%TotalEnergy(iBTStep) - EnerBT * AppCtx%Load(AppCtx%TimeStep)**2, AppCtx%VarFracSchemeParam%BTTol * AppCtx%TotalEnergy(iBTStep) * AppCtx%Load(AppCtx%TimeStep)**2, '\n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          
          If ( EnerBT < AppCtx%Load(AppCtx%TimeStep)**2 * (1.0_Kr - AppCtx%VarFracSchemeParam%BTTol) * AppCtx%TotalEnergy(iBTStep) ) Then
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'BackTracking to step', iBTStep, '\n'c 
+               Write(IOBuffer, *) 'BackTracking to step', iBTStep, '\n' 
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If
             EXIT

@@ -172,7 +172,7 @@ Contains
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
 !      Write(CharBuffer, 103) dEXO%title//' '
 !      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-!      Write(CharBuffer, '(A)') '\n'c
+!      Write(CharBuffer, '(A)') '\n'
 
       Write(CharBuffer, 106) dEXO%Num_EBProperties
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
@@ -226,23 +226,23 @@ Contains
       End Do
     
       
- 100 Format('Communicator:       ', A, '\n'c)
- 101 Format('exo ID:             ', I3, '\n'c)
- 102 Format('filename:           ', A, '\n'c)
- 103 Format('title:              ', A, '\n'c)
- 104 Format('QA_rec ', I2.2, '         ', A, '\n'c)
- 105 Format('Communicator:       ', A, I3, '\n'c)
- 106 Format('Number of EB Properties: ', I3, '\n'c)
- 107 Format('Number of SS Properties: ', I3, '\n'c)
- 108 Format('Number of NS Properties: ', I3, '\n'c)
- 109 Format('   ', A, 'num values:', I3, '\n'c)
- 110 Format('Global Variables: ', I3, '\n'c)
- 111 Format('Cell Variables:   ', I3, '\n'c)
- 112 Format('Vertex Variables: ', I3, '\n'c)
- 201 Format('   Element Block ', I3, ' value ', I3, '\n'c)
- 202 Format('   Side Set      ', I3, ' value ', I3, '\n'c)
- 203 Format('   Node Set      ', I3, ' value ', I3, '\n'c)
- 210 Format(A, I3, '\n'c)
+ 100 Format('ommunicator:       ', A, '\n')
+ 101 Format('exo ID:             ', I3, '\n')
+ 102 Format('filename:           ', A, '\n')
+ 103 Format('title:              ', A, '\n')
+ 104 Format('QA_rec ', I2.2, '         ', A, '\n')
+ 105 Format('ommunicator:       ', A, I3, '\n')
+ 106 Format('Number of EB Properties: ', I3, '\n')
+ 107 Format('Number of SS Properties: ', I3, '\n')
+ 108 Format('Number of NS Properties: ', I3, '\n')
+ 109 Format('   ', A, 'num values:', I3, '\n')
+ 110 Format('Global Variables: ', I3, '\n')
+ 111 Format('ell Variables:   ', I3, '\n')
+ 112 Format('Vertex Variables: ', I3, '\n')
+ 201 Format('   Element Block ', I3, ' value ', I3, '\n')
+ 202 Format('   Side Set      ', I3, ' value ', I3, '\n')
+ 203 Format('   Node Set      ', I3, ' value ', I3, '\n')
+ 210 Format(A, I3, '\n')
    End Subroutine EXOView
 
 
@@ -291,7 +291,7 @@ Contains
       Write(CharBuffer, 108) dMeshTopology%Num_Side_Sets
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
    
-      Write(CharBuffer, 600) '\n'c
+      Write(CharBuffer, 600) '\n'
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 200)
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
@@ -312,12 +312,12 @@ Contains
             Write(CharBuffer, 208) dMeshTopology%Elem_blk(i)%Elem_ID(j)
             Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          End Do
-         Write(CharBuffer, 600) '\n'c
+         Write(CharBuffer, 600) '\n'
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       End Do
       
       
-      Write(CharBuffer, 600) '\n'c
+      Write(CharBuffer, 600) '\n'
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 300)
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
@@ -334,7 +334,7 @@ Contains
             Write(CharBuffer, 500) dMeshTopology%Node_Set(i)%Node_ID(j)
             Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          End Do
-         Write(CharBuffer, 600) '\n'c
+         Write(CharBuffer, 600) '\n'
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       End Do
       
@@ -345,34 +345,34 @@ Contains
       Write(CharBuffer, 401) dMeshTopology%num_side_sets
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       
-103 Format('    Number of dimensions ============ ', I6, '\n'c)
-104 Format('    Number of vertices ============== ', I6, '\n'c)
-105 Format('    Number of elements ============== ', I6, '\n'c)
-106 Format('    Number of elements blocks ======= ', I6, '\n'c)
-107 Format('    Number of node sets ============= ', I6, '\n'c)
-108 Format('    Number of side sets ============= ', I6, '\n'c)
+103 Format('    Number of dimensions ============ ', I6, '\n')
+104 Format('    Number of vertices ============== ', I6, '\n')
+105 Format('    Number of elements ============== ', I6, '\n')
+106 Format('    Number of elements blocks ======= ', I6, '\n')
+107 Format('    Number of node sets ============= ', I6, '\n')
+108 Format('    Number of side sets ============= ', I6, '\n')
 
-200 Format('*** ELEMENT BLOCKS ***', '\n'c)
-201 Format('    Number of blocks ================ ', I4, '\n'c)
-203 Format('    Block ', I3, ' Number of elements ==== ', I4, '\n'c)
-204 Format('    Block ', I3, ' Element type ========== ', I4, '\n'c)
-205 Format('    Block ', I3, ' DoF location ========== ', 4(I4, ' '), '\n'c)
+200 Format('*** ELEMENT BLOCKS ***', '\n')
+201 Format('    Number of blocks ================ ', I4, '\n')
+203 Format('    Block ', I3, ' Number of elements ==== ', I4, '\n')
+204 Format('    Block ', I3, ' Element type ========== ', I4, '\n')
+205 Format('    Block ', I3, ' DoF location ========== ', 4(I4, ' '), '\n')
 207 Format('    Block ', I3, ' IDs: ')
 208 Format(' ', I4)
 
-300 Format('*** NODE SETS ***', '\n'c)
-301 Format('    Number of sets ================== ', I4, '\n'c)
-302 Format('    Set ', I3, ' Number of nodes ========= ', I4, '\n'c)
+300 Format('*** NODE SETS ***', '\n')
+301 Format('    Number of sets ================== ', I4, '\n')
+302 Format('    Set ', I3, ' Number of nodes ========= ', I4, '\n')
 303 Format('    Set ', I3, ' IDs: ')
 !304 Format('    Set ', I3, ' Number of dist. factors = ', I4)
 
-400 Format('*** SIDE SETS ***', '\n'c)
-401 Format('    Number of side sets ============= ', I4, '\n'c)
+400 Format('*** SIDE SETS ***', '\n')
+401 Format('    Number of side sets ============= ', I4, '\n')
     
 500 Format(I4) 
 600 Format(A)
-601 Format('    Number of blocks global ========= ', I4, '\n'c)
-701 Format('    Number of sets global =========== ', I4, '\n'c)
+601 Format('    Number of blocks global ========= ', I4, '\n')
+701 Format('    Number of sets global =========== ', I4, '\n')
    End Subroutine MeshTopologyView
    
 End Module m_MEF_Types

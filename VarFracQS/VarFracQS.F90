@@ -42,37 +42,37 @@ Program  VarFracQS
    TimeStep: Do 
       Write(IOBuffer, 99) AppCtx%TimeStep
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-99    Format('\n=== Solving time step ', I4, '\n\n'c)
+99    Format('\n=== Solving time step ', I4, '\n\n')
 
       !!! Init the fields:
       Call Init_TS_Loads(AppCtx)      
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Done with Init_TS_Loads \n'c 
+         Write(IOBuffer, *) 'Done with Init_TS_Loads \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
       Call Init_TS_U(AppCtx)
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Done with Init_TS_U \n'c 
+         Write(IOBuffer, *) 'Done with Init_TS_U \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
       Call Init_TS_V(AppCtx)
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Done with Init_TS_V \n'c 
+         Write(IOBuffer, *) 'Done with Init_TS_V \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
       AltMinIter = 1
       AltMin: Do 
-         Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") AppCtx%TimeStep, AltMinIter,'\n'c
+         Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") AppCtx%TimeStep, AltMinIter,'\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    
          !------------------------------------------------------------------- 
          ! Problem for U
          !-------------------------------------------------------------------
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Assembling the Matrix and RHS for  the U-subproblem \n'c 
+            Write(IOBuffer, *) 'Assembling the Matrix and RHS for  the U-subproblem \n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          Call RHSU_Assembly(AppCtx)
@@ -87,7 +87,7 @@ Program  VarFracQS
          End If
                
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n'c 
+            Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call Solve_U(AppCtx)
@@ -96,7 +96,7 @@ Program  VarFracQS
          ! Problem for V
          !-------------------------------------------------------------------
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n'c 
+            Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call RHSV_Assembly(AppCtx)
@@ -109,7 +109,7 @@ Program  VarFracQS
          End If
          
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Calling KSPSolve for the V-subproblem\n'c 
+            Write(IOBuffer, *) 'Calling KSPSolve for the V-subproblem\n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call Solve_V(AppCtx)
@@ -140,14 +140,14 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          If ( (Mod(AltMinIter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) .OR. (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR. (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter)) Then
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Saving U and V\n'c
+               Write(IOBuffer, *) 'Saving U and V\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If   
             Call Save_U(AppCtx)
             Call Save_V(AppCtx)
 
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n'c 
+               Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n' 
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If
             Call ComputeEnergy(AppCtx)
@@ -203,11 +203,11 @@ Program  VarFracQS
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
    End Do TimeStep
 
-100   Format('Elastic energy:       ', ES12.5, '\n'c)    
-101   Format('External Forces Work: ', ES12.5, '\n'c)    
-102   Format('Surface energy:       ', ES12.5, '\n'c)    
-103   Format('Total energy:         ', ES12.5, '\n'c)    
-104   Format('Load:                 ', ES12.5, '\n'c)    
+100   Format('Elastic energy:       ', ES12.5, '\n')    
+101   Format('External Forces Work: ', ES12.5, '\n')    
+102   Format('Surface energy:       ', ES12.5, '\n')    
+103   Format('Total energy:         ', ES12.5, '\n')    
+104   Format('Load:                 ', ES12.5, '\n')    
 
 105   Format(A,'-logsummary.txt')
 

@@ -79,7 +79,7 @@ Program PrepVarFracFilm
    
    Call EXO_Check_Numbering(EXO, iErr)
    If (iErr /= 0) Then
-      SETERRQ(PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n'c, iErr)
+      SETERRQ(PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
    End If
 
    !!! Reading and distributing sequential mesh
@@ -109,7 +109,7 @@ Program PrepVarFracFilm
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Write(IOBuffer, *) '\nElement Block and Node Set Properties\n'c
+   Write(IOBuffer, *) '\nElement Block and Node Set Properties\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    Call EXOProperty_Ask(MyEXO, MeshTopology)
    
@@ -126,14 +126,14 @@ Program PrepVarFracFilm
 
    Call EXOProperty_Write(MyEXO)
    If (verbose) Then
-      Write(IOBuffer, '(A)') 'Done with EXOProperty_Write\n'c
+      Write(IOBuffer, '(A)') 'Done with EXOProperty_Write\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
    Call VarFracFilmEXOVariable_Init(MyEXO)
    Call EXOVariable_Write(MyEXO)
    If (verbose) Then
-      Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'c
+      Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
@@ -146,7 +146,7 @@ Program PrepVarFracFilm
       SETERRQ(PETSC_ERR_SUP, 'Only 2 dimensional elements are supported', iErr)
    End Select
    If (verbose) Then
-      Write(IOBuffer, '(A)') 'Done with ElementInit\n'c
+      Write(IOBuffer, '(A)') 'Done with ElementInit\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
@@ -159,13 +159,13 @@ Program PrepVarFracFilm
    Call MeshGetCellSectionReal(MeshTopology%mesh, 'Phi', 1, PhiSec, iErr); CHKERRQ(iErr)
    
    If (verbose) Then
-      Write(IOBuffer, '(A)') 'Done with Initializing Sections\n'c
+      Write(IOBuffer, '(A)') 'Done with Initializing Sections\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    
    Do i = 1, NumTestCase
-      Write(IOBuffer, "('[',I2.2,'] ',A)"), TestCase(i)%Index, Trim(TestCase(i)%Description)//'\n'c
+      Write(IOBuffer, "('[',I2.2,'] ',A)"), TestCase(i)%Index, Trim(TestCase(i)%Description)//'\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End Do
    
@@ -181,7 +181,7 @@ Program PrepVarFracFilm
       Allocate(GlobVars(VarFracFilm_Num_GlobVar))
       GlobVars = 0.0_Kr
       !!! Time Steps
-      Write(IOBuffer, *) '\nGlobal Variables\n'c
+      Write(IOBuffer, *) '\nGlobal Variables\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       Write(IOBuffer, 200) 'TMin'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -227,7 +227,7 @@ Program PrepVarFracFilm
          Allocate(MatProp2D(MeshTopology%Num_Elem_Blks_Global))
       End Select
       
-      Write(IOBuffer, *) '\nMaterial properties\n'c
+      Write(IOBuffer, *) '\nMaterial properties\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       !!! Material Properties
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
@@ -278,7 +278,7 @@ Program PrepVarFracFilm
       End If
 
 
-      Write(IOBuffer, *) '\nFields and Loads\n'c
+      Write(IOBuffer, *) '\nFields and Loads\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       !!! Variable initialized on EB: U0 and Theta
       Allocate(U0(MeshTopology%Num_Elem_Blks_Global))
@@ -391,7 +391,7 @@ Program PrepVarFracFilm
          End If
       End Do
       
-      Write(IOBuffer, *) '   \n\n'c
+      Write(IOBuffer, *) '   \n\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       !!! Initialize the Section
       Allocate(Uelem(2))
@@ -423,15 +423,15 @@ Program PrepVarFracFilm
       DeAllocate(V)
       
    Case Default
-      SETERRQ(PETSC_ERR_SUP, 'Unknown test case\n'c, iErr)      
+      SETERRQ(PETSC_ERR_SUP, 'Unknown test case\n', iErr)      
    End Select
 
 
    Call MEF90_Finalize()
 
- 100 Format('*** Element Block ', T24, I3, '\n'c)
- 101 Format('*** Side Set      ', T24, I3, '\n'c)
- 102 Format('*** Node Set      ', T24, I3, '\n'c)
+ 100 Format('*** Element Block ', T24, I3, '\n')
+ 101 Format('*** Side Set      ', T24, I3, '\n')
+ 102 Format('*** Node Set      ', T24, I3, '\n')
  200 Format(A,t60, ': ')
    
 End Program PrepVarFracFilm

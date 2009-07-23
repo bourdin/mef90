@@ -54,7 +54,7 @@ Program TestNodeSet
    End If
 
 102 Format(A, '-', I4.4, '.log')
-103 Format('Output from processor ', I4.4, ' redirected to ', A, '\n'c)
+103 Format('Output from processor ', I4.4, ' redirected to ', A, '\n')
 
    MyEXO%comm = PETSC_COMM_SELF
    MyEXO%exoid = EXO%exoid
@@ -68,15 +68,15 @@ Program TestNodeSet
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
 
    If (verbose) Then
-      Write(CharBuffer, 300) 'EXO_Type\n'c
+      Write(CharBuffer, 300) 'EXO_Type\n'
       Call PetscViewerASCIIPrintf(myviewer, CharBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(EXO, myviewer)
 
-      Write(CharBuffer, 300) '\n\nMeshTopology\n'c
+      Write(CharBuffer, 300) '\n\nMeshTopology\n'
       Call PetscViewerASCIIPrintf(myviewer, CharBuffer, iErr); CHKERRQ(iErr)
       Call MeshTopologyView(MeshTopology, myviewer)
       
-      Write(CharBuffer, 300) '\n\nNode Sets\n'c
+      Write(CharBuffer, 300) '\n\nNode Sets\n'
       Call PetscViewerASCIIPrintf(myviewer, CharBuffer, iErr); CHKERRQ(iErr)
       Call ShowNodesets(MeshTopology%mesh, myviewer)
    End If
@@ -127,7 +127,7 @@ Program TestNodeSet
          Write(IOBuffer, 102) setIds(iSet)
          Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       End Do
-      Write(IOBuffer, 200) '\n'c
+      Write(IOBuffer, 200) '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
          
       Do iSet = 1, lMeshTopology%Num_node_sets
@@ -148,18 +148,18 @@ Program TestNodeSet
             Write(IOBuffer, 105) lMeshTopology%Node_Set(iSet)%Node_ID(i) - lMeshTopology%Num_Elems + 1
             Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
          End Do
-         Write(IOBuffer, 200) '\n'c
+         Write(IOBuffer, 200) '\n'
          Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
          DeAllocate(lMeshTopology%Node_Set(iSet)%Node_ID)
       End Do
    Deallocate(setIds)
    DeAllocate(lMeshTopology%Node_Set)
    
-100 Format('Number of Vertex Sets', I4, '\n'c)
+100 Format('Number of Vertex Sets', I4, '\n')
 101 Format('Ids of VertexSets:')
 102 Format('   ', I3)
-103 Format('VertexSet ', I3, '\n'c)
-104 Format('   Number of Vertices in VertexSet', I5, '\n'c) 
+103 Format('VertexSet ', I3, '\n')
+104 Format('   Number of Vertices in VertexSet', I5, '\n') 
 105 Format('  ', I5)
 200 Format(A)
    End Subroutine ShowNodeSets

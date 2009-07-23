@@ -49,7 +49,7 @@ Contains
          DeAllocate(V_Ptr)
          DeAllocate(BCFlag)
       Case(Irrev_Ineq)   
-         SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n'c, iErr)
+         SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n', iErr)
       End Select
       
       Select Case(AppCtx%VarFracFilmSchemeParam%InitV)
@@ -297,10 +297,10 @@ End Subroutine MatV_Assembly
       Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('     KSP for V converged in ', I5, ' iterations \n'c)
-101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n'c)
-700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n'c)
-800 Format('     Max change V: ', T24, ES12.5, '\n'c)
+100 Format('     KSP for V converged in ', I5, ' iterations \n')
+101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n')
+700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n')
+800 Format('     Max change V: ', T24, ES12.5, '\n')
    End Subroutine Solve_V
 
    

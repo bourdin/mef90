@@ -175,7 +175,7 @@ Program TestSieve3D
 
    !!! Ghost update can also be done using SectionComplete (equivalent of DALocalToLocal)
 
-!   Write(CharBuffer,*) 'V\n'c
+!   Write(CharBuffer,*) 'V\n'
 !   Call PetscPrintf(PETSC_COMM_WORLD, CharBuffer, ierr); CHKERRQ(iErr)
 !   Call VecView(V, PETSC_VIEWER_STDOUT_WORLD, ierr); CHKERRQ(ierr)
 

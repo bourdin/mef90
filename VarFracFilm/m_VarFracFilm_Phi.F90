@@ -86,7 +86,7 @@ Contains
        DeAllocate(Val)
       
       Call PetscGlobalSum(MyNumDec, NumDec, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Write(IOBuffer,*) 'Number of debonded elements ', numdec, '\n'c
+      Write(IOBuffer,*) 'Number of debonded elements ', numdec, '\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Solve_Phi
