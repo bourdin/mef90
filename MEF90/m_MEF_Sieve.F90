@@ -47,9 +47,9 @@ Contains
       !!! Extracts sizes from the Mesh oject
 
       ! Read Elem block information
-      CharBuffer = 'ellBlocks'
+      CharBuffer = 'CellBlocks'
       Call MeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)  
-      !!! Get the number of labels of type 'ellBlocks' in the mesh
+      !!! Get the number of labels of type 'CellBlocks' in the mesh
       If (numIds .ne. dMeshTopology%Num_Elem_blks) Then
          SETERRQ(PETSC_ERR_ARG_SIZ, 'Invalid number of element ids', ierr)
       End If
@@ -63,10 +63,10 @@ Contains
             blkId = blkIds(iBlk)
             dMeshTopology%Elem_blk(iBlk)%ID = blkId
             Call MeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr); CHKERRQ(iErr)
-            !!! Get the size of the layer (stratum) 'ellBlock' of Mesh
+            !!! Get the size of the layer (stratum) 'CellBlock' of Mesh
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
             Call MeshGetStratum(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%Elem_blk(iBlk)%Elem_ID, ierr); CHKERRQ(iErr)
-            !!! Get the layer (stratum) 'ellBlock' of Mesh in C numbering
+            !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
             dMeshTopology%Elem_blk(iBlk)%Elem_ID = dMeshTopology%Elem_blk(iBlk)%Elem_ID + 1
             !!! Converts to Fortran style indexing
          End Do
