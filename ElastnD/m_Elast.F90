@@ -20,6 +20,7 @@ Module m_Elast3D
    Use petscmesh
 
    Implicit NONE   
+#include "include/finclude/tao_solver.h"
    
    Type LogInfo_Type
       PetscLogStage               :: IO_Stage
@@ -71,6 +72,12 @@ Module m_Elast3D
       Type(Vec)                                    :: RHSU
       Type(KSP)                                    :: KSPU
       Type(PC)                                     :: PCU
+!!! TAO stuff      
+      TAO_SOLVER                                   :: taoU
+      TAO_APPLICATION                              :: taoappU
+      Type(Vec)                                    :: GradientU
+      Type(Vec)                                    :: UVec
+      
       Type(LogInfo_Type)                           :: LogInfo
 #if defined PB_2D
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp      
@@ -98,6 +105,7 @@ Contains
       PetscInt                                     :: vers
       
       Call MEF90_Initialize()
+      Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
       Call InitLog(AppCtx)
 
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
@@ -217,8 +225,27 @@ Contains
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
       
-      Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
-      Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_cg', AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappU, iErr); CHKERRQ(iErr)
+
+         
+         Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
+         
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%UVec, iErr); CHKERRQ(iErr)
+         Call TaoAppSetInitialSolutionVec(AppCtx%taoappU, AppCtx%UVec, iErr); CHKERRQ(iErr)
+         Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%KU, AppCtx%KU, iErr); CHKERRQ(iErr)
+         
+!         Call TaoAppSetObjectiveAndGradientRoutine(taoapp, FormFunctionAndGradient, AppCtx, iErr); CHKERRQ(iErr)
+!         Call TaoAppSetHessianRoutine(taoapp, FormHessian, AppCtx, iErr); CHKERRQ(iErr)
+
+         Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
+      Else
+         Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
+         Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+      End If
+
+      Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -664,6 +691,13 @@ Contains
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename
    
+
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call TaoDestroy(AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoApplicationDestroy(AppCtx%taoappU, iErr); CHKERRQ(iErr)
+         Call VecDestroy(AppCtx%UVec, iErr); CHKERRQ(iErr)
+      End If
+      
       Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%Theta, iErr); CHKERRQ(iErr)
@@ -687,6 +721,7 @@ Contains
       Call PetscViewerDestroy(AppCtx%AppParam%EnergyViewer, iErr); CHKERRQ(iErr)
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
+      Call TaoFinalize(iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
 103 Format(A,'-logsummary.txt')
    End Subroutine ElastFinalize
