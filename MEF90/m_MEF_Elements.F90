@@ -94,7 +94,7 @@ Module m_MEF_Elements
       
       Allocate(dElem(dMeshTopology%Num_Elems))
       !!! Initialize the Basis Functions in each element
-      Call MeshGetSectionReal(dMeshTopology%mesh, 'oordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
          Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
          Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
@@ -147,7 +147,7 @@ Module m_MEF_Elements
       
       Allocate(dElem(dMeshTopology%Num_Elems))
       !!! Initialize the Basis Functions in each element
-      Call MeshGetSectionReal(dMeshTopology%mesh, 'oordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
          Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
          Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
@@ -199,7 +199,7 @@ Module m_MEF_Elements
       
       Allocate(dElem(dMeshTopology%Num_Elems))
       !!! Initialize the Basis Functions in each element
-      Call MeshGetSectionReal(dMeshTopology%mesh, 'oordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
          Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
          Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
@@ -252,7 +252,7 @@ Module m_MEF_Elements
       
       Allocate(dElem(dMeshTopology%Num_Elems))
       !!! Initialize the Basis Functions in each element
-      Call MeshGetSectionReal(dMeshTopology%mesh, 'oordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
          Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
          Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
@@ -304,7 +304,7 @@ Module m_MEF_Elements
       
       Allocate(dElem(dMeshTopology%Num_Elems))
       !!! Initialize the Basis Functions in each element
-      Call MeshGetSectionReal(dMeshTopology%mesh, 'oordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
          Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
          Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
@@ -356,7 +356,7 @@ Module m_MEF_Elements
       
       Allocate(dElem(dMeshTopology%Num_Elems))
       !!! Initialize the Basis Functions in each element
-      Call MeshGetSectionReal(dMeshTopology%mesh, 'oordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
          Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
          Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
