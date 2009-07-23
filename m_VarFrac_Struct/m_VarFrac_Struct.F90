@@ -142,6 +142,9 @@ Module m_VarFrac_Struct
       
       PetscTruth                                   :: SaveStress
       PetscTruth                                   :: SaveStrain
+      
+      PetscTruth                                   :: U_UseTao
+      PetscTruth                                   :: V_UseTao
    End Type VarFracSchemeParam_Type
    
  Contains
@@ -406,6 +409,10 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-savestrain ', L1, A)")          dSchemeParam%SaveStrain, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-u_usetao ', L1, A)")          dSchemeParam%U_UseTao, '\n'
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-v_usetao ', L1, A)")          dSchemeParam%V_UseTao, '\n'
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine VarFracSchemeParam_View
 
    Subroutine VarFracSchemeParam_GetFromOptions(dSchemeParam)
@@ -431,6 +438,8 @@ Module m_VarFrac_Struct
       dSchemeParam%IntegOrder       = 2
       dSchemeParam%SaveStress       = PETSC_FALSE
       dSchemeParam%SaveStrain       = PETSC_FALSE
+      dSchemeParam%U_UseTao         = PETSC_FALSE
+      dSchemeParam%V_UseTao         = PETSC_FALSE
 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
@@ -449,6 +458,8 @@ Module m_VarFrac_Struct
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-u_usetao',       dSchemeParam%U_UseTao, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-v_usetao',       dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
    End Subroutine VarFracSchemeParam_GetFromOptions
    
    Subroutine VarFracEXOProperty_Init(dEXO, dMeshTopology)
