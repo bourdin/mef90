@@ -113,9 +113,9 @@ Contains
       End If
    
 101 Format(A, '-', I4.4, '.log')
-102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n'c)
+102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
 103 Format(A,'.log')
-104 Format('Collective output redirected to file ', A, '\n'c)
+104 Format('Collective output redirected to file ', A, '\n')
 
 
 
@@ -209,7 +209,7 @@ Contains
          Select Case (AppCtx%AppParam%TestCase)
          Case(1)
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Setting U to 0 and F to 1\n'c
+               Write(IOBuffer, *) 'Setting U to 0 and F to 1\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             !!! U = 0, F=1
@@ -217,7 +217,7 @@ Contains
             Call SectionRealSet(AppCtx%U, 0.0_Kr, iErr); CHKERRQ(iErr);
          Case(2)
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Solving Test Case 2\n'c
+               Write(IOBuffer, *) 'Solving Test Case 2\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
 
@@ -238,7 +238,7 @@ Contains
             DeAllocate(Value)
          Case(3)
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Solving Test Case 3\n'c
+               Write(IOBuffer, *) 'Solving Test Case 3\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
 
@@ -339,7 +339,7 @@ Contains
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n'c)
+100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n')
    End Subroutine Solve
    
       
@@ -571,6 +571,8 @@ Contains
                MyEnergy = MyEnergy + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * U_Elem)
                flops = flops + 4
             End Do
+            DeAllocate(U)
+            DeAllocate(F)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       Call PetscGlobalSum(MyEnergy, AppCtx%Energy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
@@ -623,6 +625,7 @@ Contains
             Grad_Ptr = (/ Grad%X, Grad%Y, Grad%Z /)
 #endif
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%GradU, iE-1, Grad_Ptr, iErr)
+            DeAllocate(U)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       DeAllocate(Grad_Ptr)

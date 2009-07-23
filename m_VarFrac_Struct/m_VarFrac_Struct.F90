@@ -372,39 +372,39 @@ Module m_VarFrac_Struct
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
-      Write(IOBuffer, "('-doIrrev ', I1, A)")             dSchemeParam%IrrevType, '\n'c
+      Write(IOBuffer, "('-doIrrev ', I1, A)")             dSchemeParam%IrrevType, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-irrevtol ', ES12.5, A)")        dSchemeParam%IrrevTol, '\n'c
+      Write(IOBuffer, "('-irrevtol ', ES12.5, A)")        dSchemeParam%IrrevTol, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-dobt ', L1, A)")                dSchemeParam%DoBT, '\n'c 
+      Write(IOBuffer, "('-dobt ', L1, A)")                dSchemeParam%DoBT, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-bttol ', ES12.5, A)")           dSchemeParam%BTTol, '\n'c
+      Write(IOBuffer, "('-bttol ', ES12.5, A)")           dSchemeParam%BTTol, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-btint ', I5, A)")               dSchemeParam%BTInt, '\n'c 
+      Write(IOBuffer, "('-btint ', I5, A)")               dSchemeParam%BTInt, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-initv ', I1, A)")               dSchemeParam%InitV, '\n'c 
+      Write(IOBuffer, "('-initv ', I1, A)")               dSchemeParam%InitV, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-nbcracks ', I5, A)")            dSchemeParam%NbCracks, '\n'c
+      Write(IOBuffer, "('-nbcracks ', I5, A)")            dSchemeParam%NbCracks, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-maxcracklength ', ES12.5, A)")  dSchemeParam%MaxCrackLength, '\n'c
+      Write(IOBuffer, "('-maxcracklength ', ES12.5, A)")  dSchemeParam%MaxCrackLength, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-altminmaxiter ', I5, A)")       dSchemeParam%AltMinMaxIter, '\n'c
+      Write(IOBuffer, "('-altminmaxiter ', I5, A)")       dSchemeParam%AltMinMaxIter, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-altmintol', ES12.5, A)")        dSchemeParam%AltMinTol, '\n'c
+      Write(IOBuffer, "('-altmintol', ES12.5, A)")        dSchemeParam%AltMinTol, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-altminsaveint ', I5, A)")       dSchemeParam%AltMinSaveInt, '\n'c
+      Write(IOBuffer, "('-altminsaveint ', I5, A)")       dSchemeParam%AltMinSaveInt, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-epsilon ', ES12.5, A)")         dSchemeParam%Epsilon, '\n'c
+      Write(IOBuffer, "('-epsilon ', ES12.5, A)")         dSchemeParam%Epsilon, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-kepsilon ', ES12.5, A)")        dSchemeParam%KEpsilon, '\n'c
+      Write(IOBuffer, "('-kepsilon ', ES12.5, A)")        dSchemeParam%KEpsilon, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-atnum ', I1, A)")               dSchemeParam%ATNum, '\n'c
+      Write(IOBuffer, "('-atnum ', I1, A)")               dSchemeParam%ATNum, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-integorder', I1, A)")          dSchemeParam%IntegOrder, '\n'c
+      Write(IOBuffer, "('-integorder', I1, A)")          dSchemeParam%IntegOrder, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-savestress ', L1, A)")          dSchemeParam%SaveStress, '\n'c
+      Write(IOBuffer, "('-savestress ', L1, A)")          dSchemeParam%SaveStress, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-savestrain ', L1, A)")          dSchemeParam%SaveStrain, '\n'c
+      Write(IOBuffer, "('-savestrain ', L1, A)")          dSchemeParam%SaveStrain, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine VarFracSchemeParam_View
 
@@ -468,8 +468,8 @@ Module m_VarFrac_Struct
       NumNS = dMeshTopology%Num_Node_Sets_Global
       
       If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
-         Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n'c, iErr); CHKERRQ(iErr)
-         Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracEXOProperty_Init?\n'c, iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n', iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracEXOProperty_Init?\n', iErr); CHKERRQ(iErr)
       End If
 
       dEXO%Num_EBProperties = VarFrac_Num_EBProperties

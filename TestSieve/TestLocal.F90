@@ -76,8 +76,8 @@ Program TestLocal
    
 101 Format(A,'.log')
 102 Format(A, '-', I4.4, '.log')
-103 Format('Output from processor ', I4.4, ' redirected to ', A, '\n'c)
-104 Format('Collective output redirected to ', A, '\n'c)
+103 Format('Output from processor ', I4.4, ' redirected to ', A, '\n')
+104 Format('Collective output redirected to ', A, '\n')
    MyEXO%comm = PETSC_COMM_SELF
    MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 200) trim(prefix), MEF90_MyRank
@@ -93,14 +93,14 @@ Program TestLocal
    Call EXO_Variable_Write(MyEXO)
 
    If (verbose) Then
-      Write(IOBuffer, 300) 'EXO\n'c
+      Write(IOBuffer, 300) 'EXO\n'
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(EXO, myviewer)
-      Write(IOBuffer, 300) 'MyEXO\n'c
+      Write(IOBuffer, 300) 'MyEXO\n'
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call EXOView(MyEXO, myviewer)
 
-      Write(IOBuffer, 300) '\n\nMeshTopology\n'c
+      Write(IOBuffer, 300) '\n\nMeshTopology\n'
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call MeshTopologyView(MeshTopology, myviewer); CHKERRQ(iErr)
    End If
@@ -111,7 +111,7 @@ Program TestLocal
    !!! ****************** PLAYING WITH SECTIONS AND VECS ******************
    Call MeshGetSectionReal(MeshTopology%mesh, 'coordinates', Coords_Sec, iErr); CHKERRQ(ierr) 
    If (verbose) Then
-      Write(IOBuffer, 300) '\n\nSECTION STUFF\n'c
+      Write(IOBuffer, 300) '\n\nSECTION STUFF\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
 
@@ -126,12 +126,12 @@ Program TestLocal
    If (verbose) Then
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-400 Format('Number of Vertices: ', I3, ' Number of elements: ', I3, '\n'c)
+400 Format('Number of Vertices: ', I3, ' Number of elements: ', I3, '\n')
 
 
    Call MeshCreateVector(MeshTopology%mesh, Coords_Sec, Coords_VecG, iErr); CHKERRQ(iErr)
 
-   Write(IOBuffer, *) '\n\nVec obtained with MeshCreateVector have no \"ghost values\" \n'c
+   Write(IOBuffer, *) '\n\nVec obtained with MeshCreateVector have no \"ghost values\" \n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
    Call VecGetSize(Coords_VecG, VSize, iErr); CHKERRQ(iErr)
@@ -142,18 +142,18 @@ Program TestLocal
    Write(IOBuffer, 402) VSize
    Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-401 Format('   Global size of Coords_VecG: ', I3, '\n'c)
-402 Format('   Local size of Coords_VecG: ', I3, '\n'c)
+401 Format('   Global size of Coords_VecG: ', I3, '\n')
+402 Format('   Local size of Coords_VecG: ', I3, '\n')
 
    If (verbose) Then
       !!! Scatter the values
-      Write(IOBuffer, *) 'Coords_VecG before scattering\n'c
+      Write(IOBuffer, *) 'Coords_VecG before scattering\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call VecView(Coords_VecG, viewer, iErr); CHKERRQ(iErr)
       
       Call MeshCreateGlobalScatter(MeshTopology%mesh, Coords_Sec, scatter, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(Coords_Sec, scatter, SCATTER_FORWARD, Coords_VecG, ierr); CHKERRQ(ierr)
-      Write(IOBuffer, *) 'Coords_VecG after scattering\n'c
+      Write(IOBuffer, *) 'Coords_VecG after scattering\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call VecView(Coords_VecG, viewer, iErr); CHKERRQ(iErr)
    End If
@@ -161,21 +161,21 @@ Program TestLocal
    Call SectionRealCreateLocalVector(Coords_Sec, Coords_VecL, iErr); CHKERRQ(iErr)
    If (verbose) Then
       !!! Scatter the values
-      Write(IOBuffer, *) 'Coords_VecL\n'c
+      Write(IOBuffer, *) 'Coords_VecL\n'
       Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
       Call VecView(Coords_VecL, myviewer, iErr); CHKERRQ(iErr)
    End If
 
 
-   Write(IOBuffer, *) '\n\nVec obtained with SectionRealCreateLocalVector do have \"ghost values\" \n'c
+   Write(IOBuffer, *) '\n\nVec obtained with SectionRealCreateLocalVector do have \"ghost values\" \n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
    Call VecGetLocalSize(Coords_VecL, VSize, iErr); CHKERRQ(iErr)
    Write(IOBuffer, 404) VSize
    Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-403 Format('   Global size of Coords_VecL: ', I3, '\n'c)
-404 Format('   Local size of Coords_VecL: ', I3, '\n'c)
+403 Format('   Global size of Coords_VecL: ', I3, '\n')
+404 Format('   Local size of Coords_VecL: ', I3, '\n')
 
    Call VecDestroy(Coords_VecG, iErr); CHKERRQ(iErr)
    Call VecDestroy(Coords_VecL, iErr); CHKERRQ(iErr)
@@ -205,7 +205,7 @@ Program TestLocal
 
       Call Read_EXO_Result_Global(MyExo, 2, 1, T)
 
-      Write(IOBuffer, *) 'Read ', T, 'from EXO file ', Trim(MyEXO%filename), '\n'c
+      Write(IOBuffer, *) 'Read ', T, 'from EXO file ', Trim(MyEXO%filename), '\n'
       Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
 
@@ -223,7 +223,7 @@ Program TestLocal
       Call Read_EXO_Result_Vertex(MyEXO, MeshTopology, 2, 1, V2D)
       If (verbose) Then
          Do i = 1, MeshTopology%Num_Verts
-            Write(IOBuffer, *) i, V2D(i)%X, V2D(i)%Y, '\n'c
+            Write(IOBuffer, *) i, V2D(i)%X, V2D(i)%Y, '\n'
             Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
          End Do
       End If
@@ -235,7 +235,7 @@ Program TestLocal
       Call Write_EXO_Result_Cell(MyExo, MeshTopology, 2, 2, V_Ptr)
       V_Ptr = 0.0_Kr
       Call Read_EXO_Result_Cell(MyExo, MeshTopology, 2, 2, V_Ptr)      
-      Write(IOBuffer, *) MEF90_MyRank, 'V_Ptr Min/Max:', MinVal(V_Ptr), MaxVal(V_Ptr), '\n'c
+      Write(IOBuffer, *) MEF90_MyRank, 'V_Ptr Min/Max:', MinVal(V_Ptr), MaxVal(V_Ptr), '\n'
       Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       

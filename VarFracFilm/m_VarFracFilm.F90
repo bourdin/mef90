@@ -67,9 +67,9 @@ Contains
       End If
    
 101 Format(A, '-', I4.4, '.log')
-102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n'c)
+102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
 103 Format(A,'.log')
-104 Format('Collective output redirected to file ', A, '\n'c)
+104 Format('Collective output redirected to file ', A, '\n')
 
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
@@ -200,7 +200,7 @@ Contains
       Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
       AppCtx%MyEXO%exoid = 0
       If (AppCtx%AppParam%verbose) Then
-         Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'c
+         Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       

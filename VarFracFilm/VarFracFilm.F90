@@ -36,36 +36,36 @@ Program  VarFracFilm
       AppCtx%TimeStep = iTS
       Write(IOBuffer, 99) AppCtx%TimeStep
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-99    Format('\n=== Solving time step ', I4, '\n\n'c)
+99    Format('\n=== Solving time step ', I4, '\n\n')
 
       !!! Init the fields:
       Call Init_TS_Loads(AppCtx)      
       If (AppCtx%AppParam%verbose) Then
-         Write(IOBuffer, *) 'Done with Init_TS_Loads \n'c 
+         Write(IOBuffer, *) 'Done with Init_TS_Loads \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
       Call Init_TS_U(AppCtx)
       If (AppCtx%AppParam%verbose) Then
-         Write(IOBuffer, *) 'Done with Init_TS_U \n'c 
+         Write(IOBuffer, *) 'Done with Init_TS_U \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
       Call Init_TS_V(AppCtx)
       If (AppCtx%AppParam%verbose) Then
-         Write(IOBuffer, *) 'Done with Init_TS_V \n'c 
+         Write(IOBuffer, *) 'Done with Init_TS_V \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
       AltMin: Do iter=1, AppCtx%VarFracFilmSchemeParam%AltMinMaxIter
-         Write(IOBuffer, "('Iteration ', I4,A)") iter, '\n'c
+         Write(IOBuffer, "('Iteration ', I4,A)") iter, '\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    
          !------------------------------------------------------------------- 
          ! Problem for U
          !-------------------------------------------------------------------
          If (AppCtx%AppParam%verbose) Then
-            Write(IOBuffer, *) 'Assembling the Matrix and RHS for  the U-subproblem \n'c 
+            Write(IOBuffer, *) 'Assembling the Matrix and RHS for  the U-subproblem \n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          Call RHSU_Assembly(AppCtx)
@@ -74,7 +74,7 @@ Program  VarFracFilm
       !   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
          
          If (AppCtx%AppParam%verbose) Then
-            Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n'c 
+            Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call Solve_U(AppCtx)
@@ -83,7 +83,7 @@ Program  VarFracFilm
          ! Problem for V
          !-------------------------------------------------------------------
          If (AppCtx%AppParam%verbose) Then
-            Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n'c 
+            Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call RHSV_Assembly(AppCtx)
@@ -92,7 +92,7 @@ Program  VarFracFilm
       !   Call MatView(AppCtx%KV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
          
          If (AppCtx%AppParam%verbose) Then
-            Write(IOBuffer, *) 'Calling KSPSolve for the V-subproblem\n'c 
+            Write(IOBuffer, *) 'Calling KSPSolve for the V-subproblem\n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call Solve_V(AppCtx)
@@ -102,7 +102,7 @@ Program  VarFracFilm
          !-------------------------------------------------------------------
    
          If (AppCtx%AppParam%verbose) Then
-            Write(IOBuffer, *) 'Calling the Solver for the PHI-subproblem\n'c 
+            Write(IOBuffer, *) 'Calling the Solver for the PHI-subproblem\n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call Solve_PHI(AppCtx)
@@ -118,7 +118,7 @@ Program  VarFracFilm
          End If
          If (Mod(iter, AppCtx%VarFracFilmSchemeParam%AltMinSaveInt) == 0) Then
             If (AppCtx%AppParam%verbose) Then
-               Write(IOBuffer, *) 'Saving U and V\n'c
+               Write(IOBuffer, *) 'Saving U and V\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If   
             Call Save_U(AppCtx)
@@ -145,7 +145,7 @@ Program  VarFracFilm
       !-------------------------------------------------------------------
       
       If (AppCtx%AppParam%verbose) Then
-         Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n'c 
+         Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
       End If
       
@@ -163,11 +163,11 @@ Program  VarFracFilm
       Write(IOBuffer, 103) AppCtx%TotalEnergy
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-100 Format('Elastic Bulk Energy:         ', ES12.5, '\n'c)    
-101 Format('Elastic Interfacial Energy:  ', ES12.5, '\n'c)    
-102 Format('Transverse Surface energy:   ', ES12.5, '\n'c)    
-104 Format('Delamination Surface energy: ', ES12.5, '\n'c)    
-103 Format('Total energy:                ', ES12.5, '\n'c)    
+100 Format('Elastic Bulk Energy:         ', ES12.5, '\n')    
+101 Format('Elastic Interfacial Energy:  ', ES12.5, '\n')    
+102 Format('Transverse Surface energy:   ', ES12.5, '\n')    
+104 Format('Delamination Surface energy: ', ES12.5, '\n')    
+103 Format('Total energy:                ', ES12.5, '\n')    
 
       Call Save_U(AppCtx)
       Call Save_V(AppCtx)

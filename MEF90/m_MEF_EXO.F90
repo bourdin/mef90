@@ -148,9 +148,9 @@ Module m_MEF_EXO
          dEXO%exoid = 0
       End If
       Call MPI_BCast(ErrorCode, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
- 100 Format('[ERROR] in MeshTopology_Check Numbering. Element block ', I3, ' index is ', I3, '\n'c)   
- 101 Format('[ERROR] in MeshTopology_Check Numbering. Side Set ', I3, ' index is ', I3, '\n'c)   
- 102 Format('[ERROR] in MeshTopology_Check Numbering. Node Set ', I3, ' index is ', I3, '\n'c)   
+ 100 Format('[ERROR] in MeshTopology_Check Numbering. Element block ', I3, ' index is ', I3, '\n')   
+ 101 Format('[ERROR] in MeshTopology_Check Numbering. Side Set ', I3, ' index is ', I3, '\n')   
+ 102 Format('[ERROR] in MeshTopology_Check Numbering. Node Set ', I3, ' index is ', I3, '\n')   
    End Subroutine EXO_Check_Numbering
 
 
@@ -294,9 +294,9 @@ Module m_MEF_EXO
             Call MPI_BCast(dEXO%NSProperty(j)%Value(i), 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
          End Do
       End Do
- 100 Format('*** Element Block ', T24, I3, '\n'c)
- 101 Format('*** Side Set      ', T24, I3, '\n'c)
- 102 Format('*** Node Set      ', T24, I3, '\n'c)
+ 100 Format('*** Element Block ', T24, I3, '\n')
+ 101 Format('*** Side Set      ', T24, I3, '\n')
+ 102 Format('*** Node Set      ', T24, I3, '\n')
  110 Format(T24, A, T60, ': ')
    End Subroutine EXOProperty_Ask
       

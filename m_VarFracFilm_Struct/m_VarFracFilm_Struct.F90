@@ -406,8 +406,8 @@ Module m_VarFracFilm_Struct
       NumNS = dMeshTopology%Num_Node_Sets_Global
       
       If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
-         Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n'c, iErr); CHKERRQ(iErr)
-         Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracFilmEXOProperty_Init?\n'c, iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n', iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracFilmEXOProperty_Init?\n', iErr); CHKERRQ(iErr)
       End If
 
       dEXO%Num_EBProperties = VarFracFilm_Num_EBProperties

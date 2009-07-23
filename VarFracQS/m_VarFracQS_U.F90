@@ -292,8 +292,8 @@ Contains
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('     KSP for U converged in ', I5, ' iterations. KSPConvergedReason is', I3, '\n'c)
-101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n'c)
+100 Format('     KSP for U converged in ', I5, ' iterations. KSPConvergedReason is', I3, '\n')
+101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
    End Subroutine Solve_U
       
 #if defined PB_2D

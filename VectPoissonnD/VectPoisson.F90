@@ -37,7 +37,7 @@ Program  VectPoisson
    End If   
 
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the matrix\n'c
+      Write(IOBuffer, *) 'Assembling the matrix\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
@@ -45,34 +45,34 @@ Program  VectPoisson
    Call MatView(AppCtx%K, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr);CHKERRQ(iErr)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Assembling the RHS\n'c
+      Write(IOBuffer, *) 'Assembling the RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call RHSAssembly(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Calling KSPSolve\n'c
+      Write(IOBuffer, *) 'Calling KSPSolve\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call Solve(AppCtx)
    
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Computing energy and gradient\n'c
+      Write(IOBuffer, *) 'Computing energy and gradient\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call ComputeEnergy(AppCtx)
 
    Write(IOBuffer, 100) AppCtx%Energy
-100 Format('Total energy: ', ES12.5, '\n'c)    
+100 Format('Total energy: ', ES12.5, '\n')    
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
    Call ComputeGradient(AppCtx)
 
    If (AppCtx%AppParam%verbose) Then
-      Write(IOBuffer, *) 'Saving results\n'c
+      Write(IOBuffer, *) 'Saving results\n'
 	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 

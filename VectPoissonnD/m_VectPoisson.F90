@@ -107,9 +107,9 @@ Contains
       End If
    
 101 Format(A, '-', I4.4, '.log')
-102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n'c)
+102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
 103 Format(A,'.log')
-104 Format('Collective output redirected to file ', A, '\n'c)
+104 Format('Collective output redirected to file ', A, '\n')
 
 
 
@@ -209,7 +209,7 @@ Contains
          Select Case (AppCtx%AppParam%TestCase)
          Case(1)
             If (AppCtx%AppParam%verbose) Then
-               Write(IOBuffer, *) 'Reading U and F from the mesh\n'c
+               Write(IOBuffer, *) 'Reading U and F from the mesh\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             !!! U = (0,0), F=(1,1)
@@ -217,7 +217,7 @@ Contains
             Call SectionRealSet(AppCtx%U, 0.0_Kr, iErr); CHKERRQ(iErr);
          Case(2)
             If (AppCtx%AppParam%verbose) Then
-               Write(IOBuffer, *) 'Solving Test Case 2\n'c
+               Write(IOBuffer, *) 'Solving Test Case 2\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
 
@@ -238,7 +238,7 @@ Contains
             DeAllocate(Value)
          Case(3)
             If (AppCtx%AppParam%verbose) Then
-               Write(IOBuffer, *) 'Solving Test Case 3\n'c
+               Write(IOBuffer, *) 'Solving Test Case 3\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
 
@@ -339,7 +339,7 @@ Contains
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n'c)
+100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n')
    End Subroutine Solve
    
       

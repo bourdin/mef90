@@ -91,7 +91,7 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
       Case(VarFrac_Irrev_Ineq)   
-         SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n'c, iErr)
+         SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n', iErr)
       End Select
       
       Select Case(AppCtx%VarFracSchemeParam%InitV)
@@ -124,7 +124,7 @@ Contains
          DeAllocate(BCVFlag)
          DeAllocate(V_Ptr)
       Case default   
-         SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n'c, iErr)
+         SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n', iErr)
       End Select
       
       Call SectionRealDestroy(VBC, iErr); CHKERRQ(iErr)
@@ -384,10 +384,10 @@ Contains
       Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('     KSP for V converged in ', I5, ' iterations. KSPConvergedReason is ', I3, '\n'c)
-101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n'c)
-700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n'c)
-800 Format('     Max change V: ', T24, ES12.5, '\n'c)
+100 Format('     KSP for V converged in ', I5, ' iterations. KSPConvergedReason is ', I3, '\n')
+101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n')
+700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n')
+800 Format('     Max change V: ', T24, ES12.5, '\n')
    End Subroutine Solve_V
 
    

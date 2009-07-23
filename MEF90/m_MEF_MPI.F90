@@ -25,7 +25,7 @@ Module m_MEF_MPI
    Subroutine MEF90_Initialize()
        PetscInt                          :: iErr
        
-      Call PetscInitialize(PETSC_NULL_CHARACTER, iErr)
+      Call PetscInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
       Call MPIType_Initialize()
       
       Call MPI_COMM_RANK(MPI_COMM_WORLD, MEF90_MyRank, iErr)
@@ -36,7 +36,7 @@ Module m_MEF_MPI
       PetscInt                          :: iErr
       
       Call MPIType_Finalize()
-      Call PetscFinalize(PETSC_NULL_CHARACTER, iErr)
+      Call PetscFinalize(iErr)
    End Subroutine MEF90_Finalize
 
    Subroutine MPIType_Initialize()

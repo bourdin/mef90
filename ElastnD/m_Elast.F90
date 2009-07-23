@@ -125,14 +125,14 @@ Contains
       End If
    
 101 Format(A, '-', I4.4, '.log')
-102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n'c)
+102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
 103 Format(A,'.log')
-104 Format('Collective output redirected to file ', A, '\n'c)
+104 Format('Collective output redirected to file ', A, '\n')
       Write(filename, "(A,'.ener')") Trim(AppCtx%AppParam%prefix)
       Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, AppCtx%AppParam%EnergyViewer, iErr); CHKERRQ(iErr);   
       Write(IOBuffer, 105) Trim(filename)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-105 Format('Energies saved in file ', A, '\n'c)
+105 Format('Energies saved in file ', A, '\n')
 
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
@@ -298,8 +298,8 @@ Contains
       
       Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('     KSP for U converged in ', I5, ' iterations \n'c)
-101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n'c)      
+100 Format('     KSP for U converged in ', I5, ' iterations \n')
+101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')      
    End Subroutine Solve
 
 !----------------------------------------------------------------------------------------!      
