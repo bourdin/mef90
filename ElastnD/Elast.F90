@@ -38,16 +38,17 @@ Program  Elast
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
 
-
-   If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Assembling the matrix\n'c
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If   
-   Call MatAssembly(AppCtx)
-   If (AppCtx%AppParam%verbose > 2) Then
-      Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+   If (.NOT. AppCtx%VarFracSchemeParam%U_UseTao) Then
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Assembling the matrix\n'c
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If   
+      Call MatAssembly(AppCtx)
+      If (AppCtx%AppParam%verbose > 1) Then
+!$$         Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+      End If
    End If
-   
+      
    Do i = 1, AppCtx%NumTimeSteps
       AppCtx%TimeStep = i
       AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
@@ -61,19 +62,6 @@ Program  Elast
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
    
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Assembling the RHS\n'c
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call RHSAssembly(AppCtx)
-      If (AppCtx%AppParam%verbose > 2) Then
-         Call VecView(AppCtx%RHSU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-      End If
-   
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Calling KSPSolve\n'c
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
       Call Solve(AppCtx)
    
       If (AppCtx%AppParam%verbose > 0) Then
