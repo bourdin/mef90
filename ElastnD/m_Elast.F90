@@ -174,8 +174,6 @@ Contains
       If (AppCtx%AppParam%verbose > 1) Then
          Write(IOBuffer, *) "Done with VarFracEXOVariable_Init and VarFracEXOProperty_Read\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
-         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
       
       !!! Read Mat Properties from the CST file
@@ -190,6 +188,7 @@ Contains
       Do i = 1, AppCtx%MeshTopology%num_elem_blks
          AppCtx%MeshTopology%elem_blk(i)%Elem_Type = AppCtx%MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( AppCtx%MeshTopology%elem_blk(i)%ID )
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(i), AppCtx%MeshTopology%num_dim)
+         Write(*,*) 'Elem_type', i, AppCtx%MeshTopology%elem_blk(i)%Elem_Type
       End Do
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with Init_Elem_Blk_Type\n"c
@@ -207,6 +206,13 @@ Contains
          Write(IOBuffer, *) "Done with ElementInit Scal\n"c
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
+
+      If (AppCtx%AppParam%verbose > 1) Then
+         Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
+         Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
+      End If
+
+
 
       !!! Create the Sections for the variables
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
@@ -537,7 +543,7 @@ Contains
       PetscInt                                     :: iELoc, iE
    
       PetscInt                                     :: iErr
-      PetscInt                                     :: NumDoF, NumGauss
+      PetscInt                                     :: NumDoF
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscLogDouble                               :: flops       
@@ -545,17 +551,18 @@ Contains
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
       flops = 0.0
       MatElem  = 0.0_Kr
-      NumDoF   = Size(AppCtx%ElemVect(iE)%BF,1)
-      NumGauss = Size(AppCtx%ElemVect(iE)%BF,2)
+      NumDoF   =  AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       Allocate(BCFlag(NumDoF))
       Allocate(MatElem(NumDoF, NumDoF))
       
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          
          MatElem  = 0.0_Kr
          Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
-         Do iGauss = 1, NumGauss
+         Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
             Do iDoF1 = 1, NumDoF
                If (BCFlag(iDoF1) == 0) Then
                   Do iDoF2 = 1, NumDoF
