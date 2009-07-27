@@ -45,7 +45,7 @@ Program  Elast
       End If   
       Call MatAssembly(AppCtx)
       If (AppCtx%AppParam%verbose > 1) Then
-!$$         Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+         Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
    End If
       

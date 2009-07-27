@@ -447,6 +447,7 @@ Program PrepVarFrac
             Uelem(2) = T(iStep) * U(i)%Y
             Uelem(3) = T(iStep) * U(i)%Z
             Velem    = V(i)
+            
             Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
                Call MeshUpdateClosure(MeshTopology%Mesh, USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, iErr); CHKERRQ(iErr)            
                Call MeshUpdateClosure(MeshTopology%Mesh, VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, iErr); CHKERRQ(iErr)            
