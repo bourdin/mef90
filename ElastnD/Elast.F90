@@ -49,7 +49,8 @@ Program  Elast
       End If
    End If
       
-   Do i = 1, AppCtx%NumTimeSteps
+!!!$   Do i = 1, AppCtx%NumTimeSteps
+i=1
       AppCtx%TimeStep = i
       AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
       Call EXGTIM(AppCtx%MyEXO%exoid, i, AppCtx%Time, iErr)
@@ -85,7 +86,7 @@ Program  Elast
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If      
       Call Save(AppCtx)
-   End Do
+!!!$   End Do
 
    Call ElastFinalize(AppCtx)
 End Program  Elast
