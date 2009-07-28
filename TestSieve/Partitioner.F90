@@ -21,7 +21,7 @@ Program Partitioner
    
    PetscTruth                                   :: HasPrefix
    PetscTruth                                   :: verbose
-   PetscErrorCode                               :: iErr
+   PetscErrorCode                               :: iErr, iBlk
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: viewer, myviewer
@@ -71,7 +71,6 @@ Program Partitioner
       Call PetscViewerDestroy(myviewer, iErr); CHKERRQ(iErr)
       Call PetscViewerFlush(viewer, iErr); CHKERRQ(iErr)
       Call PetscViewerDestroy(viewer, iErr); CHKERRQ(iErr)
-      Call VecScatterDestroy(scatter, iErr); CHKERRQ(iErr)
    End If
    
 300 Format(A)   
