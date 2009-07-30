@@ -47,19 +47,21 @@ Program  SimplePoisson
       Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End If
    
-   If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Assembling the RHS\n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-   Call RHSAssembly(AppCtx)
-   If (AppCtx%AppParam%verbose > 1) Then
-      Write(IOBuffer, *) 'RHS\n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Call VecView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   If (.NOT. AppCtx%AppParam%Use_Tao) Then
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Assembling the RHS\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call RHSAssembly(AppCtx)
+      If (AppCtx%AppParam%verbose > 1) Then
+         Write(IOBuffer, *) 'RHS\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call VecView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+      End If
    End If
    
    If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Calling KSPSolve\n'
+      Write(IOBuffer, *) 'Calling Solve\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
@@ -76,7 +78,7 @@ Program  SimplePoisson
 100 Format('Total energy: ', ES12.5, '\n')    
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-   Call ComputeGradient(AppCtx)
+   Call ComputeGradU(AppCtx)
 
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Saving results\n'
