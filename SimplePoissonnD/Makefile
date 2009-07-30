@@ -8,7 +8,8 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 
 all: ${PROJ}${DIM}
 
-include ${PETSC_DIR}/conf/base
+#include ${PETSC_DIR}/conf/base
+include ${TAO_DIR}/bmake/tao_common
 
 FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR} -ftrace=full -ffree-line-length-huge
 
@@ -20,7 +21,7 @@ ${PETSC_ARCH}:
 	
 ${PROJ}${DIM}: ${PETSC_ARCH} ${PROJ}.o   ${PETSC_ARCH/${DIM}${PROJ}.o \
                              m_${PROJ}.o ${PETSC_ARCH}/${DIM}m_${PROJ}.o
-	${FLINKER} -o ${PETSC_ARCH}/${PROJ}${DIM} ${PETSC_ARCH}/${DIM}${PROJ}.o  ${PETSC_ARCH}/${DIM}m_${PROJ}.o  ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	${FLINKER} -o ${PETSC_ARCH}/${PROJ}${DIM} ${PETSC_ARCH}/${DIM}${PROJ}.o  ${PETSC_ARCH}/${DIM}m_${PROJ}.o  ${MEF90OBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 	
 ${PROJ}.o:   ${PETSC_ARCH} m_${PROJ}.o ${PETSC_ARCH}/${DIM}m_${PROJ}.o
 
