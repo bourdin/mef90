@@ -29,6 +29,11 @@ Program  Elast
    PetscReal                                    :: rDummy
    Character                                    :: cDummy
    PetscInt                                     :: vers
+   
+   !!!
+   PetscReal, Dimension(:), Pointer             :: CoordElem
+   Type(SectionReal)                            :: CoordSec
+   PetscInt                                     :: iE
 
    Call ElastInit(AppCtx)
    
@@ -48,7 +53,31 @@ Program  Elast
          Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
    End If
-      
+   
+   !!! Testing Gradient function
+!!$   Call SectionRealSet(AppCtx%U, 1.0_Kr, iErr)
+   Allocate(CoordElem(6))
+   Call MeshGetSectionReal(AppCtx%MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
+   Do iE = 1, AppCtx%MeshTopology%Num_Elems
+      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSec, iE-1, 6, CoordElem, iErr); CHKERRQ(iErr)
+!      CoordElem = (CoordElem+1.0)/2.0
+      CoordElem(2)=0.0; CoordElem(4) = 0.0; CoordElem(6) = 0.0
+      CoordElem(1) = 1.0-CoordElem(1)**2; CoordElem(3) = 1.0-CoordElem(3)**2; CoordElem(5) = 1.0-CoordElem(5)**2
+      Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%U, iE-1, CoordElem, iErr); CHKERRQ(iErr) 
+   End Do
+   
+   Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%U_Vec, ierr); CHKERRQ(ierr)
+ Call FormFunctionandGradient(AppCtx%taoU, AppCtx%U_Vec, rDummy, AppCtx%RHSU, AppCtx, iErr)
+     
+!  Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   Write(*,*) 'func', rdummy
+   Call VecDot(AppCtx%RHSU, AppCtx%U_Vec, rdummy, ierr)
+   write(*,*)'==========', rdummy
+  
+!  Call ElastFinalize(AppCtx)
+!  STOP 
+
+
 !!!$   Do i = 1, AppCtx%NumTimeSteps
 i=1
       AppCtx%TimeStep = i
@@ -59,7 +88,7 @@ i=1
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
 
       !!! Read U, F, and Temperature
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
+!!!$      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
    
