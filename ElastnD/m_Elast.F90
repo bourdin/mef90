@@ -247,11 +247,11 @@ Contains
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
          Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+         Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
       End If
 
       Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
-      Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
@@ -410,6 +410,8 @@ Contains
       PetscReal, Dimension(:), Pointer             :: GradientLocal, XLocal
       PetscInt                                     :: NumDoFPerVertex 
       
+      PetscReal                                    :: GradNorm
+      
       
       
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
@@ -437,6 +439,7 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call GradientAssemblyLocal(iE, XSec, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, GradientLocal)
+            Write(MEF90_MyRank+200, *) '***', iE, GradientLocal
             Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, GradientSec, iE-1, GradientLocal, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(GradientLocal)
@@ -451,6 +454,8 @@ Contains
       Call SectionRealDestroy(XSec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(GradientSec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+  Call VecNorm(Gradient, Norm_2, GradNorm, ierr)
+  write(*,*)'==========', func, GradNorm
    End Subroutine FormFunctionandGradient
    
 !----------------------------------------------------------------------------------------!      
@@ -490,7 +495,7 @@ Contains
       PetscLogDouble                               :: flops       
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
-      flops      = 0.0
+      flops        = 0.0
       GradientElem = 0.0_Kr
       NumDoFVect   = Size(AppCtx%ElemVect(iE)%BF,1)
       NumDoFScal   = Size(AppCtx%ElemScal(iE)%BF,1)
@@ -522,13 +527,13 @@ Contains
             flops = flops + 2.0
          End Do
          !! Calculate the Effective Strain at the gauss point
-         Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * MatProp%Therm_Exp)   
+         Effective_Strain_Elem  =  Strain_Elem !- (Theta_Elem * MatProp%Therm_Exp)   
          Do iDoF1 = 1, NumDoFVect
             If (BCFlagLocal(iDoF1) == 0) Then
                ! terms due to forces
-               GradientElem(iDoF1) = GradientElem(iDoF1) - AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. F_Elem ) 
+!               GradientElem(iDoF1) = GradientElem(iDoF1) - AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. F_Elem ) 
                ! terms due to inelastic strains
-               GradientElem(iDoF1) = GradientElem(iDoF1) - AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss))
+               GradientElem(iDoF1) = GradientElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss))
                flops = flops + 4.0
             End If
          End Do

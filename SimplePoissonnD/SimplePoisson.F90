@@ -27,6 +27,7 @@ Program  SimplePoisson
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    Type(Vec)                                    :: V
+   PetscReal                                    :: rNorm, func
 
    Call SimplePoissonInit(AppCtx)
    
@@ -67,6 +68,14 @@ Program  SimplePoisson
    
    Call Solve(AppCtx)
    
+   Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
+   Call VecDuplicate(AppCtx%U_Vec, V, iErr); CHKERRQ(iErr)
+   Call FormFunctionandGradient(AppCtx%taoU, AppCtx%U_Vec, func, V, AppCtx)!, iErr)
+   Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
+   Call VecNorm(V, NORM_2, rnorm, iErr)
+   Write(*,*) '==== RESIDUAL NORM', rnorm, 'FUNC', func
+   Call VecDestroy(V, iErr)
+
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Computing energy and gradient\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
