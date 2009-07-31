@@ -1,4 +1,3 @@
-PROJ      = SimplePoisson
 MEF90DIR  = ../MEF90/${PETSC_ARCH}
 MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
@@ -6,9 +5,8 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
             $(MEF90DIR)/m_MEF_Sieve.o 
 
-all: ${PROJ}${DIM}
+all: SimplePoisson${DIM}
 
-#include ${PETSC_DIR}/conf/base
 include ${TAO_DIR}/bmake/tao_common
 
 FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR} -ftrace=full -ffree-line-length-huge
@@ -19,13 +17,13 @@ FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR} -ftrace=full -ffree
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 	
-${PROJ}${DIM}: ${PETSC_ARCH} ${PROJ}.o   ${PETSC_ARCH/${DIM}${PROJ}.o \
-                             m_${PROJ}.o ${PETSC_ARCH}/${DIM}m_${PROJ}.o
-	${FLINKER} -o ${PETSC_ARCH}/${PROJ}${DIM} ${PETSC_ARCH}/${DIM}${PROJ}.o  ${PETSC_ARCH}/${DIM}m_${PROJ}.o  ${MEF90OBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+SimplePoisson${DIM}: ${PETSC_ARCH} SimplePoisson.o   ${PETSC_ARCH/${DIM}SimplePoisson.o \
+                             m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o 
+	${FLINKER} -o ${PETSC_ARCH}/SimplePoisson${DIM} ${PETSC_ARCH}/${DIM}SimplePoisson.o  ${PETSC_ARCH}/${DIM}m_SimplePoisson.o  ${MEF90OBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 	
-${PROJ}.o:   ${PETSC_ARCH} m_${PROJ}.o ${PETSC_ARCH}/${DIM}m_${PROJ}.o
+SimplePoisson.o:   ${PETSC_ARCH} m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o
 
-m_${PROJ}.o: ${PETSC_ARCH}
+m_SimplePoisson.o: ${PETSC_ARCH}
 
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod

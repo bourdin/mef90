@@ -10,8 +10,10 @@ Program  SimplePoisson
    Use m_MEF90
 #if defined PB_2D
    Use m_SimplePoisson2D
+   Use m_SimplePoissonTao2D
 #elif defined PB_3D 
    Use m_SimplePoisson3D
+   Use m_SimplePoissonTao3D
 #endif
 
    Use petsc
@@ -26,8 +28,6 @@ Program  SimplePoisson
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   Type(Vec)                                    :: V
-   PetscReal                                    :: rNorm, func
 
    Call SimplePoissonInit(AppCtx)
    
@@ -37,18 +37,18 @@ Program  SimplePoisson
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
 
-   If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Assembling the matrix\n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-   Call MatAssembly_Blockwise(AppCtx)
-   If (AppCtx%AppParam%verbose > 1) Then
-      Write(IOBuffer, *) 'Matrix\n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   End If
-   
    If (.NOT. AppCtx%AppParam%Use_Tao) Then
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Assembling the matrix\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call MatAssembly(AppCtx)
+      If (AppCtx%AppParam%verbose > 1) Then
+         Write(IOBuffer, *) 'Matrix\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+      End If
+   
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Assembling the RHS\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -65,26 +65,16 @@ Program  SimplePoisson
       Write(IOBuffer, *) 'Calling Solve\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   
    Call Solve(AppCtx)
    
-   Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
-   Call VecDuplicate(AppCtx%U_Vec, V, iErr); CHKERRQ(iErr)
-   Call FormFunctionandGradient(AppCtx%taoU, AppCtx%U_Vec, func, V, AppCtx)!, iErr)
-   Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
-   Call VecNorm(V, NORM_2, rnorm, iErr)
-   Write(*,*) '==== RESIDUAL NORM', rnorm, 'FUNC', func
-   Call VecDestroy(V, iErr)
-
    If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Computing energy and gradient\n'
+      Write(IOBuffer, *) 'Computing Energies\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   
    Call ComputeEnergy(AppCtx)
 
-   Write(IOBuffer, 100) AppCtx%Energy
-100 Format('Total energy: ', ES12.5, '\n')    
+   Write(IOBuffer, 100) AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%TotalEnergy
+100 Format('Elastic energy: ', ES12.5, ' Forces Work: ', ES12.5, ' Total: ', ES12.5, '\n')    
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
    Call ComputeGradU(AppCtx)
@@ -95,7 +85,9 @@ Program  SimplePoisson
    End If
 
    Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-   Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%Energy)
+   Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%ElasticEnergy)
+   Call Write_EXO_Result_Global(AppCtx%MyExo, 2, 1, AppCtx%ExtForcesWork)
+   Call Write_EXO_Result_Global(AppCtx%MyExo, 3, 1, AppCtx%TotalEnergy)
    Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
    Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
    Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 

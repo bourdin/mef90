@@ -433,7 +433,7 @@ Contains
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'X', NumDoFPerVertex, XSec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(XSec, AppCtx%ScatterVect, SCATTER_REVERSE, X, iErr); CHKERRQ(ierr)
 
-      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(GradientLocal(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
 
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -443,7 +443,7 @@ Contains
             Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, GradientSec, iE-1, GradientLocal, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(GradientLocal)
-      End Do Do_Elem_iBlk
+      End Do Do_iBlk
       
       Call SectionRealComplete(GradientSec, iErr); CHKERRQ(iErr)
       !!! VERY important! This is the equivalent of a ghost update
