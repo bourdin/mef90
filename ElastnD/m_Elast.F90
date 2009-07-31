@@ -436,12 +436,12 @@ Contains
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(GradientLocal(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
 
-         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         Do_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call GradientAssemblyLocal(iE, XSec, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, GradientLocal)
             Write(MEF90_MyRank+200, *) '***', iE, GradientLocal
             Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, GradientSec, iE-1, GradientLocal, iErr); CHKERRQ(iErr)
-         End Do Do_Elem_iE
+         End Do Do_iE
          DeAllocate(GradientLocal)
       End Do Do_iBlk
       
@@ -510,9 +510,6 @@ Contains
       
       Allocate(Xlocal(NumDoFVect))
       Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, XSec, iE-1, NumDoFVect, XLocal, iErr); CHKERRQ(ierr)
-!      Write(MEF90_MyRank+100, *) 'FLocal ', Flocal
-!      Write(MEF90_MyRank+100, *) 'ThetaLocal ', Thetalocal
-      Write(MEF90_MyRank+100, *) 'XLocal ', iE, Xlocal
 
       Do_iGauss: Do iGauss = 1, NumGauss
          F_Elem      = 0.0_Kr
@@ -598,7 +595,6 @@ Contains
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          
          MatElem  = 0.0_Kr
-         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlagU, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
          Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
             Do iDoF1 = 1, NumDoF
                If (BCFlag(iDoF1) == 0) Then
