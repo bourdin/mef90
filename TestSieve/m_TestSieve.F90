@@ -52,8 +52,8 @@ Module m_TestSieve
       !Do_iBlk: Do iBlk = 1, dMyMeshTopology%Num_Elem_Blks
       !   Do_iE: Do iELoc = 1, dMyMeshTopology%Elem_Blk(iBlk)%Num_Elems
       !      iE = dMyMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            call MeshRestrictClosure(dMyMeshTopology%mesh, dU, iE-1, Size(U_Ptr), U_Ptr, ierr); CHKERRQ(ierr)
-            call MeshRestrictClosure(dMyMeshTopology%mesh, dF, iE-1, Size(F_Ptr), F_Ptr, ierr); CHKERRQ(ierr)
+            call SectionRealRestrictClosure(dU, dMyMeshTopology%mesh, iE-1, Size(U_Ptr), U_Ptr, ierr); CHKERRQ(ierr)
+            call SectionRealRestrictClosure(dF, dMyMeshTopology%mesh, iE-1, Size(U_Ptr), U_Ptr, ierr); CHKERRQ(ierr)
             Do_iG: Do iG = 1, size(dMyElem(iE)%BF,2)
                Strain_Elem = 0.0_Kr
                U_Elem      = 0.0_Kr

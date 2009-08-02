@@ -90,7 +90,8 @@ Program TestSieve
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         call MeshRestrictClosure(MeshTopology%mesh, coordSection, iE-1, Size(values), values, ierr)
+!         call MeshRestrictClosure(MeshTopology%mesh, coordSection, iE-1, Size(values), values, ierr)
+         Call SectionRealRestrictClosure(CoordSection, MeshTopology%mesh, iE-1, Size(values), values, ierr)
          !!! iE-1 is a point name
          !!! puts all the "values" for element iE (iE-1 in C) of the section coordsection into the vector 
          !!! "values"
@@ -148,17 +149,17 @@ Program TestSieve
    Call MeshInitCoordinates(MeshTopology, Coords)
    Do iV = 1, MeshTopology%Num_Verts
       values = 1.0+Coords(iV)%Y
-      call MeshUpdateClosure(MeshTopology%mesh, U, MeshTopology%Num_Elems+iV-1, values, ierr)
+      call SectionRealUpdateClosure(U, MeshTopology%mesh, MeshTopology%Num_Elems+iV-1, values, INSERT_VALUES, ierr)
       !!! Internal storage of points in the mesh is cell then vertices then everything else
       !!! So vertex iV is at offset MeshTopology%Num_Elems+iV-1
       !!! This is purely local (does not update "ghost values")
       !!! This sets dof values
 
       !!! Same thing for a Section defined over elements would be
-      !!! call MeshUpdateClosure(MeshTopology%mesh, U, iE, value, ierr)
+      !!! call SectionRealUpdateClosure(MeshTopology%mesh, U, iE, value, ierr)
 
-      !!! The inverse function MeshRestrictClosure
-      !!! MeshUpdateClosure(MeshTopology%mesh, 'coordinates', iE, value, ierr)
+      !!! The inverse function SectionRealRestrictClosure
+      !!! SectionRealUpdateClosure(CoordSection, MeshTopology%mesh, iE, value, ierr)
       !!! will give the coordinates of the closure of iE which can be a cell an edge a vertex etc
    End Do
    Deallocate(values)
