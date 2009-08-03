@@ -59,11 +59,11 @@ Program  Elast
    Allocate(CoordElem(6))
    Call MeshGetSectionReal(AppCtx%MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
    Do iE = 1, AppCtx%MeshTopology%Num_Elems
-      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, CoordSec, iE-1, 6, CoordElem, iErr); CHKERRQ(iErr)
+      Call SectionRealRestrictClosure(CoordSec, AppCtx%MeshTopology%mesh, iE-1, 6, CoordElem, iErr); CHKERRQ(iErr)
 !      CoordElem = (CoordElem+1.0)/2.0
       CoordElem(2)=0.0; CoordElem(4) = 0.0; CoordElem(6) = 0.0
       CoordElem(1) = 1.0-CoordElem(1)**2; CoordElem(3) = 1.0-CoordElem(3)**2; CoordElem(5) = 1.0-CoordElem(5)**2
-      Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%U, iE-1, CoordElem, iErr); CHKERRQ(iErr) 
+      Call SectionRealUpdateClosure(AppCtx%U, AppCtx%MeshTopology%Mesh, iE-1, CoordElem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
    End Do
    
    Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%U_Vec, ierr); CHKERRQ(ierr)

@@ -22,14 +22,14 @@ Module m_SimplePoisson3D
 #include "include/finclude/tao_solver.h"
    
    Type LogInfo_Type
-      PetscLogStage                                :: IO_Stage             ! All IO
-      PetscLogStage                                :: Setup_Stage      ! ?
+      PetscLogStage                                :: IO_Stage
+      PetscLogStage                                :: Setup_Stage 
       PetscLogStage                                :: MeshCreateExodus_Stage
       PetscLogStage                                :: MeshDistribute_Stage
       PetscLogStage                                :: MatAssembly_Stage    
       PetscLogStage                                :: RHSAssembly_Stage
       PetscLogStage                                :: KSPSolve_Stage
-      PetscLogStage                                :: PostProc_Stage       ! Computation of the strains and stresses
+      PetscLogStage                                :: PostProc_Stage
       
       PetscLogEvent                                :: MatAssemblyBlock_Event
       PetscLogEvent                                :: RHSAssemblyBlock_Event
@@ -177,7 +177,7 @@ Contains
          Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
             TmpPoint = AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iBlk)%Node_ID(iDoF)-1
             TmpFlag = 1
-            Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%BCFlag, TmpPoint, TmpFlag, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdateClosure(AppCtx%BCFlag, AppCtx%MeshTopology%Mesh, TmpPoint, TmpFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
          End Do
       End Do
       DeAllocate(TmpFlag)
@@ -188,7 +188,7 @@ Contains
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
       
       If (AppCtx%AppParam%Use_Tao) Then
-         Call TaoCreate(PETSC_COMM_WORLD, 'tao_cg', AppCTx%taoU, iErr); CHKERRQ(iErr)      
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCTx%taoU, iErr); CHKERRQ(iErr)      
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCTx%taoappU, iErr); CHKERRQ(iErr)      
          Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSP, iErr); CHKERRQ(iErr)
          Call KSPAppendOptionsPrefix(AppCtx%KSP, "U_", iErr); CHKERRQ(iErr)
@@ -215,6 +215,7 @@ Contains
          Call KSPGetPC(AppCtx%KSP, AppCtx%PC, iErr); CHKERRQ(iErr)
          Call PCSetType(AppCtx%PC, PCBJACOBI, iErr); CHKERRQ(iErr)
          Call KSPSetType(AppCtx%KSP, KSPCG, iErr); CHKERRQ(iErr)
+         Call KSPAppendOptionsPrefix(AppCtx%KSP, "U_", iErr); CHKERRQ(iErr)
          
          
          Call KSPSetFromOptions(AppCtx%KSP, iErr); CHKERRQ(iErr)
@@ -273,7 +274,7 @@ Contains
 #elif defined PB_3D
                Value = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
 #endif
-               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdateClosure(AppCtx%U, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
             Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             DeAllocate(Value)
@@ -302,7 +303,7 @@ Contains
                   Value = 1.0_Kr
                End If
 #endif
-               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%F, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdateClosure(AppCtx%F, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
             Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             DeAllocate(Value)
@@ -441,7 +442,7 @@ Contains
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem = 0.0_Kr
          BCFlag = 0
-         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCFlag, AppCtx%MeshTopology%mesh, iE-1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
             Do iDoF1 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
                If (BCFlag(iDoF1) == 0) Then
@@ -507,8 +508,8 @@ Contains
       Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          RHS_Loc = 0.0_Kr
-         Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, Num_DoF, F_Loc, iErr); CHKERRQ(ierr)
-         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%F, AppCtx%MeshTopology%mesh, iE-1, Num_DoF, F_Loc, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCFlag, AppCtx%MeshTopology%mesh, iE-1, Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
          Do iGauss = 1, Size(AppCtx%Elem(iE)%Gauss_C)
             F_Elem = 0.0_Kr
             Do iDoF = 1, Num_DoF
@@ -522,7 +523,7 @@ Contains
                End If
             End Do
          End Do
-         Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, AppCtx%RHS, iE-1, RHS_Loc, iErr); CHKERRQ(iErr)
+         Call SectionRealUpdateClosure(AppCtx%RHS, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
 
       DeAllocate(BCFlag)
@@ -561,9 +562,9 @@ Contains
             NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
             NumGauss = Size(AppCtx%Elem(iE)%BF,2)
             Allocate(F(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%F, AppCtx%MeshTopology%mesh, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
             Allocate(U(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
             Do iGauss = 1, NumGauss
                Strain_Elem = 0.0_Kr
                Stress_Elem = 0.0_Kr
@@ -618,7 +619,7 @@ Contains
             NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
             NumGauss = Size(AppCtx%Elem(iE)%BF,2)
             Allocate(U(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
             Grad = 0.0_Kr
             Vol  = 0.0_Kr
             Do iGauss = 1, NumGauss
@@ -634,7 +635,7 @@ Contains
 #elif defined PB_3D
             Grad_Ptr = (/ Grad%X, Grad%Y, Grad%Z /)
 #endif
-            Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%GradU, iE-1, Grad_Ptr, iErr)
+            Call SectionRealUpdateClosure(AppCtx%GradU, AppCtx%MeshTopology%Mesh, iE-1, Grad_Ptr, INSERT_VALUES, iErr)
             DeAllocate(U)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
@@ -768,8 +769,8 @@ Contains
       Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          Gradient_Loc = 0.0_Kr
-         Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, X_Sec, iE-1, Num_DoF, X_Loc, iErr); CHKERRQ(ierr)
-         Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, Num_DoF, F_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(X_Sec, AppCtx%MeshTopology%mesh, iE-1, Num_DoF, X_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%F, AppCtx%MeshTopology%mesh, iE-1, Num_DoF, F_Loc, iErr); CHKERRQ(ierr)
          Do iGauss = 1, Size(AppCtx%Elem(iE)%Gauss_C)
             Strain_Elem = 0.0_Kr
             F_Elem = 0.0_Kr
@@ -787,7 +788,7 @@ Contains
             func = func + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( (Strain_Elem .DotP. Strain_Elem) * 0.5_Kr - F_Elem * X_Elem )
             flops = flops + 5.0
          End Do
-         Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, Gradient_Sec, iE-1, Gradient_Loc, iErr); CHKERRQ(iErr)
+         Call SectionRealUpdateClosure(Gradient_Sec, AppCtx%MeshTopology%Mesh, iE-1, Gradient_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
       
       DeAllocate(Gradient_Loc)
@@ -820,11 +821,11 @@ Contains
       Call SectionRealToVec(UmSec, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%Uminus, iErr); CHKERRQ(iErr)
       
       Do i = 1, AppCtx%MeshTopology%Num_Verts
-         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, AppCtx%MeshTopology%Num_Elems+i-1, 1, BCFlag, iErr);
+         Call SectionIntRestrictClosure(AppCtx%BCFlag, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems+i-1, 1, BCFlag, iErr);
          If (BCFlag(1)/=0) Then
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems+i-1, 1, Value, iErr);
-            Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, UpSec, AppCtx%MeshTopology%Num_elems+i-1, Value, iErr); CHKERRQ(iErr)
-            Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, UmSec, AppCtx%MeshTopology%Num_elems+i-1, Value, iErr); CHKERRQ(iErr)
+            Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems+i-1, 1, Value, iErr);
+            Call SectionRealUpdateClosure(UpSec, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_elems+i-1, Value, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionRealUpdateClosure(UmSec, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_elems+i-1, Value, INSERT_VALUES, iErr); CHKERRQ(iErr)
          EndIf
       End Do
 
