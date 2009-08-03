@@ -43,16 +43,16 @@ Contains
       Allocate(UBC_Ptr(AppCtx%MeshTopology%Num_Dim))
 
       Do i = 1, AppCtx%MeshTopology%Num_Verts
-         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, BCFlag, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCUFlag, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, BCFlag, iErr); CHKERRQ(ierr)
          If (Sum(BCFlag) /= 0) Then
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, U_Ptr, iErr); CHKERRQ(ierr)      
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, UBC, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, UBC_Ptr, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, U_Ptr, iErr); CHKERRQ(ierr)      
+            Call SectionRealRestrictClosure(UBC, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, UBC_Ptr, iErr); CHKERRQ(ierr)
             Do j = 1, AppCtx%MeshTopology%Num_Dim      
                If (BCFlag(j) /= 0) Then
                   U_Ptr(j) = UBC_Ptr(j)
                End If
             End Do
-            Call MeshUpdateClosure(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems + i-1, UBC_Ptr, iErr); CHKERRQ(ierr)
+            Call SectionRealUpdateClosure(AppCtx%U, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, UBC_Ptr, INSERT_VALUES, iErr); CHKERRQ(ierr)
          End If
       End Do
       DeAllocate(BCFlag)
@@ -112,8 +112,8 @@ Contains
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          
          MatElem  = 0.0_Kr
-         Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
-         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%V, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCUFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
       
          Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
             !!! Compute the contribution of V to the stiffness matrix
@@ -175,7 +175,7 @@ Contains
             !--------------------------------------------------------
             Call RHSU_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
             !--------------------------------------------------------
-            Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
+            Call SectionRealUpdateClosure(RHSSec, AppCtx%MeshTopology%Mesh, iE-1, RHSElem, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(RHSElem)
       End Do Do_Elem_iBlk
@@ -222,13 +222,13 @@ Contains
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       Allocate(BCFlag(NumDoFVect))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCUFlag, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
+      Call SectionIntRestrictClosure(AppCtx%BCUFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
       Allocate(F(NumDoFVect))
-      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoFVect, F, iErr); CHKERRQ(ierr)
+      Call SectionRealRestrictClosure(AppCtx%F, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F, iErr); CHKERRQ(ierr)
       Allocate(Theta(NumDoFScal))
-      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+      Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
       Allocate(V(NumDoFScal))
-      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
+      Call SectionRealRestrictClosure(AppCtx%V, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
       Do_iGauss: Do iGauss = 1, NumGauss
          TmpRHS     = 0.0_Kr
          Theta_Elem = 0.0_Kr

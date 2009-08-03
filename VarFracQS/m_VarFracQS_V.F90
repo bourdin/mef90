@@ -62,9 +62,9 @@ Contains
                Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBT', 1, VBT, iErr); CHKERRQ(iErr)      
                Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, VBT)
                Do i = 1, AppCtx%MeshTopology%Num_Verts
-                  Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, VBT, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr); CHKERRQ(ierr)      
+                  Call SectionRealRestrictClosure(VBT, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr); CHKERRQ(ierr)      
                   If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                     Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(iErr)
+                     Call SectionIntUpdateClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
                      MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
                   End If
                End Do
@@ -76,9 +76,9 @@ Contains
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             Do i = 1, AppCtx%MeshTopology%Num_Verts
-               Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
+               Call SectionRealRestrictClosure(AppCtx%V, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
                If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                  Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(iErr)
+                  Call SectionIntUpdateClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
                   MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
                End If
             End Do
@@ -105,18 +105,18 @@ Contains
          Allocate(V_Ptr(1))
          Do i = 1, AppCtx%MeshTopology%Num_Verts       
             !!! Take care of potential BC on V
-            Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, 1, BCVFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, BCVFlag, iErr); CHKERRQ(ierr)
             If (BCVFlag(1) /= VarFrac_BC_Type_NONE) Then
-               Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr);                
-               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)
+               Call SectionRealRestrictClosure(AppCtx%V, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr);                
+               Call SectionRealUpdateClosure(AppCtx%V, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End If
 
             If (AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_Eq ) Then
                !!! Take care of Irreversibility 
-               Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, 1, IrrevFlag, iErr); CHKERRQ(ierr)
+               Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, IrrevFlag, iErr); CHKERRQ(ierr)
                If (IrrevFlag(1) /= VarFrac_BC_TYPE_NONE) Then
                   V_Ptr = 0.0_Kr
-                  Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)
+                  Call SectionRealUpdateClosure(AppCtx%V, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
                End If
             End If
          End Do      
@@ -191,10 +191,10 @@ Contains
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem  = 0.0_Kr
          !! Get the local nodal values of U, Theta, and BCs
-         Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
-         Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
-         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
-         Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%IrrevFlag, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
@@ -270,7 +270,7 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call RHSV_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, RHSElem)
-            Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
+            Call SectionRealUpdateClosure(RHSSec, AppCtx%MeshTopology%Mesh, iE-1, RHSElem, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(RHSElem)
       End Do Do_Elem_iBlk
@@ -308,9 +308,9 @@ Contains
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
       Allocate(BCFlag(NumDoFScal))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCVFlag, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+      Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
       Allocate(IrrevFlag(NumDoFScal))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%IrrevFlag, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+      Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
       C1_V =  0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * MatProp%Toughness 
       flops = flops + 2.0
