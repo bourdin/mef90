@@ -61,7 +61,7 @@ Program TestSectionInt
    Allocate(IntValues(1))
    Do i = 1, num_verts
       IntValues = i
-      Call MeshUpdateClosureInt(Tmp_mesh, Sec1, i+Num_Elems-1, IntValues, iErr); CHKERRQ(iErr)
+      Call SectionIntUpdateClosure(Sec1, Tmp_mesh, i+Num_Elems-1, IntValues, INSERT_VALUES, iErr); CHKERRQ(iErr)
    End Do 
    DeAllocate(IntValues)
    
@@ -104,16 +104,19 @@ Program TestSectionInt
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
 
    Allocate(IntValues(3))
-   Call MeshGetVertexSectionInt(MeshTopology%mesh, 1, Flag_Sec, iErr); CHKERRQ(iErr)
-!   Do iE = 1, MeshTopology%Num_Verts
-      iE = 5
-      IntValues = 1
-      Call MeshUpdateAddClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
-      IntValues = 34
-      Call SectionIntZero(Flag_Sec, iErr); CHKERRQ(iErr)
-      Call MeshUpdateAddClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
-      iE = 9
-      IntValues = 10
+
+!   Call MeshGetVertexSectionInt(MeshTopology%mesh, 1, Flag_Sec, iErr); CHKERRQ(iErr)
+   iE = 1
+   IntValues = 1
+!   Call SectionIntUpdateClosure(Flag_Sec, MeshTopology%Mesh, iE-1, IntValues, ADD_VALUES, iErr)
+   IntValues = 34
+
+   Call MEF90_Finalize()
+   STOP
+
+   Call SectionIntUpdateClosure(Flag_Sec, MeshTopology%Mesh, iE-1, IntValues, ADD_VALUES, iErr)
+   iE = 2
+   IntValues = 10
 !      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
 !   End Do  
 !!!   Call MeshGetCellSectionInt(MeshTopology%mesh, 1, Flag_Sec, iErr); CHKERRQ(iErr)
@@ -121,10 +124,14 @@ Program TestSectionInt
 !!!      IntValues = iE
 !!!      Call MeshUpdateClosureInt(MeshTopology%Mesh, Flag_Sec, iE-1, IntValues, iErr)
 !!!   End Do  
-   DeAllocate(IntValues)
+!   DeAllocate(IntValues)
    Call SectionIntView(Flag_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
+   
    Call MEF90_Finalize()
    STOP
+   
+   
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 1, U_Sec, iErr); CHKERRQ(iErr)
 
 !   Allocate(Values(1))
@@ -143,9 +150,9 @@ Program TestSectionInt
    Allocate(Values(3))
    iE = 5
    Values = 1.0   
-   Call MeshUpdateClosure(MeshTopology%Mesh, U_Sec, iE-1, Values, iErr)
+   Call SectionRealUpdateClosure(U_Sec, MeshTopology%Mesh, iE-1, Values, INSERT_VALUES, iErr)
    Values = 10.0
-   Call MeshUpdateAddClosure(MeshTopology%Mesh, U_Sec, iE-1, Values, iErr)
+   Call SectionRealUpdateClosure(U_Sec, MeshTopology%Mesh, iE-1, Values, ADD_VALUES, iErr)
    DeAllocate(Values)
    Call SectionRealView(U_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
@@ -167,7 +174,8 @@ Program TestSectionInt
       Call PetscViewerFlush(viewer, iErr); CHKERRQ(iErr)
       Call PetscViewerDestroy(viewer, iErr); CHKERRQ(iErr)
    End If
-   
+
+   Write(*,*) 'CALLING FINALIZE'   
 300 Format(A)   
    Call MEF90_Finalize()
 End Program TestSectionInt
