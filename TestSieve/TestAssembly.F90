@@ -29,7 +29,7 @@ Program TestAssembly
    Type(SectionReal)                            :: U_Sec
    Type(Vec)                                    :: U_VecG, U_VecL
    PetscReal, Dimension(:), Pointer             :: val
-   PetscReal, Dimension(:), Pointer             :: Kelem
+   PetscReal, Dimension(:,:), Pointer           :: Kelem
    Type(Mat)                                    :: K
    Type(VecScatter)                             :: scatter
    PetscInt                                     :: i
@@ -84,14 +84,14 @@ Program TestAssembly
    Call MeshCreateVector(MeshTopology%mesh, U_Sec, U_VecG, iErr); CHKERRQ(iErr)
    Call SectionRealCreateLocalVector(U_Sec, U_VecL, iErr); CHKERRQ(iErr)
 
-   Call VecSet(U_VecG, 1.0_Kr, iErr); CHKERRQ(iErr)
+   Call VecSet(U_VecG, 1.663_Kr, iErr); CHKERRQ(iErr)
    Call VecView(U_VecG, PetscViewer(PETSC_VIEWER_STDOUT_WORLD), iErr); CHKERRQ(iErr)
 
    Call MeshCreateMatrix(MeshTopology%mesh, U_Sec, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
 
    Allocate(val(3))
-   Allocate(Kelem(9))
-   val = 1.0_Kr
+   Allocate(Kelem(3,3))
+   val = 1.23_Kr
    Kelem = 1.0_Kr
    Do i = 0, MeshTopology%Num_Elems-1
 !      Call assemblevector(U_VecG, i, val, ADD_VALUES, iErr); CHKERRQ(iErr)

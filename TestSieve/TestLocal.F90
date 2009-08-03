@@ -53,8 +53,8 @@ Program TestLocal
    Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
    Call MeshTopologyReadEXO(MeshTopology, EXO)
-   Call EXO_Property_Read(EXO)
-   Call EXO_Variable_Read(EXO)
+   Call EXOProperty_Read(EXO)
+   Call EXOVariable_Read(EXO)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
@@ -85,12 +85,12 @@ Program TestLocal
  
    MyEXO%title = trim(EXO%title)
    MyEXO%Num_QA = EXO%Num_QA
-   Call EXO_Property_Copy(EXO, MyEXO)
-   Call EXO_Variable_Copy(EXO, MyEXO)
+   Call EXOProperty_Copy(EXO, MyEXO)
+   Call EXOVariable_Copy(EXO, MyEXO)
 
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
-   Call EXO_Property_Write(MyEXO)
-   Call EXO_Variable_Write(MyEXO)
+   Call EXOProperty_Write(MyEXO)
+   Call EXOVariable_Write(MyEXO)
 
    If (verbose) Then
       Write(IOBuffer, 300) 'EXO\n'
