@@ -33,6 +33,8 @@ Program TestSectionInt
    PetscReal, Dimension(:), Pointer             :: rVals
    PetscInt                                     :: iVal
    PetscInt, Dimension(:), Pointer              :: iVals
+   
+   PetscInt                                     :: dof = 1
 
      
    Call MEF90_Initialize()
@@ -63,8 +65,8 @@ Program TestSectionInt
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
 
-   Call MeshGetVertexSectionReal(MeshTopology%Mesh, 'rSec', 1, rSec, iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionInt (MeshTopology%Mesh, 'iSec', 1, iSec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionReal(MeshTopology%Mesh, 'rSec', dof, rSec, iErr); CHKERRQ(iErr)
+   Call MeshGetVertexSectionInt (MeshTopology%Mesh, 'iSec', dof, iSec, iErr); CHKERRQ(iErr)
    
    Write(*,*) 'Number of vertices: ', MeshTopology%Num_Verts
    Write(*,*) 'Number of elements: ', MeshTopology%Num_elems
@@ -73,7 +75,7 @@ Program TestSectionInt
 !!! Initializing Sections
    Write(IOBuffer, *) '\n\n === Initializing Sections ===\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   rVal = 1.23_Kr
+   rVal = 1.00_Kr
    Call SectionRealSet(rSec, rVal, iErr); CHKERRQ(iErr)
    Call SectionIntZero (iSec, iErr); CHKERRQ(iErr)
 
@@ -90,68 +92,72 @@ Program TestSectionInt
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    
    Point = MeshTopology%Num_Elems
-   rVal = -1.32
-   Call SectionRealUpdate(rSec, Point, rVal, INSERT_VALUES, iErr); CHKERRQ(iErr)
+   Allocate(rVals(dof))
+   rVals = -2.00_Kr
+   Call SectionRealUpdate(rSec, Point, rVals, INSERT_VALUES, iErr); CHKERRQ(iErr)
 
    Point = MeshTopology%Num_Elems+1
-   rVal = 2.65
-   Call SectionRealUpdate(rSec, Point, rVal, ADD_VALUES, iErr); CHKERRQ(iErr)
+   rVals = 2.00_Kr
+   Call SectionRealUpdate(rSec, Point, rVals, ADD_VALUES, iErr); CHKERRQ(iErr)
 
    Write(IOBuffer, *) 'rSec after SectionRealUpdate:  \n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionRealView(rSec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!!!$
-!!!$   Point = MeshTopology%Num_Elems
-!!!$   iVal = -7
-!!!$   Call SectionIntUpdate(iSec, Point, iVal, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!!!$
-!!!$   Point = MeshTopology%Num_Elems+1
-!!!$   iVal = 4
-!!!$   Call SectionIntUpdate(iSec, Point, iVal, ADD_VALUES, iErr); CHKERRQ(iErr)
-!!!$   Write(IOBuffer, *) 'iSec after SectionIntUpdate:  \n'
-!!!$   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$   Call SectionIntView(iSec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   DeAllocate(rVals)
+
+   Point = MeshTopology%Num_Elems
+   Allocate(iVals(dof))
+   iVals = -7
+   Call SectionIntUpdate(iSec, Point, iVals, INSERT_VALUES, iErr); CHKERRQ(iErr)
+
+   Point = MeshTopology%Num_Elems+1
+   iVals = 4
+   Call SectionIntUpdate(iSec, Point, iVals, ADD_VALUES, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, *) 'iSec after SectionIntUpdate:  \n'
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call SectionIntView(iSec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   DeAllocate(iVals)
    
 !!! Testing SectionRealRestrict / SectionIntRestrict
    Write(IOBuffer, *) '\n\n === SectionRealRestrict / SectionIntRestrict ===\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-   Allocate(rVals(1))
    Point = MeshTopology%Num_Elems
    Call SectionRealRestrict(rSec, Point, rVals, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) 'rSec(0)=', rVals   
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call SectionRealRestore(rSec, Point, rVals, iErr); CHKERRQ(iErr)
 
    Point = MeshTopology%Num_Elems+1
-   Call SectionRealRestrict(rSec, Point, rVal, iErr); CHKERRQ(iErr)
-   Write(IOBuffer, *) ' rSec(1)=', rVal, '\n'
+   Call SectionRealRestrict(rSec, Point, rVals, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, *) ' rSec(1)=', rVals, '\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   DeAllocate(rVals)
+   Call SectionRealRestore(rSec, Point, rVals, iErr); CHKERRQ(iErr)
    
 
-!!!$   Allocate(iVals(1))
-!!!$   Point = MeshTopology%Num_Elems
-!!!$   Call SectionIntRestrict(iSec, Point, iVals, iErr); CHKERRQ(iErr)
-!!!$   Write(IOBuffer, *) 'iSec(0)=', iVals   
-!!!$   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$
-!!!$   Point = MeshTopology%Num_Elems+1
-!!!$   Call SectionIntRestrict(iSec, Point, iVals, iErr); CHKERRQ(iErr)
-!!!$   Write(IOBuffer, *) ' iSec(1)=', iVals, '\n'
-!!!$   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$   DeAllocate(iVals)
+   Point = MeshTopology%Num_Elems
+   Call SectionIntRestrict(iSec, Point, iVals, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, *) 'iSec(0)=', iVals   
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call SectionIntRestore(iSec, Point, iVals, iErr); CHKERRQ(iErr)
+
+   Point = MeshTopology%Num_Elems+1
+   Call SectionIntRestrict(iSec, Point, iVals, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, *) ' iSec(1)=', iVals, '\n'
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call SectionIntRestore(iSec, Point, iVals, iErr); CHKERRQ(iErr)
 
 
 !!! Testing SectionRealUpdateClosure / SectionIntUpdateClosure
    Write(IOBuffer, *) '\n\n === SectionRealUpdateClosure / SectionIntUpdateClosure ===\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-   Allocate(rVals(3))
-   Point = 0
+   Allocate(rVals(3*dof))
+   Point = 2
    rVals = 6.5_Kr
    Call SectionRealUpdateClosure(rSec, MeshTopology%Mesh, Point, rVals, INSERT_VALUES, iErr); CHKERRQ(iErr)
 
-   Point = 14
+   Point = 18
    rVals = 3.0_Kr
    Call SectionRealUpdateClosure(rSec, MeshTopology%Mesh, Point, rVals, ADD_VALUES, iErr); CHKERRQ(iErr)
    DeAllocate(rVals)
@@ -160,12 +166,12 @@ Program TestSectionInt
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionRealView(rSec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
-   Allocate(iVals(3))
-   Point = 0
-   iVals = -7
+   Allocate(iVals(3*dof))
+   Point = 2
+   iVals = -9
    Call SectionIntUpdateClosure(iSec, MeshTopology%Mesh, Point, iVals, INSERT_VALUES, iErr); CHKERRQ(iErr)
 
-   Point = 14
+   Point = 18
    iVals = 4
    Call SectionIntUpdateClosure(iSec, MeshTopology%Mesh, Point, iVals, ADD_VALUES, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) 'iSec after SectionIntUpdate:  \n'
@@ -177,27 +183,27 @@ Program TestSectionInt
    Write(IOBuffer, *) '\n\n === SectionRealRestrictClosure / SectionIntRestrictClosure ===\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-   Allocate(rVals(3))
+   Allocate(rVals(3*dof))
    Point = 0
-   Call SectionRealRestrictClosure(rSec, MeshTopology%Mesh, Point, 3, rVals, iErr); CHKERRQ(iErr)
+   Call SectionRealRestrictClosure(rSec, MeshTopology%Mesh, Point, 3*dof, rVals, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) 'rSec(0)=', rVals   
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
    Point = 14
-   Call SectionRealRestrictClosure(rSec, MeshTopology%Mesh, Point, 3, rVals, iErr); CHKERRQ(iErr)
+   Call SectionRealRestrictClosure(rSec, MeshTopology%Mesh, Point, 3*dof, rVals, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) ' rSec(1)=', rVals, '\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    DeAllocate(rVals)
    
 
-   Allocate(iVals(3))
+   Allocate(iVals(3*dof))
    Point = 0
-   Call SectionIntRestrictClosure(iSec, MeshTopology%Mesh, Point, 3, iVals, iErr); CHKERRQ(iErr)
+   Call SectionIntRestrictClosure(iSec, MeshTopology%Mesh, Point, 3*dof, iVals, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) 'iSec(0)=', iVals   
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
    Point = 14
-   Call SectionIntRestrictClosure(iSec, MeshTopology%Mesh, Point, 3, iVals, iErr); CHKERRQ(iErr)
+   Call SectionIntRestrictClosure(iSec, MeshTopology%Mesh, Point, 3*dof, iVals, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) ' iSec(1)=', iVals, '\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    DeAllocate(iVals)

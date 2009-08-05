@@ -51,7 +51,7 @@ Contains
          !!! If I'd understand how to use SectionGetArrayF90 I'd use it
          Allocate(IrrevFlag(1))
          IrrevFlag = VarFrac_BC_Type_DIRI
-         Allocate(V_Ptr(1))
+!         Allocate(V_Ptr(1))
          If (AppCtx%IsBT) Then
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) "Backtracking, so reading timestep if TS>1\n"c
@@ -62,11 +62,12 @@ Contains
                Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBT', 1, VBT, iErr); CHKERRQ(iErr)      
                Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, VBT)
                Do i = 1, AppCtx%MeshTopology%Num_Verts
-                  Call SectionRealRestrictClosure(VBT, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr); CHKERRQ(ierr)      
+                  Call SectionRealRestrict(VBT, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)      
                   If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                     Call SectionIntUpdateClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                     Call SectionIntUpdate(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
                      MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
                   End If
+                  Call SectionRealRestore(VBT, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)
                End Do
                Call SectionRealDestroy(VBT, iErr); CHKERRQ(iErr)
             End If
@@ -76,14 +77,14 @@ Contains
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             Do i = 1, AppCtx%MeshTopology%Num_Verts
-               Call SectionRealRestrictClosure(AppCtx%V, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, V_Ptr, iErr); CHKERRQ(ierr)      
+               Call SectionRealRestrict(AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(ierr)      
                If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                  Call SectionIntUpdateClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                  Call SectionIntUpdate(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
                   MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
                End If
-            End Do
+               Call SectionRealRestore(AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr);             End Do
          End If
-         DeAllocate(V_Ptr)
+!         DeAllocate(V_Ptr)
          DeAllocate(IrrevFlag)
          If (AppCtx%AppParam%verbose > 0) Then
             Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
@@ -100,31 +101,34 @@ Contains
             Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
-         Allocate(IrrevFlag(1))
-         Allocate(BCVFlag(1))
+!         Allocate(IrrevFlag(1))
+!         Allocate(BCVFlag(1))
          Allocate(V_Ptr(1))
          Do i = 1, AppCtx%MeshTopology%Num_Verts       
             !!! Take care of potential BC on V
-            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, BCVFlag, iErr); CHKERRQ(ierr)
-            If (BCVFlag(1) /= VarFrac_BC_Type_NONE) Then
-               Call SectionRealRestrictClosure(AppCtx%V, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr);                
-               Call SectionRealUpdateClosure(AppCtx%V, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            End If
+            Call SectionIntRestrict(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCVFlag, iErr); CHKERRQ(ierr)
+!!!            If (BCVFlag(1) /= VarFrac_BC_Type_NONE) Then
+!!!               !!! WTF???
+!!!               Call SectionRealRestrictClosure(AppCtx%V, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr);                
+!!!               Call SectionRealUpdateClosure(AppCtx%V, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+!!!            End If
 
             If (AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_Eq ) Then
                !!! Take care of Irreversibility 
-               Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, IrrevFlag, iErr); CHKERRQ(ierr)
+               Call SectionIntRestrict(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(ierr)
                If (IrrevFlag(1) /= VarFrac_BC_TYPE_NONE) Then
                   V_Ptr = 0.0_Kr
-                  Call SectionRealUpdateClosure(AppCtx%V, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                  Call SectionRealUpdate(AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
                End If
+               Call SectionIntRestore(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(ierr)
             End If
+            Call SectionIntRestore(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCVFlag, iErr); CHKERRQ(ierr)
          End Do      
-         DeAllocate(IrrevFlag)
-         DeAllocate(BCVFlag)
+!         DeAllocate(IrrevFlag)
+!         DeAllocate(BCVFlag)
          DeAllocate(V_Ptr)
       Case default   
-         SETERRQ(PETSC_ERR_SUP, 'NotImplemented yet\n', iErr)
+         SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
       End Select
       
       Call SectionRealDestroy(VBC, iErr); CHKERRQ(iErr)

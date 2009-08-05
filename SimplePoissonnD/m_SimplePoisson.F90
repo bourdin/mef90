@@ -86,14 +86,14 @@ Contains
       PetscInt                                     :: TmpPoint
       
       Type(SectionReal)                            :: CoordSection
-      PetscReal, Dimension(:), Pointer             :: TmpCoords, Value
+      PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
       PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscInt                                     :: iE, iELoc
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename   
       PetscLogDouble                               :: TS, TF
       Type(Mesh)                                   :: Tmp_Mesh
       Type(Vec)                                    :: F
-      PetscReal                                    :: Val
+      PetscReal                                    :: Val, tol
 
       Call MEF90_Initialize()
       Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
@@ -161,23 +161,24 @@ Contains
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
 
       !!! Allocate the Section for U and F
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', 1, AppCtx%U, iErr); CHKERRQ(iErr)
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'GradU', AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', 1, AppCtx%F, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', 1,   AppCtx%U, iErr); CHKERRQ(iErr)
+      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU',  AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', 1,   AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHS', 1, AppCtx%RHS, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Uplus, iErr); CHKERRQ(iErr)
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Uminus, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%Use_Tao) Then
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Uplus, iErr); CHKERRQ(iErr)
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Uminus, iErr); CHKERRQ(iErr)
+      End If
 
       !!! Allocate and initialize the Section for the flag
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlag', 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Allocate(TmpFlag(1))
       Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
          Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
-            TmpPoint = AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iBlk)%Node_ID(iDoF)-1
-            TmpFlag = 1
-            Call SectionIntUpdateClosure(AppCtx%BCFlag, AppCtx%MeshTopology%Mesh, TmpPoint, TmpFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            TmpPoint = AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iBlk)%Node_ID(iDoF) - 1
+            Call SectionIntUpdate(AppCtx%BCFlag, TmpPoint, TmpFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
          End Do
       End Do
       DeAllocate(TmpFlag)
@@ -199,12 +200,15 @@ Contains
          Call PCSetType(AppCtx%PC, PCBJACOBI, iErr); CHKERRQ(iErr)
          Call PCSetFromOptions(AppCtx%PC, iErr); CHKERRQ(iErr)
 
-
          Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappU, FormFunctionAndGradient, AppCtx, iErr); CHKERRQ(iErr)
          Call TaoAppSetHessianRoutine(AppCtx%taoappU, FormHessian, AppCtx, iErr); CHKERRQ(iErr)
 
          Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%K, AppCtx%K, iErr); CHKERRQ(iErr)
          Call TaoAppSetInitialSolutionVec(AppCtx%taoappU, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
+         
+         tol = 1.0D-8
+         Call TaoSetTolerances(AppCtx%taoU, tol, tol, tol, tol, iErr); CHKERRQ(iErr)
+         Call TaoSetGradientTolerances(AppCtx%taoU, tol, tol, tol, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
       Else      
@@ -261,23 +265,23 @@ Contains
             End If
 
             !!! Test of non homogeneous Dirichlet BC
-            Val = 0.0_Kr
-            Call SectionRealSet(AppCtx%F, Val, iErr); CHKERRQ(iErr);
+            Allocate(ValPtr(1))
+            ValPtr = 0.0_Kr
+            Call SectionRealSet(AppCtx%F, 0.0_Kr, iErr); CHKERRQ(iErr);
             Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-            
-            Allocate(Value(1))
+               
             Do iDoF = 1, Size(Coords,1)
 #if defined PB_2D
-               Value = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2
-               Value = Coords(iDoF,1)**2 + Coords(iDoF,2)**2
-               Value = Coords(iDoF,1)**3
+               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2
+               ValPtr = Coords(iDoF,1)**2 + Coords(iDoF,2)**2
+               ValPtr = Coords(iDoF,1)**3
 #elif defined PB_3D
-               Value = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
+               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
 #endif
-               Call SectionRealUpdateClosure(AppCtx%U, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
+            DeAllocate(ValPtr)
             Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-            DeAllocate(Value)
          Case(3)
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Solving Test Case 3: F=sgn(x) . sgn(y) [. sgn(z)] \n'
@@ -285,28 +289,28 @@ Contains
             End If
 
             !!! Test of non homogeneous Dirichlet BC
+            Allocate(ValPtr(1))
+            ValPtr = 0.0_Kr
             Call SectionRealSet(AppCtx%U, 1.0_Kr, iErr); CHKERRQ(iErr);
             Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             
-            Allocate(Value(1))
             Do iDoF = 1, Size(Coords,1)
 #if defined PB_2D
                If ( Coords(iDoF,1) * Coords(iDoF,2) < 0.0_Kr ) Then
-                  Value = -1.0_Kr
+                  ValPtr = -1.0_Kr
                Else
-                  Value = 1.0_Kr
+                  ValPtr = 1.0_Kr
                End If
 #elif defined PB_3D
                If ( Coords(iDoF,1) * Coords(iDoF,2) * Coords(iDoF,3) < 0.0_Kr ) Then
-                  Value = -1.0_Kr
+                  ValPtr = -1.0_Kr
                Else
-                  Value = 1.0_Kr
+                  ValPtr = 1.0_Kr
                End If
 #endif
-               Call SectionRealUpdateClosure(AppCtx%F, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(AppCtx%F, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
             Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-            DeAllocate(Value)
          End Select            
       End If
       
@@ -378,7 +382,7 @@ Contains
          Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoGetTerminationReason(AppCtx%TaoU, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
-            Write(IOBuffer, *) 'Tao convergence status: ', TaoReason
+            Write(IOBuffer, *) 'Tao convergence status: ', TaoReason, '\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Else
             Write(IOBuffer, 103) TaoReason
@@ -443,6 +447,7 @@ Contains
          MatElem = 0.0_Kr
          BCFlag = 0
          Call SectionIntRestrictClosure(AppCtx%BCFlag, AppCtx%MeshTopology%mesh, iE-1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
+         Write(MEF90_MyRank+300, *) iE, BCFlag
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
             Do iDoF1 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
                If (BCFlag(iDoF1) == 0) Then
@@ -801,42 +806,45 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: i, iErr
-      PetscInt, Dimension(:), Pointer              :: BCFlag
-      PetscReal, Dimension(:), Pointer             :: Value
-      PetscReal                                    :: UB, LB
-      Type(SectionReal)                            :: UpSec, UmSec
+      PetscInt, Dimension(:), Pointer              :: BCFlagPtr
+      PetscReal                                    :: Val
+      PetscReal, Dimension(:), Pointer             :: UPtr, UplusPtr, UminusPtr
+      Type(SectionReal)                            :: UplusSec, UminusSec
 
-      Allocate(Value(1))
-      Allocate(BCFlag(1))
-
-      UB = 1.0D20
-      Call VecSet(AppCtx%Uplus, UB, iErr); CHKERRQ(iErr)
-      LB = -1.0D20
-      Call VecSet(AppCtx%Uminus, LB, iErr); CHKERRQ(iErr)
+      Val = 1.0D20
+      Call VecSet(AppCtx%Uplus, Val, iErr); CHKERRQ(iErr)
+      Val = -1.0D20
+      Call VecSet(AppCtx%Uminus, Val, iErr); CHKERRQ(iErr)
       
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Uplus', 1, UpSec, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Uminus', 1, UmSec, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Uplus',  1, UplusSec , iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Uminus', 1, UminusSec, iErr); CHKERRQ(iErr)
 
-      Call SectionRealToVec(UpSec, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%Uplus, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(UmSec, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%Uminus, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(UplusSec,  AppCtx%Scatter, SCATTER_REVERSE, AppCtx%Uplus, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(UminusSec, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%Uminus, iErr); CHKERRQ(iErr)
       
+      Allocate(UplusPtr(1))
+      Allocate(UminusPtr(1))
       Do i = 1, AppCtx%MeshTopology%Num_Verts
-         Call SectionIntRestrictClosure(AppCtx%BCFlag, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems+i-1, 1, BCFlag, iErr);
-         If (BCFlag(1)/=0) Then
-            Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems+i-1, 1, Value, iErr);
-            Call SectionRealUpdateClosure(UpSec, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_elems+i-1, Value, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            Call SectionRealUpdateClosure(UmSec, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_elems+i-1, Value, INSERT_VALUES, iErr); CHKERRQ(iErr)
-         EndIf
+         Call SectionIntRestrict(AppCtx%BCFlag, AppCtx%MeshTopology%Num_Elems+i-1, BCFlagPtr, iErr);
+         If ( BCFlagPtr(1) /= 0 ) Then
+            Call SectionRealRestrict(AppCtx%U,     AppCtx%MeshTopology%Num_Elems+i-1, UPtr,      iErr);
+            UplusPtr  = UPtr
+            UminusPtr = UPtr
+            Call SectionRealRestore(AppCtx%U,     AppCtx%MeshTopology%Num_Elems+i-1, UPtr,      iErr);
+            Call SectionRealUpdate(UplusSec,  AppCtx%MeshTopology%Num_Elems+i-1, UplusPtr,  INSERT_VALUES, iErr);
+            Call SectionRealUpdate(UminusSec, AppCtx%MeshTopology%Num_Elems+i-1, UminusPtr, INSERT_VALUES, iErr);
+         End If
+         Call SectionIntRestore(AppCtx%BCFlag, AppCtx%MeshTopology%Num_Elems+i-1, BCFlagPtr, iErr);
       End Do
+      DeAllocate(UplusPtr)
+      DeAllocate(UminusPtr)
 
-      Call SectionRealToVec(UpSec, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%Uplus, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(UmSec, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%Uminus, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(UplusSec,  AppCtx%Scatter, SCATTER_FORWARD, AppCtx%Uplus, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(UminusSec, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%Uminus, iErr); CHKERRQ(iErr)
       Call TaoAppSetVariableBounds(AppCtx%TaoAppU, AppCtx%Uminus, AppCtx%Uplus, iErr); CHKERRQ(iErr)
       
-      DeAllocate(BCFlag)
-      DeAllocate(Value)
-      Call SectionRealDestroy(UpSec, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(UmSec, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(UplusSec,  iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(UminusSec, iErr); CHKERRQ(iErr)
    End Subroutine SetupBCBounds   
 
    Subroutine SimplePoissonFinalize(AppCtx)   
@@ -856,6 +864,8 @@ Contains
       If (AppCtx%AppParam%Use_Tao) Then
          Call TaoApplicationDestroy(AppCtx%taoappU, iErr); CHKERRQ(iErr)
          Call TaoDestroy(AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call VecDestroy(AppCtx%Uplus, iErr); CHKERRQ(iErr)
+         Call VecDestroy(AppCtx%Uminus, iErr); CHKERRQ(iErr)
       Else
          Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
       End If

@@ -57,7 +57,7 @@ Program  SimplePoisson
       If (AppCtx%AppParam%verbose > 1) Then
          Write(IOBuffer, *) 'RHS\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call VecView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+         Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
       End If
    End If
    
