@@ -38,27 +38,29 @@ Contains
       !!! Using SectionRealDuplicate would make more sense
       
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, UBC)
-      Allocate(BCFlag(AppCtx%MeshTopology%Num_Dim))
-      Allocate(U_Ptr(AppCtx%MeshTopology%Num_Dim))
-      Allocate(UBC_Ptr(AppCtx%MeshTopology%Num_Dim))
+!      Allocate(BCFlag(AppCtx%MeshTopology%Num_Dim))
+!      Allocate(U_Ptr(AppCtx%MeshTopology%Num_Dim))
+!      Allocate(UBC_Ptr(AppCtx%MeshTopology%Num_Dim))
 
       Do i = 1, AppCtx%MeshTopology%Num_Verts
-         Call SectionIntRestrictClosure(AppCtx%BCUFlag, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, BCFlag, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrict(AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCFlag, iErr); CHKERRQ(ierr)
          If (Sum(BCFlag) /= 0) Then
-            Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, U_Ptr, iErr); CHKERRQ(ierr)      
-            Call SectionRealRestrictClosure(UBC, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, UBC_Ptr, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrict(AppCtx%U, AppCtx%MeshTopology%Num_Elems + i-1, U_Ptr, iErr); CHKERRQ(iErr)      
+            Call SectionRealRestrict(UBC, AppCtx%MeshTopology%Num_Elems + i-1, UBC_Ptr, iErr); CHKERRQ(iErr)
             Do j = 1, AppCtx%MeshTopology%Num_Dim      
                If (BCFlag(j) /= 0) Then
                   U_Ptr(j) = UBC_Ptr(j)
                End If
             End Do
-            Call SectionRealUpdateClosure(AppCtx%U, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, UBC_Ptr, INSERT_VALUES, iErr); CHKERRQ(ierr)
+            Call SectionRealUpdate(AppCtx%U, AppCtx%MeshTopology%Num_Elems + i-1, UBC_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionRealRestore(AppCtx%U, AppCtx%MeshTopology%Num_Elems + i-1, U_Ptr, iErr); CHKERRQ(iErr)      
+            Call SectionRealRestore(UBC, AppCtx%MeshTopology%Num_Elems + i-1, UBC_Ptr, iErr); CHKERRQ(iErr)
          End If
+         Call SectionIntRestore(AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCFlag, iErr); CHKERRQ(iErr)
       End Do
-      DeAllocate(BCFlag)
-      DeAllocate(U_Ptr)
-      DeAllocate(UBC_Ptr)
-      
+!      DeAllocate(BCFlag)
+!      DeAllocate(U_Ptr)
+!      DeAllocate(UBC_Ptr)
       Call SectionRealDestroy(UBC, iErr); CHKERRQ(iErr)
    End Subroutine Init_TS_U
 

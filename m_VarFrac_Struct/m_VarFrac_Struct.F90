@@ -165,8 +165,7 @@ Module m_VarFrac_Struct
          Allocate(Flag(1))
          Flag = dEXO%NSProperty( VarFrac_NSProp_BCVType )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-!            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
-            Call SectionIntUpdateClosure(dBCFlag, dMeshTopology%Mesh, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
@@ -190,8 +189,7 @@ Module m_VarFrac_Struct
          Allocate(Flag(1))
          Flag = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-!            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
-            Call SectionIntUpdateClosure(dBCFlag, dMeshTopology%Mesh, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
@@ -216,8 +214,7 @@ Module m_VarFrac_Struct
          Flag(1) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
          Flag(2) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-!            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
-            Call SectionIntUpdateClosure(dBCFlag, dMeshTopology%Mesh, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
@@ -243,8 +240,7 @@ Module m_VarFrac_Struct
          Flag(2) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
          Flag(3) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-!            Call MeshUpdateAddClosureInt(dMeshTopology%Mesh, dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, iErr); CHKERRQ(iErr)
-            Call SectionIntUpdateClosure(dBCFlag, dMeshTopology%Mesh, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
