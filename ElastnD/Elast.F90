@@ -55,43 +55,15 @@ Program  Elast
    End If
    
    !!! Testing Gradient function
-!!$   Call SectionRealSet(AppCtx%U, 1.0_Kr, iErr)
-   Allocate(CoordElem(6))
-   Call MeshGetSectionReal(AppCtx%MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
-   Do iE = 1, AppCtx%MeshTopology%Num_Elems
-      Call SectionRealRestrictClosure(CoordSec, AppCtx%MeshTopology%mesh, iE-1, 6, CoordElem, iErr); CHKERRQ(iErr)
-!      CoordElem = (CoordElem+1.0)/2.0
-      CoordElem(2)=0.0; CoordElem(4) = 0.0; CoordElem(6) = 0.0
-      CoordElem(1) = 1.0-CoordElem(1)**2; CoordElem(3) = 1.0-CoordElem(3)**2; CoordElem(5) = 1.0-CoordElem(5)**2
-      Call SectionRealUpdateClosure(AppCtx%U, AppCtx%MeshTopology%Mesh, iE-1, CoordElem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
-   End Do
-   
-   Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%U_Vec, ierr); CHKERRQ(ierr)
- Call FormFunctionandGradient(AppCtx%taoU, AppCtx%U_Vec, rDummy, AppCtx%RHSU, AppCtx, iErr)
-     
-!  Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   Write(*,*) 'func', rdummy
-   Call VecDot(AppCtx%RHSU, AppCtx%U_Vec, rdummy, ierr)
-   write(*,*)'==========', rdummy
-  
-!  Call ElastFinalize(AppCtx)
-!  STOP 
-
-
-!!!$   Do i = 1, AppCtx%NumTimeSteps
-i=1
+   Do i = 1, AppCtx%NumTimeSteps
       AppCtx%TimeStep = i
+      
       AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
-      Call EXGTIM(AppCtx%MyEXO%exoid, i, AppCtx%Time, iErr)
+      Call EXGTIM(AppCtx%MyEXO%exoid, AppCtx%TimeStep, AppCtx%Time, iErr)
       Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
       AppCtx%MyEXO%exoid = 0
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
 
-      !!! Read U, F, and Temperature
-!!!$      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
-   
       Call Solve(AppCtx)
    
       If (AppCtx%AppParam%verbose > 0) Then
@@ -99,6 +71,7 @@ i=1
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call ComputeEnergy(AppCtx)
+
       Write(IOBuffer, 108) AppCtx%TimeStep, AppCtx%Time, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
 108 Format('TS ',I4, ' Time:', ES10.3, ' Load:', ES10.3, ' Elast:', ES10.3, ' Work:', ES10.3, ' Total:', ES10.3, '\n'c)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -115,7 +88,7 @@ i=1
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If      
       Call Save(AppCtx)
-!!!$   End Do
+   End Do
 
    Call ElastFinalize(AppCtx)
 End Program  Elast

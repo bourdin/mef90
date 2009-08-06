@@ -55,6 +55,7 @@ Module m_Elast3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: ElemScal
 #endif
       Type(SectionReal)                            :: U
+      Type(Vec)                                    :: U_Vec
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       Type(SectionReal)                            :: F
@@ -70,14 +71,14 @@ Module m_Elast3D
       Type(VecScatter)                             :: ScatterScal
       Type(SectionInt)                             :: BCFlagU
       Type(Mat)                                    :: KU
-      Type(Vec)                                    :: RHSU
+      Type(SectionReal)                            :: RHSU
       Type(KSP)                                    :: KSPU
       Type(PC)                                     :: PCU
 !!! TAO stuff      
       TAO_SOLVER                                   :: taoU
       TAO_APPLICATION                              :: taoappU
-      Type(Vec)                                    :: GradientU
-      Type(Vec)                                    :: U_Vec
+      Type(Vec)                                    :: LowerBoundU, UpperBoundU
+
       
       Type(LogInfo_Type)                           :: LogInfo
 #if defined PB_2D
@@ -104,6 +105,7 @@ Contains
       PetscReal                                    :: rDummy
       Character                                    :: cDummy
       PetscInt                                     :: vers
+      PetscReal                                    :: fatol, frtol, catol, crtol, gatol, grtol, gttol
       
       Call MEF90_Initialize()
       Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
@@ -160,7 +162,7 @@ Contains
    
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done reading and partitioning the mesh\n"c
+         Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
    
@@ -173,14 +175,14 @@ Contains
       Call VarFracEXOVariable_Init(AppCtx%MyEXO)
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose > 1) Then
-         Write(IOBuffer, *) "Done with VarFracEXOVariable_Init and VarFracEXOProperty_Read\n"c
+         Write(IOBuffer, *) "Done with VarFracEXOVariable_Init and VarFracEXOProperty_Read\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
       !!! Read Mat Properties from the CST file
       Call MatProp_Read(AppCtx%MeshTopology, AppCtx%MatProp, trim(AppCtx%AppParam%prefix)//'.CST')
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with MatProp_Read\n"c
+         Write(IOBuffer, *) "Done with MatProp_Read\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
@@ -188,22 +190,21 @@ Contains
       Do i = 1, AppCtx%MeshTopology%num_elem_blks
          AppCtx%MeshTopology%elem_blk(i)%Elem_Type = AppCtx%MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( AppCtx%MeshTopology%elem_blk(i)%ID )
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(i), AppCtx%MeshTopology%num_dim)
-         Write(*,*) 'Elem_type', i, AppCtx%MeshTopology%elem_blk(i)%Elem_Type
       End Do
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with Init_Elem_Blk_Type\n"c
+         Write(IOBuffer, *) "Done with Init_Elem_Blk_Type\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
       
       Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemVect, AppCtx%VarFracSchemeParam%IntegOrder)
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with ElementInit Vect\n"c
+         Write(IOBuffer, *) "Done with ElementInit Vect\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemScal, AppCtx%VarFracSchemeParam%IntegOrder)
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with ElementInit Scal\n"c
+         Write(IOBuffer, *) "Done with ElementInit Scal\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
@@ -212,28 +213,34 @@ Contains
          Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
 
-
-
       !!! Create the Sections for the variables
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSU', AppCtx%MeshTopology%Num_Dim, AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Theta', 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
 
       NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Stress', NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
+      If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. ( AppCtx%VarFracSchemeParam%SaveStrain) ) Then
+         Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
+         Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Stress', NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
+      End If
+
 
       !!! Create the Scatter, Vec, Mat, KSP, PC
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%Theta, AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
 
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%LowerBoundU, iErr); CHKERRQ(iErr)
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%UpperBoundU, iErr); CHKERRQ(iErr)
+      End If
+   
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
       
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call TaoCreate(PETSC_COMM_WORLD, 'tao_cg', AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappU, iErr); CHKERRQ(iErr)
 
          Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappU, FormFunctionAndGradient, AppCtx, iErr); CHKERRQ(iErr)
@@ -241,6 +248,16 @@ Contains
 
          Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%KU, AppCtx%KU, iErr); CHKERRQ(iErr)
          Call TaoAppSetInitialSolutionVec(AppCtx%taoappU, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
+
+         fatol = 1.0D-6
+         frtol = 1.0D-8
+         catol = 1.0D-6
+         crtol = 1.0D-8
+         gatol = 1.0D-6
+         grtol = 1.0D-8
+         gttol = 1.0D-8
+         Call TaoSetTolerances(AppCtx%taoU, fatol, frtol, catol, crtol, iErr); CHKERRQ(iErr)
+         Call TaoSetGradientTolerances(AppCtx%taoU, gatol, grtol, gttol, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -311,20 +328,82 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       Integer                                      :: iDum
       PetscTruth                                   :: flg
+      Type(Vec)                                    :: RHSU_Vec
+      Type(SectionReal)                            :: UBC_Sec, LowerBoundU_Sec, UpperBoundU_Sec
+      PetscInt, Dimension(:), Pointer              :: BCFlag_Ptr
+      PetscReal, Dimension(:), Pointer             :: UBC_Ptr, U_Ptr, LowerBoundU_Ptr, UpperBoundU_Ptr
+      PetscInt                                     :: iDoF1, iDoF2
       
+      !!! Read F, and Temperature
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
+      
+      !!! Read and Initialize Boundary Conditions
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'UBC',  AppCtx%MeshTopology%Num_Dim, UBC_Sec , iErr); CHKERRQ(iErr)
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundU_Sec',  AppCtx%MeshTopology%Num_Dim, LowerBoundU_Sec , iErr); CHKERRQ(iErr)
+         Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundU_Sec',  AppCtx%MeshTopology%Num_Dim, UpperBoundU_Sec , iErr); CHKERRQ(iErr)
+         Allocate(LowerBoundU_Ptr(AppCtx%MeshTopology%Num_Dim))
+         Allocate(UpperBoundU_Ptr(AppCtx%MeshTopology%Num_Dim))
+         Call SectionRealToVec(LowerBoundU_Sec, AppCtx%ScatterVect, SCATTER_REVERSE, AppCtx%LowerBoundU, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(UpperBoundU_Sec, AppCtx%ScatterVect, SCATTER_REVERSE, AppCtx%UpperBoundU, iErr); CHKERRQ(iErr)
+         Call SectionRealSet(LowerBoundU_Sec, -1.0D20, iErr); CHKERRQ(iErr)
+         Call SectionRealSet(UpperBoundU_Sec,  1.0D20, iErr); CHKERRQ(iErr)
+      End If
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, UBC_Sec) 
+
+      Do iDoF1 = 1, AppCtx%MeshTopology%Num_Verts !!! WRONG!
+         Call SectionIntRestrict(AppCtx%BCFlagU, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
+         If (Sum(BCFlag_Ptr) /= 0) Then
+            LowerBoundU_Ptr = -1.0D20
+            UpperBoundU_Ptr =  1.0D20
+            Call SectionRealRestrict(UBC_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, UBC_Ptr, iErr); CHKERRQ(iErr)
+            Call SectionRealRestrict(AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF1-1, U_Ptr, iErr); CHKERRQ(iErr)
+            Do iDof2 = 1, AppCtx%MeshTopology%Num_Dim
+               If (BCFlag_Ptr(iDoF2) /= 0) Then
+                  U_Ptr(iDoF2) = UBC_Ptr(iDoF2)
+                  If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+                     LowerBoundU_Ptr(iDoF2) = UBC_Ptr(iDoF2)
+                     UpperBoundU_Ptr(iDoF2) = UBC_Ptr(iDoF2)
+                  End If
+               End If
+            End Do
+            Call SectionRealUpdate(AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF1-1, U_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionRealRestore(UBC_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, UBC_Ptr, iErr); CHKERRQ(iErr)
+            Call SectionRealRestore(AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF1-1, U_Ptr, iErr); CHKERRQ(iErr)
+            If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+               Call SectionRealUpdate(LowerBoundU_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, LowerBoundU_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(UpperBoundU_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, UpperBoundU_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            End If
+         EndIf
+         Call SectionIntRestore(AppCtx%BCFlagU, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
+      End Do
+      Call SectionRealDestroy(UBC_Sec, iErr); CHKERRQ(iErr)
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call SectionRealToVec(LowerBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%LowerBoundU, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(UpperBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%UpperBoundU, iErr); CHKERRQ(iErr)
+         Call TaoAppSetVariableBounds(AppCtx%TaoAppU, AppCtx%LowerBoundU, AppCtx%UpperBoundU, iErr); CHKERRQ(iErr)
+
+         Call SectionRealDestroy(LowerBoundU_Sec, iErr); CHKERRQ(iErr)
+         Call SectionRealDestroy(UpperBoundU_Sec, iErr); CHKERRQ(iErr)
+         DeAllocate(LowerBoundU_Ptr)
+         DeAllocate(UpperBoundU_Ptr)
+      End If      
 
       !!! KSPSolve and Tao work with vectors, not sections
       Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%U_Vec, ierr); CHKERRQ(ierr)
 
       If (.NOT. AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%RHSU, RHSU_Vec, iErr); CHKERRQ(iErr)
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Assembling the RHS\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          Call RHSAssembly(AppCtx)
          If (AppCtx%AppParam%verbose > 1) Then
-            Call VecView(AppCtx%RHSU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+            Call SectionRealView(AppCtx%RHSU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          End If
+         Call SectionRealToVec(AppCtx%RHSU, AppCtx%ScatterVect, SCATTER_FORWARD, RHSU_Vec, ierr); CHKERRQ(ierr)
       
 
          If (AppCtx%AppParam%verbose > 0) Then
@@ -333,7 +412,7 @@ Contains
          End If
    
          Call PetscLogStagePush(AppCtx%LogInfo%SolveU_Stage, iErr); CHKERRQ(iErr)
-         Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
+         Call KSPSolve(AppCtx%KSPU, RHSU_Vec, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          !!! Solve and store the solution in AppCtx%RHS
          
@@ -346,7 +425,10 @@ Contains
             Write(IOBuffer, 101) KSPreason
          End If
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call VecDestroy(RHSU_Vec, iErr); CHKERRQ(iErr)
       Else
+!         Call TaoSetTrustRegionRadius(AppCtx%taoU, 100000.0D0, iErr); CHKERRQ(iErr)
+
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -354,18 +436,12 @@ Contains
          Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, AppCtx%TotalEnergy, TaoResidual, iDum, iDum, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
-            Write(IOBuffer, *) 'Tao convergence status: ', KSPNumIter!, AppCtx%TotalEnergy
+            Write(IOBuffer, *) 'Tao convergence status: ', TaoReason, '\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Else
             Write(IOBuffer, 103) TaoReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
-         
-         Call VecValid(AppCtx%U_Vec, flg, iErr); CHKERRQ(iErr)
-         Write(*,*) 'VecValid returned ', flg
-!         Call VecView(AppCtx%U_Vec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-
-         !!! Scatter the solution from (Vec) AppCtx%RHS to (SectionReal) AppCtx%U
       End If
       Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, AppCtx%U_Vec, ierr); CHKERRQ(ierr)
       
@@ -379,169 +455,120 @@ Contains
 ! TAO wrappers
 !----------------------------------------------------------------------------------------!
 
-   Subroutine FormHessian(tao, X, H, Hpre, flg, AppCtx, iErr)
-      TAO_SOLVER         :: tao
-      Type(Vec)          :: X
-      Type(Mat)          :: H, Hpre
-      PetscInt           :: iErr
-      MatStructure       :: flg
-      Type(AppCtx_Type)  :: AppCtx
-      
-      PetscTruth         :: isEqual
-      
-      Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyU_Stage, iErr); CHKERRQ(iErr)
-      Call MatAssembly(AppCtx)
-      Call MatEqual(AppCtx%KU, H, isEqual, iErr); CHKERRQ(iErr)
-      If (.NOT. isEqual) Then
-         Call MatCopy(AppCtx%KU, H, iErr); CHKERRQ(iErr)
-      End If
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine FormHessian
-   
-   Subroutine FormFunctionandGradient(tao, X, func, Gradient, AppCtx, iErr)
+   Subroutine FormFunctionAndGradient(tao, X, func, Gradient, AppCtx, iErr)
       TAO_SOLVER                                   :: tao
       Type(Vec)                                    :: X, Gradient
       PetscInt                                     :: iErr
       PetscReal                                    :: func
       Type(AppCtx_Type)                            :: AppCtx
       
-      Type(SectionReal)                            :: GradientSec, XSec
-      PetscInt                                     :: iBlk, iE, iELoc
-      PetscReal, Dimension(:), Pointer             :: GradientLocal, XLocal
-      PetscInt                                     :: NumDoFPerVertex 
-      
-      PetscReal                                    :: GradNorm
-      
+      Type(SectionReal)                            :: Gradient_Sec, X_Sec
+      PetscInt                                     :: iBlk     
+      PetscReal                                    :: myfunc 
       
       
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
-      ! Function Evaluation
-      Call ComputeEnergy(AppCtx)
-      func = AppCtx%ElasticEnergy + AppCtx%ExtForcesWork
 
-!!!
-!!! func = 0.0_Kr
-!!! Call VecSet(Gradient, 0.0_Kr, iErr); CHKERRQ(iErr)
-!!!      
-      ! Gradient Evaluation
-      NumDoFPerVertex = AppCtx%MeshTopology%Num_Dim
-      
-      !!! Hopefully one day we will use assembleVector instead of going through a section
+      func = 0.0_Kr
+            
       Call VecZeroEntries(Gradient, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Gradient', NumDoFPerVertex, GradientSec, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Gradient', AppCtx%MeshTopology%Num_Dim, Gradient_Sec, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'X', AppCtx%MeshTopology%Num_Dim, X_Sec, iErr); CHKERRQ(iErr)
 
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'X', NumDoFPerVertex, XSec, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(XSec, AppCtx%ScatterVect, SCATTER_REVERSE, X, iErr); CHKERRQ(ierr)
+      Call SectionRealToVec(X_Sec, AppCtx%ScatterVect, SCATTER_REVERSE, X, iErr); CHKERRQ(ierr)
 
+      myfunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Allocate(GradientLocal(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
-
-         Do_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call GradientAssemblyLocal(iE, XSec, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, GradientLocal)
-            Write(MEF90_MyRank+200, *) '***', iE, GradientLocal
-            Call SectionRealUpdateClosure(GradientSec, AppCtx%MeshTopology%Mesh, iE-1, GradientLocal, ADD_VALUES, iErr); CHKERRQ(iErr)
-         End Do Do_iE
-         DeAllocate(GradientLocal)
+         Call FormFunctionAndGradientBlock(iBlk, X_Sec, myfunc, Gradient_Sec, AppCtx)
       End Do Do_iBlk
-      
-      Call SectionRealComplete(GradientSec, iErr); CHKERRQ(iErr)
-      !!! VERY important! This is the equivalent of a ghost update
-      Call SectionRealToVec(GradientSec, AppCtx%ScatterVect, SCATTER_FORWARD, Gradient, ierr); CHKERRQ(ierr)
-      
-!      Call VecView(Gradient, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-      
-      Call SectionRealDestroy(XSec, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(GradientSec, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-  Call VecNorm(Gradient, Norm_2, GradNorm, ierr)
-  write(*,*)'==========', func, GradNorm
-   End Subroutine FormFunctionandGradient
-   
-!----------------------------------------------------------------------------------------!      
-! GradientAssemblyLocal (CM)  
-!----------------------------------------------------------------------------------------!      
-   Subroutine GradientAssemblyLocal(iE, XSec, MatProp, AppCtx, GradientElem)
+      Call PetscGlobalSum(myfunc, func, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
 
-#if defined PB_2D
-      Type(MatProp2D_Type)                         :: MatProp
-#elif defined PB_3D
-      Type(MatProp3D_Type)                         :: MatProp
-#endif
-   
-      PetscInt                                     :: iE
-      Type(SectionReal)                            :: XSec
-      Type(AppCtx_Type)                            :: AppCtx
-      PetscReal, Dimension(:), Pointer             :: GradientElem
+      Call SectionRealComplete(Gradient_Sec, iErr); CHKERRQ(iErr)
+      !!! Scatter values from the Sections back to the Vec
+      Call SectionRealToVec(Gradient_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, Gradient, iErr); CHKERRQ(iErr)
+
+      Call SectionRealDestroy(Gradient_Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(X_Sec, iErr); CHKERRQ(iErr)
       
-      PetscReal, Dimension(:), Pointer             :: FLocal
-      PetscReal, Dimension(:), Pointer             :: ThetaLocal
-      PetscReal, Dimension(:), Pointer             :: XLocal
-      PetscInt, Dimension(:), Pointer              :: BCFlagLocal
-      PetscInt                                     :: iErr
-      PetscInt                                     :: NumDoFScal, NumDoFVect, NumGauss
-      PetscInt                                     :: iDoF1, iDoF2, iGauss
-      PetscReal                                    :: Theta_Elem
+      If (AppCtx%AppParam%verbose > 1) Then
+         Call VecView(Gradient, PETSC_VIEWER_STDOUT_WORLD, iErr)
+      End If
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   End Subroutine FormFunctionAndGradient
+   
+   Subroutine FormFunctionAndGradientBlock(iBlk, X_Sec, func, Gradient_Sec, AppCtx)
+      PetscInt                                     :: iBlk
+      Type(SectionReal)                            :: X_Sec
+      PetscReal                                    :: func
+      Type(SectionReal)                            :: Gradient_Sec
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      PetscReal, Dimension(:), Pointer             :: X_Loc, F_Loc, Theta_Loc, Gradient_Loc
 #if defined PB_2D
-      Type (Vect2D)                                :: F_Elem
+      Type(Vect2D)                                 :: X_Elem, F_Elem
+      Type(Mats2D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #elif defined PB_3D  
-      Type (Vect3D)                                :: F_Elem    
+      Type(Vect3D)                                 :: X_ElemF_Elem    
+      Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #endif
-#if defined PB_2D
-      Type(MatS2D)                                 :: Strain_Elem, Effective_Strain_Elem
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
-#endif      
+      PetscReal                                    :: Theta_Elem
+      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscLogDouble                               :: flops       
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
       flops        = 0.0
-      GradientElem = 0.0_Kr
-      NumDoFVect   = Size(AppCtx%ElemVect(iE)%BF,1)
-      NumDoFScal   = Size(AppCtx%ElemScal(iE)%BF,1)
-      NumGauss     = Size(AppCtx%ElemVect(iE)%BF,2)
-      
-      Allocate(BCFlagLocal(NumDoFVect))
-      Call SectionIntRestrictClosure(AppCtx%BCFlagU, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlagLocal, iErr); CHKERRQ(ierr)
-      Allocate(FLocal(NumDoFVect))
-      Call SectionRealRestrictClosure(AppCtx%F, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, FLocal, iErr); CHKERRQ(ierr)
-      Allocate(ThetaLocal(NumDoFScal))
-      Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, ThetaLocal, iErr); CHKERRQ(ierr)
-      
-      Allocate(Xlocal(NumDoFVect))
-      Call SectionRealRestrictClosure(XSec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, XLocal, iErr); CHKERRQ(ierr)
 
-      Do_iGauss: Do iGauss = 1, NumGauss
-         F_Elem      = 0.0_Kr
-         Theta_Elem  = 0.0_Kr
-         Strain_Elem = 0.0_Kr
-         Do iDoF2 = 1, NumDoFVect
-            F_Elem      = F_Elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * FLocal(iDoF2)
-            Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss) * XLocal(iDoF2))
-         End Do
-         Do iDoF2 = 1, NumDoFScal
-            Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * ThetaLocal(iDoF2)
-            flops = flops + 2.0
-         End Do
-         !! Calculate the Effective Strain at the gauss point
-         Effective_Strain_Elem  =  Strain_Elem !- (Theta_Elem * MatProp%Therm_Exp)   
-         Do iDoF1 = 1, NumDoFVect
-            If (BCFlagLocal(iDoF1) == 0) Then
-               ! terms due to forces
-!               GradientElem(iDoF1) = GradientElem(iDoF1) - AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. F_Elem ) 
-               ! terms due to inelastic strains
-               GradientElem(iDoF1) = GradientElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ((MatProp%Hookes_Law * Effective_Strain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss))
-               flops = flops + 4.0
-            End If
-         End Do
-      End Do Do_iGauss
-      DeAllocate(BCFlagLocal)
-      DeAllocate(FLocal)
-      DeAllocate(ThetaLocal)
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+
+      Allocate(X_Loc(NumDoFVect))
+      Allocate(F_Loc(NumDoFVect))
+      Allocate(Gradient_Loc(NumDoFVect))
+      Allocate(Theta_Loc(NumDoFScal))
+
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Gradient_Loc = 0.0_Kr
+         Call SectionRealRestrictClosure(X_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, X_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%F, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+            F_Elem = 0.0_Kr
+            X_ELem = 0.0_Kr
+            Strain_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFVect
+               F_Elem      = F_Elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F_Loc(iDoF2)
+               X_Elem      = X_Elem + X_Loc(iDoF2) * AppCtx%ElemVect(iE)%BF(iDoF2, iGauss)
+               Strain_Elem = Strain_Elem + X_Loc(iDoF2) * AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss)
+            End Do
+            Theta_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFScal
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
+               flops = flops + 2.0
+            End Do
+            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            
+            func = func + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * .5_Kr - (F_Elem .DotP. X_Elem) )
+            Do iDoF1 = 1, NumDofVect
+               Gradient_Loc(iDoF1) = Gradient_Loc(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) - (F_Elem .DotP. AppCtx%ElemVect(iE)%BF(iDoF1, iGauss)) )
+            End Do
+         End Do Do_iGauss
+         Call SectionRealUpdateClosure(Gradient_Sec, AppCtx%MeshTopology%Mesh, iE-1, Gradient_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_iEloc
+
+      DeAllocate(X_Loc)
+      DeAllocate(F_Loc)
+      DeAllocate(Gradient_Loc)
+      DeAllocate(Theta_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
-   End Subroutine GradientAssemblyLocal
-
+   End Subroutine FormFunctionAndGradientBlock
 
 !----------------------------------------------------------------------------------------!      
 ! MatAssembly (CM)  
@@ -614,106 +641,159 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatAssemblyBlk
 
-!----------------------------------------------------------------------------------------!      
-! RHSAssembly (CM)  
-!----------------------------------------------------------------------------------------!      
+   Subroutine FormHessian(tao, X, H, Hpre, flg, AppCtx, iErr)
+      TAO_SOLVER         :: tao
+      Type(Vec)          :: X
+      Type(Mat)          :: H, Hpre
+      PetscInt           :: iErr
+      MatStructure       :: flg
+      Type(AppCtx_Type)  :: AppCtx
+      
+      PetscInt           :: iBlk
+      
+      Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyU_Stage, iErr); CHKERRQ(iErr)
+
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Call HessianAssemblyBlock(iBlk, H, AppCtx)
+      End Do Do_Elem_iBlk
+      Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%verbose > 1) Then
+         Call MatView(H, PETSC_VIEWER_STDOUT_WORLD, iErr)
+      End If
+
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   End Subroutine FormHessian
+   
+   
+   Subroutine HessianAssemblyBlock(iBlk, H, AppCtx)
+      PetscInt                                     :: iBlk
+      Type(Mat)                                    :: H
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iBlkID
+      PetscReal, Dimension(:,:), Pointer           :: MatElem      
+      PetscInt                                     :: iELoc, iE
+   
+      PetscInt                                     :: iErr
+      PetscInt                                     :: NumDoF
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscLogDouble                               :: flops       
+      
+      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+      flops = 0.0
+      NumDoF   =  AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      Allocate(MatElem(NumDoF, NumDoF))
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         MatElem  = 0.0_Kr
+         Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
+            Do iDoF1 = 1, NumDoF
+               Do iDoF2 = 1, NumDoF
+                  MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) ) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))        
+                  flops = flops + 2.0     
+               End Do
+            End Do
+         End Do
+         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_Elem_iE
+            
+      DeAllocate(MatElem)
+      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+   End Subroutine HessianAssemblyBlock
+
+
    Subroutine RHSAssembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
-      Type(SectionReal)                            :: RHSSec
-      PetscInt                                     :: iBlk, iE, iELoc
-      PetscReal, Dimension(:), Pointer             :: RHSElem
-      PetscInt                                     :: NumDoFPerVertex 
-      
-      NumDoFPerVertex = AppCtx%MeshTopology%Num_Dim
-      
-      !!! Hopefully one day we will use assembleVector instead of going through a section
-      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
-      Call VecSet(AppCtx%RHSU, 0.0_Kr, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHS', NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
-      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
-         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call RHSAssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ),AppCtx, RHSElem)
-            Call SectionRealUpdateClosure(RHSSec, AppCtx%MeshTopology%Mesh, iE-1, RHSElem, ADD_VALUES, iErr); CHKERRQ(iErr)
-         End Do Do_Elem_iE
-         DeAllocate(RHSElem)
-      End Do Do_Elem_iBlk
-      Call SectionRealComplete(RHSSec, iErr); CHKERRQ(iErr)
-      !!! VERY important! This is the equivalent of a ghost update
-      Call SectionRealToVec(RHSSec, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%RHSU, ierr); CHKERRQ(ierr)
-      Call SectionRealDestroy(RHSSec, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-  End Subroutine RHSAssembly
-   
-!----------------------------------------------------------------------------------------!      
-! RHSAssemblyLocal (CM)  
-!----------------------------------------------------------------------------------------!      
-   Subroutine RHSAssemblyLocal(iE, MatProp, AppCtx, RHSElem)
+      PetscInt                                     :: iBlk
 
-#if defined PB_2D
-      Type(MatProp2D_Type)                         :: MatProp
-#elif defined PB_3D
-      Type(MatProp3D_Type)                         :: MatProp
-#endif
-   
-      PetscInt                                     :: iE
+      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
+
+      Call SectionRealZero(AppCtx%RHSU, iErr); CHKERRQ(iErr)
+      
+      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Call RHSAssemblyBlock(iBlk, AppCtx)
+      End Do Do_iBlk
+
+      Call SectionRealComplete(AppCtx%RHSU, iErr); CHKERRQ(iErr)
+      !!! VERY important! This is the equivalent of a ghost update
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   End Subroutine RHSAssembly
+
+
+   Subroutine RHSAssemblyBlock(iBlk, AppCtx)
+      PetscInt                                     :: iBlk
       Type(AppCtx_Type)                            :: AppCtx
-      PetscReal, Dimension(:), Pointer             :: RHSElem
-      PetscReal, Dimension(:), Pointer             :: F
-      PetscReal, Dimension(:), Pointer             :: Theta
-      PetscInt                                     :: iErr
-      PetscInt                                     :: NumDoFScal, NumDoFVect, NumGauss
-      PetscInt, Dimension(:), Pointer              :: BCFlag
-      PetscInt                                     :: iDoF1, iDoF2, iGauss
+
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      PetscReal, Dimension(:), Pointer             :: F_Loc, Theta_Loc, RHS_Loc
+      PetscInt, Dimension(:), Pointer              :: BCFlag_Loc
       PetscReal                                    :: Theta_Elem
 #if defined PB_2D
       Type (Vect2D)                                :: F_Elem
 #elif defined PB_3D  
       Type (Vect3D)                                :: F_Elem    
 #endif
+      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscLogDouble                               :: flops       
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
       flops      = 0.0
-      RHSElem    = 0.0_Kr
-      NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
-      NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
-      NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
-      Allocate(BCFlag(NumDoFVect))
-      Call SectionIntRestrictClosure(AppCtx%BCFlagU, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag, iErr); CHKERRQ(ierr)
-      Allocate(F(NumDoFVect))
-      Call SectionRealRestrictClosure(AppCtx%F, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F, iErr); CHKERRQ(ierr)
-      Allocate(Theta(NumDoFScal))
-      Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
-      Do_iGauss: Do iGauss = 1, NumGauss
-         F_Elem = 0.0_Kr
-         Theta_Elem = 0.0_Kr
-         Do iDoF2 = 1, NumDoFVect
-            F_Elem = F_Elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F(iDoF2)
-         End Do
-         Do iDoF2 = 1, NumDoFScal
-            Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta(iDoF2)
-            flops = flops + 2.0
-         End Do
-         Do iDoF1 = 1, NumDoFVect
-            If (BCFlag(iDoF1) == 0) Then
-               ! RHS terms due to forces
-               RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. F_Elem ) 
-               ! RHS terms due to inelastic strains
-               RHSElem(iDoF1) = RHSElem(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((MatProp%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. MatProp%Therm_Exp)
-               flops = flops + 5.0
-            End If
-         End Do
-      End Do Do_iGauss
-      DeAllocate(BCFlag)
-      DeAllocate(F)
-      DeAllocate(Theta)
+      
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+
+      Allocate(BCFlag_Loc(NumDoFVect))
+      Allocate(F_Loc(NumDoFVect))
+      Allocate(RHS_Loc(NumDoFVect))
+      Allocate(Theta_Loc(NumDoFScal))
+
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         RHS_Loc = 0.0_Kr
+         Call SectionIntRestrictClosure(AppCtx%BCFlagU, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%F, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+            F_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFVect
+               F_Elem = F_Elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F_Loc(iDoF2)
+            End Do
+            Theta_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFScal
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
+               flops = flops + 2.0
+            End Do
+            Do iDoF1 = 1, NumDoFVect
+               If (BCFlag_Loc(iDoF1) == 0) Then
+                  ! RHS terms due to forces
+                  RHS_Loc(iDoF1) = RHS_Loc(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) .DotP. F_Elem ) 
+                  ! RHS terms due to inelastic strains
+                  RHS_Loc(iDoF1) = RHS_Loc(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((AppCtx%MatProp(iBlkId)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%MatProp(iBlkId)%Therm_Exp)
+                  flops = flops + 5.0
+               End If
+            End Do
+         End Do Do_iGauss
+         Call SectionRealUpdateClosure(AppCtx%RHSU, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_iEloc
+      
+      DeAllocate(BCFlag_Loc)
+      DeAllocate(F_Loc)
+      DeAllocate(RHS_Loc)
+      DeAllocate(Theta_Loc)
+      
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
-   End Subroutine RHSAssemblyLocal
+   End Subroutine RHSAssemblyBLock
    
 !----------------------------------------------------------------------------------------!      
 ! ComputeEnergy (CM)  
@@ -739,6 +819,7 @@ Contains
      Type(Vect3D)                                  :: F_Elem, U_Elem  
 #endif
       PetscReal                                    :: MyElasticEnergy, MyExtForcesWork
+      PetscInt                                     :: iBlkId
       PetscLogDouble                               :: flops       
      
 
@@ -750,6 +831,7 @@ Contains
       MyExtForcesWork = 0.0_Kr
          
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         iBlkId = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
@@ -777,8 +859,8 @@ Contains
                   F_Elem      = F_Elem + F(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss) 
                   U_Elem      = U_Elem + U(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)                   
                End Do            
-               Effective_Strain_Elem = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp 
-               Stress_Elem           = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
+               Effective_Strain_Elem = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlkId)%Therm_Exp 
+               Stress_Elem           = AppCtx%MatProp(iBlkId)%Hookes_Law * Effective_Strain_Elem
                MyElasticEnergy       = MyElasticEnergy + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr 
                MyExtForcesWork       = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (F_Elem .DotP. U_Elem)
                flops = flops + 5.0
@@ -882,7 +964,7 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeStrainStress
-!----------------------------------------------------------------------------------------!      
+
    
    Subroutine Save(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
@@ -918,15 +1000,22 @@ Contains
       Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%Theta, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%StressU, iErr); CHKERRQ(iErr)
+      If ( (AppCtx%VarFracSchemeParam%SaveStrain) .OR. (AppCtx%VarFracSchemeParam%SaveStress) ) Then
+         Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
+         Call SectionRealDestroy(AppCtx%StressU, iErr); CHKERRQ(iErr)
+      End If
       
       Call VecScatterDestroy(AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
       Call VecScatterDestroy(AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
-      Call VecDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call VecDestroy(AppCtx%LowerBoundU, iErr); CHKERRQ(iErr)
+         Call VecDestroy(AppCtx%UpperBoundU, iErr); CHKERRQ(iErr)
+      End If
+
 
       If (AppCtx%AppParam%verbose > 1) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
