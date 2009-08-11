@@ -200,7 +200,7 @@ Contains
          If (DoBC) Then
             Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
             Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
-         END IF
+         End If
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
@@ -318,7 +318,7 @@ Contains
       Allocate(IrrevFlag(NumDoFScal))
       Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
-      C1_V =  2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * MatProp%Toughness * AppCtx%VarFracSchemeParam%Epsilon  
+      C1_V =  2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * MatProp%Toughness / AppCtx%VarFracSchemeParam%Epsilon  
       flops = flops + 2.0
       Do_iGauss: Do iGauss = 1, NumGauss
           Do iDoF1 = 1, NumDoFScal
