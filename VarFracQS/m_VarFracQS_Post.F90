@@ -111,7 +111,7 @@ Contains
                MyExtForcesWork = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (F_Elem .DotP. U_Elem)
                flops = flops + 2.0
             ! Calculate the suface energy
-               MySurfaceEnergy  = MySurfaceEnergy + AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( 0.25_Kr / AppCtx%VarFracSchemeParam%Epsilon *  ( 1.0_Kr - V_Elem)**2 +  AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem))
+               MySurfaceEnergy  = MySurfaceEnergy + AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( ( 1.0_Kr - V_Elem)**2 / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem))
                flops = flops + 8.0
             End Do
             ! DeAllocate the variables

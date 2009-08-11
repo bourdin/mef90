@@ -51,7 +51,6 @@ Contains
          !!! If I'd understand how to use SectionGetArrayF90 I'd use it
          Allocate(IrrevFlag(1))
          IrrevFlag = VarFrac_BC_Type_DIRI
-!         Allocate(V_Ptr(1))
          If (AppCtx%IsBT) Then
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) "Backtracking, so reading timestep if TS>1\n"c
@@ -84,7 +83,6 @@ Contains
                End If
                Call SectionRealRestore(AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr);             End Do
          End If
-!         DeAllocate(V_Ptr)
          DeAllocate(IrrevFlag)
          If (AppCtx%AppParam%verbose > 0) Then
             Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
@@ -101,17 +99,10 @@ Contains
             Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"c
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
-!         Allocate(IrrevFlag(1))
-!         Allocate(BCVFlag(1))
          Allocate(V_Ptr(1))
          Do i = 1, AppCtx%MeshTopology%Num_Verts       
             !!! Take care of potential BC on V
             Call SectionIntRestrict(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCVFlag, iErr); CHKERRQ(ierr)
-!!!            If (BCVFlag(1) /= VarFrac_BC_Type_NONE) Then
-!!!               !!! WTF???
-!!!               Call SectionRealRestrictClosure(AppCtx%V, AppCtx%MeshTopology%mesh, AppCtx%MeshTopology%Num_Elems + i-1, 1, V_Ptr, iErr);                
-!!!               Call SectionRealUpdateClosure(AppCtx%V, AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!!!            End If
 
             If (AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_Eq ) Then
                !!! Take care of Irreversibility 
@@ -124,8 +115,6 @@ Contains
             End If
             Call SectionIntRestore(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCVFlag, iErr); CHKERRQ(ierr)
          End Do      
-!         DeAllocate(IrrevFlag)
-!         DeAllocate(BCVFlag)
          DeAllocate(V_Ptr)
       Case default   
          SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
@@ -147,7 +136,14 @@ Contains
 
       Call MatZeroEntries(AppCtx%KV, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call MatV_AssemblyBlk(iBlk, AppCtx)
+         Select Case (AppCtx%VarFracSchemeParam%AtNum)
+         !!! Case(1)
+         !!!    Call MatV_AssemblyBlk_AT1(iBlk, AppCtx%KV, .TRUE., AppCtx)
+         Case(2)
+            Call MatV_AssemblyBlk_AT2(iBlk, AppCtx%KV, .TRUE., AppCtx)
+         Case Default
+            SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+      End Select
       End Do Do_Elem_iBlk
       Call MatAssemblyBegin(AppCtx%KV, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KV, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
@@ -155,8 +151,10 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatV_Assembly
 
-   Subroutine MatV_AssemblyBlk(iBlk, AppCtx)
+   Subroutine MatV_AssemblyBlk_AT2(iBlk, H, DoBC, AppCtx)
       PetscInt                                     :: iBlk
+      Type(Mat)                                    :: H
+      PetscTruth                                   :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlkID
@@ -188,7 +186,9 @@ Contains
       Allocate(U(NumDoFVect))
       Allocate(Theta(NumDoFScal))
       Allocate(BCFlag(NumDoFScal))
+      BCFlag = VarFrac_BC_Type_NONE
       Allocate(IrrevFlag(NumDoFScal))
+      IrrevFlag = VarFrac_BC_Type_NONE
       Allocate(MatElem(NumDoFScal, NumDoFScal))
       
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -197,8 +197,10 @@ Contains
          !! Get the local nodal values of U, Theta, and BCs
          Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
          Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
-         Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
-         Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+         If (DoBC) Then
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+         END IF
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
@@ -216,14 +218,14 @@ Contains
                !! Calculate the Effective Strain at the gauss point
                Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
                !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
-               C2_V = 0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * AppCtx%MatProp(iBlkID)%Toughness + ((AppCtx%MatProp(iBlkID)%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
+               C2_V = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon  + ((AppCtx%MatProp(iBlkID)%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
                flops = flops + 3.0
-               C2_GradV = 2.0_Kr * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
+               C2_GradV = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
                flops = flops + 2.0
             Else
-               C2_V = 0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * AppCtx%MatProp(iBlkID)%Toughness 
+               C2_V = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon  
                flops = flops + 2.0
-               C2_GradV = 2.0_Kr * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
+               C2_GradV = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
                flops = flops + 2.0
             End If
             !! Assemble the element stiffness
@@ -240,7 +242,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(AppCtx%KV, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(MatElem)
@@ -249,7 +251,7 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-   End Subroutine MatV_AssemblyBlk
+   End Subroutine MatV_AssemblyBlk_AT2
 
 !----------------------------------------------------------------------------------------!      
 ! RHSAssembly (CM)  
@@ -316,7 +318,7 @@ Contains
       Allocate(IrrevFlag(NumDoFScal))
       Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
       ! Calculate the coefficient of the term in V (C1_V) of the energy functional
-      C1_V =  0.5_Kr / AppCtx%VarFracSchemeParam%Epsilon * MatProp%Toughness 
+      C1_V =  2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * MatProp%Toughness * AppCtx%VarFracSchemeParam%Epsilon  
       flops = flops + 2.0
       Do_iGauss: Do iGauss = 1, NumGauss
           Do iDoF1 = 1, NumDoFScal

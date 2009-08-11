@@ -10,9 +10,10 @@ M_VARFRACOBJS = ${M_VARFRACDIR}/m_VarFrac_Struct.o
 
 all: VarFracQS${DIM}
 
-include ${PETSC_DIR}/conf/base
+#include ${PETSC_DIR}/conf/base
+include ${TAO_DIR}/bmake/tao_common
 
-FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR} -I${M_VARFRACDIR} -vec-report0
+FFLAGS = -DWITH_TAO -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR} -I${M_VARFRACDIR} -vec-report0
 # -ftrace=full -ffree-line-length-huge
 
 .F90.o: 
@@ -27,7 +28,7 @@ VarFracQS${DIM}: ${PETSC_ARCH} VarFracQS.o   ${PETSC_ARCH}/${DIM}VarFracQS.o \
                                       m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o \
                                       m_VarFracQS.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o \
                                       m_VarFracQS_Post.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o
-	${FLINKER} -o ${PETSC_ARCH}/VarFracQS${DIM} ${PETSC_ARCH}/${DIM}VarFracQS.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_U.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o  ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o ${MEF90OBJS} ${M_VARFRACOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	${FLINKER} -o ${PETSC_ARCH}/VarFracQS${DIM} ${PETSC_ARCH}/${DIM}VarFracQS.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_U.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o  ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o ${MEF90OBJS} ${M_VARFRACOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 	
 VarFracQS.o:   ${PETSC_ARCH} m_VarFracQS.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o \
                                       m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o \

@@ -138,6 +138,7 @@ Module m_VarFrac_Struct
       PetscReal                                    :: KEpsilon
 
       PetscInt                                     :: ATNum
+      PetscReal                                    :: ATCv ! The c_v constant in Braides-1998 p.48
       PetscInt                                     :: IntegOrder
       
       PetscTruth                                   :: SaveStress
@@ -409,9 +410,9 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-savestrain ', L1, A)")          dSchemeParam%SaveStrain, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-u_usetao ', L1, A)")          dSchemeParam%U_UseTao, '\n'
+      Write(IOBuffer, "('-u_tao ', L1, A)")               dSchemeParam%U_UseTao, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-v_usetao ', L1, A)")          dSchemeParam%V_UseTao, '\n'
+      Write(IOBuffer, "('-v_tao ', L1, A)")               dSchemeParam%V_UseTao, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine VarFracSchemeParam_View
 
@@ -458,8 +459,17 @@ Module m_VarFrac_Struct
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-u_usetao',       dSchemeParam%U_UseTao, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-v_usetao',       dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-u_tao',          dSchemeParam%U_UseTao, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
+      
+      Select Case(dSchemeParam%ATNum)
+      Case(1)
+         dSchemeParam%ATCv = 2.0_Kr / 3.0_Kr
+      Case(2)
+         dSchemeParam%ATCV = 0.5_Kr
+      Case Default
+         SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+      End Select
    End Subroutine VarFracSchemeParam_GetFromOptions
    
    Subroutine VarFracEXOProperty_Init(dEXO, dMeshTopology)
