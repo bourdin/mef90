@@ -249,17 +249,9 @@ Contains
          Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%KU, AppCtx%KU, iErr); CHKERRQ(iErr)
          Call TaoAppSetInitialSolutionVec(AppCtx%taoappU, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
 
-         fatol = 1.0D-5
-         frtol = 1.0D-8
-         catol = 1.0D-6
-         crtol = 1.0D-8
-         gatol = 1.0D-6
-         grtol = 1.0D-8
-         gttol = 1.0D-8
-!         Call TaoSetTolerances(AppCtx%taoU, fatol, frtol, catol, crtol, iErr); CHKERRQ(iErr)
-!         Call TaoSetGradientTolerances(AppCtx%taoU, gatol, grtol, gttol, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -332,10 +324,9 @@ Contains
       PetscInt, Dimension(:), Pointer              :: BCFlag_Ptr
       PetscReal, Dimension(:), Pointer             :: UBC_Ptr, U_Ptr, LowerBoundU_Ptr, UpperBoundU_Ptr
       PetscInt                                     :: iDoF1, iDoF2
+      
+      PetscReal      fatol, frtol, gatol, grtol, gttol, radius, catol, crtol
 
-
-      !!! TEST
-      Call SectionRealZero(AppCtx%U, iErr); CHKERRQ(iErr)
 
       !!! Read F, and Temperature
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
@@ -430,12 +421,11 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call VecDestroy(RHSU_Vec, iErr); CHKERRQ(iErr)
       Else
-!         Call TaoSetTrustRegionRadius(AppCtx%taoU, 100000.0D0, iErr); CHKERRQ(iErr)
-
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
+
          Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, AppCtx%TotalEnergy, TaoResidual, iDum, iDum, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
@@ -485,8 +475,14 @@ Contains
       Type(AppCtx_Type)  :: AppCtx
       
       PetscInt           :: iBlk
+      PetscTruth         :: assembled
       
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyU_Stage, iErr); CHKERRQ(iErr)
+
+      Call MatAssembled(H, assembled, iErr); CHKERRQ(iErr)
+      If (assembled) Then
+         Call MatZeroEntries(H, iErr); CHKERRQ(iErr)
+      End If
 
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Call HessianAssemblyBlock(iBlk, H, .FALSE.,  AppCtx)

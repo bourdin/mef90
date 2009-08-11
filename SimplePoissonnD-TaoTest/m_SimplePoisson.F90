@@ -737,8 +737,14 @@ Contains
       Type(AppCtx_Type)  :: AppCtx
       
       PetscInt           :: iBlk
+      PetscTruth         :: assembled
       
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
+
+      Call MatAssembled(H, assembled, iErr); CHKERRQ(iErr)
+      If (assembled) Then
+         Call MatZeroEntries(H, iErr); CHKERRQ(iErr)
+      End If
 
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Call HessianAssemblyBlock(iBlk, H, AppCtx)
