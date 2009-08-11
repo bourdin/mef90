@@ -53,6 +53,9 @@ Contains
       Type(PetscViewer)                            :: flgviewer
       
       Call MEF90_Initialize()
+#if defined WITH_TAO
+      Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
+#endif
       Call InitLog(AppCtx)
 
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
@@ -402,6 +405,10 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
+      
+#if defined WITH_TAO
+      Call TaoFinalize(iErr)
+#endif
       Call MEF90_Finalize()
 103 Format(A,'-logsummary.txt')
    End Subroutine VarFracQSFinalize

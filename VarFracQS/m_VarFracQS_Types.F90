@@ -20,7 +20,10 @@ Module m_VarFracQS_Types3D
    Use petscmesh
 
    Implicit NONE   
-   
+#if defined WITH_TAO
+#include "include/finclude/tao_solver.h"
+#endif
+
    Type LogInfo_Type
       PetscLogStage               :: IO_Stage
       PetscLogStage               :: Setup_Stage      
@@ -81,6 +84,11 @@ Module m_VarFracQS_Types3D
       Type(PC)                                     :: PCU, PCV
       Type(LogInfo_Type)                           :: LogInfo
       PetscTruth                                   :: IsBT
+#if defined WITH_TAO
+      TAO_SOLVER                                   :: taoV
+      TAO_APPLICATION                              :: taoAppV
+#endif
+      
 #if defined PB_2D
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp      
 #elif defined PB_3D

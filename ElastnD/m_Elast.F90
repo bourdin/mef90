@@ -77,7 +77,6 @@ Module m_Elast3D
 !!! TAO stuff      
       TAO_SOLVER                                   :: taoU
       TAO_APPLICATION                              :: taoappU
-      Type(Vec)                                    :: LowerBoundU, UpperBoundU
 
       
       Type(LogInfo_Type)                           :: LogInfo
@@ -106,6 +105,7 @@ Contains
       Character                                    :: cDummy
       PetscInt                                     :: vers
       PetscReal                                    :: fatol, frtol, catol, crtol, gatol, grtol, gttol
+      Type(Vec)                                    :: LowerBoundU, UpperBoundU
       
       Call MEF90_Initialize()
       Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
@@ -232,8 +232,8 @@ Contains
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
 
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%LowerBoundU, iErr); CHKERRQ(iErr)
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%UpperBoundU, iErr); CHKERRQ(iErr)
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, LowerBoundU, iErr); CHKERRQ(iErr)
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, UpperBoundU, iErr); CHKERRQ(iErr)
       End If
    
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
@@ -461,7 +461,7 @@ Contains
    End Subroutine Solve
    
 !----------------------------------------------------------------------------------------!      
-!             Global assmbly routines
+!             Global assembly routines
 !----------------------------------------------------------------------------------------!      
    Subroutine MatAssembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
@@ -991,11 +991,6 @@ Contains
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
-      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call VecDestroy(AppCtx%LowerBoundU, iErr); CHKERRQ(iErr)
-         Call VecDestroy(AppCtx%UpperBoundU, iErr); CHKERRQ(iErr)
-      End If
-
 
       If (AppCtx%AppParam%verbose > 1) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
