@@ -297,6 +297,135 @@ Contains
       Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
    End Subroutine InitLog
    
+   Subroutine InitLoads(AppCtx, t, iErr)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscReal                                    :: t
+
+      PetscInt                                     :: i, iErr, iDoF
+      PetscInt, Dimension(:), Pointer              :: BCFlagPtr
+      PetscReal                                    :: Val
+      PetscReal, Dimension(:), Pointer             :: UPtr, UplusPtr, UminusPtr
+      Type(SectionReal)                            :: UplusSec, UminusSec
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+      Type(SectionReal)                            :: CoordSection
+      PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
+      PetscReal, Dimension(:,:), Pointer           :: Coords
+
+      
+
+      If (AppCtx%AppParam%Restart) Then
+         Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Else
+         Select Case (AppCtx%AppParam%TestCase)
+         Case(1)
+            If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer, *) 'Setting U to 0 and F to t\n'
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
+            !!! U = 0, F=t
+            Val = t
+            Call SectionRealSet(AppCtx%F, Val, iErr); CHKERRQ(iErr);
+            Val = 0.0_Kr
+            Call SectionRealSet(AppCtx%U, Val, iErr); CHKERRQ(iErr);
+         Case(2)
+            If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer, *) 'Solving Test Case 2: pure dirichlet problem, no force\n'
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
+
+            !!! Test of non homogeneous Dirichlet BC
+            Allocate(ValPtr(1))
+            ValPtr = 0.0_Kr
+            Call SectionRealSet(AppCtx%F, 0.0_Kr, iErr); CHKERRQ(iErr);
+            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+               
+            Do iDoF = 1, Size(Coords,1)
+#if defined PB_2D
+               !!!ValPtr = t * ((Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2)
+               !!!ValPtr = t * (Coords(iDoF,1)**2 + Coords(iDoF,2)**2)
+               ValPtr = t * Coords(iDoF,1)**3
+#elif defined PB_3D
+               ValPtr = t * ((Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2)
+#endif
+               Call SectionRealUpdate(AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            End Do
+            DeAllocate(ValPtr)
+            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+         Case(3)
+            If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer, *) 'Solving Test Case 3: F=t . sgn(x) . sgn(y) [. sgn(z)] \n'
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
+
+            !!! Test of non homogeneous Dirichlet BC
+            Allocate(ValPtr(1))
+            ValPtr = 0.0_Kr
+            Call SectionRealSet(AppCtx%U, 1.0_Kr, iErr); CHKERRQ(iErr);
+            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            
+            Do iDoF = 1, Size(Coords,1)
+#if defined PB_2D
+               If ( Coords(iDoF,1) * Coords(iDoF,2) < 0.0_Kr ) Then
+                  ValPtr = -t
+               Else
+                  ValPtr = t
+               End If
+#elif defined PB_3D
+               If ( Coords(iDoF,1) * Coords(iDoF,2) * Coords(iDoF,3) < 0.0_Kr ) Then
+                  ValPtr = -t
+               Else
+                  ValPtr = t
+               End If
+#endif
+               Call SectionRealUpdate(AppCtx%F, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            End Do
+            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+         End Select            
+      End If
+
+      !!! Now update bounds for BC
+      If (AppCtx%AppParam%Use_Tao) Then   
+         Val = 1.0D20
+         Call VecSet(AppCtx%Uplus, Val, iErr); CHKERRQ(iErr)
+         Val = -1.0D20
+         Call VecSet(AppCtx%Uminus, Val, iErr); CHKERRQ(iErr)
+         
+         Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Uplus',  1, UplusSec , iErr); CHKERRQ(iErr)
+         Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Uminus', 1, UminusSec, iErr); CHKERRQ(iErr)
+   
+         Call SectionRealToVec(UplusSec,  AppCtx%Scatter, SCATTER_REVERSE, AppCtx%Uplus, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(UminusSec, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%Uminus, iErr); CHKERRQ(iErr)
+         
+         Allocate(UplusPtr(1))
+         Allocate(UminusPtr(1))
+         Do i = 1, AppCtx%MeshTopology%Num_Verts
+            Call SectionIntRestrict(AppCtx%BCFlag, AppCtx%MeshTopology%Num_Elems+i-1, BCFlagPtr, iErr);
+            If ( BCFlagPtr(1) /= 0 ) Then
+               Call SectionRealRestrict(AppCtx%U,     AppCtx%MeshTopology%Num_Elems+i-1, UPtr,      iErr);
+               UplusPtr  = UPtr
+               UminusPtr = UPtr
+               Call SectionRealRestore(AppCtx%U,     AppCtx%MeshTopology%Num_Elems+i-1, UPtr,      iErr);
+               Call SectionRealUpdate(UplusSec,  AppCtx%MeshTopology%Num_Elems+i-1, UplusPtr,  INSERT_VALUES, iErr);
+               Call SectionRealUpdate(UminusSec, AppCtx%MeshTopology%Num_Elems+i-1, UminusPtr, INSERT_VALUES, iErr);
+            End If
+            Call SectionIntRestore(AppCtx%BCFlag, AppCtx%MeshTopology%Num_Elems+i-1, BCFlagPtr, iErr);
+         End Do
+         DeAllocate(UplusPtr)
+         DeAllocate(UminusPtr)
+   
+         Call SectionRealToVec(UplusSec,  AppCtx%Scatter, SCATTER_FORWARD, AppCtx%Uplus, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(UminusSec, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%Uminus, iErr); CHKERRQ(iErr)
+         
+         Call TaoAppSetVariableBounds(AppCtx%TaoAppU, AppCtx%Uminus, AppCtx%Uplus, iErr); CHKERRQ(iErr)
+         
+         Call SectionRealDestroy(UplusSec,  iErr); CHKERRQ(iErr)
+         Call SectionRealDestroy(UminusSec, iErr); CHKERRQ(iErr)
+      End If
+   End Subroutine InitLoads   
+
    Subroutine Solve(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -313,6 +442,10 @@ Contains
       Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%Use_Tao) Then
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) 'Caling TaoSolveApplication\n'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
          Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoGetTerminationReason(AppCtx%TaoU, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
@@ -324,6 +457,17 @@ Contains
          End If
 103 Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
       Else
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) 'Assembling the RHS\n'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
+         Call RHSAssembly(AppCtx)
+         If (AppCtx%AppParam%verbose > 1) Then
+            Write(IOBuffer, *) 'RHS\n'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+         End If
+
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%RHS, RHS_Vec, iErr); CHKERRQ(iErr)
          Call SectionRealToVec(AppCtx%RHS, AppCtx%Scatter, SCATTER_FORWARD, RHS_Vec, iErr); CHKERRQ(iErr)
 
@@ -736,135 +880,6 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyBlock_Event, iErr); CHKERRQ(iErr)
    End Subroutine FormFunctionAndGradientBlock
    
-   Subroutine InitLoads(AppCtx, t, iErr)
-      Type(AppCtx_Type)                            :: AppCtx
-      PetscReal                                    :: t
-
-      PetscInt                                     :: i, iErr, iDoF
-      PetscInt, Dimension(:), Pointer              :: BCFlagPtr
-      PetscReal                                    :: Val
-      PetscReal, Dimension(:), Pointer             :: UPtr, UplusPtr, UminusPtr
-      Type(SectionReal)                            :: UplusSec, UminusSec
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      Type(SectionReal)                            :: CoordSection
-      PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
-      PetscReal, Dimension(:,:), Pointer           :: Coords
-
-      
-
-      If (AppCtx%AppParam%Restart) Then
-         Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      Else
-         Select Case (AppCtx%AppParam%TestCase)
-         Case(1)
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Setting U to 0 and F to t\n'
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-            !!! U = 0, F=t
-            Val = t
-            Call SectionRealSet(AppCtx%F, Val, iErr); CHKERRQ(iErr);
-            Val = 0.0_Kr
-            Call SectionRealSet(AppCtx%U, Val, iErr); CHKERRQ(iErr);
-         Case(2)
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Solving Test Case 2: pure dirichlet problem, no force\n'
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-
-            !!! Test of non homogeneous Dirichlet BC
-            Allocate(ValPtr(1))
-            ValPtr = 0.0_Kr
-            Call SectionRealSet(AppCtx%F, 0.0_Kr, iErr); CHKERRQ(iErr);
-            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-               
-            Do iDoF = 1, Size(Coords,1)
-#if defined PB_2D
-               !!!ValPtr = t * ((Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2)
-               !!!ValPtr = t * (Coords(iDoF,1)**2 + Coords(iDoF,2)**2)
-               ValPtr = t * Coords(iDoF,1)**3
-#elif defined PB_3D
-               ValPtr = t * ((Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2)
-#endif
-               Call SectionRealUpdate(AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            End Do
-            DeAllocate(ValPtr)
-            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-         Case(3)
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Solving Test Case 3: F=t . sgn(x) . sgn(y) [. sgn(z)] \n'
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-
-            !!! Test of non homogeneous Dirichlet BC
-            Allocate(ValPtr(1))
-            ValPtr = 0.0_Kr
-            Call SectionRealSet(AppCtx%U, 1.0_Kr, iErr); CHKERRQ(iErr);
-            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-            
-            Do iDoF = 1, Size(Coords,1)
-#if defined PB_2D
-               If ( Coords(iDoF,1) * Coords(iDoF,2) < 0.0_Kr ) Then
-                  ValPtr = -t
-               Else
-                  ValPtr = t
-               End If
-#elif defined PB_3D
-               If ( Coords(iDoF,1) * Coords(iDoF,2) * Coords(iDoF,3) < 0.0_Kr ) Then
-                  ValPtr = -t
-               Else
-                  ValPtr = t
-               End If
-#endif
-               Call SectionRealUpdate(AppCtx%F, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            End Do
-            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-         End Select            
-      End If
-
-      !!! Now update bounds for BC
-      If (AppCtx%AppParam%Use_Tao) Then   
-         Val = 1.0D20
-         Call VecSet(AppCtx%Uplus, Val, iErr); CHKERRQ(iErr)
-         Val = -1.0D20
-         Call VecSet(AppCtx%Uminus, Val, iErr); CHKERRQ(iErr)
-         
-         Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Uplus',  1, UplusSec , iErr); CHKERRQ(iErr)
-         Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Uminus', 1, UminusSec, iErr); CHKERRQ(iErr)
-   
-         Call SectionRealToVec(UplusSec,  AppCtx%Scatter, SCATTER_REVERSE, AppCtx%Uplus, iErr); CHKERRQ(iErr)
-         Call SectionRealToVec(UminusSec, AppCtx%Scatter, SCATTER_REVERSE, AppCtx%Uminus, iErr); CHKERRQ(iErr)
-         
-         Allocate(UplusPtr(1))
-         Allocate(UminusPtr(1))
-         Do i = 1, AppCtx%MeshTopology%Num_Verts
-            Call SectionIntRestrict(AppCtx%BCFlag, AppCtx%MeshTopology%Num_Elems+i-1, BCFlagPtr, iErr);
-            If ( BCFlagPtr(1) /= 0 ) Then
-               Call SectionRealRestrict(AppCtx%U,     AppCtx%MeshTopology%Num_Elems+i-1, UPtr,      iErr);
-               UplusPtr  = UPtr
-               UminusPtr = UPtr
-               Call SectionRealRestore(AppCtx%U,     AppCtx%MeshTopology%Num_Elems+i-1, UPtr,      iErr);
-               Call SectionRealUpdate(UplusSec,  AppCtx%MeshTopology%Num_Elems+i-1, UplusPtr,  INSERT_VALUES, iErr);
-               Call SectionRealUpdate(UminusSec, AppCtx%MeshTopology%Num_Elems+i-1, UminusPtr, INSERT_VALUES, iErr);
-            End If
-            Call SectionIntRestore(AppCtx%BCFlag, AppCtx%MeshTopology%Num_Elems+i-1, BCFlagPtr, iErr);
-         End Do
-         DeAllocate(UplusPtr)
-         DeAllocate(UminusPtr)
-   
-         Call SectionRealToVec(UplusSec,  AppCtx%Scatter, SCATTER_FORWARD, AppCtx%Uplus, iErr); CHKERRQ(iErr)
-         Call SectionRealToVec(UminusSec, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%Uminus, iErr); CHKERRQ(iErr)
-         
-         Call TaoAppSetVariableBounds(AppCtx%TaoAppU, AppCtx%Uminus, AppCtx%Uplus, iErr); CHKERRQ(iErr)
-         
-         Call SectionRealDestroy(UplusSec,  iErr); CHKERRQ(iErr)
-         Call SectionRealDestroy(UminusSec, iErr); CHKERRQ(iErr)
-      End If
-   End Subroutine InitLoads   
-
    Subroutine SimplePoissonFinalize(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
 
