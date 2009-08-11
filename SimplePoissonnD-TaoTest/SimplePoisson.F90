@@ -50,17 +50,6 @@ Program  SimplePoisson
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
       End If
-   
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Assembling the RHS\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call RHSAssembly(AppCtx)
-      If (AppCtx%AppParam%verbose > 1) Then
-         Write(IOBuffer, *) 'RHS\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-      End If
    End If
    
    
@@ -72,6 +61,10 @@ Program  SimplePoisson
       End If
       Write(*,*) 'Step ', step, ' load: ', t
 
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Calling InitLoads\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
       Call InitLoads(AppCtx, t, iErr)
 
       If (AppCtx%AppParam%verbose > 0) Then
@@ -98,12 +91,12 @@ Program  SimplePoisson
       End If
    
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call Write_EXO_Result_Global(AppCtx%MyExo, 1, step, AppCtx%ElasticEnergy)
-      Call Write_EXO_Result_Global(AppCtx%MyExo, 2, step, AppCtx%ExtForcesWork)
-      Call Write_EXO_Result_Global(AppCtx%MyExo, 3, step, AppCtx%TotalEnergy)
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, step, AppCtx%U) 
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, step, AppCtx%F) 
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, step, AppCtx%GradU) 
+!      Call Write_EXO_Result_Global(AppCtx%MyExo, 1, step+1, AppCtx%ElasticEnergy)
+!      Call Write_EXO_Result_Global(AppCtx%MyExo, 2, step+1, AppCtx%ExtForcesWork)
+!      Call Write_EXO_Result_Global(AppCtx%MyExo, 3, step+1, AppCtx%TotalEnergy)
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, step+1, AppCtx%U) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, step+1, AppCtx%F) 
+      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, step+1, AppCtx%GradU) 
       Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    End Do
       
