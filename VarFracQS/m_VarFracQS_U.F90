@@ -38,9 +38,6 @@ Contains
       !!! Using SectionRealDuplicate would make more sense
       
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, UBC)
-!      Allocate(BCFlag(AppCtx%MeshTopology%Num_Dim))
-!      Allocate(U_Ptr(AppCtx%MeshTopology%Num_Dim))
-!      Allocate(UBC_Ptr(AppCtx%MeshTopology%Num_Dim))
 
       Do i = 1, AppCtx%MeshTopology%Num_Verts
          Call SectionIntRestrict(AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCFlag, iErr); CHKERRQ(ierr)
@@ -58,9 +55,6 @@ Contains
          End If
          Call SectionIntRestore(AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCFlag, iErr); CHKERRQ(iErr)
       End Do
-!      DeAllocate(BCFlag)
-!      DeAllocate(U_Ptr)
-!      DeAllocate(UBC_Ptr)
       Call SectionRealDestroy(UBC, iErr); CHKERRQ(iErr)
    End Subroutine Init_TS_U
 

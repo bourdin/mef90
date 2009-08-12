@@ -51,6 +51,7 @@ Contains
       PetscReal                                    :: KSP_Default_atol = 1.0D-6
       PetscInt                                     :: KSP_Default_MaxIt = 10000
       Type(PetscViewer)                            :: flgviewer
+      Type(Vec)                                    :: V_Vec
       
       Call MEF90_Initialize()
 #if defined WITH_TAO
@@ -190,18 +191,20 @@ Contains
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
 
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHSU, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSV', 1, AppCtx%RHSV, iErr); CHKERRQ(iErr)
-
+      If (.NOT. AppCtx%VarFracSchemeParam%V_UseTao) Then
+         Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSV', 1, AppCtx%RHSV, iErr); CHKERRQ(iErr)
+      End If
+      
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
       
       !! Solver context for U      
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
-      Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
-      Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
+      Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
+      Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPU, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
@@ -210,11 +213,28 @@ Contains
       Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
          
       !! Solver context for V      
-      Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
-      Call KSPAppendOptionsPrefix(AppCtx%KSPV, "V_", iErr); CHKERRQ(iErr)
-      Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+      If (AppCtx%VarFracSchemeParam%V_UseTao) Then
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoV, iErr); CHKERRQ(iErr)
+         Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappV, iErr); CHKERRQ(iErr)
+
+         Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappV, FormFunctionAndGradientV, AppCtx, iErr); CHKERRQ(iErr)
+         Call TaoAppSetHessianRoutine(AppCtx%taoappV, HessianV_Assembly, AppCtx, iErr); CHKERRQ(iErr)
+         Call TaoAppSetVariableBoundsRoutine(AppCtx%taoappV, InitTaoBoundsV, AppCtx, iErr); CHKERRQ(iErr)
+
+         Call TaoAppSetHessianMat(AppCtx%taoappV, AppCtx%KV, AppCtx%KV, iErr); CHKERRQ(iErr)
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, V_Vec, iErr); CHKERRQ(iErr)
+         Call TaoAppSetInitialSolutionVec(AppCtx%taoappV, V_Vec, iErr); CHKERRQ(iErr)
+
+         Call TaoSetOptions(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
+         Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
+         Call TaoAppGetKSP(AppCtx%taoappV, AppCtx%KSPV, iErr); CHKERRQ(iErr)
+      Else
+         Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
+         Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+         Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
+      End If
       Call KSPSetType(AppCtx%KSPV, KSPCG, iErr); CHKERRQ(iErr)
-      Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
+      Call KSPAppendOptionsPrefix(AppCtx%KSPV, "V_", iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPV, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
       Call KSPSetFromOptions(AppCtx%KSPV, iErr); CHKERRQ(iErr)
 
@@ -382,7 +402,9 @@ Contains
       Call VecDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KV, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%RHSV, iErr); CHKERRQ(iErr)
+      If (.NOT. AppCtx%VarFracSchemeParam%V_UseTao) Then
+         Call SectionRealDestroy(AppCtx%RHSV, iErr); CHKERRQ(iErr)
+      End If
       Call KSPDestroy(AppCtx%KSPV, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 

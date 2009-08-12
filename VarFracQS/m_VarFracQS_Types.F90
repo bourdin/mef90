@@ -85,7 +85,7 @@ Module m_VarFracQS_Types3D
       Type(SectionInt)                             :: BCUFlag, BCVFlag, IrrevFlag
       Type(Mat)                                    :: KU, KV
       Type(SectionReal)                            :: RHSV
-      Type(Vec)                            :: RHSU
+      Type(Vec)                                    :: RHSU
       Type(KSP)                                    :: KSPU, KSPV
       Type(PC)                                     :: PCU, PCV
       Type(LogInfo_Type)                           :: LogInfo
