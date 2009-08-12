@@ -20,9 +20,14 @@ Module m_VarFracQS_Types3D
    Use petscmesh
 
    Implicit NONE   
+   Private
 #if defined WITH_TAO
 #include "include/finclude/tao_solver.h"
 #endif
+
+   Public :: LogInfo_Type
+   Public :: AppParam_Type
+   Public :: AppCtx_Type
 
    Type LogInfo_Type
       PetscLogStage               :: IO_Stage

@@ -29,6 +29,7 @@ Program  VarFracQS
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: AltMinIter
    Character(len=MEF90_MXSTRLEN)                :: filename
+   PetscReal                                    :: ElasticEnergy
 
    Call VarFracQSInit(AppCtx)
    
@@ -161,6 +162,10 @@ Program  VarFracQS
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+            Call ElasticEnergy_Assembly(ElasticEnergy, AppCtx)
+            Write(*,*) "*********** Elastic Energy:", AppCtx%ElasticEnergy(AppCtx%TimeSTep), ElasticEnergy
+
             If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
                Call ComputeStrainStress(AppCtx)
                Call Save_StrainStress(AppCtx)

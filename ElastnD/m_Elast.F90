@@ -728,12 +728,12 @@ Contains
       
       !!!   _Loc are restriction of fields to local patch (the element)
       !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
-      PetscReal, Dimension(:), Pointer             :: X_Loc, F_Loc, Theta_Loc, Gradient_Loc
+      PetscReal, Dimension(:), Pointer             :: X_Loc, F_Loc, Theta_Loc
 #if defined PB_2D
       Type(Vect2D)                                 :: X_Elem, F_Elem
       Type(Mats2D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #elif defined PB_3D  
-      Type(Vect3D)                                 :: X_ElemF_Elem    
+      Type(Vect3D)                                 :: X_Elem, F_Elem    
       Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #endif
       PetscReal                                    :: Theta_Elem
@@ -745,7 +745,7 @@ Contains
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
       flops  = 0.0
       ElasticEnergy = 0.0_Kr
-      ExtFOrcesWork = 0.0_Kr
+      ExtForcesWork = 0.0_Kr
 
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
@@ -763,7 +763,7 @@ Contains
          Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             F_Elem = 0.0_Kr
-            X_ELem = 0.0_Kr
+            X_Elem = 0.0_Kr
             Strain_Elem = 0.0_Kr
             Do iDoF2 = 1, NumDoFVect
                F_Elem      = F_Elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F_Loc(iDoF2)
