@@ -151,9 +151,9 @@ Contains
          !!!    Call MatV_AssemblyBlk_AT1(iBlk, AppCtx%KV, .TRUE., AppCtx)
          Case(2)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-               Call MatV_AssemblyBlk_Brittle_AT2(iBlk, AppCtx%KV, .TRUE., AppCtx)
+               Call MatV_AssemblyBlk_Brittle_AT2(AppCtx%KV, iBlk, .TRUE., AppCtx)
             Else
-               Call MatV_AssemblyBlk_NonBrittle_AT2(iBlk, AppCtx%KV, .TRUE., AppCtx)
+               Call MatV_AssemblyBlk_NonBrittle_AT2(AppCtx%KV, iBlk, .TRUE., AppCtx)
             End If
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
@@ -184,9 +184,9 @@ Contains
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-               Call MatV_AssemblyBlk_Brittle_AT1(iBlk, AppCtx%KV, .FALSE., AppCtx)
+               Call MatV_AssemblyBlk_Brittle_AT1(AppCtx%KV, iBlk, .FALSE., AppCtx)
             Else
-               Call MatV_AssemblyBlk_NonBrittle_AT1(iBlk, AppCtx%KV, .FALSE., AppCtx)
+               Call MatV_AssemblyBlk_NonBrittle_AT1(AppCtx%KV, iBlk, .FALSE., AppCtx)
             End If
          Case(2)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
@@ -208,9 +208,9 @@ Contains
    End Subroutine HessianV_Assembly
 #endif
 
-   Subroutine MatV_AssemblyBlk_Brittle_AT2(iBlk, H, DoBC, AppCtx)
-      PetscInt                                     :: iBlk
+   Subroutine MatV_AssemblyBlk_Brittle_AT2(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
+      PetscInt                                     :: iBlk
       PetscTruth                                   :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -303,9 +303,9 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_Brittle_AT2
 
-   Subroutine MatV_AssemblyBlk_NonBrittle_AT2(iBlk, H, DoBC, AppCtx)
-      PetscInt                                     :: iBlk
+   Subroutine MatV_AssemblyBlk_NonBrittle_AT2(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
+      PetscInt                                     :: iBlk
       PetscTruth                                   :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -371,9 +371,9 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_NonBrittle_AT2
 
-   Subroutine MatV_AssemblyBlk_Brittle_AT1(iBlk, H, DoBC, AppCtx)
-      PetscInt                                     :: iBlk
+   Subroutine MatV_AssemblyBlk_Brittle_AT1(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
+      PetscInt                                     :: iBlk
       PetscTruth                                   :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -465,9 +465,9 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_Brittle_AT1
 
-   Subroutine MatV_AssemblyBlk_NonBrittle_AT1(iBlk, H, DoBC, AppCtx)
-      PetscInt                                     :: iBlk
+   Subroutine MatV_AssemblyBlk_NonBrittle_AT1(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
+      PetscInt                                     :: iBlk
       PetscTruth                                   :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -544,7 +544,7 @@ Contains
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(2)
-            Call RHSV_AssemblyBlk_AT2(iBlk, AppCtx)
+            Call RHSV_AssemblyBlk_AT2(AppCtx%RHSV, iBlk, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
       End Select
@@ -557,7 +557,8 @@ Contains
 !----------------------------------------------------------------------------------------!      
 ! RHSAssemblyLocal (CM)  
 !----------------------------------------------------------------------------------------!      
-   Subroutine RHSV_AssemblyBlk_AT2(iBlk, AppCtx)
+   Subroutine RHSV_AssemblyBlk_AT2(RHSV_Sec, iBlk, AppCtx)
+      Type(SectionReal)                            :: RHSV_Sec
       PetscInt                                     :: iBlk
       Type(AppCtx_Type)                            :: AppCtx
 
@@ -601,7 +602,7 @@ Contains
                End If
             End Do
          End Do Do_iGauss
-         Call SectionRealUpdateClosure(AppCtx%RHSV, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call SectionRealUpdateClosure(RHSV_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
 
       DeAllocate(BCFlag_Loc)
