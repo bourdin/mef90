@@ -27,7 +27,158 @@ Module m_VarFracQS_Post3D
 Contains
 !----------------------------------------------------------------------------------------!      
 ! ComputeEnergy (CM)  
-!----------------------------------------------------------------------------------------!      
+!----------------------------------------------------------------------------------------! 
+
+   Subroutine ElasticEnergy_Assembly(ElasticEnergy, AppCtx)     
+      PetscReal                                    :: ElasticEnergy
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iBlk, iBlkId, iErr
+      PetscInt                                     :: NumDoFVect, NumDoFScal
+      PetscReal                                    :: MyElasticEnergy, MyElasticEnergyBlock
+     
+
+      Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+      
+      MyElasticEnergy = 0.0_Kr
+      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+         If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
+            Call ElasticEnergy_AssemblyBlk_Brittle(iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, MyElasticEnergyBlock, AppCtx)
+         Else
+            Call ElasticEnergy_AssemblyBlk_NonBrittle(iBlk, AppCtx%U, AppCtx%Theta, MyElasticEnergyBlock, AppCtx)
+         End If
+         MyElasticEnergy = MyElasticEnergy + MyElasticEnergyBlock
+      End Do Do_iBlk
+
+      Call PetscGlobalSum(MyElasticEnergy, ElasticEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      
+      Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   End Subroutine ElasticEnergy_Assembly
+   
+
+   Subroutine ElasticEnergy_AssemblyBlk_Brittle(iBlk, U_Sec, Theta_Sec, V_Sec, ElasticEnergyBlock, AppCtx)
+      PetscInt                                     :: iBlk
+      Type(SectionReal)                            :: U_Sec, Theta_Sec, V_Sec
+      PetscReal                                    :: ElasticEnergyBlock
+      Type(AppCtx_Type)                            :: AppCtx
+
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
+      PetscReal, Dimension(:), Pointer             :: U_Loc, V_Loc, Theta_Loc
+#if defined PB_2D
+      Type(Vect2D)                                 :: U_Elem
+      Type(Mats2D)                                 :: Strain_Elem, EffectiveStrain_Elem
+#elif defined PB_3D  
+      Type(Vect3D)                                 :: U_Elem    
+      Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
+#endif
+      PetscReal                                    :: V_Elem, Theta_Elem
+      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscLogDouble                               :: flops       
+
+      flops = 0.0
+      ElasticEnergyBlock = 0.0_Kr
+
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+
+      Allocate(U_Loc(NumDoFVect))
+      Allocate(Theta_Loc(NumDoFScal))
+      Allocate(V_Loc(NumDoFScal))
+
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Call SectionRealRestrictClosure(U_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(V_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
+         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+            Strain_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFVect
+               Strain_Elem = Strain_Elem + U_Loc(iDoF2) * AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss)
+            End Do
+            Theta_Elem = 0.0_Kr
+            V_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFScal
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
+               V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V_Loc(iDoF2)
+               flops = flops + 2.0
+            End Do
+            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            
+            ElasticEnergyBlock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * 0.5_Kr
+            flops = flops + 6.0 
+         End Do Do_iGauss
+      End Do Do_iEloc
+
+      DeAllocate(U_Loc)
+      DeAllocate(Theta_Loc)
+      DeAllocate(V_Loc)
+      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+   End Subroutine ElasticEnergy_AssemblyBlk_Brittle
+
+   Subroutine ElasticEnergy_AssemblyBlk_NonBrittle(iBlk, U_Sec, Theta_Sec, ElasticEnergyBlock, AppCtx)
+      PetscInt                                     :: iBlk
+      Type(SectionReal)                            :: U_Sec, Theta_Sec
+      PetscReal                                    :: ElasticEnergyBlock
+      Type(AppCtx_Type)                            :: AppCtx
+
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      PetscReal, Dimension(:), Pointer             :: U_Loc, Theta_Loc
+#if defined PB_2D
+      Type(Mats2D)                                 :: Strain_Elem, EffectiveStrain_Elem
+#elif defined PB_3D  
+      Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
+#endif
+      PetscReal                                    :: Theta_Elem
+      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscLogDouble                               :: flops       
+      
+      flops = 0.0
+      ElasticEnergyBlock = 0.0_Kr
+
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+
+      Allocate(U_Loc(NumDoFVect))
+      Allocate(Theta_Loc(NumDoFScal))
+
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Call SectionRealRestrictClosure(U_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+            Strain_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFVect
+               Strain_Elem = Strain_Elem + U_Loc(iDoF2) * AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss)
+            End Do
+            Theta_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFScal
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
+               flops = flops + 2.0
+            End Do
+            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            
+            ElasticEnergyBLock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * 0.5_Kr 
+         End Do Do_iGauss
+      End Do Do_iEloc
+
+      DeAllocate(U_Loc)
+      DeAllocate(Theta_Loc)
+      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+   End Subroutine ElasticEnergy_AssemblyBlk_NonBrittle
+
    Subroutine ComputeEnergy(AppCtx)
       !!! CM
       Type(AppCtx_Type)                            :: AppCtx
@@ -105,7 +256,7 @@ Contains
                Effective_Strain_Elem  = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp   
                Stress_Elem            = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
             ! Calculate the elastic energy
-               MyElasticEnergy  = MyElasticEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * V_Elem**2 * (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr
+               MyElasticEnergy  = MyElasticEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr
                flops = flops + 4.0
             ! Calculate the work of body forces
                MyExtForcesWork = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (F_Elem .DotP. U_Elem)

@@ -1,5 +1,4 @@
-#if defined PB_2D
-Module m_VarFracQS_V2D
+#if defined PB_2D  Module m_VarFracQS_V2D
 #elif defined PB_3D
 Module m_VarFracQS_V3D
 #endif
@@ -24,8 +23,18 @@ Module m_VarFracQS_V3D
    Use petscksp
    Use petscmesh
 
-   Implicit NONE   
+   Implicit NONE
+   Private 
+      
+#if defined WITH_TAO
+#include "include/finclude/tao_solver.h"
+#endif
 
+   Public :: Init_TS_V
+   Public :: MatV_Assembly
+   Public :: RHSV_Assembly
+   Public :: HessianV_Assembly
+   Public :: Solve_V
 Contains
    Subroutine Init_TS_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
@@ -157,7 +166,7 @@ Contains
    End Subroutine MatV_Assembly
 
 #if defined WITH_TAO
-   Subroutine FormHessianV(tao, X, H, Hpre, flg, AppCtx, iErr)
+   Subroutine HessianV_Assembly(tao, X, H, Hpre, flg, AppCtx, iErr)
       TAO_SOLVER         :: tao
       Type(Vec)          :: X
       Type(Mat)          :: H, Hpre
@@ -187,6 +196,7 @@ Contains
             End If
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+         End Select
       End Do Do_Elem_iBlk
       Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
@@ -195,7 +205,7 @@ Contains
       End If
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine FormHessianV
+   End Subroutine HessianV_Assembly
 #endif
 
    Subroutine MatV_AssemblyBlk_Brittle_AT2(iBlk, H, DoBC, AppCtx)
@@ -534,7 +544,7 @@ Contains
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(2)
-            Call RHSV_AssemblyBlock_AT2(iBlk, AppCtx)
+            Call RHSV_AssemblyBlk_AT2(iBlk, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
       End Select
@@ -547,7 +557,7 @@ Contains
 !----------------------------------------------------------------------------------------!      
 ! RHSAssemblyLocal (CM)  
 !----------------------------------------------------------------------------------------!      
-   Subroutine RHSV_AssemblyBlock_AT2(iBlk, AppCtx)
+   Subroutine RHSV_AssemblyBlk_AT2(iBlk, AppCtx)
       PetscInt                                     :: iBlk
       Type(AppCtx_Type)                            :: AppCtx
 
@@ -599,7 +609,7 @@ Contains
       DeAllocate(RHS_Loc)
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-   End Subroutine RHSV_AssemblyBlock_AT2
+   End Subroutine RHSV_AssemblyBlk_AT2
       
 
    !----------------------------------------------------------------------------------------!      
