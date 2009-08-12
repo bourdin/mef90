@@ -10,12 +10,12 @@ Module m_VarFracQS_Post3D
 
 #if defined PB_2D
    Use m_VarFracQS_Types2D
-   Use m_VarFracQS_U2D
-   Use m_VarFracQS_V2D
+!   Use m_VarFracQS_U2D
+!   Use m_VarFracQS_V2D
 #elif defined PB_3D
    Use m_VarFracQS_Types3D   
-   Use m_VarFracQS_U3D
-   Use m_VarFracQS_V3D
+!   Use m_VarFracQS_U3D
+!   Use m_VarFracQS_V3D
 #endif   
    Use m_MEF90
    Use m_VarFrac_Struct
@@ -34,7 +34,6 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
-      PetscInt                                     :: NumDoFVect, NumDoFScal
       PetscReal                                    :: MyElasticEnergy, MyElasticEnergyBlock
      
 
@@ -63,7 +62,6 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
-      PetscInt                                     :: NumDoFVect, NumDoFScal
       PetscReal                                    :: MyExtForcesWork, MyExtForcesWorkBlock
      
 
@@ -88,7 +86,6 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
-      PetscInt                                     :: NumDoFVect, NumDoFScal
       PetscReal                                    :: MySurfaceEnergy, MySurfaceEnergyBlock
      
 
@@ -385,113 +382,6 @@ Contains
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
    End Subroutine SurfaceEnergy_AssemblyBlk_AT1
 
-!!!
-!!! Old Stuff
-!!!
-   Subroutine ComputeEnergy(AppCtx)
-      !!! CM
-      Type(AppCtx_Type)                            :: AppCtx
-      
-      PetscInt                                     :: iErr
-      PetscInt                                     :: NumDoFVect, NumDoFScal, NumGauss
-      PetscReal, Dimension(:), Pointer             :: F, U, V, Theta
-      PetscInt                                     :: iBlk, iELoc, iE
-      PetscInt                                     :: iDoF, iGauss
-      PetscReal                                    :: Theta_Elem, V_Elem
-#if defined PB_2D
-      Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
-      Type(MatS2D)                                 :: Effective_Strain_Elem
-      Type(Vect2D)                                 :: F_Elem, U_Elem, GradV_Elem 
-
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, Stress_Elem 
-      Type(MatS3D)                                 :: Effective_Strain_Elem
-      Type(Vect3D)                                 :: F_Elem, U_Elem,  GradV_Elem  
-#endif
-      PetscReal                                    :: MyExtForcesWork, MyElasticEnergy, MySurfaceEnergy
-      PetscLogDouble                               :: flops
-     
-
-      Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
-      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      
-      flops = 0.0
-      MyElasticEnergy = 0.0_Kr
-      MyExtForcesWork = 0.0_Kr
-      MySurfaceEnergy = 0.0_Kr
-      !---------------------------------------------------------------------
-      ! Surface Energy      : Gc (1/ (4 eps) (1-v)^2 + eps GradV * GradV)
-      ! Elastic energy      : 1/2 v^2 (A*EffectiveStrain) * EffectiveStrain 
-      ! Work of body forces : - F*U   
-      !---------------------------------------------------------------------
-      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            ! Define the indices
-            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            NumDoFVect = Size(AppCtx%ElemVect(iE)%BF,1)
-            NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
-            NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
-            ! Allocate the variables
-            Allocate(F(NumDoFVect))
-            Call SectionRealRestrictClosure(AppCtx%F, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F, iErr); CHKERRQ(ierr)
-            Allocate(U(NumDoFVect))
-            Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
-            Allocate(Theta(NumDoFScal))
-            Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
-            Allocate(V(NumDoFScal))
-            Call SectionRealRestrictClosure(AppCtx%V, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
-            Do iGauss = 1, NumGauss
-            ! Inizialize the variables at the gauss points
-               Strain_Elem            = 0.0_Kr
-               Stress_Elem            = 0.0_Kr
-               Theta_Elem             = 0.0_Kr
-               V_Elem                 = 0.0_Kr
-               GradV_Elem             = 0.0_Kr 
-               Effective_Strain_Elem  = 0.0_Kr
-               F_Elem                 = 0.0_Kr
-               U_Elem                 = 0.0_Kr
-            ! Calculate the variables at the gauss points
-               Do iDof = 1, NumDoFScal
-                  Theta_Elem          = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
-                  V_Elem              = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V(iDoF)
-                  GradV_Elem          = GradV_Elem + AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss) * V(iDoF)
-                  flops = flops + 4.0
-               End Do
-               Do iDoF = 1, NumDoFVect
-                  Strain_Elem         = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
-                  F_Elem              = F_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * F(iDoF) 
-                  U_Elem              = U_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * U(iDoF)
-               End Do            
-               Effective_Strain_Elem  = Strain_Elem - Theta_Elem * AppCtx%MatProp(iBlk)%Therm_Exp   
-               Stress_Elem            = AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * Effective_Strain_Elem
-            ! Calculate the elastic energy
-               MyElasticEnergy  = MyElasticEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr
-               flops = flops + 4.0
-            ! Calculate the work of body forces
-               MyExtForcesWork = MyExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (F_Elem .DotP. U_Elem)
-               flops = flops + 2.0
-            ! Calculate the suface energy
-               MySurfaceEnergy  = MySurfaceEnergy + AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlk)%Toughness * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ( ( 1.0_Kr - V_Elem)**2 / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem))
-               flops = flops + 8.0
-            End Do
-            ! DeAllocate the variables
-            DeAllocate(F)
-            DeAllocate(U)
-            DeAllocate(Theta)
-            DeAllocate(V)
-         End Do Do_Elem_iE
-      End Do Do_Elem_iBlk
-      ! Global sum among  
-      Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy(AppCtx%TimeStep), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork(AppCtx%TimeStep), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)           
-      Call PetscGlobalSum(MySurfaceEnergy, AppCtx%SurfaceEnergy(AppCtx%TimeStep), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)    
-      AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
-      flops = flops + 2.0
-      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
-      Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine ComputeEnergy
-   
 !----------------------------------------------------------------------------------------!      
 ! ComputeStrainStress (CM)  
 !----------------------------------------------------------------------------------------!      

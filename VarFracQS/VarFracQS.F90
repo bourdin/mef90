@@ -29,7 +29,6 @@ Program  VarFracQS
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: AltMinIter
    Character(len=MEF90_MXSTRLEN)                :: filename
-   PetscReal                                    :: ElasticEnergy
 
    Call VarFracQSInit(AppCtx)
    
@@ -59,6 +58,7 @@ Program  VarFracQS
       End If
 
       Call Init_TS_V(AppCtx)
+      Call Init_TS_Irrev(AppCtx)
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Done with Init_TS_V \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -96,31 +96,17 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Problem for V
          !-------------------------------------------------------------------
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n' 
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-         End If
-         Call RHSV_Assembly(AppCtx)
-         If (AppCtx%AppParam%verbose > 2) Then
-            Call VecView(AppCtx%RHSV, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-         End If
-         Call MatV_Assembly(AppCtx)
-         If (AppCtx%AppParam%verbose > 2) Then
-            Call MatView(AppCtx%KV, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-         End If
-         
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Calling KSPSolve for the V-subproblem\n' 
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-         End If
-         Call Solve_V(AppCtx)
+         Call Step_V(AppCtx)
          
          !------------------------------------------------------------------- 
          ! Check For BackTracking 
          !------------------------------------------------------------------- 
          AppCtx%IsBT = PETSC_FALSE
          If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) ) Then
-            Call ComputeEnergy(AppCtx)
+            Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx)
+            Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx)
+            Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx)
+            AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
             Call BackTracking(AppCtx, iBTStep)
             
             If (iBTStep < AppCtx%TimeStep) Then
@@ -151,7 +137,11 @@ Program  VarFracQS
                Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n' 
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If
-            Call ComputeEnergy(AppCtx)
+            Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx)
+            Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx)
+            Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx)
+            AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+
             Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
@@ -162,11 +152,6 @@ Program  VarFracQS
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-
-            Call ElasticEnergy_Assembly(ElasticEnergy, AppCtx)
-            Write(*,*) "*********** Elastic Energy:", AppCtx%ElasticEnergy(AppCtx%TimeSTep), ElasticEnergy
-            Call SurfaceEnergy_Assembly(ElasticEnergy, AppCtx)
-            Write(*,*) "*********** Elastic Energy:", AppCtx%SurfaceEnergy(AppCtx%TimeSTep), ElasticEnergy
 
             If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
                Call ComputeStrainStress(AppCtx)
@@ -183,7 +168,10 @@ Program  VarFracQS
       ! Check For BackTracking again
       !------------------------------------------------------------------- 
       If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT) ) Then
-         Call ComputeEnergy(AppCtx)
+         Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx)
+         Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx)
+         Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx)
+         AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
          Call BackTracking(AppCtx, iBTStep)
          
          If (iBTStep < AppCtx%TimeStep) Then
