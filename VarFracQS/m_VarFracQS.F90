@@ -190,7 +190,7 @@ Contains
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
 
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHSU, iErr); CHKERRQ(iErr)
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%RHSV, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSV', 1, AppCtx%RHSV, iErr); CHKERRQ(iErr)
 
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
@@ -382,7 +382,7 @@ Contains
       Call VecDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KV, iErr); CHKERRQ(iErr)
-      Call VecDestroy(AppCtx%RHSV, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(AppCtx%RHSV, iErr); CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSPV, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 

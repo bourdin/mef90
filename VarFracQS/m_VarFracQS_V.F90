@@ -130,17 +130,22 @@ Contains
    Subroutine MatV_Assembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
-      PetscInt                                     :: iBlk, iErr
+      PetscInt                                     :: iBlk, iBlkID, iErr
       
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyV_Stage, iErr); CHKERRQ(iErr)
 
       Call MatZeroEntries(AppCtx%KV, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          !!! Case(1)
          !!!    Call MatV_AssemblyBlk_AT1(iBlk, AppCtx%KV, .TRUE., AppCtx)
          Case(2)
-            Call MatV_AssemblyBlk_AT2(iBlk, AppCtx%KV, .TRUE., AppCtx)
+            If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
+               Call MatV_AssemblyBlk_Brittle_AT2(iBlk, AppCtx%KV, .TRUE., AppCtx)
+            Else
+               Call MatV_AssemblyBlk_NonBrittle_AT2(iBlk, AppCtx%KV, .TRUE., AppCtx)
+            End If
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
       End Select
@@ -151,7 +156,49 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatV_Assembly
 
-   Subroutine MatV_AssemblyBlk_AT2(iBlk, H, DoBC, AppCtx)
+#if defined WITH_TAO
+   Subroutine FormHessianV(tao, X, H, Hpre, flg, AppCtx, iErr)
+      TAO_SOLVER         :: tao
+      Type(Vec)          :: X
+      Type(Mat)          :: H, Hpre
+      PetscInt           :: iErr
+      MatStructure       :: flg
+      Type(AppCtx_Type)  :: AppCtx
+      
+      PetscInt           :: iBlk, iBlkID
+      
+      Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyV_Stage, iErr); CHKERRQ(iErr)
+
+      Call MatZeroEntries(H, iErr); CHKERRQ(iErr)
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+         Select Case (AppCtx%VarFracSchemeParam%AtNum)
+         Case(1)
+            If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
+               Call MatV_AssemblyBlk_Brittle_AT1(iBlk, AppCtx%KV, .FALSE., AppCtx)
+            Else
+               Call MatV_AssemblyBlk_NonBrittle_AT1(iBlk, AppCtx%KV, .FALSE., AppCtx)
+            End If
+         Case(2)
+            If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
+               Call MatV_AssemblyBlk_Brittle_AT2(iBlk, AppCtx%KV, .FALSE., AppCtx)
+            Else
+               Call MatV_AssemblyBlk_NonBrittle_AT2(iBlk, AppCtx%KV, .FALSE., AppCtx)
+            End If
+         Case Default
+            SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+      End Do Do_Elem_iBlk
+      Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%verbose > 1) Then
+         Call MatView(H, PETSC_VIEWER_STDOUT_WORLD, iErr)
+      End If
+
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   End Subroutine FormHessianV
+#endif
+
+   Subroutine MatV_AssemblyBlk_Brittle_AT2(iBlk, H, DoBC, AppCtx)
       PetscInt                                     :: iBlk
       Type(Mat)                                    :: H
       PetscTruth                                   :: DoBC
@@ -203,31 +250,24 @@ Contains
          End If
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
-            If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-               !! Calculate the strain at the gauss point
-               Strain_Elem = 0.0_Kr
-               Theta_Elem  = 0.0_Kr
-               Do iDoF1 = 1, NumDoFVect
-                  Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
-               End Do
-               !! Calculate the temperature at the gauss point
-               Do iDoF1 = 1, NumDoFScal
-                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
-                  flops = flops + 2.0
-               End Do
-               !! Calculate the Effective Strain at the gauss point
-               Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
-               !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
-               C2_V = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon  + ((AppCtx%MatProp(iBlkID)%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
-               flops = flops + 3.0
-               C2_GradV = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
+            !! Calculate the strain at the gauss point
+            Strain_Elem = 0.0_Kr
+            Theta_Elem  = 0.0_Kr
+            Do iDoF1 = 1, NumDoFVect
+               Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
+            End Do
+            !! Calculate the temperature at the gauss point
+            Do iDoF1 = 1, NumDoFScal
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
                flops = flops + 2.0
-            Else
-               C2_V = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon  
-               flops = flops + 2.0
-               C2_GradV = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
-               flops = flops + 2.0
-            End If
+            End Do
+            !! Calculate the Effective Strain at the gauss point
+            Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
+            !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
+            C2_V = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon  + ((AppCtx%MatProp(iBlkID)%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem)
+            flops = flops + 3.0
+            C2_GradV = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
+            flops = flops + 2.0
             !! Assemble the element stiffness
             Do iDoF1 = 1, NumDoFScal
                If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
@@ -251,7 +291,232 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-   End Subroutine MatV_AssemblyBlk_AT2
+   End Subroutine MatV_AssemblyBlk_Brittle_AT2
+
+   Subroutine MatV_AssemblyBlk_NonBrittle_AT2(iBlk, H, DoBC, AppCtx)
+      PetscInt                                     :: iBlk
+      Type(Mat)                                    :: H
+      PetscTruth                                   :: DoBC
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iBlkID
+      PetscReal, Dimension(:,:), Pointer           :: MatElem      
+      PetscInt                                     :: iELoc, iE
+   
+      PetscInt                                     :: iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt, Dimension(:), Pointer              :: BCFlag, IrrevFlag
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      
+      PetscReal                                    :: C2_V, C2_GradV
+      PetscLogDouble                               :: flops
+      
+      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+
+      flops = 0.0
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Allocate(BCFlag(NumDoFScal))
+      BCFlag = VarFrac_BC_Type_NONE
+      Allocate(IrrevFlag(NumDoFScal))
+      IrrevFlag = VarFrac_BC_Type_NONE
+      Allocate(MatElem(NumDoFScal, NumDoFScal))
+      
+      Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         MatElem  = 0.0_Kr
+         !! Get the local nodal values of BC sections if necessary
+         If (DoBC) Then
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+         End If
+      
+         Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
+            C2_V = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon  
+            flops = flops + 2.0
+            C2_GradV = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
+            flops = flops + 2.0
+            !! Assemble the element stiffness
+            Do iDoF1 = 1, NumDoFScal
+               If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
+                  Do iDoF2 = 1, NumDoFScal
+                  !! Terms in V^2
+                     MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_V * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
+                     flops = flops + 4.0
+                  !! Terms in GradV^2
+                     MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradV * (AppCtx%ElemScal(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss) )               
+                     flops = flops + 3.0
+                  End Do
+               End If
+            End Do
+         End Do
+         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_Elem_iE
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+      DeAllocate(MatElem)
+      DeAllocate(BCFlag)
+      DeAllocate(IrrevFlag)
+      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+   End Subroutine MatV_AssemblyBlk_NonBrittle_AT2
+
+   Subroutine MatV_AssemblyBlk_Brittle_AT1(iBlk, H, DoBC, AppCtx)
+      PetscInt                                     :: iBlk
+      Type(Mat)                                    :: H
+      PetscTruth                                   :: DoBC
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iBlkID
+      PetscReal, Dimension(:,:), Pointer           :: MatElem      
+      PetscInt                                     :: iELoc, iE
+   
+      PetscInt                                     :: iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt, Dimension(:), Pointer              :: BCFlag, IrrevFlag
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      
+      PetscReal, Dimension(:), Pointer             :: U, Theta
+      PetscReal                                    :: Theta_Elem, ElasEnDens_Elem
+      PetscReal                                    :: C2_V, C2_GradV
+#if defined PB_2D
+      Type(MatS2D)                                 :: Strain_Elem, Effective_Strain_Elem
+#elif defined PB_3D
+      Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
+#endif      
+      PetscLogDouble                               :: flops
+      
+      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+
+      flops = 0.0
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Allocate(U(NumDoFVect))
+      Allocate(Theta(NumDoFScal))
+      Allocate(BCFlag(NumDoFScal))
+      BCFlag = VarFrac_BC_Type_NONE
+      Allocate(IrrevFlag(NumDoFScal))
+      IrrevFlag = VarFrac_BC_Type_NONE
+      Allocate(MatElem(NumDoFScal, NumDoFScal))
+      
+      Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         MatElem  = 0.0_Kr
+         !! Get the local nodal values of U, Theta, and BCs
+         Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         If (DoBC) Then
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+         End If
+      
+         Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
+            !! Calculate the strain at the gauss point
+            Strain_Elem = 0.0_Kr
+            Theta_Elem  = 0.0_Kr
+            Do iDoF1 = 1, NumDoFVect
+               Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
+            End Do
+            !! Calculate the temperature at the gauss point
+            Do iDoF1 = 1, NumDoFScal
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
+               flops = flops + 2.0
+            End Do
+            !! Calculate the Effective Strain at the gauss point
+            Effective_Strain_Elem  =  Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
+            !! Calculate the coefficients of the terms v^2 (C2_V) et GradV*GradV (C2_GradV) of the energy functional
+            C2_V = (AppCtx%MatProp(iBlkID)%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem
+            C2_GradV = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
+            flops = flops + 2.0
+            !! Assemble the element stiffness
+            Do iDoF1 = 1, NumDoFScal
+               If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
+                  Do iDoF2 = 1, NumDoFScal
+                  !! Terms in V^2
+                     MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_V * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
+                     flops = flops + 4.0
+                  !! Terms in GradV^2
+                     MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradV * (AppCtx%ElemScal(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss) )               
+                     flops = flops + 3.0
+                  End Do
+               End If
+            End Do
+         End Do
+         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_Elem_iE
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+      DeAllocate(MatElem)
+      DeAllocate(U)      
+      DeAllocate(Theta)
+      DeAllocate(BCFlag)
+      DeAllocate(IrrevFlag)
+      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+   End Subroutine MatV_AssemblyBlk_Brittle_AT1
+
+   Subroutine MatV_AssemblyBlk_NonBrittle_AT1(iBlk, H, DoBC, AppCtx)
+      PetscInt                                     :: iBlk
+      Type(Mat)                                    :: H
+      PetscTruth                                   :: DoBC
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iBlkID
+      PetscReal, Dimension(:,:), Pointer           :: MatElem      
+      PetscInt                                     :: iELoc, iE
+   
+      PetscInt                                     :: iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt, Dimension(:), Pointer              :: BCFlag, IrrevFlag
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      
+      PetscReal                                    :: C2_GradV
+      PetscLogDouble                               :: flops
+      
+      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+
+      flops = 0.0
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Allocate(BCFlag(NumDoFScal))
+      BCFlag = VarFrac_BC_Type_NONE
+      Allocate(IrrevFlag(NumDoFScal))
+      IrrevFlag = VarFrac_BC_Type_NONE
+      Allocate(MatElem(NumDoFScal, NumDoFScal))
+      
+      Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         MatElem  = 0.0_Kr
+         !! Get the local nodal values of BC sections if necessary
+         If (DoBC) Then
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+         End If
+      
+         Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
+            C2_GradV = 2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon 
+            flops = flops + 2.0
+            !! Assemble the element stiffness
+            Do iDoF1 = 1, NumDoFScal
+               If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
+                  Do iDoF2 = 1, NumDoFScal
+                  !! Terms in GradV^2
+                     MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradV * (AppCtx%ElemScal(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss) )               
+                     flops = flops + 3.0
+                  End Do
+               End If
+            End Do
+         End Do
+         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_Elem_iE
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+      DeAllocate(MatElem)
+      DeAllocate(BCFlag)
+      DeAllocate(IrrevFlag)
+      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+   End Subroutine MatV_AssemblyBlk_NonBrittle_AT1
 
 !----------------------------------------------------------------------------------------!      
 ! RHSAssembly (CM)  
@@ -260,80 +525,81 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
-      Type(SectionReal)                            :: RHSSec
-      PetscInt                                     :: iBlk, iE, iELoc
-      PetscReal, Dimension(:), Pointer             :: RHSElem
-      PetscInt                                     :: NumDoFPerVertex 
-      
-      NumDoFPerVertex = 1
-      
+      PetscInt                                     :: iBlk
+            
       !!! Hopefully one day we will use assemble Vector instead of going through a section
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyV_Stage, iErr); CHKERRQ(iErr)
-      Call VecSet(AppCtx%RHSV, 0.0_Kr, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSSec', NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
-      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
-         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call RHSV_AssemblyLocal(iE, AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID ), AppCtx, RHSElem)
-            Call SectionRealUpdateClosure(RHSSec, AppCtx%MeshTopology%Mesh, iE-1, RHSElem, ADD_VALUES, iErr); CHKERRQ(iErr)
-         End Do Do_Elem_iE
-         DeAllocate(RHSElem)
-      End Do Do_Elem_iBlk
-      Call SectionRealComplete(RHSSec, iErr); CHKERRQ(iErr)
-      !!! VERY important! This is the equivalent of a ghost update
-      Call SectionRealToVec(RHSSec, AppCtx%ScatterScal, SCATTER_FORWARD, AppCtx%RHSV, ierr); CHKERRQ(ierr)
-      Call SectionRealDestroy(RHSSec, iErr); CHKERRQ(iErr)
+      
+      Call SectionRealZero(AppCtx%RHSV, iErr); CHKERRQ(iErr)
+      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Select Case (AppCtx%VarFracSchemeParam%AtNum)
+         Case(2)
+            Call RHSV_AssemblyBlock_AT2(iBlk, AppCtx)
+         Case Default
+            SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+      End Select
+      End Do Do_iBlk
+
+      Call SectionRealComplete(AppCtx%RHSV, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
   End Subroutine RHSV_Assembly
    
 !----------------------------------------------------------------------------------------!      
 ! RHSAssemblyLocal (CM)  
 !----------------------------------------------------------------------------------------!      
-   Subroutine RHSV_AssemblyLocal(iE, MatProp, AppCtx, RHSElem)
-
-#if defined PB_2D
-      Type(MatProp2D_Type)                         :: MatProp
-#elif defined PB_3D
-      Type(MatProp3D_Type)                         :: MatProp
-#endif
-   
-      PetscInt                                     :: iE
+   Subroutine RHSV_AssemblyBlock_AT2(iBlk, AppCtx)
+      PetscInt                                     :: iBlk
       Type(AppCtx_Type)                            :: AppCtx
-      PetscReal, Dimension(:), Pointer             :: RHSElem
-      PetscInt                                     :: iErr
-      PetscInt                                     :: NumDoFScal, NumGauss
-      PetscInt, Dimension(:), Pointer              :: BCFlag, IrrevFlag
+
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      PetscReal, Dimension(:), Pointer             :: RHS_Loc
+      PetscInt, Dimension(:), Pointer              :: BCFlag_Loc, IrrevFlag_Loc
+      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+
+      PetscInt                                     :: NumDoFScal
       PetscInt                                     :: iDoF1, iGauss
       PetscReal                                    :: C1_V
       PetscLogDouble                               :: flops
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
       flops      = 0.0
-      RHSElem    = 0.0_Kr
-      NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
-      NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
-      Allocate(BCFlag(NumDoFScal))
-      Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
-      Allocate(IrrevFlag(NumDoFScal))
-      Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
-      ! Calculate the coefficient of the term in V (C1_V) of the energy functional
-      C1_V =  2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * MatProp%Toughness / AppCtx%VarFracSchemeParam%Epsilon  
+      
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      Allocate(BCFlag_Loc(NumDoFScal))
+      Allocate(IrrevFlag_Loc(NumDoFScal))      
+      
+      Allocate(RHS_Loc(NumDoFScal))
+
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      C1_V =  2.0_Kr * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkId)%Toughness / AppCtx%VarFracSchemeParam%Epsilon  
       flops = flops + 2.0
-      Do_iGauss: Do iGauss = 1, NumGauss
-          Do iDoF1 = 1, NumDoFScal
-            If  ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
+
+      Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         RHS_Loc = 0.0_Kr
+
+         Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag_Loc, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag_Loc, iErr); CHKERRQ(ierr)
+
+         Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
+            Do iDoF1 = 1, NumDoFScal
+               If  ( (BCFlag_Loc(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag_Loc(iDoF1) == VarFrac_BC_Type_NONE) ) Then
                ! RHS terms due to forces
-               RHSElem(iDoF1) = RHSElem(iDoF1) + C1_V * AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) 
-               flops = flops + 3.0
-            End If
-         End Do
-      End Do Do_iGauss
+                  RHS_Loc(iDoF1) = RHS_Loc(iDoF1) + C1_V * AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) 
+                  flops = flops + 3.0
+               End If
+            End Do
+         End Do Do_iGauss
+         Call SectionRealUpdateClosure(AppCtx%RHSV, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_iEloc
+
+      DeAllocate(BCFlag_Loc)
+      DeAllocate(IrrevFlag_Loc)      
+      DeAllocate(RHS_Loc)
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
-      DeAllocate(BCFlag)
-      DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-   End Subroutine RHSV_AssemblyLocal
+   End Subroutine RHSV_AssemblyBlock_AT2
       
 
    !----------------------------------------------------------------------------------------!      
@@ -347,7 +613,7 @@ Contains
       KSPConvergedReason                           :: reason
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      Type(Vec)                                    :: V_Vec, V_Old
+      Type(Vec)                                    :: V_Vec, V_Old, RHSV_Vec
       PetscReal                                    :: VMin, VMax
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolveV_Stage, iErr); CHKERRQ(iErr)
@@ -355,10 +621,13 @@ Contains
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, V_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_FORWARD, V_Vec, ierr); CHKERRQ(ierr)
 
+      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%RHSV, RHSV_Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%RHSV, AppCtx%ScatterScal, SCATTER_FORWARD, RHSV_Vec, ierr); CHKERRQ(ierr)
+
       Call VecDuplicate(V_Vec, V_Old, iErr); CHKERRQ(iErr)
       Call VecCopy(V_Vec, V_Old, iErr); CHKERRQ(iErr)
 
-      Call KSPSolve(AppCtx%KSPV, AppCtx%RHSV, V_Vec, iErr); CHKERRQ(iErr)
+      Call KSPSolve(AppCtx%KSPV, RHSV_Vec, V_Vec, iErr); CHKERRQ(iErr)
       !!! Solve and store the solution in AppCtx%RHS
       
       Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, ierr); CHKERRQ(ierr)
@@ -389,6 +658,7 @@ Contains
       
       Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
+      Call VecDestroy(RHSV_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('     KSP for V converged in ', I5, ' iterations. KSPConvergedReason is ', I3, '\n')
 101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n')
