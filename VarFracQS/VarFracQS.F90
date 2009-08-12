@@ -165,6 +165,8 @@ Program  VarFracQS
 
             Call ElasticEnergy_Assembly(ElasticEnergy, AppCtx)
             Write(*,*) "*********** Elastic Energy:", AppCtx%ElasticEnergy(AppCtx%TimeSTep), ElasticEnergy
+            Call SurfaceEnergy_Assembly(ElasticEnergy, AppCtx)
+            Write(*,*) "*********** Elastic Energy:", AppCtx%SurfaceEnergy(AppCtx%TimeSTep), ElasticEnergy
 
             If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
                Call ComputeStrainStress(AppCtx)
