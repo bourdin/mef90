@@ -334,7 +334,7 @@ Contains
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
    End Subroutine SurfaceEnergy_AssemblyBlk_AT2
 
-   Subroutine SurfaceEnergy_AssemblyBlk_AT1(SurfaceEnergyBLock, iBlk, V_Sec, AppCtx)
+   Subroutine SurfaceEnergy_AssemblyBlk_AT1(SurfaceEnergyBlock, iBlk, V_Sec, AppCtx)
       PetscReal                                    :: SurfaceEnergyBlock
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: V_Sec

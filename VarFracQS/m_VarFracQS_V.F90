@@ -295,12 +295,18 @@ Contains
       PetscReal                                    :: MyElasticEnergyBlock, MySurfaceEnergyBlock
       PetscReal                                    :: MyObjFunc
       
+      PetscReal                                    :: GradNorm
+      
       !!! Objective function is ElasticEnergy + SurfaceEnergy
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'V', 1, V_Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(V_Sec, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
+
       MyObjFunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-            Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+            MyElasticEnergyBlock = 0.0_Kr
+            Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, V_Sec, AppCtx)
          End If
          MyObjFunc = MyObjFunc + MyElasticEnergyBlock
 
@@ -317,23 +323,21 @@ Contains
       Call PetscGlobalSum(MyObjFunc, ObjFunc, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       
       !!! Gradient
-      Call VecZeroEntries(GradientV_Vec, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'GradientV', 1, GradientV_Sec, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'V', 1, V_Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealZero(GradientV_Sec, iErr); CHKERRQ(iErr)
 
-      Call SectionRealToVec(V_Sec, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
       Do_iBlk2: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             !!! Contribution of the bulk term 1/2 \int v^2 Ae(u):e(u)
-!            Call GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, V_Sec, AppCtx)
+            Call GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, V_Sec, AppCtx)
          End If
          !!! Contribution of the surface term
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-!            Call GradientV_AssemblyBlk_SurfaceAT1(GradientV_Sec, iBlk, V_Sec, AppCtx)
+            Call GradientV_AssemblyBlk_SurfaceAT1(GradientV_Sec, iBlk, V_Sec, AppCtx)
          Case(2)
-!            Call GradientV_AssemblyBlk_SurfaceAT2(GradientV_Sec, iBlk, V_Sec, AppCtx)
+            Call GradientV_AssemblyBlk_SurfaceAT2(GradientV_Sec, iBlk, V_Sec, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
@@ -341,6 +345,11 @@ Contains
       Call SectionRealToVec(GradientV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(ierr)
       Call SectionRealDestroy(GradientV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(V_Sec, iErr); CHKERRQ(iErr)
+!!!$      Call VecNorm(GradientV_Vec, NORM_1, GradNorm, iErr); CHKERRQ(iErr)
+!!!$      Write(*,*) '*** Gradient Norm: ', GradNorm
+!!!$      Call VecNorm(V_Vec, NORM_1, GradNorm, iErr); CHKERRQ(iErr)
+!!!$      Write(*,*) '*** V Norm:        ', GradNorm
+!!!$      Write(*,*) '*** ObjFunc:       ', ObjFunc
    End Subroutine FormFunctionAndGradientV
 #endif
 
@@ -761,7 +770,6 @@ Contains
       PetscInt                                     :: iDoF, iGauss
       PetscLogDouble                               :: flops
 
-
       flops        = 0.0
 
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
@@ -773,7 +781,7 @@ Contains
       Allocate(V_Loc(NumDoFScal))
 
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+      Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          GradientV_Loc = 0.0_Kr
          Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc, iErr); CHKERRQ(ierr)
@@ -789,7 +797,7 @@ Contains
             Do iDoF = 1, NumDoFScal
                Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
                V_Elem     = V_Elem     + V_Loc(iDoF)     * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-               flops = flops + 2.0
+               flops = flops + 4.0
             End Do
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
             Do iDoF = 1, NumDofScal
@@ -891,7 +899,7 @@ Contains
                flops = flops + 2.0
             End Do
             Do iDoF = 1, NumDofScal
-               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + 2.0_Kr * AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * ((1.0 - V_Elem) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) )
+               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + 2.0_Kr * AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * (-(1.0 - V_Elem) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) )
             End Do
          End Do Do_iGauss
          Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
@@ -961,8 +969,6 @@ Contains
             Call VecView(AppCtx%RHSV, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          End If
          Call SectionRealToVec(AppCtx%RHSV, AppCtx%ScatterScal, SCATTER_FORWARD, RHSV_Vec, ierr); CHKERRQ(ierr)
-
-
 
          Call MatV_Assembly(AppCtx)
          If (AppCtx%AppParam%verbose > 2) Then
