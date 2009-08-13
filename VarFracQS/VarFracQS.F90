@@ -96,6 +96,21 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Problem for V
          !-------------------------------------------------------------------
+      Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx)
+      Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx)
+      Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx)
+      AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+      Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, 102) AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
          Call Step_V(AppCtx)
          
          !------------------------------------------------------------------- 
