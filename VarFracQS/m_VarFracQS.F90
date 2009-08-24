@@ -214,6 +214,7 @@ Contains
          
       !! Solver context for V      
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
+#if defined WITH_TAO
          Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappV, iErr); CHKERRQ(iErr)
 
@@ -228,6 +229,7 @@ Contains
          Call TaoSetOptions(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappV, AppCtx%KSPV, iErr); CHKERRQ(iErr)
+#endif
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
          Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
