@@ -31,15 +31,15 @@ Module m_VarFracQS_V3D
       
 #if defined WITH_TAO
 #include "include/finclude/tao_solver.h"
+   Public :: HessianV_Assembly
+   Public :: FormFunctionAndGradientV
+   Public :: InitTaoBoundsV
 #endif
 
    Public :: Init_TS_V
    Public :: Init_TS_Irrev
    Public :: MatV_Assembly
    Public :: RHSV_Assembly
-   Public :: HessianV_Assembly
-   Public :: FormFunctionAndGradientV
-   Public :: InitTaoBoundsV
    Public :: Step_V
 
 Contains
