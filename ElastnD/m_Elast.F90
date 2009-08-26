@@ -662,7 +662,7 @@ Contains
       Type(Vect2D)                                 :: X_Elem, F_Elem
       Type(Mats2D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #elif defined PB_3D  
-      Type(Vect3D)                                 :: X_ElemF_Elem    
+      Type(Vect3D)                                 :: X_Elem, F_Elem    
       Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #endif
       PetscReal                                    :: Theta_Elem

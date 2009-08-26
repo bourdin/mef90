@@ -53,7 +53,7 @@ Contains
       
       Type(SectionReal)                            :: LowerBoundV_Sec, UpperBoundV_Sec
       PetscInt, Dimension(:), Pointer              :: BCVFlag_Ptr, IrrevFlag_Ptr
-      PetscReal, Dimension(:), Pointer             :: Bound_Ptr
+      PetscReal, Dimension(:), Pointer             :: Bound_Ptr, V_Ptr
       PetscInt                                     :: iDoF, NumDoF
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
       
@@ -65,22 +65,29 @@ Contains
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'UpperBoundV_Sec',  1, UpperBoundV_Sec , iErr); CHKERRQ(iErr)
       Call SectionRealSet(LowerBoundV_Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
       Call SectionRealSet(UpperBoundV_Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-
+      
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case (VarFrac_Irrev_Eq)
-         !!! Set Lower bound and upper bounds to 0 at each point where BCFlag == VarFrac_BC_Type_DIRI or IrrevFlag = VarFrac_BC_Type_DIRI
+         !!! Set Lower bound and upper bounds to 0 at each point where BCFlag == VarFrac_BC_Type_DIRI and to V whereever IrrevFlag = VarFrac_BC_Type_DIRI
          NumDoF = AppCtx%MeshTopology%Num_Verts !!! Change that!
          Allocate(Bound_Ptr(1))
          Bound_Ptr = 0.0_Kr
          Do iDof = 1, NumDoF
-            Call SectionIntRestrict(AppCtx%BCVFlag,   AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
             Call SectionIntRestrict(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
-            If ( (BCVFlag_Ptr(1) /= VarFrac_BC_Type_NONE) .OR. (IrrevFlag_Ptr(1) /= VarFrac_BC_Type_NONE) ) Then
+            If (IrrevFlag_Ptr(1) /= VarFrac_BC_Type_NONE) Then
                Call SectionRealUpdate(LowerBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
                Call SectionRealUpdate(UpperBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End If
-            Call SectionIntRestore(AppCtx%BCVFlag,   AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
             Call SectionIntRestore(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
+
+            Call SectionIntRestrict(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
+            If (BCVFlag_Ptr(1) /= VarFrac_BC_Type_NONE) Then
+               Call SectionRealRestrict(AppCtx%V,      AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(LowerBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(UpperBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealRestore(AppCtx%V,       AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, iErr); CHKERRQ(iErr)
+            End If
+            Call SectionIntRestore(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
          End Do  
          DeAllocate(Bound_Ptr)   
          
@@ -119,7 +126,7 @@ Contains
          Do i = 1, AppCtx%MeshTopology%Num_Verts  !!! NO!      
             !!! Take care of potential BC on V
             Call SectionIntRestrict(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCVFlag, iErr); CHKERRQ(ierr)
-
+            
             If (AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_Eq ) Then
                !!! Take care of Irreversibility 
                Call SectionIntRestrict(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(ierr)
@@ -161,7 +168,6 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          !!! Update the IrrevFlag Section
-         !!! If I'd understand how to use SectionGetArrayF90 I'd use it
          Allocate(IrrevFlag(1))
          IrrevFlag = VarFrac_BC_Type_DIRI
          If (AppCtx%IsBT) Then
@@ -305,16 +311,17 @@ Contains
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-            MyElasticEnergyBlock = 0.0_Kr
             Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, V_Sec, AppCtx)
+         Else
+            MyElasticEnergyBlock = 0.0_Kr
          End If
          MyObjFunc = MyObjFunc + MyElasticEnergyBlock
 
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, V_Sec, AppCtx)
          Case(2)
-            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, V_Sec, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
@@ -345,11 +352,13 @@ Contains
       Call SectionRealToVec(GradientV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(ierr)
       Call SectionRealDestroy(GradientV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(V_Sec, iErr); CHKERRQ(iErr)
-!!!$      Call VecNorm(GradientV_Vec, NORM_1, GradNorm, iErr); CHKERRQ(iErr)
-!!!$      Write(*,*) '*** Gradient Norm: ', GradNorm
+
+!      Call VecNorm(GradientV_Vec, NORM_1, GradNorm, iErr); CHKERRQ(iErr)
+!      Call VecSum(GradientV_Vec, GradNorm, iErr); CHKERRQ(iErr)
+!      Write(*,*) '*** Gradient Norm: ', GradNorm
 !!!$      Call VecNorm(V_Vec, NORM_1, GradNorm, iErr); CHKERRQ(iErr)
 !!!$      Write(*,*) '*** V Norm:        ', GradNorm
-!!!$      Write(*,*) '*** ObjFunc:       ', ObjFunc
+!      Write(*,*) '*** ObjFunc:       ', ObjFunc
    End Subroutine FormFunctionAndGradientV
 #endif
 
@@ -359,7 +368,6 @@ Contains
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
             
-      !!! Hopefully one day we will use assemble Vector instead of going through a section
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyV_Stage, iErr); CHKERRQ(iErr)
       
       Call SectionRealZero(AppCtx%RHSV, iErr); CHKERRQ(iErr)
@@ -784,9 +792,9 @@ Contains
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          GradientV_Loc = 0.0_Kr
-         Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%U,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
          Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(V_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(V_Sec,        AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             Strain_Elem = 0.0_Kr
             Do iDoF = 1, NumDoFVect
@@ -802,6 +810,7 @@ Contains
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
             Do iDoF = 1, NumDofScal
                GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem) * V_Elem * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
+!               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * V_Elem * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
             End Do
          End Do Do_iGauss
          Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
@@ -849,9 +858,10 @@ Contains
                GradV_Elem = GradV_Elem + V_Loc(iDoF) * AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)
             End Do
             Do iDoF = 1, NumDofScal
-               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * (-AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon + 2.0_Kr * AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) )
+               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  (-AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon +  2.0_Kr * AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) )
             End Do
          End Do Do_iGauss
+         GradientV_Loc = GradientV_Loc * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness 
          Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
 
@@ -899,9 +909,10 @@ Contains
                flops = flops + 2.0
             End Do
             Do iDoF = 1, NumDofScal
-               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + 2.0_Kr * AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * (-(1.0 - V_Elem) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) )
+               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * ( (V_Elem-1.0_Kr) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) )
             End Do
          End Do Do_iGauss
+         GradientV_Loc = GradientV_Loc * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * 2.0_Kr
          Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
 
