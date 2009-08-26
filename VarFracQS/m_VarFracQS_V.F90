@@ -101,6 +101,7 @@ Contains
 
       Call SectionRealDestroy(LowerBoundV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(UpperBoundV_Sec, iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine InitTaoBoundsV
 #endif
 
@@ -144,6 +145,7 @@ Contains
       End Select
       
       Call SectionRealDestroy(VBC, iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine Init_TS_V
 
    Subroutine Init_TS_Irrev(AppCtx)
@@ -157,9 +159,6 @@ Contains
       PetscReal                                    :: MyIrrevEQ_Counter  = 0.0
       PetscReal                                    :: IrrevEQ_Counter
       
-!      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBC', 1, VBC, iErr); CHKERRQ(iErr)
-!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, VBC)
-            
       !!! Update the BC Flag from the current V
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case(VarFrac_Irrev_Eq, VarFrac_Irrev_InEq)
@@ -211,8 +210,7 @@ Contains
       Case default   
          SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
       End Select
-      
-!      Call SectionRealDestroy(VBC, iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine Init_TS_Irrev
 
    
@@ -243,6 +241,7 @@ Contains
       Call MatAssemblyEnd  (AppCtx%KV, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine MatV_Assembly
 
 #if defined WITH_TAO
@@ -285,6 +284,7 @@ Contains
       End If
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine HessianV_Assembly
 #endif
 
@@ -352,13 +352,7 @@ Contains
       Call SectionRealToVec(GradientV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(ierr)
       Call SectionRealDestroy(GradientV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(V_Sec, iErr); CHKERRQ(iErr)
-
-!      Call VecNorm(GradientV_Vec, NORM_1, GradNorm, iErr); CHKERRQ(iErr)
-!      Call VecSum(GradientV_Vec, GradNorm, iErr); CHKERRQ(iErr)
-!      Write(*,*) '*** Gradient Norm: ', GradNorm
-!!!$      Call VecNorm(V_Vec, NORM_1, GradNorm, iErr); CHKERRQ(iErr)
-!!!$      Write(*,*) '*** V Norm:        ', GradNorm
-!      Write(*,*) '*** ObjFunc:       ', ObjFunc
+      CHKMEMQ
    End Subroutine FormFunctionAndGradientV
 #endif
 
@@ -382,6 +376,7 @@ Contains
 
       Call SectionRealComplete(AppCtx%RHSV, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine RHSV_Assembly
    
    Subroutine MatV_AssemblyBlk_Brittle_AT2(H, iBlk, DoBC, AppCtx)
@@ -477,6 +472,7 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine MatV_AssemblyBlk_Brittle_AT2
 
    Subroutine MatV_AssemblyBlk_NonBrittle_AT2(H, iBlk, DoBC, AppCtx)
@@ -545,6 +541,7 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine MatV_AssemblyBlk_NonBrittle_AT2
 
    Subroutine MatV_AssemblyBlk_Brittle_AT1(H, iBlk, DoBC, AppCtx)
@@ -639,6 +636,7 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine MatV_AssemblyBlk_Brittle_AT1
 
    Subroutine MatV_AssemblyBlk_NonBrittle_AT1(H, iBlk, DoBC, AppCtx)
@@ -702,6 +700,7 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine MatV_AssemblyBlk_NonBrittle_AT1
 
    Subroutine RHSV_AssemblyBlk_AT2(RHSV_Sec, iBlk, AppCtx)
@@ -757,6 +756,7 @@ Contains
       DeAllocate(RHS_Loc)
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine RHSV_AssemblyBlk_AT2
    
 #if defined WITH_TAO   
@@ -810,7 +810,6 @@ Contains
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
             Do iDoF = 1, NumDofScal
                GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem) * V_Elem * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-!               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * V_Elem * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
             End Do
          End Do Do_iGauss
          Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
@@ -821,6 +820,7 @@ Contains
       DeAllocate(GradientV_Loc)
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine GradientV_AssemblyBlk_ElastBrittle
    
    Subroutine GradientV_AssemblyBlk_SurfaceAT1(GradientV_Sec, iBlk, V_Sec, AppCtx)
@@ -868,6 +868,7 @@ Contains
       DeAllocate(V_Loc)
       DeAllocate(GradientV_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine GradientV_AssemblyBlk_SurfaceAT1
 
    Subroutine GradientV_AssemblyBlk_SurfaceAT2(GradientV_Sec, iBlk, V_Sec, AppCtx)
@@ -919,11 +920,10 @@ Contains
       DeAllocate(V_Loc)
       DeAllocate(GradientV_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      CHKMEMQ
    End Subroutine GradientV_AssemblyBlk_SurfaceAT2
 #endif
-   !----------------------------------------------------------------------------------------!      
-   ! Solve V (CM)   
-   !----------------------------------------------------------------------------------------!      
+
    
    Subroutine Step_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
@@ -1030,6 +1030,7 @@ Contains
 103 Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
 700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n')
 800 Format('     Max change V: ', T24, ES12.5, '\n')
+      CHKMEMQ
    End Subroutine Step_V
 
    
