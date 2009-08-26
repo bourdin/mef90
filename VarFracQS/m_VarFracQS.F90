@@ -215,8 +215,9 @@ Contains
       !! Solver context for V      
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
 #if defined WITH_TAO
-         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoV, iErr); CHKERRQ(iErr)
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_blmvm', AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappV, iErr); CHKERRQ(iErr)
+         Call TaoAppendOptionsPrefix(AppCtx%taoV, "V_", iErr); CHKERRQ(iErr)
 
          Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappV, FormFunctionAndGradientV, AppCtx, iErr); CHKERRQ(iErr)
          Call TaoAppSetHessianRoutine(AppCtx%taoappV, HessianV_Assembly, AppCtx, iErr); CHKERRQ(iErr)
@@ -251,7 +252,7 @@ Contains
 
       !!! Create the Section for the BC
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCUFlag', AppCtx%MeshTopology%Num_Dim, AppCtx%BCUFlag, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCVFlag', 1, AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCVFlag',    1, AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'IrrevVFlag', 1, AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
 #if defined PB_2D
       Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCUFlag)

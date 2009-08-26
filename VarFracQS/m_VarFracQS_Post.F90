@@ -30,7 +30,7 @@ Contains
 !----------------------------------------------------------------------------------------! 
 
    Subroutine ElasticEnergy_Assembly(ElasticEnergy, AppCtx)     
-      PetscReal                                    :: ElasticEnergy
+      PetscReal, Intent(OUT)                       :: ElasticEnergy
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
@@ -58,7 +58,7 @@ Contains
    End Subroutine ElasticEnergy_Assembly
    
    Subroutine ExtForcesWork_Assembly(ExtForcesWork, AppCtx)     
-      PetscReal                                    :: ExtForcesWork
+      PetscReal, Intent(OUT)                       :: ExtForcesWork
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
@@ -82,7 +82,7 @@ Contains
    End Subroutine ExtForcesWork_Assembly
    
    Subroutine SurfaceEnergy_Assembly(SurfaceEnergy, AppCtx)     
-      PetscReal                                    :: SurfaceEnergy
+      PetscReal, Intent(OUT)                       :: SurfaceEnergy
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
@@ -115,9 +115,8 @@ Contains
 !!!
 !!! Block Assembly Routines
 !!!
-
    Subroutine ElasticEnergy_AssemblyBlk_Brittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
-      PetscReal                                    :: ElasticEnergyBlock
+      PetscReal, Intent(OUT)                       :: ElasticEnergyBlock
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: U_Sec, Theta_Sec, V_Sec
       Type(AppCtx_Type)                            :: AppCtx
@@ -152,9 +151,9 @@ Contains
 
       Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         Call SectionRealRestrictClosure(U_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(U_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
          Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(V_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(V_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             Strain_Elem = 0.0_Kr
             Do iDoF2 = 1, NumDoFVect
@@ -164,11 +163,10 @@ Contains
             V_Elem = 0.0_Kr
             Do iDoF2 = 1, NumDoFScal
                Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
-               V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V_Loc(iDoF2)
+               V_Elem     = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V_Loc(iDoF2)
                flops = flops + 2.0
             End Do
-            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-            
+            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem            
             ElasticEnergyBlock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * 0.5_Kr
             flops = flops + 6.0 
          End Do Do_iGauss
@@ -181,7 +179,7 @@ Contains
    End Subroutine ElasticEnergy_AssemblyBlk_Brittle
 
    Subroutine ElasticEnergy_AssemblyBlk_NonBrittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, AppCtx)
-      PetscReal                                    :: ElasticEnergyBlock
+      PetscReal, Intent(OUT)                       :: ElasticEnergyBlock
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: U_Sec, Theta_Sec
       Type(AppCtx_Type)                            :: AppCtx
@@ -237,7 +235,7 @@ Contains
    End Subroutine ElasticEnergy_AssemblyBlk_NonBrittle
 
    Subroutine ExtForcesWork_AssemblyBlk(ExtForcesWorkBlock, iBlk, U_Sec, F_Sec, AppCtx)
-      PetscReal                                    :: ExtForcesWorkBlock
+      PetscReal, Intent(OUT)                       :: ExtForcesWorkBlock
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: U_Sec, F_Sec
       Type(AppCtx_Type)                            :: AppCtx
@@ -287,7 +285,7 @@ Contains
    End Subroutine ExtForcesWork_AssemblyBlk
 
    Subroutine SurfaceEnergy_AssemblyBlk_AT2(SurfaceEnergyBLock, iBlk, V_Sec, AppCtx)
-      PetscReal                                    :: SurfaceEnergyBlock
+      PetscReal, Intent(OUT)                       :: SurfaceEnergyBlock
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: V_Sec
       Type(AppCtx_Type)                            :: AppCtx
@@ -326,16 +324,17 @@ Contains
                GradV_Elem = GradV_Elem + V_Loc(iDoF2) * AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss)
             End Do
             
-            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlk)%Toughness * ( (1.0_Kr-V_Elem)**2 / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)  )
+            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (1.0_Kr-V_Elem)**2 / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)  )
          End Do Do_iGauss
       End Do Do_iEloc
+      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlk)%Toughness
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
    End Subroutine SurfaceEnergy_AssemblyBlk_AT2
 
    Subroutine SurfaceEnergy_AssemblyBlk_AT1(SurfaceEnergyBlock, iBlk, V_Sec, AppCtx)
-      PetscReal                                    :: SurfaceEnergyBlock
+      PetscReal, Intent(OUT)                       :: SurfaceEnergyBlock
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: V_Sec
       Type(AppCtx_Type)                            :: AppCtx

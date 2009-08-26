@@ -464,7 +464,7 @@ Module m_VarFrac_Struct
       
       Select Case(dSchemeParam%ATNum)
       Case(1)
-         dSchemeParam%ATCv = 2.0_Kr / 3.0_Kr
+         dSchemeParam%ATCv = 1.0_Kr / 3.0_Kr
       Case(2)
          dSchemeParam%ATCV = 0.5_Kr
       Case Default
