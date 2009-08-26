@@ -139,6 +139,7 @@ Module m_VarFrac_Struct
 
       PetscInt                                     :: ATNum
       PetscReal                                    :: ATCv ! The c_v constant in Braides-1998 p.48
+
       PetscInt                                     :: IntegOrder
       
       PetscTruth                                   :: SaveStress
@@ -463,8 +464,12 @@ Module m_VarFrac_Struct
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
       
       Select Case(dSchemeParam%ATNum)
+      !!! Braides 2008 p. 48
+      !!! \int V(v)/\eps + \eps |\nabla v| Gamma converges to 4c_V H^{N-1){S_u)
+      !!! with Cv = \int_0^1 \sqrt(V(s))ds
+
       Case(1)
-         dSchemeParam%ATCv = 1.0_Kr / 3.0_Kr
+         dSchemeParam%ATCv = 2.0_Kr / 3.0_Kr
       Case(2)
          dSchemeParam%ATCV = 0.5_Kr
       Case Default

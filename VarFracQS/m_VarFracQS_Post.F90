@@ -329,7 +329,7 @@ Contains
             SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (1.0_Kr-V_Elem)**2 / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)  )
          End Do Do_iGauss
       End Do Do_iEloc
-      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlk)%Toughness
+      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%MatProp(iBlk)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
@@ -376,9 +376,10 @@ Contains
                GradV_Elem = GradV_Elem + V_Loc(iDoF2) * AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss)
             End Do
             
-            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlk)%Toughness * ( (1.0_Kr-V_Elem) / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)  )
+            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (1.0_Kr-V_Elem) / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)  )
          End Do Do_iGauss
       End Do Do_iEloc
+      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%MatProp(iBlk)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr 
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
