@@ -349,32 +349,39 @@ Contains
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
       End Do Do_iBlk2
-      Call SectionRealToVec(GradientV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(ierr)
+      Call SectionRealToVec(GradientV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(GradientV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(V_Sec, iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine FormFunctionAndGradientV
 #endif
 
-   Subroutine RHSV_Assembly(AppCtx)
+   Subroutine RHSV_Assembly(RHSV_Vec, AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
+      Type(Vec)                                    :: RHSV_Vec
+
+      Type(SectionReal)                            :: RHSV_Sec
       
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
             
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyV_Stage, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSV_Sec', 1, RHSV_Sec, iErr); CHKERRQ(iErr)
       
-      Call SectionRealZero(AppCtx%RHSV, iErr); CHKERRQ(iErr)
+      Call SectionRealZero(RHSV_Sec, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(2)
-            Call RHSV_AssemblyBlk_AT2(AppCtx%RHSV, iBlk, AppCtx)
+            Call RHSV_AssemblyBlk_AT2(RHSV_Sec, iBlk, AppCtx)
          Case Default
-            SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+            SETERRQ(PETSC_ERR_SUP, 'Only AT2 is implemented with KSP\n', iErr)
       End Select
       End Do Do_iBlk
 
-      Call SectionRealComplete(AppCtx%RHSV, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(RHSV_Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(RHSV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, RHSV_Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(RHSV_Sec, iErr); CHKERRQ(iErr)
+      
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine RHSV_Assembly
@@ -932,7 +939,7 @@ Contains
       KSPConvergedReason                           :: reason
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      Type(Vec)                                    :: V_Vec, V_Old, RHSV_Vec
+      Type(Vec)                                    :: RHSV_Vec, V_Vec, V_Old
       PetscReal                                    :: VMin, VMax
       PetscReal                                    :: rDum
       PetscInt                                     :: iDum
@@ -967,19 +974,19 @@ Contains
 #endif      
       Else
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, V_Vec, iErr); CHKERRQ(iErr)
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, RHSV_Vec, iErr); CHKERRQ(iErr)
          Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_FORWARD, V_Vec, ierr); CHKERRQ(ierr)
          Call VecDuplicate(V_Vec, V_Old, iErr); CHKERRQ(iErr)
          Call VecCopy(V_Vec, V_Old, iErr); CHKERRQ(iErr)
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%RHSV, RHSV_Vec, iErr); CHKERRQ(iErr)
+
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
-         Call RHSV_Assembly(AppCtx)
+         Call RHSV_Assembly(RHSV_Vec, AppCtx)
          If (AppCtx%AppParam%verbose > 2) Then
-            Call VecView(AppCtx%RHSV, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+            Call VecView(RHSV_Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          End If
-         Call SectionRealToVec(AppCtx%RHSV, AppCtx%ScatterScal, SCATTER_FORWARD, RHSV_Vec, ierr); CHKERRQ(ierr)
 
          Call MatV_Assembly(AppCtx)
          If (AppCtx%AppParam%verbose > 2) Then
