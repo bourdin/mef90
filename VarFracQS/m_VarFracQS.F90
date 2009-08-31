@@ -179,7 +179,7 @@ Contains
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Theta', 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'V', 1, AppCtx%V, iErr); CHKERRQ(iErr)
-
+      
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
          Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
@@ -190,10 +190,12 @@ Contains
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
 
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHSU, iErr); CHKERRQ(iErr)
-      If (.NOT. AppCtx%VarFracSchemeParam%V_UseTao) Then
-         Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSV', 1, AppCtx%RHSV, iErr); CHKERRQ(iErr)
+      If (.NOT. AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHSU, iErr); CHKERRQ(iErr)
       End If
+!!!      If (.NOT. AppCtx%VarFracSchemeParam%V_UseTao) Then
+!!!         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%RHSV, iErr); CHKERRQ(iErr)
+!!!      End If
       
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
@@ -402,12 +404,14 @@ Contains
       Call SectionIntDestroy(AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
-      Call VecDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
+      If (.NOT. AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call VecDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
+      End If
       Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KV, iErr); CHKERRQ(iErr)
-      If (.NOT. AppCtx%VarFracSchemeParam%V_UseTao) Then
-         Call SectionRealDestroy(AppCtx%RHSV, iErr); CHKERRQ(iErr)
-      End If
+!!!      If (.NOT. AppCtx%VarFracSchemeParam%V_UseTao) Then
+!!!         Call VecDestroy(AppCtx%RHSV, iErr); CHKERRQ(iErr)
+!!!      End If
       Call KSPDestroy(AppCtx%KSPV, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 
