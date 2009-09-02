@@ -41,6 +41,9 @@ TestLocal:        ${PETSC_ARCH} TestLocal.o ${PETSC_ARCH}/TestLocal.o
 TestAssembly:     ${PETSC_ARCH} TestAssembly.o ${PETSC_ARCH}/TestAssembly.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestAssembly ${PETSC_ARCH}/TestAssembly.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+TestDuplicate:     ${PETSC_ARCH} TestDuplicate.o ${PETSC_ARCH}/TestDuplicate.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestDuplicate   ${PETSC_ARCH}/TestDuplicate.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 TestSectionInt:   ${PETSC_ARCH} TestSectionInt.o ${PETSC_ARCH}/TestSectionInt.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestSectionInt ${PETSC_ARCH}/TestSectionInt.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
