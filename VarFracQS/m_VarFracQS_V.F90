@@ -297,21 +297,20 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId
-      Type(SectionReal)                            :: V_Sec, GradientV_Sec
+      Type(SectionReal)                            :: GradientV_Sec
       PetscReal                                    :: MyElasticEnergyBlock, MySurfaceEnergyBlock
       PetscReal                                    :: MyObjFunc
       
       PetscReal                                    :: GradNorm
       
       !!! Objective function is ElasticEnergy + SurfaceEnergy
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'V', 1, V_Sec, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(V_Sec, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
+      Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
 
       MyObjFunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-            Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, V_Sec, AppCtx)
+            Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
          Else
             MyElasticEnergyBlock = 0.0_Kr
          End If
@@ -319,9 +318,9 @@ Contains
 
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, V_Sec, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V, AppCtx)
          Case(2)
-            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, V_Sec, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
@@ -337,21 +336,20 @@ Contains
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             !!! Contribution of the bulk term 1/2 \int v^2 Ae(u):e(u)
-            Call GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, V_Sec, AppCtx)
+            Call GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, AppCtx%V, AppCtx)
          End If
          !!! Contribution of the surface term
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-            Call GradientV_AssemblyBlk_SurfaceAT1(GradientV_Sec, iBlk, V_Sec, AppCtx)
+            Call GradientV_AssemblyBlk_SurfaceAT1(GradientV_Sec, iBlk, AppCtx%V, AppCtx)
          Case(2)
-            Call GradientV_AssemblyBlk_SurfaceAT2(GradientV_Sec, iBlk, V_Sec, AppCtx)
+            Call GradientV_AssemblyBlk_SurfaceAT2(GradientV_Sec, iBlk, AppCtx%V, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
       End Do Do_iBlk2
       Call SectionRealToVec(GradientV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(GradientV_Sec, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(V_Sec, iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine FormFunctionAndGradientV
 #endif
