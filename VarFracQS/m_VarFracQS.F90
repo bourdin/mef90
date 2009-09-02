@@ -190,13 +190,6 @@ Contains
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
 
-      If (.NOT. AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHSU, iErr); CHKERRQ(iErr)
-      End If
-!!!      If (.NOT. AppCtx%VarFracSchemeParam%V_UseTao) Then
-!!!         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%RHSV, iErr); CHKERRQ(iErr)
-!!!      End If
-      
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
@@ -404,14 +397,9 @@ Contains
       Call SectionIntDestroy(AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
-      If (.NOT. AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call VecDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
-      End If
       Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
+
       Call MatDestroy(AppCtx%KV, iErr); CHKERRQ(iErr)
-!!!      If (.NOT. AppCtx%VarFracSchemeParam%V_UseTao) Then
-!!!         Call VecDestroy(AppCtx%RHSV, iErr); CHKERRQ(iErr)
-!!!      End If
       Call KSPDestroy(AppCtx%KSPV, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 
