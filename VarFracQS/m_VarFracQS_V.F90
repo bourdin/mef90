@@ -213,15 +213,19 @@ Contains
       CHKMEMQ
    End Subroutine Init_TS_Irrev
 
+!!!
+!!! Global assembly functions
+!!!
    
-   Subroutine MatV_Assembly(AppCtx)
+   Subroutine MatV_Assembly(K, AppCtx)
+      Type(Mat)                                    :: K
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkID, iErr
       
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyV_Stage, iErr); CHKERRQ(iErr)
 
-      Call MatZeroEntries(AppCtx%KV, iErr); CHKERRQ(iErr)
+      Call MatZeroEntries(K, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
@@ -229,15 +233,18 @@ Contains
             SETERRQ(PETSC_ERR_SUP, 'AT1 requires V_tao', iErr)
          Case(2)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-               Call MatV_AssemblyBlk_ElastBrittle(AppCtx%KV, iBlk, .TRUE., AppCtx)
+               Call MatV_AssemblyBlk_ElastBrittle(K, iBlk, .TRUE., AppCtx)
             EndIf
-            Call MatV_AssemblyBlk_SurfaceAT2(AppCtx%KV, iBlk, .TRUE., AppCtx)
+            Call MatV_AssemblyBlk_SurfaceAT2(K, iBlk, .TRUE., AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
       End Select
       End Do Do_Elem_iBlk
-      Call MatAssemblyBegin(AppCtx%KV, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-      Call MatAssemblyEnd  (AppCtx%KV, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%verbose > 1) Then
+         Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr)
+      End If
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       CHKMEMQ
@@ -262,14 +269,14 @@ Contains
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-               Call MatV_AssemblyBlk_ElastBrittle(AppCtx%KV, iBlk, .FALSE., AppCtx)
+               Call MatV_AssemblyBlk_ElastBrittle(H, iBlk, .FALSE., AppCtx)
             End If
-            Call MatV_AssemblyBlk_SurfaceAT1(AppCtx%KV, iBlk, .FALSE., AppCtx)
+            Call MatV_AssemblyBlk_SurfaceAT1(H, iBlk, .FALSE., AppCtx)
          Case(2)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-               Call MatV_AssemblyBlk_ElastBrittle(AppCtx%KV, iBlk, .FALSE., AppCtx)
+               Call MatV_AssemblyBlk_ElastBrittle(H, iBlk, .FALSE., AppCtx)
             End If
-            Call MatV_AssemblyBlk_SurfaceAT2(AppCtx%KV, iBlk, .FALSE., AppCtx)
+            Call MatV_AssemblyBlk_SurfaceAT2(H, iBlk, .FALSE., AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
@@ -298,7 +305,7 @@ Contains
       PetscReal                                    :: MyElasticEnergyBlock, MySurfaceEnergyBlock
       PetscReal                                    :: MyObjFunc
       
-      PetscReal                                    :: GradNorm
+!      PetscReal                                    :: GradNorm
       
       !!! Objective function is ElasticEnergy + SurfaceEnergy
       Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
@@ -880,7 +887,7 @@ Contains
             Call VecView(RHSV_Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          End If
 
-         Call MatV_Assembly(AppCtx)
+         Call MatV_Assembly(AppCtx%KV, AppCtx)
          If (AppCtx%AppParam%verbose > 2) Then
             Call MatView(AppCtx%KV, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          End If

@@ -73,26 +73,7 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Problem for U
          !-------------------------------------------------------------------
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Assembling the Matrix and RHS for  the U-subproblem \n' 
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If
-         Call RHSU_Assembly(AppCtx)
-         If (AppCtx%AppParam%verbose > 2) Then
-            Call VecView(AppCtx%RHSU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-         End If
-         
-         
-         Call MatU_Assembly(AppCtx)
-         If (AppCtx%AppParam%verbose > 2) Then
-            Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-         End If
-               
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n' 
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-         End If
-         Call Solve_U(AppCtx)
+         Call Step_U(AppCtx)
          
          !------------------------------------------------------------------- 
          ! Problem for V
