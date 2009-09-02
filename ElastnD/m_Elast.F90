@@ -55,7 +55,7 @@ Module m_Elast3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: ElemScal
 #endif
       Type(SectionReal)                            :: U
-      Type(Vec)                                    :: U_Vec
+!      Type(Vec)                                    :: U_Vec
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       Type(SectionReal)                            :: F
@@ -103,8 +103,7 @@ Contains
       PetscReal                                    :: rDummy
       Character                                    :: cDummy
       PetscInt                                     :: vers
-      PetscReal                                    :: fatol, frtol, catol, crtol, gatol, grtol, gttol
-      Type(Vec)                                    :: LowerBoundU, UpperBoundU
+      Type(Vec)                                    :: TAO_WorkVec
       
       Call MEF90_Initialize()
       Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
@@ -227,12 +226,6 @@ Contains
       !!! Create the Scatter, Vec, Mat, KSP, PC
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
       Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%Theta, AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
-
-      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, LowerBoundU, iErr); CHKERRQ(iErr)
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, UpperBoundU, iErr); CHKERRQ(iErr)
-      End If
    
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
@@ -240,14 +233,16 @@ Contains
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
          Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappU, iErr); CHKERRQ(iErr)
-
+         Call TaoAppendOptionsPrefix(AppCtx%taoU, "U_", iErr); CHKERRQ(iErr) 
+         
          Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappU, FormFunctionAndGradient, AppCtx, iErr); CHKERRQ(iErr)
          Call TaoAppSetHessianRoutine(AppCtx%taoappU, FormHessian, AppCtx, iErr); CHKERRQ(iErr)
          Call TaoAppSetVariableBoundsRoutine(AppCtx%taoappU, FormBoundsTao, AppCtx, iErr); CHKERRQ(iErr)
 
          Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%KU, AppCtx%KU, iErr); CHKERRQ(iErr)
-         Call TaoAppSetInitialSolutionVec(AppCtx%taoappU, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
 
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, TAO_WorkVec, iErr); CHKERRQ(iErr)
+         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, TAO_WorkVec, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
@@ -391,27 +386,32 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       Integer                                      :: iDum
       PetscTruth                                   :: flg
-      Type(Vec)                                    :: RHSU_Vec
+      Type(Vec)                                    :: U_Vec, RHSU_Vec
       Type(SectionReal)                            :: UBC_Sec, LowerBoundU_Sec, UpperBoundU_Sec
       PetscInt, Dimension(:), Pointer              :: BCFlag_Ptr
       PetscReal, Dimension(:), Pointer             :: UBC_Ptr, U_Ptr, LowerBoundU_Ptr, UpperBoundU_Ptr
       PetscInt                                     :: iDoF1, iDoF2
       
-      PetscReal      fatol, frtol, gatol, grtol, gttol, radius, catol, crtol
-   
       Call InitLoads(AppCtx)
       Call InitU(AppCtx)      
 
       !!! KSPSolve and Tao work with vectors, not sections
-      Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_FORWARD, AppCtx%U_Vec, ierr); CHKERRQ(ierr)
 
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
+         
+         Call TaoAppGetSolutionVec(AppCtx%taoappU, U_Vec, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_FORWARD, U_Vec, ierr); CHKERRQ(ierr)
 
+         Call PetscLogStagePush(AppCtx%LogInfo%SolveU_Stage, iErr); CHKERRQ(iErr)
          Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
+         !!! Scatter back from U_Vec -> AppCtx%U
+         Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, U_Vec, iErr); CHKERRQ(ierr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+         
          Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, AppCtx%TotalEnergy, TaoResidual, iDum, iDum, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
             Write(IOBuffer, 102) KSPNumiter, TAOReason
@@ -426,6 +426,10 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          
+         !!! KSPSolve wants a Vec, not a SectionReal, so we create it and scatter the values from AppCtx%U -> U_Vec
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, U_Vec, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_FORWARD, U_Vec, ierr); CHKERRQ(ierr)
+
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, RHSU_Vec, iErr); CHKERRQ(iErr)
          Call RHSAssembly(RHSU_Vec, AppCtx)
          If (AppCtx%AppParam%verbose > 1) Then
@@ -438,7 +442,9 @@ Contains
          End If
    
          Call PetscLogStagePush(AppCtx%LogInfo%SolveU_Stage, iErr); CHKERRQ(iErr)
-         Call KSPSolve(AppCtx%KSPU, RHSU_Vec, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
+         Call KSPSolve(AppCtx%KSPU, RHSU_Vec, U_Vec, iErr); CHKERRQ(iErr)
+         !!! Scatter back from U_Vec -> AppCtx%U
+         Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, U_Vec, iErr); CHKERRQ(ierr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          
          Call KSPGetConvergedReason(AppCtx%KSPU, KSPreason, iErr); CHKERRQ(iErr)
@@ -450,8 +456,8 @@ Contains
          End If
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call VecDestroy(RHSU_Vec, iErr); CHKERRQ(iErr)
+         Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       End If
-      Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, AppCtx%U_Vec, iErr); CHKERRQ(ierr)
       
 100 Format('     KSP for U converged in ', I5, ' iterations \n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')      
@@ -515,7 +521,7 @@ Contains
       PetscReal                                    :: func
       Type(AppCtx_Type)                            :: AppCtx
       
-      Type(SectionReal)                            :: Gradient_Sec, X_Sec
+      Type(SectionReal)                            :: Gradient_Sec!, X_Sec
       PetscInt                                     :: iBlk     
       PetscReal                                    :: myfunc, ElasticEnergyBlock, ExtForcesWorkBlock 
       
@@ -526,15 +532,16 @@ Contains
             
       Call VecZeroEntries(Gradient, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Gradient', AppCtx%MeshTopology%Num_Dim, Gradient_Sec, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'X', AppCtx%MeshTopology%Num_Dim, X_Sec, iErr); CHKERRQ(iErr)
+!      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'X', AppCtx%MeshTopology%Num_Dim, X_Sec, iErr); CHKERRQ(iErr)
 
-      Call SectionRealToVec(X_Sec, AppCtx%ScatterVect, SCATTER_REVERSE, X, iErr); CHKERRQ(ierr)
+      !!! Instead of creating a new section in which to store the value of X when computing the gradient, we use AppCtx%U
+      Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, X, iErr); CHKERRQ(ierr)
 
       myfunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call ComputeEnergiesBlock(iBlk, X_Sec, ElasticEnergyBlock, ExtForcesWorkBlock, AppCtx)
+         Call ComputeEnergiesBlock(iBlk, AppCtx%U, ElasticEnergyBlock, ExtForcesWorkBlock, AppCtx)
          myfunc = myfunc + ElasticEnergyBlock - ExtForcesWorkBlock
-         Call FormGradientBlock(iBlk, X_Sec, Gradient_Sec, AppCtx)
+         Call FormGradientBlock(iBlk, AppCtx%U, Gradient_Sec, AppCtx)
       End Do Do_iBlk
       Call PetscGlobalSum(myfunc, func, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
 
@@ -543,7 +550,6 @@ Contains
       Call SectionRealToVec(Gradient_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, Gradient, iErr); CHKERRQ(iErr)
 
       Call SectionRealDestroy(Gradient_Sec, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(X_Sec, iErr); CHKERRQ(iErr)
       
       If (AppCtx%AppParam%verbose > 1) Then
          Call VecView(Gradient, PETSC_VIEWER_STDOUT_WORLD, iErr)
@@ -982,7 +988,6 @@ Contains
          Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
       End If
       
-      Call VecDestroy(AppCtx%U_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%Theta, iErr); CHKERRQ(iErr)
