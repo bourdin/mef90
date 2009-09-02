@@ -71,7 +71,6 @@ Module m_Elast3D
       Type(VecScatter)                             :: ScatterScal
       Type(SectionInt)                             :: BCFlagU
       Type(Mat)                                    :: KU
-      Type(SectionReal)                            :: RHSU
       Type(KSP)                                    :: KSPU
       Type(PC)                                     :: PCU
 !!! TAO stuff      
@@ -215,7 +214,6 @@ Contains
 
       !!! Create the Sections for the variables
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSU', AppCtx%MeshTopology%Num_Dim, AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Theta', 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
 
@@ -427,12 +425,12 @@ Contains
             Write(IOBuffer, *) 'Assembling the RHS\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
-         Call RHSAssembly(AppCtx)
+         
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, RHSU_Vec, iErr); CHKERRQ(iErr)
+         Call RHSAssembly(RHSU_Vec, AppCtx)
          If (AppCtx%AppParam%verbose > 1) Then
-            Call SectionRealView(AppCtx%RHSU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+            Call VecView(RHSU_Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          End If
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%RHSU, RHSU_Vec, iErr); CHKERRQ(iErr)
-         Call SectionRealToVec(AppCtx%RHSU, AppCtx%ScatterVect, SCATTER_FORWARD, RHSU_Vec, iErr); CHKERRQ(ierr)
       
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling KSPSolve\n'
@@ -577,22 +575,28 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergies
 
-   Subroutine RHSAssembly(AppCtx)
+   Subroutine RHSAssembly(RHS_Vec, AppCtx)
+      Type(Vec)                                    :: RHS_Vec
       Type(AppCtx_Type)                            :: AppCtx
       
+      Type(SectionReal)                            :: RHSU_Sec
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
 
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
 
-      Call SectionRealZero(AppCtx%RHSU, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSU_Sec',  AppCtx%MeshTopology%Num_Dim, RHSU_Sec , iErr); CHKERRQ(iErr)
+      Call SectionRealZero(RHSU_Sec, iErr); CHKERRQ(iErr)
       
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call RHSAssemblyBlock(iBlk, AppCtx)
+         Call RHSAssemblyBlock(RHSU_Sec, iBlk, AppCtx)
       End Do Do_iBlk
 
-      Call SectionRealComplete(AppCtx%RHSU, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(RHSU_Sec, iErr); CHKERRQ(iErr)
       !!! VERY important! This is the equivalent of a ghost update
+      Call SectionRealToVec(RHSU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, RHS_Vec, iErr); CHKERRQ(ierr)
+      Call SectionRealDestroy(RHSU_Sec, iErr); CHKERRQ(iErr)
+
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
 
@@ -790,8 +794,9 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergiesBlock
 
-   Subroutine RHSAssemblyBlock(iBlk, AppCtx)
+   Subroutine RHSAssemblyBlock(RHS_Sec, iBlk, AppCtx)
       PetscInt                                     :: iBlk
+      Type(SectionReal)                            :: RHS_Sec
       Type(AppCtx_Type)                            :: AppCtx
 
       !!!   _Loc are restriction of fields to local patch (the element)
@@ -847,7 +852,7 @@ Contains
                End If
             End Do
          End Do Do_iGauss
-         Call SectionRealUpdateClosure(AppCtx%RHSU, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call SectionRealUpdateClosure(RHS_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
       
       DeAllocate(BCFlag_Loc)
@@ -990,7 +995,6 @@ Contains
       Call VecScatterDestroy(AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCFlagU, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 
       If (AppCtx%AppParam%verbose > 1) Then
