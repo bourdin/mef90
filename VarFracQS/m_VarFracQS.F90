@@ -446,6 +446,15 @@ Contains
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       
 #if defined WITH_TAO
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call TaoDestroy(AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoApplicationDestroy(AppCtx%taoAppU, iErr); CHKERRQ(iErr)
+      End If
+      If (AppCtx%VarFracSchemeParam%V_UseTao) Then
+         Call TaoDestroy(AppCtx%taoV, iErr); CHKERRQ(iErr)
+         Call TaoApplicationDestroy(AppCtx%taoAppV, iErr); CHKERRQ(iErr)
+      End If
+
       Call TaoFinalize(iErr)
 #endif
       Call MEF90_Finalize()

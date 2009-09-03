@@ -55,7 +55,6 @@ Module m_Elast3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: ElemScal
 #endif
       Type(SectionReal)                            :: U
-!      Type(Vec)                                    :: U_Vec
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       Type(SectionReal)                            :: F
@@ -682,7 +681,7 @@ Contains
       PetscReal                                    :: Theta_Elem
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
-      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscInt                                     :: iDoF, iGauss
       PetscLogDouble                               :: flops       
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
@@ -708,20 +707,20 @@ Contains
             F_Elem = 0.0_Kr
             X_Elem = 0.0_Kr
             Strain_Elem = 0.0_Kr
-            Do iDoF2 = 1, NumDoFVect
-               F_Elem      = F_Elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F_Loc(iDoF2)
-               X_Elem      = X_Elem + X_Loc(iDoF2) * AppCtx%ElemVect(iE)%BF(iDoF2, iGauss)
-               Strain_Elem = Strain_Elem + X_Loc(iDoF2) * AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss)
+            Do iDoF = 1, NumDoFVect
+               F_Elem      = F_Elem + AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * F_Loc(iDoF)
+               X_Elem      = X_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)
+               Strain_Elem = Strain_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
             End Do
             Theta_Elem = 0.0_Kr
-            Do iDoF2 = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
+            Do iDoF = 1, NumDoFScal
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
                flops = flops + 2.0
             End Do
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
             
-            Do iDoF1 = 1, NumDofVect
-               Gradient_Loc(iDoF1) = Gradient_Loc(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) - (F_Elem .DotP. AppCtx%ElemVect(iE)%BF(iDoF1, iGauss)) )
+            Do iDoF = 1, NumDofVect
+               Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) - (F_Elem .DotP. AppCtx%ElemVect(iE)%BF(iDoF, iGauss)) )
             End Do
          End Do Do_iGauss
          Call SectionRealUpdateClosure(Gradient_Sec, AppCtx%MeshTopology%Mesh, iE-1, Gradient_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
@@ -1058,6 +1057,10 @@ Contains
       Call PetscViewerDestroy(AppCtx%AppParam%EnergyViewer, iErr); CHKERRQ(iErr)
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call TaoDestroy(AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoApplicationDestroy(AppCtx%taoAppU, iErr); CHKERRQ(iErr)
+      End If
       Call TaoFinalize(iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
 103 Format(A,'-logsummary.txt')
