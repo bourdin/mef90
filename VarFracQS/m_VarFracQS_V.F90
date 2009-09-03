@@ -62,7 +62,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundV_Sec',  1, LowerBoundV_Sec , iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'UpperBoundV_Sec',  1, UpperBoundV_Sec , iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'UpperBoundV_Sec',  1, UpperBoundV_Sec , iErr); CHKERRQ(iErr) 
       Call SectionRealSet(LowerBoundV_Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
       Call SectionRealSet(UpperBoundV_Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
       

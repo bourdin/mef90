@@ -51,7 +51,8 @@ Contains
       PetscReal                                    :: KSP_Default_atol = 1.0D-6
       PetscInt                                     :: KSP_Default_MaxIt = 10000
       Type(PetscViewer)                            :: flgviewer
-      Type(Vec)                                    :: taoU_WorkVec, taoV_WorkVec
+      Type(Vec)                                    :: taoU_WorkVec, taoU_LowerBound, taoU_UpperBound
+      Type(Vec)                                    :: taoV_WorkVec, taoV_LowerBound, taoV_UpperBound
       
       Call MEF90_Initialize()
 #if defined WITH_TAO
@@ -199,20 +200,23 @@ Contains
 #if defined WITH_TAO
          Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappU, iErr); CHKERRQ(iErr)
-         Call TaoAppendOptionsPrefix(AppCtx%taoV, "U_", iErr); CHKERRQ(iErr)
+         Call TaoAppendOptionsPrefix(AppCtx%taoU, "U_", iErr); CHKERRQ(iErr)
 
-         Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappV, FormFunctionAndGradientU, AppCtx, iErr); CHKERRQ(iErr)
-!         Call TaoAppSetHessianRoutine(AppCtx%taoappU, HessianU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
-!         Call TaoAppSetVariableBoundsRoutine(AppCtx%taoappU, InitTaoBoundsU, AppCtx, iErr); CHKERRQ(iErr)
+         Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappU, FormFunctionAndGradientU, AppCtx, iErr); CHKERRQ(iErr)
+         Call TaoAppSetHessianRoutine(AppCtx%taoappU, HessianU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
+         Call TaoAppSetVariableBoundsRoutine(AppCtx%taoappU, InitTaoBoundsU, AppCtx, iErr); CHKERRQ(iErr)
 
          Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%KU, AppCtx%KU, iErr); CHKERRQ(iErr)
 
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, taoU_WorkVec, iErr); CHKERRQ(iErr)
          Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, taoU_WorkVec, iErr); CHKERRQ(iErr)
+         Call VecDuplicate(taoU_WorkVec, taoU_LowerBound, iErr); CHKERRQ(iErr)
+         Call VecDuplicate(taoU_WorkVec, taoU_UpperBound, iErr); CHKERRQ(iErr)
+         Call TaoAppSetVariableBounds(AppCtx%taoappU, taoU_LowerBound, taoU_UpperBound, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
-         Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
-         Call TaoAppGetKSP(AppCtx%taoappV, AppCtx%KSPV, iErr); CHKERRQ(iErr)
+         Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
+         Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
 #endif
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -243,6 +247,9 @@ Contains
 
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, taoV_WorkVec, iErr); CHKERRQ(iErr)
          Call TaoAppSetDefaultSolutionVec(AppCtx%taoappV, taoV_WorkVec, iErr); CHKERRQ(iErr)
+         Call VecDuplicate(taoV_WorkVec, taoV_LowerBound, iErr); CHKERRQ(iErr)
+         Call VecDuplicate(taoV_WorkVec, taoV_UpperBound, iErr); CHKERRQ(iErr)
+         Call TaoAppSetVariableBounds(AppCtx%taoappV, taoV_LowerBound, taoV_UpperBound, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
@@ -419,10 +426,8 @@ Contains
       Call SectionIntDestroy(AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
-      Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
       Call MatDestroy(AppCtx%KV, iErr); CHKERRQ(iErr)
-      Call KSPDestroy(AppCtx%KSPV, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 
       DeAllocate(AppCtx%SurfaceEnergy)
@@ -445,16 +450,24 @@ Contains
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       
-#if defined WITH_TAO
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+#if defined WITH_TAO
          Call TaoDestroy(AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoApplicationDestroy(AppCtx%taoAppU, iErr); CHKERRQ(iErr)
+#endif
+      Else
+         Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
       End If
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
+#if defined WITH_TAO
          Call TaoDestroy(AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoApplicationDestroy(AppCtx%taoAppV, iErr); CHKERRQ(iErr)
+#endif
+      Else
+         Call KSPDestroy(AppCtx%KSPV, iErr); CHKERRQ(iErr)
       End If
 
+#if defined WITH_TAO
       Call TaoFinalize(iErr)
 #endif
       Call MEF90_Finalize()
