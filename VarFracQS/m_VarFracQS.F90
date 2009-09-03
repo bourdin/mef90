@@ -51,7 +51,7 @@ Contains
       PetscReal                                    :: KSP_Default_atol = 1.0D-6
       PetscInt                                     :: KSP_Default_MaxIt = 10000
       Type(PetscViewer)                            :: flgviewer
-      Type(Vec)                                    :: V_Vec
+      Type(Vec)                                    :: taoU_WorkVec, taoV_WorkVec
       
       Call MEF90_Initialize()
 #if defined WITH_TAO
@@ -195,11 +195,32 @@ Contains
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
       
       !! Solver context for U      
-      Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
-      Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+#if defined WITH_TAO
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappU, iErr); CHKERRQ(iErr)
+         Call TaoAppendOptionsPrefix(AppCtx%taoV, "U_", iErr); CHKERRQ(iErr)
+
+         Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappV, FormFunctionAndGradientU, AppCtx, iErr); CHKERRQ(iErr)
+!         Call TaoAppSetHessianRoutine(AppCtx%taoappU, HessianU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
+!         Call TaoAppSetVariableBoundsRoutine(AppCtx%taoappU, InitTaoBoundsU, AppCtx, iErr); CHKERRQ(iErr)
+
+         Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%KU, AppCtx%KU, iErr); CHKERRQ(iErr)
+
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, taoU_WorkVec, iErr); CHKERRQ(iErr)
+         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, taoU_WorkVec, iErr); CHKERRQ(iErr)
+
+         Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
+         Call TaoAppGetKSP(AppCtx%taoappV, AppCtx%KSPV, iErr); CHKERRQ(iErr)
+#endif
+      Else
+         Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
+         Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+      End If
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
-      Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
+      Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPU, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
@@ -219,8 +240,9 @@ Contains
          Call TaoAppSetVariableBoundsRoutine(AppCtx%taoappV, InitTaoBoundsV, AppCtx, iErr); CHKERRQ(iErr)
 
          Call TaoAppSetHessianMat(AppCtx%taoappV, AppCtx%KV, AppCtx%KV, iErr); CHKERRQ(iErr)
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, V_Vec, iErr); CHKERRQ(iErr)
-         Call TaoAppSetInitialSolutionVec(AppCtx%taoappV, V_Vec, iErr); CHKERRQ(iErr)
+
+         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, taoV_WorkVec, iErr); CHKERRQ(iErr)
+         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappV, taoV_WorkVec, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
@@ -229,8 +251,8 @@ Contains
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
          Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
-         Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
       End If
+      Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
       Call KSPSetType(AppCtx%KSPV, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPAppendOptionsPrefix(AppCtx%KSPV, "V_", iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPV, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)

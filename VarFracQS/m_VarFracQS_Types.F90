@@ -84,7 +84,6 @@ Module m_VarFracQS_Types3D
       Type(VecScatter)                             :: ScatterScal
       Type(SectionInt)                             :: BCUFlag, BCVFlag, IrrevFlag
       Type(Mat)                                    :: KU, KV
-!      Type(Vec)                                    :: RHSU
       Type(KSP)                                    :: KSPU, KSPV
       Type(PC)                                     :: PCU, PCV
       Type(LogInfo_Type)                           :: LogInfo
@@ -92,6 +91,8 @@ Module m_VarFracQS_Types3D
 #if defined WITH_TAO
       TAO_SOLVER                                   :: taoV
       TAO_APPLICATION                              :: taoAppV
+      TAO_SOLVER                                   :: taoU
+      TAO_APPLICATION                              :: taoAppU
 #endif
       
 #if defined PB_2D
