@@ -68,8 +68,10 @@ Contains
       MyExtForcesWork = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-         Call ExtForcesWork_AssemblyBlk(MyExtForcesWorkBlock, iBlk, AppCtx%U, AppCtx%F, AppCtx)
-         MyExtForcesWork = MyExtForcesWork + MyExtForcesWorkBlock
+         If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
+            Call ExtForcesWork_AssemblyBlk(MyExtForcesWorkBlock, iBlk, AppCtx%U, AppCtx%F, AppCtx)
+            MyExtForcesWork = MyExtForcesWork + MyExtForcesWorkBlock
+         End If
       End Do Do_iBlk
 
       Call PetscGlobalSum(MyExtForcesWork, ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)

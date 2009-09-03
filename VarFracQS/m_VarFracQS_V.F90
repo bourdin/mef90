@@ -305,8 +305,6 @@ Contains
       PetscReal                                    :: MyElasticEnergyBlock, MySurfaceEnergyBlock
       PetscReal                                    :: MyObjFunc
       
-!      PetscReal                                    :: GradNorm
-      
       !!! Objective function is ElasticEnergy + SurfaceEnergy
       Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
 
@@ -315,10 +313,8 @@ Contains
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
-         Else
-            MyElasticEnergyBlock = 0.0_Kr
+            MyObjFunc = MyObjFunc + MyElasticEnergyBlock
          End If
-         MyObjFunc = MyObjFunc + MyElasticEnergyBlock
 
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)

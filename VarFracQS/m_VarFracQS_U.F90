@@ -13,8 +13,10 @@ Module m_VarFracQS_U3D
 
 #if defined PB_2D
    Use m_VarFracQS_Types2D
+   Use m_VarFracQS_Post2D
 #elif defined PB_3D
    Use m_VarFracQS_Types3D
+   Use m_VarFracQS_Post2D
 #endif   
    Use m_MEF90
    Use m_VarFrac_Struct
@@ -30,7 +32,7 @@ Module m_VarFracQS_U3D
 #if defined WITH_TAO
 #include "include/finclude/tao_solver.h"
    Public :: HessianU_Assembly
-!   Public :: FormFunctionAndGradientU
+   Public :: FormFunctionAndGradientU
 !   Public :: InitTaoBoundsU
 #endif
    Public :: Init_TS_U
@@ -134,6 +136,61 @@ Contains
    End Subroutine HessianU_Assembly
 #endif
   
+#if defined WITH_TAO
+   Subroutine FormFunctionAndGradientU(tao, U_Vec, ObjFunc, GradientU_Vec, AppCtx, iErr)
+      TAO_SOLVER                                   :: tao
+      Type(Vec)                                    :: U_Vec, GradientU_Vec
+      PetscInt                                     :: iErr
+      PetscReal                                    :: ObjFunc
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      PetscInt                                     :: iBlk, iBlkId
+      Type(SectionReal)                            :: GradientU_Sec
+      PetscReal                                    :: MyElasticEnergyBlock, MyExtForcesWorkBlock
+      PetscReal                                    :: MyObjFunc
+      
+      !!! Objective function is ElasticEnergy + ExtForcesWork
+      Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, U_Vec, iErr); CHKERRQ(ierr)
+
+      MyObjFunc = 0.0_Kr
+      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+         If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
+            Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+         Else
+            Call ElasticEnergy_AssemblyBlk_NonBrittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx)
+         End If
+         MyObjFunc = MyObjFunc + MyElasticEnergyBlock
+
+         If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
+            Call ElasticEnergy_AssemblyBlk_Brittle(MyExtForcesWorkBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%F, AppCtx)
+            MyObjFunc = MyObjFunc + MyExtForcesWorkBlock
+         End If
+      End Do Do_iBlk
+      Call PetscGlobalSum(MyObjFunc, ObjFunc, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      
+      !!! Gradient
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'GradientU', AppCtx%MeshTopology%Num_Dim, GradientU_Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealZero(GradientU_Sec, iErr); CHKERRQ(iErr)
+
+      Do_iBlk2: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+         If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
+!            Call GradientU_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, AppCtx%V, AppCtx)
+         Else
+!            Call GradientU_AssemblyBlk_ElastNonBrittle(GradientV_Sec, iBlk, AppCtx)
+         End If
+         If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
+!            Call GradientU_AssemblyBlk_ExtForcesWork(GradientV_Sec, iBlk, AppCtx%F, AppCtx)
+         End If
+      End Do Do_iBlk2
+      Call SectionRealToVec(GradientU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, GradientU_Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(GradientU_Sec, iErr); CHKERRQ(iErr)
+      CHKMEMQ
+   End Subroutine FormFunctionAndGradientU
+#endif
+
+
    Subroutine RHSU_Assembly(RHS_Vec, AppCtx)
       Type(Vec)                                    :: RHS_Vec
       Type(AppCtx_Type)                            :: AppCtx
