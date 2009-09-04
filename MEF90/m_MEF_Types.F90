@@ -231,13 +231,13 @@ Contains
  102 Format('filename:           ', A,       '\n'c)
  103 Format('title:              ', A,       '\n'c)
  104 Format('QA_rec ', I2.2, '         ', A, '\n'c)
- 105 Format('ommunicator:       ', A, I3,    '\n'c)
+ 105 Format('Communicator:       ', A, I3,   '\n'c)
  106 Format('Number of EB Properties: ', I3, '\n'c)
  107 Format('Number of SS Properties: ', I3, '\n'c)
  108 Format('Number of NS Properties: ', I3, '\n'c)
  109 Format('   ', A, 'num values:', I3,     '\n'c)
  110 Format('Global Variables: ', I3,        '\n'c)
- 111 Format('ell Variables:   ', I3,         '\n'c)
+ 111 Format('Cell Variables:   ', I3,        '\n'c)
  112 Format('Vertex Variables: ', I3,        '\n'c)
  201 Format('   Element Block ', I3, ' value ', I3, '\n'c)
  202 Format('   Side Set      ', I3, ' value ', I3, '\n'c)
@@ -247,27 +247,25 @@ Contains
 
 
    Subroutine MeshTopologyDestroy(dMeshTopology)
-     Type(MeshTopology_Type)         :: dMeshTopology
-     PetscInt                        :: iSet, iBlk
-
-     If (Size(dMeshTopology%Node_set) > 0) Then
-!!!        Do iSet = 1, Size(dMeshTopology%Node_set)
-!!!           Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
-!!!        End Do
-!!!        This will cause the following  error: 
-!!!        A pointer passed to DEALLOCATE points to an array that cannot be deallocated
-!!!        I don't understand why
-        Deallocate (dMeshTopology%Node_Set)
-     End If
-     If (Size(dMeshTopology%Elem_Blk) > 0) Then
-!!!        Do iBlk = 1, Size(dMeshTopology%Elem_Blk)
-!!!           Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
-!!!        End Do
-!!!        This will cause the following  error: 
-!!!        A pointer passed to DEALLOCATE points to an array that cannot be deallocated
-!!!        I don't understand why
-        Deallocate(dMeshTopology%Elem_blk)
-     End If
+      Type(MeshTopology_Type)         :: dMeshTopology
+      PetscInt                        :: iSet, iBlk
+      
+      If (Size(dMeshTopology%Node_set) > 0) Then
+         Do iSet = 1, Size(dMeshTopology%Node_set)
+            If (dMeshTopology%Node_set(iSet)%num_nodes>0) Then
+               Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
+            End If
+         End Do
+         Deallocate (dMeshTopology%Node_Set)
+      End If
+      If (Size(dMeshTopology%Elem_Blk) > 0) Then
+         Do iBlk = 1, Size(dMeshTopology%Elem_Blk)
+            If (dMeshTopology%Elem_Blk(iBlk)%Num_Elems > 0) Then
+               Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
+            End If
+         End Do
+         Deallocate(dMeshTopology%Elem_blk)
+      End If
    End Subroutine MeshTopologyDestroy
 
    Subroutine MeshTopologyView(dMeshTopology, viewer)
