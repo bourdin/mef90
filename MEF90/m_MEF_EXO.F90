@@ -626,7 +626,7 @@ Module m_MEF_EXO
 
 
       ! Gather Global Sizes
-      GlobalMeshTopology%num_dim  = dMeshTopology%num_dim
+      GlobalMeshTopology%num_dim   = dMeshTopology%num_dim
       GlobalMeshTopology%num_verts = dMeshTopology%num_verts
       GlobalMeshTopology%num_elems = dMeshTopology%num_elems
       

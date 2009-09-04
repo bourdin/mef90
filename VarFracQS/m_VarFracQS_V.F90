@@ -96,7 +96,9 @@ Contains
          SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
       End Select
       
+      Call SectionRealComplete(LowerBoundV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(LowerBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, LowerBoundV_Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(UpperBoundV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(UpperBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, UpperBoundV_Vec, iErr); CHKERRQ(iErr)
 
       Call SectionRealDestroy(LowerBoundV_Sec, iErr); CHKERRQ(iErr)
@@ -348,6 +350,7 @@ Contains
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
       End Do Do_iBlk2
+      Call SectionRealComplete(GradientV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(GradientV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(GradientV_Sec, iErr); CHKERRQ(iErr)
       CHKMEMQ
@@ -926,9 +929,9 @@ Contains
          Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
       End If
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('     KSP for V converged in ', I5, ' iterations. KSPConvergedReason is ', I3, '\n')
+100 Format('     KSP for V converged in  ', I5, ' iterations. KSPConvergedReason is     ', I3, '\n')
 101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n')
-102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I2, '\n')
+102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I3, '\n')
 103 Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
 700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n')
 800 Format('     Max change V: ', T24, ES12.5, '\n')

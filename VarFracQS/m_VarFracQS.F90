@@ -51,8 +51,8 @@ Contains
       PetscReal                                    :: KSP_Default_atol = 1.0D-6
       PetscInt                                     :: KSP_Default_MaxIt = 10000
       Type(PetscViewer)                            :: flgviewer
-      Type(Vec)                                    :: taoU_WorkVec, taoU_LowerBound, taoU_UpperBound
-      Type(Vec)                                    :: taoV_WorkVec, taoV_LowerBound, taoV_UpperBound
+      Type(Vec)                                    :: taoU_WorkVec
+      Type(Vec)                                    :: taoV_WorkVec
       
       Call MEF90_Initialize()
 #if defined WITH_TAO
@@ -210,9 +210,6 @@ Contains
 
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, taoU_WorkVec, iErr); CHKERRQ(iErr)
          Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, taoU_WorkVec, iErr); CHKERRQ(iErr)
-         Call VecDuplicate(taoU_WorkVec, taoU_LowerBound, iErr); CHKERRQ(iErr)
-         Call VecDuplicate(taoU_WorkVec, taoU_UpperBound, iErr); CHKERRQ(iErr)
-         Call TaoAppSetVariableBounds(AppCtx%taoappU, taoU_LowerBound, taoU_UpperBound, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
@@ -247,9 +244,6 @@ Contains
 
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, taoV_WorkVec, iErr); CHKERRQ(iErr)
          Call TaoAppSetDefaultSolutionVec(AppCtx%taoappV, taoV_WorkVec, iErr); CHKERRQ(iErr)
-         Call VecDuplicate(taoV_WorkVec, taoV_LowerBound, iErr); CHKERRQ(iErr)
-         Call VecDuplicate(taoV_WorkVec, taoV_UpperBound, iErr); CHKERRQ(iErr)
-         Call TaoAppSetVariableBounds(AppCtx%taoappV, taoV_LowerBound, taoV_UpperBound, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)

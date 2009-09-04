@@ -349,7 +349,9 @@ Contains
       End Do
       Call SectionRealDestroy(UBC_Sec, iErr); CHKERRQ(iErr)
 
+      Call SectionRealComplete(LowerBoundU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(LowerBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, LowerBound, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(UpperBoundU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(UpperBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, UpperBound, iErr); CHKERRQ(iErr)
 
       Call SectionRealDestroy(LowerBoundU_Sec, iErr); CHKERRQ(iErr)
@@ -1057,10 +1059,6 @@ Contains
       Call PetscViewerDestroy(AppCtx%AppParam%EnergyViewer, iErr); CHKERRQ(iErr)
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
-      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call TaoDestroy(AppCtx%taoU, iErr); CHKERRQ(iErr)
-         Call TaoApplicationDestroy(AppCtx%taoAppU, iErr); CHKERRQ(iErr)
-      End If
       Call TaoFinalize(iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
 103 Format(A,'-logsummary.txt')

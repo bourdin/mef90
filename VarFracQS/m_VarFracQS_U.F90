@@ -88,7 +88,9 @@ Contains
       DeAllocate(LowerBoundU_Ptr)   
       DeAllocate(UpperBoundU_Ptr)   
          
+      Call SectionRealComplete(LowerBoundU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(LowerBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, LowerBoundU_Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(UpperBoundU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(UpperBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, UpperBoundU_Vec, iErr); CHKERRQ(iErr)
 
       Call SectionRealDestroy(LowerBoundU_Sec, iErr); CHKERRQ(iErr)
@@ -240,6 +242,8 @@ Contains
             Call GradientU_AssemblyBlk_ExtForcesWork(GradientU_Sec, iBlk, AppCtx%U, AppCtx%F, AppCtx)
          End If
       End Do Do_iBlk2
+      
+      Call SectionRealComplete(GradientU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(GradientU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, GradientU_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(GradientU_Sec, iErr); CHKERRQ(iErr)
       CHKMEMQ
@@ -866,9 +870,9 @@ Contains
          Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       End If
       CHKMEMQ
-100 Format('     KSP for U converged in ', I5, ' iterations.  KSPConvergedReason is     ', I3, '\n')
+100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is     ', I3, '\n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
-102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I2, '\n')
+102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I3, '\n')
 103 Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
    End Subroutine Step_U   
 
