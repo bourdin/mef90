@@ -16,7 +16,7 @@ Module m_VarFracQS_U3D
    Use m_VarFracQS_Post2D
 #elif defined PB_3D
    Use m_VarFracQS_Types3D
-   Use m_VarFracQS_Post2D
+   Use m_VarFracQS_Post3D
 #endif   
    Use m_MEF90
    Use m_VarFrac_Struct
