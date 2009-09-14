@@ -492,13 +492,13 @@ Contains
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       
       PetscReal, Dimension(:), Pointer             :: U, Theta
-      PetscReal                                    :: Theta_Elem, ElasEnDens_Elem
+      PetscReal                                    :: Theta_Elem
 #if defined PB_2D
-      Type(MatS2D)                                 :: Strain_Elem, Effective_Strain_Elem
-      Type(MatS2D)                                 :: EffectiveStrain_Elem_S, EffectiveStrain_Elem_D
+      Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
+      Type(MatS2D)                                 :: EffectiveStrain_Elem_D
 #elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
-      Type(MatS3D)                                 :: EffectiveStrain_Elem_S, EffectiveStrain_Elem_D
+      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
+      Type(MatS3D)                                 :: EffectiveStrain_Elem_D
 #endif      
       PetscReal                                    :: EffectiveStrain_Trace
       PetscReal                                    :: ElasticEnergyDensity
@@ -543,19 +543,19 @@ Contains
                flops = flops + 2.0
             End Do
             !! Calculate the Effective Strain at the gauss point
-            Effective_Strain_Elem = Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
+            EffectiveStrain_Elem  = Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
             EffectiveStrain_Trace = Trace(EffectiveStrain_Elem)
 
             If (EffectiveStrain_Trace >= 0.0_Kr) Then
-               ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem
+               ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
             Else
                EffectiveStrain_Elem_D    = EffectiveStrain_Elem
                EffectiveStrain_Elem_D%XX = EffectiveStrain_Elem%XX - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-               EffectiveStrain_Elem_S%YY = EffectiveStrain_Elem%YY - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
+               EffectiveStrain_Elem_D%YY = EffectiveStrain_Elem%YY - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
 #if defined PB_3D
-               EffectiveStrain_Elem_S%ZZ = EffectiveStrain_Elem%ZZ - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
+               EffectiveStrain_Elem_D%ZZ = EffectiveStrain_Elem%ZZ - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
 #endif
-               ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * Effective_Strain_Elem_D) .DotP. Effective_Strain_Elem_D
+               ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D
             End If
 
             !! Assemble the element stiffness
@@ -923,11 +923,7 @@ Contains
                flops = flops + 2.0
             End Do
             Do iDoF = 1, NumDofScal
-<<<<<<< local
-               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + 2.0_Kr * AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%VarFracSchemeParam%ATCv * AppCtx%MatProp(iBlkID)%Toughness * ( -(1.0_Kr - V_Elem) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) )
-=======
                GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * ( (V_Elem-1.0_Kr) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) )
->>>>>>> other
             End Do
          End Do Do_iGauss
          GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
