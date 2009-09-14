@@ -140,7 +140,8 @@ Contains
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U0', AppCtx%MeshTopology%Num_Dim, AppCtx%U0, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Theta', 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'V', 1, AppCtx%V, iErr); CHKERRQ(iErr)      
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'PHI', 1, AppCtx%PHI, iErr); CHKERRQ(iErr)
+      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'PHI', 1, AppCtx%PHI, iErr); CHKERRQ(iErr)      
+!      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'PHI', 1, AppCtx%PHI, iErr); CHKERRQ(iErr)
       
       If ( (AppCtx%VarFracFilmSchemeParam%SaveStress) .OR. (AppCtx%VarFracFilmSchemeParam%SaveStrain) ) Then
          NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
@@ -154,6 +155,7 @@ Contains
 
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHSU, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%RHSV, iErr); CHKERRQ(iErr)
+    Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%PHI, AppCtx%RHSPHI, iErr); CHKERRQ(iErr)
       
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
@@ -227,7 +229,8 @@ Contains
    Subroutine Save_PHI(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFracFilm_CellVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%PHI) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFracFilm_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%PHI) 
+ !     Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%CellVariable(VarFracFilm_CellVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%PHI) 
    End Subroutine Save_PHI
 
    Subroutine Save_StrainStress(AppCtx)
@@ -277,6 +280,7 @@ Contains
       Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%V, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%PHI, iErr); CHKERRQ(iErr)
+      Call SectionRealDestroy(AppCtx%RHSPHI, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%U0, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%Theta, iErr); CHKERRQ(iErr)
       If ( (AppCtx%VarFracFilmSchemeParam%SaveStress) .OR. (AppCtx%VarFracFilmSchemeParam%SaveStrain) ) Then

@@ -60,22 +60,22 @@ Module m_VarFracFilm_Struct
    PetscInt, Parameter, Public                     :: Irrev_Eq   = 1
    PetscInt, Parameter, Public                     :: Irrev_Ineq = 2
    
-   PetscInt, Parameter, Public                     :: VarFracFilm_Num_VertVar           = 6
+   PetscInt, Parameter, Public                     :: VarFracFilm_Num_VertVar           = 7
    PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_Fracture      = 1
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementX = 2   
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementY = 3
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_U0X           = 4
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_U0Y           = 5
-   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_Temperature   = 6
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_Delamination  = 2
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementX = 3   
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_DisplacementY = 4
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_U0X           = 5
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_U0Y           = 6
+   PetscInt, Parameter, Public                     :: VarFracFilm_VertVar_Temperature   = 7
    
-   PetscInt, Parameter, Public                     :: VarFracFilm_Num_CellVar          = 7
-   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_Delamination = 1
-   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StrainXX     = 2
-   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StrainYY     = 3 
-   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StrainXY     = 4
-   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StressXX     = 5
-   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StressYY     = 6
-   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StressXY     = 7
+   PetscInt, Parameter, Public                     :: VarFracFilm_Num_CellVar          = 6
+   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StrainXX     = 1
+   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StrainYY     = 2 
+   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StrainXY     = 3
+   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StressXX     = 4
+   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StressYY     = 5
+   PetscInt, Parameter, Public                     :: VarFracFilm_CellVar_StressXY     = 6
 
    PetscInt, Parameter, Public                     :: VarFracFilm_Num_GlobVar                    = 6       
    PetscInt, Parameter, Public                     :: VarFracFilm_GlobVar_ElasticBulkEnergy      = 1   
@@ -458,7 +458,6 @@ Module m_VarFracFilm_Struct
       
       dEXO%Num_CellVariables = VarFracFilm_Num_CellVar
       Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))
-      dEXO%CellVariable(VarFracFilm_CellVar_Delamination)%Name  = 'Delamination'
       dEXO%CellVariable(VarFracFilm_CellVar_StrainXX)%Name      = 'Strain XX'
       dEXO%CellVariable(VarFracFilm_CellVar_StrainYY)%Name      = 'Strain YY' 
       dEXO%CellVariable(VarFracFilm_CellVar_StrainXY)%Name      = 'Strain XY'
@@ -470,6 +469,7 @@ Module m_VarFracFilm_Struct
       dEXO%Num_VertVariables = VarFracFilm_Num_VertVar
       Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))
       dEXO%VertVariable(VarFracFilm_VertVar_Fracture)%Name      = 'Fracture'
+      dEXO%VertVariable(VarFracFilm_VertVar_Delamination)%Name  = 'Delamination'
       dEXO%VertVariable(VarFracFilm_VertVar_DisplacementX)%Name = 'Displacement X'   
       dEXO%VertVariable(VarFracFilm_VertVar_DisplacementY)%Name = 'Displacement Y'
       dEXO%VertVariable(VarFracFilm_VertVar_U0X)%Name           = 'U0X'
