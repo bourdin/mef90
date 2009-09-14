@@ -126,6 +126,8 @@ Module m_VarFrac_Struct
       PetscReal                                    :: BTTol
       PetscInt                                     :: BTInt
       
+      PetscInt                                     :: Unilateral
+      
       PetscInt                                     :: InitV
       PetscInt                                     :: nbCracks
       PetscReal                                    :: MaxCrackLength     
@@ -387,6 +389,8 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-btint ', I5, A)")               dSchemeParam%BTInt, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-unilateral ', I5, A)")          dSchemeParam%Unilateral, '\n' 
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-initv ', I1, A)")               dSchemeParam%InitV, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-nbcracks ', I5, A)")            dSchemeParam%NbCracks, '\n'
@@ -418,7 +422,7 @@ Module m_VarFrac_Struct
    End Subroutine VarFracSchemeParam_View
 
    Subroutine VarFracSchemeParam_GetFromOptions(dSchemeParam)
-      Type(VarFracSchemeParam_Type)                   :: dSchemeParam
+      Type(VarFracSchemeParam_Type)                :: dSchemeParam
       PetscInt                                     :: iErr
       PetscTruth                                   :: flag
 
@@ -427,6 +431,7 @@ Module m_VarFrac_Struct
       dSchemeParam%DoBT             = PETSC_FALSE
       dSchemeParam%BTTol            = 1.0D-2
       dSchemeParam%BTInt            = 10
+      dSchemeParam%Unilateral       = 0
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
       dSchemeParam%nbCracks         = 0
       dSchemeParam%MaxCrackLength   = 0.0D0  
@@ -443,11 +448,12 @@ Module m_VarFrac_Struct
       dSchemeParam%U_UseTao         = PETSC_FALSE
       dSchemeParam%V_UseTao         = PETSC_FALSE
 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-doirrev',        dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-irrev',          dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-dobt',           dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-bt',             dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-bttol',          dSchemeParam%BTTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',          dSchemeParam%BTInt, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-unilateral',     dSchemeParam%Unilateral, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-maxcracklength', dSchemeParam%MaxCrackLength, flag, iErr); CHKERRQ(iErr)

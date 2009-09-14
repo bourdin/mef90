@@ -65,10 +65,14 @@ Program Partitioner
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Else
       If (verbose > 0) Then
-         Write(IOBuffer, *) "Reading and partitioning the mesh\n"
+         Write(IOBuffer, *) "Calling MeshCreateExodus\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      If (verbose > 0) Then
+         Write(IOBuffer, *) "Calling MeshDistribute\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
       Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
 !      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If

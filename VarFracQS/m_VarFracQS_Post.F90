@@ -180,6 +180,87 @@ Contains
       CHKMEMQ
    End Subroutine ElasticEnergy_AssemblyBlk_Brittle
 
+   Subroutine ElasticEnergy_AssemblyBlk_BrittleUnilateral(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
+      PetscReal, Intent(OUT)                       :: ElasticEnergyBlock
+      PetscInt                                     :: iBlk
+      Type(SectionReal)                            :: U_Sec, Theta_Sec, V_Sec
+      Type(AppCtx_Type)                            :: AppCtx
+
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
+      PetscReal, Dimension(:), Pointer             :: U_Loc, V_Loc, Theta_Loc
+#if defined PB_2D
+      Type(Vect2D)                                 :: U_Elem
+      Type(Mats2D)                                 :: Strain_Elem, EffectiveStrain_Elem
+      Type(MatS2D)                                 :: EffectiveStrain_Elem_S, EffectiveStrain_Elem_D
+#elif defined PB_3D  
+      Type(Vect3D)                                 :: U_Elem    
+      Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
+      Type(MatS3D)                                 :: EffectiveStrain_Elem_S, EffectiveStrain_Elem_D
+#endif
+      PetscReal                                    :: EffectiveStrain_Trace
+      PetscReal                                    :: V_Elem, Theta_Elem
+      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscLogDouble                               :: flops       
+
+      flops = 0.0
+      ElasticEnergyBlock = 0.0_Kr
+
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+
+      Allocate(U_Loc(NumDoFVect))
+      Allocate(Theta_Loc(NumDoFScal))
+      Allocate(V_Loc(NumDoFScal))
+
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Call SectionRealRestrictClosure(U_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(V_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
+         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+            Strain_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFVect
+               Strain_Elem = Strain_Elem + U_Loc(iDoF2) * AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss)
+            End Do
+            Theta_Elem = 0.0_Kr
+            V_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFScal
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
+               V_Elem     = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V_Loc(iDoF2)
+               flops = flops + 2.0
+            End Do
+            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem            
+            EffectiveStrain_Trace = Trace(EffectiveStrain_Elem)
+            If (EffectiveStrain_Trace >= 0.0_Kr) Then
+               ElasticEnergyBlock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * 0.5_Kr
+               flops = flops + 6.0 
+            Else
+               EffectiveStrain_Elem_S = 0.0_Kr
+               EffectiveStrain_Elem_S%XX = EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
+               EffectiveStrain_Elem_S%YY = EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
+#if defined PB_3D
+               EffectiveStrain_Elem_S%ZZ = EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
+#endif
+               EffectiveStrain_Elem_D = EffectiveStrain_Elem - EffectiveStrain_Elem_S
+
+               ElasticEnergyBlock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D )  + ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem_S) .DotP. EffectiveStrain_Elem_S ) ) * 0.5_Kr
+               flops = flops + 6.0 
+            End If
+         End Do Do_iGauss
+      End Do Do_iEloc
+
+      DeAllocate(U_Loc)
+      DeAllocate(Theta_Loc)
+      DeAllocate(V_Loc)
+      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      CHKMEMQ
+   End Subroutine ElasticEnergy_AssemblyBlk_BrittleUnilateral
+
    Subroutine ElasticEnergy_AssemblyBlk_NonBrittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, AppCtx)
       PetscReal, Intent(OUT)                       :: ElasticEnergyBlock
       PetscInt                                     :: iBlk
