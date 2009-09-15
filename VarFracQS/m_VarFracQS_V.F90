@@ -237,10 +237,8 @@ Contains
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
                If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
                   Call MatV_AssemblyBlk_ElastBrittleUnilateral(K, iBlk, .TRUE., AppCtx)
-                  Write(*,*) '*** ', iBlk, iBlkId, 'MatV_AssemblyBlk_ElastBrittleUnilateral'
                Else
                   Call MatV_AssemblyBlk_ElastBrittle(K, iBlk, .TRUE., AppCtx)
-                  Write(*,*) '*** ', iBlk, iBlkId, 'MatV_AssemblyBlk_ElastBrittle'
                End If
             End If
             Call MatV_AssemblyBlk_SurfaceAT2(K, iBlk, .TRUE., AppCtx)
