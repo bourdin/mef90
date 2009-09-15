@@ -235,12 +235,8 @@ Contains
             SETERRQ(PETSC_ERR_SUP, 'AT1 requires V_tao', iErr)
          Case(2)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-               If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-                  Call MatV_AssemblyBlk_ElastBrittleUnilateral(K, iBlk, .TRUE., AppCtx)
-               Else
-                  Call MatV_AssemblyBlk_ElastBrittle(K, iBlk, .TRUE., AppCtx)
-               End If
-            End If
+               Call MatV_AssemblyBlk_ElastBrittle(K, iBlk, .TRUE., AppCtx)
+            EndIf
             Call MatV_AssemblyBlk_SurfaceAT2(K, iBlk, .TRUE., AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
@@ -275,11 +271,7 @@ Contains
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-               If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-                  Call MatV_AssemblyBlk_ElastBrittleUnilateral(H, iBlk, .FALSE., AppCtx)
-               Else
-                  Call MatV_AssemblyBlk_ElastBrittle(H, iBlk, .FALSE., AppCtx)
-               End If
+               Call MatV_AssemblyBlk_ElastBrittle(H, iBlk, .FALSE., AppCtx)
             End If
             Call MatV_AssemblyBlk_SurfaceAT1(H, iBlk, .FALSE., AppCtx)
          Case(2)
@@ -322,11 +314,7 @@ Contains
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-            If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateral(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
-            Else
-               Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
-            End If
+            Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
             MyObjFunc = MyObjFunc + MyElasticEnergyBlock
          End If
 
@@ -417,9 +405,9 @@ Contains
       PetscReal, Dimension(:), Pointer             :: U, Theta
       PetscReal                                    :: Theta_Elem, ElasEnDens_Elem
 #if defined PB_2D
-      Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
+      Type(MatS2D)                                 :: Strain_Elem, Effective_Strain_Elem
 #elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
+      Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
 #endif      
       PetscReal                                    :: ElasticEnergyDensity
       PetscLogDouble                               :: flops
@@ -463,8 +451,8 @@ Contains
                flops = flops + 2.0
             End Do
             !! Calculate the Effective Strain at the gauss point
-            EffectiveStrain_Elem  = Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
-            ElasticEnergyDensity  = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
+            Effective_Strain_Elem = Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
+            ElasticEnergyDensity  = (AppCtx%MatProp(iBlkID)%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem
             !! Assemble the element stiffness
             Do iDoF1 = 1, NumDoFScal
                If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
@@ -562,13 +550,10 @@ Contains
                ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
             Else
                EffectiveStrain_Elem_D    = EffectiveStrain_Elem
-#if defined PB_2D
-               EffectiveStrain_Elem_D%XX = EffectiveStrain_Elem%XX - EffectiveStrain_Trace * 0.5_Kr
-               EffectiveStrain_Elem_D%YY = EffectiveStrain_Elem%YY - EffectiveStrain_Trace * 0.5_Kr
-#elif defined PB_3D
-               EffectiveStrain_Elem_D%XX = EffectiveStrain_Elem%XX - EffectiveStrain_Trace / 3.0_Kr
-               EffectiveStrain_Elem_D%YY = EffectiveStrain_Elem%YY - EffectiveStrain_Trace / 3.0_Kr
-               EffectiveStrain_Elem_D%ZZ = EffectiveStrain_Elem%ZZ - EffectiveStrain_Trace / 3.0_Kr
+               EffectiveStrain_Elem_D%XX = EffectiveStrain_Elem%XX - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
+               EffectiveStrain_Elem_D%YY = EffectiveStrain_Elem%YY - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
+#if defined PB_3D
+               EffectiveStrain_Elem_D%ZZ = EffectiveStrain_Elem%ZZ - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
 #endif
                ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D
             End If
@@ -795,9 +780,9 @@ Contains
       PetscReal, Dimension(:), Pointer             :: U_Loc, Theta_Loc, V_Loc, GradientV_Loc
       PetscReal                                    :: Theta_Elem, V_Elem
 #if defined PB_2D
-      Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
+      Type(MatS2D)                                 :: Strain_Elem, Effective_Strain_Elem
 #elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
+      Type(MatS3D)                                 :: Strain_Elem, Effective_Strain_Elem
 #endif      
       PetscReal                                    :: ElasticEnergyDensity
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
@@ -834,8 +819,8 @@ Contains
                V_Elem     = V_Elem     + V_Loc(iDoF)     * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
                flops = flops + 4.0
             End Do
-            EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-            ElasticEnergyDensity  = (AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
+            Effective_Strain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            ElasticEnergyDensity  = (AppCtx%MatProp(iBlkId)%Hookes_Law * Effective_Strain_Elem) .DotP. Effective_Strain_Elem
             Do iDoF = 1, NumDofScal
                GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * ElasticEnergyDensity * V_Elem * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
             End Do
@@ -850,88 +835,6 @@ Contains
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine GradientV_AssemblyBlk_ElastBrittle
-   
-#if defined WITH_TAO   
-   Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateral(GradientV_Sec, iBlk, V_Sec, AppCtx)
-      Type(SectionReal)                            :: GradientV_Sec
-      PetscInt                                     :: iBlk
-      Type(SectionReal)                            :: V_Sec
-      Type(AppCtx_Type)                            :: AppCtx
-
-      PetscReal, Dimension(:), Pointer             :: U_Loc, Theta_Loc, V_Loc, GradientV_Loc
-      PetscReal                                    :: Theta_Elem, V_Elem
-#if defined PB_2D
-      Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
-      Type(MatS2D)                                 :: EffectiveStrain_Elem_D
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
-      Type(MatS3D)                                 :: EffectiveStrain_Elem_D
-#endif      
-      PetscReal                                    :: EffectiveStrain_Trace
-      PetscReal                                    :: ElasticEnergyDensity
-      PetscInt                                     :: iE, iEloc, iBlkId, iErr
-      PetscInt                                     :: NumDoFScal, NumDoFVect
-      PetscInt                                     :: iDoF, iGauss
-      PetscLogDouble                               :: flops
-
-      flops        = 0.0
-
-      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
-      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
-
-      Allocate(U_Loc(NumDoFVect))
-      Allocate(Theta_Loc(NumDoFScal))
-      Allocate(GradientV_Loc(NumDoFScal))
-      Allocate(V_Loc(NumDoFScal))
-
-      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         GradientV_Loc = 0.0_Kr
-         Call SectionRealRestrictClosure(AppCtx%U,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(V_Sec,        AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
-         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
-            Strain_Elem = 0.0_Kr
-            Do iDoF = 1, NumDoFVect
-               Strain_Elem = Strain_Elem + U_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
-            End Do
-            Theta_Elem = 0.0_Kr
-            V_Elem     = 0.0_Kr
-            Do iDoF = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-               V_Elem     = V_Elem     + V_Loc(iDoF)     * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-               flops = flops + 4.0
-            End Do
-            EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-            EffectiveStrain_Trace = Trace(EffectiveStrain_Elem)
-            
-            If (EffectiveStrain_Trace >= 0.0_Kr) Then
-               ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
-            Else
-               EffectiveStrain_Elem_D    = EffectiveStrain_Elem
-               EffectiveStrain_Elem_D%XX = EffectiveStrain_Elem%XX - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-               EffectiveStrain_Elem_D%YY = EffectiveStrain_Elem%YY - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-#if defined PB_3D
-               EffectiveStrain_Elem_D%ZZ = EffectiveStrain_Elem%ZZ - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-#endif
-               ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D
-            End If
-            Do iDoF = 1, NumDofScal
-               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * ElasticEnergyDensity * V_Elem * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-            End Do
-         End Do Do_iGauss
-         Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
-      End Do Do_iEloc
-
-      DeAllocate(U_Loc)
-      DeAllocate(Theta_Loc)
-      DeAllocate(GradientV_Loc)
-      DeAllocate(V_Loc)
-      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
-   End Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateral
-#endif
    
    Subroutine GradientV_AssemblyBlk_SurfaceAT1(GradientV_Sec, iBlk, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
