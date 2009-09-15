@@ -151,44 +151,46 @@ Contains
    !----------------------------------------------------------------------------------------!      
    ! Solve Phi (CM)   
    !----------------------------------------------------------------------------------------!      
-Subroutine Solve_Phi(AppCtx)
- Ê Ê ÊType(AppCtx_Type) Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê:: AppCtx
- Ê Ê ÊPetscInt Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê :: iErr
- Ê Ê ÊPetscInt Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê :: i
- Ê Ê ÊPetscReal, Dimension(:), Pointer Ê Ê Ê Ê Ê Ê :: RHSPHI_Ptr, PHI0, PHI1
- ! Ê Ê Type(Vec) Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê:: Phi_Vec, Phi_Old
- Ê Ê ÊPetscInt Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê Ê :: MyNumDec, NumDec
- Ê Ê ÊCharacter(len=MEF90_MXSTRLEN) Ê Ê Ê Ê Ê Ê Ê Ê:: IOBuffer
+   
+   Subroutine Solve_Phi(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
+      PetscInt                                     :: i
+      PetscReal, Dimension(:), Pointer             :: RHSPHI_Ptr, PHI0, PHI1
+ !     Type(Vec)                                    :: Phi_Vec, Phi_Old
+      PetscInt                                     :: MyNumDec, NumDec
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
 
- Ê Ê Ê Ê Ê
+          
 
- Ê Ê Ê Ê MyNumDec = 0 Ê
- Ê Ê Ê Ê 
- Ê Ê Ê Ê Allocate(PHI0(1))
- Ê Ê Ê Ê PHI0(1) = 0.0_Kr Ê Ê Ê Ê 
- Ê Ê Ê Ê Allocate(PHI1(1))
- Ê Ê Ê Ê PHI1(1) = 1.0_Kr
- Ê Ê Ê Ê Allocate( RHSPhi_Ptr(1))
- Ê Ê Ê Ê Do i = 1, AppCtx%MeshTopology%Num_Verts
- Ê Ê Ê Ê Ê ÊCall MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%RHSPHI, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, RHSPHI_Ptr, iErr); CHKERRQ(ierr) Ê Ê Ê
- Ê Ê Ê Ê Ê ÊIf (RHSPHI_Ptr(1) > 0) Then
- Ê Ê Ê Ê Ê Ê Ê Call MeshUpdateClosure(AppCtx%MeshTopology%mesh, AppCtx%PHI, AppCtx%MeshTopology%Num_Elems + i-1, PHI0, iErr); CHKERRQ(iErr)
- Ê Ê Ê Ê Ê Ê Ê MyNumDec = MyNumDec + 1
- Ê Ê Ê Ê Ê Ê!Else
- Ê Ê Ê Ê Ê Ê! Ê Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%PHI, AppCtx%MeshTopology%Num_Elems + i-1, PHI1, iErr); CHKERRQ(iErr)
- Ê Ê Ê Ê Ê ÊEnd If
- Ê Ê Ê Ê End Do
- Ê Ê Ê Ê DeAllocate(RHSPhi_Ptr)
- Ê Ê Ê Ê DeAllocate(PHI0) Ê Ê Ê Ê 
- Ê Ê Ê Ê DeAllocate(PHI1)
+         MyNumDec = 0  
+         
+         Allocate(PHI0(1))
+         PHI0(1) = 0.0_Kr         
+         Allocate(PHI1(1))
+         PHI1(1) = 1.0_Kr
+         Allocate( RHSPhi_Ptr(1))
+         Do i = 1, AppCtx%MeshTopology%Num_Verts
+            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%RHSPHI, AppCtx%MeshTopology%Num_Elems + i-1, AppCtx%MeshTopology%Num_Dim, RHSPHI_Ptr, iErr); CHKERRQ(ierr)      
+            If (RHSPHI_Ptr(1) > 0) Then
+               Call MeshUpdateClosure(AppCtx%MeshTopology%mesh, AppCtx%PHI, AppCtx%MeshTopology%Num_Elems + i-1, PHI0, iErr); CHKERRQ(iErr)
+               MyNumDec = MyNumDec + 1
+            !Else
+            !   Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%PHI, AppCtx%MeshTopology%Num_Elems + i-1, PHI1, iErr); CHKERRQ(iErr)
+            End If
+         End Do
+         DeAllocate(RHSPhi_Ptr)
+         DeAllocate(PHI0)         
+         DeAllocate(PHI1)
 
- Ê Ê ÊCall PetscGlobalSum(MyNumDec, NumDec, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
- Ê Ê Ê!!! Count the total number of debonded elements
+      Call PetscGlobalSum(MyNumDec, NumDec, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      !!! Count the total number of debonded elements
 
- Ê Ê ÊWrite(IOBuffer,*) 'Number of debonded elements ', numdec, '\n'c
- Ê Ê ÊCall PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
- Ê Ê Ê!Call PetscLogStagePop(iErr); CHKERRQ(iErr)
- Ê Ê Ê
+      Write(IOBuffer,*) 'Number of debonded elements ', numdec, '\n'c
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      !Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      
 
- Ê End Subroutine Solve_Phi   
+   End Subroutine Solve_Phi
+
 End Module m_VarFracFilm_Phi
