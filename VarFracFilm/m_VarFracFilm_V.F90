@@ -222,6 +222,7 @@ End Subroutine MatV_Assembly
       PetscInt                                     :: iDoF1, iGauss
       PetscReal                                    :: C1_V
 
+      !Allocate(RHSElem(NumDoFScal))
       RHSElem    = 0.0_Kr
       NumDoFScal = Size(AppCtx%ElemScal(iE)%BF,1)
       NumGauss   = Size(AppCtx%ElemVect(iE)%BF,2)
@@ -239,6 +240,7 @@ End Subroutine MatV_Assembly
          End Do
       End Do Do_iGauss
       DeAllocate(BCFlag)
+      !DeAllocate(RHSElem)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocal_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSV_AssemblyLocal
       

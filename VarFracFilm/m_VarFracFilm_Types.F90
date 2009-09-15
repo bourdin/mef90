@@ -48,7 +48,7 @@ Module m_VarFracFilm_Types
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       Type(SectionReal)                            :: V
-      Type(SectionReal)                            :: PHI
+      Type(SectionReal)                            :: Phi
       Type(SectionReal)                            :: GradV
       Type(SectionReal)                            :: Theta
       Type(SectionReal)                            :: U0
@@ -64,6 +64,7 @@ Module m_VarFracFilm_Types
       PetscInt                                     :: ErrPHI
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
+      Type(SectionReal)                            :: RHSPHI
       Type(SectionInt)                             :: BCUFlag, BCVFlag
       Type(Mat)                                    :: KU, KV
       Type(Vec)                                    :: RHSU, RHSV
