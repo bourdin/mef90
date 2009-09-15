@@ -65,11 +65,17 @@ Program  VarFracFilm
          ! Problem for U
          !-------------------------------------------------------------------
          If (AppCtx%AppParam%verbose) Then
-            Write(IOBuffer, *) 'Assembling the Matrix and RHS for  the U-subproblem \n' 
+            Write(IOBuffer, *) 'Assembling the RHS for  the U-subproblem \n'c 
+             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+          End If
+          Call RHSU_Assembly(AppCtx)
+       !   Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+      
+         If (AppCtx%AppParam%verbose) Then
+            Write(IOBuffer, *) 'Assembling the Matrix for the U-subproblem \n'c 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
-         Call RHSU_Assembly(AppCtx)
-      !   Call VecView(AppCtx%RHSU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+         
          Call MatU_Assembly(AppCtx)
       !   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
          
@@ -83,11 +89,15 @@ Program  VarFracFilm
          ! Problem for V
          !-------------------------------------------------------------------
          If (AppCtx%AppParam%verbose) Then
-            Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n' 
+            Write(IOBuffer, *) 'Assembling the RHS for the V-subproblem \n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          Call RHSV_Assembly(AppCtx)
       !   Call VecView(AppCtx%RHSV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+         If (AppCtx%AppParam%verbose) Then
+            Write(IOBuffer, *) 'Assembling the Matrix for the V-subproblem \n' 
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+         End If
          Call MatV_Assembly(AppCtx)
       !   Call MatView(AppCtx%KV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
          
@@ -101,6 +111,12 @@ Program  VarFracFilm
          ! Problem for phi
          !-------------------------------------------------------------------
    
+         If (AppCtx%AppParam%verbose) Then
+            Write(IOBuffer, *) 'Assembling the RHS for the PHI-subproblem \n' 
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+         End If
+         Call RHSPHI_Assembly(AppCtx)
+
          If (AppCtx%AppParam%verbose) Then
             Write(IOBuffer, *) 'Calling the Solver for the PHI-subproblem\n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 

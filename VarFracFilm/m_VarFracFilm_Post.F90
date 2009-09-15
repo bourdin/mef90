@@ -28,7 +28,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: U, U0, V, Theta, Phi
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
-      PetscReal                                    :: Theta_Elem, V_Elem
+      PetscReal                                    :: Theta_Elem, V_Elem, Phi_Elem
       Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
       Type(MatS2D)                                 :: Effective_Strain_Elem
       Type(Vect2D)                                 :: DU_Elem, GradV_Elem 
@@ -63,7 +63,8 @@ Contains
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
             Allocate(V(NumDoFScal))
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
-            Allocate(Phi(1))
+            Allocate(Phi(NumDoFScal))
+!            Allocate(Phi(1))
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Phi, iE-1, NumDoFScal, Phi, iErr); CHKERRQ(ierr)
             Do iGauss = 1, NumGauss
             ! Inizialize the variables at the gauss points
@@ -71,6 +72,7 @@ Contains
                Stress_Elem            = 0.0_Kr
                Theta_Elem             = 0.0_Kr
                V_Elem                 = 0.0_Kr
+               Phi_Elem               = 0.0_Kr
                GradV_Elem             = 0.0_Kr 
                Effective_Strain_Elem  = 0.0_Kr
                DU_Elem                = 0.0_Kr
@@ -78,6 +80,7 @@ Contains
                Do iDof = 1, NumDoFScal
                   Theta_Elem          = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
                   V_Elem              = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V(iDoF)
+                  Phi_Elem            = Phi_Elem   + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Phi(iDoF)
                   GradV_Elem          = GradV_Elem + AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss) * V(iDoF)
                End Do
                Do iDoF = 1, NumDoFVect
@@ -90,12 +93,12 @@ Contains
             ! Calculate the bulk elastic energy
                MyElasticBulkEnergy  = MyElasticBulkEnergy  + AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  V_Elem**2 * (Stress_Elem .DotP. Effective_Strain_Elem) * 0.5_Kr
             ! Calculate the interface elastic energy
-               MyElasticInterEnergy = MyElasticInterEnergy +  0.5_Kr * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  (( AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%K_interface * DU_Elem ) .DotP. DU_Elem)
+               MyElasticInterEnergy = MyElasticInterEnergy +  0.5_Kr * AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Phi_Elem * (( AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%K_interface * DU_Elem ) .DotP. DU_Elem)
             ! Calculate the suface energy of transverse crack
-               MySurfaceEnergyT  = MySurfaceEnergyT  + Phi(1) * AppCtx%MatProp(iBlk)%ToughnessT * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ((0.25_Kr / AppCtx%VarFracFilmSchemeParam%Epsilon) *  ( 1.0_Kr - V_Elem)**2 + ( AppCtx%VarFracFilmSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)) )
+               MySurfaceEnergyT  = MySurfaceEnergyT  + AppCtx%MatProp(iBlk)%ToughnessT * AppCtx%ElemVect(iE)%Gauss_C(iGauss) *  ((0.25_Kr / AppCtx%VarFracFilmSchemeParam%Epsilon) *  ( 1.0_Kr - V_Elem)**2 + ( AppCtx%VarFracFilmSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)) )
             ! Calculate the suface energy due to delamination
             ! see the comment on the volume for calculate the stresses
-               MySurfaceEnergyD  = MySurfaceEnergyD + AppCtx%MatProp(iBlk)%ToughnessD * AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (1-Phi(1))
+               MySurfaceEnergyD  = MySurfaceEnergyD + AppCtx%MatProp(iBlk)%ToughnessD * AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (1-Phi_Elem)
             ! For Blaise: what's the line below????                 
             Call PetscLogFlops(AppCtx%MeshTopology%Num_Dim+4, iErr)
             
@@ -127,12 +130,12 @@ Contains
      Type(AppCtx_Type)                             :: AppCtx
       
       PetscInt                                     :: iErr
-     Type(MatS2D)                                 :: Strain_Elem, Stress_Elem 
-     Type(Vect2D)                                 :: F_Elem, U_Elem  
-      PetscReal                                    :: Theta_Elem, V_Elem
+     Type(MatS2D)                                  :: Strain_Elem, Stress_Elem 
+     Type(Vect2D)                                  :: F_Elem, U_Elem  
+      PetscReal                                    :: Theta_Elem, V_Elem, Phi_Elem
       PetscReal                                    :: Vol
       PetscInt                                     :: NumDoFVect, NumDofScal, NumGauss
-      PetscReal, Dimension(:), Pointer             :: U, Theta, V
+      PetscReal, Dimension(:), Pointer             :: U, Theta, V, Phi
       PetscInt                                     :: iBlk, iELoc, iE
       PetscInt                                     :: iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
@@ -154,23 +157,27 @@ Contains
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Theta, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
             Allocate(V(NumDoFScal))
             Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, NumDoFScal, V, iErr); CHKERRQ(ierr)
+!            Allocate(Phi(NumDoFScal))
+!            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%Phi, iE-1, NumDoFScal, Phi, iErr); CHKERRQ(ierr)
             V_Elem                = 0.0_Kr
+!           Phi_Elem              = 0.0_Kr
             Strain_Elem           = 0.0_Kr
             Stress_Elem           = 0.0_Kr
             Theta_Elem            = 0.0_Kr
             Vol  = 0.0_Kr
             Do iDof = 1, NumDoFScal
                   V_Elem          = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V(iDoF)
+!                  Phi_Elem        = Phi_Elem   + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Phi(iDoF)
                   Theta_Elem      = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
-    !! I think the volume here is wrong. I moved it in the gauss points cycle
-    !             Vol             = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
+    !! Check the volume!!!!!!!!!!!!
+                 Vol             = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
             End Do
             Do iGauss = 1, NumGauss
                Do iDoF = 1, NumDoFVect
                   Strain_Elem            = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
                   Stress_Elem            = Stress_Elem + (V_Elem**2) * AppCtx%MatProp( AppCtx%MeshTopology%Elem_Blk(iBlk)%ID )%Hookes_Law * ( Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp) )
 !             Call PetscLogFlops(3*AppCtx%MeshTopology%Num_Dim+2, iErr)
-                  Vol                    = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) 
+!                  Vol                    = Vol + AppCtx%ElemScal(iE)%Gauss_C(iGauss) 
                End Do
             End Do
             Strain_Elem = Strain_Elem / Vol
@@ -182,6 +189,8 @@ Contains
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%StressU, iE-1, Stress_Ptr, iErr)
             Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%StrainU, iE-1, Strain_Ptr, iErr)
             DeAllocate(U)
+            DeAllocate(V)
+!            DeAllocate(Phi)
             DeAllocate(Theta)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
