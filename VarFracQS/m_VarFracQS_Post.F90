@@ -244,13 +244,8 @@ Contains
                ElasticEnergyBlock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * 0.5_Kr
                flops = flops + 6.0 
             Else
-               EffectiveStrain_Elem_S = 0.0_Kr
-               EffectiveStrain_Elem_S%XX = EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-               EffectiveStrain_Elem_S%YY = EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-#if defined PB_3D
-               EffectiveStrain_Elem_S%ZZ = EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-#endif
-               EffectiveStrain_Elem_D = EffectiveStrain_Elem - EffectiveStrain_Elem_S
+               EffectiveStrain_Elem_S = SphericalPart(EffectiveStrain_Elem)
+               EffectiveStrain_Elem_D = DeviatoricPart(EffectiveStrain_Elem)
 
                ElasticEnergyBlock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D )  + ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem_S) .DotP. EffectiveStrain_Elem_S ) ) * 0.5_Kr
                flops = flops + 6.0 

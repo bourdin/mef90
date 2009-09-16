@@ -172,6 +172,13 @@ Module m_MEF_LinAlg
       Module Procedure Symmetrize2D, Symmetrize3D
    End Interface
    
+   Interface DeviatoricPart
+      Module Procedure DeviatoricPart2D, DeviatoricPart2DS, DeviatoricPart3D, DeviatoricPart3DS
+   End Interface
+
+   Interface SphericalPart
+      Module Procedure SphericalPart2D, SphericalPart2DS, SphericalPart3D, SphericalPart3DS
+   End Interface
 
 !!$  Type(Vect2D), Parameter       :: e1_2D = (/ 1.0_Kr, 0.0_Kr /)
 !!$  Type(Vect2D), Parameter       :: e2_2D = (/ 0.0_Kr, 1.0_Kr /)
@@ -1588,6 +1595,165 @@ Contains
       flops = 6.0
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
    End Function Symmetrize3D
+   
+   Function DeviatoricPart2D(M1)
+      Type(Mat2D), Intent(IN)                             :: M1
+      Type(Mat2D)                                         :: DeviatoricPart2D
+      
+      PetscReal                                           :: M1_Trace
+      PetscLogDouble                                      :: flops = 0
+      PetscInt                                            :: iErr
+      
+      M1_Trace = Trace(M1)
+      DeviatoricPart2D%XX = M1%XX - M1_Trace * 0.5_Kr
+      DeviatoricPart2D%XY = M1%XY
+      DeviatoricPart2D%YX = M1%YX
+      DeviatoricPart2D%YY = M1%YY - M1_Trace * 0.5_Kr
+      flops = 4.0
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+   End Function DeviatoricPart2D
+
+
+   Function DeviatoricPart2DS(M1)
+      Type(MatS2D), Intent(IN)                            :: M1
+      Type(MatS2D)                                        :: DeviatoricPart2DS
+      
+      PetscReal                                           :: M1_Trace
+      PetscLogDouble                                      :: flops = 0
+      PetscInt                                            :: iErr
+      
+      M1_Trace = Trace(M1)
+      DeviatoricPart2DS%XX = M1%XX - M1_Trace * 0.5_Kr
+      DeviatoricPart2DS%YY = M1%YY - M1_Trace * 0.5_Kr
+      DeviatoricPart2DS%XY = M1%XY
+      flops = 4.0
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+   End Function DeviatoricPart2DS
+
+   Function DeviatoricPart3D(M1)
+      Type(Mat3D), Intent(IN)                             :: M1
+      Type(Mat3D)                                         :: DeviatoricPart3D
+      
+      PetscReal                                           :: M1_Trace
+      PetscLogDouble                                      :: flops = 0
+      PetscInt                                            :: iErr
+      
+      M1_Trace = Trace(M1)
+      DeviatoricPart3D%XX = M1%XX - M1_Trace / 3.0_Kr
+      DeviatoricPart3D%XY = M1%XY
+      DeviatoricPart3D%XZ = M1%XZ
+
+      DeviatoricPart3D%YX = M1%YX
+      DeviatoricPart3D%YY = M1%YY - M1_Trace / 3.0_Kr
+      DeviatoricPart3D%YZ = M1%YZ
+
+      DeviatoricPart3D%ZX = M1%ZX
+      DeviatoricPart3D%ZY = M1%ZY
+      DeviatoricPart3D%ZZ = M1%ZZ - M1_Trace / 3.0_Kr
+      flops = 6.0
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+   End Function DeviatoricPart3D
+
+
+   Function DeviatoricPart3DS(M1)
+      Type(MatS3D), Intent(IN)                            :: M1
+      Type(MatS3D)                                        :: DeviatoricPart3DS
+      
+      PetscReal                                           :: M1_Trace
+      PetscLogDouble                                      :: flops = 0
+      PetscInt                                            :: iErr
+      
+      M1_Trace = Trace(M1)
+      DeviatoricPart3DS%XX = M1%XX - M1_Trace / 3.0_Kr
+      DeviatoricPart3DS%YY = M1%YY - M1_Trace / 3.0_Kr
+      DeviatoricPart3DS%ZZ = M1%ZZ - M1_Trace / 3.0_Kr
+
+      DeviatoricPart3DS%YZ = M1%YZ
+      DeviatoricPart3DS%XZ = M1%XZ
+      DeviatoricPart3DS%XY = M1%XY
+      flops = 6.0
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+   End Function DeviatoricPart3DS
+
+   Function SphericalPart2D(M1)
+      Type(Mat2D), Intent(IN)                             :: M1
+      Type(Mat2D)                                         :: SphericalPart2D
+      
+      PetscReal                                           :: M1_Trace
+      PetscLogDouble                                      :: flops = 0
+      PetscInt                                            :: iErr
+      
+      M1_Trace = Trace(M1)
+      SphericalPart2D%XX = M1_Trace * 0.5_Kr
+      SphericalPart2D%XY = 0.0_Kr
+      SphericalPart2D%YX = 0.0_Kr
+      SphericalPart2D%YY = M1_Trace * 0.5_Kr
+      flops = 2.0
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+   End Function SphericalPart2D
+
+
+   Function SphericalPart2DS(M1)
+      Type(MatS2D), Intent(IN)                            :: M1
+      Type(MatS2D)                                        :: SphericalPart2DS
+      
+      PetscReal                                           :: M1_Trace
+      PetscLogDouble                                      :: flops = 0
+      PetscInt                                            :: iErr
+      
+      M1_Trace = Trace(M1)
+      SphericalPart2DS%XX = M1_Trace * 0.5_Kr
+      SphericalPart2DS%YY = M1_Trace * 0.5_Kr
+      SphericalPart2DS%XY = 0.0_Kr
+      flops = 2.0
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+   End Function SphericalPart2DS
+
+   Function SphericalPart3D(M1)
+      Type(Mat3D), Intent(IN)                             :: M1
+      Type(Mat3D)                                         :: SphericalPart3D
+      
+      PetscReal                                           :: M1_Trace
+      PetscLogDouble                                      :: flops = 0
+      PetscInt                                            :: iErr
+      
+      M1_Trace = Trace(M1)
+      SphericalPart3D%XX = M1_Trace / 3.0_Kr
+      SphericalPart3D%XY = 0.0_Kr
+      SphericalPart3D%XZ = 0.0_Kr
+
+      SphericalPart3D%YX = 0.0_Kr
+      SphericalPart3D%YY = M1_Trace / 3.0_Kr
+      SphericalPart3D%YZ = 0.0_Kr
+                         
+      SphericalPart3D%ZX = 0.0_Kr
+      SphericalPart3D%ZY = 0.0_Kr
+      SphericalPart3D%ZZ = M1_Trace / 3.0_Kr
+      flops = 6.0
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+   End Function SphericalPart3D
+
+
+   Function SphericalPart3DS(M1)
+      Type(MatS3D), Intent(IN)                            :: M1
+      Type(MatS3D)                                        :: SphericalPart3DS
+      
+      PetscReal                                           :: M1_Trace
+      PetscLogDouble                                      :: flops = 0
+      PetscInt                                            :: iErr
+      
+      M1_Trace = Trace(M1)
+      SphericalPart3DS%XX = M1_Trace / 3.0_Kr
+      SphericalPart3DS%YY = M1_Trace / 3.0_Kr
+      SphericalPart3DS%ZZ = M1_Trace / 3.0_Kr
+
+      SphericalPart3DS%YZ = 0.0_Kr
+      SphericalPart3DS%XZ = 0.0_Kr
+      SphericalPart3DS%XY = 0.0_Kr
+      flops = 6.0
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+   End Function SphericalPart3DS
+
 !====================================================================
 !             END OF OPERATOR OVERLOADING
 !====================================================================
