@@ -564,15 +564,7 @@ Contains
             If (EffectiveStrain_Trace >= 0.0_Kr) Then
                ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
             Else
-               EffectiveStrain_Elem_D    = EffectiveStrain_Elem
-#if defined PB_2D
-               EffectiveStrain_Elem_D%XX = EffectiveStrain_Elem%XX - EffectiveStrain_Trace * 0.5_Kr
-               EffectiveStrain_Elem_D%YY = EffectiveStrain_Elem%YY - EffectiveStrain_Trace * 0.5_Kr
-#elif defined PB_3D
-               EffectiveStrain_Elem_D%XX = EffectiveStrain_Elem%XX - EffectiveStrain_Trace / 3.0_Kr
-               EffectiveStrain_Elem_D%YY = EffectiveStrain_Elem%YY - EffectiveStrain_Trace / 3.0_Kr
-               EffectiveStrain_Elem_D%ZZ = EffectiveStrain_Elem%ZZ - EffectiveStrain_Trace / 3.0_Kr
-#endif
+               EffectiveStrain_Elem_D = DeviatoricPart(EffectiveStrain_Elem)
                ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D
             End If
 
@@ -912,12 +904,7 @@ Contains
             If (EffectiveStrain_Trace >= 0.0_Kr) Then
                ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
             Else
-               EffectiveStrain_Elem_D    = EffectiveStrain_Elem
-               EffectiveStrain_Elem_D%XX = EffectiveStrain_Elem%XX - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-               EffectiveStrain_Elem_D%YY = EffectiveStrain_Elem%YY - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-#if defined PB_3D
-               EffectiveStrain_Elem_D%ZZ = EffectiveStrain_Elem%ZZ - EffectiveStrain_Trace / Real(AppCtx%MeshTopology%Num_Dim)
-#endif
+               EffectiveStrain_Elem_D = DeviatoricPart(EffectiveStrain_Elem)
                ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D
             End If
             Do iDoF = 1, NumDofScal
