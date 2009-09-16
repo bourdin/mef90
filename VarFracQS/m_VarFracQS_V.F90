@@ -158,9 +158,12 @@ Contains
       PetscInt, Dimension(:), Pointer              :: BCVFlag, IrrevFlag
       PetscInt                                     :: i, iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
-      PetscReal                                    :: MyIrrevEQ_Counter  = 0.0
+      PetscReal                                    :: MyIrrevEQ_Counter 
       PetscReal                                    :: IrrevEQ_Counter
       
+      MyIrrevEq_Counter = 0.0_Kr
+      IrrevEq_Counter   = 0.0_Kr
+
       !!! Update the BC Flag from the current V
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case(VarFrac_Irrev_Eq, VarFrac_Irrev_InEq)
