@@ -59,6 +59,7 @@ Contains
       Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
 #endif
       Call InitLog(AppCtx)
+      Call PetscMemorySetGetMaximumUsage(iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       AppCtx%AppParam%Verbose = 0
