@@ -47,9 +47,9 @@ Contains
       PetscInt                                     :: vers
       PetscTruth                                   :: flag
       
-      PetscReal                                    :: KSP_Default_rtol = 1.0D-6
-      PetscReal                                    :: KSP_Default_atol = 1.0D-6
-      PetscInt                                     :: KSP_Default_MaxIt = 10000
+      PetscReal                                    :: KSP_Default_rtol  = 1.0D-6
+      PetscReal                                    :: KSP_Default_atol  = 1.0D-6
+      PetscInt                                     :: KSP_Default_MaxIt = 50000
       Type(PetscViewer)                            :: flgviewer
       Type(Vec)                                    :: taoU_WorkVec
       Type(Vec)                                    :: taoV_WorkVec
@@ -210,7 +210,8 @@ Contains
 
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, taoU_WorkVec, iErr); CHKERRQ(iErr)
          Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, taoU_WorkVec, iErr); CHKERRQ(iErr)
-
+         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, taoU_WorkVec, iErr); CHKERRQ(iErr) !!! TEST
+         
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -220,7 +221,7 @@ Contains
          Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
       End If
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
-      Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
+      Call KSPSetType(AppCtx%KSPU, KSPGMRES, iErr); CHKERRQ(iErr)
       Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPU, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -254,7 +255,7 @@ Contains
          Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
       End If
       Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
-      Call KSPSetType(AppCtx%KSPV, KSPCG, iErr); CHKERRQ(iErr)
+      Call KSPSetType(AppCtx%KSPV, KSPGMRES, iErr); CHKERRQ(iErr)
       Call KSPAppendOptionsPrefix(AppCtx%KSPV, "V_", iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPV, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
       Call KSPSetFromOptions(AppCtx%KSPV, iErr); CHKERRQ(iErr)

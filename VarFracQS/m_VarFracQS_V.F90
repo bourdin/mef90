@@ -1124,9 +1124,9 @@ Contains
          Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
       End If
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('     KSP for V converged in  ', I5, ' iterations. KSPConvergedReason is     ', I3, '\n')
+100 Format('     KSP for V converged in  ', I5, ' iterations. KSPConvergedReason is     ', I5, '\n')
 101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n')
-102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I3, '\n')
+102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I5, '\n')
 103 Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
 700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n')
 800 Format('     Max change V: ', T24, ES12.5, '\n')
