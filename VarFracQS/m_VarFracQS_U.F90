@@ -683,7 +683,7 @@ Contains
                End Do
             Else
                Do iDoF = 1, NumDofVect
-                  Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (CoefV * ((AppCtx%MatProp(iBlkId)%Hookes_Law * DeviatoricPart(EffectiveStrain_Elem)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) + ((AppCtx%MatProp(iBlkId)%Hookes_Law * SphericalPart(EffectiveStrain_Elem)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) )
+                  Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (CoefV * ((AppCtx%MatProp(iBlkId)%Hookes_Law * DeviatoricPart(EffectiveStrain_Elem)) .DotP. DeviatoricPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))) + ((AppCtx%MatProp(iBlkId)%Hookes_Law * SphericalPart(EffectiveStrain_Elem)) .DotP. SphericalPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))) )
                End Do
             End If
          End Do Do_iGauss
@@ -1075,9 +1075,9 @@ Contains
          Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       End If
       CHKMEMQ
-100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is     ', I3, '\n')
+100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is     ', I5, '\n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
-102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I3, '\n')
+102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I5, '\n')
 103 Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
    End Subroutine Step_U   
 
