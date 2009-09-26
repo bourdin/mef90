@@ -13,55 +13,49 @@ Module m_MEF_Types
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
 
-   Public :: Elem_Blk_Type, Node_Set_Type, MeshTopology_Type, EXO_Type
+   Public :: Elem_Blk_Type, Node_Set_Type, MeshTopology_Type
+   Public :: EXO_Type, EXO_Property_Type, EXO_Variable_Type
    
    Public :: EXOView
    Public :: MeshTopologyDestroy, MeshTopologyView
       
    Type Element1D
-!      PetscInt, Dimension(:), Pointer                :: ID_DoF
       PetscReal, Dimension(:,:), Pointer             :: BF
       PetscReal, Dimension(:,:), Pointer             :: Der_BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element1D
  
    Type Element2D_Scal
-!      PetscInt, Dimension(:), Pointer                :: ID_DoF
       PetscReal, Dimension(:,:), Pointer             :: BF
       Type(Vect2D), Dimension(:,:), Pointer          :: Grad_BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element2D_Scal
  
    Type Element2D
-!      PetscInt, Dimension(:), Pointer                :: ID_DoF
       Type (Vect2D), Dimension(:,:), Pointer         :: BF
       Type (Mat2D), Dimension(:,:), Pointer          :: Der_BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element2D
  
    Type Element2D_Elast
-!      PetscInt, Dimension(:), Pointer                :: ID_DoF
       Type (Vect2D), Dimension(:,:), Pointer         :: BF
       Type (MatS2D), Dimension(:,:), Pointer         :: GradS_BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element2D_Elast
  
    Type Element3D
-!      PetscInt, Dimension(:), Pointer                :: ID_DoF
       Type (Vect3D), Dimension(:,:), Pointer         :: BF
       Type (Mat3D), Dimension(:,:), Pointer          :: Der_BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element3D
  
    Type Element3D_Scal
-!      PetscInt, Dimension(:), Pointer                :: ID_DoF
       PetscReal, Dimension(:,:), Pointer             :: BF
       Type (Vect3D), Dimension(:,:), Pointer         :: Grad_BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element3D_Scal
  
    Type Element3D_Elast
-!      PetscInt, Dimension(:), Pointer                :: ID_DoF
       Type (Vect3D), Dimension(:,:), Pointer         :: BF
       Type (MatS3D), Dimension(:,:), Pointer         :: GradS_BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
