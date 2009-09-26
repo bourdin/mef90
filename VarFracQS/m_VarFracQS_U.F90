@@ -57,7 +57,7 @@ Contains
       PetscReal                                    :: DummyUpperBound =  1.0D+20      
       
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Updating bounds for U\n"c
+         Write(IOBuffer, *) "Updating bounds for U\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundU_Sec', AppCtx%MeshTopology%Num_Dim, LowerBoundU_Sec , iErr); CHKERRQ(iErr)

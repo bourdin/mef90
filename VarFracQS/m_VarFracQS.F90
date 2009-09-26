@@ -123,7 +123,7 @@ Contains
    
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done reading and partitioning the mesh\n"c
+         Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
    
@@ -136,7 +136,7 @@ Contains
       Call VarFracEXOVariable_Init(AppCtx%MyEXO)
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with VarFracQSEXOVariable_Init and VarFracQSEXOProperty_Read\n"c
+         Write(IOBuffer, *) "Done with VarFracQSEXOVariable_Init and VarFracQSEXOProperty_Read\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       If (AppCtx%AppParam%verbose > 1) Then
@@ -147,7 +147,7 @@ Contains
       !!! Read Mat Properties from the CST file
       Call MatProp_Read(AppCtx%MeshTopology, AppCtx%MatProp, trim(AppCtx%AppParam%prefix)//'.CST')
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with MatProp_Read\n"c
+         Write(IOBuffer, *) "Done with MatProp_Read\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       If (AppCtx%AppParam%verbose > 2) Then
@@ -160,19 +160,19 @@ Contains
          Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(i), AppCtx%MeshTopology%num_dim)
       End Do
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with Init_Elem_Blk_Type\n"c
+         Write(IOBuffer, *) "Done with Init_Elem_Blk_Type\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
       
       Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemVect, AppCtx%VarFracSchemeParam%IntegOrder)
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with ElementInit Vect\n"c
+         Write(IOBuffer, *) "Done with ElementInit Vect\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call ElementInit(AppCtx%MeshTopology, AppCtx%ElemScal, AppCtx%VarFracSchemeParam%IntegOrder)
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with ElementInit Scal\n"c
+         Write(IOBuffer, *) "Done with ElementInit Scal\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
@@ -266,7 +266,7 @@ Contains
       Call PCSetFromOptions(AppCtx%PCV, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done Creating fields Section, Vec, KSP and Mat\n"c
+         Write(IOBuffer, *) "Done Creating fields Section, Vec, KSP and Mat\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
@@ -283,7 +283,7 @@ Contains
       Call SectionIntZero(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done Initializing BC Sections\n"c
+         Write(IOBuffer, *) "Done Initializing BC Sections\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
