@@ -93,7 +93,7 @@ Program PrepVarFrac
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    If (verbose) Then
-      Write(IOBuffer, *) "Done reading and partitioning the mesh\n"c
+      Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
@@ -105,7 +105,7 @@ Program PrepVarFrac
    
    Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
    If (verbose) Then
-      Write(IOBuffer, *) "Done with VarFracEXOProperty_Init\n"c
+      Write(IOBuffer, *) "Done with VarFracEXOProperty_Init\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
@@ -120,7 +120,7 @@ Program PrepVarFrac
 
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
    If (verbose) Then
-      Write(IOBuffer, *) "Done with Write_MeshTopologyGlobal\n"c
+      Write(IOBuffer, *) "Done with Write_MeshTopologyGlobal\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
