@@ -58,7 +58,7 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
       
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Updating bounds for V\n"c
+         Write(IOBuffer, *) "Updating bounds for V\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundV_Sec',  1, LowerBoundV_Sec , iErr); CHKERRQ(iErr)
@@ -122,7 +122,7 @@ Contains
       Select Case(AppCtx%VarFracSchemeParam%InitV)
       Case(VarFrac_INIT_V_PREV)
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"c
+            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
          Allocate(V_Ptr(1))
@@ -168,7 +168,7 @@ Contains
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case(VarFrac_Irrev_Eq, VarFrac_Irrev_InEq)
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Irreversibility with Irrev_EQ\n"c
+            Write(IOBuffer, *) "Irreversibility with Irrev_EQ\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          !!! Update the IrrevFlag Section
@@ -176,7 +176,7 @@ Contains
          IrrevFlag = VarFrac_BC_Type_DIRI
          If (AppCtx%IsBT) Then
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) "Backtracking, so reading timestep if TS>1\n"c
+               Write(IOBuffer, *) "Backtracking, so reading timestep if TS>1\n"
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             Call SectionIntZero(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
@@ -195,7 +195,7 @@ Contains
             End If
          Else
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) "Not Backtracking, so getting blocked nodes from V\n"c
+               Write(IOBuffer, *) "Not Backtracking, so getting blocked nodes from V\n"
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             Do i = 1, AppCtx%MeshTopology%Num_Verts
@@ -209,7 +209,7 @@ Contains
          DeAllocate(IrrevFlag)
          If (AppCtx%AppParam%verbose > 0) Then
             Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"c
+            Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
       Case default   
