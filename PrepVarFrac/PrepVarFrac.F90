@@ -363,8 +363,8 @@ Program PrepVarFrac
                   Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
                   Do k = 1, Num_DoF
                      Z(k) = CoordElem((k-1) * MeshTopology%Num_Dim + 2)**2 / T(iStep)
+                     ThetaElem(k) = erf(Z(k))
                   End Do
-                  Call VDERF(Num_DoF, Z, ThetaELem)
                   ThetaElem = Theta(i) * (1.0-ThetaElem)
                   Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
                End Do
