@@ -8,9 +8,6 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
 M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 
-#MKLLIB=-L${MKLROOT}/lib ${MKLROOT}/lib/em64t/libmkl_intel_lp64.a ${MKLROOT}/lib/em64t/libmkl_sequential.a ${MKLROOT}/lib/em64t/libmkl_core.a
-MKLLIB=-L${MKLROOT}/lib ${MKLROOT}/lib/32/libmkl_intel.a ${MKLROOT}/lib/32/libmkl_sequential.a ${MKLROOT}/lib/32/libmkl_core.a
-
 all: ${PROJ}
 
 include ${PETSC_DIR}/conf/base
@@ -25,5 +22,4 @@ ${PETSC_ARCH}:
 #${PROJ}.o: ${PETSC_ARCH}
 
 ${PROJ}: ${PETSC_ARCH} ${PROJ}.o ${PETSC_ARCH}/${PROJ}.o
-	${FLINKER} -o ${PETSC_ARCH}/${PROJ} ${PETSC_ARCH}/${PROJ}.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MKLLIB}
-
+	${FLINKER} -o ${PETSC_ARCH}/${PROJ} ${PETSC_ARCH}/${PROJ}.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -lm
