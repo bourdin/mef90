@@ -261,7 +261,7 @@ Contains
       If (Size(dMeshTopology%Elem_Blk) > 0) Then
          Do iBlk = 1, Size(dMeshTopology%Elem_Blk)
             If (dMeshTopology%Elem_Blk(iBlk)%Num_Elems > 0) Then
-               Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
+               Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
             End If
          End Do
          Deallocate(dMeshTopology%Elem_blk)
