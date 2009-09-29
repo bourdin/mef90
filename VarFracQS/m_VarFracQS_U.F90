@@ -1026,14 +1026,23 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
-         Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, rDum, TaoResidual, iDum, iDum, TaoReason, iErr); CHKERRQ(iErr)
+!         Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, rDum, TaoResidual, iDum, iDum, TaoReason, iErr); CHKERRQ(iErr)
+         Call TaoGetTerminationReason(AppCtx%taoU, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
             Write(IOBuffer, 102) KSPNumiter, TAOReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Else
             Write(IOBuffer, 103) TaoReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If     
+         End If    
+          
+         Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
+!         If ( reason > 0) Then
+            Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
+            Write(IOBuffer, 100) KSPNumIter, reason
+!         Else
+!            Write(IOBuffer, 101) reason
+!         End If
 #endif      
       Else
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, RHSU_Vec, iErr); CHKERRQ(iErr)
