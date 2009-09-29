@@ -1064,6 +1064,13 @@ Contains
             Write(IOBuffer, 103) TaoReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If     
+         Call KSPGetConvergedReason(AppCtx%KSPV, reason, iErr); CHKERRQ(iErr)
+         If ( reason > 0) Then
+            Call KSPGetIterationNumber(AppCtx%KSPV, KSPNumIter, iErr); CHKERRQ(iErr)
+            Write(IOBuffer, 100) KSPNumIter, reason
+         Else
+            Write(IOBuffer, 101) reason
+         End If
 #endif      
       Else
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, V_Vec, iErr); CHKERRQ(iErr)
