@@ -253,7 +253,7 @@ Contains
       End If
 
       Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
-      Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
+      Call KSPSetType(AppCtx%KSPU, KSPGMRES, iErr); CHKERRQ(iErr)
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
@@ -317,7 +317,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
-      !!! It would be better to use SectionRealDUplicate, provided that this does not create a problem with names
+      !!! It would be better to use SectionRealDuplicate, provided that this does not create a problem with names
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'UBC',  AppCtx%MeshTopology%Num_Dim, UBC_Sec , iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundU_Sec',  AppCtx%MeshTopology%Num_Dim, LowerBoundU_Sec , iErr); CHKERRQ(iErr)
       Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundU_Sec',  AppCtx%MeshTopology%Num_Dim, UpperBoundU_Sec , iErr); CHKERRQ(iErr)
@@ -349,13 +349,13 @@ Contains
       End Do
       Call SectionRealDestroy(UBC_Sec, iErr); CHKERRQ(iErr)
 
-      Call SectionRealComplete(LowerBoundU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(LowerBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, LowerBound, iErr); CHKERRQ(iErr)
-      Call SectionRealComplete(UpperBoundU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(UpperBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, UpperBound, iErr); CHKERRQ(iErr)
 
       Call SectionRealDestroy(LowerBoundU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(UpperBoundU_Sec, iErr); CHKERRQ(iErr)
+
+	
       DeAllocate(LowerBoundU_Ptr)
       DeAllocate(UpperBoundU_Ptr)
    End Subroutine FormBoundsTao   
@@ -386,6 +386,7 @@ Contains
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       Integer                                      :: iDum
+      PetscReal                                    :: rDum
       PetscTruth                                   :: flg
       Type(Vec)                                    :: U_Vec, RHSU_Vec
       Type(SectionReal)                            :: UBC_Sec, LowerBoundU_Sec, UpperBoundU_Sec
@@ -413,7 +414,8 @@ Contains
          Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, U_Vec, iErr); CHKERRQ(ierr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          
-         Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, AppCtx%TotalEnergy, TaoResidual, iDum, iDum, TaoReason, iErr); CHKERRQ(iErr)
+!         Call TaoGetTerminationReason(AppCtx%taoU, TaoReason, iErr); CHKERRQ(iErr)
+         Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, rDum, TaoResidual, rDum, rDum, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
             Write(IOBuffer, 102) KSPNumiter, TAOReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)

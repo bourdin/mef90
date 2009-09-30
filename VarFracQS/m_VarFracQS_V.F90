@@ -96,9 +96,7 @@ Contains
          SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
       End Select
       
-      Call SectionRealComplete(LowerBoundV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(LowerBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, LowerBoundV_Vec, iErr); CHKERRQ(iErr)
-      Call SectionRealComplete(UpperBoundV_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(UpperBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, UpperBoundV_Vec, iErr); CHKERRQ(iErr)
 
       Call SectionRealDestroy(LowerBoundV_Sec, iErr); CHKERRQ(iErr)
@@ -353,7 +351,12 @@ Contains
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             !!! Contribution of the bulk term 1/2 \int v^2 Ae(u):e(u)
-            Call GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, AppCtx%V, AppCtx)
+            If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
+               Call GradientV_AssemblyBlk_ElastBrittleUnilateral(GradientV_Sec, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+            Else
+               Call GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+            End If
+            
          End If
          !!! Contribution of the surface term
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
@@ -781,10 +784,10 @@ Contains
    End Subroutine RHSV_AssemblyBlk_AT2
    
 #if defined WITH_TAO   
-   Subroutine GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, V_Sec, AppCtx)
+   Subroutine GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
-      Type(SectionReal)                            :: V_Sec
+      Type(SectionReal)                            :: U_Sec, Theta_SeC, V_Sec
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscReal, Dimension(:), Pointer             :: U_Loc, Theta_Loc, V_Loc, GradientV_Loc
@@ -814,9 +817,9 @@ Contains
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          GradientV_Loc = 0.0_Kr
-         Call SectionRealRestrictClosure(AppCtx%U,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(V_Sec,        AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(U_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(V_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             Strain_Elem = 0.0_Kr
             Do iDoF = 1, NumDoFVect
@@ -847,10 +850,10 @@ Contains
    End Subroutine GradientV_AssemblyBlk_ElastBrittle
    
 #if defined WITH_TAO   
-   Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateral(GradientV_Sec, iBlk, V_Sec, AppCtx)
+   Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateral(GradientV_Sec, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
-      Type(SectionReal)                            :: V_Sec
+      Type(SectionReal)                            :: U_Sec, Theta_Sec, V_Sec
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscReal, Dimension(:), Pointer             :: U_Loc, Theta_Loc, V_Loc, GradientV_Loc
@@ -883,9 +886,9 @@ Contains
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          GradientV_Loc = 0.0_Kr
-         Call SectionRealRestrictClosure(AppCtx%U,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(V_Sec,        AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(U_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(V_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             Strain_Elem = 0.0_Kr
             Do iDoF = 1, NumDoFVect
@@ -1056,7 +1059,7 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          Call TaoSolveApplication(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
-         Call TaoGetSolutionStatus(AppCtx%taoV, KSPNumIter, rDum, TaoResidual, iDum, iDum, TaoReason, iErr); CHKERRQ(iErr)
+         Call TaoGetSolutionStatus(AppCtx%taoV, KSPNumIter, rDum, TaoResidual, rDum, rDum, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
             Write(IOBuffer, 102) KSPNumiter, TAOReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)

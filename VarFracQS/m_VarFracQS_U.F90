@@ -88,9 +88,7 @@ Contains
       DeAllocate(LowerBoundU_Ptr)   
       DeAllocate(UpperBoundU_Ptr)   
          
-      Call SectionRealComplete(LowerBoundU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(LowerBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, LowerBoundU_Vec, iErr); CHKERRQ(iErr)
-      Call SectionRealComplete(UpperBoundU_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(UpperBoundU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, UpperBoundU_Vec, iErr); CHKERRQ(iErr)
 
       Call SectionRealDestroy(LowerBoundU_Sec, iErr); CHKERRQ(iErr)
@@ -246,7 +244,11 @@ Contains
       Do_iBlk2: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-            Call GradientU_AssemblyBlk_ElastBrittle(GradientU_Sec, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+            If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
+               Call GradientU_AssemblyBlk_ElastBrittleUnilateral(GradientU_Sec, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+            Else
+               Call GradientU_AssemblyBlk_ElastBrittle(GradientU_Sec, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+            End If
          Else
             Call GradientU_AssemblyBlk_ElastNonBrittle(GradientU_Sec, iBlk, AppCtx%U, AppCtx%Theta, AppCtx)
          End If
@@ -1026,8 +1028,8 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
-!         Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, rDum, TaoResidual, iDum, iDum, TaoReason, iErr); CHKERRQ(iErr)
-         Call TaoGetTerminationReason(AppCtx%taoU, TaoReason, iErr); CHKERRQ(iErr)
+         Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, rDum, TaoResidual, rDum, rDum, TaoReason, iErr); CHKERRQ(iErr)
+!         Call TaoGetTerminationReason(AppCtx%taoU, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
             Write(IOBuffer, 102) KSPNumiter, TAOReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -1037,12 +1039,13 @@ Contains
          End If    
           
          Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
-!         If ( reason > 0) Then
+         If ( reason > 0) Then
             Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 100) KSPNumIter, reason
-!         Else
-!            Write(IOBuffer, 101) reason
-!         End If
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Else
+            Write(IOBuffer, 101) reason
+         End If
 #endif      
       Else
          Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, RHSU_Vec, iErr); CHKERRQ(iErr)
