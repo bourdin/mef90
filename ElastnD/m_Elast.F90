@@ -604,7 +604,7 @@ Contains
             Call RHSAssemblyBlock_Force(RHSU_Sec, iBlk, AppCtx)
          End If
       End Do Do_iBlk
-
+      
       Call SectionRealComplete(RHSU_Sec, iErr); CHKERRQ(iErr)
       !!! VERY important! This is the equivalent of a ghost update
       Call SectionRealToVec(RHSU_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, RHS_Vec, iErr); CHKERRQ(ierr)
@@ -613,6 +613,42 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
 
+Subroutine FixBC(RHS_Sec, K, UBC_Sec, BCFlag_Sec, AppCtx)
+   Type(SectionReal)                                :: RHS_Sec
+   Type(Mat)                                        :: K
+   Type(SectionReal)                                :: UBC_Sec
+   Type(SectionInt)                                 :: BCFlag_Sec
+   Type(AppCtx_Type)                                :: AppCtx
+   
+   PetscReal, Dimension(:), Pointer                 :: UBC_Ptr
+   PetscInt, Dimension(:), Pointer                  :: BCFlag_Ptr
+   PetscInt                                         :: iDoF1, iDoF2
+   
+   PetscReal, Dimension(:,:)                        :: MatElem
+   PetscReal, Dimension(:)                          :: RHSElem
+   
+   Allocate(MatElem(AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Num_Dim))
+   Allocate(RHSElem(AppCtx%MeshTopology%Num_Dim))
+   Do iDoF1 = 1, AppCtx%MeshTopology%Num_Verts !!! WRONG!
+      Call SectionIntRestrict(BCUFlag_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
+      If (Sum(BCFlag_Ptr) /= 0) Then
+         MatElem = 0.0_Kr
+         Call SectionRealRestrict(UBC_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, UBC_Ptr, iErr); CHKERRQ(iErr)
+         Do iDof2 = 1, AppCtx%MeshTopology%Num_Dim
+            If (BCFlag_Ptr(iDoF2) /= 0) Then
+               MatElem(iDoF2, iDoF2) = 1.0_Kr
+               RHSElem(iDoF2) = UBC_Sec(iDoF2)
+            End If
+         End Do
+         Call SectionRealRestore(UBC_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, UBC_Ptr, iErr); CHKERRQ(iErr)
+         Call SectionRealUpdate(RHS_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, RHSElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call assembleMatrix(K, AppCtx%MeshTopology%mesh, RHS_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      EndIf
+      Call SectionIntRestore(AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
+   End Do
+   DeAllocate(MatElem)
+   DeAllocate(RHSElem)
+End Subroutine FixBC
 !----------------------------------------------------------------------------------------!      
 !             Block assembly routines
 !----------------------------------------------------------------------------------------!      
@@ -654,6 +690,8 @@ Contains
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) ) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))        
                      flops = flops + 2.0     
                   End Do
+               Else 
+                  MatElem(iDoF1,iDoF1) = 1.0_Kr
                End If
             End Do
          End Do
