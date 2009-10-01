@@ -296,10 +296,6 @@ Contains
       Call PetscLogStageRegister("Post Proc",      AppCtx%LogInfo%PostProc_Stage,       iErr)
    End Subroutine InitLog
 
-
-!----------------------------------------------------------------------------------------!      
-! Solve (CM)   
-!----------------------------------------------------------------------------------------!      
    Subroutine FormBoundsTao(TaoApp, LowerBound, UpperBound, AppCtx, iErr)
       TAO_APPLICATION                              :: TaoApp
       Type(Vec)                                    :: LowerBound, UpperBound
