@@ -613,34 +613,38 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
 
-Subroutine FixBC(RHS_Sec, K, UBC_Sec, BCFlag_Sec, AppCtx)
-   Type(SectionReal)                                :: RHS_Sec
+Subroutine FixBC(RHS_Vec, K, BC_Sec, BCFlag_Sec, AppCtx)
+   Type(Vec)                                        :: RHS_Vec
    Type(Mat)                                        :: K
-   Type(SectionReal)                                :: UBC_Sec
+   Type(SectionReal)                                :: BC_Sec
    Type(SectionInt)                                 :: BCFlag_Sec
    Type(AppCtx_Type)                                :: AppCtx
    
-   PetscReal, Dimension(:), Pointer                 :: UBC_Ptr
+   Type(SectionReal)                                :: RHS_Sec
+   PetscReal, Dimension(:), Pointer                 :: BC_Ptr
    PetscInt, Dimension(:), Pointer                  :: BCFlag_Ptr
    PetscInt                                         :: iDoF1, iDoF2
    
-   PetscReal, Dimension(:,:)                        :: MatElem
-   PetscReal, Dimension(:)                          :: RHSElem
+   PetscReal, Dimension(:,:), Pointer               :: MatElem
+   PetscReal, Dimension(:), Pointer                 :: RHSElem
+   PetscInt                                         :: iErr
    
+   Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHS_Sec', AppCtx%MeshTopology%Num_Dim, RHS_Sec, iErr); CHKERRQ(iErr)
+   Call SectionRealToVec(RHS_Sec, AppCtx%ScatterVect, SCATTER_REVERSE, RHS_Vec, iErr); CHKERRQ(iErr)
    Allocate(MatElem(AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Num_Dim))
    Allocate(RHSElem(AppCtx%MeshTopology%Num_Dim))
    Do iDoF1 = 1, AppCtx%MeshTopology%Num_Verts !!! WRONG!
-      Call SectionIntRestrict(BCUFlag_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
+      Call SectionIntRestrict(BCFlag_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
       If (Sum(BCFlag_Ptr) /= 0) Then
          MatElem = 0.0_Kr
-         Call SectionRealRestrict(UBC_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, UBC_Ptr, iErr); CHKERRQ(iErr)
+         Call SectionRealRestrict(BC_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BC_Ptr, iErr); CHKERRQ(iErr)
          Do iDof2 = 1, AppCtx%MeshTopology%Num_Dim
             If (BCFlag_Ptr(iDoF2) /= 0) Then
                MatElem(iDoF2, iDoF2) = 1.0_Kr
-               RHSElem(iDoF2) = UBC_Sec(iDoF2)
+               RHSElem(iDoF2) = BC_Ptr(iDoF2)
             End If
          End Do
-         Call SectionRealRestore(UBC_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, UBC_Ptr, iErr); CHKERRQ(iErr)
+         Call SectionRealRestore(BC_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BC_Ptr, iErr); CHKERRQ(iErr)
          Call SectionRealUpdate(RHS_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, RHSElem, ADD_VALUES, iErr); CHKERRQ(iErr)
          Call assembleMatrix(K, AppCtx%MeshTopology%mesh, RHS_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       EndIf
@@ -648,6 +652,8 @@ Subroutine FixBC(RHS_Sec, K, UBC_Sec, BCFlag_Sec, AppCtx)
    End Do
    DeAllocate(MatElem)
    DeAllocate(RHSElem)
+   Call SectionRealToVec(RHS_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, RHS_Vec, iErr); CHKERRQ(iErr)
+   Call SectionRealDestroy(RHS_Sec, iErr); CHKERRQ(iErr)
 End Subroutine FixBC
 !----------------------------------------------------------------------------------------!      
 !             Block assembly routines

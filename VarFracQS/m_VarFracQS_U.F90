@@ -1077,9 +1077,9 @@ Contains
          Call VecDestroy(U_Vec, iErr); CHKERRQ(iErr)
       End If
       CHKMEMQ
-100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is     ', I5, '\n')
+100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
-102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I5, '\n')
+102 Format('     TAO for U converged in ', I5, ' iterations. Tao termination reason is ', I5, '\n')
 103 Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
    End Subroutine Step_U   
 
