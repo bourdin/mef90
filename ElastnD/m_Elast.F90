@@ -414,7 +414,6 @@ Contains
          Call SectionRealToVec(AppCtx%U, AppCtx%ScatterVect, SCATTER_REVERSE, U_Vec, iErr); CHKERRQ(ierr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          
-!         Call TaoGetTerminationReason(AppCtx%taoU, TaoReason, iErr); CHKERRQ(iErr)
          Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, rDum, TaoResidual, rDum, rDum, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0) Then
             Write(IOBuffer, 102) KSPNumiter, TAOReason
