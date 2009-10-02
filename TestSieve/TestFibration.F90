@@ -29,7 +29,7 @@ Program TestFibration
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: LogViewer, MyLogViewer
    Type(Mesh)                                   :: Tmp_Mesh
-   PetscInt                                     :: num_components
+   PetscInt                                     :: num_components, numdof
    PetscInt, Dimension(:), Pointer              :: component_length 
 
    Call MEF90_Initialize()
@@ -111,49 +111,56 @@ Program TestFibration
    End If
 
    num_components=2
-   Allocate (component_length(3))
+   Allocate (component_length(2))
    component_length(1) = 1
    component_length(2) = 2
+   numdof = sum(component_length)
 
-   Call MeshGetSectionReal(MeshTopology%Mesh, 'Field1%Sec', Field1%Sec, iErr); CHKERRQ(iErr)
+   If (verbose > 0) Then
+      Write(IOBuffer, *) "Field1.Sec\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   
+   Call MeshGetSectionReal(MeshTopology%Mesh, 'Field1.Sec', Field1%Sec, iErr); CHKERRQ(iErr)
    Do i = 1, MeshTopology%num_verts
-      Call SectionRealSetFiberDimension(Field1%Sec, i+MeshTopology%Num_Elems-1, 3, iErr); CHKERRQ(iErr)
+      Call SectionRealSetFiberDimension(Field1%Sec, i+MeshTopology%Num_Elems-1, numdof, iErr); CHKERRQ(iErr)
+   End Do 
+   Call SectionRealAllocate(Field1%Sec, iErr); CHKERRQ(iErr)
+   Do i = 1, MeshTopology%num_verts
       Do j = 1, num_components
          Call SectionRealSetFiberDimensionField(Field1%Sec, i+MeshTopology%Num_Elems-1, component_length(j), j, iErr); CHKERRQ(iErr)
       End Do
    End Do 
-   Call SectionRealAllocate(Field1%Sec, iErr); CHKERRQ(iErr)
-
    
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 3, Field1%Sec, iErr); CHKERRQ(iErr)
-   Call FieldCreateComponents(Field1, num_components)
+!!!   Call FieldCreateComponents(Field1, num_components)
 
    Call SectionRealSet(Field1%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-   Write(IOBuffer, *) "Field1%Sec\n"
+
+   Write(IOBuffer, *) "Field1.Sec\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionRealView(Field1%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-   Write(IOBuffer, *) "Field1%Component_Sec(1)\n"
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Call SectionRealView(Field1%Component_Sec(1), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+!!!   Write(IOBuffer, *) "Field1%Component_Sec(1)\n"
+!!!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!!!   Call SectionRealView(Field1%Component_Sec(1), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+!!!   
+!!!   Write(IOBuffer, *) "Field1%Component_Sec(2)\n"
+!!!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!!!   Call SectionRealView(Field1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-   Write(IOBuffer, *) "Field1%Component_Sec(2)\n"
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Call SectionRealView(Field1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   
-   Call FieldDestroy(Field1)
-   
-   Call MeshTopologyDestroy(MeshTopology)
-   If (verbose > 0) Then
-      Write(IOBuffer, *) "Cleaning up\n"
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-   If (verbose>1) Then
-      Call PetscViewerFlush(MyLogViewer, iErr); CHKERRQ(iErr)
-      Call PetscViewerDestroy(MyLogViewer, iErr); CHKERRQ(iErr)
-      Call PetscViewerFlush(LogViewer, iErr); CHKERRQ(iErr)
-      Call PetscViewerDestroy(LogViewer, iErr); CHKERRQ(iErr)
-   End If
+!!$   Call FieldDestroy(Field1)
+!!$   
+!!$   Call MeshTopologyDestroy(MeshTopology)
+!!$   If (verbose > 0) Then
+!!$      Write(IOBuffer, *) "Cleaning up\n"
+!!$      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!!$   End If
+!!$   If (verbose>1) Then
+!!$      Call PetscViewerFlush(MyLogViewer, iErr); CHKERRQ(iErr)
+!!$      Call PetscViewerDestroy(MyLogViewer, iErr); CHKERRQ(iErr)
+!!$      Call PetscViewerFlush(LogViewer, iErr); CHKERRQ(iErr)
+!!$      Call PetscViewerDestroy(LogViewer, iErr); CHKERRQ(iErr)
+!!$   End If
 
 300 Format(A)   
    Call MEF90_Finalize()
