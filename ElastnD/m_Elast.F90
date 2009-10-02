@@ -434,7 +434,7 @@ Contains
          If (AppCtx%AppParam%verbose > 1) Then
             Call VecView(RHSU_Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          End If
-      
+         
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling KSPSolve\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -675,6 +675,7 @@ Contains
          Call SectionIntRestore(AppCtx%BCUFlag, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
       End Do
       DeAllocate(RHSElem)
+      Call SectionRealComplete(RHS_Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(RHS_Sec, AppCtx%ScatterVect, SCATTER_FORWARD, RHS_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(RHS_Sec, iErr); CHKERRQ(iErr)
    End Subroutine VecAddBC

@@ -74,7 +74,7 @@ Program Partitioner
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-!      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
    
    If (verbose > 0) Then

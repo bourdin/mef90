@@ -65,6 +65,9 @@ Partitioner:   ${PETSC_ARCH} Partitioner.o ${PETSC_ARCH}/Partitioner.o
 TestUpdateRestrict:   ${PETSC_ARCH} TestUpdateRestrict.o ${PETSC_ARCH}/TestUpdateRestrict.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestUpdateRestrict ${PETSC_ARCH}/TestUpdateRestrict.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	
+TestFibration:   ${PETSC_ARCH} TestFibration.o ${PETSC_ARCH}/TestFibration.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestFibration ${PETSC_ARCH}/TestFibration.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}

@@ -2,28 +2,29 @@ Module m_MEF_Sieve
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
 #include "finclude/petscmeshdef.h"
+#include "finclude/petscvecdef.h"
 
    Use m_MEF_LinAlg
    Use m_MEF_Types
    Use m_MEF_Utils
    Use petsc
    Use petscmesh
-   
+   Use petscvec
+      
    IMPLICIT NONE
    Private
    
    Public :: MeshTopologyReadEXO
-!!!$   Public :: MeshInitElementConnectivity
    Public :: MeshInitCoordinates
+   Public :: FieldCreateComponents
+   Public :: FieldDestroy
+   Public :: FlagCreateComponents
+   Public :: FlagDestroy
    
    Interface MeshInitCoordinates
       Module Procedure MeshInitCoordinatesVect2D, MeshInitCoordinatesVect3D
    End Interface MeshInitCoordinates
    
-!!!$   Interface MeshInitElementConnectivity
-!!!$      Module Procedure MeshInitElementConnectivity2D_Scal, MeshInitElementConnectivity2D, MeshInitElementConnectivity2D_Elast, MeshInitElementConnectivity3D_Scal, MeshInitElementConnectivity3D, MeshInitElementConnectivity3D_Elast
-!!!$   End Interface MeshInitElementConnectivity
-      
 Contains
    Subroutine MeshTopologyReadEXO(dMeshTopology, dEXO)
       !!! Remove the element and coordinate stuff and move in separate functions
@@ -258,5 +259,62 @@ Contains
 !!!$      End Do
 !!!$      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
 !!!$    End Subroutine MeshInitElementConnectivity3D_Elast
+
+   Subroutine FieldCreateComponents(F, num_components)
+      Type(Field)                                  :: F
+      PetscInt                                     :: num_components
+      PetscInt, Dimension(:), Pointer              :: component_lengths
+
+      PetscInt                                     :: i, iErr
+      
+      F%Has_Component_Sec = .TRUE.
+      F%num_components = num_components
+      Allocate(F%Component_Sec(num_Components))
+      Do i = 1, num_Components      
+         Call SectionRealGetFibration(F%Sec, i, F%Component_sec(i), iErr); CHKERRQ(iErr)
+      End Do
+      F%Is_UpToDate = .FALSE.
+   End Subroutine FieldCreateComponents
+   
+   Subroutine FlagCreateComponents(F, num_components)
+      Type(Flag)                                   :: F
+      PetscInt                                     :: num_components
+      PetscInt, Dimension(:), Pointer              :: component_length
+
+      PetscInt                                     :: i, iErr
+      
+      F%Has_Component_Sec = .TRUE.
+      F%num_components = num_components
+      Allocate(F%Component_Sec(num_Components))
+      Do i = 1, num_Components      
+!         Call SectionIntGetFibration(F%Sec, i, F%Component_sec(i), iErr); CHKERRQ(iErr)
+      End Do
+   End Subroutine FlagCreateComponents
+   
+   Subroutine FieldDestroy(F)
+      Type(Field)                                  :: F
+      PetscInt                                     :: i, iErr
+      
+      Call SectionRealDestroy(F%Sec, iErr); CHKERRQ(iErr)
+      If (F%Has_Component_Sec) Then
+         Do i = 1, F%Num_Components   
+            Call SectionRealDestroy(F%Component_Sec(i), iErr); CHKERRQ(iErr)   
+         End Do
+         DeAllocate(F%Component_Sec)
+      End If
+   End Subroutine FieldDestroy
+
+   Subroutine FlagDestroy(F)
+      Type(Field)                                  :: F
+      PetscInt                                     :: i, iErr
+      
+      Call SectionIntDestroy(F%Sec, iErr); CHKERRQ(iErr)
+      If (F%Has_Component_Sec) Then
+         Do i = 1, F%Num_Components   
+            Call SectionIntDestroy(F%Component_Sec(i), iErr); CHKERRQ(iErr)   
+         End Do
+         DeAllocate(F%Component_Sec)
+      End If
+   End Subroutine FlagDestroy
 
 End Module m_MEF_Sieve
