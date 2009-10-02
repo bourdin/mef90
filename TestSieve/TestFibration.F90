@@ -23,7 +23,7 @@ Program TestFibration
    Type(Flag)                                   :: Flag1, Flag2
    
    PetscTruth                                   :: HasPrefix, flg
-   PetscTruth                                   :: verbose
+   PetscInt                                     :: verbose
    PetscErrorCode                               :: iErr, i, j, iBlk
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
@@ -126,6 +126,10 @@ Program TestFibration
       Call SectionRealSetFiberDimension(Field1%Sec, i+MeshTopology%Num_Elems-1, numdof, iErr); CHKERRQ(iErr)
    End Do 
    Call SectionRealAllocate(Field1%Sec, iErr); CHKERRQ(iErr)
+   Do j = 1, num_components
+   Call SectionRealAddSpace(Field1%Sec, iErr); CHKERRQ(iErr)
+   Call SectionRealAddSpace(Field1%Sec, iErr); CHKERRQ(iErr)
+   End Do 
    Do i = 1, MeshTopology%num_verts
       Do j = 1, num_components
          Call SectionRealSetFiberDimensionField(Field1%Sec, i+MeshTopology%Num_Elems-1, component_length(j), j, iErr); CHKERRQ(iErr)
