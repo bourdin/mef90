@@ -29,7 +29,7 @@ Program TestFibration
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: LogViewer, MyLogViewer
    Type(Mesh)                                   :: Tmp_Mesh
-   PetscInt                                     :: num_components, numdof
+   PetscInt                                     :: num_components, num_dof
    PetscInt, Dimension(:), Pointer              :: component_length 
 
    Call MEF90_Initialize()
@@ -114,7 +114,7 @@ Program TestFibration
    Allocate (component_length(2))
    component_length(1) = 1
    component_length(2) = 2
-   numdof = sum(component_length)
+   num_dof = sum(component_length)
 
    If (verbose > 0) Then
       Write(IOBuffer, *) "Field1.Sec\n"
@@ -123,11 +123,10 @@ Program TestFibration
    
    Call MeshGetSectionReal(MeshTopology%Mesh, 'Field1.Sec', Field1%Sec, iErr); CHKERRQ(iErr)
    Do i = 1, MeshTopology%num_verts
-      Call SectionRealSetFiberDimension(Field1%Sec, i+MeshTopology%Num_Elems-1, numdof, iErr); CHKERRQ(iErr)
+      Call SectionRealSetFiberDimension(Field1%Sec, i+MeshTopology%Num_Elems-1, num_dof, iErr); CHKERRQ(iErr)
    End Do 
    Call SectionRealAllocate(Field1%Sec, iErr); CHKERRQ(iErr)
-   Do j = 1, num_components
-   Call SectionRealAddSpace(Field1%Sec, iErr); CHKERRQ(iErr)
+   Do j = 1, num_dof
    Call SectionRealAddSpace(Field1%Sec, iErr); CHKERRQ(iErr)
    End Do 
    Do i = 1, MeshTopology%num_verts
@@ -135,8 +134,11 @@ Program TestFibration
          Call SectionRealSetFiberDimensionField(Field1%Sec, i+MeshTopology%Num_Elems-1, component_length(j), j, iErr); CHKERRQ(iErr)
       End Do
    End Do 
-   
-!!!   Call FieldCreateComponents(Field1, num_components)
+
+   Allocate(Field1%Component_Sec(num_Components))
+   Do i = 1, Num_Components
+      Call SectionRealGetFibration(Field1%Sec, i, Field1%Component_sec(i), iErr); CHKERRQ(iErr)
+   End Do
 
    Call SectionRealSet(Field1%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
 
@@ -144,13 +146,13 @@ Program TestFibration
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionRealView(Field1%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-!!!   Write(IOBuffer, *) "Field1%Component_Sec(1)\n"
-!!!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!   Call SectionRealView(Field1%Component_Sec(1), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!!!   
-!!!   Write(IOBuffer, *) "Field1%Component_Sec(2)\n"
-!!!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!   Call SectionRealView(Field1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, *) "Field1%Component_Sec(1)\n"
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call SectionRealView(Field1%Component_Sec(1), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
+   Write(IOBuffer, *) "Field1%Component_Sec(2)\n"
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call SectionRealView(Field1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
 !!$   Call FieldDestroy(Field1)
 !!$   

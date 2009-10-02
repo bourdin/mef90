@@ -16,8 +16,10 @@ Module m_MEF_Sieve
    
    Public :: MeshTopologyReadEXO
    Public :: MeshInitCoordinates
+   Public :: FieldCreate
    Public :: FieldCreateComponents
    Public :: FieldDestroy
+!   Public :: FlagCreate
    Public :: FlagCreateComponents
    Public :: FlagDestroy
    
@@ -259,6 +261,23 @@ Contains
 !!!$      End Do
 !!!$      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
 !!!$    End Subroutine MeshInitElementConnectivity3D_Elast
+
+   Subroutine FieldCreate(F, FieldName, MeshTopology, num_dof)
+      Type(Field)                                  :: F
+      Character(len = *), Intent(IN)               :: FieldName
+      Type(MeshTopology_Type)                      :: MeshTopology
+      PetscInt                                     :: num_dof
+
+      PetscInt                                     :: iBlk, iE, iPt, iErr
+      
+!!!      Call MeshGetSectionReal(MeshTopology%Mesh, FieldName, F%Sec, iErr); CHKERRQ(iErr)
+!!!      Do iBlk = 1, MeshTopology%Num_Elem_Blk
+!!!         Do iE = 1, MeshTopology%ELem_Blk(iBlk)%Num_Elems
+!!!            
+!!!         End Do
+!!!      End Do
+            
+   End Subroutine FieldCreate
 
    Subroutine FieldCreateComponents(F, num_components)
       Type(Field)                                  :: F
