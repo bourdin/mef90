@@ -1,14 +1,18 @@
 Module m_MEF_Types
 #include "finclude/petscdef.h"
 #include "finclude/petscmeshdef.h"
+#include "finclude/petscvecdef.h"
 
    Use m_MEF_LinAlg
    Use petsc
    Use petscmesh
-
+   Use petscvec
+   
    IMPLICIT NONE
    Private
    
+   Public :: Field
+   Public :: Flag
    Public :: Element1D
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
@@ -19,6 +23,22 @@ Module m_MEF_Types
    Public :: EXOView
    Public :: MeshTopologyDestroy, MeshTopologyView
       
+   Type Field
+      Type(Vec)                                      :: Vec
+      Type(SectionReal)                              :: Sec
+      Type(SectionReal), Dimension(:), Pointer       :: Component_Sec
+      PetscInt                                       :: num_components
+      Logical                                        :: Has_Component_Sec
+      Logical                                        :: Is_Uptodate
+   End Type Field
+   
+   Type Flag
+      Type(SectionInt)                               :: Sec
+      Type(SectionInt), Dimension(:), Pointer        :: Component_Sec
+      PetscInt                                       :: num_components
+      Logical                                        :: Has_Component_Sec
+   End Type Flag
+
    Type Element1D
       PetscReal, Dimension(:,:), Pointer             :: BF
       PetscReal, Dimension(:,:), Pointer             :: Der_BF
