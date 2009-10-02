@@ -45,7 +45,7 @@ Program  Elast
 
    If (.NOT. AppCtx%VarFracSchemeParam%U_UseTao) Then
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Assembling the matrix\n'c
+         Write(IOBuffer, *) 'Assembling the matrix\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If   
       Call MatAssembly(AppCtx)
@@ -68,24 +68,24 @@ Program  Elast
       Call Solve(AppCtx)
    
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Computing Elastic energy, strains and stresses\n'c
+         Write(IOBuffer, *) 'Computing Elastic energy, strains and stresses\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call ComputeEnergies(AppCtx)
 
       Write(IOBuffer, 108) AppCtx%TimeStep, AppCtx%Time, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
-108 Format('TS ',I4, ' Time:', ES10.3, ' Load:', ES10.3, ' Elast:', ES10.3, ' Work:', ES10.3, ' Total:', ES10.3, '\n'c)
+108 Format('TS ',I4, ' Time:', ES10.3, ' Load:', ES10.3, ' Elast:', ES10.3, ' Work:', ES10.3, ' Total:', ES10.3, '\n')
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
       Write(IOBuffer, 110) AppCtx%TimeStep, AppCtx%Time, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
-110 Format(I4, 5(ES13.5, '   '), '\n'c)
+110 Format(I4, 5(ES13.5, '   '), '\n')
       Call PetscViewerASCIIPrintf(AppCtx%AppParam%EnergyViewer, IOBuffer, iErr); CHKERRQ(iErr)
 
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. ( AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          Call ComputeStrainStress(AppCtx)
       End If   
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Saving results\n'c
+         Write(IOBuffer, *) 'Saving results\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If      
       Call Save(AppCtx)

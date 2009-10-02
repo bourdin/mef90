@@ -25,10 +25,12 @@ Program  VarFracQS
 
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
+   PetscInt                                     :: iDebug
    PetscInt                                     :: iBTStep
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: AltMinIter
    Character(len=MEF90_MXSTRLEN)                :: filename
+   Character(len=MEF90_MXSTRLEN)                :: stagename
    PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
 
    Call VarFracQSInit(AppCtx)
@@ -40,7 +42,11 @@ Program  VarFracQS
    End If   
    
    AppCtx%TimeStep = 1
+   iDebug = 0
+   Write(stagename, 106)
    TimeStep: Do 
+      Call ALEStagePush(stagename, iDebug, iErr); CHKERRQ(iErr)
+
       Write(IOBuffer, 99) AppCtx%TimeStep
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 99    Format('\n=== Solving time step ', I4, '\n\n')
@@ -188,6 +194,9 @@ Program  VarFracQS
       AppCtx%TimeStep = AppCtx%TimeStep + 1
       Write(filename, 105) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
+
+      Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+      Call ALEStagePrintMemory(stagename, iErr); CHKERRQ(iErr)
    End Do TimeStep
 
 100   Format('Elastic energy:       ', ES12.5, '\n')    
@@ -197,6 +206,7 @@ Program  VarFracQS
 104   Format('Load:                 ', ES12.5, '\n')    
 
 105   Format(A,'-logsummary.txt')
+106   Format('Time Loop')
 
    Call VarFracQSFinalize(AppCtx)
 End Program  VarFracQS
