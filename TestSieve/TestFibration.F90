@@ -125,19 +125,20 @@ Program TestFibration
    Do i = 1, MeshTopology%num_verts
       Call SectionRealSetFiberDimension(Field1%Sec, i+MeshTopology%Num_Elems-1, num_dof, iErr); CHKERRQ(iErr)
    End Do 
-   Call SectionRealAllocate(Field1%Sec, iErr); CHKERRQ(iErr)
-   Do j = 1, num_dof
-   Call SectionRealAddSpace(Field1%Sec, iErr); CHKERRQ(iErr)
+   Do j = 1, num_components
+      Call SectionRealAddSpace(Field1%Sec, iErr); CHKERRQ(iErr)
    End Do 
    Do i = 1, MeshTopology%num_verts
       Do j = 1, num_components
-         Call SectionRealSetFiberDimensionField(Field1%Sec, i+MeshTopology%Num_Elems-1, component_length(j), j, iErr); CHKERRQ(iErr)
+         Call SectionRealSetFiberDimensionField(Field1%Sec, i+MeshTopology%Num_Elems-1, component_length(j), j-1, iErr); CHKERRQ(iErr)
       End Do
    End Do 
+   Call SectionRealAllocate(Field1%Sec, iErr); CHKERRQ(iErr)
 
-   Allocate(Field1%Component_Sec(num_Components))
+   Allocate(Field1%Component_Sec(Num_Components))
    Do i = 1, Num_Components
-      Call SectionRealGetFibration(Field1%Sec, i, Field1%Component_sec(i), iErr); CHKERRQ(iErr)
+      Call SectionRealGetFibration(Field1%Sec, i-1, Field1%Component_sec(i), iErr); CHKERRQ(iErr)
+      Call SectionRealView(Field1%Component_sec(i), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End Do
 
    Call SectionRealSet(Field1%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
