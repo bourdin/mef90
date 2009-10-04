@@ -31,6 +31,7 @@ Program TestFibration
    Type(Mesh)                                   :: Tmp_Mesh
    PetscInt                                     :: num_components, num_dof
    PetscInt, Dimension(:), Pointer              :: component_length 
+   Type(SectionReal)                            :: Comp1, Comp2
 
    Call MEF90_Initialize()
    verbose = 0
@@ -125,7 +126,7 @@ Program TestFibration
    Do i = 1, MeshTopology%num_verts
       Call SectionRealSetFiberDimension(Field1%Sec, i+MeshTopology%Num_Elems-1, num_dof, iErr); CHKERRQ(iErr)
    End Do 
-   Do j = 1, num_components
+   Do i = 1, num_components
       Call SectionRealAddSpace(Field1%Sec, iErr); CHKERRQ(iErr)
    End Do 
    Do i = 1, MeshTopology%num_verts
@@ -138,20 +139,21 @@ Program TestFibration
    Allocate(Field1%Component_Sec(Num_Components))
    Do i = 1, Num_Components
       Call SectionRealGetFibration(Field1%Sec, i-1, Field1%Component_sec(i), iErr); CHKERRQ(iErr)
-      Call SectionRealView(Field1%Component_sec(i), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End Do
 
    Call SectionRealSet(Field1%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
+   Call SectionRealSet(Field1%Component_Sec(1), 2.23_Kr, iErr); CHKERRQ(iErr)
+   Call SectionRealSet(Field1%Component_Sec(2), 4.43_Kr, iErr); CHKERRQ(iErr)
 
    Write(IOBuffer, *) "Field1.Sec\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionRealView(Field1%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-   Write(IOBuffer, *) "Field1%Component_Sec(1)\n"
+   Write(IOBuffer, *) "Field1.Component_Sec(1)\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionRealView(Field1%Component_Sec(1), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-   Write(IOBuffer, *) "Field1%Component_Sec(2)\n"
+   Write(IOBuffer, *) "Field1.Component_Sec(2)\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionRealView(Field1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
