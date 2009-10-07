@@ -263,6 +263,7 @@ Contains
       Character(len=*)                             :: Fname
       Type(MeshTopology_Type)                      :: MeshTopology
       PetscInt, Dimension(:), Pointer              :: component_size
+      Character(len=256)                           :: component_name
 
       PetscInt                                     :: i, j, iErr
       
@@ -290,6 +291,8 @@ Contains
       Allocate(F%Component_Sec(F%num_Components))
       Do i = 1, F%num_Components      
          Call SectionRealGetFibration(F%Sec, i-1, F%Component_sec(i), iErr); CHKERRQ(iErr)
+         Write(component_name, "(A, '.', I3.3)") Trim(Fname), i
+         Call PetscObjectSetName(F%Component_Sec(i), component_name, iErr); CHKERRQ(iErr)
       End Do
 
       !!! Create the Scatter and global Vec
