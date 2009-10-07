@@ -1,12 +1,12 @@
 Module m_MEF_Sieve
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
 #include "finclude/petscmeshdef.h"
 #include "finclude/petscvecdef.h"
 
    Use m_MEF_LinAlg
    Use m_MEF_Types
    Use m_MEF_Utils
+
    Use petsc
    Use petscmesh
    Use petscvec
@@ -16,12 +16,8 @@ Module m_MEF_Sieve
    
    Public :: MeshTopologyReadEXO
    Public :: MeshInitCoordinates
-   Public :: FieldCreate
-   Public :: FieldCreateComponents
+   Public :: FieldCreateVertex
    Public :: FieldDestroy
-!   Public :: FlagCreate
-   Public :: FlagCreateComponents
-   Public :: FlagDestroy
    
    Interface MeshInitCoordinates
       Module Procedure MeshInitCoordinatesVect2D, MeshInitCoordinatesVect3D
@@ -262,53 +258,45 @@ Contains
 !!!$      Call MeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
 !!!$    End Subroutine MeshInitElementConnectivity3D_Elast
 
-   Subroutine FieldCreate(F, FieldName, MeshTopology, num_dof)
+   Subroutine FieldCreateVertex(F, Fname, MeshTopology, component_size)
       Type(Field)                                  :: F
-      Character(len = *), Intent(IN)               :: FieldName
+      Character(len=*)                             :: Fname
       Type(MeshTopology_Type)                      :: MeshTopology
-      PetscInt                                     :: num_dof
+      PetscInt, Dimension(:), Pointer              :: component_size
 
-      PetscInt                                     :: iBlk, iE, iPt, iErr
-      
-!!!      Call MeshGetSectionReal(MeshTopology%Mesh, FieldName, F%Sec, iErr); CHKERRQ(iErr)
-!!!      Do iBlk = 1, MeshTopology%Num_Elem_Blk
-!!!         Do iE = 1, MeshTopology%ELem_Blk(iBlk)%Num_Elems
-!!!            
-!!!         End Do
-!!!      End Do
-            
-   End Subroutine FieldCreate
-
-   Subroutine FieldCreateComponents(F, num_components)
-      Type(Field)                                  :: F
-      PetscInt                                     :: num_components
-      PetscInt, Dimension(:), Pointer              :: component_lengths
-
-      PetscInt                                     :: i, iErr
+      PetscInt                                     :: i, j, iErr
       
       F%Has_Component_Sec = .TRUE.
-      F%num_components = num_components
-      Allocate(F%Component_Sec(num_Components))
-      Do i = 1, num_Components      
-         Call SectionRealGetFibration(F%Sec, i, F%Component_sec(i), iErr); CHKERRQ(iErr)
-      End Do
       F%Is_UpToDate = .FALSE.
-   End Subroutine FieldCreateComponents
-   
-   Subroutine FlagCreateComponents(F, num_components)
-      Type(Flag)                                   :: F
-      PetscInt                                     :: num_components
-      PetscInt, Dimension(:), Pointer              :: component_length
+      F%num_components = Size(component_size)
 
-      PetscInt                                     :: i, iErr
+      !!! Create the Main Section
+      Call MeshGetVertexSectionReal(MeshTopology%Mesh, Fname, sum(component_size), F%Sec, iErr); CHKERRQ(iErr)
       
-      F%Has_Component_Sec = .TRUE.
-      F%num_components = num_components
-      Allocate(F%Component_Sec(num_Components))
-      Do i = 1, num_Components      
-!         Call SectionIntGetFibration(F%Sec, i, F%Component_sec(i), iErr); CHKERRQ(iErr)
+      !!! Add space for each of the individual component section
+      Do i = 1, F%num_components
+         Call SectionRealAddSpace(F%Sec, iErr); CHKERRQ(iErr)
+      End Do 
+      Call SectionRealAllocate(F%Sec, iErr); CHKERRQ(iErr)
+      
+      !!! Set the fibration size
+      Do i = 1, MeshTopology%num_verts
+         Do j = 1, F%num_components
+            Call SectionRealSetFiberDimensionField(F%Sec, i+MeshTopology%Num_Elems-1, component_size(j), j-1, iErr); CHKERRQ(iErr)
+         End Do
+      End Do 
+      
+      !!! Create the individual component sections
+      Allocate(F%Component_Sec(F%num_Components))
+      Do i = 1, F%num_Components      
+         Call SectionRealGetFibration(F%Sec, i-1, F%Component_sec(i), iErr); CHKERRQ(iErr)
       End Do
-   End Subroutine FlagCreateComponents
+
+      !!! Create the Scatter and global Vec
+      F%Has_Vec  = .TRUE.
+      Call MeshCreateGlobalScatter(MeshTopology%mesh, F%Sec, F%Scatter, iErr); CHKERRQ(iErr)
+      Call MeshCreateVector(MeshTopology%mesh, F%Sec, F%Vec, iErr); CHKERRQ(iErr)
+   End Subroutine FieldCreateVertex
    
    Subroutine FieldDestroy(F)
       Type(Field)                                  :: F
@@ -321,19 +309,11 @@ Contains
          End Do
          DeAllocate(F%Component_Sec)
       End If
-   End Subroutine FieldDestroy
-
-   Subroutine FlagDestroy(F)
-      Type(Field)                                  :: F
-      PetscInt                                     :: i, iErr
       
-      Call SectionIntDestroy(F%Sec, iErr); CHKERRQ(iErr)
-      If (F%Has_Component_Sec) Then
-         Do i = 1, F%Num_Components   
-            Call SectionIntDestroy(F%Component_Sec(i), iErr); CHKERRQ(iErr)   
-         End Do
-         DeAllocate(F%Component_Sec)
+      If (F%Has_Vec) Then
+         Call VecDestroy(F%Vec, iErr); CHKERRQ(iErr)
+         Call VecScatterDestroy(F%Scatter, iErr); CHKERRQ(iErr)
       End If
-   End Subroutine FlagDestroy
+   End Subroutine FieldDestroy
 
 End Module m_MEF_Sieve
