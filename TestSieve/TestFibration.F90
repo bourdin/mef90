@@ -116,18 +116,6 @@ Program TestFibration
       Call VecView(FieldVecs(i), PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
    End Do
    Call FieldDestroy(Field1)
-!!$   
-!!$   Call MeshTopologyDestroy(MeshTopology)
-!!$   If (verbose > 0) Then
-!!$      Write(IOBuffer, *) "Cleaning up\n"
-!!$      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!$   End If
-!!$   If (verbose>1) Then
-!!$      Call PetscViewerFlush(MyLogViewer, iErr); CHKERRQ(iErr)
-!!$      Call PetscViewerDestroy(MyLogViewer, iErr); CHKERRQ(iErr)
-!!$      Call PetscViewerFlush(LogViewer, iErr); CHKERRQ(iErr)
-!!$      Call PetscViewerDestroy(LogViewer, iErr); CHKERRQ(iErr)
-!!$   End If
 
 300 Format(A)   
    Call MEF90_Finalize()
