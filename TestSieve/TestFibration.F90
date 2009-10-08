@@ -20,8 +20,8 @@ Program TestFibration
    Type(Element2D_Elast), Dimension(:), Pointer :: ElemVect
    Type(Element2D_Scal), Dimension(:), Pointer  :: ElemScal
    Type(Field)                                  :: Field1
-   Type(Vec), Dimension(:), Pointer             :: FieldVecs   
-   
+   Type(Flag)                                   :: Flag1
+      
    PetscTruth                                   :: HasPrefix, flg
    PetscErrorCode                               :: iErr, i, j, iBlk
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
@@ -109,15 +109,28 @@ Program TestFibration
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call VecView(Field1%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-   Allocate(FieldVecs(Field1%num_components))
-   Do i = 1, Field1%num_components
-      Call SectionRealCreateLocalVector(Field1%Component_Sec(i), FieldVecs(i), iErr); CHKERRQ(iErr)
-      Write(IOBuffer, *) "FieldsVec", i, "\n"
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Call VecView(FieldVecs(i), PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
-   End Do
    Call FieldDestroy(Field1)
 
+   Call FlagCreateVertex(Flag1, 'Flag1', MeshTopology, component_length)
+   
+   Call SectionIntSet(Flag1%Sec, 1, iErr); CHKERRQ(iErr)
+   Call SectionIntSet(Flag1%Component_Sec(1), 2, iErr); CHKERRQ(iErr)
+   Call SectionIntSet(Flag1%Component_Sec(2), 4, iErr); CHKERRQ(iErr)
+
+   Write(IOBuffer, *) "Flag1.Sec\n"
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call SectionIntView(Flag1%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
+   
+   Write(IOBuffer, *) "Flag1.Component_Sec(1)\n"
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call SectionIntView(Flag1%Component_Sec(1), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
+   Write(IOBuffer, *) "Flag1.Component_Sec(2)\n"
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call SectionIntView(Flag1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+
+   Call FlagDestroy(Flag1)
 300 Format(A)   
    Call MEF90_Finalize()
 
