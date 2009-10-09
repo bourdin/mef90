@@ -21,6 +21,8 @@ Program TestFibration
    Type(Element2D_Scal), Dimension(:), Pointer  :: ElemScal
    Type(Field)                                  :: Field1
    Type(Flag)                                   :: Flag1
+   Type(Mat)                                    :: M
+   PetscReal, Dimension(:,:), Pointer           :: MatElem
       
    PetscTruth                                   :: HasPrefix, flg
    PetscErrorCode                               :: iErr, i, j, iBlk
@@ -81,6 +83,7 @@ Program TestFibration
    Allocate (component_length(2))
    component_length(1) = 1
    component_length(2) = 2
+   num_dof = sum(component_length)
 
    Write(IOBuffer, *) "Field1.Sec\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -109,7 +112,6 @@ Program TestFibration
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call VecView(Field1%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-   Call FieldDestroy(Field1)
 
    Call FlagCreateVertex(Flag1, 'Flag1', MeshTopology, component_length)
    
@@ -130,6 +132,31 @@ Program TestFibration
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionIntView(Flag1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
+
+   Call MeshSetMaxDof(MeshTopology%Mesh, num_dof, iErr); CHKERRQ(iErr) 
+   Call MeshCreateMatrix(MeshTopology%mesh, Field1%Sec, MATMPIAIJ, M, iErr); CHKERRQ(iErr)
+!!!   Allocate(MatElem(num_dof,num_dof))
+!!!   Do i = 1, num_dof
+!!!      MatElem(i,i) = i
+!!!   End Do 
+!!!   i=1     
+!!!   Call assembleMatrix(M, MeshTopology%mesh, Field1%Sec, MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+!!!   Call assembleMatrix(M, MeshTopology%mesh, Field1%Sec, MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+!!!   DeAllocate(MatElem)
+   
+   Do i = 1, num_dof
+      Allocate(MatElem(component_length(i),component_length(i)))
+      MatElem = i + .456_Kr
+      Call assembleMatrix(M, MeshTopology%mesh, Field1%Component_Sec(i), MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+   End Do
+   
+   Call MatAssemblyBegin(M, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+   Call MatAssemblyEnd  (M, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+
+   Call MatView(M, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
+   Call MatDestroy(M, iErr); CHKERRQ(iErr)
+   Call FieldDestroy(Field1)
    Call FlagDestroy(Flag1)
 300 Format(A)   
    Call MEF90_Finalize()

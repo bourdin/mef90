@@ -25,8 +25,7 @@ Module m_VarFrac_Struct
    
    Public :: EXOProperty_InitBCVFlag
    Public :: EXOProperty_InitBCUFlag2DA
-   Public :: EXOProperty_InitBCUFlag2D
-   Public :: EXOProperty_InitBCUFlag3D
+   Public :: EXOProperty_InitBCUFlag
    
    Public :: VarFracSchemeParam_Type
 
@@ -176,10 +175,10 @@ Module m_VarFrac_Struct
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
    End Subroutine EXOProperty_InitBCVFlag
    
-   Subroutine EXOProperty_InitBCUFlag2DA(dEXO, dMeshTopology, dBCFlag)
+   Subroutine EXOProperty_InitBCUFlag2DA(dBCFlag, dEXO, dMeshTopology)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(SectionInt)                             :: dBCFlag 
+      Type(Flag)                                   :: dBCFlag 
       
       PetscInt                                     :: iErr, NumDoF, i, j
       PetscInt, Dimension(:), Pointer              :: Flag
@@ -191,22 +190,22 @@ Module m_VarFrac_Struct
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
          Allocate(Flag(1))
-         Flag = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+         Flag(1) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-            Call SectionIntUpdate(dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag%Sec, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do
          DeAllocate(Flag)
       End Do
-      Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
    End Subroutine EXOProperty_InitBCUFlag2DA
    
-   Subroutine EXOProperty_InitBCUFlag2D(dEXO, dMeshTopology, dBCFlag)
+   !!! Rewrite as FlagInitNSProperty(Flag, Property, MeshTopology)
+   Subroutine EXOProperty_InitBCUFlag(dBCFlag, dEXO, dMeshTopology)
       Type(EXO_Type)                               :: dEXO
       Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(SectionInt)                             :: dBCFlag 
+      Type(Flag)                                   :: dBCFlag 
       
-      PetscInt                                     :: iErr, NumDoF, i, j
-      PetscInt, Dimension(:), Pointer              :: Flag
+      PetscInt                                     :: iErr, NumDoF, i, j, k
+      PetscInt, Dimension(:), Pointer              :: FlagX, FlagY, FlagZ
       
       Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
       !!! Side Sets
@@ -214,43 +213,29 @@ Module m_VarFrac_Struct
       
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
-         Allocate(Flag(2))
-         Flag(1) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(2) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
+         Allocate(FlagX(1))
+         FlagX = dEXO%NSProperty( VarFrac_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
+         Allocate(FlagY(1))
+         FlagY = dEXO%NSProperty( VarFrac_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
+         If (dMeshTopology%num_dim == 3) Then
+            Allocate(FlagZ(1))
+            FlagZ = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+         End If
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-            Call SectionIntUpdate(dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag%Component_Sec(1), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagX, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag%Component_Sec(2), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagY, ADD_VALUES, iErr); CHKERRQ(iErr)
+            If (dMeshTopology%num_dim == 3) Then
+               Call SectionIntUpdate(dBCFlag%Component_Sec(3), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagZ, ADD_VALUES, iErr); CHKERRQ(iErr)
+            End If
          End Do
-         DeAllocate(Flag)
+         DeAllocate(FlagX)
+         DeAllocate(FlagX)
+         If (dMeshTopology%num_dim == 3) Then
+            DeAllocate(FlagZ)
+         End If
       End Do
-      Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
-   End Subroutine EXOProperty_InitBCUFlag2D
+   End Subroutine EXOProperty_InitBCUFlag
    
-   Subroutine EXOProperty_InitBCUFlag3D(dEXO, dMeshTopology, dBCFlag)
-      Type(EXO_Type)                               :: dEXO
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(SectionInt)                             :: dBCFlag 
-      
-      PetscInt                                     :: iErr, NumDoF, i, j
-      PetscInt, Dimension(:), Pointer              :: Flag
-      
-      Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
-      !!! Side Sets
-      !!! To be implemented
-      
-      !!! Node Sets
-      Do i = 1, dMeshTopology%Num_Node_Sets
-         Allocate(Flag(3))
-         Flag(1) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(2) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
-         Flag(3) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
-         Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-            Call SectionIntUpdate(dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
-         End Do
-         DeAllocate(Flag)
-      End Do
-      Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
-   End Subroutine EXOProperty_InitBCUFlag3D
-
    Subroutine MatProp2D_Write(MeshTopology, MatProp, filename)
       Type(MeshTopology_Type)                      :: MeshTopology
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp

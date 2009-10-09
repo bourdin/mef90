@@ -1693,6 +1693,5 @@ Module m_MEF_EXO
       Call Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx+5, dTS, Res_Ptr)
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_CellMatS3D
-
 End Module m_MEF_EXO
 
