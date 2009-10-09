@@ -2,7 +2,7 @@ Module m_MEF_Sieve
 #include "finclude/petscdef.h"
 #include "finclude/petscmeshdef.h"
 #include "finclude/petscvecdef.h"
-#include "finclude/petscMatdef.h"
+#include "finclude/petscmatdef.h"
 
    Use m_MEF_LinAlg
    Use m_MEF_Types
