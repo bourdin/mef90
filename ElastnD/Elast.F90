@@ -49,10 +49,10 @@ Program  Elast
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If   
       Call MatAssembly(AppCtx)
-      Call MatFixBC(AppCtx%KU, AppCtx%U, AppCtx%BCUFlag, AppCtx)
-      If (AppCtx%AppParam%verbose > 1) Then
-         Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-      End If
+!      Call MatFixBC(AppCtx%KU, AppCtx%U%Sec, AppCtx%BCUFlag%Sec, AppCtx)
+!      If (AppCtx%AppParam%verbose > 1) Then
+!         Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+!      End If
    End If
    
    !!! Testing Gradient function

@@ -12,6 +12,7 @@ Module m_MEF_Types
    Private
    
    Public :: Field
+   Public :: Flag
    Public :: Element1D
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
@@ -28,11 +29,20 @@ Module m_MEF_Types
       Type(SectionReal), Dimension(:), Pointer       :: Component_Sec
       Type(VecScatter)                               :: Scatter
       PetscInt                                       :: num_components
+      PetscInt, Dimension(:), Pointer                :: component_size
       Logical                                        :: Has_Component_Sec
       Logical                                        :: Has_Vec
-      Logical                                        :: Is_Uptodate
    End Type Field
    
+   Type Flag
+      Type(SectionInt)                               :: Sec
+      Type(SectionInt), Dimension(:), Pointer        :: Component_Sec
+      PetscInt                                       :: num_components
+      PetscInt, Dimension(:), Pointer                :: component_size
+      Logical                                        :: Has_Component_Sec
+   End Type Flag
+
+
    Type Element1D
       PetscReal, Dimension(:,:), Pointer             :: BF
       PetscReal, Dimension(:,:), Pointer             :: Der_BF
