@@ -287,7 +287,7 @@ Contains
          Call SectionIntAddNSProperty(AppCtx%BCUFlag%Component_Sec(3), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ), AppCtx%MeshTopology)
       End If
       If (AppCtx%AppParam%verbose > 1) Then
-         Call SectionIntView(AppCtx%BCUFlag%Sec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+!         Call SectionIntView(AppCtx%BCUFlag%Sec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
 
       !!! Get the number of time steps
@@ -373,62 +373,60 @@ Contains
       Call InitLoads(AppCtx)
       Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCUFlag, AppCtx%MeshTopology)
 
-!!!$      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-!!!$         If (AppCtx%AppParam%verbose > 0) Then
-!!!$            Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
-!!!$            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$         End If
-!!!$         
-!!!$         Call TaoAppGetSolutionVec(AppCtx%taoappU, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-!!!$         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-!!!$
-!!!$         Call PetscLogStagePush(AppCtx%LogInfo%SolveU_Stage, iErr); CHKERRQ(iErr)
-!!!$         Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
-!!!$         !!! Scatter back from U_Vec -> AppCtx%U
-!!!$         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, iErr); CHKERRQ(ierr)
-!!!$         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-!!!$         
-!!!$         Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, rDum, TaoResidual, rDum, rDum, TaoReason, iErr); CHKERRQ(iErr)
-!!!$         If ( TaoReason > 0) Then
-!!!$            Write(IOBuffer, 102) KSPNumiter, TAOReason
-!!!$            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$         Else
-!!!$            Write(IOBuffer, 103) TaoReason
-!!!$            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$         End If
-!!!$      Else
-!!!$         If (AppCtx%AppParam%verbose > 0) Then
-!!!$            Write(IOBuffer, *) 'Assembling the RHS\n'
-!!!$            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$         End If
-!!!$         
-!!!$         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-!!!$
-!!!$         Call RHSAssembly(AppCtx%RHSU, AppCtx)
-!!!$         If (AppCtx%AppParam%verbose > 1) Then
-!!!$            Call VecView(AppCtx%RHSU%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-!!!$         End If
-!!!$         
-!!!$         If (AppCtx%AppParam%verbose > 0) Then
-!!!$            Write(IOBuffer, *) 'Calling KSPSolve\n'
-!!!$            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$         End If
-!!!$   
-!!!$         Call PetscLogStagePush(AppCtx%LogInfo%SolveU_Stage, iErr); CHKERRQ(iErr)
-!!!$         Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-!!!$         !!! Scatter back from U_Vec -> AppCtx%U
-!!!$         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, iErr); CHKERRQ(ierr)
-!!!$         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-!!!$         
-!!!$         Call KSPGetConvergedReason(AppCtx%KSPU, KSPreason, iErr); CHKERRQ(iErr)
-!!!$         If ( KSPreason > 0) Then
-!!!$            Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
-!!!$            Write(IOBuffer, 100) KSPNumIter
-!!!$         Else
-!!!$            Write(IOBuffer, 101) KSPreason
-!!!$         End If
-!!!$         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$      End If
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
+         
+         Call TaoAppGetSolutionVec(AppCtx%taoappU, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+
+         Call PetscLogStagePush(AppCtx%LogInfo%SolveU_Stage, iErr); CHKERRQ(iErr)
+         Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
+         !!! Scatter back from U_Vec -> AppCtx%U
+         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, iErr); CHKERRQ(ierr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+         
+         Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, rDum, TaoResidual, rDum, rDum, TaoReason, iErr); CHKERRQ(iErr)
+         If ( TaoReason > 0) Then
+            Write(IOBuffer, 102) KSPNumiter, TAOReason
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Else
+            Write(IOBuffer, 103) TaoReason
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
+      Else
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) 'Assembling the RHS\n'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
+         
+         Call RHSAssembly(AppCtx%RHSU, AppCtx)
+         If (AppCtx%AppParam%verbose > 1) Then
+            Call VecView(AppCtx%RHSU%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+         End If
+         
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) 'Calling KSPSolve\n'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
+   
+         Call PetscLogStagePush(AppCtx%LogInfo%SolveU_Stage, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+         Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, iErr); CHKERRQ(ierr)
+         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+         
+         Call KSPGetConvergedReason(AppCtx%KSPU, KSPreason, iErr); CHKERRQ(iErr)
+         If ( KSPreason > 0) Then
+            Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
+            Write(IOBuffer, 100) KSPNumIter
+         Else
+            Write(IOBuffer, 101) KSPreason
+         End If
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
       
 100 Format('     KSP for U converged in ', I5, ' iterations \n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')      
@@ -448,20 +446,16 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyU_Stage, iErr); CHKERRQ(iErr)
 
       Call MatZeroEntries(AppCtx%KU, iErr); CHKERRQ(iErr)
-!      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
 !         Call HessianAssemblyBlock(iBlk, AppCtx%KU, .TRUE.,  AppCtx)
-!      End Do Do_Elem_iBlk
+      End Do Do_Elem_iBlk
 
-!      Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-!      Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-!      Call MatAssemblyBegin(AppCtx%KU, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
-!      Call MatAssemblyEnd  (AppCtx%KU, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
-!      Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr)
+      Call MatAssemblyBegin(AppCtx%KU, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (AppCtx%KU, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
 
       Call MatInsertVertexBoundaryValues(AppCtx%KU, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
       Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-      Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatAssembly
@@ -484,7 +478,10 @@ Contains
 !         Call HessianAssemblyBlock(iBlk, H, .FALSE.,  AppCtx)
          Call HessianAssemblyBlock(iBlk, H, .TRUE.,  AppCtx)
       End Do Do_Elem_iBlk
-!      Call MatFixBC(H, AppCtx%U%Sec, AppCtx%BCUFlag%Sec, AppCtx)
+      Call MatAssemblyBegin(H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+
+      Call MatInsertVertexBoundaryValues(AppCtx%KU, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
       Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose > 1) Then
@@ -569,7 +566,7 @@ Contains
       
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-         Call RHSAssemblyBlock_Elast(RHS%Sec, iBlk, AppCtx)
+!         Call RHSAssemblyBlock_Elast(RHS%Sec, iBlk, AppCtx)
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
             Call RHSAssemblyBlock_Force(RHS%Sec, iBlk, AppCtx)
          End If
@@ -586,37 +583,6 @@ Contains
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
-
-!!!   Subroutine MatFixBC(K, BC_Sec, BCFlag_Sec, AppCtx)
-!!!      Type(Mat)                                        :: K
-!!!      Type(SectionReal)                                :: BC_Sec
-!!!      Type(SectionInt)                                 :: BCFlag_Sec
-!!!      Type(AppCtx_Type)                                :: AppCtx
-!!!      
-!!!      PetscInt, Dimension(:), Pointer                  :: BCFlag_Ptr
-!!!      PetscInt                                         :: iDoF1, iDoF2
-!!!      
-!!!      PetscReal, Dimension(:,:), Pointer               :: MatElem
-!!!      PetscInt                                         :: iErr
-!!!      
-!!!      Allocate(MatElem(AppCtx%MeshTopology%Num_Dim, AppCtx%MeshTopology%Num_Dim))
-!!!      Do iDoF1 = 1, AppCtx%MeshTopology%Num_Verts !!! WRONG!
-!!!         Call SectionIntRestrict(BCFlag_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
-!!!         If (Sum(BCFlag_Ptr) /= 0) Then
-!!!            MatElem = 0.0_Kr
-!!!            Do iDof2 = 1, AppCtx%MeshTopology%Num_Dim
-!!!               If (BCFlag_Ptr(iDoF2) /= 0) Then
-!!!                  MatElem(iDoF2, iDoF2) = 1.0_Kr
-!!!               End If
-!!!            End Do
-!!!            Call assembleMatrix(K, AppCtx%MeshTopology%mesh, BC_Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
-!!!         EndIf
-!!!         Call SectionIntRestore(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%Num_Elems+iDoF1-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
-!!!      End Do
-!!!      DeAllocate(MatElem)
-!!!      Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-!!!      Call MatAssemblyEnd  (K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-!!!   End Subroutine MatFixBC
 
 
 !----------------------------------------------------------------------------------------!      
@@ -655,7 +621,7 @@ Contains
          MatElem  = 0.0_Kr
          Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
             Do iDoF1 = 1, NumDoF
-               If (BCFlag(iDOF1) == 0) Then
+               If (BCFlag(iDoF1) == 0) Then
                   Do iDoF2 = 1, NumDoF
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) ) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))        
                      flops = flops + 2.0     
