@@ -398,7 +398,6 @@ Contains
       Do i = 1, MeshTopology%Num_Node_Sets
          Allocate(Flag_Ptr(1))
          Flag_Ptr = NSProperty%Value( MeshTopology%Node_Set(i)%ID )
-         Write(*,*) 'Node set', i, 'Flag', Flag_Ptr
          Do j = 1, MeshTopology%Node_Set(i)%Num_Nodes
             Call SectionIntUpdate(Flag, MeshTopology%Node_Set(i)%Node_ID(j) + MeshTopology%Num_Elems-1, Flag_Ptr, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do
@@ -427,7 +426,7 @@ Contains
          Do i = 1, MeshTopology%Num_Verts
             Call SectionIntRestrict(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
             If (BCFlag_Ptr(1) /= 0) Then
-               Call assembleMatrix(M, MeshTopology%mesh, U%Sec, MeshTopology%Num_Elems+i-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+               Call assembleMatrix(M, MeshTopology%mesh, U%Component_Sec(j), MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End If
             Call SectionIntRestore(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
          End Do
