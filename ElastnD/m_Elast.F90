@@ -334,7 +334,7 @@ Contains
       Call SectionRealSet(AppCtx%LowerBoundU%Sec, -1.0D20, iErr); CHKERRQ(iErr)
       Call SectionRealSet(AppCtx%UpperBoundU%Sec,  1.0D20, iErr); CHKERRQ(iErr)
 
-!!!! Let's assume that I have read the BC so I don;t need to re-read the same field at each tao iteration         
+!!!! Let's assume that I have read the BC so I don't need to re-read the same field at each tao iteration         
 
       Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundU, AppCtx%UBC, AppCtx%BCUFlag, AppCtx%MeshTopology)
       Call FieldInsertVertexBoundaryValues(AppCtx%UpperBoundU, AppCtx%UBC, AppCtx%BCUFlag, AppCtx%MeshTopology)
@@ -446,14 +446,17 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyU_Stage, iErr); CHKERRQ(iErr)
 
       Call MatZeroEntries(AppCtx%KU, iErr); CHKERRQ(iErr)
-      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-!         Call HessianAssemblyBlock(iBlk, AppCtx%KU, .TRUE.,  AppCtx)
-      End Do Do_Elem_iBlk
 
+      !!! MatInsertVertexBoundaryValues overwrites the entire block corresponding to all
+      !!! dof of a point where a boundary condition is applied
+      !!! it is to be called BEFORE assembling the matrix
+      Call MatInsertVertexBoundaryValues(AppCtx%KU, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
       Call MatAssemblyBegin(AppCtx%KU, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
 
-      Call MatInsertVertexBoundaryValues(AppCtx%KU, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
+      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Call HessianAssemblyBlock(iBlk, AppCtx%KU, .TRUE.,  AppCtx)
+      End Do Do_Elem_iBlk
       Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
@@ -474,14 +477,18 @@ Contains
 
       Call MatZeroEntries(H, iErr); CHKERRQ(iErr)
 
+      !!! MatInsertVertexBoundaryValues overwrites the entire block corresponding to all
+      !!! dof of a point where a boundary condition is applied
+      !!! it is to be called BEFORE assembling the matrix
+      Call MatInsertVertexBoundaryValues(H, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
+      Call MatAssemblyBegin(H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
 !         Call HessianAssemblyBlock(iBlk, H, .FALSE.,  AppCtx)
          Call HessianAssemblyBlock(iBlk, H, .TRUE.,  AppCtx)
       End Do Do_Elem_iBlk
-      Call MatAssemblyBegin(H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
-      Call MatAssemblyEnd  (H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
 
-      Call MatInsertVertexBoundaryValues(AppCtx%KU, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
       Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose > 1) Then
