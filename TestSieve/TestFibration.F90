@@ -82,7 +82,7 @@ Program TestFibration
    num_components=2
    Allocate (component_length(2))
    component_length(1) = 1
-   component_length(2) = 2
+   component_length(2) = 1
    num_dof = sum(component_length)
 
    Write(IOBuffer, *) "Field1.Sec\n"
@@ -135,23 +135,13 @@ Program TestFibration
 
    Call MeshSetMaxDof(MeshTopology%Mesh, num_dof, iErr); CHKERRQ(iErr) 
    Call MeshCreateMatrix(MeshTopology%mesh, Field1%Sec, MATMPIAIJ, M, iErr); CHKERRQ(iErr)
-   Allocate(MatElem(num_dof,num_dof))
-   MatElem = 0.0_Kr
-   Do i = 1, num_dof
-      MatElem(i,i) = i
-   End Do 
-   i=1     
-   Call assembleMatrix(M, MeshTopology%mesh, Field1%Sec, MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
-   Call assembleMatrix(M, MeshTopology%mesh, Field1%Sec, MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
-   DeAllocate(MatElem)
-   
+
+   j = 5
    Do i = 1, num_components
       Allocate(MatElem(component_length(i),component_length(i)))
-      MatElem = 0.0_Kr
       MatElem = 100.0_Kr * i 
-!      Call assembleMatrix(M, MeshTopology%mesh, Field1%Component_Sec(i), MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!      Call assembleMatrix(M, MeshTopology%mesh, Field1%Component_Sec(i), MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
-      DeAllocate(MatELem)
+      Call assembleMatrix(M, MeshTopology%mesh, Field1%Component_Sec(i), MeshTopology%Num_Elems+j-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      DeAllocate(MatElem)
    End Do
    
    Call MatAssemblyBegin(M, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)

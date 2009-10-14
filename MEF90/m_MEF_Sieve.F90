@@ -420,14 +420,16 @@ Contains
       Allocate(MatElem(1,1))
       MatElem = 1.0_Kr
       Do j = 1, BCFlag%num_components 
+         Write(*,*) 'Doing component', j
          If (BCFlag%Component_size(j) /= 1 ) Then
             SETERRQ(PETSC_ERR_ARG_SIZ, 'MatInsertVertexBoundaryValues requires scalar components', ierr)
          End If
          Do i = 1, MeshTopology%Num_Verts
             Call SectionIntRestrict(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
-            If (BCFlag_Ptr(1) /= 0) Then
-               Call assembleMatrix(M, MeshTopology%mesh, U%Component_Sec(j), MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            End If
+!            If (BCFlag_Ptr(1) /= 0) Then
+               Write(*,*) 'Found BC at vertex ', i
+               Call assembleMatrix(M, MeshTopology%mesh, U%Component_Sec(j), MeshTopology%Num_Elems+i-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+!            End If
             Call SectionIntRestore(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
          End Do
       End Do
