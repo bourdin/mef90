@@ -706,9 +706,9 @@ Contains
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
             
             Do iDoF = 1, NumDofVect
-!               If (BCFlag_Loc(iDoF) == 0) Then
+               If (BCFlag_Loc(iDoF) == 0) Then
                   Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) - (F_Elem .DotP. AppCtx%ElemVect(iE)%BF(iDoF, iGauss)) )
-!               End If
+               End If
             End Do
          End Do Do_iGauss
          Call SectionRealUpdateClosure(Gradient_Sec, AppCtx%MeshTopology%Mesh, iE-1, Gradient_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
