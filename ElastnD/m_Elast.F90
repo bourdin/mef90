@@ -506,7 +506,7 @@ Contains
       PetscReal                                    :: func
       Type(AppCtx_Type)                            :: AppCtx
       
-      Type(SectionReal)                            :: Gradient_Sec!, X_Sec
+!      Type(SectionReal)                            :: Gradient_Sec
       PetscInt                                     :: iBlk     
       PetscReal                                    :: myfunc, ElasticEnergyBlock, ExtForcesWorkBlock 
       
@@ -515,7 +515,7 @@ Contains
 
       func = 0.0_Kr
             
-      Call VecZeroEntries(Gradient, iErr); CHKERRQ(iErr)
+      Call SectionRealZero(AppCtx%GradientU%Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, X, iErr); CHKERRQ(ierr)
 
       myfunc = 0.0_Kr
@@ -694,13 +694,13 @@ Contains
             X_Elem = 0.0_Kr
             Strain_Elem = 0.0_Kr
             Do iDoF = 1, NumDoFVect
-               F_Elem      = F_Elem + AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * F_Loc(iDoF)
-               X_Elem      = X_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)
-               Strain_Elem = Strain_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
+               F_Elem      = F_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * F_Loc(iDoF)
+               X_Elem      = X_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * X_Loc(iDoF)
+               Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * X_Loc(iDoF)
             End Do
             Theta_Elem = 0.0_Kr
             Do iDoF = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
+               Theta_Elem  = Theta_Elem  + AppCtx%ElemScal(iE)%BF(iDoF, iGauss)       * Theta_Loc(iDoF)
                flops = flops + 2.0
             End Do
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
