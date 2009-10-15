@@ -652,7 +652,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       !!!   _Loc are restriction of fields to local patch (the element)
-      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
       PetscReal, Dimension(:), Pointer             :: X_Loc, F_Loc, Theta_Loc, Gradient_Loc
       PetscInt, Dimension(:), Pointer              :: BCFlag_Loc
 #if defined PB_2D
@@ -706,9 +706,9 @@ Contains
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
             
             Do iDoF = 1, NumDofVect
-               If (BCFlag_Loc(iDoF) == 0) Then
+!               If (BCFlag_Loc(iDoF) == 0) Then
                   Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) - (F_Elem .DotP. AppCtx%ElemVect(iE)%BF(iDoF, iGauss)) )
-               End If
+!               End If
             End Do
          End Do Do_iGauss
          Call SectionRealUpdateClosure(Gradient_Sec, AppCtx%MeshTopology%Mesh, iE-1, Gradient_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
@@ -730,7 +730,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       !!!   _Loc are restriction of fields to local patch (the element)
-      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
       PetscReal, Dimension(:), Pointer             :: X_Loc, F_Loc, Theta_Loc
 #if defined PB_2D
       Type(Vect2D)                                 :: X_Elem, F_Elem
@@ -798,7 +798,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       !!!   _Loc are restriction of fields to local patch (the element)
-      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
       PetscReal, Dimension(:), Pointer             :: Theta_Loc, RHS_Loc
       PetscInt, Dimension(:), Pointer              :: BCFlag_Loc
       PetscReal                                    :: Theta_Elem
@@ -854,7 +854,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       !!!   _Loc are restriction of fields to local patch (the element)
-      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
       PetscReal, Dimension(:), Pointer             :: F_Loc, RHS_Loc
       PetscInt, Dimension(:), Pointer              :: BCFlag_Loc
 #if defined PB_2D
