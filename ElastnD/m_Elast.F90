@@ -258,11 +258,11 @@ Contains
          Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
          Call KSPSetType(AppCtx%KSPU, KSPSTCG, iErr); CHKERRQ(iErr)
+         Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
          Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
          Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
          Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
-         Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
          Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -270,11 +270,11 @@ Contains
          Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
 
          Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
+         Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
          Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
    
          Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
          Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
-         Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
          Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
       End If
 
@@ -506,7 +506,6 @@ Contains
       PetscReal                                    :: func
       Type(AppCtx_Type)                            :: AppCtx
       
-!      Type(SectionReal)                            :: Gradient_Sec
       PetscInt                                     :: iBlk     
       PetscReal                                    :: myfunc, ElasticEnergyBlock, ExtForcesWorkBlock 
       
@@ -573,7 +572,7 @@ Contains
       
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-!         Call RHSAssemblyBlock_Elast(RHS%Sec, iBlk, AppCtx)
+         Call RHSAssemblyBlock_Elast(RHS%Sec, iBlk, AppCtx)
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
             Call RHSAssemblyBlock_Force(RHS%Sec, iBlk, AppCtx)
          End If
@@ -706,9 +705,9 @@ Contains
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
             
             Do iDoF = 1, NumDofVect
-!               If (BCFlag_Loc(iDoF) == 0) Then
+               If (BCFlag_Loc(iDoF) == 0) Then
                   Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) - (F_Elem .DotP. AppCtx%ElemVect(iE)%BF(iDoF, iGauss)) )
-!               End If
+               End If
             End Do
          End Do Do_iGauss
          Call SectionRealUpdateClosure(Gradient_Sec, AppCtx%MeshTopology%Mesh, iE-1, Gradient_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
