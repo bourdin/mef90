@@ -41,12 +41,12 @@ Contains
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateral(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+               Call ElasticEnergy_AssemblyBlk_BrittleUnilateral(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             Else
-               Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+               Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             End If
          Else
-            Call ElasticEnergy_AssemblyBlk_NonBrittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx)
+            Call ElasticEnergy_AssemblyBlk_NonBrittle(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx)
          End If
          MyElasticEnergy = MyElasticEnergy + MyElasticEnergyBlock
       End Do Do_iBlk
@@ -73,7 +73,7 @@ Contains
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
-            Call ExtForcesWork_AssemblyBlk(MyExtForcesWorkBlock, iBlk, AppCtx%U, AppCtx%F, AppCtx)
+            Call ExtForcesWork_AssemblyBlk(MyExtForcesWorkBlock, iBlk, AppCtx%U%Sec, AppCtx%F%Sec, AppCtx)
             MyExtForcesWork = MyExtForcesWork + MyExtForcesWorkBlock
          End If
       End Do Do_iBlk
@@ -101,9 +101,9 @@ Contains
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case(2)
-            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
@@ -507,8 +507,8 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
 
-            Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
-            Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%U%Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U,     iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
             Strain_Elem       = 0.0_Kr
             Stress_Elem       = 0.0_Kr
             Theta_Elem        = 0.0_Kr

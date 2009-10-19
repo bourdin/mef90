@@ -51,21 +51,25 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       PetscErrorCode                               :: iErr
       
-      Type(SectionReal)                            :: LowerBoundV_Sec, UpperBoundV_Sec
-      PetscInt, Dimension(:), Pointer              :: BCVFlag_Ptr, IrrevFlag_Ptr
-      PetscReal, Dimension(:), Pointer             :: Bound_Ptr, V_Ptr
+      PetscReal, Dimension(:), Pointer             :: Bound_Ptr
+      PetscInt, Dimension(:), Pointer              :: IrrevFlag_Ptr
       PetscInt                                     :: iDoF, NumDoF
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+      PetscReal                                    :: DummyLowerBound = -1.0D+20      
+      PetscReal                                    :: DummyUpperBound =  1.0D+20      
       
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Updating bounds for V\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundV_Sec',  1, LowerBoundV_Sec , iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'UpperBoundV_Sec',  1, UpperBoundV_Sec , iErr); CHKERRQ(iErr) 
-      Call SectionRealSet(LowerBoundV_Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
-      Call SectionRealSet(UpperBoundV_Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
+      Call SectionRealSet(AppCtx%LowerBoundV%Sec, DummyLowerBound, iErr); CHKERRQ(iErr)
+      Call SectionRealSet(AppCtx%UpperBoundV%Sec, DummyUpperBound, iErr); CHKERRQ(iErr)
       
+      !!! Regular Boundary Conditions
+      Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+      Call FieldInsertVertexBoundaryValues(AppCtx%UpperBoundV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+
+      !!! Irreversibility
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case (VarFrac_Irrev_Eq)
          !!! Set Lower bound and upper bounds to 0 at each point where BCFlag == VarFrac_BC_Type_DIRI and to V whereever IrrevFlag = VarFrac_BC_Type_DIRI
@@ -73,44 +77,90 @@ Contains
          Allocate(Bound_Ptr(1))
          Bound_Ptr = 0.0_Kr
          Do iDof = 1, NumDoF
-            Call SectionIntRestrict(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
+            Call SectionIntRestrict(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
             If (IrrevFlag_Ptr(1) /= VarFrac_BC_Type_NONE) Then
-               Call SectionRealUpdate(LowerBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-               Call SectionRealUpdate(UpperBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(AppCtx%LowerBoundV%Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(AppCtx%UpperBoundV%Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End If
-            Call SectionIntRestore(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
-
-            Call SectionIntRestrict(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
-            If (BCVFlag_Ptr(1) /= VarFrac_BC_Type_NONE) Then
-               Call SectionRealRestrict(AppCtx%V,      AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, iErr); CHKERRQ(iErr)
-               Call SectionRealUpdate(LowerBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-               Call SectionRealUpdate(UpperBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-               Call SectionRealRestore(AppCtx%V,       AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, iErr); CHKERRQ(iErr)
-            End If
-            Call SectionIntRestore(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
+            Call SectionIntRestore(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
          End Do  
          DeAllocate(Bound_Ptr)   
-         
       Case (VarFrac_Irrev_InEq)      
-         !!! Set Set lower bound to 0 and Upper bound to V, THEN to 0 at each point where at each point where BCFlag == VarFrac_BC_Type_DIRI
-         SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
+         Call FieldInsertVertexBoundaryValues(AppCtx%UpperBoundV, AppCtx%V, AppCtx%BCVFlag, AppCtx%MeshTopology)
       End Select
-      
-      Call SectionRealToVec(LowerBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, LowerBoundV_Vec, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(UpperBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, UpperBoundV_Vec, iErr); CHKERRQ(iErr)
+         
+      Call SectionRealToVec(AppCtx%LowerBoundV%Sec, AppCtx%LowerBoundV%Scatter, SCATTER_FORWARD, LowerBoundV_Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_FORWARD, UpperBoundV_Vec, iErr); CHKERRQ(iErr)
 
-      Call SectionRealDestroy(LowerBoundV_Sec, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(UpperBoundV_Sec, iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine InitTaoBoundsV
+   
+!!!$!!!   Subroutine InitTaoBoundsVold(TaoApp, LowerBoundV_Vec, UpperBoundV_Vec, AppCtx, iErr)
+!!!$!!!      TAO_APPLICATION                              :: taoapp
+!!!$!!!      Type(Vec)                                    :: LowerBoundV_Vec, UpperBoundV_Vec
+!!!$!!!      Type(AppCtx_Type)                            :: AppCtx
+!!!$!!!      PetscErrorCode                               :: iErr
+!!!$!!!      
+!!!$!!!      Type(SectionReal)                            :: LowerBoundV_Sec, UpperBoundV_Sec
+!!!$!!!      PetscInt, Dimension(:), Pointer              :: BCVFlag_Ptr, IrrevFlag_Ptr
+!!!$!!!      PetscReal, Dimension(:), Pointer             :: Bound_Ptr, V_Ptr
+!!!$!!!      PetscInt                                     :: iDoF, NumDoF
+!!!$!!!      Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
+!!!$!!!      
+!!!$!!!      If (AppCtx%AppParam%verbose > 0) Then
+!!!$!!!         Write(IOBuffer, *) "Updating bounds for V\n"
+!!!$!!!         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!!!$!!!      End If
+!!!$!!!      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundV_Sec',  1, LowerBoundV_Sec , iErr); CHKERRQ(iErr)
+!!!$!!!      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'UpperBoundV_Sec',  1, UpperBoundV_Sec , iErr); CHKERRQ(iErr) 
+!!!$!!!      Call SectionRealSet(LowerBoundV_Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
+!!!$!!!      Call SectionRealSet(UpperBoundV_Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
+!!!$!!!      
+!!!$!!!      Select Case(AppCtx%VarFracSchemeParam%IrrevType)
+!!!$!!!      Case (VarFrac_Irrev_Eq)
+!!!$!!!         !!! Set Lower bound and upper bounds to 0 at each point where BCFlag == VarFrac_BC_Type_DIRI and to V whereever IrrevFlag = VarFrac_BC_Type_DIRI
+!!!$!!!         NumDoF = AppCtx%MeshTopology%Num_Verts !!! Change that!
+!!!$!!!         Allocate(Bound_Ptr(1))
+!!!$!!!         Bound_Ptr = 0.0_Kr
+!!!$!!!         Do iDof = 1, NumDoF
+!!!$!!!            Call SectionIntRestrict(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
+!!!$!!!            If (IrrevFlag_Ptr(1) /= VarFrac_BC_Type_NONE) Then
+!!!$!!!               Call SectionRealUpdate(LowerBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+!!!$!!!               Call SectionRealUpdate(UpperBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+!!!$!!!            End If
+!!!$!!!            Call SectionIntRestore(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
+!!!$!!!
+!!!$!!!            Call SectionIntRestrict(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
+!!!$!!!            If (BCVFlag_Ptr(1) /= VarFrac_BC_Type_NONE) Then
+!!!$!!!               Call SectionRealRestrict(AppCtx%V,      AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, iErr); CHKERRQ(iErr)
+!!!$!!!               Call SectionRealUpdate(LowerBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+!!!$!!!               Call SectionRealUpdate(UpperBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+!!!$!!!               Call SectionRealRestore(AppCtx%V,       AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, iErr); CHKERRQ(iErr)
+!!!$!!!            End If
+!!!$!!!            Call SectionIntRestore(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
+!!!$!!!         End Do  
+!!!$!!!         DeAllocate(Bound_Ptr)   
+!!!$!!!         
+!!!$!!!      Case (VarFrac_Irrev_InEq)      
+!!!$!!!         !!! Set Set lower bound to 0 and Upper bound to V, THEN to 0 at each point where at each point where BCFlag == VarFrac_BC_Type_DIRI
+!!!$!!!         SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
+!!!$!!!      End Select
+!!!$!!!      
+!!!$!!!      Call SectionRealToVec(LowerBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, LowerBoundV_Vec, iErr); CHKERRQ(iErr)
+!!!$!!!      Call SectionRealToVec(UpperBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, UpperBoundV_Vec, iErr); CHKERRQ(iErr)
+!!!$!!!
+!!!$!!!      Call SectionRealDestroy(LowerBoundV_Sec, iErr); CHKERRQ(iErr)
+!!!$!!!      Call SectionRealDestroy(UpperBoundV_Sec, iErr); CHKERRQ(iErr)
+!!!$!!!      CHKMEMQ
+!!!$!!!   End Subroutine InitTaoBoundsVold
 #endif
 
    Subroutine Init_TS_V(AppCtx)
    !!! Split into Init_V and Init_IrrevBC_V
       Type(AppCtx_Type)                            :: AppCtx
       Type(SectionReal)                            :: VBC, VBT
-      PetscReal, Dimension(:), Pointer             :: V_Ptr, VBC_Ptr
-      PetscInt, Dimension(:), Pointer              :: BCVFlag, IrrevFlag
+      PetscReal, Dimension(:), Pointer             :: V_Ptr
+      PetscInt, Dimension(:), Pointer              :: IrrevFlag
       PetscInt                                     :: i, iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
       
@@ -118,33 +168,31 @@ Contains
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, VBC)
             
       Select Case(AppCtx%VarFracSchemeParam%InitV)
-      Case(VarFrac_INIT_V_PREV)
+      Case(VarFrac_INIT_V_PREV, VarFrac_Irrev_InEq)
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
+
+         Call FieldInsertVertexBoundaryValues(AppCtx%V, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+
+         !!! Irreversibility
          Allocate(V_Ptr(1))
          Do i = 1, AppCtx%MeshTopology%Num_Verts  !!! NO!      
-            !!! Take care of potential BC on V
-            Call SectionIntRestrict(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCVFlag, iErr); CHKERRQ(ierr)
-            
             If (AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_Eq ) Then
                !!! Take care of Irreversibility 
-               Call SectionIntRestrict(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(ierr)
+               Call SectionIntRestrict(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(ierr)
                If (IrrevFlag(1) /= VarFrac_BC_TYPE_NONE) Then
                   V_Ptr = 0.0_Kr
-                  Call SectionRealUpdate(AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                  Call SectionRealUpdate(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
                End If
-               Call SectionIntRestore(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(ierr)
+               Call SectionIntRestore(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, iErr); CHKERRQ(ierr)
             End If
-            Call SectionIntRestore(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems + i-1, BCVFlag, iErr); CHKERRQ(ierr)
          End Do      
          DeAllocate(V_Ptr)
-      Case default   
+      Case Default   
          SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
       End Select
-      
-      Call SectionRealDestroy(VBC, iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine Init_TS_V
 
@@ -162,6 +210,8 @@ Contains
       MyIrrevEq_Counter = 0.0_Kr
       IrrevEq_Counter   = 0.0_Kr
 
+!!! THERE MUST BE A WAY TO AVOID ALLOCATING AND DESTROYING THE SECTION VBT
+
       !!! Update the BC Flag from the current V
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case(VarFrac_Irrev_Eq, VarFrac_Irrev_InEq)
@@ -177,14 +227,14 @@ Contains
                Write(IOBuffer, *) "Backtracking, so reading timestep if TS>1\n"
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
-            Call SectionIntZero(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
+            Call SectionIntZero(AppCtx%IrrevFlag%Sec, iErr); CHKERRQ(iErr)
             If (AppCtx%TimeStep > 1) Then
                Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBT', 1, VBT, iErr); CHKERRQ(iErr)      
                Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, VBT)
                Do i = 1, AppCtx%MeshTopology%Num_Verts
                   Call SectionRealRestrict(VBT, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)      
                   If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                     Call SectionIntUpdate(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                     Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
                      MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
                   End If
                   Call SectionRealRestore(VBT, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)
@@ -197,12 +247,12 @@ Contains
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             Do i = 1, AppCtx%MeshTopology%Num_Verts
-               Call SectionRealRestrict(AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(ierr)      
+               Call SectionRealRestrict(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(ierr)      
                If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                  Call SectionIntUpdate(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                  Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
                   MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
                End If
-               Call SectionRealRestore(AppCtx%V, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr);             End Do
+               Call SectionRealRestore(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr);             End Do
          End If
          DeAllocate(IrrevFlag)
          If (AppCtx%AppParam%verbose > 0) Then
@@ -229,6 +279,13 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyV_Stage, iErr); CHKERRQ(iErr)
 
       Call MatZeroEntries(K, iErr); CHKERRQ(iErr)
+      !!! MatInsertVertexBoundaryValues overwrites the entire block corresponding to all
+      !!! dof of a point where a boundary condition is applied
+      !!! it is to be called BEFORE assembling the matrix
+      Call MatInsertVertexBoundaryValues(K, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
+      Call MatAssemblyBegin(K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
@@ -271,6 +328,13 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyV_Stage, iErr); CHKERRQ(iErr)
 
       Call MatZeroEntries(H, iErr); CHKERRQ(iErr)
+      !!! MatInsertVertexBoundaryValues overwrites the entire block corresponding to all
+      !!! dof of a point where a boundary condition is applied
+      !!! it is to be called BEFORE assembling the matrix
+      Call MatInsertVertexBoundaryValues(H, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
+      Call MatAssemblyBegin(H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
@@ -317,25 +381,25 @@ Contains
       PetscReal                                    :: MyObjFunc
       
       !!! Objective function is ElasticEnergy + SurfaceEnergy
-      Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
+      Call SectionRealToVec(AppCtx%V%Sec, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
 
       MyObjFunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateral(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+               Call ElasticEnergy_AssemblyBlk_BrittleUnilateral(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             Else
-               Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+               Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             End If
             MyObjFunc = MyObjFunc + MyElasticEnergyBlock
          End If
 
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case(2)
-            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
@@ -344,33 +408,35 @@ Contains
       Call PetscGlobalSum(MyObjFunc, ObjFunc, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       
       !!! Gradient
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'GradientV', 1, GradientV_Sec, iErr); CHKERRQ(iErr)
-      Call SectionRealZero(GradientV_Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealZero(AppCtx%GradientV%Sec, iErr); CHKERRQ(iErr)
 
       Do_iBlk2: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             !!! Contribution of the bulk term 1/2 \int v^2 Ae(u):e(u)
             If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-               Call GradientV_AssemblyBlk_ElastBrittleUnilateral(GradientV_Sec, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+               Call GradientV_AssemblyBlk_ElastBrittleUnilateral(AppCtx%GradientV%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             Else
-               Call GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, AppCtx%U, AppCtx%Theta, AppCtx%V, AppCtx)
+               Call GradientV_AssemblyBlk_ElastBrittle(AppCtx%GradientV%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             End If
             
          End If
          !!! Contribution of the surface term
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-            Call GradientV_AssemblyBlk_SurfaceAT1(GradientV_Sec, iBlk, AppCtx%V, AppCtx)
+            Call GradientV_AssemblyBlk_SurfaceAT1(AppCtx%GradientV%Sec, iBlk, AppCtx%V%Sec, AppCtx)
          Case(2)
-            Call GradientV_AssemblyBlk_SurfaceAT2(GradientV_Sec, iBlk, AppCtx%V, AppCtx)
+            Call GradientV_AssemblyBlk_SurfaceAT2(AppCtx%GradientV%Sec, iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
       End Do Do_iBlk2
-      Call SectionRealComplete(GradientV_Sec, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(GradientV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(GradientV_Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(AppCtx%GradientV%Sec, iErr); CHKERRQ(iErr)
+
+      !!! Set Dirichlet Boundary Values
+      Call FieldInsertVertexBoundaryValues(AppCtx%RHSV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+
+      Call SectionRealToVec(AppCtx%GradientV%Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine FormFunctionAndGradientV
 #endif
@@ -379,27 +445,23 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       Type(Vec)                                    :: RHSV_Vec
 
-      Type(SectionReal)                            :: RHSV_Sec
-      
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
             
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyV_Stage, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSV_Sec', 1, RHSV_Sec, iErr); CHKERRQ(iErr)
-      
-      Call SectionRealZero(RHSV_Sec, iErr); CHKERRQ(iErr)
+
+      Call SectionRealZero(AppCtx%RHSV%Sec, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(2)
-            Call RHSV_AssemblyBlk_AT2(RHSV_Sec, iBlk, AppCtx)
+            Call RHSV_AssemblyBlk_AT2(AppCtx%RHSV%Sec, iBlk, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT2 is implemented with KSP\n', iErr)
       End Select
       End Do Do_iBlk
 
-      Call SectionRealComplete(RHSV_Sec, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(RHSV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, RHSV_Vec, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(RHSV_Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(AppCtx%RHSV%Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%RHSV%Sec, AppCtx%ScatterScal, SCATTER_FORWARD, RHSV_Vec, iErr); CHKERRQ(iErr)
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       CHKMEMQ
@@ -449,11 +511,11 @@ Contains
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem  = 0.0_Kr
          !! Get the local nodal values of U, Theta, and BCs
-         Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%U%Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U,     iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
          If (DoBC) Then
-            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
-            Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag,    iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
          End If
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
@@ -541,11 +603,11 @@ Contains
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem  = 0.0_Kr
          !! Get the local nodal values of U, Theta, and BCs
-         Call SectionRealRestrictClosure(AppCtx%U, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%U%Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U,     iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
          If (DoBC) Then
-            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
-            Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag,    iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
          End If
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
@@ -630,8 +692,8 @@ Contains
          MatElem  = 0.0_Kr
          !! Get the local nodal values of BC sections if necessary
          If (DoBC) Then
-            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
-            Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag,    iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
          End If
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
@@ -699,8 +761,8 @@ Contains
          MatElem  = 0.0_Kr
          !! Get the local nodal values of BC sections if necessary
          If (DoBC) Then
-            Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
-            Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag, iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
          End If
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
@@ -760,8 +822,8 @@ Contains
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          RHS_Loc = 0.0_Kr
 
-         Call SectionIntRestrictClosure(AppCtx%BCVFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag_Loc, iErr); CHKERRQ(ierr)
-         Call SectionIntRestrictClosure(AppCtx%IrrevFlag, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag_Loc, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag_Loc,    iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag_Loc, iErr); CHKERRQ(ierr)
 
          Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
             Do iDoF1 = 1, NumDoFScal
@@ -1035,7 +1097,7 @@ Contains
       KSPConvergedReason                           :: reason
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      Type(Vec)                                    :: RHSV_Vec, V_Vec, V_Old
+      Type(Vec)                                    :: V_Old
       PetscReal                                    :: VMin, VMax
       PetscReal                                    :: rDum
       PetscInt                                     :: iDum
@@ -1046,21 +1108,19 @@ Contains
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolveV_Stage, iErr); CHKERRQ(iErr)
   
-      !!! Create Vectors for V and RHSV
-
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
 #if defined WITH_TAO
-         Call TaoAppGetSolutionVec(AppCtx%taoappV, V_Vec, iErr); CHKERRQ(iErr)
-         Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_FORWARD, V_Vec, ierr); CHKERRQ(ierr)
-         Call VecDuplicate(V_Vec, V_Old, iErr); CHKERRQ(iErr)
-         Call VecCopy(V_Vec, V_Old, iErr); CHKERRQ(iErr)
+         Call TaoAppGetSolutionVec(AppCtx%taoappV, AppCtx%V%Vec, iErr); CHKERRQ(iErr)
+         Call VecDuplicate(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
+         Call VecCopy(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
+
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          Call TaoSolveApplication(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoGetSolutionStatus(AppCtx%taoV, KSPNumIter, rDum, TaoResidual, rDum, rDum, TaoReason, iErr); CHKERRQ(iErr)
-         If ( TaoReason > 0) Then
+         If ( TaoReason > 0 ) Then
             Write(IOBuffer, 102) KSPNumiter, TAOReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Else
@@ -1068,7 +1128,7 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If     
          Call KSPGetConvergedReason(AppCtx%KSPV, reason, iErr); CHKERRQ(iErr)
-         If ( reason > 0) Then
+         If ( reason > 0 ) Then
             Call KSPGetIterationNumber(AppCtx%KSPV, KSPNumIter, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 100) KSPNumIter, reason
          Else
@@ -1076,19 +1136,17 @@ Contains
          End If
 #endif      
       Else
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, V_Vec, iErr); CHKERRQ(iErr)
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, RHSV_Vec, iErr); CHKERRQ(iErr)
-         Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_FORWARD, V_Vec, ierr); CHKERRQ(ierr)
-         Call VecDuplicate(V_Vec, V_Old, iErr); CHKERRQ(iErr)
-         Call VecCopy(V_Vec, V_Old, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, AppCtx%V%Vec, iErr); CHKERRQ(ierr)
+         Call VecDuplicate(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
+         Call VecCopy(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
 
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
-         Call RHSV_Assembly(RHSV_Vec, AppCtx)
+         Call RHSV_Assembly(AppCtx%RHSV%Vec, AppCtx)
          If (AppCtx%AppParam%verbose > 2) Then
-            Call VecView(RHSV_Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+            Call VecView(AppCtx%RHSV%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
          End If
 
          Call MatV_Assembly(AppCtx%KV, AppCtx)
@@ -1101,7 +1159,7 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
 
-         Call KSPSolve(AppCtx%KSPV, RHSV_Vec, V_Vec, iErr); CHKERRQ(iErr)
+         Call KSPSolve(AppCtx%KSPV, AppCtx%RHSV%Vec, AppCtx%V%Vec, iErr); CHKERRQ(iErr)
       
          Call KSPGetConvergedReason(AppCtx%KSPV, reason, iErr); CHKERRQ(iErr)
          If ( reason > 0) Then
@@ -1111,28 +1169,24 @@ Contains
             Write(IOBuffer, 101) reason
          End If
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call VecDestroy(RHSV_Vec, iErr); CHKERRQ(iErr)
       End If      
    
       !!! Compute ||v-v_old||_\infty
-      Call VecMin(V_Vec, PETSC_NULL_INTEGER, VMin, iErr); CHKERRQ(iErr)
-      Call VecMax(V_Vec, PETSC_NULL_INTEGER, VMax, iErr); CHKERRQ(iErr)
+      Call VecMin(AppCtx%V%Vec, PETSC_NULL_INTEGER, VMin, iErr); CHKERRQ(iErr)
+      Call VecMax(AppCtx%V%Vec, PETSC_NULL_INTEGER, VMax, iErr); CHKERRQ(iErr)
       Write(IOBuffer, 700) VMin, VMax
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-       Call VecAxPy(V_Old, -1.0_Kr, V_Vec, iErr)
+       Call VecAxPy(V_Old, -1.0_Kr, AppCtx%V%Vec, iErr)
        Call VecNorm(V_Old, NORM_INFINITY, AppCtx%ErrV, iErr)
 
       Write(IOBuffer, 800) AppCtx%ErrV
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
       !!! Scatter V back into a SectionReal
-      Call SectionRealToVec(AppCtx%V, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, ierr); CHKERRQ(ierr)
+      Call SectionRealToVec(AppCtx%V%Sec, AppCtx%ScatterScal, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
       
       Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
-      If (.NOT. AppCtx%VarFracSchemeParam%V_UseTao) Then
-         Call VecDestroy(V_Vec, iErr); CHKERRQ(iErr)
-      End If
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('     KSP for V converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n')
