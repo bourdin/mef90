@@ -175,7 +175,11 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
-      !!! Create the Sections for the NODAL variables
+      !!! Create the Fields for the variables
+      Allocate(SizeVect(AppCtx%MeshTopology%Num_dim))
+      SizeVect= 1
+      Allocate(SizeScal(1))
+      SizeScal=1
       Call FieldCreateVertex(AppCtx%U,     'U',     AppCtx%MeshTopology, SizeVect)
       Call FieldCreateVertex(AppCtx%UBC,   'UBC',   AppCtx%MeshTopology, SizeVect)
       Call FieldCreateVertex(AppCtx%F,     'F',     AppCtx%MeshTopology, SizeVect)
@@ -196,6 +200,8 @@ Contains
       Call FlagCreateVertex(AppCtx%BCUFlag,   'BCU',       AppCtx%MeshTopology, SizeVect)
       Call FlagCreateVertex(AppCtx%BCVFlag,   'BCV',       AppCtx%MeshTopology, SizeScal)
       Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
+      DeAllocate(SizeVect)
+      DeAllocate(SizeScal)
 
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
@@ -288,7 +294,7 @@ Contains
       End If
 
       Call SectionIntZero(AppCtx%BCVFlag%Sec, iErr); CHKERRQ(iErr)
-      Call SectionIntAddNSProperty(AppCtx%BCVFlag%Component_Sec(1), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCVType), AppCtx%MeshTopology)
+      Call SectionIntAddNSProperty(AppCtx%BCVFlag%Sec, AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCVType), AppCtx%MeshTopology)
 
       Call SectionIntZero(AppCtx%IrrevFlag%Sec, iErr); CHKERRQ(iErr)
 
@@ -314,7 +320,7 @@ Contains
       Allocate(AppCtx%Load(AppCtx%NumTimeSteps))
       
       !!! Set V=1
-      Call SectionRealSet(AppCtx%V, 1.0_Kr, iErr); CHKERRQ(iErr)
+      Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
       
       !!! We are not backTracking
       AppCtx%IsBT = PETSC_FALSE
@@ -415,6 +421,7 @@ Contains
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F%Sec) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta%Sec) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC%Sec) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%VBC%Sec) 
 
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep))
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)

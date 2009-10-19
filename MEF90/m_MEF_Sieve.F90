@@ -294,17 +294,12 @@ Contains
       End Do 
       
       !!! Create the individual component sections
-      If (F%num_components > 1) Then
-         F%Has_Component_Sec = .TRUE.
-         Allocate(F%Component_Sec(F%num_Components))
-         Do i = 1, F%num_Components      
-            Call SectionRealGetFibration(F%Sec, i-1, F%Component_sec(i), iErr); CHKERRQ(iErr)
-            Write(component_name, "(A, '.', I3.3)") Trim(Fname), i
-            Call PetscObjectSetName(F%Component_Sec(i), component_name, iErr); CHKERRQ(iErr)
-         End Do
-      Else
-         F%Has_Component_Sec = .FALSE.
-      End If      
+      Allocate(F%Component_Sec(F%num_Components))
+      Do i = 1, F%num_Components      
+         Call SectionRealGetFibration(F%Sec, i-1, F%Component_sec(i), iErr); CHKERRQ(iErr)
+         Write(component_name, "(A, '.', I3.3)") Trim(Fname), i
+         Call PetscObjectSetName(F%Component_Sec(i), component_name, iErr); CHKERRQ(iErr)
+      End Do
       !!! Create the Scatter and global Vec
       F%Has_Vec  = .TRUE.
       Call MeshCreateGlobalScatter(MeshTopology%mesh, F%Sec, F%Scatter, iErr); CHKERRQ(iErr)
@@ -317,12 +312,10 @@ Contains
       
       Call SectionRealDestroy(F%Sec, iErr); CHKERRQ(iErr)
       DeAllocate(F%Component_size)
-      If (F%Has_Component_Sec) Then
-         Do i = 1, F%Num_Components   
-            Call SectionRealDestroy(F%Component_Sec(i), iErr); CHKERRQ(iErr)   
-         End Do
-         DeAllocate(F%Component_Sec)
-      End If
+      Do i = 1, F%Num_Components   
+         Call SectionRealDestroy(F%Component_Sec(i), iErr); CHKERRQ(iErr)   
+      End Do
+      DeAllocate(F%Component_Sec)
       
       If (F%Has_Vec) Then
          Call VecDestroy(F%Vec, iErr); CHKERRQ(iErr)
@@ -360,17 +353,12 @@ Contains
       End Do 
       
       !!! Create the individual component sections
-      If (F%num_components > 1) Then
-         F%Has_Component_Sec = .TRUE.
-         Allocate(F%Component_Sec(F%num_Components))
-         Do i = 1, F%num_Components      
-            Call SectionIntGetFibration(F%Sec, i-1, F%Component_sec(i), iErr); CHKERRQ(iErr)
-            Write(component_name, "(A, '.', I3.3)") Trim(Fname), i
-            Call PetscObjectSetName(F%Component_Sec(i), component_name, iErr); CHKERRQ(iErr)
-         End Do
-      Else
-         F%Has_Component_Sec = .FALSE.
-      End If      
+      Allocate(F%Component_Sec(F%num_Components))
+      Do i = 1, F%num_Components      
+         Call SectionIntGetFibration(F%Sec, i-1, F%Component_sec(i), iErr); CHKERRQ(iErr)
+         Write(component_name, "(A, '.', I3.3)") Trim(Fname), i
+         Call PetscObjectSetName(F%Component_Sec(i), component_name, iErr); CHKERRQ(iErr)
+      End Do
    End Subroutine FlagCreateVertex
 
    Subroutine FlagDestroy(F)
@@ -379,12 +367,10 @@ Contains
       
       Call SectionIntDestroy(F%Sec, iErr); CHKERRQ(iErr)
       DeAllocate(F%Component_size)
-      If (F%Has_Component_Sec) Then
-         Do i = 1, F%Num_Components   
-            Call SectionIntDestroy(F%Component_Sec(i), iErr); CHKERRQ(iErr)   
-         End Do
-         DeAllocate(F%Component_Sec)
-      End If
+      Do i = 1, F%Num_Components   
+         Call SectionIntDestroy(F%Component_Sec(i), iErr); CHKERRQ(iErr)   
+      End Do
+      DeAllocate(F%Component_Sec)
    End Subroutine FlagDestroy
 
    Subroutine SectionIntAddNSProperty(Flag, NSProperty, MeshTopology)

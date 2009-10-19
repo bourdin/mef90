@@ -83,8 +83,6 @@ Module m_VarFracQS_Types3D
       PetscReal, Dimension(:), Pointer             :: ExtForcesWork
       PetscReal, Dimension(:), Pointer             :: TotalEnergy
       PetscReal                                    :: ErrV
-      Type(VecScatter)                             :: ScatterVect
-      Type(VecScatter)                             :: ScatterScal
       Type(Mat)                                    :: KU, KV
       Type(KSP)                                    :: KSPU, KSPV
       Type(PC)                                     :: PCU, PCV

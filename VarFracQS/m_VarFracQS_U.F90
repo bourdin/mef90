@@ -119,7 +119,7 @@ Contains
       
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyU_Stage, iErr); CHKERRQ(iErr)
       If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%ScatterVect, SCATTER_REVERSE, X_Vec, iErr); CHKERRQ(ierr)
+         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, X_Vec, iErr); CHKERRQ(ierr)
       End If
       
       Call MatZeroEntries(H, iErr); CHKERRQ(iErr)
@@ -167,7 +167,7 @@ Contains
       PetscReal                                    :: MyObjFunc
       
       !!! Objective function is ElasticEnergy + ExtForcesWork
-      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%ScatterVect, SCATTER_REVERSE, U_Vec, iErr); CHKERRQ(ierr)
+      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, U_Vec, iErr); CHKERRQ(ierr)
 
       MyObjFunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
@@ -315,7 +315,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
@@ -421,7 +421,7 @@ Contains
                End Do
             End If         
          End Do
-         Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
@@ -481,7 +481,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
