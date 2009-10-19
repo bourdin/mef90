@@ -66,12 +66,15 @@ Module m_VarFracQS_Types3D
       Type(Element3D_Elast), Dimension(:), Pointer :: ElemVect
       Type(Element3D_Scal), Dimension(:), Pointer  :: ElemScal
 #endif
-      Type(SectionReal)                            :: U
+      Type(Field)                                  :: U
+      Type(Field)                                  :: F
+      Type(Field)                                  :: V
+      Type(Field)                                  :: Theta
+      Type(Field)                                  :: RHSU, GradientU, LowerBoundU, UpperBoundU, UBC
+      Type(Field)                                  :: RHSV, GradientV, LowerBoundV, UpperBoundV, VBC
+      Type(Flag)                                   :: BCUFlag, BCVFlag, IrrevFlag
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
-      Type(SectionReal)                            :: F
-      Type(SectionReal)                            :: V
-      Type(SectionReal)                            :: Theta
       PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
       PetscReal, Dimension(:), Pointer             :: Load
@@ -82,7 +85,6 @@ Module m_VarFracQS_Types3D
       PetscReal                                    :: ErrV
       Type(VecScatter)                             :: ScatterVect
       Type(VecScatter)                             :: ScatterScal
-      Type(SectionInt)                             :: BCUFlag, BCVFlag, IrrevFlag
       Type(Mat)                                    :: KU, KV
       Type(KSP)                                    :: KSPU, KSPV
       Type(PC)                                     :: PCU, PCV

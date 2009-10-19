@@ -51,8 +51,7 @@ Contains
       PetscReal                                    :: KSP_Default_atol  = 1.0D-6
       PetscInt                                     :: KSP_Default_MaxIt = 50000
       Type(PetscViewer)                            :: flgviewer
-      Type(Vec)                                    :: taoU_WorkVec
-      Type(Vec)                                    :: taoV_WorkVec
+      PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
       
       Call MEF90_Initialize()
 #if defined WITH_TAO
@@ -177,24 +176,37 @@ Contains
       End If
 
       !!! Create the Sections for the NODAL variables
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'Theta', 1, AppCtx%Theta, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'V', 1, AppCtx%V, iErr); CHKERRQ(iErr)
-      
+      Call FieldCreateVertex(AppCtx%U,     'U',     AppCtx%MeshTopology, SizeVect)
+      Call FieldCreateVertex(AppCtx%UBC,   'UBC',   AppCtx%MeshTopology, SizeVect)
+      Call FieldCreateVertex(AppCtx%F,     'F',     AppCtx%MeshTopology, SizeVect)
+      Call FieldCreateVertex(AppCtx%V,     'V',     AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%VBC,   'VBC',   AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%Theta, 'Theta', AppCtx%MeshTopology, SizeScal)
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call FieldCreateVertex(AppCtx%GradientU,   'GradientU',   AppCtx%MeshTopology, SizeVect)
+         Call FieldCreateVertex(AppCtx%LowerBoundU, 'LowerBoundU', AppCtx%MeshTopology, SizeVect)
+         Call FieldCreateVertex(AppCtx%UpperBoundU, 'UpperBoundU', AppCtx%MeshTopology, SizeVect)
+         Call FieldCreateVertex(AppCtx%GradientV,   'GradientV',   AppCtx%MeshTopology, SizeScal)
+         Call FieldCreateVertex(AppCtx%LowerBoundV, 'LowerBoundV', AppCtx%MeshTopology, SizeScal)
+         Call FieldCreateVertex(AppCtx%UpperBoundV, 'UpperBoundV', AppCtx%MeshTopology, SizeScal)
+      Else
+         Call FieldCreateVertex(AppCtx%RHSU, 'RHSU', AppCtx%MeshTopology, SizeVect)
+         Call FieldCreateVertex(AppCtx%RHSV, 'RHSV', AppCtx%MeshTopology, SizeScal)
+      End If
+      Call FlagCreateVertex(AppCtx%BCUFlag,   'BCU',       AppCtx%MeshTopology, SizeVect)
+      Call FlagCreateVertex(AppCtx%BCVFlag,   'BCV',       AppCtx%MeshTopology, SizeScal)
+      Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
+
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
          Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
          Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Stress', NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
       End If
 
-      !!! Create the Scatter, Vec, Mat, KSP, PC
-      Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
-      Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%V, AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
-
+      !!! Create the Mat, KSP, PC
       Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
-      Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
-      Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
+      Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
+      Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V%Sec, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
       
       !! Solver context for U      
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
@@ -209,9 +221,7 @@ Contains
 
          Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%KU, AppCtx%KU, iErr); CHKERRQ(iErr)
 
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, taoU_WorkVec, iErr); CHKERRQ(iErr)
-         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, taoU_WorkVec, iErr); CHKERRQ(iErr)
-         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, taoU_WorkVec, iErr); CHKERRQ(iErr) !!! TEST
+         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
          
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
@@ -244,8 +254,7 @@ Contains
 
          Call TaoAppSetHessianMat(AppCtx%taoappV, AppCtx%KV, AppCtx%KV, iErr); CHKERRQ(iErr)
 
-         Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%V, taoV_WorkVec, iErr); CHKERRQ(iErr)
-         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappV, taoV_WorkVec, iErr); CHKERRQ(iErr)
+         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappV, AppCtx%V%Vec, iErr); CHKERRQ(iErr)
 
          Call TaoSetOptions(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
@@ -270,17 +279,18 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
-      !!! Create the Section for the BC
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCUFlag', AppCtx%MeshTopology%Num_Dim, AppCtx%BCUFlag, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCVFlag',    1, AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'IrrevVFlag', 1, AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
-#if defined PB_2D
-      Call EXOProperty_InitBCUFlag2D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCUFlag)
-#elif defined PB_3D
-      Call EXOProperty_InitBCUFlag3D(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCUFlag)
-#endif
-      Call EXOProperty_InitBCVFlag(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%BCVFlag)
-      Call SectionIntZero(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
+      !!! Initialize flags
+      Call SectionIntZero(AppCtx%BCUFlag%Sec, iErr); CHKERRQ(iErr)
+      Call SectionIntAddNSProperty(AppCtx%BCUFlag%Component_Sec(1), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX), AppCtx%MeshTopology)
+      Call SectionIntAddNSProperty(AppCtx%BCUFlag%Component_Sec(2), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY), AppCtx%MeshTopology)
+      If (AppCtx%MeshTopology%Num_Dim == 3) Then
+         Call SectionIntAddNSProperty(AppCtx%BCUFlag%Component_Sec(3), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ), AppCtx%MeshTopology)
+      End If
+
+      Call SectionIntZero(AppCtx%BCVFlag%Sec, iErr); CHKERRQ(iErr)
+      Call SectionIntAddNSProperty(AppCtx%BCVFlag%Component_Sec(1), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCVType), AppCtx%MeshTopology)
+
+      Call SectionIntZero(AppCtx%IrrevFlag%Sec, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done Initializing BC Sections\n"
@@ -341,7 +351,8 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
+      !!! Saving SectionReal involves a Vec creation, plus whenever we get to save, the Vec should be up to date 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U%Vec) 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_U
 
@@ -351,7 +362,8 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+      !!! Saving SectionReal involves a Vec creation, plus whenever we get to save, the Vec should be up to date 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V%Vec) 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_V
 
@@ -393,8 +405,16 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
+!@!!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F%Vec) 
+!@!!      Call SectionRealToVec(AppCtx%F%Sec, AppCtx%F%Scatter, SCATTER_REVERSE, AppCtx%F%Vec, iErr); CHKERRQ(ierr)
+!@!!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta%Vec) 
+!@!!      Call SectionRealToVec(AppCtx%Theta%Sec, AppCtx%Theta%Scatter, SCATTER_REVERSE, AppCtx%Theta%Vec, iErr); CHKERRQ(ierr)
+!@!!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC%Vec) 
+!@!!      Call SectionRealToVec(AppCtx%UBC%Sec, AppCtx%Theta%Scatter, SCATTER_REVERSE, AppCtx%UBC%Vec, iErr); CHKERRQ(ierr)
+
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F%Sec) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta%Sec) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC%Sec) 
 
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep))
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
@@ -407,22 +427,34 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: filename
    
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%V, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
-      Call SectionRealDestroy(AppCtx%Theta, iErr); CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%U);     CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%UBC);   CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%V);     CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%VBC);   CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%F);     CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%Theta); CHKERRQ(iErr)
+      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
+         Call FieldDestroy(AppCtx%GradientU);   CHKERRQ(iErr)
+         Call FieldDestroy(AppCtx%LowerBoundU); CHKERRQ(iErr)
+         Call FieldDestroy(AppCtx%UpperBoundU); CHKERRQ(iErr)
+         Call FieldDestroy(AppCtx%GradientV);   CHKERRQ(iErr)
+         Call FieldDestroy(AppCtx%LowerBoundV); CHKERRQ(iErr)
+         Call FieldDestroy(AppCtx%UpperBoundV); CHKERRQ(iErr)
+      Else
+         Call FieldDestroy(AppCtx%RHSU); CHKERRQ(iErr)
+         Call FieldDestroy(AppCtx%RHSV); CHKERRQ(iErr)
+      End If
+
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
          Call SectionRealDestroy(AppCtx%StressU, iErr); CHKERRQ(iErr)
       End If
       
-      Call VecScatterDestroy(AppCtx%ScatterVect, iErr); CHKERRQ(iErr)
-      Call VecScatterDestroy(AppCtx%ScatterScal, iErr); CHKERRQ(iErr)
-      Call SectionIntDestroy(AppCtx%BCUFlag, iErr); CHKERRQ(iErr)
-      Call SectionIntDestroy(AppCtx%BCVFlag, iErr); CHKERRQ(iErr)
-      Call SectionIntDestroy(AppCtx%IrrevFlag, iErr); CHKERRQ(iErr)
-      Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
+      Call FlagDestroy(AppCtx%BCUFlag);   CHKERRQ(iErr)
+      Call FlagDestroy(AppCtx%BCVFlag);   CHKERRQ(iErr)
+      Call FlagDestroy(AppCtx%IrrevFlag); CHKERRQ(iErr)
 
+      Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KV, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 
