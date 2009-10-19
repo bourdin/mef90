@@ -282,7 +282,8 @@ Contains
       !!! MatInsertVertexBoundaryValues overwrites the entire block corresponding to all
       !!! dof of a point where a boundary condition is applied
       !!! it is to be called BEFORE assembling the matrix
-      Call MatInsertVertexBoundaryValues(K, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
+      Call MatInsertVertexBoundaryValues(K, AppCtx%V, AppCtx%BCVFlag, AppCtx%MeshTopology)
+      Call MatInsertVertexBoundaryValues(K, AppCtx%V, AppCtx%IrrevFlag, AppCtx%MeshTopology)
       Call MatAssemblyBegin(K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
 
@@ -381,7 +382,7 @@ Contains
       PetscReal                                    :: MyObjFunc
       
       !!! Objective function is ElasticEnergy + SurfaceEnergy
-      Call SectionRealToVec(AppCtx%V%Sec, AppCtx%ScatterScal, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
+      Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
 
       MyObjFunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
@@ -436,7 +437,7 @@ Contains
       !!! Set Dirichlet Boundary Values
       Call FieldInsertVertexBoundaryValues(AppCtx%RHSV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
 
-      Call SectionRealToVec(AppCtx%GradientV%Sec, AppCtx%ScatterScal, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%GradientV%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine FormFunctionAndGradientV
 #endif
@@ -461,8 +462,11 @@ Contains
       End Do Do_iBlk
 
       Call SectionRealComplete(AppCtx%RHSV%Sec, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(AppCtx%RHSV%Sec, AppCtx%ScatterScal, SCATTER_FORWARD, RHSV_Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%RHSV%Sec, AppCtx%RHSV%Scatter, SCATTER_FORWARD, RHSV_Vec, iErr); CHKERRQ(iErr)
       
+      !!! Set Dirichlet Boundary Values
+      Call FieldInsertVertexBoundaryValues(AppCtx%RHSV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine RHSV_Assembly
@@ -544,7 +548,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(MatElem)
@@ -644,7 +648,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(MatElem)
@@ -715,7 +719,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(MatElem)
@@ -779,7 +783,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(MatElem)
@@ -1184,7 +1188,7 @@ Contains
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
       !!! Scatter V back into a SectionReal
-      Call SectionRealToVec(AppCtx%V%Sec, AppCtx%ScatterScal, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
+      Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
       
       Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)

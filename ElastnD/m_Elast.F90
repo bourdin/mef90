@@ -210,7 +210,7 @@ Contains
          Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       End If
 
-      !!! Create the Sections for the variables
+      !!! Create the Fields for the variables
       Allocate(SizeVect(AppCtx%MeshTopology%Num_dim))
       SizeVect= 1
       Allocate(SizeScal(1))
