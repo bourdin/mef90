@@ -411,17 +411,14 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-!@!!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F%Vec) 
-!@!!      Call SectionRealToVec(AppCtx%F%Sec, AppCtx%F%Scatter, SCATTER_REVERSE, AppCtx%F%Vec, iErr); CHKERRQ(ierr)
-!@!!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta%Vec) 
-!@!!      Call SectionRealToVec(AppCtx%Theta%Sec, AppCtx%Theta%Scatter, SCATTER_REVERSE, AppCtx%Theta%Vec, iErr); CHKERRQ(ierr)
-!@!!      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC%Vec) 
-!@!!      Call SectionRealToVec(AppCtx%UBC%Sec, AppCtx%Theta%Scatter, SCATTER_REVERSE, AppCtx%UBC%Vec, iErr); CHKERRQ(ierr)
-
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F%Sec) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta%Sec) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC%Sec) 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%VBC%Sec) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F%Vec) 
+      Call SectionRealToVec(AppCtx%F%Sec, AppCtx%F%Scatter, SCATTER_REVERSE, AppCtx%F%Vec, iErr); CHKERRQ(ierr)
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta%Vec) 
+      Call SectionRealToVec(AppCtx%Theta%Sec, AppCtx%Theta%Scatter, SCATTER_REVERSE, AppCtx%Theta%Vec, iErr); CHKERRQ(ierr)
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V%Vec) 
+      Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, iErr); CHKERRQ(ierr)
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC%Vec) 
+      Call SectionRealToVec(AppCtx%UBC%Sec, AppCtx%UBC%Scatter, SCATTER_REVERSE, AppCtx%UBC%Vec, iErr); CHKERRQ(ierr)
 
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep))
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
