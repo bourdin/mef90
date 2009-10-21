@@ -834,6 +834,7 @@ Contains
       DeAllocate(BCFlag_Loc)
       DeAllocate(RHS_Loc)
       DeAllocate(Theta_Loc)
+      DeAllocate(V_Loc)
       
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)

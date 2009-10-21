@@ -30,7 +30,7 @@ Program  VarFracQS
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: AltMinIter
    Character(len=MEF90_MXSTRLEN)                :: filename
-   Character(len=MEF90_MXSTRLEN)                :: stagename
+   Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
    PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
 
    Call VarFracQSInit(AppCtx)
@@ -43,9 +43,12 @@ Program  VarFracQS
    
    AppCtx%TimeStep = 1
    iDebug = 0
-   Write(stagename, 106)
+   Write(stagename(1), "(A)") "Outer loop"
+   Write(stagename(2), "(A)") "AltMin loop"
+   Write(stagename(3), "(A)") "U-step"
+   Write(stagename(4), "(A)") "V-step"
    TimeStep: Do 
-      Call ALEStagePush(stagename, iDebug, iErr); CHKERRQ(iErr)
+      Call ALEStagePush(stagename(1), iDebug, iErr); CHKERRQ(iErr)
 
       Write(IOBuffer, 99) AppCtx%TimeStep
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -58,9 +61,16 @@ Program  VarFracQS
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
+
+      !!! Update U at fixed nodes
       Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCUFlag, AppCtx%MeshTopology)
+      
+     !!! Rebuild AppCtx%VIrrev and AppCtx%IrrevFlag
+      Call Update_Irrev(AppCtx)
+
+      !!! Update V at fixed nodes
       Call Init_TS_V(AppCtx)
-      Call Init_TS_Irrev(AppCtx)
+
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Done with Init_TS_V \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -68,12 +78,12 @@ Program  VarFracQS
       
       AltMinIter = 1
       AltMin: Do 
-         CHKMEMQ
+         Call ALEStagePush(stagename(2), iDebug, iErr); CHKERRQ(iErr)
          If (AppCtx%AppParam%verbose > 0) Then
             Call PetscMemoryGetCurrentUsage(CurrentMemoryUsage,iErr); CHKERRQ(iErr)
             Call PetscMemoryGetMaximumUsage(MaximumMemoryUsage,iErr); CHKERRQ(iErr)
             Write(MEF90_MyRank+100, *) AppCtx%TimeStep, AltMinIter, CurrentMemoryUsage, MaximumMemoryUsage
-            Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage output for PETSC_COMM_WORLD: \n", iErr); CHKERRQ(iErr)
+            Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage output for PETSC_COMM_WORLD: ", iErr); CHKERRQ(iErr)
          End If
          Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") AppCtx%TimeStep, AltMinIter,'\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -81,18 +91,27 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Problem for U
          !-------------------------------------------------------------------
+         Call ALEStagePush(stagename(3), iDebug, iErr); CHKERRQ(iErr)
          Call Step_U(AppCtx)
-         
+         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         If (AppCtx%AppParam%verbose > 0) Then
+            Call ALEStagePrintMemory(stagename(3), iErr); CHKERRQ(iErr)
+         End If
          !------------------------------------------------------------------- 
          ! Problem for V
          !-------------------------------------------------------------------
+         Call ALEStagePush(stagename(4), iDebug, iErr); CHKERRQ(iErr)
          Call Step_V(AppCtx)
-         
+         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         If (AppCtx%AppParam%verbose > 0) Then
+            Call ALEStagePrintMemory(stagename(4), iErr); CHKERRQ(iErr)
+         EndIf      
          !------------------------------------------------------------------- 
          ! Check For BackTracking 
          !------------------------------------------------------------------- 
          AppCtx%IsBT = PETSC_FALSE
          If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) ) Then
+
             Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx)
             Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx)
             Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx)
@@ -108,6 +127,10 @@ Program  VarFracQS
                Write(AppCtx%AppParam%Ener_Unit, *)
                
                !!! Exit the AltMin loop
+               Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+               If (AppCtx%AppParam%verbose > 0) Then
+                  Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+               End If
                EXIT 
             End If
          End If
@@ -150,9 +173,17 @@ Program  VarFracQS
          End If
          If ( (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR. (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter) ) then 
             Call Save_Ener(AppCtx)
+            Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+            If (AppCtx%AppParam%verbose > 0) Then
+               Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+            End If
             EXIT 
          End If
          AltMinIter = AltMinIter + 1
+         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         If (AppCtx%AppParam%verbose > 0) Then
+            Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+         End If
       End Do AltMin
       !------------------------------------------------------------------- 
       ! Check For BackTracking again
@@ -186,9 +217,10 @@ Program  VarFracQS
       AppCtx%TimeStep = AppCtx%TimeStep + 1
       Write(filename, 105) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
-
       Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-      Call ALEStagePrintMemory(stagename, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
+      End If
    End Do TimeStep
 
 100   Format('Elastic energy:       ', ES12.5, '\n')    
