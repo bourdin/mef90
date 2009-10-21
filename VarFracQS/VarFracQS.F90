@@ -68,6 +68,11 @@ Program  VarFracQS
      !!! Rebuild AppCtx%VIrrev and AppCtx%IrrevFlag
       Call Update_Irrev(AppCtx)
 
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Done with Update_Irrev \n' 
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+
       !!! Update V at fixed nodes
       Call Init_TS_V(AppCtx)
 
