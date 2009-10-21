@@ -180,25 +180,29 @@ Contains
       SizeVect= 1
       Allocate(SizeScal(1))
       SizeScal=1
-      Call FieldCreateVertex(AppCtx%U,     'U',     AppCtx%MeshTopology, SizeVect)
-      Call FieldCreateVertex(AppCtx%UBC,   'UBC',   AppCtx%MeshTopology, SizeVect)
-      Call FieldCreateVertex(AppCtx%F,     'F',     AppCtx%MeshTopology, SizeVect)
-      Call FieldCreateVertex(AppCtx%V,     'V',     AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%VBC,   'VBC',   AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%Theta, 'Theta', AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%U,      'U',      AppCtx%MeshTopology, SizeVect)
+      Call FieldCreateVertex(AppCtx%UBC,    'UBC',    AppCtx%MeshTopology, SizeVect)
+      Call FieldCreateVertex(AppCtx%F,      'F',      AppCtx%MeshTopology, SizeVect)
+      Call FieldCreateVertex(AppCtx%V,      'V',      AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%VBC,    'VBC',    AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%VIrrev, 'VIrrev', AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%Theta,  'Theta',  AppCtx%MeshTopology, SizeScal)
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
          Call FieldCreateVertex(AppCtx%GradientU,   'GradientU',   AppCtx%MeshTopology, SizeVect)
          Call FieldCreateVertex(AppCtx%LowerBoundU, 'LowerBoundU', AppCtx%MeshTopology, SizeVect)
          Call FieldCreateVertex(AppCtx%UpperBoundU, 'UpperBoundU', AppCtx%MeshTopology, SizeVect)
+      Else
+         Call FieldCreateVertex(AppCtx%RHSU, 'RHSU', AppCtx%MeshTopology, SizeVect)
+      End If
+      If (AppCtx%VarFracSchemeParam%V_UseTao) Then
          Call FieldCreateVertex(AppCtx%GradientV,   'GradientV',   AppCtx%MeshTopology, SizeScal)
          Call FieldCreateVertex(AppCtx%LowerBoundV, 'LowerBoundV', AppCtx%MeshTopology, SizeScal)
          Call FieldCreateVertex(AppCtx%UpperBoundV, 'UpperBoundV', AppCtx%MeshTopology, SizeScal)
       Else
-         Call FieldCreateVertex(AppCtx%RHSU, 'RHSU', AppCtx%MeshTopology, SizeVect)
          Call FieldCreateVertex(AppCtx%RHSV, 'RHSV', AppCtx%MeshTopology, SizeScal)
       End If
-      Call FlagCreateVertex(AppCtx%BCUFlag,   'BCU',       AppCtx%MeshTopology, SizeVect)
-      Call FlagCreateVertex(AppCtx%BCVFlag,   'BCV',       AppCtx%MeshTopology, SizeScal)
+      Call FlagCreateVertex(AppCtx%BCUFlag,   'BCUFlag',   AppCtx%MeshTopology, SizeVect)
+      Call FlagCreateVertex(AppCtx%BCVFlag,   'BCVFlag',   AppCtx%MeshTopology, SizeScal)
       Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeVect)
       DeAllocate(SizeScal)
@@ -232,13 +236,14 @@ Contains
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
+         Call KSPSetType(AppCtx%KSPU, KSPSTCG, iErr); CHKERRQ(iErr)
 #endif
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
          Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+         Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
       End If
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
-      Call KSPSetType(AppCtx%KSPU, KSPGMRES, iErr); CHKERRQ(iErr)
       Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPU, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -265,13 +270,14 @@ Contains
          Call TaoSetOptions(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappV, AppCtx%KSPV, iErr); CHKERRQ(iErr)
+         Call KSPSetType(AppCtx%KSPV, KSPSTCG, iErr); CHKERRQ(iErr)
 #endif
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
          Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+         Call KSPSetType(AppCtx%KSPV, KSPCG, iErr); CHKERRQ(iErr)
       End If
       Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
-      Call KSPSetType(AppCtx%KSPV, KSPGMRES, iErr); CHKERRQ(iErr)
       Call KSPAppendOptionsPrefix(AppCtx%KSPV, "V_", iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPV, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
       Call KSPSetFromOptions(AppCtx%KSPV, iErr); CHKERRQ(iErr)
@@ -321,6 +327,7 @@ Contains
       
       !!! Set V=1
       Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
+      Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)
       
       !!! We are not backTracking
       AppCtx%IsBT = PETSC_FALSE
@@ -415,8 +422,9 @@ Contains
       Call SectionRealToVec(AppCtx%F%Sec, AppCtx%F%Scatter, SCATTER_REVERSE, AppCtx%F%Vec, iErr); CHKERRQ(ierr)
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta%Vec) 
       Call SectionRealToVec(AppCtx%Theta%Sec, AppCtx%Theta%Scatter, SCATTER_REVERSE, AppCtx%Theta%Vec, iErr); CHKERRQ(ierr)
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V%Vec) 
-      Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, iErr); CHKERRQ(ierr)
+      
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%VBC%Vec) 
+      Call SectionRealToVec(AppCtx%VBC%Sec, AppCtx%VBC%Scatter, SCATTER_REVERSE, AppCtx%VBC%Vec, iErr); CHKERRQ(ierr)
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC%Vec) 
       Call SectionRealToVec(AppCtx%UBC%Sec, AppCtx%UBC%Scatter, SCATTER_REVERSE, AppCtx%UBC%Vec, iErr); CHKERRQ(ierr)
 
@@ -431,21 +439,25 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: filename
    
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
-      Call FieldDestroy(AppCtx%U);     CHKERRQ(iErr)
-      Call FieldDestroy(AppCtx%UBC);   CHKERRQ(iErr)
-      Call FieldDestroy(AppCtx%V);     CHKERRQ(iErr)
-      Call FieldDestroy(AppCtx%VBC);   CHKERRQ(iErr)
-      Call FieldDestroy(AppCtx%F);     CHKERRQ(iErr)
-      Call FieldDestroy(AppCtx%Theta); CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%U);      CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%UBC);    CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%V);      CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%VBC);    CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%VIrrev); CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%F);      CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%Theta);  CHKERRQ(iErr)
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
          Call FieldDestroy(AppCtx%GradientU);   CHKERRQ(iErr)
          Call FieldDestroy(AppCtx%LowerBoundU); CHKERRQ(iErr)
          Call FieldDestroy(AppCtx%UpperBoundU); CHKERRQ(iErr)
+      Else
+         Call FieldDestroy(AppCtx%RHSU); CHKERRQ(iErr)
+      End If
+      If (AppCtx%VarFracSchemeParam%V_UseTao) Then
          Call FieldDestroy(AppCtx%GradientV);   CHKERRQ(iErr)
          Call FieldDestroy(AppCtx%LowerBoundV); CHKERRQ(iErr)
          Call FieldDestroy(AppCtx%UpperBoundV); CHKERRQ(iErr)
       Else
-         Call FieldDestroy(AppCtx%RHSU); CHKERRQ(iErr)
          Call FieldDestroy(AppCtx%RHSV); CHKERRQ(iErr)
       End If
 

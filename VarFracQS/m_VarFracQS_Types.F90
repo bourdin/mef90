@@ -67,11 +67,13 @@ Module m_VarFracQS_Types3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: ElemScal
 #endif
       Type(Field)                                  :: U
+      Type(Field)                                  :: UBC
       Type(Field)                                  :: F
       Type(Field)                                  :: V
+      Type(Field)                                  :: VBC, VIrrev
       Type(Field)                                  :: Theta
-      Type(Field)                                  :: RHSU, GradientU, LowerBoundU, UpperBoundU, UBC
-      Type(Field)                                  :: RHSV, GradientV, LowerBoundV, UpperBoundV, VBC
+      Type(Field)                                  :: RHSU, GradientU, LowerBoundU, UpperBoundU
+      Type(Field)                                  :: RHSV, GradientV, LowerBoundV, UpperBoundV
       Type(Flag)                                   :: BCUFlag, BCVFlag, IrrevFlag
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
