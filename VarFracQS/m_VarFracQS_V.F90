@@ -436,7 +436,7 @@ Contains
       End Do Do_Elem_iBlk
       Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%verbose > 1) Then
+      If (AppCtx%AppParam%verbose > 2) Then
          Call MatView(H, AppCtx%AppParam%LogViewer, iErr)
       End If
 

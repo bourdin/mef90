@@ -98,7 +98,7 @@ Contains
       End Do Do_Elem_iBlk
       Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%verbose > 1) Then
+      If (AppCtx%AppParam%verbose > 2) Then
          Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr)
       End If
 
@@ -144,7 +144,7 @@ Contains
       End Do Do_Elem_iBlk
       Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%verbose > 1) Then
+      If (AppCtx%AppParam%verbose > 2) Then
          Call MatView(H, PETSC_VIEWER_STDOUT_WORLD, iErr)
       End If
 
