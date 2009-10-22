@@ -71,6 +71,9 @@ TestFibration:   ${PETSC_ARCH} TestFibration.o ${PETSC_ARCH}/TestFibration.o
 TestFibrationVertex:   ${PETSC_ARCH} TestFibrationVertex.o ${PETSC_ARCH}/TestFibrationVertex.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestFibrationVertex ${PETSC_ARCH}/TestFibrationVertex.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+TestSectionToArray:   ${PETSC_ARCH} TestSectionToArray.o ${PETSC_ARCH}/TestSectionToArray.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestSectionToArray ${PETSC_ARCH}/TestSectionToArray.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}

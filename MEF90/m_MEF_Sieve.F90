@@ -300,10 +300,11 @@ Contains
          Write(component_name, "(A, '.', I3.3)") Trim(Fname), i
          Call PetscObjectSetName(F%Component_Sec(i), component_name, iErr); CHKERRQ(iErr)
       End Do
-      !!! Create the Scatter and global Vec
-      F%Has_Vec  = .TRUE.
+      !!! Create the Scatter and global and local Vec
+!      F%Has_Vec  = .TRUE.
       Call MeshCreateGlobalScatter(MeshTopology%mesh, F%Sec, F%Scatter, iErr); CHKERRQ(iErr)
       Call MeshCreateVector(MeshTopology%mesh, F%Sec, F%Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealCreateLocalVector(F%Sec, F%LocalVec, iErr); CHKERRQ(iErr)
    End Subroutine FieldCreateVertex
    
    Subroutine FieldDestroy(F)
@@ -317,10 +318,9 @@ Contains
       End Do
       DeAllocate(F%Component_Sec)
       
-      If (F%Has_Vec) Then
-         Call VecDestroy(F%Vec, iErr); CHKERRQ(iErr)
-         Call VecScatterDestroy(F%Scatter, iErr); CHKERRQ(iErr)
-      End If
+      Call VecDestroy(F%Vec, iErr); CHKERRQ(iErr)
+      Call VecDestroy(F%LocalVec, iErr); CHKERRQ(iErr)
+      Call VecScatterDestroy(F%Scatter, iErr); CHKERRQ(iErr)
    End Subroutine FieldDestroy
 
    Subroutine FlagCreateVertex(F, Fname, MeshTopology, component_size)
