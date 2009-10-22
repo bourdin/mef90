@@ -166,6 +166,8 @@ Contains
       PetscReal                                    :: MyElasticEnergyBlock, MyExtForcesWorkBlock
       PetscReal                                    :: MyObjFunc
       
+      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
+
       !!! Objective function is ElasticEnergy + ExtForcesWork
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, U_Vec, iErr); CHKERRQ(ierr)
 
@@ -211,6 +213,7 @@ Contains
       
       Call SectionRealComplete(AppCtx%GradientU%Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%GradientU%Sec, AppCtx%GradientU%Scatter, SCATTER_FORWARD, GradientU_Vec, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine FormFunctionAndGradientU
 #endif
@@ -969,6 +972,9 @@ Contains
       TaoTerminateReason                           :: TaoReason
       PetscReal                                    :: TaoResidual
 #endif
+
+      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolveV_Stage, iErr); CHKERRQ(iErr)
+  
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
 #if defined WITH_TAO
          Call TaoAppGetSolutionVec(AppCtx%taoappU, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
@@ -1020,6 +1026,7 @@ Contains
          End If
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       CHKMEMQ
 100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
