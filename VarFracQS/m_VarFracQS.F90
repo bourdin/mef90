@@ -221,7 +221,7 @@ Contains
       !! Solver context for U      
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
 #if defined WITH_TAO
-         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_blmvm', AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappU, iErr); CHKERRQ(iErr)
          Call TaoAppendOptionsPrefix(AppCtx%taoU, "U_", iErr); CHKERRQ(iErr)
 
@@ -257,7 +257,7 @@ Contains
       !! Solver context for V      
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
 #if defined WITH_TAO
-         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoV, iErr); CHKERRQ(iErr)
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_blmvm', AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappV, iErr); CHKERRQ(iErr)
          Call TaoAppendOptionsPrefix(AppCtx%taoV, "V_", iErr); CHKERRQ(iErr)
 
