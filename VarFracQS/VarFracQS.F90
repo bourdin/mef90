@@ -149,8 +149,8 @@ Program  VarFracQS
                Write(IOBuffer, *) 'Saving U and V\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If   
-!            Call Save_U(AppCtx)
-!            Call Save_V(AppCtx)
+            Call Save_U(AppCtx)
+            Call Save_V(AppCtx)
 
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n' 
