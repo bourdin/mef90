@@ -330,10 +330,10 @@ Module m_VarFrac_Struct
       PetscReal                                    :: Toughness
       Type(MatS3D)                                 :: Therm_Exp
    
-      Open(File = filename, Unit = F_IN, Status = 'Unknown')
+      Open(File = filename, Unit = F_IN, Status = 'Old', Action = 'Read')
       Rewind(F_IN)
       Read(F_IN, *) NumBlks
-      If (NumBlks /= MeshTopology%Num_Elem_Blks) Then
+      If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
          SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp3DRead: non matching blocks numbers', iErr)
       End If
       !!! Reading the file once first to get the right number of blocks

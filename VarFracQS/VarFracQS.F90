@@ -81,6 +81,7 @@ Program  VarFracQS
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
+      
       AltMinIter = 1
       AltMin: Do 
          Call ALEStagePush(stagename(2), iDebug, iErr); CHKERRQ(iErr)
