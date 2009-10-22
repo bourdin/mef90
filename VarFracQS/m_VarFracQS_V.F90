@@ -458,6 +458,7 @@ Contains
       PetscReal                                    :: MyElasticEnergyBlock, MySurfaceEnergyBlock
       PetscReal                                    :: MyObjFunc
       
+      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyV_Stage, iErr); CHKERRQ(iErr)
       !!! Objective function is ElasticEnergy + SurfaceEnergy
       Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
 
@@ -515,6 +516,7 @@ Contains
       Call FieldInsertVertexBoundaryValues(AppCtx%GradientV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
 
       Call SectionRealToVec(AppCtx%GradientV%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       CHKMEMQ
    End Subroutine FormFunctionAndGradientV
 #endif
@@ -1271,13 +1273,13 @@ Contains
       
       Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      CHKMEMQ
 100 Format('     KSP for V converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n')
 102 Format('     TAO for V converged in ', I5, ' iterations. Tao termination reason is ', I5, '\n')
 103 Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
 700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n')
 800 Format('     Max change V: ', T24, ES12.5, '\n')
-      CHKMEMQ
    End Subroutine Step_V
 
    
