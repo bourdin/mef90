@@ -221,7 +221,7 @@ Contains
       !! Solver context for U      
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
 #if defined WITH_TAO
-         Call TaoCreate(PETSC_COMM_WORLD, 'tao_blmvm', AppCtx%taoU, iErr); CHKERRQ(iErr)
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappU, iErr); CHKERRQ(iErr)
          Call TaoAppendOptionsPrefix(AppCtx%taoU, "U_", iErr); CHKERRQ(iErr)
 
@@ -257,7 +257,7 @@ Contains
       !! Solver context for V      
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
 #if defined WITH_TAO
-         Call TaoCreate(PETSC_COMM_WORLD, 'tao_blmvm', AppCtx%taoV, iErr); CHKERRQ(iErr)
+         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappV, iErr); CHKERRQ(iErr)
          Call TaoAppendOptionsPrefix(AppCtx%taoV, "V_", iErr); CHKERRQ(iErr)
 
@@ -368,7 +368,7 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U%Sec) 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_U
 
@@ -378,7 +378,7 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V%Sec) 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_V
 
