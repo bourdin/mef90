@@ -177,6 +177,7 @@ Contains
       End If
       
       !!! Read Mat Properties from the CST file
+      Write(*,*) 'CST file is ', trim(AppCtx%AppParam%prefix)//'.CST'
       Call MatProp_Read(AppCtx%MeshTopology, AppCtx%MatProp, trim(AppCtx%AppParam%prefix)//'.CST')
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with MatProp_Read\n"
@@ -260,10 +261,6 @@ Contains
          Call KSPSetType(AppCtx%KSPU, KSPSTCG, iErr); CHKERRQ(iErr)
          Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
          Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
-
-         Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
-         Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
-         Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
          Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
@@ -272,11 +269,11 @@ Contains
          Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
          Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
          Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
-   
-         Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
-         Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
-         Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
       End If
+      Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
+      Call PCSetType(AppCtx%PCU, PCHYPRE, iErr); CHKERRQ(iErr)
+      Call PCHYPRESetType(AppCtx%PCU, "boomeramg", iErr); CHKERRQ(iErr)
+      Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
 
 
       !!! Initialize the BC Flag

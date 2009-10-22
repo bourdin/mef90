@@ -249,7 +249,9 @@ Contains
       Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
-      Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
+!      Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
+      Call PCSetType(AppCtx%PCU, PCHYPRE, iErr); CHKERRQ(iErr)
+      Call PCHYPRESetType(APpCtx%PCU, "boomeramg", iErr); CHKERRQ(iErr)
       Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
          
       !! Solver context for V      
@@ -275,7 +277,7 @@ Contains
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
          Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
-         Call KSPSetType(AppCtx%KSPV, KSPCG, iErr); CHKERRQ(iErr)
+         Call KSPSetType(AppCtx%KSPV, KSPGMRES, iErr); CHKERRQ(iErr)
       End If
       Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
       Call KSPAppendOptionsPrefix(AppCtx%KSPV, "V_", iErr); CHKERRQ(iErr)
@@ -283,7 +285,9 @@ Contains
       Call KSPSetFromOptions(AppCtx%KSPV, iErr); CHKERRQ(iErr)
 
       Call KSPGetPC(AppCtx%KSPV, AppCtx%PCV, iErr); CHKERRQ(iErr)
-      Call PCSetType(AppCtx%PCV, PCBJACOBI, iErr); CHKERRQ(iErr)
+!      Call PCSetType(AppCtx%PCV, PCBJACOBI, iErr); CHKERRQ(iErr)
+      Call PCSetType(AppCtx%PCV, PCHYPRE, iErr); CHKERRQ(iErr)
+      Call PCHYPRESetType(APpCtx%PCV, "boomeramg", iErr); CHKERRQ(iErr)
       Call PCSetFromOptions(AppCtx%PCV, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 0) Then
@@ -364,8 +368,7 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      !!! Saving SectionReal involves a Vec creation, plus whenever we get to save, the Vec should be up to date 
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U%Vec) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U%Sec) 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_U
 
@@ -375,8 +378,7 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      !!! Saving SectionReal involves a Vec creation, plus whenever we get to save, the Vec should be up to date 
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V%Vec) 
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V%Sec) 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_V
 
@@ -418,15 +420,11 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F%Vec) 
-      Call SectionRealToVec(AppCtx%F%Sec, AppCtx%F%Scatter, SCATTER_REVERSE, AppCtx%F%Vec, iErr); CHKERRQ(ierr)
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta%Vec) 
-      Call SectionRealToVec(AppCtx%Theta%Sec, AppCtx%Theta%Scatter, SCATTER_REVERSE, AppCtx%Theta%Vec, iErr); CHKERRQ(ierr)
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F%Sec) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta%Sec) 
       
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%VBC%Vec) 
-      Call SectionRealToVec(AppCtx%VBC%Sec, AppCtx%VBC%Scatter, SCATTER_REVERSE, AppCtx%VBC%Vec, iErr); CHKERRQ(ierr)
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC%Vec) 
-      Call SectionRealToVec(AppCtx%UBC%Sec, AppCtx%UBC%Scatter, SCATTER_REVERSE, AppCtx%UBC%Vec, iErr); CHKERRQ(ierr)
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%VBC%Sec) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC%Sec) 
 
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep))
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
