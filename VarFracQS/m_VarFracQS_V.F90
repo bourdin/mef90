@@ -202,7 +202,7 @@ Contains
             Call SectionIntSet(AppCtx%IrrevFlag%Sec, VarFrac_BC_Type_NONE, iErr); CHKERRQ(iErr)
             Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
             If (AppCtx%TimeStep > 1) Then
-               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%VIrrev%Vec)
+               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%VIrrev)
                Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%VIrrev%Scatter, SCATTER_REVERSE, AppCtx%VIrrev%Vec, ierr); CHKERRQ(ierr)
                Do i = 1, AppCtx%MeshTopology%Num_Verts
                   Call SectionRealRestrict(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(iErr)      
@@ -248,7 +248,7 @@ Contains
             End If
 
             If (AppCtx%TimeStep > 1) Then
-               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%VIrrev%Vec)
+               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%VIrrev)
                Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%VIrrev%Scatter, SCATTER_REVERSE, AppCtx%VIrrev%Vec, ierr); CHKERRQ(ierr)
             Else
                Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)

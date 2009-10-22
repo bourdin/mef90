@@ -24,13 +24,14 @@ Module m_MEF_Types
    Public :: MeshTopologyDestroy, MeshTopologyView
       
    Type Field
-      Type(Vec)                                      :: Vec
       Type(SectionReal)                              :: Sec
       Type(SectionReal), Dimension(:), Pointer       :: Component_Sec
+      Type(Vec)                                      :: Vec
+      Type(Vec)                                      :: LocalVec
       Type(VecScatter)                               :: Scatter
       PetscInt                                       :: num_components
       PetscInt, Dimension(:), Pointer                :: component_size
-      Logical                                        :: Has_Vec
+!      Logical                                        :: Has_Vec
    End Type Field
    
    Type Flag

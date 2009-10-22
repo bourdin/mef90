@@ -45,12 +45,12 @@ Module m_MEF_EXO
    Public :: EXOVariable_Read
    
    Interface Read_EXO_Result_Vertex
-      Module Procedure Read_EXO_Result_VertexPtrInterlaced, Read_EXO_Result_VertexSection, Read_EXO_Result_VertexVec, Read_EXO_Result_VertexVect2D, Read_EXO_Result_VertexVect3D, Read_EXO_Result_VertexMat2D, Read_EXO_Result_VertexMatS2D, Read_EXO_Result_VertexMat3D, Read_EXO_Result_VertexMatS3D
+      Module Procedure Read_EXO_Result_VertexPtrInterlaced, Read_EXO_Result_VertexField, Read_EXO_Result_VertexSection, Read_EXO_Result_VertexVec, Read_EXO_Result_VertexVect2D, Read_EXO_Result_VertexVect3D, Read_EXO_Result_VertexMat2D, Read_EXO_Result_VertexMatS2D, Read_EXO_Result_VertexMat3D, Read_EXO_Result_VertexMatS3D
    End Interface Read_EXO_Result_Vertex
    !!! These are BROKEN! the number of values may not match the number of vertices (non P1)
 
    Interface Write_EXO_Result_Vertex
-      Module Procedure Write_EXO_Result_VertexPtrInterlaced, Write_EXO_Result_VertexSection, Write_EXO_Result_VertexVec, Write_EXO_Result_VertexVect2D, Write_EXO_Result_VertexVect3D, Write_EXO_Result_VertexMat2D, Write_EXO_Result_VertexMatS2D, Write_EXO_Result_VertexMat3D, Write_EXO_Result_VertexMatS3D
+      Module Procedure Write_EXO_Result_VertexPtrInterlaced, Write_EXO_Result_VertexField, Write_EXO_Result_VertexSection, Write_EXO_Result_VertexVec, Write_EXO_Result_VertexVect2D, Write_EXO_Result_VertexVect3D, Write_EXO_Result_VertexMat2D, Write_EXO_Result_VertexMatS2D, Write_EXO_Result_VertexMat3D, Write_EXO_Result_VertexMatS3D
    End Interface Write_EXO_Result_Vertex
    
    Interface Read_EXO_Result_Cell
@@ -765,6 +765,23 @@ Module m_MEF_EXO
       dEXO%exoid = 0
    End Subroutine Read_EXO_Result_VertexPtrInterlaced
 
+   Subroutine Read_EXO_Result_VertexField(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Field)                                   :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+      
+      !!! We Assume that the section is initialized and has the proper size
+      Call VecGetArrayF90(dRes%LocalVec, Res_Ptr, iErr); CHKERRQ(iErr)
+      Call Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, Res_Ptr)
+      Call VecRestoreArrayF90(dRes%LocalVec, Res_Ptr, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(dRes%Sec, dRes%Scatter, SCATTER_FORWARD, dRes%Vec, iErr); CHKERRQ(iErr)
+   End Subroutine Read_EXO_Result_VertexField
+
    Subroutine Read_EXO_Result_VertexSection(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1277,6 +1294,21 @@ Module m_MEF_EXO
       Call EXCLOS(dEXO%exoid, iErr)
       dEXO%exoid = 0
    End Subroutine Write_EXO_Result_VertexPtrInterlaced
+
+   Subroutine Write_EXO_Result_VertexField(dExo, dMeshTopology, dIdx, dTS, dRes)
+      Type (EXO_Type), Intent(INOUT)                 :: dEXO
+      Type (MeshTopology_Type)                       :: dMeshTopology
+      PetscInt                                       :: dIdx
+      PetscInt                                       :: dTS
+      Type (Field)                                   :: dRes
+      
+      PetscReal, Dimension(:), Pointer               :: Res_Ptr
+      PetscInt                                       :: iErr
+
+      Call VecGetArrayF90(dRes%LocalVec, Res_Ptr, iErr); CHKERRQ(iErr)
+      Call Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, Res_Ptr)
+      Call VecRestoreArrayF90(dRes%LocalVec, Res_Ptr, iErr); CHKERRQ(iErr)
+   End Subroutine Write_EXO_Result_VertexField
 
    Subroutine Write_EXO_Result_VertexSection(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
