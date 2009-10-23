@@ -74,6 +74,7 @@ Module m_VarFracQS_Types3D
       Type(Field)                                  :: Theta
       Type(Field)                                  :: RHSU, GradientU, LowerBoundU, UpperBoundU
       Type(Field)                                  :: RHSV, GradientV, LowerBoundV, UpperBoundV
+      Type(Vec)                                    :: V_Old
       Type(Flag)                                   :: BCUFlag, BCVFlag, IrrevFlag
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
