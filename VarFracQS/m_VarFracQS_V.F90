@@ -1188,7 +1188,7 @@ Contains
       KSPConvergedReason                           :: reason
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      Type(Vec)                                    :: V_Old
+!      Type(Vec)                                    :: V_Old
       PetscReal                                    :: VMin, VMax
       PetscReal                                    :: rDum
       PetscInt                                     :: iDum
@@ -1202,8 +1202,8 @@ Contains
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
 #if defined WITH_TAO
          Call TaoAppGetSolutionVec(AppCtx%taoappV, AppCtx%V%Vec, iErr); CHKERRQ(iErr)
-         Call VecDuplicate(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
-         Call VecCopy(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
+!         Call VecDuplicate(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
+         Call VecCopy(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
 
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
@@ -1228,8 +1228,8 @@ Contains
 #endif      
       Else
          Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, AppCtx%V%Vec, iErr); CHKERRQ(ierr)
-         Call VecDuplicate(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
-         Call VecCopy(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
+!         Call VecDuplicate(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
+         Call VecCopy(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
 
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n' 
@@ -1262,8 +1262,8 @@ Contains
       Write(IOBuffer, 700) VMin, VMax
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-       Call VecAxPy(V_Old, -1.0_Kr, AppCtx%V%Vec, iErr)
-       Call VecNorm(V_Old, NORM_INFINITY, AppCtx%ErrV, iErr)
+       Call VecAxPy(AppCtx%V_Old, -1.0_Kr, AppCtx%V%Vec, iErr)
+       Call VecNorm(AppCtx%V_Old, NORM_INFINITY, AppCtx%ErrV, iErr)
 
       Write(IOBuffer, 800) AppCtx%ErrV
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -1271,7 +1271,7 @@ Contains
       !!! Scatter V back into a SectionReal
       Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
       
-      Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
+!      Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       CHKMEMQ
 100 Format('     KSP for V converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')

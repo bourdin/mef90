@@ -206,6 +206,7 @@ Contains
       Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeVect)
       DeAllocate(SizeScal)
+      Call VecDuplicate(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
 
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
@@ -458,6 +459,7 @@ Contains
       Else
          Call FieldDestroy(AppCtx%RHSV); CHKERRQ(iErr)
       End If
+      Call VecDestroy(AppCtx%V_Old, iErr); CHKERRQ(iErr)
 
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
