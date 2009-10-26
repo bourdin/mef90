@@ -74,6 +74,12 @@ TestFibrationVertex:   ${PETSC_ARCH} TestFibrationVertex.o ${PETSC_ARCH}/TestFib
 TestSectionToArray:   ${PETSC_ARCH} TestSectionToArray.o ${PETSC_ARCH}/TestSectionToArray.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestSectionToArray ${PETSC_ARCH}/TestSectionToArray.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+TestSaveMesh:   ${PETSC_ARCH} TestSaveMesh.o ${PETSC_ARCH}/TestSaveMesh.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestSaveMesh ${PETSC_ARCH}/TestSaveMesh.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
+FindMPIProblem:   ${PETSC_ARCH} FindMPIProblem.o ${PETSC_ARCH}/FindMPIProblem.o
+	-${FLINKER} -o ${PETSC_ARCH}/FindMPIProblem ${PETSC_ARCH}/FindMPIProblem.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}

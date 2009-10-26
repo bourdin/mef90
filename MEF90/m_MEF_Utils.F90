@@ -26,15 +26,19 @@ Module m_MEF_Utils
          MyMaxVal = MaxVal(dMyVals)
          Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPI_INTEGER, MPI_MIN, dComm, iErr)
          Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPI_INTEGER, MPI_MAX, dComm, iErr)
-   
-   
+!!!$         openmpi doesn't like these so we do a Reduce followed by a Bcast
+!!!$         Call MPI_Reduce(MyMinVal, GlobMinVal, 1, MPI_INTEGER, MPI_MIN, 0, dComm, iErr)
+!!!$         Call MIP_Bcast(GlobMinVal, 1, MPI_INTEGER, 0, dComm, iErr)   
+!!!$         Call MPI_Reduce(MyMaxVal, GlobMaxVal, 1, MPI_INTEGER, MPI_MAX, 0, dComm, iErr)
+!!!$         Call MIP_Bcast(GlobMaxVal, 1, MPI_INTEGER, 0, dComm, iErr)   
+!!!$   
          Allocate(ValCount(GlobMinVal:GlobMaxVal))
          ValCount = .FALSE.
          Do i = 1, Size(dMyVals)
             ValCount(dMyVals(i)) = .TRUE.
          End Do
    
-         Call MPI_AllReduce(MPI_IN_PLACE, ValCount, GlobMaxVal-GlobMinVal+1, MPI_INTEGER, MPI_LOR, dComm, iErr)
+         Call MPI_AllReduce(MPI_IN_PLACE, ValCount, GlobMaxVal-GlobMinVal+1, MPI_LOGICAL, MPI_LOR, dComm, iErr)
          !!! This is suboptimal. I could gather only to CPU 0 and do everything else on CPU 0 before broadcasting
          
          UniqCount = Count(ValCount)
