@@ -364,11 +364,11 @@ Module m_VarFrac_Struct
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
-      Write(IOBuffer, "('-doIrrev ', I1, A)")             dSchemeParam%IrrevType, '\n'
+      Write(IOBuffer, "('-irrev ', I1, A)")               dSchemeParam%IrrevType, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-irrevtol ', ES12.5, A)")        dSchemeParam%IrrevTol, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-dobt ', L1, A)")                dSchemeParam%DoBT, '\n' 
+      Write(IOBuffer, "('-bt ', L1, A)")                  dSchemeParam%DoBT, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-bttol ', ES12.5, A)")           dSchemeParam%BTTol, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)

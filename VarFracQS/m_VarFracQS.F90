@@ -331,6 +331,7 @@ Contains
       Allocate(AppCtx%Load(AppCtx%NumTimeSteps))
       
       !!! Set V=1
+      Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
       Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
       Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)
       

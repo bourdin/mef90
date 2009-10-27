@@ -65,6 +65,8 @@ Contains
          !!! Irreversibility
          Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
          Call FieldInsertVertexBoundaryValues(AppCtx%UpperBoundV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
+!         Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%LowerBoundV, AppCtx%IrrevFlag, AppCtx%MeshTopology)
+!         Call FieldInsertVertexBoundaryValues(AppCtx%UpperBoundV, AppCtx%LowerBoundV, AppCtx%IrrevFlag, AppCtx%MeshTopology)
 
          !!! Regular Boundary Conditions
          Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
@@ -75,8 +77,8 @@ Contains
       Case (VarFrac_Irrev_InEq)      
          !!! Irreversibility
          !!! This is a total nonsense. I need a SectionRealCopy
-         Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%VIrrev%Scatter, SCATTER_FORWARD, AppCtx%UpperBoundV, iErr); CHKERRQ(iErr)
-         Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_REVERSE, AppCtx%UpperBoundV, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%VIrrev%Scatter, SCATTER_FORWARD, AppCtx%UpperBoundV%Vec, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_REVERSE, AppCtx%UpperBoundV%Vec, iErr); CHKERRQ(iErr)
          
          !!! Regular Boundary Conditions
          Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
@@ -88,65 +90,6 @@ Contains
 
       CHKMEMQ
    End Subroutine InitTaoBoundsV
-   
-!!!$!!!   Subroutine InitTaoBoundsVold(TaoApp, LowerBoundV_Vec, UpperBoundV_Vec, AppCtx, iErr)
-!!!$!!!      TAO_APPLICATION                              :: taoapp
-!!!$!!!      Type(Vec)                                    :: LowerBoundV_Vec, UpperBoundV_Vec
-!!!$!!!      Type(AppCtx_Type)                            :: AppCtx
-!!!$!!!      PetscErrorCode                               :: iErr
-!!!$!!!      
-!!!$!!!      Type(SectionReal)                            :: LowerBoundV_Sec, UpperBoundV_Sec
-!!!$!!!      PetscInt, Dimension(:), Pointer              :: BCVFlag_Ptr, IrrevFlag_Ptr
-!!!$!!!      PetscReal, Dimension(:), Pointer             :: Bound_Ptr, V_Ptr
-!!!$!!!      PetscInt                                     :: iDoF, NumDoF
-!!!$!!!      Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
-!!!$!!!      
-!!!$!!!      If (AppCtx%AppParam%verbose > 0) Then
-!!!$!!!         Write(IOBuffer, *) "Updating bounds for V\n"
-!!!$!!!         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$!!!      End If
-!!!$!!!      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'LowerBoundV_Sec',  1, LowerBoundV_Sec , iErr); CHKERRQ(iErr)
-!!!$!!!      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'UpperBoundV_Sec',  1, UpperBoundV_Sec , iErr); CHKERRQ(iErr) 
-!!!$!!!      Call SectionRealSet(LowerBoundV_Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
-!!!$!!!      Call SectionRealSet(UpperBoundV_Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-!!!$!!!      
-!!!$!!!      Select Case(AppCtx%VarFracSchemeParam%IrrevType)
-!!!$!!!      Case (VarFrac_Irrev_Eq)
-!!!$!!!         !!! Set Lower bound and upper bounds to 0 at each point where BCFlag == VarFrac_BC_Type_DIRI and to V whereever IrrevFlag = VarFrac_BC_Type_DIRI
-!!!$!!!         NumDoF = AppCtx%MeshTopology%Num_Verts !!! Change that!
-!!!$!!!         Allocate(Bound_Ptr(1))
-!!!$!!!         Bound_Ptr = 0.0_Kr
-!!!$!!!         Do iDof = 1, NumDoF
-!!!$!!!            Call SectionIntRestrict(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
-!!!$!!!            If (IrrevFlag_Ptr(1) /= VarFrac_BC_Type_NONE) Then
-!!!$!!!               Call SectionRealUpdate(LowerBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!!!$!!!               Call SectionRealUpdate(UpperBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, Bound_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!!!$!!!            End If
-!!!$!!!            Call SectionIntRestore(AppCtx%IrrevFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, IrrevFlag_Ptr, iErr); CHKERRQ(iErr)
-!!!$!!!
-!!!$!!!            Call SectionIntRestrict(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
-!!!$!!!            If (BCVFlag_Ptr(1) /= VarFrac_BC_Type_NONE) Then
-!!!$!!!               Call SectionRealRestrict(AppCtx%V,      AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, iErr); CHKERRQ(iErr)
-!!!$!!!               Call SectionRealUpdate(LowerBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!!!$!!!               Call SectionRealUpdate(UpperBoundV_Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!!!$!!!               Call SectionRealRestore(AppCtx%V,       AppCtx%MeshTopology%Num_Elems+iDoF-1, V_Ptr, iErr); CHKERRQ(iErr)
-!!!$!!!            End If
-!!!$!!!            Call SectionIntRestore(AppCtx%BCVFlag, AppCtx%MeshTopology%Num_Elems+iDoF-1, BCVFlag_Ptr, iErr); CHKERRQ(iErr)
-!!!$!!!         End Do  
-!!!$!!!         DeAllocate(Bound_Ptr)   
-!!!$!!!         
-!!!$!!!      Case (VarFrac_Irrev_InEq)      
-!!!$!!!         !!! Set Set lower bound to 0 and Upper bound to V, THEN to 0 at each point where at each point where BCFlag == VarFrac_BC_Type_DIRI
-!!!$!!!         SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
-!!!$!!!      End Select
-!!!$!!!      
-!!!$!!!      Call SectionRealToVec(LowerBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, LowerBoundV_Vec, iErr); CHKERRQ(iErr)
-!!!$!!!      Call SectionRealToVec(UpperBoundV_Sec, AppCtx%ScatterScal, SCATTER_FORWARD, UpperBoundV_Vec, iErr); CHKERRQ(iErr)
-!!!$!!!
-!!!$!!!      Call SectionRealDestroy(LowerBoundV_Sec, iErr); CHKERRQ(iErr)
-!!!$!!!      Call SectionRealDestroy(UpperBoundV_Sec, iErr); CHKERRQ(iErr)
-!!!$!!!      CHKMEMQ
-!!!$!!!   End Subroutine InitTaoBoundsVold
 #endif
 
    Subroutine Init_TS_V(AppCtx)
@@ -218,7 +161,6 @@ Contains
                Write(IOBuffer, *) "Not Backtracking, so getting blocked nodes from V\n"
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
-!            Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
             Do i = 1, AppCtx%MeshTopology%Num_Verts
                Call SectionRealRestrict(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(ierr)      
                If (VIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
@@ -230,6 +172,7 @@ Contains
             End Do
          End If
          DeAllocate(IrrevFlag_Ptr)
+         Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
          If (AppCtx%AppParam%verbose > 0) Then
             Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
             Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"
@@ -270,76 +213,6 @@ Contains
       End Select
       CHKMEMQ
    End Subroutine Update_Irrev
-
-!!!$!!!   Subroutine Init_TS_Irrev(AppCtx)
-!!!$!!!   !!! Split into Init_V and Init_IrrevBC_V
-!!!$!!!      Type(AppCtx_Type)                            :: AppCtx
-!!!$!!!      Type(SectionReal)                            :: VBT
-!!!$!!!      PetscReal, Dimension(:), Pointer             :: V_Ptr
-!!!$!!!      PetscInt, Dimension(:), Pointer              :: BCVFlag, IrrevFlag
-!!!$!!!      PetscInt                                     :: i, iErr
-!!!$!!!      Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
-!!!$!!!      PetscReal                                    :: MyIrrevEQ_Counter 
-!!!$!!!      PetscReal                                    :: IrrevEQ_Counter
-!!!$!!!      
-!!!$!!!      MyIrrevEq_Counter = 0.0_Kr
-!!!$!!!      IrrevEq_Counter   = 0.0_Kr
-!!!$!!!
-!!!$!!!!!! THERE MUST BE A WAY TO AVOID ALLOCATING AND DESTROYING THE SECTION VBT
-!!!$!!!
-!!!$!!!      !!! Update the BC Flag from the current V
-!!!$!!!      Select Case(AppCtx%VarFracSchemeParam%IrrevType)
-!!!$!!!      Case(VarFrac_Irrev_Eq, VarFrac_Irrev_InEq)
-!!!$!!!         If (AppCtx%AppParam%verbose > 0) Then
-!!!$!!!            Write(IOBuffer, *) "Irreversibility with Irrev_EQ\n"
-!!!$!!!            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$!!!         End If
-!!!$!!!         !!! Update the IrrevFlag Section
-!!!$!!!         Allocate(IrrevFlag(1))
-!!!$!!!         IrrevFlag = VarFrac_BC_Type_DIRI
-!!!$!!!         If (AppCtx%IsBT) Then
-!!!$!!!            If (AppCtx%AppParam%verbose > 0) Then
-!!!$!!!               Write(IOBuffer, *) "Backtracking, so reading timestep if TS>1\n"
-!!!$!!!               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$!!!            End If
-!!!$!!!            Call SectionIntZero(AppCtx%IrrevFlag%Sec, iErr); CHKERRQ(iErr)
-!!!$!!!            If (AppCtx%TimeStep > 1) Then
-!!!$!!!               Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'VBT', 1, VBT, iErr); CHKERRQ(iErr)      
-!!!$!!!               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, VBT)
-!!!$!!!               Do i = 1, AppCtx%MeshTopology%Num_Verts
-!!!$!!!                  Call SectionRealRestrict(VBT, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)      
-!!!$!!!                  If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-!!!$!!!                     Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!!!$!!!                     MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
-!!!$!!!                  End If
-!!!$!!!                  Call SectionRealRestore(VBT, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(iErr)
-!!!$!!!               End Do
-!!!$!!!               Call SectionRealDestroy(VBT, iErr); CHKERRQ(iErr)
-!!!$!!!            End If
-!!!$!!!         Else
-!!!$!!!            If (AppCtx%AppParam%verbose > 0) Then
-!!!$!!!               Write(IOBuffer, *) "Not Backtracking, so getting blocked nodes from V\n"
-!!!$!!!               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$!!!            End If
-!!!$!!!            Do i = 1, AppCtx%MeshTopology%Num_Verts
-!!!$!!!               Call SectionRealRestrict(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr); CHKERRQ(ierr)      
-!!!$!!!               If (V_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-!!!$!!!                  Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!!!$!!!                  MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
-!!!$!!!               End If
-!!!$!!!               Call SectionRealRestore(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, V_Ptr, iErr);             End Do
-!!!$!!!         End If
-!!!$!!!         DeAllocate(IrrevFlag)
-!!!$!!!         If (AppCtx%AppParam%verbose > 0) Then
-!!!$!!!            Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-!!!$!!!            Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"
-!!!$!!!            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!$!!!         End If      
-!!!$!!!      Case default   
-!!!$!!!         SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
-!!!$!!!      End Select
-!!!$!!!      CHKMEMQ
-!!!$!!!   End Subroutine Init_TS_Irrev
 
 !!!
 !!! Global assembly functions
@@ -514,6 +387,7 @@ Contains
 
       !!! Set Dirichlet Boundary Values
       Call FieldInsertVertexBoundaryValues(AppCtx%GradientV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+      Call FieldInsertVertexBoundaryValues(AppCtx%GradientV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
 
       Call SectionRealToVec(AppCtx%GradientV%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
