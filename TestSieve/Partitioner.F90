@@ -17,7 +17,6 @@ Program Partitioner
    Type(MeshTopology_Type)                      :: MeshTopology
    Type(Mesh)                                   :: Tmp_Mesh
    Type(EXO_Type)                               :: EXO, MyEXO
-   Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    
    PetscTruth                                   :: HasPrefix, flg
    PetscInt                                     :: verbose
@@ -25,9 +24,24 @@ Program Partitioner
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: LogViewer, MyLogViewer
-     
+   Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
+   PetscInt                                     :: iDebug
+   
    Call MEF90_Initialize()
+
+
+   Call PetscMemorySetGetMaximumUsage(iErr); CHKERRQ(iErr)
+   iDebug = 0
+   Write(stagename(1), "(A)") "Everything"
+   Write(stagename(2), "(A)") "MeshCreate"
+   Write(stagename(3), "(A)") "MeshDistribute"
+   Write(stagename(4), "(A)") "MEF90 stuff"
+   Call ALEStagePush(stagename(1), iDebug, iErr); CHKERRQ(iErr)
+
    verbose = 0
+
+
+
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, flg, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr)    
    If (.NOT. HasPrefix) Then
@@ -61,25 +75,63 @@ Program Partitioner
       If (verbose > 0) Then
          Write(IOBuffer, *) "Reading the mesh\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call ALEStagePush(stagename(2), iDebug, iErr); CHKERRQ(iErr)
       End If
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      If (verbose > 0) Then
+         Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage AfterMeshCreate: ", iErr); CHKERRQ(iErr)
+         Write(IOBuffer, *) "\n\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
    Else
       If (verbose > 0) Then
          Write(IOBuffer, *) "Calling MeshCreateExodus\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call ALEStagePush(stagename(2), iDebug, iErr); CHKERRQ(iErr)
       End If
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
       If (verbose > 0) Then
-         Write(IOBuffer, *) "Calling MeshDistribute\n"
+         Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage AfterMeshCreate: ", iErr); CHKERRQ(iErr)
+         Write(IOBuffer, *) "\n\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
+
+      If (verbose > 0) Then
+         Write(IOBuffer, *) "Calling MeshDistribute\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call ALEStagePush(stagename(3), iDebug, iErr); CHKERRQ(iErr)
+      End If
       Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      If (verbose > 0) Then
+         Call ALEStagePrintMemory(stagename(3), iErr); CHKERRQ(iErr)
+         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage After MeshCreate: ", iErr); CHKERRQ(iErr)
+         Write(IOBuffer, *) "\n\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+
+
+      If (verbose > 0) Then
+         Write(IOBuffer, *) "Calling MeshDestroy\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
       Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+      If (verbose > 0) Then
+         Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
+         Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage After MeshDestroy: ", iErr); CHKERRQ(iErr)
+         Write(IOBuffer, *) "\n\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
    End If
    
    If (verbose > 0) Then
       Write(IOBuffer, *) "Initializing MeshTopology object\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call ALEStagePush(stagename(4), iDebug, iErr); CHKERRQ(iErr)
    End If
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    
@@ -91,6 +143,12 @@ Program Partitioner
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
    End Do
+   If (verbose > 0) Then
+      Call ALEStagePrintMemory(stagename(4), iErr); CHKERRQ(iErr)
+      Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage After MEF90 Initializations: ", iErr); CHKERRQ(iErr)
+      Write(IOBuffer, *) "\n\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    
    MyEXO%comm = PETSC_COMM_SELF
    MyEXO%exoid = EXO%exoid
@@ -110,6 +168,11 @@ Program Partitioner
    
    If (verbose > 0) Then
       Write(IOBuffer, *) "Cleaning up\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+      Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
+      Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage After MeshCreate: ", iErr); CHKERRQ(iErr)
+      Write(IOBuffer, *) "\n\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    If (verbose>1) Then
