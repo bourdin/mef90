@@ -402,9 +402,9 @@ Contains
             CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
             flops = flops + 2.0
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem            
-            EffectiveStrain_Trace = Trace(EffectiveStrain_Elem)
+            Strain_Trace = Trace(Strain_Elem)
 
-            If (EffectiveStrain_Trace >= 0.0_Kr) Then
+            If (Strain_Trace >= 0.0_Kr) Then
                Do iDoF1 = 1, NumDoFVect
                   If (BCFlag_Loc(iDoF1) == VarFrac_BC_Type_NONE) Then
                      Do iDoF2 = 1, NumDoFVect
@@ -630,9 +630,9 @@ Contains
             flops = flops + 2.0
 
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-            EffectiveStrain_Trace = Trace(EffectiveStrain_Elem)
+            Strain_Trace = Trace(Strain_Elem)
             
-            If (EffectiveStrain_Trace >= 0.0_Kr) Then
+            If (Strain_Trace >= 0.0_Kr) Then
                Do iDoF = 1, NumDofVect
                   Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * CoefV * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))
                End Do
