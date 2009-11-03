@@ -202,7 +202,7 @@ Contains
       Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
       Type(MatS3D)                                 :: EffectiveStrain_Elem_S, EffectiveStrain_Elem_D
 #endif
-      PetscReal                                    :: EffectiveStrain_Trace
+      PetscReal                                    :: Strain_Trace
       PetscReal                                    :: V_Elem, Theta_Elem
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
@@ -239,8 +239,8 @@ Contains
                flops = flops + 2.0
             End Do
             EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem            
-            EffectiveStrain_Trace = Trace(EffectiveStrain_Elem)
-            If (EffectiveStrain_Trace >= 0.0_Kr) Then
+            Strain_Trace = Trace(Strain_Elem)
+            If (Strain_Trace >= 0.0_Kr) Then
                ElasticEnergyBlock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * 0.5_Kr
                flops = flops + 6.0 
             Else
