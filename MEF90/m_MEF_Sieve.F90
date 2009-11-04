@@ -400,7 +400,7 @@ Contains
       PetscInt                                     :: iErr
       PetscInt, Dimension(:), Pointer              :: BCFlag_Ptr
       PetscReal, Dimension(:,:), Pointer           :: MatElem
-      PetscInt                                     :: i, j, num_dof
+      PetscInt                                     :: i, j, num_dof, zero
       !!! As soon as I can get access to the layout data of a SectionReal, I won't need the MeshTopology and the specific Vertex case
 
       !!!
@@ -409,6 +409,7 @@ Contains
       !!! therefre erasing exsting values....
       !!! MatInsertBoundaryValues needs to be called BEFORE building the hessian of stifness matrix
       !!!
+      zero = 0
       num_dof = sum(BCFlag%component_size)
       Allocate(MatElem(num_dof, num_dof))  
       Do i = 1, MeshTopology%num_verts
@@ -416,7 +417,7 @@ Contains
          If (Sum(BCFlag_Ptr) /= 0) Then
             MatElem = 0.0_Kr
             Do j = 1, num_dof
-               If (BCFlag_Ptr(j) /= 0) Then
+               If (BCFlag_Ptr(j) /= zero) Then
                   MatElem(j,j) = 1.0_Kr
                End If  
             End Do
@@ -447,19 +448,19 @@ Contains
       Type(Flag)                                   :: BCFlag
       Type(MeshTopology_Type)                      :: MeshTopology
       
-      PetscInt                                     :: iErr
+      PetscInt                                     :: iErr, zero
       PetscInt, Dimension(:), Pointer              :: BCFlag_Ptr
       PetscReal, Dimension(:), Pointer             :: FBC_Ptr
       PetscInt                                     :: i, j
       !!! As soon as I can get access to the layout data of a SectionReal, I won't need the MeshTopology and the specific Vertex case
-
+      zero = 0
       Do j = 1, BCFlag%num_components 
          If (BCFlag%Component_size(j) /= 1 ) Then
             SETERRQ(PETSC_ERR_ARG_SIZ, 'FieldInsertVertexBoundaryValues requires scalar components', ierr)
          End If
          Do i = 1, MeshTopology%Num_Verts
             Call SectionIntRestrict(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
-            If (BCFlag_Ptr(1) /= 0) Then
+            If (BCFlag_Ptr(1) /= zero) Then
                Call SectionRealRestrict(FBC%Component_Sec(j), MeshTopology%Num_Elems+i-1, FBC_Ptr, iErr); CHKERRQ(iErr)
                Call SectionRealUpdate  (F%Component_Sec(j),   MeshTopology%Num_Elems+i-1, FBC_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
                Call SectionRealRestore (FBC%Component_Sec(j), MeshTopology%Num_Elems+i-1, FBC_Ptr, iErr); CHKERRQ(iErr)
