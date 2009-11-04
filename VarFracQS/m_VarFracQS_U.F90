@@ -354,7 +354,7 @@ Contains
       Type(Vect3D)                                 :: U_Elem    
       Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #endif
-      PetscReal                                    :: EffectiveStrain_Trace
+      PetscReal                                    :: Strain_Trace
       PetscReal                                    :: Theta_Elem, V_Elem, CoefV
       PetscLogDouble                               :: flops
       
@@ -585,7 +585,7 @@ Contains
       Type(Vect3D)                                 :: X_Elem
       Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #endif      
-      PetscReal                                    :: EffectiveStrain_Trace
+      PetscReal                                    :: Strain_Trace
       PetscReal                                    :: Theta_Elem, V_Elem, CoefV
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect

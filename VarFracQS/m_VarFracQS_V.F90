@@ -545,7 +545,7 @@ Contains
       Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
       Type(MatS3D)                                 :: EffectiveStrain_Elem_D
 #endif      
-      PetscReal                                    :: EffectiveStrain_Trace
+      PetscReal                                    :: Strain_Trace
       PetscReal                                    :: ElasticEnergyDensity
       PetscLogDouble                               :: flops
       
@@ -589,9 +589,9 @@ Contains
             End Do
             !! Calculate the Effective Strain at the gauss point
             EffectiveStrain_Elem  = Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
-            EffectiveStrain_Trace = Trace(EffectiveStrain_Elem)
+            Strain_Trace = Trace(Strain_Elem)
 
-            If (EffectiveStrain_Trace >= 0.0_Kr) Then
+            If (Strain_Trace >= 0.0_Kr) Then
                ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
             Else
                EffectiveStrain_Elem_D = DeviatoricPart(EffectiveStrain_Elem)
@@ -892,7 +892,7 @@ Contains
       Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
       Type(MatS3D)                                 :: EffectiveStrain_Elem_D
 #endif      
-      PetscReal                                    :: EffectiveStrain_Trace
+      PetscReal                                    :: Strain_Trace
       PetscReal                                    :: ElasticEnergyDensity
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
@@ -929,9 +929,9 @@ Contains
                flops = flops + 4.0
             End Do
             EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-            EffectiveStrain_Trace = Trace(EffectiveStrain_Elem)
+            Strain_Trace = Trace(Strain_Elem)
             
-            If (EffectiveStrain_Trace >= 0.0_Kr) Then
+            If (Strain_Trace >= 0.0_Kr) Then
                ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
             Else
                EffectiveStrain_Elem_D = DeviatoricPart(EffectiveStrain_Elem)
