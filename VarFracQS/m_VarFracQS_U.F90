@@ -118,7 +118,7 @@ Contains
       PetscInt           :: iBlk, iBlkID
       
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyU_Stage, iErr); CHKERRQ(iErr)
-      If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
+      If (AppCtx%VarFracSchemeParam%Unilateral /= VarFrac_Unilateral_NONE) Then
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, X_Vec, iErr); CHKERRQ(ierr)
       End If
       
@@ -133,11 +133,14 @@ Contains
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-            If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-               Call MatU_AssemblyBlk_BrittleUnilateral(H, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, .FALSE., AppCtx)
-            Else
+            Select Case (AppCtx%VarFracSchemeParam%Unilateral)
+            Case (VarFrac_Unilateral_NONE)
                Call MatU_AssemblyBlk_Brittle(H, iBlk, AppCtx%V%Sec, .FALSE., AppCtx)
-            End If
+            Case (VarFrac_Unilateral_Full)
+               Call MatU_AssemblyBlk_BrittleUnilateralFull(H, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, .FALSE., AppCtx)
+            Case (VarFrac_Unilateral_Shear)
+               Call MatU_AssemblyBlk_BrittleUnilateralShear(H, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, .FALSE., AppCtx)
+            End Select
          Else
             Call MatU_AssemblyBlk_NonBrittle(H, iBlk, .FALSE., AppCtx)
          End If
@@ -175,11 +178,14 @@ Contains
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-            If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateral(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            Else
+            Select Case (AppCtx%VarFracSchemeParam%Unilateral)
+            Case (VarFrac_Unilateral_NONE)
                Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            End If
+            Case (VarFrac_Unilateral_Full)
+               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralFull(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+            Case (VarFrac_Unilateral_Shear)
+               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralShear(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+            End Select
          Else
             Call ElasticEnergy_AssemblyBlk_NonBrittle(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx)
          End If
@@ -198,11 +204,14 @@ Contains
       Do_iBlk2: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-            If (AppCtx%VarFracSchemeParam%Unilateral /= 0) Then
-               Call GradientU_AssemblyBlk_ElastBrittleUnilateral(AppCtx%GradientU%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            Else
+            Select Case (AppCtx%VarFracSchemeParam%Unilateral)
+            Case (VarFrac_Unilateral_NONE)
                Call GradientU_AssemblyBlk_ElastBrittle(AppCtx%GradientU%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            End If
+            Case (VarFrac_Unilateral_Full)
+               Call GradientU_AssemblyBlk_ElastBrittleUnilateralFull(AppCtx%GradientU%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+            Case (VarFrac_Unilateral_Shear)
+               Call GradientU_AssemblyBlk_ElastBrittleUnilateralShear(AppCtx%GradientU%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+            End Select
          Else
             Call GradientU_AssemblyBlk_ElastNonBrittle(AppCtx%GradientU%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx)
          End If
@@ -328,7 +337,7 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatU_AssemblyBlk_Brittle
 
-   Subroutine MatU_AssemblyBlk_BrittleUnilateral(K, iBlk, X_Sec, Theta_Sec, V_Sec, DoBC, AppCtx)
+   Subroutine MatU_AssemblyBlk_BrittleUnilateralFull(K, iBlk, X_Sec, Theta_Sec, V_Sec, DoBC, AppCtx)
       Type(Mat)                                    :: K
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: X_Sec, Theta_Sec, V_Sec
@@ -434,7 +443,102 @@ Contains
       DeAllocate(BCFlag_Loc)
       DeAllocate(U_Loc)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
-   End Subroutine MatU_AssemblyBlk_BrittleUnilateral
+   End Subroutine MatU_AssemblyBlk_BrittleUnilateralFull
+
+   Subroutine MatU_AssemblyBlk_BrittleUnilateralShear(K, iBlk, X_Sec, Theta_Sec, V_Sec, DoBC, AppCtx)
+      Type(Mat)                                    :: K
+      PetscInt                                     :: iBlk
+      Type(SectionReal)                            :: X_Sec, Theta_Sec, V_Sec
+      PetscTruth                                   :: DoBC
+      Type(AppCtx_Type)                            :: AppCtx
+
+      PetscInt                                     :: iBlkID
+      PetscReal, Dimension(:,:), Pointer           :: Mat_Loc      
+      PetscInt                                     :: iELoc, iE
+      PetscInt                                     :: iErr
+
+      PetscInt                                     :: NumDoFScal, NumDoFVect, NumGauss
+      PetscInt, Dimension(:), Pointer              :: BCFlag_Loc
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+      
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
+      PetscReal, Dimension(:), Pointer             :: U_Loc, V_Loc, Theta_Loc
+#if defined PB_2D
+      Type(Vect2D)                                 :: U_Elem
+      Type(Mats2D)                                 :: Strain_Elem, EffectiveStrain_Elem
+#elif defined PB_3D  
+      Type(Vect3D)                                 :: U_Elem    
+      Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
+#endif
+      PetscReal                                    :: Theta_Elem, V_Elem, CoefV
+      PetscLogDouble                               :: flops
+      
+      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+
+      flops = 0.0
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      
+      Allocate(V_Loc(NumDoFScal))
+      Allocate(Theta_Loc(NumDoFScal))
+      Allocate(BCFlag_Loc(NumDoFVect))
+      Allocate(U_Loc(NumDoFVect))
+      BCFlag_Loc = VarFrac_BC_Type_NONE
+      Allocate(Mat_Loc(NumDoFVect, NumDoFVect))
+      
+      Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         
+         Mat_Loc  = 0.0_Kr
+         Call SectionRealRestrictClosure(X_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(V_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
+         If (DoBC) Then
+            Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
+         End If
+            
+         Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
+            !!! Compute the trace of the effective strain in order to differentiate tension and compression
+            Strain_Elem = 0.0_Kr
+            Do iDoF2 = 1, NumDoFVect
+               Strain_Elem = Strain_Elem + U_Loc(iDoF2) * AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss)
+            End Do
+            Theta_Elem = 0.0_Kr
+            
+            !!! Compute the contribution of V to the stiffness matrix
+            !!! CoefV = (1+\eta_\varepsilon)v^2 
+            V_Elem = 0.0_Kr        
+            Do iDoF1 = 1, NumDoFScal
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
+               V_Elem     = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * V_Loc(iDoF1)
+               flops = flops + 4.0
+            End Do
+            CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
+            flops = flops + 2.0
+            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem            
+
+            Do iDoF1 = 1, NumDoFVect
+               If (BCFlag_Loc(iDoF1) == VarFrac_BC_Type_NONE) Then
+                  Do iDoF2 = 1, NumDoFVect
+                     Mat_Loc(iDoF2, iDoF1) =  Mat_Loc(iDoF2, iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( ((AppCtx%MatProp(iBlkID)%Hookes_Law * SphericalPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss))) .DotP. SphericalPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))) + CoefV * ((AppCtx%MatProp(iBlkID)%Hookes_Law * DeviatoricPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss))) .DotP. DeviatoricPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))) )
+                     flops = flops + 3.0
+                  End Do
+               End If
+            End Do
+         End Do
+         Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_Elem_iE
+      
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+      DeAllocate(Mat_Loc)
+      DeAllocate(V_Loc)
+      DeAllocate(Theta_Loc)
+      DeAllocate(BCFlag_Loc)
+      DeAllocate(U_Loc)
+      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+   End Subroutine MatU_AssemblyBlk_BrittleUnilateralShear
 
    Subroutine MatU_AssemblyBlk_NonBrittle(K, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: K
@@ -569,7 +673,7 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine GradientU_AssemblyBlk_ElastBrittle
 
-   Subroutine GradientU_AssemblyBlk_ElastBrittleUnilateral(Gradient_Sec, iBlk, X_Sec, Theta_Sec, V_Sec, AppCtx)
+   Subroutine GradientU_AssemblyBlk_ElastBrittleUnilateralFull(Gradient_Sec, iBlk, X_Sec, Theta_Sec, V_Sec, AppCtx)
       Type(SectionReal)                            :: Gradient_Sec
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: X_Sec, Theta_Sec, V_Sec
@@ -651,7 +755,83 @@ Contains
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
-   End Subroutine GradientU_AssemblyBlk_ElastBrittleUnilateral
+   End Subroutine GradientU_AssemblyBlk_ElastBrittleUnilateralFull
+
+   Subroutine GradientU_AssemblyBlk_ElastBrittleUnilateralShear(Gradient_Sec, iBlk, X_Sec, Theta_Sec, V_Sec, AppCtx)
+      Type(SectionReal)                            :: Gradient_Sec
+      PetscInt                                     :: iBlk
+      Type(SectionReal)                            :: X_Sec, Theta_Sec, V_Sec
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      PetscReal, Dimension(:), Pointer             :: X_Loc, Theta_Loc, V_Loc, Gradient_Loc
+#if defined PB_2D
+      Type(Vect2D)                                 :: X_Elem
+      Type(Mats2D)                                 :: Strain_Elem, EffectiveStrain_Elem
+#elif defined PB_3D  
+      Type(Vect3D)                                 :: X_Elem
+      Type(Mats3D)                                 :: Strain_Elem, EffectiveStrain_Elem
+#endif      
+      PetscReal                                    :: Theta_Elem, V_Elem, CoefV
+      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt                                     :: iDoF, iGauss
+      PetscLogDouble                               :: flops       
+
+      Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+      flops = 0.0
+
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+
+      Allocate(X_Loc(NumDoFVect))
+      Allocate(Gradient_Loc(NumDoFVect))
+      Allocate(Theta_Loc(NumDoFScal))
+      Allocate(V_Loc(NumDoFScal))
+
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Gradient_Loc = 0.0_Kr
+         Call SectionRealRestrictClosure(X_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, X_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(V_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+            X_Elem = 0.0_Kr
+            Strain_Elem = 0.0_Kr
+            Do iDoF = 1, NumDoFVect
+               X_Elem      = X_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)
+               Strain_Elem = Strain_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
+            End Do
+            Theta_Elem = 0.0_Kr
+            V_Elem = 0.0_Kr        
+            Do iDoF = 1, NumDoFScal
+               V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V_Loc(iDoF)
+               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
+               flops = flops + 4.0
+            End Do
+            CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
+            !!! CoefV = (1+\eta_\varepsilon)v^2 if Is_Brittle, 1 otherwise
+            flops = flops + 2.0
+
+            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+
+            Do iDoF = 1, NumDofVect
+               Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (CoefV * ((AppCtx%MatProp(iBlkId)%Hookes_Law * DeviatoricPart(EffectiveStrain_Elem)) .DotP. DeviatoricPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))) + ((AppCtx%MatProp(iBlkId)%Hookes_Law * SphericalPart(EffectiveStrain_Elem)) .DotP. SphericalPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))) )
+            End Do
+         End Do Do_iGauss
+         Call SectionRealUpdateClosure(Gradient_Sec, AppCtx%MeshTopology%Mesh, iE-1, Gradient_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_iEloc
+
+      DeAllocate(X_Loc)
+      DeAllocate(Gradient_Loc)
+      DeAllocate(Theta_Loc)
+      DeAllocate(V_Loc)
+      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+   End Subroutine GradientU_AssemblyBlk_ElastBrittleUnilateralShear
 
    Subroutine GradientU_AssemblyBlk_ElastNonBrittle(Gradient_Sec, iBlk, X_Sec, Theta_Sec, AppCtx)
       Type(SectionReal)                            :: Gradient_Sec
