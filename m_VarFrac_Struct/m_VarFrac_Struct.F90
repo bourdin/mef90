@@ -52,7 +52,11 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_NONE = 0
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_Eq   = 1
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_Ineq = 2
-   
+
+   PetscInt, Parameter, Public                     :: VarFrac_Unilateral_NONE  = 0
+   PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Full  = 1
+   PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Shear = 2
+
    PetscInt, Parameter, Public                     :: VarFrac_Num_VertVar           = 8
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_Fracture      = 1
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_DisplacementX = 2   
