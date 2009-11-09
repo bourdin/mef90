@@ -241,21 +241,6 @@ Module m_MEF_EXO
       PetscInt                                       :: EXO_MyRank
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
 
-!      Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
-!      Do i = 1, dEXO%Num_EBProperties
-!         Allocate(dEXO%EBProperty(i)%Value(dMeshTopology%Num_Elem_Blks))
-!      End Do
-!      
-!      Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
-!      Do i = 1, dEXO%Num_SSProperties
-!         Allocate(dEXO%SSProperty(i)%Value(dMeshTopology%Num_Side_Sets))
-!      End Do
-!
-!      Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
-!      Do i = 1, dEXO%Num_NSProperties
-!         Allocate(dEXO%NSProperty(i)%Value(dMeshTopology%Num_Node_Sets))
-!      End Do
-
       Do i = 1, dMeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
