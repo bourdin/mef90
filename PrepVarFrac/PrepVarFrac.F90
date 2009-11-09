@@ -196,14 +196,7 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End Do
    
-!!!   msg = 'Test Case'
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
-!!!   Write(IOBuffer, 200) 'Test Case'
-!!!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!!!   If (MEF90_MyRank == 0) Then
-!!!      Read(*,*) iCase
-!!!   End If
-!!!   Call MPI_BCast(iCase, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
 
    Select Case(iCase)
    Case (1,2)! MIL, geothermal PoC
@@ -212,8 +205,8 @@ Program PrepVarFrac
       Write(IOBuffer, *) '\nGlobal Variables\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       Call AskReal(TMin, 'TMin', BatchUnit, IsBatch)
-      Call AskReal(TMin, 'TMax', BatchUnit, IsBatch)
-      Call AskInt(NumSTeps, 'NumSteps', BatchUnit, IsBatch)
+      Call AskReal(TMax, 'TMax', BatchUnit, IsBatch)
+      Call AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
       
       Allocate(GlobVars(VarFrac_Num_GlobVar))
       GlobVars = 0.0_Kr
@@ -487,7 +480,7 @@ Contains
          If (MEF90_MyRank == 0) Then
             Read(ArgUnit,*) Val
          End If
-         Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+         Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
       Else
          Write(IOBuffer, "(A, t60,':  ')") msg
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
