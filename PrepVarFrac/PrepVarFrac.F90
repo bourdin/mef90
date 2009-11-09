@@ -30,15 +30,16 @@ Program PrepVarFrac
    Type(Mesh)                                   :: Tmp_Mesh
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2D
    Type(Element3D_Scal), Dimension(:), Pointer  :: Elem3D
-   PetscTruth                                   :: HasPrefix, verbose
+   PetscTruth                                   :: HasPrefix
+   PetscInt                                     :: verbose = 0
    PetscInt                                     :: iErr, iloc, i, j, k, iCase, iStep
 
-   PetscInt, Parameter                          :: NumTestCase=2
-   Type(TestCase_Type), Dimension(NumTestCase)  :: TestCase
+   PetscInt                                     :: NumTestCase
+   Type(TestCase_Type), Dimension(:) , Pointer  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
    Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec, CoordSec
    Type(Vect3D), Dimension(:), Pointer          :: U, F
-   PetscReal, DImension(:), Pointer             :: V
+   PetscReal, Dimension(:), Pointer             :: V
    PetscReal, Dimension(:), Pointer             :: Theta
    PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem, Z
    PetscReal                                    :: Tmin, Tmax
@@ -53,22 +54,48 @@ Program PrepVarFrac
    PetscReal                                    :: rDummy
    Character                                    :: cDummy
    PetscInt                                     :: vers
-
+   PetscTruth                                   :: IsBatch, HasBatchFile
+   PetscInt                                     :: BatchUnit=99
+   Character(len=MEF90_MXSTRLEN)                :: BatchFileName
+   PetscTruth                                   :: EraseBatch
 
    Call MEF90_Initialize()
    
-   Call PetscOptionsHasName(PETSC_NULL_CHARACTER, '-verbose', verbose, iErr)    
-   Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',       prefix, HasPrefix, iErr); CHKERRQ(iErr)
+   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, HasPrefix, iErr)    
+   Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr); CHKERRQ(iErr)
    If (.NOT. HasPrefix) Then
-      Call PetscPrintf(PETSC_COMM_WORLD, "No input file prefix given\n", iErr)
+      Call PetscPrintf(PETSC_COMM_WORLD, "No mesh prefix given\n", iErr)
       Call MEF90_Finalize()
       STOP
    End If
+   Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
+   Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
+   If (IsBatch) Then
+      Write(IOBuffer, *) "Processing batch file ", Trim(BatchFileName), "\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Open(Unit=BatchUnit, File=BatchFileName, Status='Old')
+      Rewind(BatchUnit)
+   Else
+      BatchFileName = Trim(prefix)//'.args'
+      Inquire(File=BatchFileName, EXIST=HasBatchFile)
+      Write(IOBuffer, *) "Running interactively and generating batch file ", trim(BatchFileName), "\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
+         Write(IOBuffer, *) "Batch file ", trim(BatchFileName), " already exists. Erase it and restart\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call MEF90_Finalize()
+         STOP
+      End If
+      Open(Unit=BatchUnit, File=BatchFileName, Status='Unknown')
+      Rewind(BatchUnit)
+   End If
    
+   NumTestCase = 2
+   Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
    End Do
-   TestCase(1)%Description = "MIL 2D/3D elasticity    "
+   TestCase(1)%Description = "MIL 2D/3D elasticity                       "
    TestCase(2)%Description = "Geothermal thermal cracks: proof of concept"
    
    
@@ -92,7 +119,7 @@ Program PrepVarFrac
    End If
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
-   If (verbose) Then
+   If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
@@ -104,14 +131,14 @@ Program PrepVarFrac
    Call MeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
    
    Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
-   If (verbose) Then
+   If (verbose > 0) Then
       Write(IOBuffer, *) "Done with VarFracEXOProperty_Init\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Write(IOBuffer, *) '\nElement Block and Node Set Properties\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-   Call EXOProperty_Ask(MyEXO, MeshTopology)
+   Call EXOProperty_AskWithBatch(MyEXO, MeshTopology, BatchUnit, IsBatch)
    
    Do i = 1, MeshTopology%num_elem_blks
       MeshTopology%elem_blk(i)%Elem_Type = MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( MeshTopology%elem_blk(i)%ID )
@@ -119,20 +146,20 @@ Program PrepVarFrac
    End Do
 
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
-   If (verbose) Then
+   If (verbose > 0) Then
       Write(IOBuffer, *) "Done with Write_MeshTopologyGlobal\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
    Call EXOProperty_Write(MyEXO)
-   If (verbose) Then
+   If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with EXOProperty_Write\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
    Call VarFracEXOVariable_Init(MyEXO)
    Call EXOVariable_Write(MyEXO)
-   If (verbose) Then
+   If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
@@ -147,7 +174,7 @@ Program PrepVarFrac
    Case Default
       SETERRQ(PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
    End Select
-   If (verbose) Then
+   If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with ElementInit\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
@@ -158,7 +185,7 @@ Program PrepVarFrac
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
    Call MeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
    
-   If (verbose) Then
+   If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with Initializing Sections\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
@@ -169,12 +196,14 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End Do
    
-   Write(IOBuffer, 200) 'Test Case'
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   If (MEF90_MyRank == 0) Then
-      Read(*,*) iCase
-   End If
-   Call MPI_BCast(iCase, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+!!!   msg = 'Test Case'
+   Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
+!!!   Write(IOBuffer, 200) 'Test Case'
+!!!   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!!!   If (MEF90_MyRank == 0) Then
+!!!      Read(*,*) iCase
+!!!   End If
+!!!   Call MPI_BCast(iCase, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
 
    Select Case(iCase)
    Case (1,2)! MIL, geothermal PoC
@@ -182,24 +211,9 @@ Program PrepVarFrac
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-      Write(IOBuffer, 200) 'TMin'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      If (MEF90_MyRank == 0) Then
-         Read(*,*) TMin
-      End If
-      Call MPI_BCast(TMin, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-      Write(IOBuffer, 200) 'TMax'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      If (MEF90_MyRank == 0) Then
-         Read(*,*) TMax
-      End If
-      Call MPI_BCast(TMax, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
-      Write(IOBuffer, 200) 'NumSteps'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      If (MEF90_MyRank == 0) Then
-         Read(*,*) NumSteps
-      End If
-      Call MPI_BCast(NumSteps, 1, MPI_INTEGER, 0, EXO%Comm, iErr)
+      Call AskReal(TMin, 'TMin', BatchUnit, IsBatch)
+      Call AskReal(TMin, 'TMax', BatchUnit, IsBatch)
+      Call AskInt(NumSTeps, 'NumSteps', BatchUnit, IsBatch)
       
       Allocate(GlobVars(VarFrac_Num_GlobVar))
       GlobVars = 0.0_Kr
@@ -239,37 +253,31 @@ Program PrepVarFrac
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         
+         Write(IOBuffer, 300) i, 'Toughness'
+         Call AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) i, 'Young Modulus'
+         Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) i, 'Poisson Ratio'
+         Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) i, 'Therm Exp'
+         Call AskReal(THerm_ExpScal, IOBuffer, BatchUnit, IsBatch)
 
-         If (MEF90_MyRank == 0) Then
-            Write(IOBuffer, 200) 'Toughness'
-            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
-            Read(*,*) Toughness
-            Write(IOBuffer, 200) 'Young modulus'
-            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
-            Read(*,*) E
-            Write(IOBuffer, 200) 'Poisson ratio'
-            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
-            Read(*,*) nu
-            Write(IOBuffer, 200) 'Thermal expansion coefficient'
-            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
-            Read(*,*) Therm_ExpScal
-               
-            Select Case(MeshTopology%Num_Dim)
-            Case(2)
-               MatProp2D(i)%Toughness = Toughness
-               Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
-               MatProp2D(i)%Therm_Exp    = 0.0_Kr
-               MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
-               MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
-            Case(3)
-               MatProp3D(i)%Toughness = Toughness
-               Call GenHL_Iso3D_Enu(E, nu, MatProp3D(i)%Hookes_Law)
-               MatProp3D(i)%Therm_Exp    = 0.0_Kr
-               MatProp3D(i)%Therm_Exp%XX = Therm_ExpScal
-               MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
-               MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
-            End Select 
-         End If        
+         Select Case(MeshTopology%Num_Dim)
+         Case(2)
+            MatProp2D(i)%Toughness = Toughness
+            Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
+            MatProp2D(i)%Therm_Exp    = 0.0_Kr
+            MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
+            MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
+         Case(3)
+            MatProp3D(i)%Toughness = Toughness
+            Call GenHL_Iso3D_Enu(E, nu, MatProp3D(i)%Hookes_Law)
+            MatProp3D(i)%Therm_Exp    = 0.0_Kr
+            MatProp3D(i)%Therm_Exp%XX = Therm_ExpScal
+            MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
+            MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
+         End Select 
       End Do
       If (MEF90_MyRank == 0) Then
          Select Case(MeshTopology%Num_Dim)
@@ -297,35 +305,19 @@ Program PrepVarFrac
 
          !!! Force
          If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'Fx'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) F(i)%X
-            End If
-            Call MPI_BCast(F(i)%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+            Write(IOBuffer, 300) i, 'Fx'
+            Call AskReal(F(i)%X, IOBuffer, BatchUnit, IsBatch)
 
-            Write(IOBuffer, 200) 'Fy'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) F(i)%Y
-            End If
-            Call MPI_BCast(F(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+            Write(IOBuffer, 300) i, 'Fy'
+            Call AskReal(F(i)%Y, IOBuffer, BatchUnit, IsBatch)
 
-            Write(IOBuffer, 200) 'Fz'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) F(i)%Z
-            End If
-            Call MPI_BCast(F(i)%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+            Write(IOBuffer, 300) i, 'FZ'
+            Call AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
          End If
          
          !!! Temperature
-         Write(IOBuffer, 200) 'Theta'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         If (MEF90_MyRank == 0) Then
-            Read(*,*) Theta(i)
-         End If
-         Call MPI_BCast(Theta(i), 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+         Write(IOBuffer, 300) i, 'Theta'
+         Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
       End Do   
       
       Do iStep = 1, NumSteps
@@ -397,36 +389,20 @@ Program PrepVarFrac
          !!! Displacement
          !!! WTF I can bcast the entire arrays
          If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'Ux'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) U(i)%X
-            End If
-            Call MPI_BCast(U(i)%X, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+            Write(IOBuffer, 301) i, 'Ux'
+            Call AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'Uy'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) U(i)%Y
-            End If
-            Call MPI_BCast(U(i)%Y, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+            Write(IOBuffer, 301) i, 'Uy'
+            Call AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'Uz'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) U(i)%Z
-            End If
-            Call MPI_BCast(U(i)%Z, 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+            Write(IOBuffer, 301) i, 'Uz'
+            Call AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 200) 'V'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (MEF90_MyRank == 0) Then
-               Read(*,*) V(i)
-            End If
-            Call MPI_BCast(V(i), 1, MPIU_SCALAR, 0, EXO%Comm, iErr)
+            Write(IOBuffer, 301) i, 'V'
+            Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
          End If
       End Do
       
@@ -465,12 +441,111 @@ Program PrepVarFrac
       SETERRQ(PETSC_ERR_SUP, 'Unknown test case\n', iErr)      
    End Select
 
-
+   Close(BatchUnit)
    Call MEF90_Finalize()
 
  100 Format('*** Element Block ', T24, I3, '\n')
  101 Format('*** Side Set      ', T24, I3, '\n')
  102 Format('*** Node Set      ', T24, I3, '\n')
- 200 Format(A,t60, ': ')
+ !200 Format(A,t60, ': ')
+ 300 Format('EB', I4.4, ': ', A)
+ 301 Format('SS', I4.4, ': ', A)
+ 302 Format('NS', I4.4, ': ', A)
+
+Contains
+   Subroutine AskInt(val, msg, ArgUnit, IsBatch)
+      PetscInt                                  :: Val
+      Character(len=*)                          :: msg 
+      PetscInt                                  :: argunit
+      PetscTruth                                :: IsBatch
+
+      Character(len=MEF90_MXSTRLEN)             :: prefix, IOBuffer      
+      If (IsBatch) Then
+         If (MEF90_MyRank == 0) Then
+            Read(ArgUnit,*) Val
+         End If
+         Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+      Else
+         Write(IOBuffer, "(A, t60,':  ')") msg
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         If (MEF90_MyRank == 0) Then
+            Read(*,*) Val
+            Write(ArgUnit, "(I4, t60, A)") val, msg
+         End If
+         Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+      End If
+   End Subroutine AskInt   
    
+   Subroutine AskReal(val, msg, ArgUnit, IsBatch)
+      PetscReal                                 :: Val
+      Character(len=*)                          :: msg 
+      PetscInt                                  :: argunit
+      PetscTruth                                :: IsBatch
+
+      Character(len=MEF90_MXSTRLEN)             :: prefix, IOBuffer      
+      If (IsBatch) Then
+         If (MEF90_MyRank == 0) Then
+            Read(ArgUnit,*) Val
+         End If
+         Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+      Else
+         Write(IOBuffer, "(A, t60,':  ')") msg
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         If (MEF90_MyRank == 0) Then
+            Read(*,*) Val
+            Write(ArgUnit, "(ES12.5, t60, A)") val, msg
+         End If
+         Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
+      End If
+   End Subroutine AskReal
+
+   Subroutine EXOProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
+      Type(EXO_Type)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      PetscInt                                       :: BatchUnit
+      PetscTruth                                     :: IsBatch
+      
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i, j, IntBuffer
+
+      PetscInt                                       :: NumEB, NumSS, NumNS
+      PetscInt                                       :: EXO_MyRank
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+
+      Do i = 1, dMeshTopology%Num_Elem_Blks_Global
+         Write(IOBuffer, 100) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_EBProperties
+            Write(IOBuffer, 200) i, Trim(dEXO%EBProperty(j)%Name)
+            Call AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+      End Do
+      
+      Do i = 1, dMeshTopology%Num_Side_Sets_Global
+         Write(IOBuffer, 101) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_SSProperties
+            Write(IOBuffer, 201) i, Trim(dEXO%SSProperty(j)%Name)
+            Call AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+      End Do
+
+      Do i = 1, dMeshTopology%Num_Node_Sets_Global
+         Write(IOBuffer, 102) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_NSProperties
+            Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
+            Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+      End Do
+ 100 Format('*** Element Block ', T24, I3, '\n')
+ 101 Format('*** Side Set      ', T24, I3, '\n')
+ 102 Format('*** Node Set      ', T24, I3, '\n')
+ 110 Format(T24, A, T60, ': ')
+ 200 Format('EB', I4.4, ': ', A)
+ 201 Format('SS', I4.4, ': ', A)
+ 202 Format('NS', I4.4, ': ', A)
+   End Subroutine EXOProperty_AskWithBatch
+      
+
 End Program PrepVarFrac
