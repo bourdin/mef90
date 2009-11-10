@@ -380,21 +380,20 @@ Program PrepVarFrac
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
          !!! Displacement
-         !!! WTF I can bcast the entire arrays
          If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 301) i, 'Ux'
+            Write(IOBuffer, 302) i, 'Ux'
             Call AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 301) i, 'Uy'
+            Write(IOBuffer, 302) i, 'Uy'
             Call AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 301) i, 'Uz'
+            Write(IOBuffer, 302) i, 'Uz'
             Call AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 301) i, 'V'
+            Write(IOBuffer, 302) i, 'V'
             Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
          End If
       End Do
@@ -459,11 +458,11 @@ Contains
          End If
          Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
       Else
-         Write(IOBuffer, "(A, t60,':  ')") msg
+         Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          If (MEF90_MyRank == 0) Then
             Read(*,*) Val
-            Write(ArgUnit, "(I4, t60, A)") val, msg
+            Write(ArgUnit, "(I4, t60, A)") val, Trim(msg)
          End If
          Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
       End If
@@ -482,11 +481,11 @@ Contains
          End If
          Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
       Else
-         Write(IOBuffer, "(A, t60,':  ')") msg
+         Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          If (MEF90_MyRank == 0) Then
             Read(*,*) Val
-            Write(ArgUnit, "(ES12.5, t60, A)") val, msg
+            Write(ArgUnit, "(ES12.5, t60, A)") val, Trim(msg)
          End If
          Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
       End If
