@@ -36,8 +36,8 @@ Program EXOGetBB
    Call MeshGetCoordinatesF90(MeshTopology%mesh, CoordArray, iErr); CHKERRQ(iErr)
    Write(*, *) 'Size(CoordArray)', Size(CoordArray,1), Size(CoordArray,2)
    Write(*,*) 'X range: ', MinVal(CoordArray(:,1)), MaxVal(CoordArray(:,1))
-   Write(*,*) 'Z range: ', MinVal(CoordArray(:,2)), MaxVal(CoordArray(:,2))
-   If (MeshTopology%Num_Dim ==3) Then
+   Write(*,*) 'Y range: ', MinVal(CoordArray(:,2)), MaxVal(CoordArray(:,2))
+   If (Size(CoordArray,2) == 3) Then
       Write(*,*) 'Z range: ', MinVal(CoordArray(:,3)), MaxVal(CoordArray(:,3))
    End If
    Call MeshRestoreCoordinatesF90(MeshTopology%mesh, CoordArray, iErr); CHKERRQ(iErr)
