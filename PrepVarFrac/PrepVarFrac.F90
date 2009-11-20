@@ -202,7 +202,7 @@ Program PrepVarFrac
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2)! MIL, geothermal PoC
+   Case (1,2,3,4)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -211,6 +211,10 @@ Program PrepVarFrac
       Call AskReal(TMax, 'TMax', BatchUnit, IsBatch)
       Call AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
       
+      If (iCase == 4) Then
+         Call AskReal(Beta, 'Beta', BatchUnit, IsBatch)
+      End If
+
       Allocate(GlobVars(VarFrac_Num_GlobVar))
       GlobVars = 0.0_Kr
       Allocate(T(NumSteps))
@@ -285,6 +289,7 @@ Program PrepVarFrac
       End If
 
 
+
       Write(IOBuffer, *) '\nFields and Loads\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       !!! Variable initialized on EB: F and Theta
@@ -316,10 +321,6 @@ Program PrepVarFrac
          Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
       End Do   
 
-      If (iCase == 4) Then
-         Write(IOBuffer, 300) i, 'Beta'
-         Call AskReal(Beta, IOBuffer, BatchUnit, IsBatch)
-      End If
                   
       Do iStep = 1, NumSteps
          Call SectionRealSet(FSec, 0.0_Kr, iErr); CHKERRQ(iErr)
@@ -375,9 +376,9 @@ Program PrepVarFrac
                   Do k = 1, Num_DoF
                      eta = CoordElem((k-1) * MeshTopology%Num_Dim + 2)
                      tau  = sqrt(T(iStep))
-                     ThetaElem(k) = erf(eta / tau * 0.5_Kr ) - exp(beta * eta + beta**2 * tau**2) * erf(eta / tau * 0.5_Kr + beta * tau)
+                     ThetaElem(k) = erfc(eta / tau * 0.5_Kr ) - exp(beta * eta + beta**2 * tau**2) * erfc(eta / tau * 0.5_Kr + beta * tau)
                   End Do
-                  ThetaElem = Theta(i) * ThetaElem
+                  ThetaElem = Theta(i) * (1.0-ThetaElem)
                   Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
                End Do
             End Select
