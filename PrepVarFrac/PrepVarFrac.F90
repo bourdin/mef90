@@ -219,7 +219,11 @@ Program PrepVarFrac
       GlobVars = 0.0_Kr
       Allocate(T(NumSteps))
       Do i = 1, NumSteps-1
-         T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
+         If ( (iCase == 3) .OR. (iCase == 4) ) Then
+            T(i) = Tmin + (Real(i-1) * (sqrt(Tmax-TMin))/Real(NumSteps-1))**2
+         Else
+            T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
+         End If
          GlobVars(VarFrac_GlobVar_Load) = T(i)
          Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
 
@@ -227,6 +231,7 @@ Program PrepVarFrac
          Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
          Call EXCLOS(MyEXO%exoid, iErr)
          MyEXO%exoid = 0
+         Write(200,'(I4,ES12.5)') i, T(i)
       End Do
 
       T(NumSteps) = Tmax
