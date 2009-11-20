@@ -41,9 +41,10 @@ Program PrepVarFrac
    Type(Vect3D), Dimension(:), Pointer          :: U, F
    PetscReal, Dimension(:), Pointer             :: V
    PetscReal, Dimension(:), Pointer             :: Theta
-   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem, Z
+   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
+   PetscReal                                    :: Beta, eta, tau, Y
    PetscInt                                     :: NumSteps
    PetscInt                                     :: Num_DoF
    PetscReal                                    :: RealBuffer
@@ -90,14 +91,16 @@ Program PrepVarFrac
       Rewind(BatchUnit)
    End If
    
-   NumTestCase = 2
+   NumTestCase = 4
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
    End Do
    TestCase(1)%Description = "MIL 2D/3D elasticity                       "
    TestCase(2)%Description = "Geothermal thermal cracks: proof of concept"
-   
+   TestCase(3)%Description = "Cooling: infinite domain, thermal conduction only"
+   TestCase(4)%Description = "Cooling: infinite domain, convection and conduction (Newtonian cooling)"
+
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -312,7 +315,12 @@ Program PrepVarFrac
          Write(IOBuffer, 300) i, 'Theta'
          Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
       End Do   
-      
+
+      If (iCase == 4) Then
+         Write(IOBuffer, 300) i, 'Beta'
+         Call AskReal(Beta, IOBuffer, BatchUnit, IsBatch)
+      End If
+                  
       Do iStep = 1, NumSteps
          Call SectionRealSet(FSec, 0.0_Kr, iErr); CHKERRQ(iErr)
          Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
@@ -323,7 +331,6 @@ Program PrepVarFrac
             Allocate(Felem(3*Num_DoF))
             Allocate(Thetaelem(Num_DoF))
             Allocate(Coordelem(Num_DoF * MeshTopology%Num_Dim))
-            Allocate(Z(Num_DoF))
             
             !!! Update F
             If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
@@ -338,27 +345,45 @@ Program PrepVarFrac
             End If
    
             !!! Update Theta
-            If (iCase == 1) Then
+            Select Case (iCase)
+            Case(1)
                Thetaelem = T(iSTep) * Theta(i)
                Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
                   Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
                End Do
-            ElseIf (iCase == 2) Then
+            Case(2)
                Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
                   Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
                   Do k = 1, Num_DoF
-                     Z(k) = CoordElem((k-1) * MeshTopology%Num_Dim + 2)**2 / T(iStep)
-                     ThetaElem(k) = erf(Z(k))
+                     ThetaElem(k) = erf( CoordElem((k-1) * MeshTopology%Num_Dim + 2)**2 / T(iStep) )
                   End Do
                   ThetaElem = Theta(i) * (1.0-ThetaElem)
                   Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
                End Do
-               
-            End If
+            Case(3)
+               Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+                  Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
+                  Do k = 1, Num_DoF
+                     ThetaElem(k) = erf( CoordElem((k-1) * MeshTopology%Num_Dim + 2) / Sqrt(T(iStep)) * 0.5_Kr )
+                  End Do
+                  ThetaElem = Theta(i) * (1.0-ThetaElem)
+                  Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+               End Do
+            Case(4)
+               Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+                  Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
+                  Do k = 1, Num_DoF
+                     eta = CoordElem((k-1) * MeshTopology%Num_Dim + 2)
+                     tau  = sqrt(T(iStep))
+                     ThetaElem(k) = erf(eta / tau * 0.5_Kr ) - exp(beta * eta + beta**2 * tau**2) * erf(eta / tau * 0.5_Kr + beta * tau)
+                  End Do
+                  ThetaElem = Theta(i) * ThetaElem
+                  Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+               End Do
+            End Select
             DeAllocate(Felem)
             DeAllocate(Thetaelem)         
             DeAllocate(CoordElem)
-            DeAllocate(Z)
          End Do
          
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, iStep, FSec) 
