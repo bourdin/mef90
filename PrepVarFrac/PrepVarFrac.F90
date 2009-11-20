@@ -378,7 +378,7 @@ Program PrepVarFrac
                      tau  = sqrt(T(iStep))
                      ThetaElem(k) = erfc(eta / tau * 0.5_Kr ) - exp(beta * eta + beta**2 * tau**2) * erfc(eta / tau * 0.5_Kr + beta * tau)
                   End Do
-                  ThetaElem = Theta(i) * (1.0-ThetaElem)
+                  ThetaElem = Theta(i) * ThetaElem
                   Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
                End Do
             End Select
