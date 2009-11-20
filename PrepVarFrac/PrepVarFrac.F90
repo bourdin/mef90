@@ -231,7 +231,6 @@ Program PrepVarFrac
          Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
          Call EXCLOS(MyEXO%exoid, iErr)
          MyEXO%exoid = 0
-         Write(200,'(I4,ES12.5)') i, T(i)
       End Do
 
       T(NumSteps) = Tmax
