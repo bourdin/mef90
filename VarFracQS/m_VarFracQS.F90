@@ -57,11 +57,8 @@ Contains
 #if defined WITH_TAO
       Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
 #endif
-      Call InitLog(AppCtx)
       Call PetscMemorySetGetMaximumUsage(iErr); CHKERRQ(iErr)
 
-      Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
-      AppCtx%AppParam%Verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, flag, iErr)    
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       If (.NOT. HasPrefix) Then
@@ -74,6 +71,9 @@ Contains
       If (AppCtx%AppParam%verbose > 0) Then
          Call VarFracSchemeParam_View(AppCtx%VarFracSchemeParam, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
       End If
+      Call InitLog(AppCtx)
+      Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
+      AppCtx%AppParam%Verbose = 0
       
       Write(filename, 100) Trim(AppCtx%AppParam%prefix)
       Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, flgviewer, iErr); CHKERRQ(iErr);   
