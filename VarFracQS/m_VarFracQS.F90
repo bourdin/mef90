@@ -346,15 +346,15 @@ Contains
       PetscInt                                     :: iErr
       
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call PetscLogEventRegister('Hessian Assembly Local U',  0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
-         Call PetscLogEventRegister('Obj+Grad Assembly Local U', 0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
+         Call PetscLogEventRegister('Hessian Local U',  0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
+         Call PetscLogEventRegister('Obj+Grad Local U', 0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
       Else
          Call PetscLogEventRegister('MatAssembly Local U', 0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
          Call PetscLogEventRegister('RHSAssembly Local U', 0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
       End If
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
-         Call PetscLogEventRegister('Hessian Assembly Local V',  0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
-         Call PetscLogEventRegister('Obj+Grad Assembly Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+         Call PetscLogEventRegister('Hessian Local V',  0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+         Call PetscLogEventRegister('Obj+Grad Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
       Else
          Call PetscLogEventRegister('MatAssembly Local V', 0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
          Call PetscLogEventRegister('RHSAssembly Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
@@ -364,16 +364,16 @@ Contains
       Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
       Call PetscLogStageRegister("MeshDistribute",   AppCtx%LogInfo%MeshDistribute_Stage,   iErr)
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call PetscLogStageRegister("Hessian Assembly U",  AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
-         Call PetscLogStageRegister("Obj+Grad Assembly U", AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
+         Call PetscLogStageRegister("Hessian U",  AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
+         Call PetscLogStageRegister("Obj+Grad U", AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
       Else
          Call PetscLogStageRegister("Mat Assembly U",   AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
          Call PetscLogStageRegister("RHS Assembly U",   AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
       End If      
       Call PetscLogStageRegister("KSP Solve U",      AppCtx%LogInfo%KSPSolveU_Stage,        iErr)
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
-         Call PetscLogStageRegister("Hessian Assembly V",  AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
-         Call PetscLogStageRegister("Obj+Grad Assembly V", AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
+         Call PetscLogStageRegister("Hessian V",  AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
+         Call PetscLogStageRegister("Obj+Grad V", AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
       Else
          Call PetscLogStageRegister("Mat Assembly V",   AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
          Call PetscLogStageRegister("RHS Assembly V",   AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
