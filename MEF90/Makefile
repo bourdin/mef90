@@ -1,7 +1,9 @@
 
 all: m_MEF90.o ${PETSC_ARCH}
 
-include ${PETSC_DIR}/conf/base
+include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/conf/rules
+
 MODULE_OPTS = ${FC_MODULE_FLAG}${PETSC_ARCH}
 FFLAGS = --free-line-length-none
 

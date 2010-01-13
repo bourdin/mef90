@@ -10,7 +10,8 @@ M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 
 all: ${PROJ}
 
-include ${PETSC_DIR}/conf/base
+include ${PETSC_DIR}/conf/rules
+include ${PETSC_DIR}/conf/variables
 
 FFLAGS = -I. -I${MEF90DIR} -I${M_VARFRACSTRUCTDIR} --free-line-length-none
 .F90.o: 
