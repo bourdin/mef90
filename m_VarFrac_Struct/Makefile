@@ -7,7 +7,8 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_Sieve.o 
 
 all: ${PROJ}.o
-include ${PETSC_DIR}/conf/base
+include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/conf/rules
 
 FFLAGS = ${FC_MODULE_FLAG}${PETSC_ARCH} -I${MEF90DIR} --free-line-length-none
 
