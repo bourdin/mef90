@@ -73,7 +73,6 @@ Contains
       End If
       Call InitLog(AppCtx)
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
-      AppCtx%AppParam%Verbose = 0
       
       Write(filename, 100) Trim(AppCtx%AppParam%prefix)
       Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, flgviewer, iErr); CHKERRQ(iErr);   
@@ -553,7 +552,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
       End If
       Do iBTStep = 1, AppCtx%TimeStep-1
-         EnerBT = AppCtx%Load(iBTStep)**2 * AppCtx%ElasticEnergy(AppCtx%TimeStep) + AppCtx%Load(iBTStep) * AppCtx%Load(AppCtx%TimeStep) * AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+         EnerBT = AppCtx%Load(iBTStep)**2 * AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%Load(iBTStep) * AppCtx%Load(AppCtx%TimeStep) * AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%SurfaceEnergy(AppCtx%TimeStep)
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Checking against timestep', iBTStep, ':', AppCtx%TotalEnergy(iBTStep) - EnerBT * AppCtx%Load(AppCtx%TimeStep)**2, AppCtx%VarFracSchemeParam%BTTol * AppCtx%TotalEnergy(iBTStep) * AppCtx%Load(AppCtx%TimeStep)**2, '\n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
