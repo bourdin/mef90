@@ -45,6 +45,7 @@ Program PrepVarFrac
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
    PetscReal                                    :: Beta, eta, tau, Y
+   PetscReal                                    :: FixedPoint
    PetscInt                                     :: NumSteps
    PetscInt                                     :: Num_DoF
    PetscReal                                    :: RealBuffer
@@ -91,7 +92,7 @@ Program PrepVarFrac
       Rewind(BatchUnit)
    End If
    
-   NumTestCase = 4
+   NumTestCase = 5
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -100,6 +101,7 @@ Program PrepVarFrac
    TestCase(2)%Description = "Geothermal thermal cracks: proof of concept"
    TestCase(3)%Description = "Cooling: infinite domain, thermal conduction only"
    TestCase(4)%Description = "Cooling: infinite domain, convection and conduction (Newtonian cooling)"
+   TestCase(5)%Description = "MIL affine loading"
 
    
 
@@ -202,7 +204,7 @@ Program PrepVarFrac
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4)! MIL, geothermal PoC
+   Case (1,2,3,4,5)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -213,6 +215,10 @@ Program PrepVarFrac
       
       If (iCase == 4) Then
          Call AskReal(Beta, 'Beta', BatchUnit, IsBatch)
+      End If
+      
+      If (iCase == 5) Then
+         Call AskReal(FixedPoint, 'FixedPt', BatchUnit, IsBatch)
       End If
 
       Allocate(GlobVars(VarFrac_Num_GlobVar))
@@ -439,16 +445,30 @@ Program PrepVarFrac
          Call SectionRealSet(VSec, 1.0_Kr, iErr); CHKERRQ(iErr)
          Do iloc = 1, MeshTopology%Num_Node_Sets         
             i = MeshTopology%Node_Set(iloc)%ID
-            !!! Update 
-            Uelem(1) = T(iStep) * U(i)%X
-            Uelem(2) = T(iStep) * U(i)%Y
-            Uelem(3) = T(iStep) * U(i)%Z
-            Velem    = V(i)
             
-            Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
-               Call SectionRealUpdateClosure(USec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
-               Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
-            End Do
+            Select Case (iCase)
+            Case(1,2,3,4)
+               Uelem(1) = T(iStep) * U(i)%X
+               Uelem(2) = T(iStep) * U(i)%Y
+               Uelem(3) = T(iStep) * U(i)%Z
+               Velem    = V(i)
+               Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+                  Call SectionRealUpdateClosure(USec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+                  Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+               End Do
+            Case(5)
+               Velem    = V(i)
+               Allocate(Coordelem(MeshTopology%Num_Dim))
+               Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+                  Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
+                  Uelem(1) = T(iStep) * U(i)%X
+                  Uelem(2) = T(iStep) * U(i)%Y * (FixedPoint-CoordElem(1))
+                  Uelem(3) = T(iStep) * U(i)%Z
+                  Call SectionRealUpdateClosure(USec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+                  Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+               End Do
+               DeAllocate(Coordelem)
+            End Select
          End Do
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, iStep, USec) 
