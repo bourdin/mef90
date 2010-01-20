@@ -38,7 +38,7 @@ Program PrepVarFrac
    Type(TestCase_Type), Dimension(:) , Pointer  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
    Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec, CoordSec
-   Type(Vect3D), Dimension(:), Pointer          :: U, F
+   Type(Vect3D), Dimension(:), Pointer          :: U, F, P
    PetscReal, Dimension(:), Pointer             :: V
    PetscReal, Dimension(:), Pointer             :: Theta
    PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem
@@ -92,7 +92,7 @@ Program PrepVarFrac
       Rewind(BatchUnit)
    End If
    
-   NumTestCase = 6
+   NumTestCase = 7
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -103,6 +103,7 @@ Program PrepVarFrac
    TestCase(4)%Description = "Cooling: infinite domain, convection and conduction (Newtonian cooling)"
    TestCase(5)%Description = "MIL affine loading"
    TestCase(6)%Description = "Loads given by a polar angle (2D)"
+   TestCase(7)%Description = "Afine forces: F=P+t*F_0"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -204,7 +205,7 @@ Program PrepVarFrac
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4,5,6)! MIL, geothermal PoC
+   Case (1,2,3,4,5,6,7)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -221,7 +222,7 @@ Program PrepVarFrac
          Call AskReal(FixedPoint, 'FixedPt', BatchUnit, IsBatch)
       End If
 
-      If (iCase == 4) Then
+      If (iCase == 6) Then
          Call AskReal(Beta, 'polar angle', BatchUnit, IsBatch)
       End If
 
@@ -275,7 +276,7 @@ Program PrepVarFrac
          Write(IOBuffer, 300) i, 'Poisson Ratio'
          Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) i, 'Therm Exp'
-         Call AskReal(THerm_ExpScal, IOBuffer, BatchUnit, IsBatch)
+         Call AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
 
          Select Case(MeshTopology%Num_Dim)
          Case(2)
@@ -313,7 +314,12 @@ Program PrepVarFrac
       F%Y = 0.0_Kr
       F%Z = 0.0_Kr
       Theta = 0.0_Kr
-      
+      If (iCase == 7) Then
+         Allocate(P(MeshTopology%Num_Elem_Blks_Global))
+         P%X = 0.0_Kr
+         P%Y = 0.0_Kr
+         P%Z = 0.0_Kr
+      End If      
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -328,7 +334,18 @@ Program PrepVarFrac
 
             Write(IOBuffer, 300) i, 'FZ'
             Call AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
+            If (iCase == 7) Then
+               Write(IOBuffer, 300) i, 'Px'
+               Call AskReal(P(i)%X, IOBuffer, BatchUnit, IsBatch)
+   
+               Write(IOBuffer, 300) i, 'Py'
+               Call AskReal(P(i)%Y, IOBuffer, BatchUnit, IsBatch)
+   
+               Write(IOBuffer, 300) i, 'PZ'
+               Call AskReal(P(i)%Z, IOBuffer, BatchUnit, IsBatch)
+            End If
          End If
+
          
          !!! Temperature
          Write(IOBuffer, 300) i, 'Theta'
@@ -364,6 +381,15 @@ Program PrepVarFrac
                      Felem(3*k+1) = cos(T(iStep)*PETSC_PI/180.0_Kr) * F(i)%X
                      Felem(3*k+2) = sin(T(iStep)*PETSC_PI/180.0_Kr) * F(i)%Y
                      Felem(3*k+3) = 0.
+                  End Do
+                  Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+                     Call SectionRealUpdateClosure(FSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+                  End Do
+               Case(7)
+                  Do k = 0, Num_DoF-1
+                     Felem(3*k+1) = P(i)%X + T(iStep) * F(i)%X
+                     Felem(3*k+2) = P(i)%Y + T(iStep) * F(i)%Y
+                     Felem(3*k+3) = P(i)%Z + T(iStep) * F(i)%Z
                   End Do
                   Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
                      Call SectionRealUpdateClosure(FSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
@@ -418,7 +444,9 @@ Program PrepVarFrac
       End Do
       DeAllocate(F)
       DeAllocate(Theta)
-      
+      If (iCase == 7) Then
+         DeAllocate(P)
+      End If      
 
      !!! Variables Initialized at NS
       Allocate(U(MeshTopology%Num_Node_Sets_Global))
@@ -463,7 +491,7 @@ Program PrepVarFrac
             i = MeshTopology%Node_Set(iloc)%ID
             
             Select Case (iCase)
-            Case(1,2,3,4)
+            Case(1,2,3,4,7)
                Uelem(1) = T(iStep) * U(i)%X
                Uelem(2) = T(iStep) * U(i)%Y
                Uelem(3) = T(iStep) * U(i)%Z
