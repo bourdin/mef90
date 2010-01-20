@@ -92,7 +92,7 @@ Program PrepVarFrac
       Rewind(BatchUnit)
    End If
    
-   NumTestCase = 5
+   NumTestCase = 6
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -102,7 +102,7 @@ Program PrepVarFrac
    TestCase(3)%Description = "Cooling: infinite domain, thermal conduction only"
    TestCase(4)%Description = "Cooling: infinite domain, convection and conduction (Newtonian cooling)"
    TestCase(5)%Description = "MIL affine loading"
-
+   TestCase(6)%Description = "Loads given by a polar angle (2D)"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -204,7 +204,7 @@ Program PrepVarFrac
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4,5)! MIL, geothermal PoC
+   Case (1,2,3,4,5,6)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -219,6 +219,10 @@ Program PrepVarFrac
       
       If (iCase == 5) Then
          Call AskReal(FixedPoint, 'FixedPt', BatchUnit, IsBatch)
+      End If
+
+      If (iCase == 4) Then
+         Call AskReal(Beta, 'polar angle', BatchUnit, IsBatch)
       End If
 
       Allocate(GlobVars(VarFrac_Num_GlobVar))
@@ -345,14 +349,26 @@ Program PrepVarFrac
             
             !!! Update F
             If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
-               Do k = 0, Num_DoF-1
-                  Felem(3*k+1) = T(iStep) * F(i)%X
-                  Felem(3*k+2) = T(iStep) * F(i)%Y
-                  Felem(3*k+3) = T(iStep) * F(i)%Z
-               End Do
-               Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
-                  Call SectionRealUpdateClosure(FSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
-               End Do
+               Select Case (iCase)
+               Case(1,2,3,4,5)
+                  Do k = 0, Num_DoF-1
+                     Felem(3*k+1) = T(iStep) * F(i)%X
+                     Felem(3*k+2) = T(iStep) * F(i)%Y
+                     Felem(3*k+3) = T(iStep) * F(i)%Z
+                  End Do
+                  Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+                     Call SectionRealUpdateClosure(FSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+                  End Do
+               Case(6)
+                  Do k = 0, Num_DoF-1
+                     Felem(3*k+1) = cos(T(iStep)*PETSC_PI/180.0_Kr) * F(i)%X
+                     Felem(3*k+2) = sin(T(iStep)*PETSC_PI/180.0_Kr) * F(i)%Y
+                     Felem(3*k+3) = 0.
+                  End Do
+                  Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+                     Call SectionRealUpdateClosure(FSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+                  End Do
+               End Select
             End If
    
             !!! Update Theta
@@ -468,6 +484,15 @@ Program PrepVarFrac
                   Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
                End Do
                DeAllocate(Coordelem)
+            Case(6)
+               Uelem(1) = cos(T(iStep)*PETSC_PI/180_Kr) * U(i)%X
+               Uelem(2) = sin(T(iStep)*PETSC_PI/180_Kr) * U(i)%Y
+               Uelem(3) = 0
+               Velem    = V(i)
+               Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+                  Call SectionRealUpdateClosure(USec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+                  Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+               End Do
             End Select
          End Do
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
