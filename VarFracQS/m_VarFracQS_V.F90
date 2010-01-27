@@ -1267,6 +1267,9 @@ Contains
          Else
             Write(IOBuffer, 103) TaoReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (AppCtx%AppParam%StopOnError) Then
+               SETERRQ(PETSC_ERR_CONV_FAILED, 'TAO failed to converge, aborting...\n', iErr)
+            EndIf
          End If     
          Call KSPGetConvergedReason(AppCtx%KSPV, reason, iErr); CHKERRQ(iErr)
          If ( reason > 0 ) Then
@@ -1300,10 +1303,14 @@ Contains
          If ( reason > 0) Then
             Call KSPGetIterationNumber(AppCtx%KSPV, KSPNumIter, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 100) KSPNumIter, reason
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Else
             Write(IOBuffer, 101) reason
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (AppCtx%AppParam%StopOnError) Then
+               SETERRQ(PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
+            EndIf
          End If
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If      
    
       !!! Compute ||v-v_old||_\infty
