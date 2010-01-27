@@ -59,13 +59,16 @@ Contains
 #endif
       Call PetscMemorySetGetMaximumUsage(iErr); CHKERRQ(iErr)
 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, flag, iErr)    
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, flag, iErr); CHKERRQ(iErr)    
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       If (.NOT. HasPrefix) Then
          Call PetscPrintf(PETSC_COMM_WORLD, "No input file prefix given\n", iErr)
          Call MEF90_Finalize()
          STOP
       End If
+      AppCtx%AppParam%StopOnError = PETSC_FALSE
+      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-stop_on_error', AppCtx%AppParam%StopOnError, flag, iErr) ; CHKERRQ(iErr)
+      Write(*,*) 'Stop_on_error is ', AppCtx%AppParam%StopOnError, PETSC_TRUE
 
       Call VarFracSchemeParam_GetFromOptions(AppCtx%VarFracSchemeParam)
       If (AppCtx%AppParam%verbose > 0) Then
