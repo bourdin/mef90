@@ -75,7 +75,7 @@ Program PrepVarFrac
    If (IsBatch) Then
       Write(IOBuffer, *) "Processing batch file ", Trim(BatchFileName), "\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Open(Unit=BatchUnit, File=BatchFileName, Status='Old')
+      Open(Unit=BatchUnit, File=BatchFileName, Status='Old', readonly)
       Rewind(BatchUnit)
    Else
       BatchFileName = Trim(prefix)//'.args'
@@ -225,6 +225,9 @@ Program PrepVarFrac
       If (iCase == 6) Then
          Call AskReal(Beta, 'polar angle', BatchUnit, IsBatch)
       End If
+      If (.NOT. IsBatch) Then
+         Write(BatchUnit, *)
+      End If
 
       Allocate(GlobVars(VarFrac_Num_GlobVar))
       GlobVars = 0.0_Kr
@@ -293,6 +296,9 @@ Program PrepVarFrac
             MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
             MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
          End Select 
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
       End Do
       If (MEF90_MyRank == 0) Then
          Select Case(MeshTopology%Num_Dim)
@@ -350,6 +356,9 @@ Program PrepVarFrac
          !!! Temperature
          Write(IOBuffer, 300) i, 'Theta'
          Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
       End Do   
 
                   
@@ -475,6 +484,9 @@ Program PrepVarFrac
          If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
             Write(IOBuffer, 302) i, 'V'
             Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+         End If
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
          End If
       End Do
       
@@ -614,6 +626,9 @@ Contains
             Write(IOBuffer, 200) i, Trim(dEXO%EBProperty(j)%Name)
             Call AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
       End Do
       
       Do i = 1, dMeshTopology%Num_Side_Sets_Global
@@ -623,6 +638,9 @@ Contains
             Write(IOBuffer, 201) i, Trim(dEXO%SSProperty(j)%Name)
             Call AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
       End Do
 
       Do i = 1, dMeshTopology%Num_Node_Sets_Global
@@ -632,6 +650,9 @@ Contains
             Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
             Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
       End Do
  100 Format('*** Element Block ', T24, I3, '\n')
  101 Format('*** Side Set      ', T24, I3, '\n')
