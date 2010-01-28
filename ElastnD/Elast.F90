@@ -53,21 +53,6 @@ Program  Elast
       End If
    End If
    
-!!!   Call SectionIntView(AppCtx%BCUFlag%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!!!   Call SectionIntView(AppCtx%BCUFlag%Component_Sec(1), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!!!   Call SectionIntView(AppCtx%BCUFlag%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!!!
-!!!   Call MatView(AppCtx%KU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!!!   Call SectionRealSet(AppCtx%UBC%Sec, 2.45_Kr, iErr); CHKERRQ(iErr)
-!!!   Call SectionRealSet(AppCtx%U%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
-!!!   Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCUFlag, AppCtx%MeshTopology)
-!!!   Call SectionRealView(AppCtx%U%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!!!   Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-!!!   Call VecView(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!!!
-!!!   Call MEf90_FInalize()
-!!!   STOP
-   
    Do i = 1, AppCtx%NumTimeSteps
       AppCtx%TimeStep = i
       
