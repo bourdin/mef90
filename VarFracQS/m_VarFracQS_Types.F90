@@ -51,6 +51,7 @@ Module m_VarFracQS_Types3D
    Type AppParam_Type
       PetscInt                                     :: Restart
       PetscInt                                     :: Verbose
+      PetscTruth                                   :: StopOnError
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
       Integer                                      :: Ener_Unit
