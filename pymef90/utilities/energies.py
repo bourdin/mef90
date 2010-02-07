@@ -1,5 +1,3 @@
-#!/usr/bin/env python 
-
 def plotener(energies):
   import matplotlib.pyplot as plt
 
