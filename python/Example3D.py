@@ -79,16 +79,22 @@ ensight.part.select_begin(SeqMesh_PartID)
 ensight.part.select_begin(3,4)
 ensight.part.modify_begin()
 ensight.part.colorby_rgb(0.6,0.6,0.6)
-ensight.part.opaqueness(0.5)
+ensight.part.opaqueness(0.4)
 ensight.part.modify_end()
 
 ### Extract Crack
 ensmef90.CrackExtract(DistMesh_PartID, .05)
-ensmef90.BrittlePart(5)
 
-ensight.legend.select_palette_begin("_Fracture")
+### Color by Temperature
+ensight.variables.activate("_Temperature")
+ensight.part.select_begin(5)
+ensight.part.modify_begin()
+ensight.part.colorby_palette("_Temperature")
+ensight.part.modify_end()
+ensight.part.select_end()
+ensight.legend.select_palette_begin("_Temperature")
 ensight.legend.visible("OFF")
-ensight.function.palette("_Fracture")
+ensight.function.palette("_Temperature")
 
 
 ### export PNG
