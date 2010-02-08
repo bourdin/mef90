@@ -1,4 +1,6 @@
-def init()
+import ensight
+
+def Init():
   ensight.data.binary_files_are("big_endian")
   ensight.command.part_selection_by("number")
   ensight.data.binary_files_are("big_endian")
@@ -31,13 +33,11 @@ def init()
 
 def FractureActivate():
   ensight.variables.activate("_Fracture")
-  
-  ###
-  ### Set colormap for _Fracture
-  ###
+
   ensight.legend.select_palette_begin("_Fracture")
-  ensight.legend.visible("ON")
+  ensight.legend.visible("OFF")
   ensight.function.palette("_Fracture")
+  ensight.function.range(0,1)
   ensight.function.modify_begin()
   ensight.function.edit_level(1)
   ensight.function.rgb(1.0000e+00,0.0000e+00,0.0000e+00)
@@ -49,9 +49,29 @@ def FractureActivate():
   ensight.function.rgb(0.0000e+00,1.0000e+00,1.0000e+00)
   ensight.function.edit_level(5)
   ensight.function.rgb(0.0000e+00,0.0000e+00,1.0000e+00)
-  ensight.function.range(0.000000,1.000000)
   ensight.function.modify_end()
-
+###  ensight.variables.activate("_Fracture")
+###  
+###  ###
+###  ### Set colormap for _Fracture
+###  ###
+###  ensight.legend.select_palette_begin("_Fracture")
+###  ensight.function.palette("_Fracture")
+###  ensight.function.modify_begin()
+###  ensight.function.edit_level(1)
+###  ensight.function.rgb(0.0000e+00,0.0000e+00,1.0000e+00)
+###  ensight.function.edit_level(2)
+###  ensight.function.rgb(0.0000e+00,1.0000e+00,1.0000e+00)
+###  ensight.function.edit_level(3)
+###  ensight.function.rgb(0.0000e+00,1.0000e+00,0.0000e+00)
+###  ensight.function.edit_level(4)
+###  ensight.function.rgb(1.0000e+00,1.0000e+00,0.0000e+00)
+###  ensight.function.edit_level(5)
+###  ensight.function.rgb(1.0000e+00,0.0000e+00,0.0000e+00)
+###  ensight.function.range(0.000000,1.000000)
+###  ensight.function.modify_end()
+###  ensight.legend.visible("OFF")
+###  ensight.legend.select_palette_end()
 
 def BrittlePart(partlist):
   ensight.part.select_begin(partlist)
@@ -68,7 +88,7 @@ def ElasticPart(partlist):
   ensight.part.modify_end()
   ensight.part.select_end()
 
-def DispPart(partlist, factor):
+def DisplacePart(partlist, factor):
   ensight.part.select_begin(partlist)
   ensight.part.select_end()
   ensight.part.modify_begin()
@@ -103,11 +123,12 @@ def CrackRemove(partlist, threshold):
   ensight.isos.variable("_Fracture")
   ensight.isos.type("isovolume")
   ensight.isos.constraint("high")
-  ensight.isos.main(0.000000e+00)
+  ensight.isos.min(0.000000e+00)
   ensight.isos.max(threshold)
   ensight.isos.create()
   ensight.part.modify_end()
   ensight.part.select_end()
+
 
 #def TempIsolines(partlist):
 
