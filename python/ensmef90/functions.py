@@ -50,28 +50,6 @@ def FractureActivate():
   ensight.function.edit_level(5)
   ensight.function.rgb(0.0000e+00,0.0000e+00,1.0000e+00)
   ensight.function.modify_end()
-###  ensight.variables.activate("_Fracture")
-###  
-###  ###
-###  ### Set colormap for _Fracture
-###  ###
-###  ensight.legend.select_palette_begin("_Fracture")
-###  ensight.function.palette("_Fracture")
-###  ensight.function.modify_begin()
-###  ensight.function.edit_level(1)
-###  ensight.function.rgb(0.0000e+00,0.0000e+00,1.0000e+00)
-###  ensight.function.edit_level(2)
-###  ensight.function.rgb(0.0000e+00,1.0000e+00,1.0000e+00)
-###  ensight.function.edit_level(3)
-###  ensight.function.rgb(0.0000e+00,1.0000e+00,0.0000e+00)
-###  ensight.function.edit_level(4)
-###  ensight.function.rgb(1.0000e+00,1.0000e+00,0.0000e+00)
-###  ensight.function.edit_level(5)
-###  ensight.function.rgb(1.0000e+00,0.0000e+00,0.0000e+00)
-###  ensight.function.range(0.000000,1.000000)
-###  ensight.function.modify_end()
-###  ensight.legend.visible("OFF")
-###  ensight.legend.select_palette_end()
 
 def BrittlePart(partlist):
   ensight.part.select_begin(partlist)
