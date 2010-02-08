@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import pymef90
-import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 from optparse import OptionParser
 
@@ -42,6 +42,13 @@ if options.debug:
   print('size of energies: {0}'.format(energies.shape))
   print('requested slice: {0}:{1}'.format(tmin,tmax))
   print('Energies: {0}'.format(energies[tmin:tmax,:]))
+
+
+if options.outputfile != None:
+  matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+
 ### plot
 if options.forces:
   pymef90.plotener_withforces(energies[tmin:tmax,:])
