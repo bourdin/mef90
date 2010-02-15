@@ -11,7 +11,7 @@ Program TestDuplicate
    Use petscvec
    Use petscmat
    Use petscmesh
-
+   
    Implicit NONE   
 
    Type(MeshTopology_Type)                      :: MeshTopology
@@ -30,6 +30,8 @@ Program TestDuplicate
    PetscInt                                     :: dof
    PetscInt, Dimension(:), Pointer              :: iRows
    PetscReal                                    :: one = 1.0_Kr
+   Character(len=256)                           :: IO_Buffer
+   Type(PetscViewer)                            :: MeshViewer
      
    Call MEF90_Initialize()
    dof=1
@@ -66,11 +68,17 @@ Program TestDuplicate
 
    Call PetscPrintf(PETSC_COMM_WORLD, "\n\nSection U_Sec: \n", iErr); CHKERRQ(iErr)
    Call SectionRealView(U_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   
-   Call SectionRealDuplicate(U_Sec, V_Sec, iErr); CHKERRQ(iErr)
-   Call PetscPrintf(PETSC_COMM_WORLD, "\n\nSection V_Sec: \n", iErr); CHKERRQ(iErr)
-   Call SectionRealView(V_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   
+   Call SectionRealGetSize(U_Sec, i, iErr)
+   Write(IO_Buffer, *) 'Size of U_Sec: ', i, '\n'
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IO_Buffer, iErr); CHKERRQ(iErr)
+   Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)   
+!   Call SectionRealDuplicate(U_Sec, V_Sec, iErr); CHKERRQ(iErr)
+!   Call PetscPrintf(PETSC_COMM_WORLD, "\n\nSection V_Sec: \n", iErr); CHKERRQ(iErr)
+!   Call SectionRealView(V_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+
+   Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, Trim(Prefix)//'.dat', MeshViewer, iErr); CHKERRQ(iErr)
+!   Call PetscViewerASCIIPrintf(MeshViewer, "MeshTopology%Mesh: \n", iErr); CHKERRQ(iErr)
+   Call MeshView(MeshTopology%Mesh, MeshViewer, iErr); CHKERRQ(iErr)
    
 
    Call MeshTopologyDestroy(MeshTopology)
