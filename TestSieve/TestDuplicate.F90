@@ -76,7 +76,7 @@ Program TestDuplicate
 !   Call PetscPrintf(PETSC_COMM_WORLD, "\n\nSection V_Sec: \n", iErr); CHKERRQ(iErr)
 !   Call SectionRealView(V_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
-   Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, Trim(Prefix)//'.dat', MeshViewer, iErr); CHKERRQ(iErr)
+   Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, Trim(Prefix)//'.dat', FILE_MODE_WRITE, MeshViewer, iErr); CHKERRQ(iErr)
 !   Call PetscViewerASCIIPrintf(MeshViewer, "MeshTopology%Mesh: \n", iErr); CHKERRQ(iErr)
    Call MeshView(MeshTopology%Mesh, MeshViewer, iErr); CHKERRQ(iErr)
    

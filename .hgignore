@@ -2,5 +2,8 @@ syntax: glob
 *~
 *.mod
 *.o
+*.pyc
 TestSieve/TestSieve
 TestSieve/fort.*
+TestSieve/*gen
+TestSieve/*log
