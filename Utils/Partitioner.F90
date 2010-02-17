@@ -81,7 +81,7 @@ Program Partitioner
       If (verbose > 0) Then
          Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
          Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-         Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage AfterMeshCreate: \n"c, iErr); CHKERRQ(iErr)
+         Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage AfterMeshCreate: \n", iErr); CHKERRQ(iErr)
          Write(IOBuffer, *) "\n\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
