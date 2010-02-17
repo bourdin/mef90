@@ -2,11 +2,10 @@ static char help[] = "Test distribution of properties using a mesh\n\n";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "petsc.h"
-#include "petscmesh.h"
-#include <netcdf.h>
+#include <petsc.h>
+#include <petscmesh.hh>
+#include <sieve/Selection.hh>
 #include <exodusII.h>
-#include <Selection.hh>
 
 PetscErrorCode MyPetscReadExodusII(MPI_Comm comm, const char filename[], ALE::Obj<PETSC_MESH_TYPE>& mesh);
 PetscErrorCode MeshCreateExodus(MPI_Comm comm, const char filename[], Mesh *mesh);
@@ -14,25 +13,22 @@ PetscErrorCode MeshCreateExodus(MPI_Comm comm, const char filename[], Mesh *mesh
 #undef __FUNCT__
 #define __FUNCT__ "main"
 int main (int argc, char ** argv) {
-  int   exoid;
-  int   CPU_word_size = 0, IO_word_size = 0;
-  //    const PetscMPIInt rank = mesh->commRank();
-  float version;
-  char  title[MAX_LINE_LENGTH+1], elem_type[MAX_STR_LENGTH+1];
-  int   num_dim, num_nodes, num_elem, num_elem_blk, num_node_sets, num_side_sets;
-  int   ierr;
-  char filename[PETSC_MAX_PATH_LEN+1];
-  Mesh  mesh;
+  Mesh           mesh;
+  PetscTruth     flag;
+  char           filename[PETSC_MAX_PATH_LEN+1];
+  PetscErrorCode ierr;
 
-  ierr = PetscInitialize(&argc,&argv,(char *)0,help);  
-  
-  ierr = PetscOptionsGetString(PETSC_NULL, "-f", filename, PETSC_MAX_PATH_LEN, PETSC_NULL);CHKERRQ(ierr);
-  
-  ierr = MeshCreateExodus(PETSC_COMM_WORLD, filename, &mesh); CHKERRQ(ierr)
-  
-//    ierr = MeshView(PETSC_VIEWER_STDOUT_WORLD, mesh); CHKERRQ(iErr)
-
-  PetscFinalize();
+  ierr = PetscInitialize(&argc,&argv,(char *)0,help);CHKERRQ(ierr);
+  ierr = PetscOptionsGetString(PETSC_NULL, "-f", filename, PETSC_MAX_PATH_LEN, &flag);CHKERRQ(ierr);
+  if (flag) {
+    try {
+      ierr = MeshCreateExodus(PETSC_COMM_WORLD, filename, &mesh);CHKERRQ(ierr);
+      ierr = MeshView(mesh, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+    } catch(ALE::Exception e) {
+      std::cerr << "Error: " << e << std::endl;
+    }
+  }
+  ierr = PetscFinalize();CHKERRQ(ierr);
   return 0;
 
 }
@@ -66,10 +62,10 @@ PetscErrorCode MeshCreateExodus(MPI_Comm comm, const char filename[], Mesh *mesh
   ierr = MeshCreate(comm, mesh);CHKERRQ(ierr);
   ierr = PetscOptionsGetInt(PETSC_NULL, "-debug", &debug, &flag);CHKERRQ(ierr);
   ALE::Obj<PETSC_MESH_TYPE> m = new PETSC_MESH_TYPE(comm, -1, debug);
-#ifdef PETSC_HAVE_EXODUS
+#ifdef PETSC_HAVE_EXODUSII
   ierr = MyPetscReadExodusII(comm, filename, m);CHKERRQ(ierr);
 #else
-  SETERRQ(PETSC_ERR_SUP, "This method requires ExodusII support. Reconfigure using --with-exodus-dir=/path/to/exodus");
+  SETERRQ(PETSC_ERR_SUP, "This method requires ExodusII support. Reconfigure using --with-exodusii-dir=/path/to/exodus");
 #endif
   if (debug) {m->view("Mesh");}
   ierr = MeshSetMesh(*mesh, m);CHKERRQ(ierr);
@@ -81,16 +77,20 @@ PetscErrorCode MeshCreateExodus(MPI_Comm comm, const char filename[], Mesh *mesh
 #define __FUNCT__ "MyPetscReadExodusII"
 PetscErrorCode MyPetscReadExodusII(MPI_Comm comm, const char filename[], ALE::Obj<PETSC_MESH_TYPE>& mesh)
 {
-  int   exoid;
-  int   CPU_word_size = 0, IO_word_size = 0;
-  const PetscMPIInt rank = mesh->commRank();
-  float version;
-  char  title[MAX_LINE_LENGTH+1], elem_type[MAX_STR_LENGTH+1];
-  int   num_dim, num_nodes, num_elem, num_elem_blk, num_node_sets, num_side_sets;
-  int   ierr;
   typedef std::set<ALE::Mesh::point_type> PointSet;
+  ALE::Obj<ALE::Mesh> boundarymesh; 
+  const PetscMPIInt   rank          = mesh->commRank();
+  int                 CPU_word_size = 0;
+  int                 IO_word_size  = 0;
+  PetscTruth          interpolate   = PETSC_FALSE;
+  int                 exoid;
+  char                title[MAX_LINE_LENGTH+1], elem_type[MAX_STR_LENGTH+1];
+  float               version;
+  int                 num_dim, num_nodes, num_elem, num_elem_blk, num_node_sets, num_side_sets;
+  PetscErrorCode      ierr;
 
   PetscFunctionBegin;
+  ierr = PetscOptionsGetTruth(PETSC_NULL, "-interpolate", &interpolate, PETSC_NULL);CHKERRQ(ierr);
   // Open EXODUS II file
   exoid = ex_open(filename, EX_READ, &CPU_word_size, &IO_word_size, &version);CHKERRQ(!exoid);
   // Read database parameters
@@ -189,7 +189,7 @@ PetscErrorCode MyPetscReadExodusII(MPI_Comm comm, const char filename[], ALE::Ob
   for(int eb = 0, k = 0; eb < num_elem_blk; ++eb) {
     for(int e = 0; e < num_elem_in_block[eb]; ++e, ++k) {
       for(int c = 0; c < num_nodes_per_elem[eb]; ++c) {
-        cells[k*num_nodes_per_elem[eb]+c] = connect[eb][e*num_nodes_per_elem[eb]+c];
+        cells[k*num_nodes_per_elem[eb]+c] = connect[eb][e*num_nodes_per_elem[eb]+c] - 1;
       }
       connectivity_table[k] = &cells[k*num_nodes_per_elem[eb]];
     }
@@ -198,18 +198,20 @@ PetscErrorCode MyPetscReadExodusII(MPI_Comm comm, const char filename[], ALE::Ob
 
 
   ALE::Obj<PETSC_MESH_TYPE::sieve_type> sieve = new PETSC_MESH_TYPE::sieve_type(mesh->comm(), mesh->debug());
+  ALE::Obj<ALE::Mesh>                   m     = new ALE::Mesh(mesh->comm(), mesh->debug());
   ALE::Obj<ALE::Mesh::sieve_type>       s     = new ALE::Mesh::sieve_type(mesh->comm(), mesh->debug());
 
   // Here we assume that num_nodes_per_elem is constant accross blocks (i.e.) 
   // that all elements in the mesh are of the same type
   int  numCorners = num_nodes_per_elem[0];
-  ALE::SieveBuilder<ALE::Mesh>::buildTopology(s, num_dim, num_elem, cells, num_nodes, false, numCorners);
+  ALE::SieveBuilder<ALE::Mesh>::buildTopology(s, num_dim, num_elem, cells, num_nodes, interpolate, numCorners, PETSC_DECIDE, m->getArrowSection("orientation"));
   
   std::map<PETSC_MESH_TYPE::point_type,PETSC_MESH_TYPE::point_type> renumbering;
-  ALE::ISieveConverter::convertSieve(*s, *sieve, renumbering);
+  ALE::ISieveConverter::convertSieve(*s, *sieve, renumbering, false);
   mesh->setSieve(sieve);
   mesh->stratify();
-  
+  ALE::ISieveConverter::convertOrientation(*s, *sieve, renumbering, m->getArrowSection("orientation").ptr());
+
   // Build cell blocks
   const ALE::Obj<PETSC_MESH_TYPE::label_type>& cellBlocks = mesh->createLabel("CellBlocks");
   if (rank == 0) {
@@ -256,17 +258,11 @@ PetscErrorCode MyPetscReadExodusII(MPI_Comm comm, const char filename[], ALE::Ob
 
   // Build side sets
   if (num_side_sets > 0){
-    
+    ierr = PetscPrintf(mesh->comm(), "Building boundary\n");CHKERRQ(ierr);
     // Build the boundary mesh
-
-//    ALE::Obj<PETSC_MESH_TYPE> boundarymesh = ALE::Selection<PETSC_MESH_TYPE>::boundaryV(mesh);    
-    try {
-      ALE::Obj<PETSC_MESH_TYPE> boundarymesh = ALE::Selection<PETSC_MESH_TYPE>::boundaryV(mesh);
-      boundarymesh->view("Mesh");
-    } catch (ALE::Exception e) {
-        std::cout << e << std::endl;
-    }
+    boundarymesh = ALE::Selection<PETSC_MESH_TYPE>::boundaryV(mesh);
 //    const ALE::Obj<PETSC_MESH_TYPE::label_type>& sideSets = boundarymesh->createLabel("SideSets");
+
     /* 
       Find the parent block of each element 
     */
@@ -281,6 +277,7 @@ PetscErrorCode MyPetscReadExodusII(MPI_Comm comm, const char filename[], ALE::Ob
       }
 
       ALE::Obj<PointSet> face = new PointSet();
+      int facepoint;
       int num_side_corners, *side_corners;
       for (int ss=0; ss < num_side_sets; ++ss){
         for (int s = 0; s < num_sides_in_set[ss]; ++s){
@@ -294,11 +291,7 @@ PetscErrorCode MyPetscReadExodusII(MPI_Comm comm, const char filename[], ALE::Ob
                   or we will need to play with pointer arithmetic
           */
           /* 
-<<<<<<< local
-            the numberic scheme for vertices, faces and edges in EXO has been designed by a maniac
-=======
             the numbering scheme for vertices, faces and edges in EXO has been designed by a maniac
->>>>>>> other
             cf. Figure 5 in exodus documentation or 
             https://redmine.schur.math.lsu.edu/attachments/36/Exodus_Sides_Ordering.png
           */
@@ -414,7 +407,7 @@ PetscErrorCode MyPetscReadExodusII(MPI_Comm comm, const char filename[], ALE::Ob
                 break;
             }
           }
-          
+//          facepoint = boundarymesh->nJoin1(face);
           // Do a join to get the point number of the edge with vertices side_corners
           // Add the edge
         }
@@ -422,6 +415,7 @@ PetscErrorCode MyPetscReadExodusII(MPI_Comm comm, const char filename[], ALE::Ob
       ierr = PetscFree(parent_block);CHKERRQ(ierr);
     }
   }
+  boundarymesh->view("Boundary Mesh");
 
   // Free element block temporary variables
   if (num_elem_blk > 0) {
