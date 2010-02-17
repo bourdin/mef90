@@ -81,7 +81,7 @@ Program Partitioner
       If (verbose > 0) Then
          Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
          Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-         Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage AfterMeshCreate: ", iErr); CHKERRQ(iErr)
+         Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage AfterMeshCreate: \n"c, iErr); CHKERRQ(iErr)
          Write(IOBuffer, *) "\n\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
@@ -163,6 +163,7 @@ Program Partitioner
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
+   Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
    Call MeshTopologyDestroy(MeshTopology)
    
    
