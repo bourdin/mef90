@@ -27,6 +27,12 @@ Program Partitioner
    Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
    PetscInt                                     :: iDebug
    
+   
+   !!! REMOVE WHEN FINISHED
+   PetscInt, Dimension(:,:), Pointer            :: ConnectivityTable
+   Integer                                      :: iE
+   !!! REMOVE WHEN FINISHED
+   
    Call MEF90_Initialize()
 
 
@@ -99,6 +105,16 @@ Program Partitioner
          Write(IOBuffer, *) "\n\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
+!!! REMOVE WHEN FINISHED
+      If (verbose > 1) Then
+         Call MeshGetElementsF90(Tmp_Mesh, ConnectivityTable, iErr); CHKERRQ(iErr)
+         Write(MEF90_MyRank+100, *) "ConnectivityTable for Tmp_Mesh", size(ConnectivityTable), size(ConnectivityTable,1), size(ConnectivityTable, 2)
+         Do iE = 1, size(ConnectivityTable,1)
+            Write(MEF90_MyRank+100, *) iE, ConnectivityTable(iE, :)
+         End Do
+         Call MeshRestoreElementsF90(Tmp_Mesh, ConnectivityTable, iErr); CHKERRQ(iErr)
+      End If
+!!! REMOVE WHEN FINISHED
 
       If (verbose > 0) Then
          Write(IOBuffer, *) "Calling MeshDistribute\n"
@@ -113,6 +129,16 @@ Program Partitioner
          Write(IOBuffer, *) "\n\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
+!!! REMOVE WHEN FINISHED
+      If (verbose > 1) Then
+         Call MeshGetElementsF90(MeshTopology%Mesh, ConnectivityTable, iErr); CHKERRQ(iErr)
+         Write(MEF90_MyRank+100, *) "ConnectivityTable for MeshTopology%Mesh ", size(ConnectivityTable), size(ConnectivityTable,1), size(ConnectivityTable, 2)
+         Do iE = 1, size(ConnectivityTable,1)
+            Write(MEF90_MyRank+100, *) iE, ConnectivityTable(iE, :)
+         End Do
+         Call MeshRestoreElementsF90(MeshTopology%Mesh, ConnectivityTable, iErr); CHKERRQ(iErr)
+      End If
+!!! REMOVE WHEN FINISHED
 
 
       If (verbose > 0) Then
