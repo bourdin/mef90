@@ -7,3 +7,5 @@ TestSieve/TestSieve
 TestSieve/fort.*
 TestSieve/*gen
 TestSieve/*log
+.DS_Store
+
