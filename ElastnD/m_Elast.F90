@@ -271,8 +271,12 @@ Contains
          Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
       End If
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
+#ifdef PETSC_HAVE_HYPRE
       Call PCSetType(AppCtx%PCU, PCHYPRE, iErr); CHKERRQ(iErr)
       Call PCHYPRESetType(AppCtx%PCU, "boomeramg", iErr); CHKERRQ(iErr)
+#else
+      Call PCSetType(AppCtx%PCU, PCHYPRE, iErr); CHKERRQ(iErr)
+#endif      
       Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
 
 
