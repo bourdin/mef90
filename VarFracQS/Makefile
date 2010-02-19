@@ -12,8 +12,9 @@ all: VarFracQS${DIM}
 
 #include ${PETSC_DIR}/conf/base
 include ${TAO_DIR}/bmake/tao_common
+FC_MODULE_FLAG=-module
 
-FFLAGS = -DWITH_TAO -DPB_${DIM} ${FC_MODULE_FLAG}${PETSC_ARCH} -I. -I${MEF90DIR} -I${M_VARFRACDIR} --free-line-length-none
+FFLAGS = -DWITH_TAO -DPB_${DIM} ${FC_MODULE_FLAG} ${PETSC_ARCH} -I. -I${MEF90DIR} -I${M_VARFRACDIR} --free-line-length-none
 # -ftrace=full
 
 .F90.o: 
