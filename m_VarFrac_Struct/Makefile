@@ -9,11 +9,15 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 all: ${PROJ}.o
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
-FC_MODULE_FLAG=-module 
-FFLAGS = ${FC_MODULE_FLAG} ${PETSC_ARCH} -I${MEF90DIR} --free-line-length-none
 
-.F90.o: 
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+ifeq (${FC},gfortran)
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS} --free-line-length-none
+else
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS}
+endif
+
+.F90.o:
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
 
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
