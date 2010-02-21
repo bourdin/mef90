@@ -5,15 +5,18 @@ include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
 ifeq (${FC},gfortran)
-	FC_FLAGS=${FC_FLAGS} --free-line-length-none
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS} --free-line-length-none
+else
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS}
 endif
 
 .F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
 
 debug:
 	@echo FC is ${FC}
 	@echo FC_FLAGS is ${FC_FLAGS}
+	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
 	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
 	@echo FCPPFLAGS is ${FCPPFLAGS}
 	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
