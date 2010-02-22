@@ -11,9 +11,9 @@ include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
 ifeq (${FC},gfortran)
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS} --free-line-length-none
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} --free-line-length-none
 else
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS}
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} ${FC_FLAGS}
 endif
 
 .F90.o:
@@ -24,4 +24,11 @@ ${PETSC_ARCH}:
 
 $(PROJ).o: ${PETSC_ARCH} 
 
-
+debug:
+	@echo FC is ${FC}
+	@echo FC_FLAGS is ${FC_FLAGS}
+	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
+	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
+	@echo FCPPFLAGS is ${FCPPFLAGS}
+	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
+	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}

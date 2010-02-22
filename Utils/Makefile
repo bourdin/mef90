@@ -10,13 +10,14 @@ all: Partitioner EXOGetBB
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
 
+ifeq (${FC},gfortran)
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} --free-line-length-none
+else
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} ${FC_FLAGS}
+endif
 
-
-FFLAGS = ${FC_MODULE_FLAG}${PETSC_ARCH} -I. -I${MEF90DIR} --free-line-length-none
-#FFLAGS = -fmod=${PETSC_ARCH} -I. -I${MEF90DIR} -ffree-line-length-huge
-
-.F90.o: 
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+.F90.o:
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
 
 
 ${PETSC_ARCH}:

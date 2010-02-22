@@ -15,13 +15,13 @@ endif
 
 debug:
 	@echo FC is ${FC}
-	@echo FFLAGS is ${FFLAGS}
 	@echo FC_FLAGS is ${FC_FLAGS}
 	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
 	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
 	@echo FCPPFLAGS is ${FCPPFLAGS}
 	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
 	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
+
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 
