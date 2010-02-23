@@ -68,7 +68,6 @@ Contains
       End If
       AppCtx%AppParam%StopOnError = PETSC_FALSE
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-stop_on_error', AppCtx%AppParam%StopOnError, flag, iErr) ; CHKERRQ(iErr)
-      Write(*,*) 'Stop_on_error is ', AppCtx%AppParam%StopOnError, PETSC_TRUE
 
       Call VarFracSchemeParam_GetFromOptions(AppCtx%VarFracSchemeParam)
       If (AppCtx%AppParam%verbose > 0) Then
