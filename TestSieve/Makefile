@@ -10,13 +10,14 @@ all: TestSieve TestSieve3D TestNodeSet TestLocal TestAssembly TestSectionInt
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
 
+ifeq (${FC},gfortran)
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} --free-line-length-none
+else
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} ${FC_FLAGS}
+endif
 
-FFLAGS = ${FC_MODULE_FLAG}${PETSC_ARCH} -I. -I${MEF90DIR} --free-line-length-none
-#FFLAGS = -fmod=${PETSC_ARCH} -I. -I${MEF90DIR} -ffree-line-length-huge
-
-.F90.o: 
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
-
+.F90.o:
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
 
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
@@ -65,7 +66,7 @@ Partitioner:   ${PETSC_ARCH} Partitioner.o ${PETSC_ARCH}/Partitioner.o
 
 TestUpdateRestrict:   ${PETSC_ARCH} TestUpdateRestrict.o ${PETSC_ARCH}/TestUpdateRestrict.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestUpdateRestrict ${PETSC_ARCH}/TestUpdateRestrict.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-	
+
 TestFibration:   ${PETSC_ARCH} TestFibration.o ${PETSC_ARCH}/TestFibration.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestFibration ${PETSC_ARCH}/TestFibration.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
