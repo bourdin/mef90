@@ -65,7 +65,6 @@ Contains
       Call SectionRealToVec(AppCtx%LowerBoundU%Sec, AppCtx%LowerBoundU%Scatter, SCATTER_FORWARD, LowerBoundU_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%UpperBoundU%Sec, AppCtx%UpperBoundU%Scatter, SCATTER_FORWARD, UpperBoundU_Vec, iErr); CHKERRQ(iErr)
 
-      CHKMEMQ
    End Subroutine InitTaoBoundsU
 #endif
 
@@ -103,7 +102,6 @@ Contains
       End If
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine MatU_Assembly
 
 #if defined WITH_TAO
@@ -152,7 +150,6 @@ Contains
       End If
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine HessianU_Assembly
 #endif
   
@@ -223,7 +220,6 @@ Contains
       Call SectionRealComplete(AppCtx%GradientU%Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%GradientU%Sec, AppCtx%GradientU%Scatter, SCATTER_FORWARD, GradientU_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine FormFunctionAndGradientU
 #endif
 
@@ -1215,7 +1211,6 @@ Contains
          End If
       End If
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
 100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
 102 Format('     TAO for U converged in ', I5, ' iterations. Tao termination reason is ', I5, '\n')

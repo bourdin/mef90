@@ -88,7 +88,6 @@ Contains
          Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_FORWARD, UpperBoundV_Vec, iErr); CHKERRQ(iErr)
       End Select
 
-      CHKMEMQ
    End Subroutine InitTaoBoundsV
 #endif
 
@@ -110,7 +109,6 @@ Contains
       Case Default   
          SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
       End Select
-      CHKMEMQ
    End Subroutine Init_TS_V
    
    Subroutine Update_Irrev(AppCtx)
@@ -211,7 +209,6 @@ Contains
       Case Default
          SETERRQ(PETSC_ERR_ARG_WRONG, 'Wrong value for AppCtx./.VarFracSchemeParam./.IrrevType \n', iErr)
       End Select
-      CHKMEMQ
    End Subroutine Update_Irrev
 
 !!!
@@ -263,7 +260,6 @@ Contains
       End If
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine MatV_Assembly
 
 #if defined WITH_TAO
@@ -320,7 +316,6 @@ Contains
       End If
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine HessianV_Assembly
 #endif
 
@@ -402,7 +397,6 @@ Contains
 
       Call SectionRealToVec(AppCtx%GradientV%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine FormFunctionAndGradientV
 #endif
 
@@ -440,7 +434,6 @@ Contains
       End If
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine RHSV_Assembly
    
    Subroutine MatV_AssemblyBlk_ElastBrittle(H, iBlk, DoBC, AppCtx)
@@ -529,7 +522,6 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine MatV_AssemblyBlk_ElastBrittle
 
    Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralFull(H, iBlk, DoBC, AppCtx)
@@ -629,7 +621,6 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralFull
 
    Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralShear(H, iBlk, DoBC, AppCtx)
@@ -723,7 +714,6 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralShear
 
    Subroutine MatV_AssemblyBlk_SurfaceAT2(H, iBlk, DoBC, AppCtx)
@@ -792,7 +782,6 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine MatV_AssemblyBlk_SurfaceAT2
 
    Subroutine MatV_AssemblyBlk_SurfaceAT1(H, iBlk, DoBC, AppCtx)
@@ -856,7 +845,6 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine MatV_AssemblyBlk_SurfaceAT1
 
    Subroutine RHSV_AssemblyBlk_AT2(RHSV_Sec, iBlk, AppCtx)
@@ -912,7 +900,6 @@ Contains
       DeAllocate(RHS_Loc)
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine RHSV_AssemblyBlk_AT2
    
 #if defined WITH_TAO   
@@ -978,7 +965,6 @@ Contains
       DeAllocate(GradientV_Loc)
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine GradientV_AssemblyBlk_ElastBrittle
    
 #if defined WITH_TAO   
@@ -1054,7 +1040,6 @@ Contains
       DeAllocate(GradientV_Loc)
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateralFull
 #endif
    
@@ -1125,7 +1110,6 @@ Contains
       DeAllocate(GradientV_Loc)
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateralShear
 #endif
 
@@ -1174,7 +1158,6 @@ Contains
       DeAllocate(V_Loc)
       DeAllocate(GradientV_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine GradientV_AssemblyBlk_SurfaceAT1
 
    Subroutine GradientV_AssemblyBlk_SurfaceAT2(GradientV_Sec, iBlk, V_Sec, AppCtx)
@@ -1226,7 +1209,6 @@ Contains
       DeAllocate(V_Loc)
       DeAllocate(GradientV_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine GradientV_AssemblyBlk_SurfaceAT2
 #endif
 
@@ -1330,7 +1312,6 @@ Contains
       
 !      Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
 100 Format('     KSP for V converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n')
 102 Format('     TAO for V converged in ', I5, ' iterations. Tao termination reason is ', I5, '\n')
