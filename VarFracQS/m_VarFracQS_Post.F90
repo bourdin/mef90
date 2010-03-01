@@ -54,7 +54,6 @@ Contains
       
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine ElasticEnergy_Assembly
    
    Subroutine ExtForcesWork_Assembly(ExtForcesWork, AppCtx)     
@@ -81,7 +80,6 @@ Contains
       
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine ExtForcesWork_Assembly
    
    Subroutine SurfaceEnergy_Assembly(SurfaceEnergy, AppCtx)     
@@ -113,7 +111,6 @@ Contains
       
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine SurfaceEnergy_Assembly
    
 !!!
@@ -180,7 +177,6 @@ Contains
       DeAllocate(Theta_Loc)
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine ElasticEnergy_AssemblyBlk_Brittle
 
    Subroutine ElasticEnergy_AssemblyBlk_BrittleUnilateralFull(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
@@ -256,7 +252,6 @@ Contains
       DeAllocate(Theta_Loc)
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine ElasticEnergy_AssemblyBlk_BrittleUnilateralFull
 
    Subroutine ElasticEnergy_AssemblyBlk_BrittleUnilateralShear(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
@@ -326,7 +321,6 @@ Contains
       DeAllocate(Theta_Loc)
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine ElasticEnergy_AssemblyBlk_BrittleUnilateralShear
 
    Subroutine ElasticEnergy_AssemblyBlk_NonBrittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, AppCtx)
@@ -383,7 +377,6 @@ Contains
       DeAllocate(U_Loc)
       DeAllocate(Theta_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine ElasticEnergy_AssemblyBlk_NonBrittle
 
    Subroutine ExtForcesWork_AssemblyBlk(ExtForcesWorkBlock, iBlk, U_Sec, F_Sec, AppCtx)
@@ -434,7 +427,6 @@ Contains
       DeAllocate(U_Loc)
       DeAllocate(F_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine ExtForcesWork_AssemblyBlk
 
    Subroutine SurfaceEnergy_AssemblyBlk_AT2(SurfaceEnergyBLock, iBlk, V_Sec, AppCtx)
@@ -484,7 +476,6 @@ Contains
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine SurfaceEnergy_AssemblyBlk_AT2
 
    Subroutine SurfaceEnergy_AssemblyBlk_AT1(SurfaceEnergyBlock, iBlk, V_Sec, AppCtx)
@@ -534,7 +525,6 @@ Contains
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine SurfaceEnergy_AssemblyBlk_AT1
 
 !----------------------------------------------------------------------------------------!      
@@ -618,7 +608,6 @@ Contains
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      CHKMEMQ
    End Subroutine ComputeStrainStress
 
 #if defined PB_2D

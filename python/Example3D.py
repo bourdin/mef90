@@ -99,3 +99,4 @@ ensight.function.palette("_Temperature")
 
 ### export PNG
 ensmef90.ExportPNG(e2cfile)
+ensmef90.ExportMOV(e2cfile)
