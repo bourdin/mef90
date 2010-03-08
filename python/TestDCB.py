@@ -2,6 +2,9 @@
 import cubit
 import numpy as np
 import pymef90
+
+cubit.init([""])
+cubit.cmd("reset")
 ###
 ###  DCB Basic Geometry
 ###
@@ -23,9 +26,10 @@ yi=1/2.
 loffset=0.1
 llayers=3.
 bb=[lx/2.-llayers/2., lx/2.+llayers/2.+loffset*2., -ly/2., ly/2., -lz/2., lz/2.]
-theta1=.1
-theta2=.2
+theta1=.3
+theta2=.5
 alpha=15
+depth=lz/3.
 ###
 ### Create the DCB shape
 ###
@@ -54,4 +58,4 @@ cubit.cmd('move volume %i X %f' % (tmp_ID, lx/2.))
 ### 
 ### Layer
 ###
-(LAYER1_3D, LAYER2_3D) = pymef90.Layer(LAYER1_3D, bb, alpha, theta1, theta2)
+(LAYER1_3D, LAYER2_3D) = pymef90.MilledLayer(LAYER1_3D, bb, alpha, theta1, theta2, depth)
