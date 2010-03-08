@@ -395,6 +395,57 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2):
       LAYER2_IDs.append(l)
   return (LAYER1_IDs, LAYER2_IDs)
 
+def MilledLayer(Body_IDs, BB, Alpha, Theta1, Theta2, depth):
+  import cubit
+  import numpy as np
+  ###
+  ###    Body_ID: a single volume ID
+  ###    BB:      bounding box in the form [xmin, xmax, ymin, ymax, zmin, zmax]
+  ###    Alpha:   lamination angle
+  ###    Theta1:  thickness of layer 1
+  ###    Theta2:  thickness of layer 2
+  ###    The first Layer1-Layer2 interface is always at the center of BB
+  ###                                            
+  YL = np.sqrt((BB[1]-BB[0])**2+(BB[3]-BB[2])**2)
+  XC = (BB[0] + BB[1]) / 2.
+  YC = (BB[2] + BB[3]) / 2.
+  ZC = (BB[4] + BB[5]) / 2.
+  Theta = Theta1 + Theta2
+  if Alpha>0:
+    l1 = (BB[0]-XC) * np.cos(np.radians(Alpha)) + (BB[2]-YC) * np.sin(np.radians(Alpha))
+    l2 = (BB[1]-XC) * np.cos(np.radians(Alpha)) + (BB[3]-YC) * np.sin(np.radians(Alpha))
+  else:
+    l1 = (BB[0]-XC) * np.cos(np.radians(Alpha)) + (BB[3]-YC) * np.sin(np.radians(Alpha))
+    l2 = (BB[1]-XC) * np.cos(np.radians(Alpha)) + (BB[2]-YC) * np.sin(np.radians(Alpha))    
+  n1 = int(np.ceil(l1/Theta))
+  n2 = int(np.ceil(l2/Theta))
+  print('n1:%i\nn2:%i' % (n1, n2))
+  for i in range(n1,n2):
+    X = XC + i * np.cos( np.radians(Alpha) ) * Theta
+    Y = YC + i * np.sin( np.radians(Alpha) ) * Theta
+    cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[4]))
+    v1_ID=cubit.get_last_id("vertex")
+    cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[5]))
+    v2_ID=cubit.get_last_id("vertex")
+    cubit.cmd('create brick X %f Y %f Z %f' % (Theta1, YL, 2*depth))
+    tmp_ID=cubit.get_last_id("volume")
+    cubit.cmd('move volume %i X %f Y %f Z %f' % (tmp_ID, X, Y, BB[5]))
+    cubit.cmd('rotate volume %i about vertex %i vertex %i angle %f' % (tmp_ID, v1_ID, v2_ID, Alpha))
+    cubit.cmd('delete vertex %i' % v1_ID)
+    cubit.cmd('delete vertex %i' % v2_ID)
+    (Body_IDs, tmp_layer) = WebcutTool(Body_IDs, tmp_ID, delete=False)
+    cmd="delete volume "
+    for v in tmp_layer:
+      cmd+=" %i" % v
+    cubit.cmd(cmd)
+    cubit.cmd("move volume %i Z %f" % (tmp_ID, BB[4]-BB[5]))
+    (Body_IDs, tmp_layer) = WebcutTool(Body_IDs, tmp_ID, delete=True)
+    cmd="delete volume "
+    for v in tmp_layer:
+      cmd+=" %i" % v
+    cubit.cmd(cmd)
+  return (Body_IDs)
+
 #def Crystallize(Body_ID, Grain_IDs):
 #  
 #  return Grains
