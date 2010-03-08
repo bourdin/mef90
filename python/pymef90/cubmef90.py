@@ -493,3 +493,10 @@ def DCBCreate(LX, LY1, LY, LZ, EPSCRACK, LCRACK):
   cubit.cmd("sweep surface %i direction Z distance %f" % (s_ID, LZ))
   DCB_3D=[cubit.get_last_id("volume")]
   return DCB_3D
+
+def GroupAddVolList(groupname, vol_IDs):
+  import cubit
+  cmd='group "%s" add volume ' % groupname
+  for vol in vol_IDs:
+    cmd += ' %i' % vol
+  cubit.cmd(cmd)
