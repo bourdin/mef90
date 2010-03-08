@@ -50,10 +50,7 @@ import matplotlib.pyplot as plt
 
 
 ### plot
-if options.forces:
-  pymef90.plotener_withforces(energies[tmin:tmax,:])
-else:
-  pymef90.plotener(energies[tmin:tmax,:])
+pymef90.energies.plot(energies[tmin:tmax,:], options.forces)
   
 ### export plot if needed
 if options.outputfile != None:
