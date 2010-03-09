@@ -65,8 +65,6 @@ Contains
          !!! Irreversibility
          Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
          Call FieldInsertVertexBoundaryValues(AppCtx%UpperBoundV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
-!         Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%LowerBoundV, AppCtx%IrrevFlag, AppCtx%MeshTopology)
-!         Call FieldInsertVertexBoundaryValues(AppCtx%UpperBoundV, AppCtx%LowerBoundV, AppCtx%IrrevFlag, AppCtx%MeshTopology)
 
          !!! Regular Boundary Conditions
          Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
@@ -1220,7 +1218,6 @@ Contains
       KSPConvergedReason                           :: reason
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-!      Type(Vec)                                    :: V_Old
       PetscReal                                    :: VMin, VMax
       PetscReal                                    :: rDum
       PetscInt                                     :: iDum
@@ -1234,7 +1231,6 @@ Contains
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
 #if defined WITH_TAO
          Call TaoAppGetSolutionVec(AppCtx%taoappV, AppCtx%V%Vec, iErr); CHKERRQ(iErr)
-!         Call VecDuplicate(AppCtx%V%Vec, V_Old, iErr); CHKERRQ(iErr)
          Call VecCopy(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
 
          If (AppCtx%AppParam%verbose > 0) Then
@@ -1263,7 +1259,6 @@ Contains
 #endif      
       Else
          Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, AppCtx%V%Vec, iErr); CHKERRQ(ierr)
-!         Call VecDuplicate(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
          Call VecCopy(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
 
          If (AppCtx%AppParam%verbose > 0) Then
