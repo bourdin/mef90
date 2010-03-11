@@ -769,8 +769,8 @@ Contains
             X_Elem = 0.0_Kr
             Strain_Elem = 0.0_Kr
             Do iDoF2 = 1, NumDoFVect
-               F_Elem      = F_Elem + AppCtx%ElemVect(iE)%BF(iDoF2, iGauss) * F_Loc(iDoF2)
-               X_Elem      = X_Elem + X_Loc(iDoF2) * AppCtx%ElemVect(iE)%BF(iDoF2, iGauss)
+               F_Elem      = F_Elem      + F_Loc(iDoF2) * AppCtx%ElemVect(iE)%BF(iDoF2, iGauss)
+               X_Elem      = X_Elem      + X_Loc(iDoF2) * AppCtx%ElemVect(iE)%BF(iDoF2, iGauss)
                Strain_Elem = Strain_Elem + X_Loc(iDoF2) * AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss)
             End Do
             Theta_Elem = 0.0_Kr
