@@ -74,7 +74,7 @@ Program  Elast
 108 Format('TS ',I4, ' Time:', ES10.3, ' Load:', ES10.3, ' Elast:', ES10.3, ' Work:', ES10.3, ' Total:', ES10.3, '\n')
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-      Write(IOBuffer, 110) AppCtx%TimeStep, AppCtx%Time, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
+      Write(IOBuffer, 110) AppCtx%TimeStep, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, 0.0_Kr, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
 110 Format(I4, 5(ES13.5, '   '), '\n')
       Call PetscViewerASCIIPrintf(AppCtx%AppParam%EnergyViewer, IOBuffer, iErr); CHKERRQ(iErr)
 
