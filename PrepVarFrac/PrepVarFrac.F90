@@ -102,7 +102,7 @@ Program PrepVarFrac
    TestCase(3)%Description = "Cooling: infinite domain, thermal conduction only"
    TestCase(4)%Description = "Cooling: infinite domain, convection and conduction (Newtonian cooling)"
    TestCase(5)%Description = "MIL affine loading"
-   TestCase(6)%Description = "Loads given by a polar angle (2D)"
+   TestCase(6)%Description = "MIL given by a polar angle (2D)"
    TestCase(7)%Description = "Afine forces: F=P+t*F_0"
    
 
@@ -387,8 +387,10 @@ Program PrepVarFrac
                   End Do
                Case(6)
                   Do k = 0, Num_DoF-1
-                     Felem(3*k+1) = cos(T(iStep)*PETSC_PI/180.0_Kr) * F(i)%X
-                     Felem(3*k+2) = sin(T(iStep)*PETSC_PI/180.0_Kr) * F(i)%Y
+                     Felem(3*k+1) = T(iStep) * cos(Beta*PETSC_PI/180.0_Kr) * F(i)%X
+                     Felem(3*k+2) = T(iStep) * sin(Beta*PETSC_PI/180.0_Kr) * F(i)%Y
+                     !Felem(3*k+1) = cos(T(iStep)*PETSC_PI/180.0_Kr) * F(i)%X
+                     !Felem(3*k+2) = sin(T(iStep)*PETSC_PI/180.0_Kr) * F(i)%Y
                      Felem(3*k+3) = 0.
                   End Do
                   Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
@@ -525,8 +527,8 @@ Program PrepVarFrac
                End Do
                DeAllocate(Coordelem)
             Case(6)
-               Uelem(1) = cos(T(iStep)*PETSC_PI/180_Kr) * U(i)%X
-               Uelem(2) = sin(T(iStep)*PETSC_PI/180_Kr) * U(i)%Y
+               Uelem(1) = T(iStep) * cos(Beta*PETSC_PI/180_Kr) * U(i)%X
+               Uelem(2) = T(iStep) * sin(Beta*PETSC_PI/180_Kr) * U(i)%Y
                Uelem(3) = 0
                Velem    = V(i)
                Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
