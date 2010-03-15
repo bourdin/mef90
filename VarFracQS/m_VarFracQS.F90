@@ -50,6 +50,12 @@ Contains
       PetscReal                                    :: KSP_Default_rtol  = 1.0D-6
       PetscReal                                    :: KSP_Default_atol  = 1.0D-6
       PetscInt                                     :: KSP_Default_MaxIt = 50000
+      PetscReal                                    :: TAO_Default_fatol = 1.0D-10
+      PetscReal                                    :: TAO_Default_frtol = 1.0D-8
+      PetscReal                                    :: TAO_Default_gatol = 0.
+      PetscReal                                    :: TAO_Default_grtol = 0.
+      PetscReal                                    :: TAO_Default_catol = 0.
+      PetscReal                                    :: TAO_Default_crtol = 0.
       Type(PetscViewer)                            :: flgviewer
       PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
       
@@ -235,6 +241,7 @@ Contains
 
          Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
          
+         Call TaoSetTolerances(AppCtx%taoU, TAO_Default_fatol, TAO_Default_frtol, TAO_Default_catol, TAO_Default_crtol, iErr); CHKERRQ(iErr)
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -268,7 +275,8 @@ Contains
          Call TaoAppSetHessianMat(AppCtx%taoappV, AppCtx%KV, AppCtx%KV, iErr); CHKERRQ(iErr)
 
          Call TaoAppSetDefaultSolutionVec(AppCtx%taoappV, AppCtx%V%Vec, iErr); CHKERRQ(iErr)
-
+         
+         Call TaoSetTolerances(AppCtx%taoV, TAO_Default_fatol, TAO_Default_frtol, TAO_Default_catol, TAO_Default_crtol, iErr); CHKERRQ(iErr)
          Call TaoSetOptions(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappV, AppCtx%KSPV, iErr); CHKERRQ(iErr)
@@ -277,7 +285,7 @@ Contains
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
          Call KSPSetOperators(AppCtx%KSPV, AppCtx%KV, AppCtx%KV, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
-         Call KSPSetType(AppCtx%KSPV, KSPGMRES, iErr); CHKERRQ(iErr)
+         Call KSPSetType(AppCtx%KSPV, KSPCG, iErr); CHKERRQ(iErr)
       End If
       Call KSPSetInitialGuessNonzero(AppCtx%KSPV, PETSC_TRUE, iErr); CHKERRQ(iErr)
       Call KSPAppendOptionsPrefix(AppCtx%KSPV, "V_", iErr); CHKERRQ(iErr)
