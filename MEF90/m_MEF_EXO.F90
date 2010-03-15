@@ -397,19 +397,19 @@ Module m_MEF_EXO
       dEXO_out%Num_CellVariables = dEXO_in%Num_CellVariables
       dEXO_out%Num_VertVariables = dEXO_in%Num_VertVariables
       
-      If (dEXO%Num_GlobVariables > 0) Then
+      If (dEXO_out%Num_GlobVariables > 0) Then
          Allocate(dEXO_out%GlobVariable(dEXO_out%Num_GlobVariables))
          dEXO_out%GlobVariable(:)%Name   = dEXO_in%GlobVariable(:)%Name
          dEXO_out%GlobVariable(:)%Offset = dEXO_in%GlobVariable(:)%Offset
       End If
 
-      If (dEXO%Num_CellVariables > 0) Then
+      If (dEXO_out%Num_CellVariables > 0) Then
          Allocate(dEXO_out%CellVariable(dEXO_out%Num_CellVariables))
          dEXO_out%CellVariable(:)%Name   = dEXO_in%CellVariable(:)%Name
          dEXO_out%CellVariable(:)%Offset = dEXO_in%CellVariable(:)%Offset
       End If
       
-      If (dEXO%Num_VertVariables > 0) Then
+      If (dEXO_out%Num_VertVariables > 0) Then
          Allocate(dEXO_out%VertVariable(dEXO_out%Num_VertVariables))
          dEXO_out%VertVariable(:)%Name   = dEXO_in%VertVariable(:)%Name
          dEXO_out%VertVariable(:)%Offset = dEXO_in%VertVariable(:)%Offset
