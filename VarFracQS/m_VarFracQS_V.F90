@@ -337,6 +337,7 @@ Contains
       MyObjFunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+         MyElasticEnergyBlock = 0.0_Kr
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             Select Case (AppCtx%VarFracSchemeParam%Unilateral)
             Case (VarFrac_Unilateral_NONE)
@@ -349,7 +350,8 @@ Contains
             MyObjFunc = MyObjFunc + MyElasticEnergyBlock
          End If
 
-         Select Case (AppCtx%VarFracSchemeParam%AtNum)
+         MySurfaceEnergyBlock = 0.0_Kr
+         Select Case (AppCtx%VarFracSchemeParam%ATNum)
          Case(1)
             Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case(2)
@@ -378,7 +380,7 @@ Contains
             End Select
          End If
          !!! Contribution of the surface term
-         Select Case (AppCtx%VarFracSchemeParam%AtNum)
+         Select Case (AppCtx%VarFracSchemeParam%ATNum)
          Case(1)
             Call GradientV_AssemblyBlk_SurfaceAT1(AppCtx%GradientV%Sec, iBlk, AppCtx%V%Sec, AppCtx)
          Case(2)
@@ -387,12 +389,8 @@ Contains
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
       End Do Do_iBlk2
+
       Call SectionRealComplete(AppCtx%GradientV%Sec, iErr); CHKERRQ(iErr)
-
-      !!! Set Dirichlet Boundary Values
-!      Call FieldInsertVertexBoundaryValues(AppCtx%GradientV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
-!      Call FieldInsertVertexBoundaryValues(AppCtx%GradientV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
-
       Call SectionRealToVec(AppCtx%GradientV%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine FormFunctionAndGradientV
@@ -907,6 +905,8 @@ Contains
       Type(SectionReal)                            :: U_Sec, Theta_SeC, V_Sec
       Type(AppCtx_Type)                            :: AppCtx
 
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
       PetscReal, Dimension(:), Pointer             :: U_Loc, Theta_Loc, V_Loc, GradientV_Loc
       PetscReal                                    :: Theta_Elem, V_Elem
 #if defined PB_2D
@@ -1146,7 +1146,8 @@ Contains
                GradV_Elem = GradV_Elem + V_Loc(iDoF) * AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)
             End Do
             Do iDoF = 1, NumDofScal
-               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  (-AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon +  2.0_Kr * AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) )
+               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) - AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) / AppCtx%VarFracSchemeParam%Epsilon
+               GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * (GradV_Elem .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF, iGauss)) * AppCtx%VarFracSchemeParam%Epsilon * 2.0_Kr 
             End Do
          End Do Do_iGauss
          GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr

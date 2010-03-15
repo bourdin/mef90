@@ -167,13 +167,13 @@ Contains
       PetscReal                                    :: MyObjFunc
       
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
-
       !!! Objective function is ElasticEnergy + ExtForcesWork
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, U_Vec, iErr); CHKERRQ(ierr)
 
       MyObjFunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+         MyElasticEnergyBlock = 0.0_Kr
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             Select Case (AppCtx%VarFracSchemeParam%Unilateral)
             Case (VarFrac_Unilateral_NONE)
@@ -188,6 +188,7 @@ Contains
          End If
          MyObjFunc = MyObjFunc + MyElasticEnergyBlock
 
+         MyExtForcesWorkBlock = 0.0_Kr
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
             Call ElasticEnergy_AssemblyBlk_Brittle(MyExtForcesWorkBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%F%Sec, AppCtx)
             MyObjFunc = MyObjFunc + MyExtForcesWorkBlock

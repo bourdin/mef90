@@ -393,7 +393,7 @@ Contains
 #elif defined PB_3D  
       Type(Vect3D)                                 :: U_Elem, F_Elem
 #endif
-      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+      PetscInt                                     :: iE, iEloc, iErr
       PetscInt                                     :: NumDoFVect
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscLogDouble                               :: flops       
@@ -406,7 +406,7 @@ Contains
       Allocate(U_Loc(NumDoFVect))
       Allocate(F_Loc(NumDoFVect))
 
-      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+!      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
 
       Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -472,7 +472,7 @@ Contains
             SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (1.0_Kr-V_Elem)**2 / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)  )
          End Do Do_iGauss
       End Do Do_iEloc
-      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%MatProp(iBlk)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr
+      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
@@ -518,10 +518,11 @@ Contains
                GradV_Elem = GradV_Elem + V_Loc(iDoF2) * AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss)
             End Do
             
-            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (1.0_Kr-V_Elem) / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)  )
+            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (1.0_Kr-V_Elem) / AppCtx%VarFracSchemeParam%Epsilon
+            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (GradV_Elem .DotP. GradV_Elem) * AppCtx%VarFracSchemeParam%Epsilon 
          End Do Do_iGauss
       End Do Do_iEloc
-      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%MatProp(iBlk)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr 
+      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr 
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
@@ -584,7 +585,7 @@ Contains
             End Do
             Strain_Elem = Strain_Elem / Vol
             Theta_Elem  = Theta_Elem / Vol
-            Stress_Elem = AppCtx%MatProp(iBlkID)%Hookes_Law * ( Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlk)%Therm_Exp) )
+            Stress_Elem = AppCtx%MatProp(iBlkID)%Hookes_Law * ( Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlkId)%Therm_Exp) )
             flops = flops + 2.0
 #if defined PB_2D
             Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%XY /)
