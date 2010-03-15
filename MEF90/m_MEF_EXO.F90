@@ -15,7 +15,6 @@ Module m_MEF_EXO
    
    
    IMPLICIT NONE
-!   Private
 
    Integer, Parameter, Public                        :: exo_cpu_ws = 8
    Integer, Parameter, Public                        :: exo_io_ws = 8
@@ -398,17 +397,23 @@ Module m_MEF_EXO
       dEXO_out%Num_CellVariables = dEXO_in%Num_CellVariables
       dEXO_out%Num_VertVariables = dEXO_in%Num_VertVariables
       
-      Allocate(dEXO_out%GlobVariable(dEXO_out%Num_GlobVariables))
-      dEXO_out%GlobVariable(:)%Name   = dEXO_in%GlobVariable(:)%Name
-      dEXO_out%GlobVariable(:)%Offset = dEXO_in%GlobVariable(:)%Offset
+      If (dEXO%Num_GlobVariables > 0) Then
+         Allocate(dEXO_out%GlobVariable(dEXO_out%Num_GlobVariables))
+         dEXO_out%GlobVariable(:)%Name   = dEXO_in%GlobVariable(:)%Name
+         dEXO_out%GlobVariable(:)%Offset = dEXO_in%GlobVariable(:)%Offset
+      End If
 
-      Allocate(dEXO_out%CellVariable(dEXO_out%Num_CellVariables))
-      dEXO_out%CellVariable(:)%Name   = dEXO_in%CellVariable(:)%Name
-      dEXO_out%CellVariable(:)%Offset = dEXO_in%CellVariable(:)%Offset
+      If (dEXO%Num_CellVariables > 0) Then
+         Allocate(dEXO_out%CellVariable(dEXO_out%Num_CellVariables))
+         dEXO_out%CellVariable(:)%Name   = dEXO_in%CellVariable(:)%Name
+         dEXO_out%CellVariable(:)%Offset = dEXO_in%CellVariable(:)%Offset
+      End If
       
-      Allocate(dEXO_out%VertVariable(dEXO_out%Num_VertVariables))
-      dEXO_out%VertVariable(:)%Name   = dEXO_in%VertVariable(:)%Name
-      dEXO_out%VertVariable(:)%Offset = dEXO_in%VertVariable(:)%Offset
+      If (dEXO%Num_VertVariables > 0) Then
+         Allocate(dEXO_out%VertVariable(dEXO_out%Num_VertVariables))
+         dEXO_out%VertVariable(:)%Name   = dEXO_in%VertVariable(:)%Name
+         dEXO_out%VertVariable(:)%Offset = dEXO_in%VertVariable(:)%Offset
+      End If
    End Subroutine EXOVariable_Copy
 
 
@@ -424,12 +429,18 @@ Module m_MEF_EXO
       If (EXO_MyRank == 0) Then
          dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
 
-         Call EXPVP (dEXO%exoid, 'g', dEXO%Num_GlobVariables, iErr)
-         Call EXPVAN(dEXO%exoid, 'g', dEXO%Num_GlobVariables, dEXO%GlobVariable(:)%Name, iErr)
-         Call EXPVP (dEXO%exoid, 'e', dEXO%Num_CellVariables, iErr)
-         Call EXPVAN(dEXO%exoid, 'e', dEXO%Num_CellVariables, dEXO%CellVariable(:)%Name, iErr)
-         Call EXPVP (dEXO%exoid, 'n', dEXO%Num_VertVariables, iErr)
-         Call EXPVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
+         If (dEXO%Num_GlobVariables > 0) Then
+            Call EXPVP (dEXO%exoid, 'g', dEXO%Num_GlobVariables, iErr)
+            Call EXPVAN(dEXO%exoid, 'g', dEXO%Num_GlobVariables, dEXO%GlobVariable(:)%Name, iErr)
+         End If
+         If (dEXO%Num_CellVariables > 0) Then
+            Call EXPVP (dEXO%exoid, 'e', dEXO%Num_CellVariables, iErr)
+            Call EXPVAN(dEXO%exoid, 'e', dEXO%Num_CellVariables, dEXO%CellVariable(:)%Name, iErr)
+         End If
+         If (dEXO%Num_VertVariables > 0) Then
+            Call EXPVP (dEXO%exoid, 'n', dEXO%Num_VertVariables, iErr)
+            Call EXPVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
+         End If
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
       End If
@@ -452,16 +463,23 @@ Module m_MEF_EXO
          dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
 
          Call EXGVP (dEXO%exoid, 'g', dEXO%Num_GlobVariables, iErr)
-         Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))      
-         Call EXGVAN(dEXO%exoid, 'g', dEXO%Num_GlobVariables, dEXO%GlobVariable(:)%Name, iErr)
+         If (dEXO%Num_GlobVariables > 0) Then
+            Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))      
+            Call EXGVAN(dEXO%exoid, 'g', dEXO%Num_GlobVariables, dEXO%GlobVariable(:)%Name, iErr)
+         End If
          
          Call EXGVP (dEXO%exoid, 'e', dEXO%Num_CellVariables, iErr)
-         Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))      
-         Call EXGVAN(dEXO%exoid, 'e', dEXO%Num_CellVariables, dEXO%CellVariable(:)%Name, iErr)
+         If (dEXO%Num_CellVariables > 0) Then
+            Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))      
+            Call EXGVAN(dEXO%exoid, 'e', dEXO%Num_CellVariables, dEXO%CellVariable(:)%Name, iErr)
+         End If
 
          Call EXGVP (dEXO%exoid, 'n', dEXO%Num_VertVariables, iErr)
-         Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))      
-         Call EXGVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
+         If (dEXO%Num_VertVariables > 0) Then
+            Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))      
+            Call EXGVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
+         End If
+         
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
       End If
@@ -471,9 +489,15 @@ Module m_MEF_EXO
       Call MPI_BCast(dEXO%Num_VertVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
 
       If (EXO_MyRank /= 0) Then
-         Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))      
-         Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))      
-         Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))      
+         If (dEXO%Num_GlobVariables > 0) Then
+            Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))      
+         End If
+         If (dEXO%Num_CellVariables > 0) Then
+            Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))      
+         End If
+         If (dEXO%Num_VertVariables > 0) Then
+            Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))      
+         End If
       End If      
 
       Call MPI_BCast(dEXO%GlobVariable(:)%Offset, dEXO%Num_GlobVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
