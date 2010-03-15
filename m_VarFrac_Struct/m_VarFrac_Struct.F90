@@ -415,7 +415,7 @@ Module m_VarFrac_Struct
       PetscInt                                     :: iErr
       PetscTruth                                   :: flag
 
-      dSchemeParam%IrrevType        = VarFrac_Irrev_Eq
+      dSchemeParam%IrrevType        = VarFrac_Irrev_Ineq
       dSchemeParam%IrrevTol         = 1.0D-2
       dSchemeParam%DoBT             = PETSC_FALSE
       dSchemeParam%BTTol            = 1.0D-2
@@ -430,12 +430,12 @@ Module m_VarFrac_Struct
 
       dSchemeParam%Epsilon          = .1
       dSchemeParam%KEpsilon         = 1.0E-6
-      dSchemeParam%ATNum            = 2
+      dSchemeParam%ATNum            = 1
       dSchemeParam%IntegOrder       = 2
       dSchemeParam%SaveStress       = PETSC_FALSE
       dSchemeParam%SaveStrain       = PETSC_FALSE
       dSchemeParam%U_UseTao         = PETSC_FALSE
-      dSchemeParam%V_UseTao         = PETSC_FALSE
+      dSchemeParam%V_UseTao         = PETSC_TRUE
 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-irrev',          dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
