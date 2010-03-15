@@ -529,9 +529,10 @@ Module m_VarFrac_Struct
       End Do
    End Subroutine VarFracEXOProperty_Init   
 
-   Subroutine VarFracEXOVariable_Init(dEXO)
+   Subroutine VarFracEXOVariable_Init(dEXO, dSkipElementVariables)
       Type(EXO_Type)                      :: dEXO
       PetscInt                            :: i
+      PetscTruth, optional                :: dSkipElementVariables
       
       dEXO%Num_GlobVariables = VarFrac_Num_GlobVar
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
@@ -543,22 +544,26 @@ Module m_VarFrac_Struct
       dEXO%GlobVariable(VarFrac_GlobVar_Load)%Name          = 'Load'
       dEXO%GlobVariable(:)%Offset = (/ (i, i=1,dEXO%Num_GlobVariables) /)
       
-      dEXO%Num_CellVariables = VarFrac_Num_CellVar
-      Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))
-      dEXO%CellVariable(VarFrac_CellVar_StrainXX)%Name = 'Strain XX'
-      dEXO%CellVariable(VarFrac_CellVar_StrainYY)%Name = 'Strain YY' 
-      dEXO%CellVariable(VarFrac_CellVar_StrainZZ)%Name = 'Strain ZZ'
-      dEXO%CellVariable(VarFrac_CellVar_StrainXY)%Name = 'Strain XY'
-      dEXO%CellVariable(VarFrac_CellVar_StrainYZ)%Name = 'Strain YZ'
-      dEXO%CellVariable(VarFrac_CellVar_StrainXZ)%Name = 'Strain XZ'
-      dEXO%CellVariable(VarFrac_CellVar_StressXX)%Name = 'Stress XX'
-      dEXO%CellVariable(VarFrac_CellVar_StressYY)%Name = 'Stress YY'
-      dEXO%CellVariable(VarFrac_CellVar_StressZZ)%Name = 'Stress ZZ'
-      dEXO%CellVariable(VarFrac_CellVar_StressXY)%Name = 'Stress XY'
-      dEXO%CellVariable(VarFrac_CellVar_StressYZ)%Name = 'Stress YZ'
-      dEXO%CellVariable(VarFrac_CellVar_StressZX)%Name = 'Stress ZX'
-      dEXO%CellVariable(:)%Offset = (/ (i, i=1,dEXO%Num_CellVariables) /)
-
+      If ( Present(dSkipElementVariables) .AND. (.NOT. dSkipElementVariables)) Then
+         dEXO%Num_CellVariables = VarFrac_Num_CellVar
+         Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))
+         dEXO%CellVariable(VarFrac_CellVar_StrainXX)%Name = 'Strain XX'
+         dEXO%CellVariable(VarFrac_CellVar_StrainYY)%Name = 'Strain YY' 
+         dEXO%CellVariable(VarFrac_CellVar_StrainZZ)%Name = 'Strain ZZ'
+         dEXO%CellVariable(VarFrac_CellVar_StrainXY)%Name = 'Strain XY'
+         dEXO%CellVariable(VarFrac_CellVar_StrainYZ)%Name = 'Strain YZ'
+         dEXO%CellVariable(VarFrac_CellVar_StrainXZ)%Name = 'Strain XZ'
+         dEXO%CellVariable(VarFrac_CellVar_StressXX)%Name = 'Stress XX'
+         dEXO%CellVariable(VarFrac_CellVar_StressYY)%Name = 'Stress YY'
+         dEXO%CellVariable(VarFrac_CellVar_StressZZ)%Name = 'Stress ZZ'
+         dEXO%CellVariable(VarFrac_CellVar_StressXY)%Name = 'Stress XY'
+         dEXO%CellVariable(VarFrac_CellVar_StressYZ)%Name = 'Stress YZ'
+         dEXO%CellVariable(VarFrac_CellVar_StressZX)%Name = 'Stress ZX'
+         dEXO%CellVariable(:)%Offset = (/ (i, i=1,dEXO%Num_CellVariables) /)
+      Else
+         dEXO%Num_CellVariables = 0
+      End If
+         
       dEXO%Num_VertVariables = VarFrac_Num_VertVar
       Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))
       dEXO%VertVariable(VarFrac_VertVar_Fracture)%Name      = 'Fracture'
