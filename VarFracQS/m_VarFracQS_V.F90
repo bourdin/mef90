@@ -274,15 +274,15 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyV_Stage, iErr); CHKERRQ(iErr)
 
       Call MatZeroEntries(H, iErr); CHKERRQ(iErr)
-      !!! MatInsertVertexBoundaryValues overwrites the entire block corresponding to all
-      !!! dof of a point where a boundary condition is applied
-      !!! it is to be called BEFORE assembling the matrix
-      Call MatInsertVertexBoundaryValues(H, AppCtx%V, AppCtx%BCVFlag, AppCtx%MeshTopology)
-      ! check for type of irreversibility here
-      Call MatInsertVertexBoundaryValues(H, AppCtx%V, AppCtx%IrrevFlag, AppCtx%MeshTopology)
-      Call MatAssemblyBegin(H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
-      Call MatAssemblyEnd  (H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
-
+!!!$      !!! MatInsertVertexBoundaryValues overwrites the entire block corresponding to all
+!!!$      !!! dof of a point where a boundary condition is applied
+!!!$      !!! it is to be called BEFORE assembling the matrix
+!!!$      Call MatInsertVertexBoundaryValues(H, AppCtx%V, AppCtx%BCVFlag, AppCtx%MeshTopology)
+!!!$      ! check for type of irreversibility here
+!!!$      Call MatInsertVertexBoundaryValues(H, AppCtx%V, AppCtx%IrrevFlag, AppCtx%MeshTopology)
+!!!$      Call MatAssemblyBegin(H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+!!!$      Call MatAssemblyEnd  (H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+!!!$
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
@@ -390,8 +390,8 @@ Contains
       Call SectionRealComplete(AppCtx%GradientV%Sec, iErr); CHKERRQ(iErr)
 
       !!! Set Dirichlet Boundary Values
-      Call FieldInsertVertexBoundaryValues(AppCtx%GradientV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
-      Call FieldInsertVertexBoundaryValues(AppCtx%GradientV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
+!      Call FieldInsertVertexBoundaryValues(AppCtx%GradientV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+!      Call FieldInsertVertexBoundaryValues(AppCtx%GradientV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
 
       Call SectionRealToVec(AppCtx%GradientV%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, GradientV_Vec, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
@@ -745,6 +745,10 @@ Contains
       IrrevFlag = VarFrac_BC_Type_NONE
       Allocate(MatElem(NumDoFScal, NumDoFScal))
       
+      C2_V = AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      flops = flops + 2.0
+      C2_GradV = AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      flops = flops + 2.0
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem  = 0.0_Kr
@@ -755,10 +759,6 @@ Contains
          End If
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
-            C2_V = AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
-            flops = flops + 2.0
-            C2_GradV = AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
-            flops = flops + 2.0
             !! Assemble the element stiffness
             Do iDoF1 = 1, NumDoFScal
                If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
@@ -813,6 +813,8 @@ Contains
       IrrevFlag = VarFrac_BC_Type_NONE
       Allocate(MatElem(NumDoFScal, NumDoFScal))
       
+      C2_GradV = AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      flops = flops + 2.0
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem  = 0.0_Kr
@@ -823,8 +825,6 @@ Contains
          End If
       
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
-            C2_GradV = AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
-            flops = flops + 2.0
             !! Assemble the element stiffness
             Do iDoF1 = 1, NumDoFScal
                If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
@@ -1136,7 +1136,7 @@ Contains
       Allocate(GradientV_Loc(NumDoFScal))
 
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+      Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          GradientV_Loc = 0.0_Kr
          Call SectionRealRestrictClosure(V_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
@@ -1210,7 +1210,8 @@ Contains
    End Subroutine GradientV_AssemblyBlk_SurfaceAT2
 #endif
 
-   
+#undef __FUNCT__
+#define __FUNCT__ "Step_V"
    Subroutine Step_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -1232,11 +1233,12 @@ Contains
 #if defined WITH_TAO
          Call TaoAppGetSolutionVec(AppCtx%taoappV, AppCtx%V%Vec, iErr); CHKERRQ(iErr)
          Call VecCopy(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
-
+         
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
+
          Call TaoSolveApplication(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoGetSolutionStatus(AppCtx%taoV, KSPNumIter, rDum, TaoResidual, rDum, rDum, TaoReason, iErr); CHKERRQ(iErr)
          If ( TaoReason > 0 ) Then
@@ -1260,7 +1262,7 @@ Contains
       Else
          Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, AppCtx%V%Vec, iErr); CHKERRQ(ierr)
          Call VecCopy(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
-
+         
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n' 
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 

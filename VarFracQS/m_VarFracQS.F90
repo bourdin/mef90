@@ -252,8 +252,6 @@ Contains
 
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
-!      Call PCSetType(AppCtx%PCU, PCHYPRE, iErr); CHKERRQ(iErr)
-!      Call PCHYPRESetType(AppCtx%PCU, "boomeramg", iErr); CHKERRQ(iErr)
       Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
          
       !! Solver context for V      
@@ -288,8 +286,6 @@ Contains
 
       Call KSPGetPC(AppCtx%KSPV, AppCtx%PCV, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCV, PCBJACOBI, iErr); CHKERRQ(iErr)
-!      Call PCSetType(AppCtx%PCV, PCHYPRE, iErr); CHKERRQ(iErr)
-!      Call PCHYPRESetType(AppCtx%PCV, "boomeramg", iErr); CHKERRQ(iErr)
       Call PCSetFromOptions(AppCtx%PCV, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 0) Then
