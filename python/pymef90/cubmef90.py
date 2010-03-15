@@ -359,7 +359,7 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2):
   ###    Alpha:   lamination angle
   ###    Theta1:  thickness of layer 1
   ###    Theta2:  thickness of layer 2
-  ###    The first Layer1-Layer2 interface is always at the center of BB
+  ###    The center of BB always corresponds to the center of a Layer1
   ###                                            
   YL = np.sqrt((BB[1]-BB[0])**2+(BB[3]-BB[2])**2)
   XC = (BB[0] + BB[1]) / 2.
@@ -377,18 +377,20 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2):
   LAYER1_IDs = Body_IDs[:]
   LAYER2_IDs = []
   for i in range(n1,n2):
-    X = XC + +Theta1/2. + i * np.cos( np.radians(Alpha) ) * Theta
+    X = XC + i * np.cos( np.radians(Alpha) ) * Theta
     Y = YC + i * np.sin( np.radians(Alpha) ) * Theta
-    cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[4]))
-    v1_ID=cubit.get_last_id("vertex")
-    cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[5]))
-    v2_ID=cubit.get_last_id("vertex")
     cubit.cmd('create brick X %f Y %f Z %f' % (Theta1, YL, BB[5]-BB[4]))
     tmp_ID=cubit.get_last_id("volume")
     cubit.cmd('move volume %i X %f Y %f Z %f' % (tmp_ID, X, Y, ZC))
-    cubit.cmd('rotate volume %i about vertex %i vertex %i angle %f' % (tmp_ID, v1_ID, v2_ID, Alpha))
-    cubit.cmd('delete vertex %i' % v1_ID)
-    cubit.cmd('delete vertex %i' % v2_ID)
+    if not Alpha == 0.:
+      ### cubit doesn;t like rotations will 0 angle...
+      cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[4]))
+      v1_ID=cubit.get_last_id("vertex")
+      cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[5]))
+      v2_ID=cubit.get_last_id("vertex")
+      cubit.cmd('rotate volume %i about vertex %i vertex %i angle %f' % (tmp_ID, v1_ID, v2_ID, Alpha))
+      cubit.cmd('delete vertex %i' % v1_ID)
+      cubit.cmd('delete vertex %i' % v2_ID)
     (LAYER1_IDs, tmp_layer) = WebcutTool(LAYER1_IDs, tmp_ID, delete=True)
     for l in tmp_layer:
       LAYER2_IDs.append(l)
@@ -422,18 +424,19 @@ def MilledLayer(Body_IDs, BB, Alpha, Theta1, Theta2, secmin):
   n2 = int(np.ceil(l2/Theta))
   for i in range(n1,n2):
     X = XC + i * np.cos( np.radians(Alpha) ) * Theta
-    # Cubit seems to have diffculties merging if the layer end matches the crack end
     Y = YC + i * np.sin( np.radians(Alpha) ) * Theta
-    cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[4]))
-    v1_ID=cubit.get_last_id("vertex")
-    cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[5]))
-    v2_ID=cubit.get_last_id("vertex")
     cubit.cmd('create brick X %f Y %f Z %f' % (Theta1, YL, ZL))
     tmp_ID=cubit.get_last_id("volume")
     cubit.cmd('move volume %i X %f Y %f Z %f' % (tmp_ID, X, Y, ZL/2.+secmin[1]))
-    cubit.cmd('rotate volume %i about vertex %i vertex %i angle %f' % (tmp_ID, v1_ID, v2_ID, Alpha))
-    cubit.cmd('delete vertex %i' % v1_ID)
-    cubit.cmd('delete vertex %i' % v2_ID)
+    if not Alpha == 0.:
+      ### cubit doesn;t like rotations will 0 angle...
+      cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[4]))
+      v1_ID=cubit.get_last_id("vertex")
+      cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[5]))
+      v2_ID=cubit.get_last_id("vertex")
+      cubit.cmd('rotate volume %i about vertex %i vertex %i angle %f' % (tmp_ID, v1_ID, v2_ID, Alpha))
+      cubit.cmd('delete vertex %i' % v1_ID)
+      cubit.cmd('delete vertex %i' % v2_ID)
     (Body_IDs, tmp_layer) = WebcutTool(Body_IDs, tmp_ID, delete=False)
     cmd="delete volume "
     for v in tmp_layer:
