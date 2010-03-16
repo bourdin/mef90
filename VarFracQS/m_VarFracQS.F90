@@ -47,16 +47,16 @@ Contains
       PetscInt                                     :: vers
       PetscTruth                                   :: flag
       
-      PetscReal                                    :: KSP_Default_rtol  = 1.0D-6
-      PetscReal                                    :: KSP_Default_atol  = 1.0D-6
-      PetscInt                                     :: KSP_Default_MaxIt = 50000
-      PetscReal                                    :: TAO_Default_fatol = 1.0D-10
-      PetscReal                                    :: TAO_Default_frtol = 1.0D-8
-      PetscReal                                    :: TAO_Default_gatol = 0.
-      PetscReal                                    :: TAO_Default_grtol = 0.
-      PetscReal                                    :: TAO_Default_gttol = 0.
-      PetscReal                                    :: TAO_Default_catol = 0.
-      PetscReal                                    :: TAO_Default_crtol = 0.
+      PetscReal                                    :: KSP_Default_rtol
+      PetscReal                                    :: KSP_Default_atol
+      PetscInt                                     :: KSP_Default_MaxIt
+      PetscReal                                    :: TAO_Default_fatol
+      PetscReal                                    :: TAO_Default_frtol
+      PetscReal                                    :: TAO_Default_gatol
+      PetscReal                                    :: TAO_Default_grtol
+      PetscReal                                    :: TAO_Default_gttol
+      PetscReal                                    :: TAO_Default_catol
+      PetscReal                                    :: TAO_Default_crtol
       Type(PetscViewer)                            :: flgviewer
       PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
       
@@ -66,6 +66,17 @@ Contains
 #endif
       Call PetscMemorySetGetMaximumUsage(iErr); CHKERRQ(iErr)
 
+      KSP_Default_rtol  = 1.0D-6
+      KSP_Default_atol  = 1.0D-6
+      KSP_Default_MaxIt = 50000
+      TAO_Default_fatol = 1.0D-10
+      TAO_Default_frtol = 1.0D-8
+      TAO_Default_gatol = 0.
+      TAO_Default_grtol = 0.
+      TAO_Default_gttol = 0.
+      TAO_Default_catol = 0.
+      TAO_Default_crtol = 0.
+      
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, flag, iErr); CHKERRQ(iErr)    
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       If (.NOT. HasPrefix) Then
@@ -242,10 +253,10 @@ Contains
 
          Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
          
-         Call TaoSetTolerances(AppCtx%taoU, TAO_Default_fatol, TAO_Default_frtol, TAO_Default_catol, TAO_Default_crtol, iErr); CHKERRQ(iErr)
-         Call TaoSetGradientTolerances(AppCtx%taoU, TAO_Default_gatol, TAO_Default_grtol, TAO_Default_gttol, iErr); CHKERRQ(iErr)
          Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
+         Call TaoSetTolerances(AppCtx%taoU, TAO_Default_fatol, TAO_Default_frtol, TAO_Default_catol, TAO_Default_crtol, iErr); CHKERRQ(iErr)
+         Call TaoSetGradientTolerances(AppCtx%taoU, TAO_Default_gatol, TAO_Default_grtol, TAO_Default_gttol, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
          Call KSPSetType(AppCtx%KSPU, KSPSTCG, iErr); CHKERRQ(iErr)
 #endif
@@ -278,10 +289,10 @@ Contains
 
          Call TaoAppSetDefaultSolutionVec(AppCtx%taoappV, AppCtx%V%Vec, iErr); CHKERRQ(iErr)
          
-         Call TaoSetTolerances(AppCtx%taoV, TAO_Default_fatol, TAO_Default_frtol, TAO_Default_catol, TAO_Default_crtol, iErr); CHKERRQ(iErr)
-         Call TaoSetGradientTolerances(AppCtx%taoV, TAO_Default_gatol, TAO_Default_grtol, TAO_Default_gttol, iErr); CHKERRQ(iErr)
          Call TaoSetOptions(AppCtx%taoappV, AppCtx%taoV, iErr); CHKERRQ(iErr)
          Call TaoAppSetFromOptions(AppCtx%taoappV, iErr); CHKERRQ(iErr)
+         Call TaoSetTolerances(AppCtx%taoV, TAO_Default_fatol, TAO_Default_frtol, TAO_Default_catol, TAO_Default_crtol, iErr); CHKERRQ(iErr)
+         Call TaoSetGradientTolerances(AppCtx%taoV, TAO_Default_gatol, TAO_Default_grtol, TAO_Default_gttol, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappV, AppCtx%KSPV, iErr); CHKERRQ(iErr)
          Call KSPSetType(AppCtx%KSPV, KSPSTCG, iErr); CHKERRQ(iErr)
 #endif

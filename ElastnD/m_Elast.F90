@@ -177,7 +177,6 @@ Contains
       End If
       
       !!! Read Mat Properties from the CST file
-      Write(*,*) 'CST file is ', trim(AppCtx%AppParam%prefix)//'.CST'
       Call MatProp_Read(AppCtx%MeshTopology, AppCtx%MatProp, trim(AppCtx%AppParam%prefix)//'.CST')
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with MatProp_Read\n"
