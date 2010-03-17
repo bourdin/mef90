@@ -55,6 +55,7 @@ Module m_VarFracQS_Types3D
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
       Integer                                      :: Ener_Unit
+      Integer, Dimension(:), Pointer               :: EnerBlock_Unit
    End Type AppParam_Type
 
    Type AppCtx_Type
@@ -81,11 +82,15 @@ Module m_VarFracQS_Types3D
       Type(SectionReal)                            :: StrainU
       PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
-      PetscReal, Dimension(:), Pointer             :: Load
-      PetscReal, Dimension(:), Pointer             :: SurfaceEnergy
-      PetscReal, Dimension(:), Pointer             :: ElasticEnergy
-      PetscReal, Dimension(:), Pointer             :: ExtForcesWork
+      PetscReal, Dimension(:), Pointer             :: Load                 ! All Time Steps
+      PetscReal, Dimension(:), Pointer             :: SurfaceEnergy        ! All Time Steps
+      PetscReal, Dimension(:), Pointer             :: ElasticEnergy        ! All Time Steps
+      PetscReal, Dimension(:), Pointer             :: ExtForcesWork        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: TotalEnergy
+      PetscReal, Dimension(:), Pointer             :: SurfaceEnergyBlock   ! Current TS, All Blocks
+      PetscReal, Dimension(:), Pointer             :: ElasticEnergyBlock   ! Current TS, All Blocks
+      PetscReal, Dimension(:), Pointer             :: ExtForcesWorkBlock   ! Current TS, All Blocks
+      PetscReal, Dimension(:), Pointer             :: TotalEnergyBlock     ! Current TS, All Blocks
       PetscReal                                    :: ErrV
       Type(Mat)                                    :: KU, KV
       Type(KSP)                                    :: KSPU, KSPV

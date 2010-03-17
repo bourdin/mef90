@@ -31,7 +31,6 @@ Module m_MEF_Types
       Type(VecScatter)                               :: Scatter
       PetscInt                                       :: num_components
       PetscInt, Dimension(:), Pointer                :: component_size
-!      Logical                                        :: Has_Vec
    End Type Field
    
    Type Flag
