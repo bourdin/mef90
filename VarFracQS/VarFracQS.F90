@@ -24,7 +24,7 @@ Program  VarFracQS
 
 
    Type(AppCtx_Type)                            :: AppCtx
-   PetscInt                                     :: iErr
+   PetscInt                                     :: iErr, iBlk
    PetscInt                                     :: iDebug
    PetscInt                                     :: iBTStep
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
@@ -117,20 +117,21 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          AppCtx%IsBT = PETSC_FALSE
          If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) ) Then
-
-            Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx)
-            Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx)
-            Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx)
-            AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+            Call ComputeEnergies(AppCtx)
             Call BackTracking(AppCtx, iBTStep)
             
             If (iBTStep < AppCtx%TimeStep) Then
                AppCtx%IsBT = PETSC_TRUE
                AppCtx%TimeStep = iBTStep - 1
 
-               !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
+               !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
                Write(AppCtx%AppParam%Ener_Unit, *)
                Write(AppCtx%AppParam%Ener_Unit, *)
+               
+               Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+                  Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+                  Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+               End Do
                
                !!! Exit the AltMin loop
                Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
@@ -156,10 +157,7 @@ Program  VarFracQS
                Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n' 
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If
-            Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx)
-            Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx)
-            Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx)
-            AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+            Call ComputeEnergies(AppCtx)
 
             Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -195,10 +193,7 @@ Program  VarFracQS
       ! Check For BackTracking again
       !------------------------------------------------------------------- 
       If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT) ) Then
-         Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx)
-         Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx)
-         Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx)
-         AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+         Call ComputeEnergies(AppCtx)
          Call BackTracking(AppCtx, iBTStep)
          
          If (iBTStep < AppCtx%TimeStep) Then

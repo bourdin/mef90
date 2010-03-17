@@ -21,94 +21,114 @@ Module m_VarFracQS_Post3D
    Implicit NONE   
    
 Contains
-   Subroutine ElasticEnergy_Assembly(ElasticEnergy, AppCtx)     
+   Subroutine ElasticEnergy_Assembly(ElasticEnergy, ElasticEnergyBlock, AppCtx)     
       PetscReal, Intent(OUT)                       :: ElasticEnergy
+      PetscReal, Dimension(:), Pointer             :: ElasticEnergyBlock
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
-      PetscReal                                    :: MyElasticEnergy, MyElasticEnergyBlock
+      PetscReal                                    :: MyElasticEnergy
+      PetscReal, Dimension(:), Pointer             :: MyElasticEnergyBlock
      
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
       MyElasticEnergy = 0.0_Kr
-      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+      Allocate(MyELasticEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+      MyElasticEnergyBlock = 0.0_Kr
+      Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             Select Case (AppCtx%VarFracSchemeParam%Unilateral)
             Case (VarFrac_Unilateral_NONE)
-               Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+               Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             Case (VarFrac_Unilateral_Full)
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralFull(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralFull(MyElasticEnergyBlock(iBlkId), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             Case (VarFrac_Unilateral_Shear)
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralShear(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralShear(MyElasticEnergyBlock(iBlkId), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             End Select
          Else
-            Call ElasticEnergy_AssemblyBlk_NonBrittle(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx)
+            Call ElasticEnergy_AssemblyBlk_NonBrittle(MyElasticEnergyBlock(iBlkId), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx)
          End If
-         MyElasticEnergy = MyElasticEnergy + MyElasticEnergyBlock
-      End Do Do_iBlk
+         MyElasticEnergy = MyElasticEnergy + MyElasticEnergyBlock(iBlkId)
+      End Do
 
       Call PetscGlobalSum(MyElasticEnergy, ElasticEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      
+      Do iBlkID = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+         Call PetscGlobalSum(MyElasticEnergyBlock(iBlkID), ElasticEnergyBlock(iBlkID), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      End Do
+      DeAllocate(MyElasticEnergyBlock)
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ElasticEnergy_Assembly
    
-   Subroutine ExtForcesWork_Assembly(ExtForcesWork, AppCtx)     
+   Subroutine ExtForcesWork_Assembly(ExtForcesWork, ExtForcesWorkBlock, AppCtx)     
       PetscReal, Intent(OUT)                       :: ExtForcesWork
+      PetscReal, Dimension(:), Pointer             :: ExtForcesWorkBlock
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
-      PetscReal                                    :: MyExtForcesWork, MyExtForcesWorkBlock
+      PetscReal                                    :: MyExtForcesWork
+      PetscReal, Dimension(:), Pointer             :: MyExtForcesWorkBlock
      
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
       MyExtForcesWork = 0.0_Kr
-      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+      Allocate(MyExtForcesWorkBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+      MyExtForcesWorkBlock = 0.0_Kr
+      Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
-            Call ExtForcesWork_AssemblyBlk(MyExtForcesWorkBlock, iBlk, AppCtx%U%Sec, AppCtx%F%Sec, AppCtx)
-            MyExtForcesWork = MyExtForcesWork + MyExtForcesWorkBlock
+            Call ExtForcesWork_AssemblyBlk(MyExtForcesWorkBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%F%Sec, AppCtx)
+            MyExtForcesWork = MyExtForcesWork + MyExtForcesWorkBlock(iBlkID)
          End If
-      End Do Do_iBlk
+      End Do
 
       Call PetscGlobalSum(MyExtForcesWork, ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      
+      Do iBlkID = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+         Call PetscGlobalSum(MyExtForcesWorkBlock(iBlkID), ExtForcesWorkBlock(iBlkID), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      End Do
+      DeAllocate(MyExtForcesWorkBlock)
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ExtForcesWork_Assembly
    
-   Subroutine SurfaceEnergy_Assembly(SurfaceEnergy, AppCtx)     
+   Subroutine SurfaceEnergy_Assembly(SurfaceEnergy, SurfaceEnergyBlock, AppCtx)     
       PetscReal, Intent(OUT)                       :: SurfaceEnergy
+      PetscReal, Dimension(:), Pointer             :: SurfaceEnergyBlock
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
-      PetscReal                                    :: MySurfaceEnergy, MySurfaceEnergyBlock
+      PetscReal                                    :: MySurfaceEnergy
+      PetscReal, Dimension(:), Pointer             :: MySurfaceEnergyBlock
      
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
       MySurfaceEnergy = 0.0_Kr
-      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+      Allocate(MySurfaceEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+      Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock(iBlkID), iBlk, AppCtx%V%Sec, AppCtx)
          Case(2)
-            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
+            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock(iBlkID), iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
             SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
-         MySurfaceEnergy = MySurfaceEnergy + MySurfaceEnergyBlock
-      End Do Do_iBlk
+         MySurfaceEnergy = MySurfaceEnergy + MySurfaceEnergyBlock(iBlkID)
+      End Do
 
       Call PetscGlobalSum(MySurfaceEnergy, SurfaceEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      
+      Do iBlkID = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+         Call PetscGlobalSum(MySurfaceEnergyBlock(iBlkID), SurfaceEnergyBlock(iBlkID), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      End Do
+      DeAllocate(MySurfaceEnergyBlock)
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine SurfaceEnergy_Assembly

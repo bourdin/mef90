@@ -37,7 +37,7 @@ Contains
    Subroutine VarFracQSInit(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      PetscInt                                     :: iErr, i
+      PetscInt                                     :: iErr, i, iBlk
       Type(Mesh)                                   :: Tmp_Mesh
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename
       PetscInt                                     :: NumComponents
@@ -112,12 +112,6 @@ Contains
          Write(IOBuffer, 104) Trim(filename)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      AppCtx%AppParam%Ener_Unit = 71
-      If (MEF90_MyRank == 0) Then
-         Open(File = Trim(AppCtx%AppParam%Prefix)//'.ener', Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
-         Rewind(AppCtx%AppParam%Ener_Unit)
-      End If
-      
 100 Format(A, '.flg')      
 101 Format(A, '-', I4.4, '.log')
 102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
@@ -343,11 +337,31 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
+      !!! Allocate energies, and open matching files
       Allocate(AppCtx%SurfaceEnergy(AppCtx%NumTimeSteps))
       Allocate(AppCtx%ElasticEnergy(AppCtx%NumTimeSteps))
       Allocate(AppCtx%ExtForcesWork(AppCtx%NumTimeSteps))
       Allocate(AppCtx%TotalEnergy(AppCtx%NumTimeSteps))
       Allocate(AppCtx%Load(AppCtx%NumTimeSteps))
+      
+      Allocate(AppCtx%SurfaceEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+      Allocate(AppCtx%ElasticEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+      Allocate(AppCtx%ExtForcesWorkBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+      Allocate(AppCtx%TotalEnergyblock  (AppCtx%MeshTopology%Num_Elem_Blks_Global))
+      
+      If (MEF90_MyRank == 0) Then
+         AppCtx%AppParam%Ener_Unit = 71
+         Allocate(AppCtx%AppParam%EnerBlock_Unit(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+         Open(File = Trim(AppCtx%AppParam%Prefix)//'.ener', Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
+         Rewind(AppCtx%AppParam%Ener_Unit)
+         Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+            AppCtx%AppParam%EnerBlock_Unit(iBlk) = 170+iBlk
+            Write(filename, 110) Trim(AppCtx%AppParam%Prefix), iBlk
+            Open(File = filename, Unit = AppCtx%AppParam%EnerBlock_Unit(iBlk), Status = 'Unknown')
+            Rewind(AppCtx%AppParam%EnerBlock_Unit(iBlk))
+         End Do
+      End If
+      110 Format(A, '-', I4.4, '.enerblk')
       
       !!! Set V=1
       Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
@@ -434,9 +448,19 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_StrainStress
 
+   Subroutine ComputeEnergies(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+
+      Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock, AppCtx)
+      Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%ExtForcesWorkBlock, AppCtx)
+      Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx%SurfaceEnergyBlock, AppCtx)
+      AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+      AppCtx%TotalEnergyBlock = AppCtx%ElasticEnergyBlock - AppCtx%ExtForcesWorkBlock + AppCtx%SurfaceEnergyBlock
+   End Subroutine ComputeEnergies
+
    Subroutine Save_Ener(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
-      PetscInt                                     :: iErr
+      PetscInt                                     :: iErr, iBlk
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_SurfaceEnergy)%Offset, AppCtx%TimeStep, AppCtx%SurfaceEnergy(AppCtx%TimeStep))
@@ -447,6 +471,9 @@ Contains
       
       If (MEF90_MyRank == 0) Then
          Write(AppCtx%AppParam%Ener_Unit, 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx%TotalEnergy(AppCtx%TimeStep)
+         Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+            Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock(iBlk), AppCtx%ExtForcesWorkBlock(iBlk), AppCtx%SurfaceEnergyBlock(iBlk), AppCtx%TotalEnergyBlock(iBlk)
+         End Do    
       End If
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100   Format(I6, 5(ES13.5,'  '))  
@@ -470,7 +497,7 @@ Contains
    Subroutine VarFracQSFinalize(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      PetscInt                                     :: iErr
+      PetscInt                                     :: iErr, iBlk
       Character(len=MEF90_MXSTRLEN)                :: filename
    
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
@@ -515,6 +542,10 @@ Contains
       DeAllocate(AppCtx%ExtForcesWork)
       DeAllocate(AppCtx%TotalEnergy)
       DeAllocate(AppCtx%Load)
+      DeAllocate(AppCtx%SurfaceEnergyBlock)
+      DeAllocate(AppCtx%ElasticEnergyBlock)
+      DeAllocate(AppCtx%ExtForcesWorkBlock)
+      DeAllocate(AppCtx%TotalEnergyBlock)
       If (AppCtx%AppParam%verbose > 1) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
          Call PetscViewerFlush(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
@@ -524,6 +555,10 @@ Contains
       
       If (MEF90_MyRank == 0) Then
          Close(AppCtx%AppParam%Ener_Unit)
+         Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+            Close(AppCtx%AppParam%EnerBlock_Unit(iBlk))
+         End Do
+         DeAllocate(AppCtx%AppParam%EnerBlock_Unit)
       End If
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
