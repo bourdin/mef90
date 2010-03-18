@@ -253,6 +253,8 @@ Contains
          Call TaoSetGradientTolerances(AppCtx%taoU, TAO_Default_gatol, TAO_Default_grtol, TAO_Default_gttol, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
          Call KSPSetType(AppCtx%KSPU, KSPSTCG, iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, "TAO U Solver:\n", iErr); CHKERRQ(iErr)
+         Call TaoView(AppCtx%taoU, iErr); CHKERRQ(iErr)
 #endif
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -267,6 +269,7 @@ Contains
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
       Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
+!      Call KSPView(AppCtx%KSPU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
          
       !! Solver context for V      
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
@@ -289,6 +292,8 @@ Contains
          Call TaoSetGradientTolerances(AppCtx%taoV, TAO_Default_gatol, TAO_Default_grtol, TAO_Default_gttol, iErr); CHKERRQ(iErr)
          Call TaoAppGetKSP(AppCtx%taoappV, AppCtx%KSPV, iErr); CHKERRQ(iErr)
          Call KSPSetType(AppCtx%KSPV, KSPSTCG, iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, "TAO V Solver:\n", iErr); CHKERRQ(iErr)
+         Call TaoView(AppCtx%taoV, iErr); CHKERRQ(iErr)
 #endif
       Else
          Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPV, iErr); CHKERRQ(iErr)
@@ -303,6 +308,7 @@ Contains
       Call KSPGetPC(AppCtx%KSPV, AppCtx%PCV, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCV, PCBJACOBI, iErr); CHKERRQ(iErr)
       Call PCSetFromOptions(AppCtx%PCV, iErr); CHKERRQ(iErr)
+!      Call KSPView(AppCtx%KSPV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done Creating fields Section, Vec, KSP and Mat\n"
