@@ -45,3 +45,27 @@ def computeG(t, Eel, l):
   G = -(Eel[1:]/pow(t[1:],2)-Eel[:-1]/np.power(t[:-1],2)) / (l[1:]-l[:-1])
   ###
   return G
+
+def ReadCompositeEnergies(prefix, stepmin=None, stepmax=None):
+  import numpy as np
+  ###
+  toughness   = np.loadtxt(prefix+'.CST', skiprows=1, usecols=[1])
+  all_energies = []
+  for blk in range(toughness.shape[0]):
+    blkfile="%s-%.4i.enerblk" % (prefix, blk+1) 
+    all_energies.append(np.loadtxt(blkfile))
+  ###
+  if stepmin == None:
+    tmin = 0
+  else:
+    tmin = int(stepmin)
+  if stepmax == None:
+    tmax = all_energies[0].shape[0]
+  else:
+    tmax = int(stepmax)
+  ###
+  Eel = np.sum(e[tmin:tmax,2] for e in all_energies)
+  l   = np.sum(e[tmin:tmax,4]/k for (e,k) in zip(all_energies, toughness))
+  t   = all_energies[0][tmin:tmax,1]
+  return Eel, l, t
+
