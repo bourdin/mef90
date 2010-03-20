@@ -67,5 +67,5 @@ def ReadCompositeEnergies(prefix, stepmin=None, stepmax=None):
   Eel = np.sum(e[tmin:tmax,2] for e in all_energies)
   l   = np.sum(e[tmin:tmax,4]/k for (e,k) in zip(all_energies, toughness))
   t   = all_energies[0][tmin:tmax,1]
-  return Eel, l, t
+  return Eel, l, t, toughness
 
