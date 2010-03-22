@@ -136,7 +136,7 @@ Module m_MEF_LinAlg
    End Interface
    
    Interface Invert
-      Module Procedure InvertMat2D, InvertMatS2D, InvertMat3D, InvertMatS3D
+      Module Procedure InvertMat2D, InvertMatS2D, InvertMat3D, InvertMatS3D, InvertTest4OS2D
    End Interface
 
    Interface Operator (.TensP.)
@@ -1968,7 +1968,7 @@ Contains
       flops = 46.0
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
    End Function InvertMat3D
-
+   
    Function InvertMatS3D(M)
       Type (MatS3D), Intent(IN)                      :: M
       Type (MatS3D)                                  :: InvertMatS3D
@@ -1984,12 +1984,39 @@ Contains
       CofMt%XY = -(M%XY * M%ZZ - M%XZ * M%YZ)
       CofMt%XZ =   M%XY * M%YZ - M%XZ * M%YY
       CofMt%YY =   M%XX * M%ZZ - M%XZ * M%XZ
-      CofMt%YZ = -(M%XX * M%YZ - M%XZ * M%XY)
       CofMt%YZ = -(M%XX * M%YZ - M%XY * M%XZ)
       CofMt%ZZ =   M%XX * M%YY - M%XY * M%XY
        
       InvertMatS3D = CofMt / DetM
-      flops = 39.0
+      flops = 35.0
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
    End Function InvertMatS3D
+
+   Function InvertTest4OS2D(T)
+      Type (Tens4OS2D), Intent(IN)                   :: T
+      Type (Tens4OS2D)                               :: InvertTest4OS2D
+      
+      Type (MatS3D)                                  :: TmpMat, TmpInvMat
+      PetscLogDouble                                 :: flops = 0
+      PetscInt                                       :: iErr
+      
+      !!! This is ugly: we cast the 4th order tensor into a symmetric 3x3 matrix, invert the matrix and recast into a Tens4OS2D
+      !!! Rewrite properly using BLAS to invert a F90 Matrix in 2D and 3D instead
+      
+      TmpMat%XX = T%XXXX
+      TmpMat%XY = T%XXXY
+      TmpMat%XZ = T%XXYY
+      TmpMat%YY = T%XYXY
+      TmpMat%YZ = T%XYYY
+      TmpMat%ZZ = T%YYYY
+      
+      TmpInvMat = Invert(TmpMat)
+      
+      InvertTest4OS2D%XXXX = TmpInvMat%XX 
+      InvertTest4OS2D%XXXY = TmpInvMat%XY 
+      InvertTest4OS2D%XXYY = TmpInvMat%XZ 
+      InvertTest4OS2D%XYXY = TmpInvMat%YY 
+      InvertTest4OS2D%XYYY = TmpInvMat%YZ 
+      InvertTest4OS2D%YYYY = TmpInvMat%ZZ 
+   End Function InvertTest4OS2D
 End Module m_MEF_LinAlg
