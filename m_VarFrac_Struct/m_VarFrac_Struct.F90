@@ -679,4 +679,72 @@ Module m_VarFrac_Struct
 
       A%YYYY =  A%XXXX
    End Subroutine GenHL_Ortho2D_LambdaMu
+   
+   PetscReal Function StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu)
+      !!! Compute the projection operator on strain fields as in Allaire 1997 Corollary 1.14.13
+      !!! f_B(k) \xi \dot \xi = \frac{1}{\mu} ( |\xi k|^2 - (\xi k \dot k)^2) + \frac{1}{\lamba + 2\mu}(\xi k \dot k)^2
+      Type(MatS2D), Intent(IN)            :: xi
+      Type(Vect2D), Intent(IN)            :: k
+      PetscReal, Intent(IN)               :: lambda, mu
+      
+      Type(Tens4OS2D)                     :: TmpProj
+      Type(Vect2D)                        :: xik, knorm
+      PetscReal                           :: xikk, xik2
+      
+      knorm = k / sqrt(k%X**2 + k%Y**2)
+      
+      xik  = xi * knorm
+      xikk = xik .DotP. knorm
+      xik2 = xik%X**2 + xik%Y**2
+      StrainProjectionComponent2D_LambdaMu = (xik2 - xikk**2) / mu + xikk**2 / (lambda + 2.0_Kr * mu)
+   End Function StrainProjectionComponent2D_LambdaMu
+   
+   Type(Tens4OS2D) Function StrainProjection2D_LambdaMu(k, lambda, mu)
+      Type(Vect2D), Intent(IN)            :: k
+      PetscReal, Intent(IN)               :: lambda, mu
+      
+      Type(MatS2D)                        :: xi
+      Type(Tens4OS2D)                     :: fB
+      
+      fB = 0.0_Kr
+      
+      xi = 0.0_Kr
+      xi%XX = 1.0_Kr
+      fB%XXXX = StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu)
+      
+      xi = 0.0_Kr
+      xi%YY = 1.0_Kr
+      fB%YYYY = StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu)
+
+      xi = 0.0_Kr
+      xi%XY = 1.0_Kr
+      fB%XYXY = StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu)
+
+      xi = 0.0_Kr
+      xi%XX = 1.0_Kr; xi%YY = 1.0_Kr
+      fB%XXYY = (StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu) - fB%XXXX - fB%YYYY) * 0.5_Kr
+
+      xi = 0.0_Kr
+      xi%XX = 1.0_Kr; xi%XY = 0.5_Kr
+      fB%XXXY = (StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu) - fB%XXXX - fB%XYXY) * 0.5_Kr
+
+      xi = 0.0_Kr
+      xi%YY = 1.0_Kr; xi%XY = 0.5_Kr
+      fB%XYYY = (StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu) - fB%YYYY - fB%XYXY) * 0.5_Kr
+      
+      StrainProjection2D_LambdaMu = fB
+   End Function StrainProjection2D_LambdaMu
+   
+   Type(Tens4OS2D) Function Laminate2D_LambdaMu(A, k, lambda, mu, theta)
+      Type(Tens4OS2D), Intent(IN)         :: A
+      Type(Vect2D), Intent(IN)            :: k
+      PetscReal, Intent(IN)               :: lambda, mu, theta
+      
+      Type(Tens4OS2D)                     :: B
+      
+      Call GenHL_Iso_LambdaMu(lambda, mu, B)
+      
+      Laminate2D_LambdaMu = Invert(Invert(A-B) / theta + (1.0_Kr-theta)/theta * StrainProjection2D_LambdaMu(k, lambda, mu)) + B
+   End Function Laminate2D_LambdaMu
+      
 End Module m_VarFrac_Struct
