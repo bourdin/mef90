@@ -13,6 +13,7 @@ Module m_VarFrac_Struct
    Public :: GenHL_Iso2D_EnuPlaneStress
    Public :: GenHL_Iso2D_EnuPlaneStrain
    Public :: GenHL_Ortho2D_LambdaMu
+   Public :: GenHL_Laminate_LambdaMu
    
    Public :: VarFracSchemeParam_View
    Public :: VarFracSchemeParam_GetFromOptions
@@ -28,7 +29,12 @@ Module m_VarFrac_Struct
    Public :: EXOProperty_InitBCUFlag
    
    Public :: VarFracSchemeParam_Type
-
+   
+   !!! remove
+   Public :: StrainProjectionComponent2D_LambdaMu
+   Public :: StrainProjection2D_LambdaMu
+   !!! remove
+   
    Interface MatProp_Write
       Module Procedure MatProp2D_Write, MatProp3D_Write
    End Interface
@@ -39,6 +45,10 @@ Module m_VarFrac_Struct
    
    Interface GenHL_Iso_LambdaMu
       Module Procedure GenHL_Iso2D_LambdaMu, GenHL_Iso3D_LambdaMu
+   End Interface
+   
+   Interface GenHL_Laminate_LambdaMu
+      Module Procedure GenHL_Laminate2D_LambdaMu
    End Interface
 
    PetscInt, Parameter, Public                     :: VarFrac_BC_Type_NONE = 0
@@ -717,7 +727,7 @@ Module m_VarFrac_Struct
       fB%YYYY = StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu)
 
       xi = 0.0_Kr
-      xi%XY = 1.0_Kr
+      xi%XY = 0.5_Kr
       fB%XYXY = StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu)
 
       xi = 0.0_Kr
@@ -735,16 +745,17 @@ Module m_VarFrac_Struct
       StrainProjection2D_LambdaMu = fB
    End Function StrainProjection2D_LambdaMu
    
-   Type(Tens4OS2D) Function Laminate2D_LambdaMu(A, k, lambda, mu, theta)
+   Subroutine GenHL_Laminate2D_LambdaMu(A, k, lambda, mu, theta, Astar)
       Type(Tens4OS2D), Intent(IN)         :: A
       Type(Vect2D), Intent(IN)            :: k
       PetscReal, Intent(IN)               :: lambda, mu, theta
+      Type(Tens4OS2D), Intent(OUT)        :: Astar
       
       Type(Tens4OS2D)                     :: B
       
       Call GenHL_Iso_LambdaMu(lambda, mu, B)
       
-      Laminate2D_LambdaMu = Invert(Invert(A-B) / theta + (1.0_Kr-theta)/theta * StrainProjection2D_LambdaMu(k, lambda, mu)) + B
-   End Function Laminate2D_LambdaMu
+      Astar = Invert(Invert(A-B)  + (1.0_Kr-theta) * StrainProjection2D_LambdaMu(k, lambda, mu)) * theta + B
+   End Subroutine GenHL_Laminate2D_LambdaMu
       
 End Module m_VarFrac_Struct
