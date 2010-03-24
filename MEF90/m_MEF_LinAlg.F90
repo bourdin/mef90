@@ -1996,27 +1996,32 @@ Contains
       Type (Tens4OS2D), Intent(IN)                   :: T
       Type (Tens4OS2D)                               :: InvertTens4OS2D
       
-      !Type (MatS3D)                                  :: TmpMat, TmpInvMat
-      Type (Mat3D)                                  :: TmpMat, TmpInvMat
+      Type (MatS3D)                                  :: TmpMat, TmpInvMat
       PetscLogDouble                                 :: flops = 0
       PetscInt                                       :: iErr
+      PetscReal                                      :: sqrt2
       
-      !!! This is ugly: we cast the 4th order tensor into a symmetric 3x3 matrix, invert the matrix and recast into a Tens4OS2D
+      sqrt2 = sqrt(2.0_Kr)
+      !!! This is ugly: we cast the 4th order tensor into a symmetric 3x3 matrix, using Mandel notations, 
+      !!! invert the matrix and recast into a Tens4OS2D
+      !!! http://en.wikipedia.org/wiki/Voigt_notation
       !!! Rewrite properly using BLAS to invert a F90 Matrix in 2D and 3D instead
       TmpMat%XX = T%XXXX
-      TmpMat%XY = T%XXXY * 2.0_Kr
+      TmpMat%XY = T%XXXY * sqrt2
       TmpMat%XZ = T%XXYY
       TmpMat%YY = T%XYXY * 2.0_Kr
-      TmpMat%YZ = T%XYYY * 2.0_Kr
+      TmpMat%YZ = T%XYYY * sqrt2
       TmpMat%ZZ = T%YYYY
 
       TmpInvMat = Invert(TmpMat)
       
       InvertTens4OS2D%XXXX = TmpInvMat%XX 
-      InvertTens4OS2D%XXXY = TmpInvMat%XY * 0.5_Kr
+      InvertTens4OS2D%XXXY = TmpInvMat%XY / sqrt2
       InvertTens4OS2D%XXYY = TmpInvMat%XZ 
-      InvertTens4OS2D%XYXY = TmpInvMat%YY * 0.5_Kr 
-      InvertTens4OS2D%XYYY = TmpInvMat%YZ * 0.5_Kr 
+      InvertTens4OS2D%XYXY = TmpInvMat%YY * .5_Kr 
+      InvertTens4OS2D%XYYY = TmpInvMat%YZ / sqrt2 
       InvertTens4OS2D%YYYY = TmpInvMat%ZZ 
+      flops = 7.0
+      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
    End Function InvertTens4OS2D
 End Module m_MEF_LinAlg
