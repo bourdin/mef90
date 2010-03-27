@@ -1,6 +1,7 @@
 Module m_MEF_LinAlg
 #include "finclude/petscdef.h"
    Use m_MEF_Parameters
+   Use m_MEF_Utils
    Use petsc
    
    IMPLICIT NONE
@@ -165,7 +166,7 @@ Module m_MEF_LinAlg
          Vect2DEQ, Vect3DEQ, Mat2D_Get_Real, Mat3D_Get_Real,         &
          Mat2DEQ, Mat3DEQ, MatS2D_Get_Real, MatS3D_Get_Real,         &
          MatS2DEQ, MatS3DEQ, Tens4OS2D_Get_Real, Tens4OS2DEQ,        &
-         Tens4OS3D_Get_Real, Tens4OS3DEQ
+         Tens4OS3D_Get_Real, Tens4OS3DEQ   
    End Interface
   
    Interface Symmetrize
@@ -1565,8 +1566,130 @@ Contains
           
       T1%ZZZZ = D1  
   End Subroutine Tens4OS3D_Get_Real
+  
+   Subroutine Tens4OS2DGetArrayF90(T, A)
+      Type(Tens4OS2D), Intent(IN)                         :: T
+      PetscReal, Dimension(:,:), Pointer, Intent(OUT)     :: A
 
-  Function Symmetrize2D(M1)
+      PetscReal                                           :: sqrt2
+      
+      sqrt2 = sqrt(2.0_Kr)
+      Allocate(A(3,3))
+      A(1,1) = T%XXXX
+      A(1,2) = T%XXXY * sqrt2
+      A(2,1) = T%XXXY * sqrt2
+      A(1,3) = T%XXYY
+      A(3,1) = T%XXYY
+      A(2,2) = T%XYXY * 2.0_Kr
+      A(2,3) = T%XYYY * sqrt2
+      A(3,2) = T%XYYY * sqrt2
+      A(3,3) = T%YYYY
+   End Subroutine Tens4OS2DGetArrayF90
+
+   Subroutine Tens4OS3DGetArrayF90(T, A)
+      Type(Tens4OS3D), Intent(IN)                         :: T
+      PetscReal, Dimension(:,:), Pointer, Intent(OUT)     :: A
+
+      PetscReal                                           :: sqrt2
+   
+      sqrt2 = sqrt(2.0_Kr)
+      Allocate(A(6,6))
+      A(1,1) = T%XXXX
+      A(1,2) = T%XXYY
+      A(1,3) = T%XXZZ
+      A(1,4) = T%XXXY * sqrt2
+      A(1,5) = T%XXYZ * sqrt2
+      A(1,6) = T%XXXZ * sqrt2
+
+      A(2,1) = A(1,1)
+      A(2,2) = T%YYYY
+      A(2,3) = T%YYZZ
+      A(2,4) = T%XYYY * sqrt2
+      A(2,5) = T%YYYZ * sqrt2
+      A(2,6) = T%XYYZ * sqrt2
+
+      A(3,1) = A(1,3)
+      A(3,2) = A(2,3)
+      A(3,3) = T%ZZZZ
+      A(3,4) = T%XYZZ * sqrt2
+      A(3,5) = T%YZZZ * sqrt2
+      A(3,6) = T%XZZZ * sqrt2
+   
+      A(4,1) = A(1,4)
+      A(4,2) = A(2,4)
+      A(4,3) = A(3,4)
+      A(4,4) = T%XYXY * 2.0_Kr
+      A(4,5) = T%XYYZ * 2.0_Kr
+      A(4,6) = T%XXYZ * 2.0_Kr
+   
+      A(5,1) = A(1,5)
+      A(5,2) = A(2,5)
+      A(5,3) = A(3,5)
+      A(5,4) = A(4,5)
+      A(5,5) = T%YYZZ * 2.0_Kr
+      A(5,6) = T%XYZZ * 2.0_Kr
+   
+      A(6,1) = A(1,6)
+      A(2,6) = A(2,6)
+      A(3,6) = A(3,6)
+      A(4,6) = A(4,6)
+      A(5,6) = A(5,6)
+      A(6,6) = T%XXZZ * 2.0_Kr
+   End Subroutine Tens4OS3DGetArrayF90
+
+   Subroutine Tens4OS2DRestoreArrayF90(T, A)
+      Type(Tens4OS2D), Intent(OUT)                        :: T
+      PetscReal, Dimension(:,:), Pointer, Intent(INOUT)   :: A
+
+      PetscReal                                           :: sqrt2over2
+
+      sqrt2over2 = sqrt(2.0_Kr) * 0.5_Kr
+      T%XXXX = A(1,1) 
+      T%XXXY = A(1,2) * sqrt2over2
+      T%XXYY = A(1,3) 
+      T%XYXY = A(2,2) * .5_Kr 
+      T%XYYY = A(2,3) * sqrt2over2 
+      T%YYYY = A(3,3)
+      DeAllocate(A)
+   End Subroutine Tens4OS2DRestoreArrayF90
+
+   Subroutine Tens4OS3DRestoreArrayF90(T, A)
+      Type(Tens4OS3D), Intent(OUT)                        :: T
+      PetscReal, Dimension(:,:), Pointer, Intent(INOUT)   :: A
+
+      PetscReal                                           :: sqrt2over2
+
+      sqrt2over2 = sqrt(2.0_Kr) * 0.5_Kr
+      T%XXXX = A(1,1)
+      T%XXYY = A(1,2)
+      T%XXZZ = A(1,3)
+      T%XXXY = A(1,4) * sqrt2over2
+      T%XXYZ = A(1,5) * sqrt2over2
+      T%XXXZ = A(1,6) * sqrt2over2
+
+      T%YYYY = A(2,2) 
+      T%YYZZ = A(2,3) 
+      T%XYYY = A(2,4) * sqrt2over2
+      T%YYYZ = A(2,5) * sqrt2over2
+      T%XYYZ = A(2,6) * sqrt2over2
+
+      T%ZZZZ = A(3,3) 
+      T%XYZZ = A(3,4) * sqrt2over2
+      T%YZZZ = A(3,5) * sqrt2over2
+      T%XZZZ = A(3,6) * sqrt2over2
+   
+      T%XYXY = A(4,4) * 0.5_Kr
+      T%XYYZ = A(4,5) * 0.5_Kr
+      T%XXYZ = A(4,6) * 0.5_Kr
+   
+      T%YYZZ = A(5,5) * 0.5_Kr
+      T%XYZZ = A(5,6) * 0.5_Kr
+   
+      T%XXZZ = A(6,6) * 0.5_Kr
+      DeAllocate(A)
+   End Subroutine Tens4OS3DRestoreArrayF90
+
+   Function Symmetrize2D(M1)
       Type(Mat2D), Intent(IN)                             :: M1
       Type(MatS2D)                                        :: Symmetrize2D
       PetscLogDouble                                      :: flops = 0
@@ -1996,32 +2119,34 @@ Contains
       Type (Tens4OS2D), Intent(IN)                   :: T
       Type (Tens4OS2D)                               :: InvertTens4OS2D
       
-      Type (MatS3D)                                  :: TmpMat, TmpInvMat
-      PetscLogDouble                                 :: flops = 0
       PetscInt                                       :: iErr
-      PetscReal                                      :: sqrt2
-      
-      sqrt2 = sqrt(2.0_Kr)
-      !!! This is ugly: we cast the 4th order tensor into a symmetric 3x3 matrix, using Mandel notations, 
-      !!! invert the matrix and recast into a Tens4OS2D
-      !!! http://en.wikipedia.org/wiki/Voigt_notation
-      !!! Rewrite properly using BLAS to invert a F90 Matrix in 2D and 3D instead
-      TmpMat%XX = T%XXXX
-      TmpMat%XY = T%XXXY * sqrt2
-      TmpMat%XZ = T%XXYY
-      TmpMat%YY = T%XYXY * 2.0_Kr
-      TmpMat%YZ = T%XYYY * sqrt2
-      TmpMat%ZZ = T%YYYY
+      Type (Tens4OS2D)                               :: TmpTensor
+      PetscReal, Dimension(:,:), Pointer             :: TmpArray
 
-      TmpInvMat = Invert(TmpMat)
-      
-      InvertTens4OS2D%XXXX = TmpInvMat%XX 
-      InvertTens4OS2D%XXXY = TmpInvMat%XY / sqrt2
-      InvertTens4OS2D%XXYY = TmpInvMat%XZ 
-      InvertTens4OS2D%XYXY = TmpInvMat%YY * .5_Kr 
-      InvertTens4OS2D%XYYY = TmpInvMat%YZ / sqrt2 
-      InvertTens4OS2D%YYYY = TmpInvMat%ZZ 
-      flops = 7.0
-      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+      !!! We convert T in a matrix using Mandel notations, invert the matrix then write back in a tensor
+      TmpTensor = T
+      Call Tens4OS2DGetArrayF90(TmpTensor, TmpArray)
+      Call GaussJordan_Inverse(TmpArray, iErr)
+      Call Tens4OS2DRestoreArrayF90(TmpTensor, TmpArray)
+      InvertTens4OS2D = TmpTensor
+      ! GaussJordan does not report flops, so there is no point in calling PetscLogFLops
    End Function InvertTens4OS2D
+
+   Function InvertTens4OS3D(T)
+      Type (Tens4OS3D), Intent(IN)                   :: T
+      Type (Tens4OS3D)                               :: InvertTens4OS3D
+      
+      PetscInt                                       :: iErr
+      Type (Tens4OS3D)                               :: TmpTensor
+      PetscReal, Dimension(:,:), Pointer             :: TmpArray
+
+      !!! We convert T in a matrix using Mandel notations, invert the matrix then write back in a tensor
+      TmpTensor = T
+      Call Tens4OS3DGetArrayF90(TmpTensor, TmpArray)
+      Call GaussJordan_Inverse(TmpArray, iErr)
+      Call Tens4OS3DRestoreArrayF90(TmpTensor, TmpArray)
+      InvertTens4OS3D = TmpTensor
+      ! GaussJordan does not report flops, so there is no point in calling PetscLogFLops
+   End Function InvertTens4OS3D
+   
 End Module m_MEF_LinAlg

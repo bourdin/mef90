@@ -64,10 +64,10 @@ Module m_MEF_Utils
 !!!
       !
       ! Gauss Jordan inversion
-      ! Very closely based on the routine from Numerical recipes
+      ! Very closely based on the routine from Numerical Recipes
       ! 
       PetscReal, Dimension(:,:), Pointer          :: A
-      PetscTruth, Intent(OUT)                     :: Status
+      PetscInt, Intent(OUT)                       :: Status
       
       Integer, Dimension(:), Pointer              :: ipiv,indxr,indxc
       Logical, Dimension(:), Pointer              :: lpiv 
@@ -80,11 +80,11 @@ Module m_MEF_Utils
       Integer, Pointer                            :: irow,icol 
       
       
-      Status = .TRUE.
+      Status = 0
       N = Size(A,1)
       If (N /= Size(A,2) ) Then
          Write(*,*) 'Gauss Jordan: A is not square...'
-         Status = .FALSE.
+         Status = -1
          Return
       End If
       Allocate (ipiv(N))
@@ -111,7 +111,7 @@ Module m_MEF_Utils
          ipiv(icol) = ipiv(icol)+1 
          If (ipiv(icol) > 1) Then
             Print*, 'Singular Matrix'
-            Status = .FALSE.
+            Status = -2
             Return
          End If
          If (irow /= icol) then 
@@ -123,7 +123,7 @@ Module m_MEF_Utils
          indxc(i) = icol 
          If (A(icol,icol) == 0.0_Kr) Then
             Print*, 'Singular Matrix'
-            Status = .FALSE.
+            Status = -2
             Return
          End If
       
