@@ -27,7 +27,8 @@ ${PETSC_ARCH}:
 
 m_MEF_Parameters.o: ${PETSC_ARCH}   
 
-m_MEF_LinAlg.o:     m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o
+m_MEF_LinAlg.o:     m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o   \
+					m_MEF_Utils.o      ${PETSC_ARCH}/m_MEF_Utils.o
 
 m_MEF_Utils.o:      m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o
 

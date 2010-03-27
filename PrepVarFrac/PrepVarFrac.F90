@@ -92,7 +92,7 @@ Program PrepVarFrac
       Rewind(BatchUnit)
    End If
    
-   NumTestCase = 7
+   NumTestCase = 8
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -104,6 +104,7 @@ Program PrepVarFrac
    TestCase(5)%Description = "MIL affine loading"
    TestCase(6)%Description = "MIL given by a polar angle (2D)"
    TestCase(7)%Description = "Afine forces: F=P+t*F_0"
+   TestCase(8)%Description = "MIL 2D laminate"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
