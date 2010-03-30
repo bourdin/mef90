@@ -25,7 +25,7 @@ Write(*, 100, advance = 'no') '(E_B, nu_B): '
 Read(*,*)    E_B, nu_B
 lambda_B = E_B * nu_B / (1.0_Kr - nu_B**2) 
 mu_B     = E_B / (1.0_Kr + nu_B) * .5_Kr
-Call GenHL_Iso2D_EnuPlaneStress(E_B, nu_B, B) 
+!Call GenHL_Iso2D_EnuPlaneStress(E_B, nu_B, B) 
 
 Write(*, 100, advance = 'no') 'Number of layers: '
 Read(*,*) nlayers
