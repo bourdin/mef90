@@ -696,7 +696,7 @@ Module m_VarFrac_Struct
       Type(Vect2D)                        :: xik, knorm
       PetscReal                           :: xikk, xik2
       
-      knorm = k / sqrt(k%X**2 + k%Y**2)
+      knorm = k / Norm(k)
       
       xik  = xi * knorm
       xikk = xik .DotP. knorm
@@ -715,7 +715,7 @@ Module m_VarFrac_Struct
       Type(Vect3D)                        :: xik, knorm
       PetscReal                           :: xikk, xik2
       
-      knorm = k / sqrt(k%X**2 + k%Y**2 + k%Z**2)
+      knorm = k / Norm(k)
       
       xik  = xi * knorm
       xikk = xik .DotP. knorm
