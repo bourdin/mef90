@@ -665,6 +665,7 @@ Contains
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
+      PetscReal                                    :: ThermExpNorm
       PetscLogDouble                               :: flops       
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
@@ -673,13 +674,16 @@ Contains
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
 
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      ThermExpNorm = Norm(AppCtx%MatProp(iBlkId)%Therm_Exp)
+
       Allocate(X_Loc(NumDoFVect))
       Allocate(F_Loc(NumDoFVect))
       Allocate(Gradient_Loc(NumDoFVect))
       Allocate(BCFlag_Loc(NumDoFVect))
-      Allocate(Theta_Loc(NumDoFScal))
-
-      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      If (ThermExpNorm>0.0_Kr) Then
+         Allocate(Theta_Loc(NumDoFScal))
+      End If
 
       Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -687,7 +691,9 @@ Contains
          Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
          Call SectionRealRestrictClosure(X_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, X_Loc, iErr); CHKERRQ(ierr)
          Call SectionRealRestrictClosure(AppCtx%F%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         If (ThermExpNorm>0.0_Kr) Then
+            Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         End If
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             F_Elem = 0.0_Kr
             X_Elem = 0.0_Kr
@@ -697,13 +703,16 @@ Contains
                X_Elem      = X_Elem      + AppCtx%ElemVect(iE)%BF(iDoF, iGauss)       * X_Loc(iDoF)
                Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * X_Loc(iDoF)
             End Do
-            Theta_Elem = 0.0_Kr
-            Do iDoF = 1, NumDoFScal
-               Theta_Elem  = Theta_Elem  + AppCtx%ElemScal(iE)%BF(iDoF, iGauss)       * Theta_Loc(iDoF)
-               flops = flops + 2.0
-            End Do
-            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-            
+            If (ThermExpNorm > 0.0_Kr) Then
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  Theta_Elem  = Theta_Elem  + AppCtx%ElemScal(iE)%BF(iDoF, iGauss)       * Theta_Loc(iDoF)
+                  flops = flops + 2.0
+               End Do
+               EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            Else
+               EffectiveStrain_Elem = Strain_Elem
+            End If
             Do iDoF = 1, NumDofVect
                If (BCFlag_Loc(iDoF) == 0) Then
                   Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) - (F_Elem .DotP. AppCtx%ElemVect(iE)%BF(iDoF, iGauss)) )
@@ -716,7 +725,9 @@ Contains
       DeAllocate(X_Loc)
       DeAllocate(F_Loc)
       DeAllocate(Gradient_Loc)
-      DeAllocate(Theta_Loc)
+      If (ThermExpNorm > 0.0_Kr) Then
+         DeAllocate(Theta_Loc)
+      End If
       DeAllocate(BCFlag_Loc)  
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
@@ -742,6 +753,7 @@ Contains
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscReal                                    :: ThermExpNorm
       PetscLogDouble                               :: flops       
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
@@ -752,17 +764,22 @@ Contains
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
 
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      ThermExpNorm = Norm(AppCtx%MatProp(iBlkId)%Therm_Exp)
+
       Allocate(X_Loc(NumDoFVect))
       Allocate(F_Loc(NumDoFVect))
-      Allocate(Theta_Loc(NumDoFScal))
-
-      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      If (ThermExpNorm > 0.0_Kr) Then
+         Allocate(Theta_Loc(NumDoFScal))
+      End If
 
       Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          Call SectionRealRestrictClosure(X_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, X_Loc, iErr); CHKERRQ(ierr)
          Call SectionRealRestrictClosure(AppCtx%F%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         If (ThermExpNorm > 0.0_Kr) Then
+            Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         End If
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             F_Elem = 0.0_Kr
             X_Elem = 0.0_Kr
@@ -772,21 +789,27 @@ Contains
                X_Elem      = X_Elem      + X_Loc(iDoF2) * AppCtx%ElemVect(iE)%BF(iDoF2, iGauss)
                Strain_Elem = Strain_Elem + X_Loc(iDoF2) * AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss)
             End Do
-            Theta_Elem = 0.0_Kr
-            Do iDoF2 = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
-               flops = flops + 2.0
-            End Do
-            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-            
+            If (ThermExpNorm > 0.0_Kr) Then
+               Theta_Elem = 0.0_Kr
+               Do iDoF2 = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
+                  flops = flops + 2.0
+               End Do
+               EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            Else
+               EffectiveStrain_Elem = Strain_Elem
+            End If
             ElasticEnergy = ElasticEnergy + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * .5_Kr 
             ExtForcesWork = ExtForcesWork + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (F_Elem .DotP. X_Elem)
          End Do Do_iGauss
       End Do Do_iEloc
-
+      !!! this could be optimized further: split the Do_iGauss loop into 2 (strain, temperature / effective strain), and test for the norm 
+      !!! Then test for the norm of the thermal expansion tensor outside of the loop
       DeAllocate(X_Loc)
       DeAllocate(F_Loc)
-      DeAllocate(Theta_Loc)
+      If (ThermExpNorm > 0.0_Kr) Then
+         DeAllocate(Theta_Loc)
+      End If
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergiesBlock
@@ -804,6 +827,7 @@ Contains
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscReal                                    :: ThermExpNorm
       PetscLogDouble                               :: flops       
 
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
@@ -812,36 +836,40 @@ Contains
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
 
-      Allocate(BCFlag_Loc(NumDoFVect))
-      Allocate(RHS_Loc(NumDoFVect))
-      Allocate(Theta_Loc(NumDoFScal))
-
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         RHS_Loc = 0.0_Kr
-         Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
-         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
-            Theta_Elem = 0.0_Kr
-            Do iDoF2 = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
-               flops = flops + 2.0
-            End Do
-            Do iDoF1 = 1, NumDoFVect
-               If (BCFlag_Loc(iDoF1) == 0) Then
-                  ! RHS terms due to inelastic strains
-                  RHS_Loc(iDoF1) = RHS_Loc(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((AppCtx%MatProp(iBlkId)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%MatProp(iBlkId)%Therm_Exp)
-                  flops = flops + 5.0
-               End If
-            End Do
-         End Do Do_iGauss
-         Call SectionRealUpdateClosure(RHS_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
-      End Do Do_iEloc
+      ThermExpNorm = Norm(AppCtx%MatProp(iBlkId)%Therm_Exp)
       
-      DeAllocate(BCFlag_Loc)
-      DeAllocate(RHS_Loc)
-      DeAllocate(Theta_Loc)
+      If (ThermExpNorm > 0.0_Kr) Then
+         Allocate(BCFlag_Loc(NumDoFVect))
+         Allocate(RHS_Loc(NumDoFVect))
+         Allocate(Theta_Loc(NumDoFScal))
+
+         Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            RHS_Loc = 0.0_Kr
+            Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+            Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+               Theta_Elem = 0.0_Kr
+               Do iDoF2 = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * Theta_Loc(iDoF2)
+                  flops = flops + 2.0
+               End Do
+               Do iDoF1 = 1, NumDoFVect
+                  If (BCFlag_Loc(iDoF1) == 0) Then
+                     ! RHS terms due to inelastic strains
+                     RHS_Loc(iDoF1) = RHS_Loc(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((AppCtx%MatProp(iBlkId)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%MatProp(iBlkId)%Therm_Exp)
+                     flops = flops + 5.0
+                  End If
+               End Do
+            End Do Do_iGauss
+            Call SectionRealUpdateClosure(RHS_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+         End Do Do_iEloc
+      
+         DeAllocate(BCFlag_Loc)
+         DeAllocate(RHS_Loc)
+         DeAllocate(Theta_Loc)
+      End If
       
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
