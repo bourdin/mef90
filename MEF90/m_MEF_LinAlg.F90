@@ -180,6 +180,11 @@ Module m_MEF_LinAlg
    Interface SphericalPart
       Module Procedure SphericalPart2D, SphericalPart2DS, SphericalPart3D, SphericalPart3DS
    End Interface
+   
+   Interface Norm
+      Module Procedure Vect2DNorm, Vect3DNorm, Mat2DNorm, MatS2DNorm, Mat3DNorm, MatS3DNorm
+      ! Tens4OS2DNorm, Tens4OS3DNorm
+   End Interface
 
 !!$  Type(Vect2D), Parameter       :: e1_2D = (/ 1.0_Kr, 0.0_Kr /)
 !!$  Type(Vect2D), Parameter       :: e2_2D = (/ 0.0_Kr, 1.0_Kr /)
@@ -1689,6 +1694,43 @@ Contains
       DeAllocate(A)
    End Subroutine Tens4OS3DRestoreArrayF90
 
+   !!! Overloading euclidian norm of derived types
+   PetscReal Function Vect2DNorm(V)
+      Type(Vect2D), Intent(IN)                            :: V
+      
+      Vect2DNorm = sqrt(V%X**2 + V%Y**2)
+   End Function Vect2DNorm
+   
+   PetscReal Function Vect3DNorm(V)
+      Type(Vect3D), Intent(IN)                            :: V
+      
+      Vect3DNorm = sqrt(V%X**2 + V%Y**2 + V%Z**2)
+   End Function Vect3DNorm
+   
+   PetscReal Function Mat2DNorm(M)
+      Type(Mat2D), Intent(IN)                             :: M
+      
+      Mat2DNorm = sqrt(M%XY**2 + M%XY**2 + M%YX**2 + M%YY**2)
+   End Function Mat2DNorm
+   
+   PetscReal Function MatS2DNorm(M)
+      Type(MatS2D), Intent(IN)                            :: M
+      
+      MatS2DNorm = sqrt(M%XY**2 + 2.0_Kr * M%XY**2 + M%YY**2)
+   End Function MatS2DNorm
+   
+   PetscReal Function Mat3DNorm(M)
+      Type(Mat3D), Intent(IN)                             :: M
+      
+      Mat3DNorm = sqrt(M%XY**2 + M%XY**2 + M%XZ**2 + M%YX**2 + M%YY**2 + M%YZ**2 + M%ZX**2 + M%ZY**2 + M%ZZ**2)
+   End Function Mat3DNorm
+   
+   PetscReal Function MatS3DNorm(M)
+      Type(MatS3D), Intent(IN)                            :: M
+      
+      MatS3DNorm = sqrt(M%XY**2 + 2.0_Kr * M%XY**2 + 2.0_Kr * M%XZ**2 + M%YY**2 + 2.0_Kr * M%YZ**2 + M%ZZ**2 )
+   End Function MatS3DNorm
+   
    Function Symmetrize2D(M1)
       Type(Mat2D), Intent(IN)                             :: M1
       Type(MatS2D)                                        :: Symmetrize2D
