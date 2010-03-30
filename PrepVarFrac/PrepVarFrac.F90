@@ -51,7 +51,14 @@ Program PrepVarFrac
    PetscReal                                    :: RealBuffer
    Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp2D
    Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp3D
+   Type(Tens4OS2D)                              :: TmpHL_2D
+   Type(Tens4OS3D)                              :: TmpHL_3D   
+   Type(Vect2D)                                 :: k_2D
+   type(Vect3D)                                 :: k_3D
+   PetscReal                                    :: m
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
+   PetscReal                                    :: Lambda, Mu
+   PetscInt                                     :: NumLayers
    PetscReal, Dimension(:), Pointer             :: GlobVars
    PetscReal                                    :: rDummy
    Character                                    :: cDummy
@@ -97,14 +104,14 @@ Program PrepVarFrac
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
    End Do
-   TestCase(1)%Description = "MIL 2D/3D elasticity                       "
+   TestCase(1)%Description = "MIL, 2D plane stresses / 3D Homogeneous Isotropic"
    TestCase(2)%Description = "Geothermal thermal cracks: proof of concept"
    TestCase(3)%Description = "Cooling: infinite domain, thermal conduction only"
    TestCase(4)%Description = "Cooling: infinite domain, convection and conduction (Newtonian cooling)"
    TestCase(5)%Description = "MIL affine loading"
    TestCase(6)%Description = "MIL given by a polar angle (2D)"
    TestCase(7)%Description = "Afine forces: F=P+t*F_0"
-   TestCase(8)%Description = "MIL 2D laminate"
+   TestCase(8)%Description = "MIL, 2D plane stresses / 3D Sequential Iterated Laminate"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -206,7 +213,7 @@ Program PrepVarFrac
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4,5,6,7)! MIL, geothermal PoC
+   Case (1,2,3,4,5,6,7,8)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -297,6 +304,41 @@ Program PrepVarFrac
             MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
             MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
          End Select 
+         If (iCase == 8) Then
+            Write(IOBuffer, 300) i, 'Layering material: Young Modulus'
+            Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
+            Write(IOBuffer, 300) i, 'Layering Material: Poisson Ratio'
+            Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
+            Select Case(MeshTopology%Num_Dim)
+            Case(2)
+               Lambda = E * nu / (1.0_Kr - nu**2)
+               Mu = E / (1.0_Kr + nu) * .5_Kr
+            Case(3)
+               Lambda = E * nu / (1.0_Kr + nu) / (1 - 2.0_Kr * nu)
+               Mu     = E / (1.0_Kr + nu) * .5_Kr      
+            End Select 
+            Write(IOBuffer, 300) i, 'Number of layers'
+            Call AskInt(NumLayers, IOBuffer, BatchUnit, IsBatch)   
+            Do j = 1, NumLayers
+               Write(IOBuffer, 300) i, 'kx'
+               Call AskReal(k_3D%X, IOBuffer, BatchUnit, IsBatch)
+               Write(IOBuffer, 300) i, 'ky'
+               Call AskReal(k_3D%Y, IOBuffer, BatchUnit, IsBatch)
+               Write(IOBuffer, 300) i, 'kz'
+               Call AskReal(k_3D%Z, IOBuffer, BatchUnit, IsBatch)
+               Write(IOBuffer, 300) i, 'Lamination parameter'
+               Call AskReal(m, IOBuffer, BatchUnit, IsBatch)
+               Select Case(MeshTopology%Num_Dim)
+               Case(2)
+                  k_2D%X = k_3D%X
+                  k_2D%Y = k_3D%Y
+                  Call GenHL_Laminate_LambdaMu(MatProp2D(i)%Hookes_Law, k_2D, Lambda, Mu, m, MatProp2D(i)%Hookes_Law)
+               Case(3)
+                  Call GenHL_Laminate_LambdaMu(MatProp3D(i)%Hookes_Law, k_3D, Lambda, Mu, m, MatProp3D(i)%Hookes_Law)
+               End Select
+            End Do
+         End If
+            
          If (.NOT. IsBatch) Then
             Write(BatchUnit, *)
          End If

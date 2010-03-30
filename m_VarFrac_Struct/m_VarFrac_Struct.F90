@@ -30,11 +30,6 @@ Module m_VarFrac_Struct
    
    Public :: VarFracSchemeParam_Type
    
-   !!! remove
-   Public :: StrainProjectionComponent2D_LambdaMu
-   Public :: StrainProjection2D_LambdaMu
-   !!! remove
-   
    Interface MatProp_Write
       Module Procedure MatProp2D_Write, MatProp3D_Write
    End Interface
@@ -48,7 +43,7 @@ Module m_VarFrac_Struct
    End Interface
    
    Interface GenHL_Laminate_LambdaMu
-      Module Procedure GenHL_Laminate2D_LambdaMu
+      Module Procedure GenHL_Laminate2D_LambdaMu, GenHL_Laminate3D_LambdaMu
    End Interface
 
    PetscInt, Parameter, Public                     :: VarFrac_BC_Type_NONE = 0
@@ -709,6 +704,25 @@ Module m_VarFrac_Struct
       StrainProjectionComponent2D_LambdaMu = (xik2 - xikk**2) / mu + xikk**2 / (lambda + 2.0_Kr * mu)
    End Function StrainProjectionComponent2D_LambdaMu
    
+   PetscReal Function StrainProjectionComponent3D_LambdaMu(xi, k, lambda, mu)
+      !!! Compute the projection operator on strain fields as in Allaire 1997 Corollary 1.14.13
+      !!! f_B(k) \xi \dot \xi = \frac{1}{\mu} ( |\xi k|^2 - (\xi k \dot k)^2) + \frac{1}{\lamba + 2\mu}(\xi k \dot k)^2
+      Type(MatS3D), Intent(IN)            :: xi
+      Type(Vect3D), Intent(IN)            :: k
+      PetscReal, Intent(IN)               :: lambda, mu
+      
+      Type(Tens4OS3D)                     :: TmpProj
+      Type(Vect3D)                        :: xik, knorm
+      PetscReal                           :: xikk, xik2
+      
+      knorm = k / sqrt(k%X**2 + k%Y**2 + k%Z**2)
+      
+      xik  = xi * knorm
+      xikk = xik .DotP. knorm
+      xik2 = xik%X**2 + xik%Y**2 * xik%Z**2
+      StrainProjectionComponent3D_LambdaMu = (xik2 - xikk**2) / mu + xikk**2 / (lambda + 2.0_Kr * mu)
+   End Function StrainProjectionComponent3D_LambdaMu
+
    Type(Tens4OS2D) Function StrainProjection2D_LambdaMu(k, lambda, mu)
       Type(Vect2D), Intent(IN)            :: k
       PetscReal, Intent(IN)               :: lambda, mu
@@ -745,6 +759,20 @@ Module m_VarFrac_Struct
       StrainProjection2D_LambdaMu = fB
    End Function StrainProjection2D_LambdaMu
    
+   Type(Tens4OS3D) Function StrainProjection3D_LambdaMu(k, lambda, mu)
+      Type(Vect3D), Intent(IN)            :: k
+      PetscReal, Intent(IN)               :: lambda, mu
+      
+      Type(MatS3D)                        :: xi
+      Type(Tens4OS3D)                     :: fB
+      
+      
+      Write(*,*) 'StrainProjection3D_LambdaMu Not implemented yet'
+      STOP
+      StrainProjection3D_LambdaMu = 0.0_Kr
+   End Function StrainProjection3D_LambdaMu
+
+
    Subroutine GenHL_Laminate2D_LambdaMu(A, k, lambda, mu, theta, Astar)
       Type(Tens4OS2D), Intent(IN)         :: A
       Type(Vect2D), Intent(IN)            :: k
@@ -757,5 +785,18 @@ Module m_VarFrac_Struct
       
       Astar = Invert(Invert(A-B)  + (1.0_Kr-theta) * StrainProjection2D_LambdaMu(k, lambda, mu)) * theta + B
    End Subroutine GenHL_Laminate2D_LambdaMu
+
+   Subroutine GenHL_Laminate3D_LambdaMu(A, k, lambda, mu, theta, Astar)
+      Type(Tens4OS3D), Intent(IN)         :: A
+      Type(Vect3D), Intent(IN)            :: k
+      PetscReal, Intent(IN)               :: lambda, mu, theta
+      Type(Tens4OS3D), Intent(OUT)        :: Astar
+   
+      Type(Tens4OS3D)                     :: B
+   
+      Call GenHL_Iso_LambdaMu(lambda, mu, B)
+   
+      Astar = Invert(Invert(A-B)  + (1.0_Kr-theta) * StrainProjection3D_LambdaMu(k, lambda, mu)) * theta + B
+   End Subroutine GenHL_Laminate3D_LambdaMu
       
 End Module m_VarFrac_Struct

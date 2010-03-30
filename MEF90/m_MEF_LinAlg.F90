@@ -137,7 +137,7 @@ Module m_MEF_LinAlg
    End Interface
    
    Interface Invert
-      Module Procedure InvertMat2D, InvertMatS2D, InvertMat3D, InvertMatS3D, InvertTens4OS2D
+      Module Procedure InvertMat2D, InvertMatS2D, InvertMat3D, InvertMatS3D, InvertTens4OS2D, InvertTens4OS3D
    End Interface
 
    Interface Operator (.TensP.)
@@ -2026,7 +2026,6 @@ Contains
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
    End Function DetMatS3D
 
-   !!! Make functions and add error checking
    Function InvertMat2D(M)
       Type (Mat2D), Intent(IN)                       :: M
       Type (Mat2D)                                   :: InvertMat2D
