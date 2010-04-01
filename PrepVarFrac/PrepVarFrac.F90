@@ -242,6 +242,9 @@ Program PrepVarFrac
       Allocate(T(NumSteps))
       Do i = 1, NumSteps-1
          If ( (iCase == 3) .OR. (iCase == 4) ) Then
+            !! Non uniform time stepping adapted to the time scale of the thermal problem in tau=sqrt(t)
+            !! Time in our simulation is the physical time, while Bahr et al. (TAFM 1998) use tau
+            !! Pay attention in visualization softwares
             T(i) = Tmin + (Real(i-1) * (sqrt(Tmax-TMin))/Real(NumSteps-1))**2
          Else
             T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
@@ -471,7 +474,8 @@ Program PrepVarFrac
                Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
                   Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
                   Do k = 1, Num_DoF
-                     ThetaElem(k) = erf( CoordElem((k-1) * MeshTopology%Num_Dim + 2) / Sqrt(T(iStep)) * 0.5_Kr )
+                    tau  = sqrt(T(iStep))  !! tau=sqrt(t) is the time scale of the thermal problem (see Bahr at, TAFM 1998). The code keeps t as time and non-uniform time-stepping (see Time Steps)
+                    ThetaElem(k) = erf( CoordElem((k-1) * MeshTopology%Num_Dim + 2) / tau * 0.5_Kr )
                   End Do
                   ThetaElem = Theta(i) * (1.0-ThetaElem)
                   Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
@@ -481,7 +485,7 @@ Program PrepVarFrac
                   Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
                   Do k = 1, Num_DoF
                      eta = CoordElem((k-1) * MeshTopology%Num_Dim + 2)
-                     tau  = sqrt(T(iStep))
+                     tau  = sqrt(T(iStep))  !! tau=sqrt(t) is the time scale of the thermal problem (see Bahr at, TAFM 1998). The code keeps t as time and non-uniform time-stepping (see Time Steps)
                      ThetaElem(k) = erfc(eta / tau * 0.5_Kr ) - exp(beta * eta + beta**2 * tau**2) * erfc(eta / tau * 0.5_Kr + beta * tau)
                   End Do
                   ThetaElem = Theta(i) * ThetaElem
