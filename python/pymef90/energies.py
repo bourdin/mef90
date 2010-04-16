@@ -42,7 +42,7 @@ def fixBT(energies):
 def computeG(t, Eel, l):
   import numpy as np
   ###
-  G = -(Eel[1:]/pow(t[1:],2)-Eel[:-1]/np.power(t[:-1],2)) / (l[1:]-l[:-1])
+  G = -(Eel[1:]/np.power(t[1:],2)-Eel[:-1]/np.power(t[:-1],2)) / (l[1:]-l[:-1]) * np.power(t[:-1],2)
   ###
   return G
 
