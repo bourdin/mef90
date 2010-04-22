@@ -422,7 +422,7 @@ Program PrepVarFrac
             !!! Update F
             If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
                Select Case (iCase)
-               Case(1,2,3,4,5)
+               Case(1,2,3,4,5,8)
                   Do k = 0, Num_DoF-1
                      Felem(3*k+1) = T(iStep) * F(i)%X
                      Felem(3*k+2) = T(iStep) * F(i)%Y
@@ -552,7 +552,7 @@ Program PrepVarFrac
             i = MeshTopology%Node_Set(iloc)%ID
             
             Select Case (iCase)
-            Case(1,2,3,4,7)
+            Case(1,2,3,4,7,8)
                Uelem(1) = T(iStep) * U(i)%X
                Uelem(2) = T(iStep) * U(i)%Y
                Uelem(3) = T(iStep) * U(i)%Z
