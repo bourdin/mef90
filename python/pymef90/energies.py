@@ -1,10 +1,10 @@
 def plot(energies, showwork=False):
   import matplotlib.pyplot as plt
-  plt.plot(energies[:,1], energies[:,2], 'r', label='Elastic energy')
+  plt.plot(energies[:,1], energies[:,2], 'r.-', label='Elastic energy')
   if showwork:
-    plt.plot(energies[:,1], energies[:,3], 'k', label='External Forces')
-  plt.plot(energies[:,1], energies[:,4], 'g', label='Surface energy')
-  plt.plot(energies[:,1], energies[:,5], 'b', label='Total energy', lw=2)
+    plt.plot(energies[:,1], energies[:,3], 'k.-', label='External Forces')
+  plt.plot(energies[:,1], energies[:,4], 'g.-', label='Surface energy')
+  plt.plot(energies[:,1], energies[:,5], 'b.-', label='Total energy', lw=2)
   plt.grid()
   plt.legend(loc=0)
   plt.xlabel('t')
