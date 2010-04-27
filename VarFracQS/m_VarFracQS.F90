@@ -612,7 +612,7 @@ Contains
          Write(IOBuffer, *) 'Doing BackTracking\n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
       End If
-      Do iBTStep = 1, AppCtx%TimeStep-1
+      Do iBTStep = max(1, AppCtx%TimeStep-AppCtx%VarFracSchemeParam%BTScope), AppCtx%TimeStep-1
          EnerBT = AppCtx%Load(iBTStep)**2 * AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%Load(iBTStep) * AppCtx%Load(AppCtx%TimeStep) * AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%SurfaceEnergy(AppCtx%TimeStep)
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Checking against timestep', iBTStep, ':', AppCtx%TotalEnergy(iBTStep) - EnerBT * AppCtx%Load(AppCtx%TimeStep)**2, AppCtx%VarFracSchemeParam%BTTol * AppCtx%TotalEnergy(iBTStep) * AppCtx%Load(AppCtx%TimeStep)**2, '\n' 
