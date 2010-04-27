@@ -122,7 +122,7 @@ Program  VarFracQS
             
             If (iBTStep < AppCtx%TimeStep) Then
                AppCtx%IsBT = PETSC_TRUE
-               AppCtx%TimeStep = iBTStep - 1
+               AppCtx%TimeStep = max(1, iBTStep - 1)
 
                !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
                Write(AppCtx%AppParam%Ener_Unit, *)
@@ -198,8 +198,7 @@ Program  VarFracQS
          
          If (iBTStep < AppCtx%TimeStep) Then
             AppCtx%IsBT = PETSC_TRUE
-            AppCtx%TimeStep = iBTStep - 1
-
+            AppCtx%TimeStep = max(1, iBTStep)
             !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
             Write(AppCtx%AppParam%Ener_Unit, *)
             Write(AppCtx%AppParam%Ener_Unit, *)
