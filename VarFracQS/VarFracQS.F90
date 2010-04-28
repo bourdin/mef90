@@ -115,14 +115,14 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Check For BackTracking 
          !------------------------------------------------------------------- 
-         AppCtx%IsBT = PETSC_FALSE
-         If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) ) Then
+         !
+         If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) .AND. (.NOT. AppCtx%IsBT)) Then
             Call ComputeEnergies(AppCtx)
             Call BackTracking(AppCtx, iBTStep)
-            
+            AppCtx%IsBT = PETSC_FALSE   
             If (iBTStep < AppCtx%TimeStep) Then
                AppCtx%IsBT = PETSC_TRUE
-               AppCtx%TimeStep = max(1, iBTStep - 1)
+               AppCtx%TimeStep = max(1, iBTStep-1)
 
                !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
                Write(AppCtx%AppParam%Ener_Unit, *)
@@ -192,13 +192,13 @@ Program  VarFracQS
       !------------------------------------------------------------------- 
       ! Check For BackTracking again
       !------------------------------------------------------------------- 
-      If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT) ) Then
+      If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT) .AND. (.NOT. AppCtx%IsBT)) Then
          Call ComputeEnergies(AppCtx)
          Call BackTracking(AppCtx, iBTStep)
          
          If (iBTStep < AppCtx%TimeStep) Then
             AppCtx%IsBT = PETSC_TRUE
-            AppCtx%TimeStep = max(1, iBTStep)
+            AppCtx%TimeStep = max(1, iBTStep-1)
             !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
             Write(AppCtx%AppParam%Ener_Unit, *)
             Write(AppCtx%AppParam%Ener_Unit, *)
