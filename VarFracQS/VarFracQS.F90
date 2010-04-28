@@ -192,7 +192,7 @@ Program  VarFracQS
       !------------------------------------------------------------------- 
       ! Check For BackTracking again
       !------------------------------------------------------------------- 
-      If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT) .AND. (.NOT. AppCtx%IsBT)) Then
+      If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT)) Then
          Call ComputeEnergies(AppCtx)
          Call BackTracking(AppCtx, iBTStep)
          
@@ -205,6 +205,8 @@ Program  VarFracQS
          Else
             AppCtx%IsBT = PETSC_FALSE
          End If
+      Else 
+         AppCtx%IsBT = PETSC_FALSE
       End If
       
       !------------------------------------------------------------------- 
