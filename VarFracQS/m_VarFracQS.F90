@@ -604,7 +604,7 @@ Contains
       PetscInt, Intent(OUT)                        :: iBTStep
       
       PetscInt                                     :: iErr
-      PetscReal                                    :: EnerBT
+      PetscReal                                    :: EnerBT, EnerRef
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    
       !!! Check the BT condition
@@ -613,13 +613,14 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
       End If
       Do iBTStep = max(1, AppCtx%TimeStep-AppCtx%VarFracSchemeParam%BTScope), AppCtx%TimeStep-1
-         EnerBT = AppCtx%Load(iBTStep)**2 * AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%Load(iBTStep) * AppCtx%Load(AppCtx%TimeStep) * AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+         EnerBT  = AppCtx%Load(iBTStep)**2 * AppCtx%ElasticEnergy(AppCtx%TimeStep) + AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+         EnerRef = AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%TotalEnergy(iBTStep)
          If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Checking against timestep', iBTStep, ':', AppCtx%TotalEnergy(iBTStep) - EnerBT * AppCtx%Load(AppCtx%TimeStep)**2, AppCtx%VarFracSchemeParam%BTTol * AppCtx%TotalEnergy(iBTStep) * AppCtx%Load(AppCtx%TimeStep)**2, '\n' 
+            Write(IOBuffer, *) 'Checking against timestep', iBTStep, ':', EnerBT, EnerRef, (1.0_Kr - AppCtx%VarFracSchemeParam%BTTol) * EnerRef, '\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
          
-         If ( EnerBT < AppCtx%Load(AppCtx%TimeStep)**2 * (1.0_Kr - AppCtx%VarFracSchemeParam%BTTol) * AppCtx%TotalEnergy(iBTStep) ) Then
+         If (EnerBT < (1.0_Kr - AppCtx%VarFracSchemeParam%BTTol) * EnerRef) Then
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'BackTracking to step', iBTStep, '\n' 
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
@@ -627,7 +628,6 @@ Contains
             EXIT
          End If
       End Do
-
    End Subroutine BackTracking   
    
 #if defined PB_2D
