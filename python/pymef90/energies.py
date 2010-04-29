@@ -25,18 +25,25 @@ def save(fname, energies):
   import numpy as np
   np.savetxt(fname, energies, fmt='%7d  %13.5E %13.5E %13.5E %13.5E %13.5E')
 
-def fixBT(energies):
+def fixBT(energies, laststep=None):
   import numpy as np
   ###
-  laststep = energies[-1,0]
-  maxstep  = energies[:,0].max()
+  print('hello!')
+  if laststep == None:
+    laststep = energies[-1,0]
+  else:
+    laststep = min(energies[-1,0], laststep)
+  maxstep  = energies.shape[0]
   ###
   energiesBT = np.zeros([laststep,energies.shape[1]])
-  for i in range(energies.shape[0]):
+  ###
+  i = 0
+  while True:
     step = energies[i,0]
-    if step <= laststep:
-      energiesBT[step-1,:] = energies[i,:]
-    ###
+    energiesBT[step-1,:] = energies[i,:]
+    i += 1
+    if step == laststep or i >= maxstep:
+      break
   return energiesBT
 
 def computeG(t, Eel, l):
