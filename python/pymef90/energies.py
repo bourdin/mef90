@@ -28,7 +28,6 @@ def save(fname, energies):
 def fixBT(energies, laststep=None):
   import numpy as np
   ###
-  print('hello!')
   if laststep == None:
     laststep = energies[-1,0]
   else:
@@ -75,4 +74,3 @@ def ReadCompositeEnergies(prefix, stepmin=None, stepmax=None):
   l   = np.sum(e[tmin:tmax,4]/k for (e,k) in zip(all_energies, toughness))
   t   = all_energies[0][tmin:tmax,1]
   return Eel, l, t, toughness
-
