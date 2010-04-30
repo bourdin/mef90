@@ -29,9 +29,9 @@ def fixBT(energies, laststep=None):
   import numpy as np
   ###
   if laststep == None:
-    laststep = energies[-1,0]
+    laststep = int(energies[-1,0])
   else:
-    laststep = min(energies[-1,0], laststep)
+    laststep = min(int(energies[-1,0]), int(laststep))
   maxstep  = energies.shape[0]
   ###
   energiesBT = np.zeros([laststep,energies.shape[1]])
@@ -74,3 +74,46 @@ def ReadCompositeEnergies(prefix, stepmin=None, stepmax=None):
   l   = np.sum(e[tmin:tmax,4]/k for (e,k) in zip(all_energies, toughness))
   t   = all_energies[0][tmin:tmax,1]
   return Eel, l, t, toughness
+
+def ReadCompositeEnergiesBT(prefix, laststep=None):
+  import numpy as np
+  ###
+  toughness   = np.loadtxt(prefix+'.CST', skiprows=1, usecols=[1])
+  all_energies = []
+  for blk in range(toughness.shape[0]):
+    blkfile="%s-%.4i.enerblk" % (prefix, blk+1) 
+    all_energies.append(np.loadtxt(blkfile))
+  ###
+  ### Compute last step and larger step
+  ###
+  if laststep == None:
+    laststep = int(all_energies[0][-1,0])
+  else:
+    lasstep = min(int(laststep), int(all_energies[0][-1,0]))
+  maxstep = all_energies[0].shape[0]
+  ###
+  ### Initialize all_energies_BT
+  ###
+  all_energiesBT=[]
+  for e in all_energies:
+    all_energiesBT.append(np.zeros([int(laststep),e.shape[1]]))
+  ###
+  ### Remove redundant computations
+  ###
+  i = 0
+  while True:
+    step = all_energies[0][i,0]
+    for (energiesBT, energies) in zip(all_energiesBT, all_energies):
+      energiesBT[step-1,:] = energies[i,:]
+    i += 1
+    if step == int(laststep) or i >= maxstep:
+      break
+  ###
+  ### Extract Elastic Energy, length, time, toughness 
+  ##
+  Eel = np.sum(e[:,2] for e in all_energiesBT)
+  l   = np.sum(e[:,4]/k for (e,k) in zip(all_energiesBT, toughness))
+  t   = all_energiesBT[0][:,1]
+  return Eel, l, t, toughness
+
+  

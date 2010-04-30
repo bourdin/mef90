@@ -31,6 +31,6 @@ if options.debug:
   print('size of energies: {0}'.format(energies.shape))
   print('Energies: {0}'.format(energies))
 
-energiesBT=pymef90.energies.fixBT(energies, int(options.stepmax))
+energiesBT=pymef90.energies.fixBT(energies, options.stepmax)
 
 pymef90.energies.save(options.outputfile, energiesBT)
