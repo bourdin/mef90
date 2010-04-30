@@ -9,6 +9,7 @@ parser.add_option("-d", "--debug", dest="debug", action="store_true", default=Fa
 parser.add_option("-i", "--input", dest="inputfile", help="energy file")
 parser.add_option("-o", "--output", dest="outputfile", help="output file name")
 parser.add_option("--old", dest="old", action="store_true", default=False, help="old style energy file (no forces)")
+parser.add_option("-M", "--stepmax", dest="stepmax", default=None, help="step to parse until" )
 
 
 (options, args) = parser.parse_args()
@@ -30,6 +31,6 @@ if options.debug:
   print('size of energies: {0}'.format(energies.shape))
   print('Energies: {0}'.format(energies))
 
-energiesBT=pymef90.energies.fixBT(energies)
+energiesBT=pymef90.energies.fixBT(energies, int(options.stepmax))
 
 pymef90.energies.save(options.outputfile, energiesBT)
