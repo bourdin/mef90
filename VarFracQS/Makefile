@@ -40,6 +40,20 @@ VarFracQS.o:   ${PETSC_ARCH} m_VarFracQS.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o \
                                       m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o \
                                       m_VarFracQS_Post.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o
 
+VarFracQSRecomputeEnergy${DIM}: ${PETSC_ARCH} VarFracQSRecomputeEnergy.o   ${PETSC_ARCH}/${DIM}VarFracQSRecomputeEnergy.o \
+                                          m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o \
+                                          m_VarFracQS_U.o ${PETSC_ARCH}/${DIM}m_VarFracQS_U.o \
+                                          m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o \
+                                          m_VarFracQS.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o \
+                                          m_VarFracQS_Post.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o
+	${FLINKER} -o ${PETSC_ARCH}/VarFracQSRecomputeEnergy${DIM} ${PETSC_ARCH}/${DIM}VarFracQSRecomputeEnergy.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_U.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o  ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
+VarFracQSRecomputeEnergy.o:   ${PETSC_ARCH} m_VarFracQS.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o \
+                                              m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o \
+                                              m_VarFracQS_U.o ${PETSC_ARCH}/${DIM}m_VarFracQS_U.o \
+                                              m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o \
+                                              m_VarFracQS_Post.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o
+
 m_VarFracQS.o: ${PETSC_ARCH} m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o \
                                       m_VarFracQS_U.o ${PETSC_ARCH}/${DIM}m_VarFracQS_U.o \
                                       m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o \
