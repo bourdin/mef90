@@ -1308,7 +1308,6 @@ Contains
       !!! Scatter V back into a SectionReal
       Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
       
-!      Call VecDestroy(V_Old, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('     KSP for V converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for V diverged. KSPConvergedReason is ', I2, '\n')
