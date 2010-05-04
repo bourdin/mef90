@@ -77,13 +77,8 @@ Contains
       TAO_Default_catol = 0.
       TAO_Default_crtol = 0.
       
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, flag, iErr); CHKERRQ(iErr)    
-      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
-      If (.NOT. HasPrefix) Then
-         Call PetscPrintf(PETSC_COMM_WORLD, "No input file prefix given\n", iErr)
-         Call MEF90_Finalize()
-         STOP
-      End If
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, flag, iErr); CHKERRQ(iErr)
+      Call InitFileNames(AppCtx)    
       AppCtx%AppParam%StopOnError = PETSC_FALSE
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-stop_on_error', AppCtx%AppParam%StopOnError, flag, iErr) ; CHKERRQ(iErr)
 
@@ -157,7 +152,7 @@ Contains
       End If
       
       !!! Read Mat Properties from the CST file
-      Call MatProp_Read(AppCtx%MeshTopology, AppCtx%MatProp, trim(AppCtx%AppParam%prefix)//'.CST')
+      Call MatProp_Read(AppCtx%MeshTopology, AppCtx%MatProp, AppCtx%AppParam%CST_FileName)
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with MatProp_Read\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -358,16 +353,16 @@ Contains
       If (MEF90_MyRank == 0) Then
          AppCtx%AppParam%Ener_Unit = 71
          Allocate(AppCtx%AppParam%EnerBlock_Unit(AppCtx%MeshTopology%Num_Elem_Blks_Global))
-         Open(File = Trim(AppCtx%AppParam%Prefix)//'.ener', Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
+         Open(File = AppCtx%AppParam%Ener_FileName, Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
          Rewind(AppCtx%AppParam%Ener_Unit)
          Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
             AppCtx%AppParam%EnerBlock_Unit(iBlk) = 170+iBlk
-            Write(filename, 110) Trim(AppCtx%AppParam%Prefix), iBlk
-            Open(File = filename, Unit = AppCtx%AppParam%EnerBlock_Unit(iBlk), Status = 'Unknown')
+            Write(AppCtx%AppParam%EnerBlock_FileName, 110) Trim(AppCtx%AppParam%Prefix), iBlk, Trim(AppCtx%AppParam%EnerBlock_Suffix)
+            Open(File = AppCtx%AppParam%EnerBlock_FileName, Unit = AppCtx%AppParam%EnerBlock_Unit(iBlk), Status = 'Unknown')
             Rewind(AppCtx%AppParam%EnerBlock_Unit(iBlk))
          End Do
+ 110 Format(A, '-', I4.4, '.', A)
       End If
-      110 Format(A, '-', I4.4, '.enerblk')
       
       !!! Set V=1
       Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
@@ -380,6 +375,47 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine VarFracQSInit
    
+   Subroutine InitFileNames(dAppCtx) 
+      Type(AppCtx_Type)                            :: dAppCtx
+      PetscInt                                     :: iErr
+      PetscTruth                                   :: HasPrefix
+      Character(len=MEF90_MXSTRLEN)                :: tmpStr
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', dAppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
+      If (.NOT. HasPrefix) Then
+         Call PetscPrintf(PETSC_COMM_WORLD, "No input file prefix given\n", iErr)
+         Call MEF90_Finalize()
+         STOP
+      End If
+
+      !!!
+      !!! CST file
+      !!!
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-cst', dAppCtx%AppParam%CST_FileName, HasPrefix, iErr); CHKERRQ(iErr)
+      If (.NOT. HasPrefix) Then
+         dAppCtx%AppParam%CST_FileName = trim(dAppCtx%AppParam%prefix)//'.CST'
+      End If
+
+      !!! 
+      !!! global energy file
+      !!!
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-ener', dAppCtx%AppParam%Ener_FileName, HasPrefix, iErr); CHKERRQ(iErr)
+      If (.NOT. HasPrefix) Then
+         dAppCtx%AppParam%Ener_FileName = trim(dAppCtx%AppParam%prefix)//'.ener'
+      End If
+      
+      !!!
+      !!! blockwise energy files
+      !!!
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-enerblk', dAppCtx%AppParam%EnerBlock_Suffix, HasPrefix, iErr); CHKERRQ(iErr)
+      If (.NOT. HasPrefix) Then
+         dAppCtx%AppParam%EnerBlock_Suffix = 'enerblk'
+      End If
+      
+   End Subroutine InitFileNames
+
+
+
+
    Subroutine InitLog(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr

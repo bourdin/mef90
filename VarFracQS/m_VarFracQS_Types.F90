@@ -53,9 +53,14 @@ Module m_VarFracQS_Types3D
       PetscInt                                     :: Verbose
       PetscTruth                                   :: StopOnError
       Character(len=MEF90_MXSTRLEN)                :: prefix
-      Type(PetscViewer)                            :: LogViewer, MyLogViewer
+      Character(len=MEF90_MXSTRLEN)                :: CST_FileName
+      Character(len=MEF90_MXSTRLEN)                :: Ener_FileName
       Integer                                      :: Ener_Unit
+      Type(PetscViewer)                            :: LogViewer, MyLogViewer
+      Character(len=MEF90_MXSTRLEN)                :: Log_FileName, MyLog_FileName
       Integer, Dimension(:), Pointer               :: EnerBlock_Unit
+      Character(len=MEF90_MXSTRLEN)                :: EnerBlock_Suffix
+      Character(len=MEF90_MXSTRLEN)                :: EnerBlock_Filename
    End Type AppParam_Type
 
    Type AppCtx_Type
