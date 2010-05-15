@@ -57,7 +57,7 @@ Contains
       Call MeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)  
       !!! Get the number of labels of type 'CellBlocks' in the mesh
       If (numIds .ne. dMeshTopology%Num_Elem_blks) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Invalid number of element ids', ierr)
+         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'Invalid number of element ids', ierr)
       End If
       !!! Compare to the number initialized in MeshTopology
       
@@ -91,7 +91,7 @@ Contains
       CharBuffer = 'VertexSets'
       Call MeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)
       If (numIds .ne. dMeshTopology%Num_node_sets) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Invalid number of node set ids', ierr)
+         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'Invalid number of node set ids', ierr)
       End If
       Allocate(dMeshTopology%Node_Set(dMeshTopology%Num_Node_Sets))
       Allocate(setIds(numIds))
@@ -430,7 +430,7 @@ Contains
 !!!$      Do j = 1, BCFlag%num_components 
 !!!$         Write(*,*) 'Doing component', j
 !!!$         If (BCFlag%Component_size(j) /= 1 ) Then
-!!!$            SETERRQ(PETSC_ERR_ARG_SIZ, 'MatInsertVertexBoundaryValues requires scalar components', ierr)
+!!!$            SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatInsertVertexBoundaryValues requires scalar components', ierr)
 !!!$         End If
 !!!$         Do i = 1, MeshTopology%Num_Verts
 !!!$            Call SectionIntRestrict(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
@@ -456,7 +456,7 @@ Contains
       zero = 0
       Do j = 1, BCFlag%num_components 
          If (BCFlag%Component_size(j) /= 1 ) Then
-            SETERRQ(PETSC_ERR_ARG_SIZ, 'FieldInsertVertexBoundaryValues requires scalar components', ierr)
+            SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'FieldInsertVertexBoundaryValues requires scalar components', ierr)
          End If
          Do i = 1, MeshTopology%Num_Verts
             Call SectionIntRestrict(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
