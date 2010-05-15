@@ -559,7 +559,7 @@ Module m_MEF_EXO
                Case (3)
                   Elem_Type = 'TETRA4'
                Case Default
-                  SETERRQ(PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
+                  SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
                End Select
             Case (MEF90_P2_Lagrange)
                Select Case (dMeshTopology%Num_Dim)
@@ -568,17 +568,17 @@ Module m_MEF_EXO
                Case (3)
                   Elem_Type = 'TETRA10'
                Case Default
-                  SETERRQ(PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
+                  SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
                End Select
             Case Default
-                  SETERRQ(PETSC_ERR_SUP, 'Only MEF90_P1_Lagrange and MEF90_P2_Lagrange elements are supported', iErr)
+                  SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Only MEF90_P1_Lagrange and MEF90_P2_Lagrange elements are supported', iErr)
             End Select
             Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
          End Do
    
          ! Write Side sets informations
          If (dMeshTopology%Num_Side_Sets > 0) Then
-            SETERRQ(PETSC_ERR_SUP, 'Side sets not supported yet', iErr)
+            SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Side sets not supported yet', iErr)
          End If
          
          ! Write Node sets informations
@@ -614,7 +614,7 @@ Module m_MEF_EXO
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
       Else
-         SETERRQ(PETSC_ERR_SUP, 'Synchronized I/O on PETSC_COMM_WORLD not supported yet', ierr)
+         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Synchronized I/O on PETSC_COMM_WORLD not supported yet', ierr)
       End If Is_IO
    End Subroutine Write_MeshTopology
    
@@ -763,7 +763,7 @@ Module m_MEF_EXO
       dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
       
       If (Mod(Size(dRes), dMeshTopology%Num_Verts) /= 0) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexPtrInterlaced: The argument does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexPtrInterlaced: The argument does not match the number of vertices in the mesh', iErr)
       End If
       Num_Rec = Size(dRes) / dMeshTopology%Num_Verts
       
@@ -837,7 +837,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexVect2D: The argument does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexVect2D: The argument does not match the number of vertices in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
@@ -859,7 +859,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexVect3D: The argument does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexVect3D: The argument does not match the number of vertices in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
@@ -883,7 +883,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat2D: The argument does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat2D: The argument does not match the number of vertices in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
@@ -909,7 +909,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMatS2D: The argument does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMatS2D: The argument does not match the number of vertices in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
@@ -933,7 +933,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat3D: The argument does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat3D: The argument does not match the number of vertices in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
@@ -969,7 +969,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMatS3D: The argument does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMatS3D: The argument does not match the number of vertices in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
@@ -1007,7 +1007,7 @@ Module m_MEF_EXO
       dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
       
       If (Mod(Size(dRes), dMeshTopology%Num_Elems) /= 0) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
       End If
       Num_Rec = Size(dRes) / dMeshTopology%Num_Elems
 
@@ -1073,7 +1073,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellVect2D: The argument does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellVect2D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(Size(dRes)))
@@ -1095,7 +1095,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellVect3D: The argument does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellVect3D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(Size(dRes)))
@@ -1119,7 +1119,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_elems) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat2D: The argument does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat2D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(Size(dRes)))
@@ -1145,7 +1145,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_elems) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMatS2D: The argument does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMatS2D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(Size(dRes)))
@@ -1169,7 +1169,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Elems) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMat3D: The argument does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMat3D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(Size(dRes)))
@@ -1205,7 +1205,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       
       If ( Size(dRes) /= dMeshTopology%Num_Elems) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMatS3D: The argument does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMatS3D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
       Allocate(Res_Ptr(Size(dRes)))
@@ -1240,7 +1240,7 @@ Module m_MEF_EXO
          dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
          Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
          If (Num_Vars /= Size(dRes)) Then
-            SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_AllResult_Global: The argument does not match the number of global variables in the mesh', iErr)
+            SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_AllResult_Global: The argument does not match the number of global variables in the mesh', iErr)
          End If
          Call EXPGV(dEXO%exoid, dTS, Num_Vars, dRes, iErr)
          Call EXCLOS(dEXO%exoid, iErr)
@@ -1294,7 +1294,7 @@ Module m_MEF_EXO
       dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
       
       If (Mod(Size(dRes), dMeshTopology%Num_Verts) /= 0) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexPtrInterlaced: The argument does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexPtrInterlaced: The argument does not match the number of vertices in the mesh', iErr)
       End If
       Num_Rec = Size(dRes) / dMeshTopology%Num_Verts
       Do iRec = 1, Num_Rec
@@ -1363,7 +1363,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexVect2D: The argument size does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexVect2D: The argument size does not match the number of vertices in the mesh', iErr)
       End If
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
       Res_Ptr = dRes(:)%X
@@ -1384,7 +1384,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexVect2D: The argument size does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexVect2D: The argument size does not match the number of vertices in the mesh', iErr)
       End If
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
       Res_Ptr = dRes(:)%X
@@ -1407,7 +1407,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMat2D: The argument size does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMat2D: The argument size does not match the number of vertices in the mesh', iErr)
       End If
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
       Res_Ptr = dRes(:)%XX
@@ -1432,7 +1432,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMatS2D: The argument size does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMatS2D: The argument size does not match the number of vertices in the mesh', iErr)
       End If
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
       Res_Ptr = dRes(:)%XX
@@ -1455,7 +1455,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMat3D: The argument size does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMat3D: The argument size does not match the number of vertices in the mesh', iErr)
       End If
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
       Res_Ptr = dRes(:)%XX
@@ -1490,7 +1490,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Verts ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMatS3D: The argument size does not match the number of vertices in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexMatS3D: The argument size does not match the number of vertices in the mesh', iErr)
       End If
       Allocate(Res_Ptr(dMeshTopology%Num_Verts))
       Res_Ptr = dRes(:)%XX
@@ -1526,7 +1526,7 @@ Module m_MEF_EXO
       dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
       
       If (Mod(Size(dRes), dMeshTopology%Num_Elems) /= 0) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
       End If
       Num_Rec = Size(dRes) / dMeshTopology%Num_Elems
       
@@ -1590,7 +1590,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellVect2D: The argument size does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellVect2D: The argument size does not match the number of cells in the mesh', iErr)
       End If
       Allocate(Res_Ptr(Size(dRes)))
       Res_Ptr = dRes(:)%X
@@ -1611,7 +1611,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellVect2D: The argument size does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellVect2D: The argument size does not match the number of cells in the mesh', iErr)
       End If
       Allocate(Res_Ptr(Size(dRes)))
       Res_Ptr = dRes(:)%X
@@ -1634,7 +1634,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMat2D: The argument size does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMat2D: The argument size does not match the number of cells in the mesh', iErr)
       End If
       Allocate(Res_Ptr(Size(dRes)))
       Res_Ptr = dRes(:)%XX
@@ -1659,7 +1659,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMatS2D: The argument size does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMatS2D: The argument size does not match the number of cells in the mesh', iErr)
       End If
       Allocate(Res_Ptr(Size(dRes)))
       Res_Ptr = dRes(:)%XX
@@ -1682,7 +1682,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMat3D: The argument size does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMat3D: The argument size does not match the number of cells in the mesh', iErr)
       End If
       Allocate(Res_Ptr(Size(dRes)))
       Res_Ptr = dRes(:)%XX
@@ -1717,7 +1717,7 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
 
       If ( Size(dRes) /= dMeshTopology%Num_Elems ) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMatS3D: The argument size does not match the number of cells in the mesh', iErr)
+         SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_CellMatS3D: The argument size does not match the number of cells in the mesh', iErr)
       End If
       Allocate(Res_Ptr(Size(dRes)))
       Res_Ptr = dRes(:)%XX
