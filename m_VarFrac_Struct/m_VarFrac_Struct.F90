@@ -302,7 +302,7 @@ Module m_VarFrac_Struct
       Rewind(F_IN)
       Read(F_IN, *) NumBlks
       If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
+         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
       End If
       !!! Reading the file once first to get the right number of blocks
       IdxMin =  100000000
@@ -344,7 +344,7 @@ Module m_VarFrac_Struct
       Rewind(F_IN)
       Read(F_IN, *) NumBlks
       If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
-         SETERRQ(PETSC_ERR_ARG_SIZ, 'MatProp3DRead: non matching blocks numbers', iErr)
+         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatProp3DRead: non matching blocks numbers', iErr)
       End If
       !!! Reading the file once first to get the right number of blocks
       IdxMin =  100000000
@@ -478,7 +478,7 @@ Module m_VarFrac_Struct
       Case(2)
          dSchemeParam%ATCV = 0.5_Kr
       Case Default
-         SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
       End Select
    End Subroutine VarFracSchemeParam_GetFromOptions
    
