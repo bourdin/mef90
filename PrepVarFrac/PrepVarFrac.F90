@@ -120,7 +120,7 @@ Program PrepVarFrac
    
    Call EXO_Check_Numbering(EXO, iErr)
    If (iErr /= 0) Then
-      SETERRQ(PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
+      SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
    End If
 
    !!! Reading and distributing sequential mesh
@@ -186,7 +186,7 @@ Program PrepVarFrac
    Case(3)
       Call ElementInit(MeshTopology, Elem3D, QuadOrder)   
    Case Default
-      SETERRQ(PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
+      SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Only 2 and 3 dimensional elements are supported', iErr)
    End Select
    If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with ElementInit\n'
@@ -594,7 +594,7 @@ Program PrepVarFrac
       DeAllocate(V)
       
    Case Default
-      SETERRQ(PETSC_ERR_SUP, 'Unknown test case\n', iErr)      
+      SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Unknown test case\n', iErr)      
    End Select
 
    Close(BatchUnit)
