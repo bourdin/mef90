@@ -1169,7 +1169,7 @@ Contains
             Write(IOBuffer, 103) TaoReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (AppCtx%AppParam%StopOnError) Then
-               SETERRQ(PETSC_ERR_CONV_FAILED, 'TAO failed to converge, aborting...\n', iErr)
+               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'TAO failed to converge, aborting...\n', iErr)
             EndIf
          End If    
 #endif      
@@ -1206,7 +1206,7 @@ Contains
             Write(IOBuffer, 101) reason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (AppCtx%AppParam%StopOnError) Then
-               SETERRQ(PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
+               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
             EndIf
          End If
       End If
