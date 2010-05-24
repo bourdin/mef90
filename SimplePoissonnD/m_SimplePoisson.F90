@@ -711,7 +711,7 @@ Contains
       
       Type(SectionReal)                            :: Gradient_Sec, X_Sec
       PetscInt                                     :: iBlk 
-      PetscReal                                    :: myfunk
+      PetscReal                                    :: myfunc
 
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
 
