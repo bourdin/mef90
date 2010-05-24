@@ -119,7 +119,7 @@ Contains
          Case(2)
             Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock(iBlkID), iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
-            SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
          MySurfaceEnergy = MySurfaceEnergy + MySurfaceEnergyBlock(iBlkID)
       End Do

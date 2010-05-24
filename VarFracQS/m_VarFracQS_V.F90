@@ -105,7 +105,7 @@ Contains
          Call FieldInsertVertexBoundaryValues(AppCtx%V, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
 
       Case Default   
-         SETERRQ(PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
+         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
       End Select
    End Subroutine Init_TS_V
    
@@ -205,7 +205,7 @@ Contains
             Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
 
       Case Default
-         SETERRQ(PETSC_ERR_ARG_WRONG, 'Wrong value for AppCtx./.VarFracSchemeParam./.IrrevType \n', iErr)
+         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONG, 'Wrong value for AppCtx./.VarFracSchemeParam./.IrrevType \n', iErr)
       End Select
    End Subroutine Update_Irrev
 
@@ -234,7 +234,7 @@ Contains
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-            SETERRQ(PETSC_ERR_SUP, 'AT1 requires V_tao', iErr)
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'AT1 requires V_tao', iErr)
          Case(2)
             If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
                Select Case (AppCtx%VarFracSchemeParam%Unilateral)
@@ -248,7 +248,7 @@ Contains
             End If
             Call MatV_AssemblyBlk_SurfaceAT2(K, iBlk, .TRUE., AppCtx)
          Case Default
-            SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
       End Select
       End Do Do_Elem_iBlk
       Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
@@ -304,7 +304,7 @@ Contains
             End If
             Call MatV_AssemblyBlk_SurfaceAT2(H, iBlk, .FALSE., AppCtx)
          Case Default
-            SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
       End Do Do_Elem_iBlk
       Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
@@ -357,7 +357,7 @@ Contains
          Case(2)
             Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
-            SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
          MyObjFunc = MyObjFunc + MySurfaceEnergyBlock
       End Do Do_iBlk
@@ -386,7 +386,7 @@ Contains
          Case(2)
             Call GradientV_AssemblyBlk_SurfaceAT2(AppCtx%GradientV%Sec, iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
-            SETERRQ(PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
       End Do Do_iBlk2
 
@@ -411,7 +411,7 @@ Contains
          Case(2)
             Call RHSV_AssemblyBlk_AT2(AppCtx%RHSV%Sec, iBlk, AppCtx)
          Case Default
-            SETERRQ(PETSC_ERR_SUP, 'Only AT2 is implemented with KSP\n', iErr)
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT2 is implemented with KSP\n', iErr)
       End Select
       End Do Do_iBlk
 
@@ -1249,7 +1249,7 @@ Contains
             Write(IOBuffer, 103) TaoReason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (AppCtx%AppParam%StopOnError) Then
-               SETERRQ(PETSC_ERR_CONV_FAILED, 'TAO failed to converge, aborting...\n', iErr)
+               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'TAO failed to converge, aborting...\n', iErr)
             EndIf
          End If     
          Call KSPGetConvergedReason(AppCtx%KSPV, reason, iErr); CHKERRQ(iErr)
@@ -1288,7 +1288,7 @@ Contains
             Write(IOBuffer, 101) reason
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             If (AppCtx%AppParam%StopOnError) Then
-               SETERRQ(PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
+               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
             EndIf
          End If
       End If      
