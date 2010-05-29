@@ -118,7 +118,7 @@ def ExportPNG(filename):
   ensight.file.image_numpasses(4)
   ensight.file.image_stereo("current")
   ensight.file.image_screen_tiling(1,1)
-  ensight.file.image_window_size("HD1080p")
+  ensight.file.image_window_size("HD720p")
   ensight.file.save_image()
 
 def ExportMOV(filename):
@@ -134,7 +134,7 @@ def ExportMOV(filename):
   ensight.file.image_stereo("current")
   ensight.file.image_screen_tiling(1,1)
   ensight.file.animation_window_size("user_defined")
-  ensight.file.animation_window_xy(1920,1080)
+  ensight.file.animation_window_xy(1280,720)
   ensight.file.animation_multiple_images("OFF")
   ensight.file.animation_play_flipbook("OFF")
   ensight.file.animation_play_time("ON")
