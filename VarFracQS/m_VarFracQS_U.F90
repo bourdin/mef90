@@ -194,7 +194,8 @@ Contains
             MyObjFunc = MyObjFunc + MyExtForcesWorkBlock
          End If
       End Do Do_iBlk
-      Call PetscGlobalSum(MyObjFunc, ObjFunc, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+!      Call PetscGlobalSum(MyObjFunc, ObjFunc, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call MPI_AllReduce(MyObjFunc, ObjFunc, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       
       !!! Gradient
       Call SectionRealZero(AppCtx%GradientU%Sec, iErr); CHKERRQ(iErr)

@@ -114,13 +114,13 @@ Contains
 
       PetscInt                                     :: i, iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
-      PetscReal                                    :: MyIrrevEQ_Counter 
-      PetscReal                                    :: IrrevEQ_Counter
+      PetscInt                                     :: MyIrrevEQ_Counter 
+      PetscInt                                     :: IrrevEQ_Counter
       PetscReal, Dimension(:), Pointer             :: VIrrev_Ptr
       PetscInt, Dimension(:), Pointer              :: IrrevFlag_Ptr
 
-      MyIrrevEq_Counter = 0.0_Kr
-      IrrevEq_Counter   = 0.0_Kr
+      MyIrrevEq_Counter = 0
+      IrrevEq_Counter   = 0
 
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case(VarFrac_Irrev_Eq)
@@ -147,7 +147,7 @@ Contains
                   Call SectionRealRestrict(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(iErr)      
                   If (VIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
                      Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-                     MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
+                     MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
                   End If
                   Call SectionRealRestore(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(iErr)
                End Do
@@ -162,7 +162,7 @@ Contains
                If (VIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
                   Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
                   Call SectionRealUpdate(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-                  MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1.0
+                  MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
                End If
                Call SectionRealRestore(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr);
             End Do
@@ -170,7 +170,8 @@ Contains
          DeAllocate(IrrevFlag_Ptr)
          Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
          If (AppCtx%AppParam%verbose > 0) Then
-            Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+            !Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+            Call MPI_AllReduce(MyIrrevEQ_Counter, IrrevEQ_Counter, 1, MPI_Int, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
             Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
@@ -361,8 +362,8 @@ Contains
          End Select
          MyObjFunc = MyObjFunc + MySurfaceEnergyBlock
       End Do Do_iBlk
-      Call PetscGlobalSum(MyObjFunc, ObjFunc, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      
+      !Call PetscGlobalSum(MyObjFunc, ObjFunc, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call MPI_AllReduce(MyObjFunc, ObjFunc, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       !!! Gradient
       Call SectionRealZero(AppCtx%GradientV%Sec, iErr); CHKERRQ(iErr)
 

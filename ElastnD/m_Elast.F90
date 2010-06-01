@@ -523,7 +523,6 @@ Contains
          myfunc = myfunc + ElasticEnergyBlock - ExtForcesWorkBlock
          Call FormGradientBlock(iBlk, AppCtx%U%Sec, AppCtx%GradientU%Sec, AppCtx)
       End Do Do_iBlk
-!      Call PetscGlobalSum(myfunc, func, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Call MPI_AllReduce(myfunc, func, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Call SectionRealComplete(AppCtx%GradientU%Sec, iErr); CHKERRQ(iErr)
       !!! Scatter values from the Sections back to the Vec
@@ -553,9 +552,7 @@ Contains
          MyElasticEnergy = MyElasticEnergy + ElasticEnergyBlock
          MyExtForcesWork = MyExtForcesWork + ExtForcesWorkBlock
       End Do Do_iBlk
-!      Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Call MPI_AllReduce(myElasticEnergy, AppCtx%ElasticEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-!      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Call MPI_AllReduce(myExtForcesWork, AppCtx%ExtForcesWork, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)

@@ -54,10 +54,11 @@ Contains
          MyElasticEnergy = MyElasticEnergy + MyElasticEnergyBlock(iBlkId)
       End Do
 
-      Call PetscGlobalSum(MyElasticEnergy, ElasticEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Do iBlkID = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-         Call PetscGlobalSum(MyElasticEnergyBlock(iBlkID), ElasticEnergyBlock(iBlkID), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      End Do
+      Call MPI_AllReduce(MyElasticEnergy, ElasticEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call MPI_AllReduce(MyElasticEnergyBlock, ElasticEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      !Do iBlkID = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+      !   Call PetscGlobalSum(MyElasticEnergyBlock(iBlkID), ElasticEnergyBlock(iBlkID), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      !End Do
       DeAllocate(MyElasticEnergyBlock)
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
@@ -87,10 +88,12 @@ Contains
          End If
       End Do
 
-      Call PetscGlobalSum(MyExtForcesWork, ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Do iBlkID = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-         Call PetscGlobalSum(MyExtForcesWorkBlock(iBlkID), ExtForcesWorkBlock(iBlkID), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      End Do
+      !Call PetscGlobalSum(MyExtForcesWork, ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      !Do iBlkID = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+      !   Call PetscGlobalSum(MyExtForcesWorkBlock(iBlkID), ExtForcesWorkBlock(iBlkID), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      !End Do
+      Call MPI_AllReduce(MyExtForcesWork, ExtForcesWork, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call MPI_AllReduce(MyExtForcesWorkBlock, ExtForcesWorkBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       DeAllocate(MyExtForcesWorkBlock)
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
@@ -124,10 +127,12 @@ Contains
          MySurfaceEnergy = MySurfaceEnergy + MySurfaceEnergyBlock(iBlkID)
       End Do
 
-      Call PetscGlobalSum(MySurfaceEnergy, SurfaceEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Do iBlkID = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-         Call PetscGlobalSum(MySurfaceEnergyBlock(iBlkID), SurfaceEnergyBlock(iBlkID), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      End Do
+!      Call PetscGlobalSum(MySurfaceEnergy, SurfaceEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+!      Do iBlkID = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+!         Call PetscGlobalSum(MySurfaceEnergyBlock(iBlkID), SurfaceEnergyBlock(iBlkID), PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+!      End Do
+      Call MPI_AllReduce(MySurfaceEnergy, SurfaceEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call MPI_AllReduce(MySurfaceEnergyBlock, SurfaceEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       DeAllocate(MySurfaceEnergyBlock)
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
