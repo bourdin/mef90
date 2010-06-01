@@ -240,8 +240,8 @@ Program PrepVarFrac
       !!! Yes, this is retarded, but I can't see how to recover Kappa at a node when
       !!! parsing node sets from full hooke's law...
       If (iCase == 10) Then
-         Call AskReal(E,  'E',  BatchUnit, IsBatch)
-         Call AskReal(nu, 'nu', BatchUnit, IsBatch)
+         Call AskReal(E,  'E effective (for displacement field)',  BatchUnit, IsBatch)
+         Call AskReal(nu, 'nu effective (for displacement field)', BatchUnit, IsBatch)
          Kappa = (3.0-nu)/(1.0+nu)
          Mu = E / (1.0_Kr + nu) * .5_Kr
       End If
