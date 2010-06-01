@@ -668,8 +668,8 @@ Contains
             DeAllocate(F)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
-      Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy, PETSC_COMM_WORLD,iErr); CHKERRQ(iErr)
+      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD,iErr); CHKERRQ(iErr)
       AppCtx%TotalEnergy = AppCtx%ElasticEnergy + AppCtx%ExtForcesWork
       Call PetscLogFlops(flops, iErr)
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
