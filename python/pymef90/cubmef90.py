@@ -350,7 +350,7 @@ def CircleDraw(circle):
 ###
 ### Microstructure constructors
 ###
-def Layer(Body_IDs, BB, Alpha, Theta1, Theta2):
+def Layer(Body_IDs, BB, Alpha, Theta1, Theta2, Xoffset=.5):
   import cubit
   import numpy as np
   ###
@@ -359,7 +359,12 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2):
   ###    Alpha:   lamination angle
   ###    Theta1:  thickness of layer 1
   ###    Theta2:  thickness of layer 2
-  ###    The center of BB always corresponds to the center of a Layer1
+  ###    Xoffset: distance along the x-axis between the center of the bounding box
+  ###             and the first interface l1-l2 if specified, in fraction of Theta1
+  ###             i.e. 0 -> interface l2-l1 at center
+  ###                  1 -> interface l1-l2 at center
+  ###             otherwise, the center of BB corresponds to the center of a Layer1
+  ###             i.e. Xoffset = .5
   ###                                            
   YL = np.sqrt((BB[1]-BB[0])**2+(BB[3]-BB[2])**2)
   XC = (BB[0] + BB[1]) / 2.
@@ -376,14 +381,17 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2):
   n2 = int(np.ceil(l2/Theta))
   LAYER1_IDs = Body_IDs[:]
   LAYER2_IDs = []
+  ###
+  ### offset layers
+  ###
   for i in range(n1,n2):
-    X = XC + i * np.cos( np.radians(Alpha) ) * Theta
+    X = XC + i * np.cos( np.radians(Alpha) ) * Theta + np.cos( np.radians(Alpha) ) * Theta1 * (Xoffset - .5)
     Y = YC + i * np.sin( np.radians(Alpha) ) * Theta
     cubit.cmd('create brick X %f Y %f Z %f' % (Theta1, YL, BB[5]-BB[4]))
     tmp_ID=cubit.get_last_id("volume")
     cubit.cmd('move volume %i X %f Y %f Z %f' % (tmp_ID, X, Y, ZC))
     if not Alpha == 0.:
-      ### cubit doesn;t like rotations will 0 angle...
+      ### cubit doesn't like rotations will 0 angle...
       cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[4]))
       v1_ID=cubit.get_last_id("vertex")
       cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[5]))
@@ -396,7 +404,7 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2):
       LAYER2_IDs.append(l)
   return (LAYER1_IDs, LAYER2_IDs)
 
-def MilledLayer(Body_IDs, BB, Alpha, Theta1, Theta2, secmin):
+def MilledLayer(Body_IDs, BB, Alpha, Theta1, Theta2, secmin, Xoffset=.5):
   import cubit
   import numpy as np
   ###
@@ -406,7 +414,12 @@ def MilledLayer(Body_IDs, BB, Alpha, Theta1, Theta2, secmin):
   ###    Theta1:  thickness of layer 1
   ###    Theta2:  thickness of layer 2
   ###    secmin:  the cross section after machining
-  ###    The first Layer1-Layer2 interface is always at the center of BB
+  ###    Xoffset: distance along the x-axis between the center of the bounding box
+  ###             and the first interface l1-l2 if specified, in fraction of Theta1
+  ###             i.e. 0 -> interface l2-l1 at center
+  ###                  1 -> interface l1-l2 at center
+  ###             otherwise, the center of BB corresponds to the center of a Layer1
+  ###             i.e. Xoffset = .5
   ###                                            
   YL = np.sqrt((BB[1]-BB[0])**2+(BB[3]-BB[2])**2)
   ZL = BB[5] - BB[4]
@@ -423,13 +436,13 @@ def MilledLayer(Body_IDs, BB, Alpha, Theta1, Theta2, secmin):
   n1 = int(np.ceil(l1/Theta))
   n2 = int(np.ceil(l2/Theta))
   for i in range(n1,n2):
-    X = XC + i * np.cos( np.radians(Alpha) ) * Theta
+    X = XC + i * np.cos( np.radians(Alpha) ) * Theta + np.cos( np.radians(Alpha) ) * Theta1 * (Xoffset - .5)
     Y = YC + i * np.sin( np.radians(Alpha) ) * Theta
     cubit.cmd('create brick X %f Y %f Z %f' % (Theta1, YL, ZL))
     tmp_ID=cubit.get_last_id("volume")
     cubit.cmd('move volume %i X %f Y %f Z %f' % (tmp_ID, X, Y, ZL/2.+secmin[1]))
     if not Alpha == 0.:
-      ### cubit doesn;t like rotations will 0 angle...
+      ### cubit doesn't like rotations will 0 angle...
       cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[4]))
       v1_ID=cubit.get_last_id("vertex")
       cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[5]))
