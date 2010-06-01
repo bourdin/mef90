@@ -112,6 +112,7 @@ Program PrepVarFrac
    TestCase(6)%Description = "MIL given by a polar angle (2D)"
    TestCase(7)%Description = "Afine forces: F=P+t*F_0"
    TestCase(8)%Description = "MIL, 2D plane stresses / 3D Sequential Iterated Laminate"
+   TestCase(9)%Description = "Cooling: steady-state propagation of a front"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -491,6 +492,21 @@ Program PrepVarFrac
                   ThetaElem = Theta(i) * ThetaElem
                   Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
                End Do
+            Case(9)
+               Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+                  Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
+                  Do k = 1, Num_DoF
+                     eta = CoordElem((k-1) * MeshTopology%Num_Dim + 2)
+                     If (eta < T(iStep)) Then
+                     ThetaElem(k) = 1-eta/T(iStep)
+                     Else 
+                     ThetaElem(k) = 0
+                     End If
+                  End Do
+                  ThetaElem = Theta(i) * ThetaElem
+                  Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+               End Do
+    
             End Select
             DeAllocate(Felem)
             DeAllocate(Thetaelem)         

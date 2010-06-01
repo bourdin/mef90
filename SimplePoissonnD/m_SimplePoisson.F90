@@ -586,8 +586,8 @@ Contains
             DeAllocate(F)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
-      Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call PetscGlobalSum(MyElasticEnergy, AppCtx%ElasticEnergy, PETSC_COMM_WORLD,iErr); CHKERRQ(iErr)
+      Call PetscGlobalSum(MyExtForcesWork, AppCtx%ExtForcesWork, PETSC_COMM_WORLD,iErr); CHKERRQ(iErr)
       AppCtx%TotalEnergy = AppCtx%ElasticEnergy + AppCtx%ExtForcesWork
       Call PetscLogFlops(flops, iErr)
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
@@ -728,7 +728,7 @@ Contains
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Call FormFunctionAndGradientBlock(iBlk, X_Sec, myfunc, Gradient_Sec, AppCtx)
       End Do Do_iBlk
-      Call PetscGlobalSum(Myfunc, func, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call PetscGlobalSum(Myfunc, func, PETSC_COMM_WORLD,iErr); CHKERRQ(iErr)
 
       Call SectionRealComplete(Gradient_Sec, iErr); CHKERRQ(iErr)
       !!! Scatter values from the Sections back to the Vec
