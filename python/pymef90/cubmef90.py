@@ -463,9 +463,6 @@ def MilledLayer(Body_IDs, BB, Alpha, Theta1, Theta2, secmin, Xoffset=.5):
     cubit.cmd(cmd)
   return (Body_IDs)
 
-#def Crystallize(Body_ID, Grain_IDs):
-#  
-#  return Grains
 ### 
 ### Various geometry constructors
 ###
@@ -510,6 +507,92 @@ def DCBCreate(LX, LY1, LY, LZ, EPSCRACK, LCRACK):
   cubit.cmd("sweep surface %i direction Z distance %f" % (s_ID, LZ))
   DCB_3D=[cubit.get_last_id("volume")]
   return DCB_3D
+  
+def CylCrackCreate(lx, ly, lz, thetacrack):
+   import cubit
+   import numpy as np
+   import pymef90
+   ###
+   ### Create Main body
+   ###
+   cubit.cmd ("Create cylinder height %f major radius %f minor radius %f" % (lz, lx, ly)) 
+   CYL = cubit.get_last_id("volume")
+   ###
+   ### Create wedge
+   ###
+   w_ID=[]
+   cubit.cmd("create vertex X 0 Y 0 Z %f" % (-lz))
+   w_ID.append(cubit.get_last_id("vertex"))
+   X = 1.1 * np.max(lx, ly) * np.cos(np.radians(thetacrack/2.))
+   Y = 1.1 * np.max(lx, ly) * np.sin(np.radians(thetacrack/2.))
+   cubit.cmd("create vertex X %f Y %f Z %f" % (-X, Y, -lz))
+   w_ID.append(cubit.get_last_id("vertex"))
+   cubit.cmd("create vertex X %f Y %f Z %f" % (-X,  -Y, -lz))
+   w_ID.append(cubit.get_last_id("vertex"))
+   cubit.cmd("create surface vertex %i %i %i" % (w_ID[0], w_ID[1], w_ID[2]))
+   cubit.cmd("sweep surface %i perpendicular distance %f" % (cubit.get_last_id("surface"), 2*lz))
+   WEDGE=cubit.get_last_id("volume")
+   ###
+   ### remove crack
+   ###
+   cubit.cmd("subtract volume %i from volume %i" % (WEDGE, CYL))
+   ###
+   ### Return the ID of the cylinder
+   ###
+   return CYL
+
+def CylCrackCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5, ):
+  import cubit
+  import numpy as np
+  import pymef90
+  ###
+  ### Create Main body
+  ###
+  cubit.cmd ("Create cylinder height %f major radius %f minor radius %f" % (lz, lx, ly)) 
+  CYL = cubit.get_last_id("volume")
+  ###
+  ### Create wedge
+  ###
+  w_ID=[]
+  cubit.cmd("create vertex X %f Y 0 Z %f" % ( (2. * lcrack - 1.) *lx, -lz))
+  #  cubit.cmd("create vertex X 0 Y 0 Z %f" % ( -lz))
+  w_ID.append(cubit.get_last_id("vertex"))
+  X = 1.1 * np.max(lx, ly) * np.cos(np.radians(thetacrack/2.))
+  Y = 1.1 * np.max(lx, ly) * np.sin(np.radians(thetacrack/2.))
+  cubit.cmd("create vertex X %f Y %f Z %f" % (-X, Y, -lz))
+  w_ID.append(cubit.get_last_id("vertex"))
+  cubit.cmd("create vertex X %f Y %f Z %f" % (-X,  -Y, -lz))
+  w_ID.append(cubit.get_last_id("vertex"))
+  cubit.cmd("create surface vertex %i %i %i" % (w_ID[0], w_ID[1], w_ID[2]))
+  cubit.cmd("sweep surface %i perpendicular distance %f" % (cubit.get_last_id("surface"), 2*lz))
+  WEDGE=cubit.get_last_id("volume")
+  ###
+  ### remove crack
+  ###
+  cubit.cmd("subtract volume %i from volume %i" % (WEDGE, CYL))
+  CYL_ID=[]
+  CYL_ID.append(CYL)
+  ###
+  ### create layers
+  ###
+  bb=[-lx, lx, -ly, ly, -2.*lz, 2.*lz]
+  print('CYL_ID, bb, alpha, theta1, theta2', CYL_ID, bb, alpha, theta1, theta2)
+  (LAYER1_3D, LAYER2_3D) = pymef90.Layer(CYL_ID, bb, alpha, theta1, theta2, 0.)
+  ###
+  ### imprint and merge
+  ###
+  cubit.cmd("imprint all")
+  cubit.cmd("merge all")
+  ###
+  ### groups
+  ###
+  pymef90.GroupAddVolList("LAYER1_3D", LAYER1_3D)
+  pymef90.GroupAddVolList("LAYER2_3D", LAYER2_3D)
+  ###
+  ### return LAYER1_3D and LAYER2_3D
+  ###
+  return LAYER1_3D, LAYER2_3D
+  
 
 def GroupAddVolList(groupname, vol_IDs):
   import cubit
