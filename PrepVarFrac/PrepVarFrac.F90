@@ -67,7 +67,7 @@ Program PrepVarFrac
    PetscInt                                     :: BatchUnit=99
    Character(len=MEF90_MXSTRLEN)                :: BatchFileName
    PetscTruth                                   :: EraseBatch
-   PetscReal                                    :: CTheta, CTheta2, STheta2, R, K1, Kappa
+   PetscReal                                    :: CTheta, CTheta2, STheta2, R, Kappa
 
    Call MEF90_Initialize()
    
@@ -240,8 +240,10 @@ Program PrepVarFrac
       !!! Yes, this is retarded, but I can't see how to recover Kappa at a node when
       !!! parsing node sets from full hooke's law...
       If (iCase == 10) Then
-         Call AskReal(Kappa, 'Kappa', BatchUnit, IsBatch)
-         Call AskReal(K1,    'K1', BatchUnit, IsBatch)
+         Call AskReal(E,  'E',  BatchUnit, IsBatch)
+         Call AskReal(nu, 'nu', BatchUnit, IsBatch)
+         Kappa = (3.0-nu)/(1.0+nu)
+         Mu = E / (1.0_Kr + nu) * .5_Kr
       End If
       If (.NOT. IsBatch) Then
          Write(BatchUnit, *)
@@ -613,18 +615,14 @@ Program PrepVarFrac
                   Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
                   R        = sqrt(CoordElem(1)**2 + CoordElem(2)**2)
                   CTheta   = CoordElem(1)/R
-                  If (CoordElem(1) > 0.) Then
-                     Ctheta2 = sqrt((1.0 - CTheta) * .5)
-                  Else
-                     Ctheta2 = -sqrt((1.0 - CTheta) * .5)
-                  End If
+                  Ctheta2 = sqrt((1.0_Kr + CTheta) * .5_Kr)
                   If (CoordElem(2) > 0.) Then
-                     Stheta2 = sqrt((1.0 + CTheta) * .5)
+                     Stheta2 = sqrt((1.0_Kr - CTheta) * .5_Kr)
                   Else
-                     Stheta2 = -sqrt((1.0 + CTheta) * .5)
+                     Stheta2 = -sqrt((1.0_Kr - CTheta) * .5_Kr)
                   End If
-                  Uelem(1) = T(iStep) * sqrt(R / PETSC_PI * .5) * STheta2 * (Kappa - CTheta)
-                  Uelem(2) = T(iStep) * sqrt(R / PETSC_PI * .5) * CTheta2 * (Kappa - CTheta)
+                  Uelem(1) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (Kappa - CTheta) * U(i)%X
+                  Uelem(2) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa - CTheta) * U(i)%Y
                   Uelem(3) = 0.
                   Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
                   Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
