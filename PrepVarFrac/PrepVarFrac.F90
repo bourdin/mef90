@@ -67,6 +67,7 @@ Program PrepVarFrac
    PetscInt                                     :: BatchUnit=99
    Character(len=MEF90_MXSTRLEN)                :: BatchFileName
    PetscTruth                                   :: EraseBatch
+   PetscReal                                    :: CTheta, CTheta2, STheta2, R, K1, Kappa
 
    Call MEF90_Initialize()
    
@@ -234,6 +235,13 @@ Program PrepVarFrac
 
       If (iCase == 6) Then
          Call AskReal(Beta, 'polar angle', BatchUnit, IsBatch)
+      End If
+      
+      !!! Yes, this is retarded, but I can't see how to recover Kappa at a node when
+      !!! parsing node sets from full hooke's law...
+      If (iCase == 10) Then
+         Call AskReal(Kappa, 'Kappa', BatchUnit, IsBatch)
+         Call AskReal(K1,    'K1', BatchUnit, IsBatch)
       End If
       If (.NOT. IsBatch) Then
          Write(BatchUnit, *)
@@ -600,6 +608,27 @@ Program PrepVarFrac
                   Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
                End Do
             Case(10)
+               !!! this will break when we do P2 elements, just like everything else here...
+               Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+                  Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+                  R        = sqrt(CoordElem(1)**2 + CoordElem(2)**2)
+                  CTheta   = CoordElem(1)/R
+                  If (CoordElem(1) > 0.) Then
+                     Ctheta2 = sqrt((1.0 - CTheta) * .5)
+                  Else
+                     Ctheta2 = -sqrt((1.0 - CTheta) * .5)
+                  End If
+                  If (CoordElem(2) > 0.) Then
+                     Stheta2 = sqrt((1.0 + CTheta) * .5)
+                  Else
+                     Stheta2 = -sqrt((1.0 + CTheta) * .5)
+                  End If
+                  Uelem(1) = T(iStep) * sqrt(R / PETSC_PI * .5) * STheta2 * (Kappa - CTheta)
+                  Uelem(2) = T(iStep) * sqrt(R / PETSC_PI * .5) * CTheta2 * (Kappa - CTheta)
+                  Uelem(3) = 0.
+                  Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                  Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+               End Do   
             End Select
          End Do
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
