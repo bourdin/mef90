@@ -99,7 +99,7 @@ Program PrepVarFrac
       Rewind(BatchUnit)
    End If
    
-   NumTestCase = 8
+   NumTestCase = 10
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -113,6 +113,7 @@ Program PrepVarFrac
    TestCase(7)%Description = "Afine forces: F=P+t*F_0"
    TestCase(8)%Description = "MIL, 2D plane stresses / 3D Sequential Iterated Laminate"
    TestCase(9)%Description = "Cooling: steady-state propagation of a front"
+   TestCase(10)%Description = "Mode-I loading, using asymptotic form of displacement"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -214,7 +215,7 @@ Program PrepVarFrac
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4,5,6,7,8)! MIL, geothermal PoC
+   Case (1,2,3,4,5,6,7,8,9,10)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -568,7 +569,7 @@ Program PrepVarFrac
             i = MeshTopology%Node_Set(iloc)%ID
             
             Select Case (iCase)
-            Case(1,2,3,4,7,8)
+            Case(1,2,3,4,7,8,9)
                Uelem(1) = T(iStep) * U(i)%X
                Uelem(2) = T(iStep) * U(i)%Y
                Uelem(3) = T(iStep) * U(i)%Z
@@ -598,6 +599,7 @@ Program PrepVarFrac
                   Call SectionRealUpdateClosure(USec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
                   Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
                End Do
+            Case(10)
             End Select
          End Do
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
