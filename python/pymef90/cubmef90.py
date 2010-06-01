@@ -377,8 +377,8 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2, Xoffset=.5):
   else:
     l1 = (BB[0]-XC) * np.cos(np.radians(Alpha)) + (BB[3]-YC) * np.sin(np.radians(Alpha))
     l2 = (BB[1]-XC) * np.cos(np.radians(Alpha)) + (BB[2]-YC) * np.sin(np.radians(Alpha))    
-  n1 = int(np.ceil(l1/Theta))
-  n2 = int(np.ceil(l2/Theta))
+  n1 = int(np.ceil(l1/Theta))-1
+  n2 = int(np.ceil(l2/Theta))+1
   LAYER1_IDs = Body_IDs[:]
   LAYER2_IDs = []
   ###
