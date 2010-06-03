@@ -639,9 +639,6 @@ def CylCrackCreateLayeredCoin(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, 
   ###
   cubit.cmd("imprint all")
   cubit.cmd("merge all")
-  ### for some reason imprinting and merging once is not enough...
-  cubit.cmd("imprint all")
-  cubit.cmd("merge all")
   ###
   ### groups
   ###
