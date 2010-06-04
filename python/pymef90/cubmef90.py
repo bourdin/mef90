@@ -385,12 +385,11 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2, Xoffset=.5):
   ### offset layers
   ###
   for i in range(n1,n2):
-    X = XC + i * np.cos( np.radians(Alpha) ) * Theta + Theta1 * (Xoffset - .5)
+    X = XC + i * np.cos( np.radians(Alpha) ) * Theta 
     Y = YC + i * np.sin( np.radians(Alpha) ) * Theta 
-    cubit.cmd("create vertex X %f Y %f Z %f" % (X, Y, ZC))
     cubit.cmd('create brick X %f Y %f Z %f' % (Theta1, YL, BB[5]-BB[4]))
     tmp_ID=cubit.get_last_id("volume")
-    cubit.cmd('move volume %i X %f Y %f Z %f' % (tmp_ID, X, Y, ZC))
+    cubit.cmd('move volume %i X %f Y %f Z %f' % (tmp_ID, X + Theta1 * (.5 - Xoffset), Y, ZC))
     if not Alpha == 0.:
       ### cubit doesn't like rotations will 0 angle...
       cubit.cmd('create vertex X %f Y %f Z %f' % (X, Y, BB[4]))
