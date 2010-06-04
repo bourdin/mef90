@@ -385,8 +385,9 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2, Xoffset=.5):
   ### offset layers
   ###
   for i in range(n1,n2):
-    X = XC + i * np.cos( np.radians(Alpha) ) * Theta + np.cos( np.radians(Alpha) ) * Theta1 * (Xoffset - .5)
-    Y = YC + i * np.sin( np.radians(Alpha) ) * Theta
+    X = XC + i * np.cos( np.radians(Alpha) ) * Theta + Theta1 * (Xoffset - .5)
+    Y = YC + i * np.sin( np.radians(Alpha) ) * Theta 
+    cubit.cmd("create vertex X %f Y %f Z %f" % (X, Y, ZC))
     cubit.cmd('create brick X %f Y %f Z %f' % (Theta1, YL, BB[5]-BB[4]))
     tmp_ID=cubit.get_last_id("volume")
     cubit.cmd('move volume %i X %f Y %f Z %f' % (tmp_ID, X, Y, ZC))
@@ -436,7 +437,7 @@ def MilledLayer(Body_IDs, BB, Alpha, Theta1, Theta2, secmin, Xoffset=.5):
   n1 = int(np.ceil(l1/Theta))
   n2 = int(np.ceil(l2/Theta))
   for i in range(n1,n2):
-    X = XC + i * np.cos( np.radians(Alpha) ) * Theta + np.cos( np.radians(Alpha) ) * Theta1 * (Xoffset - .5)
+    X = XC + i * np.cos( np.radians(Alpha) ) * Theta + Theta1 * (Xoffset - .5)
     Y = YC + i * np.sin( np.radians(Alpha) ) * Theta
     cubit.cmd('create brick X %f Y %f Z %f' % (Theta1, YL, ZL))
     tmp_ID=cubit.get_last_id("volume")
@@ -593,7 +594,7 @@ def CylCrackCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=
   ###
   return LAYER1_3D, LAYER2_3D
   
-def CylCrackCreateLayeredCoin(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5, ):
+def CylCrackCreateLayeredCoin(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5):
   import cubit
   import numpy as np
   import pymef90
