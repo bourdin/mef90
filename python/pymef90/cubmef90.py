@@ -593,6 +593,62 @@ def CylCrackCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=
   ###
   return LAYER1_3D, LAYER2_3D
   
+def CylCrackCreateLayeredCoin(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5, ):
+  import cubit
+  import numpy as np
+  import pymef90
+  ###
+  ### Create Main body
+  ###
+  OUTSIDE_3D=[]
+  cubit.cmd ("Create cylinder height %f radius %f" % (lz, R)) 
+  OUTSIDE_3D.append(cubit.get_last_id("volume"))
+  ###
+  ### Create wedge
+  ###
+  w_ID=[]
+  cubit.cmd("create vertex X %f Y 0 Z %f" % ( (2. * lcrack - 1.) * R, -lz))
+  w_ID.append(cubit.get_last_id("vertex"))
+  X = 1.1 * R * np.cos(np.radians(thetacrack/2.))
+  Y = 1.1 * R * np.sin(np.radians(thetacrack/2.))
+  cubit.cmd("create vertex X %f Y %f Z %f" % (-X, Y, -lz))
+  w_ID.append(cubit.get_last_id("vertex"))
+  cubit.cmd("create vertex X %f Y %f Z %f" % (-X,  -Y, -lz))
+  w_ID.append(cubit.get_last_id("vertex"))
+  cubit.cmd("create surface vertex %i %i %i" % (w_ID[0], w_ID[1], w_ID[2]))
+  cubit.cmd("sweep surface %i perpendicular distance %f" % (cubit.get_last_id("surface"), 2*lz))
+  WEDGE=cubit.get_last_id("volume")
+  ###
+  ### remove crack
+  ###
+  cubit.cmd("subtract volume %i from volume %i" % (WEDGE, OUTSIDE_3D[0]))
+  ###
+  ### Create center coin
+  ###
+  cubit.cmd ("Create cylinder height %f major radius %f minor radius %f" % (lz, lx, ly)) 
+  CYL = cubit.get_last_id("volume")
+  (OUTSIDE_3D, CYL_ID) = pymef90.WebcutTool(OUTSIDE_3D, CYL)
+  ###
+  ### create layers
+  ###
+  bb=[-lx, lx, -ly, ly, -2.*lz, 2.*lz]
+  print('CYL_ID, bb, alpha, theta1, theta2', CYL_ID, bb, alpha, theta1, theta2)
+  (LAYER1_3D, LAYER2_3D) = pymef90.Layer(CYL_ID, bb, alpha, theta1, theta2, 0.)
+  ###
+  ### imprint and merge
+  ###
+  cubit.cmd("imprint all")
+  cubit.cmd("merge all")
+  ###
+  ### groups
+  ###
+  pymef90.GroupAddVolList("LAYER1_3D",  LAYER1_3D)
+  pymef90.GroupAddVolList("LAYER2_3D",  LAYER2_3D)
+  pymef90.GroupAddVolList("OUTSIDE_3D", OUTSIDE_3D)
+  ###
+  ### return LAYER1_3D and LAYER2_3D
+  ###
+  return OUTSIDE_3D, LAYER1_3D, LAYER2_3D
 
 def GroupAddVolList(groupname, vol_IDs):
   import cubit
