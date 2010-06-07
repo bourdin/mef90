@@ -100,7 +100,7 @@ Program PrepVarFrac
       Rewind(BatchUnit)
    End If
    
-   NumTestCase = 10
+   NumTestCase = 11
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -114,7 +114,8 @@ Program PrepVarFrac
    TestCase(7)%Description = "Afine forces: F=P+t*F_0"
    TestCase(8)%Description = "MIL, 2D plane stresses / 3D Sequential Iterated Laminate"
    TestCase(9)%Description = "Cooling: steady-state propagation of a front"
-   TestCase(10)%Description = "Mode-I loading, using asymptotic form of displacement"
+   TestCase(10)%Description = "Mode-I loading, using asymptotic form of displacement (MIL)"
+   TestCase(11)%Description = "Mode-I loading, using asymptotic form of displacement (Crack tip at (t,0,0))"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -216,7 +217,7 @@ Program PrepVarFrac
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4,5,6,7,8,9,10)! MIL, geothermal PoC
+   Case (1,2,3,4,5,6,7,8,9,10, 11)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -242,6 +243,13 @@ Program PrepVarFrac
       If (iCase == 10) Then
          Call AskReal(E,  'E effective (for displacement field)',  BatchUnit, IsBatch)
          Call AskReal(nu, 'nu effective (for displacement field)', BatchUnit, IsBatch)
+         Kappa = (3.0-nu)/(1.0+nu)
+         Mu = E / (1.0_Kr + nu) * .5_Kr
+      End If
+      If (iCase == 11) Then
+         Call AskReal(E,  'E effective (for displacement field)',  BatchUnit, IsBatch)
+         Call AskReal(nu, 'nu effective (for displacement field)', BatchUnit, IsBatch)
+         Call AskReal(Beta, 'Displacement magnitude', Batchunit, IsBatch)
          Kappa = (3.0-nu)/(1.0+nu)
          Mu = E / (1.0_Kr + nu) * .5_Kr
       End If
@@ -623,6 +631,26 @@ Program PrepVarFrac
                   End If
                   Uelem(1) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (Kappa - CTheta) * U(i)%X
                   Uelem(2) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa - CTheta) * U(i)%Y
+                  Uelem(3) = 0.
+                  Velem = V(i)
+                  Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                  Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+                  Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+               End Do   
+            Case(11)
+               !!! this will break when we do P2 elements, just like everything else here...
+               Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+                  Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+                  R        = sqrt((CoordElem(1)-T(iStep))**2 + CoordElem(2)**2)
+                  CTheta   = (CoordElem(1)-T(iStep))/R
+                  Ctheta2 = sqrt((1.0_Kr + CTheta) * .5_Kr)
+                  If (CoordElem(2) > 0.) Then
+                     Stheta2 = sqrt((1.0_Kr - CTheta) * .5_Kr)
+                  Else
+                     Stheta2 = -sqrt((1.0_Kr - CTheta) * .5_Kr)
+                  End If
+                  Uelem(1) = Beta * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (Kappa - CTheta) * U(i)%X
+                  Uelem(2) = Beta * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa - CTheta) * U(i)%Y
                   Uelem(3) = 0.
                   Velem = V(i)
                   Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
