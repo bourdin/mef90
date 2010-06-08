@@ -171,7 +171,7 @@ Contains
          Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
          If (AppCtx%AppParam%verbose > 0) Then
             !Call PetscGlobalSum(MyIrrevEQ_Counter, IrrevEQ_Counter, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-            Call MPI_AllReduce(MyIrrevEQ_Counter, IrrevEQ_Counter, 1, MPI_Int, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+            Call MPI_AllReduce(MyIrrevEQ_Counter, IrrevEQ_Counter, 1, MPI_INTEGER, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
             Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      

@@ -453,7 +453,7 @@ Contains
          Call PetscLogStageRegister("Mat Assembly V",   AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
          Call PetscLogStageRegister("RHS Assembly V",   AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
       End If
-      Call PetscLogStageRegister("V-Step",      AppCtx%LogInfo%KSPSolveV_Stage,        iErr)
+      Call PetscLogStageRegister("V-Step",      AppCtx%LogInfo%VStep_Stage,        iErr)
       Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
       Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
    End Subroutine InitLog
