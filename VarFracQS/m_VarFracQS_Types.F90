@@ -35,10 +35,10 @@ Module m_VarFracQS_Types3D
       PetscLogStage               :: MeshDistribute_Stage
       PetscLogStage               :: MatAssemblyU_Stage
       PetscLogStage               :: RHSAssemblyU_Stage
-      PetscLogStage               :: KSPSolveU_Stage
+      PetscLogStage               :: UStep_Stage
       PetscLogStage               :: MatAssemblyV_Stage
       PetscLogStage               :: RHSAssemblyV_Stage
-      PetscLogStage               :: KSPSolveV_Stage
+      PetscLogStage               :: VStep_Stage
       PetscLogStage               :: PostProc_Stage
       
       PetscLogEvent               :: MatAssemblyLocalU_Event

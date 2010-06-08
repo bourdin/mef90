@@ -445,7 +445,7 @@ Contains
          Call PetscLogStageRegister("Mat Assembly U",   AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
          Call PetscLogStageRegister("RHS Assembly U",   AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
       End If      
-      Call PetscLogStageRegister("KSP Solve U",      AppCtx%LogInfo%KSPSolveU_Stage,        iErr)
+      Call PetscLogStageRegister("U-Step",      AppCtx%LogInfo%UStep_Stage,        iErr)
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
          Call PetscLogStageRegister("Hessian V",  AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
          Call PetscLogStageRegister("Obj+Grad V", AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
@@ -453,7 +453,7 @@ Contains
          Call PetscLogStageRegister("Mat Assembly V",   AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
          Call PetscLogStageRegister("RHS Assembly V",   AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
       End If
-      Call PetscLogStageRegister("KSP Solve V",      AppCtx%LogInfo%KSPSolveV_Stage,        iErr)
+      Call PetscLogStageRegister("V-Step",      AppCtx%LogInfo%KSPSolveV_Stage,        iErr)
       Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
       Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
    End Subroutine InitLog

@@ -1151,7 +1151,7 @@ Contains
       PetscReal                                    :: TaoResidual
 #endif
 
-      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolveU_Stage, iErr); CHKERRQ(iErr)
+      Call PetscLogStagePush(AppCtx%LogInfo%UStep_Stage, iErr); CHKERRQ(iErr)
   
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
 #if defined WITH_TAO
