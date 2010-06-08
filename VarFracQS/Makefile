@@ -8,7 +8,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
 M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 
-all: VarFracQS${DIM}
+all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
 
 #include ${PETSC_DIR}/conf/rules
 #include ${PETSC_DIR}/conf/variables
