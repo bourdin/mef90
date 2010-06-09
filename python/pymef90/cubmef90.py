@@ -140,12 +140,10 @@ def SitesToStr(sitecoords):
     sitestr += '\n '
   return(sitestr)
 
-def SitesPlot(sites, pattern=None):
+def SitesPlot(sites, pattern='ro'):
   import matplotlib.pyplot as plt
   import numpy as np
 
-  if not pattern:
-    pattern= 'ro'
   for site in sites:
     plt.plot(site[0], site[1], pattern)
 
@@ -319,13 +317,13 @@ def SitesSmootherSphere(sites, vertices, cells, sphere):
     for i in range(sites.shape[0]):
       cell = cells[i]
       if 0 not in cell:
-        R=np.sqrt(sum(pow(sites[i,:]-sphere[1:],2)))
-        if R<=sphere[0]:
+        R=np.sqrt(sum(pow(sites[i,:]-sphere[:-1],2)))
+        if R<=sphere[2]:
           for j in range(sites.shape[1]):
             newsites[i,j] = sum(vertices[cell,j]) / len(cell)
-          R=np.sqrt(sum(pow(sites[i,:]-sphere[1:],2)))
-          if R>=sphere[0]:
-            newsites[i,:] = sphere[1:] + (newsites[i,:]-sphere[1:])/R * sphere[0]
+          R=np.sqrt(sum(pow(newsites[i,:]-sphere[:-1],2)))
+          if R>=sphere[2]:
+            newsites[i,:] = sphere[:-1] + (newsites[i,:]-sphere[:-1]) / R * sphere[2]
     return newsites
 
 def BoxDraw(box):
@@ -342,7 +340,7 @@ def CircleDraw(circle):
   from matplotlib.patches import Circle
 
   ax=matplotlib.pyplot.subplot(111, aspect='equal')
-  circ = Circle((circle[1], circle[2]), circle[0])
+  circ = Circle((circle[0], circle[1]), circle[2])
   circ.set_fill(False)
   circ.set_linewidth(2)
   ax.add_patch(circ)
