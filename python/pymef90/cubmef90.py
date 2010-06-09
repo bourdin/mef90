@@ -87,10 +87,10 @@ def SitesGenCircle2D(N, circle, BB):
   import numpy as np
 
   sites=np.empty([N+4,2])
-  R = circle[0]*(np.random.power(2, size=N))
+  R = circle[2]*(np.random.power(2, size=N))
   Theta = np.random.uniform(0, 2*np.pi, N)
-  sites[:N,0]  = circle[1]+R*np.cos(Theta)
-  sites[:N,1]  = circle[2]+R*np.sin(Theta)
+  sites[:N,0]  = circle[0]+R*np.cos(Theta)
+  sites[:N,1]  = circle[1]+R*np.sin(Theta)
   sites[N,:]   = np.array([BB[0], BB[2]])
   sites[N+1,:] = np.array([BB[1], BB[2]])
   sites[N+2,:] = np.array([BB[0], BB[3]])
@@ -508,6 +508,13 @@ def DCBCreate(LX, LY1, LY, LZ, EPSCRACK, LCRACK):
   DCB_3D=[cubit.get_last_id("volume")]
   return DCB_3D
   
+def GroupAddVolList(groupname, vol_IDs):
+  import cubit
+  cmd='group "%s" add volume ' % groupname
+  for vol in vol_IDs:
+    cmd += ' %i' % vol
+  cubit.cmd(cmd)
+    
 def CylCrackCreate(lx, ly, lz, thetacrack):
    import cubit
    import numpy as np
@@ -627,7 +634,7 @@ def CylCrackCreateLayeredCoin(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, 
   ###
   cubit.cmd ("Create cylinder height %f major radius %f minor radius %f" % (lz, lx, ly)) 
   CYL = cubit.get_last_id("volume")
-  (OUTSIDE_3D, CYL_ID) = pymef90.WebcutTool(OUTSIDE_3D, CYL)
+  (OUTSIDE_3D, CYL_ID) = pymef90.WebcutTool(OUTSIDE_3D, CYL, delete=True)
   ###
   ### create layers
   ###
@@ -650,9 +657,127 @@ def CylCrackCreateLayeredCoin(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, 
   ###
   return OUTSIDE_3D, LAYER1_3D, LAYER2_3D
 
-def GroupAddVolList(groupname, vol_IDs):
+  ###
+  ### Generate the pacman geometry
+  ###
+  (OUTSIDE_3D, CYL_3D) = pymef90.CylCrackCreateCoin(R, r, r, lz, thetac, lc)
+  ###
+  ### Create grains geometry
+  ###
+  circle = [0., 0., r]
+  BB = [-R, R, -R, R]
+  sites=pymef90.SitesGenCircle2D(ngrains, circle, BB)
+  (vertices, cells) = pymef90.VoronoiGen(sites)
+  realcells = pymef90.VoronoiRemoveInfiniteCells(cells)
+  newsites=pymef90.SitesSmootherSphere(sites, vertices, cells, circle)
+  (newvertices, newcells) = pymef90.VoronoiGen(newsites)
+  newrealcells = pymef90.VoronoiRemoveInfiniteCells(newcells)
+  ###
+  if debug:
+    print('\nregularized sites:')
+    for site in newsites:
+      print(site)
+    print('\ncells:')
+    for cell in newrealcells:
+      print(cell)
+    print('\nvertices:')
+    for vertex in newvertices:
+      print(vertex)
+  ###    
+  ### Create grains bodies
+  ### 
+  Grain_3D=[]
+  for i in range(ngrains):
+    tmpgrain=pymef90.GrainCreate(newvertices[newrealcells[i],:], lz)
+    Grain_3D.append([])
+    (CYL_3D, Grain_3D[i]) = pymef90.WebcutTool(CYL_3D, tmpgrain, delete=True)
+    pymef90.GroupAddVolList("Grain%i"%i, Grain_3D[i])
+
+def CylCrackCreateCoin(R, lx, ly, lz, thetacrack, lcrack=.5):
   import cubit
-  cmd='group "%s" add volume ' % groupname
-  for vol in vol_IDs:
-    cmd += ' %i' % vol
-  cubit.cmd(cmd)
+  import numpy as np
+  import pymef90
+  ###
+  ### Create Main body
+  ###
+  OUTSIDE_3D=[]
+  cubit.cmd ("Create cylinder height %f radius %f" % (lz, R)) 
+  OUTSIDE_3D.append(cubit.get_last_id("volume"))
+  ###
+  ### Create wedge
+  ###
+  w_ID=[]
+  cubit.cmd("create vertex X %f Y 0 Z %f" % ( (2. * lcrack - 1.) * R, -lz))
+  w_ID.append(cubit.get_last_id("vertex"))
+  X = 1.1 * R * np.cos(np.radians(thetacrack/2.))
+  Y = 1.1 * R * np.sin(np.radians(thetacrack/2.))
+  cubit.cmd("create vertex X %f Y %f Z %f" % (-X, Y, -lz))
+  w_ID.append(cubit.get_last_id("vertex"))
+  cubit.cmd("create vertex X %f Y %f Z %f" % (-X,  -Y, -lz))
+  w_ID.append(cubit.get_last_id("vertex"))
+  cubit.cmd("create surface vertex %i %i %i" % (w_ID[0], w_ID[1], w_ID[2]))
+  cubit.cmd("sweep surface %i perpendicular distance %f" % (cubit.get_last_id("surface"), 2*lz))
+  WEDGE=cubit.get_last_id("volume")
+  ###
+  ### remove crack
+  ###
+  cubit.cmd("subtract volume %i from volume %i" % (WEDGE, OUTSIDE_3D[0]))
+  ###
+  ### Create center coin
+  ###
+  cubit.cmd ("Create cylinder height %f major radius %f minor radius %f" % (lz, lx, ly)) 
+  CYL = cubit.get_last_id("volume")
+  (OUTSIDE_3D, CYL_3D) = pymef90.WebcutTool(OUTSIDE_3D, CYL, delete=True)
+  ###
+  ### create layers
+  ###
+  cubit.cmd("imprint all")
+  cubit.cmd("merge all")
+  ###
+  ### groups
+  ###
+  pymef90.GroupAddVolList("CYL_3D",  CYL_3D)
+  pymef90.GroupAddVolList("OUTSIDE_3D", OUTSIDE_3D)
+  ###
+  ### return LAYER1_3D and LAYER2_3D
+  ###
+  return OUTSIDE_3D, CYL_3D
+  
+def CylCrackCreateCrystalCoin(R, r, lz, thetac, lc, ngrains, debug=False):
+  ###
+  ### create initial pacman
+  ###
+  (OUTSIDE_3D, CYL_3D) = CylCrackCreateCoin(R, r, r, lz, thetac, lc)
+  ###
+  ### Create grains geometry
+  ###
+  circle = [0., 0., r]
+  BB = [-R, R, -R, R]
+  sites=SitesGenCircle2D(ngrains, circle, BB)
+  (vertices, cells) = VoronoiGen(sites)
+  realcells = VoronoiRemoveInfiniteCells(cells)
+  newsites=SitesSmootherSphere(sites, vertices, cells, circle)
+  (newvertices, newcells) = VoronoiGen(newsites)
+  newrealcells = VoronoiRemoveInfiniteCells(newcells)
+  ###
+  if debug:
+    print('\nregularized sites:')
+    for site in newsites:
+      print(site)
+    print('\ncells:')
+    for cell in newrealcells:
+      print(cell)
+    print('\nvertices:')
+    for vertex in newvertices:
+      print(vertex)
+  ###    
+  ### Create grains bodies
+  ### 
+  GRAINS_3D=[]
+  for i in range(ngrains):
+    tmpgrain=GrainCreate(newvertices[newrealcells[i],:], lz)
+    GRAINS_3D.append([])
+    (CYL_3D, GRAINS_3D[i]) = WebcutTool(CYL_3D, tmpgrain, delete=True)
+    GroupAddVolList("Grain%i"%i, GRAINS_3D[i])
+  return OUTSIDE_3D, GRAINS_3D
+
