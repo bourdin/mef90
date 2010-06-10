@@ -779,3 +779,110 @@ def CylCrackCreateCrystalCoin(R, r, lz, thetac, lc, ngrains, debug=False):
     GroupAddVolList("Grain%i"%i, GRAINS_3D[i])
   return OUTSIDE_3D, GRAINS_3D
 
+def CylCrackCreateCrystalCoinNG(R, r, lz, thetac, lc, ngrains, debug=False):
+  import cubit
+  ###
+  ### create initial pacman
+  ###
+  (OUTSIDE_3D, CYL_3D) = CylCrackCreateCoin(R, r, r, lz, thetac, lc)
+  ###
+  ### Create grains geometry
+  ###
+  circle = [0., 0., r]
+  BB = [-R, R, -R, R]
+  sites=SitesGenCircle2D(ngrains, circle, BB)
+  (vertices, cells) = VoronoiGen(sites)
+  realcells = VoronoiRemoveInfiniteCells(cells)
+  newsites=SitesSmootherSphere(sites, vertices, cells, circle)
+  (newvertices, newcells) = VoronoiGen(newsites)
+  newrealcells = VoronoiRemoveInfiniteCells(newcells)
+  ###
+  if debug:
+    print('\nregularized sites:')
+    for site in newsites:
+      print(site)
+    print('\ncells:')
+    for cell in newrealcells:
+      print(cell)
+    print('\nvertices:')
+    for vertex in newvertices:
+      print(vertex)
+  ###
+  ### chop grains
+  ###
+  GRAINS_3D=[]
+  numgrains=0
+  for i in range(len(newrealcells)):
+    tmpgrain = GrainCreate(newvertices[newrealcells[i],:], lz)
+    cubit.cmd("volume %i copy" % CYL_3D[0])
+    tmpBOX = cubit.get_last_id("volume")
+    cubit.cmd("intersect %i %i keep" % (tmpBOX, tmpgrain))
+    offset = cubit.get_last_id("volume")
+    if offset > tmpBOX:
+      GRAINS_3D.append([])
+      for j in range(tmpBOX, offset):
+        GRAINS_3D[numgrains].append(j+1)
+      cubit.cmd("delete volume %i %i" % (tmpgrain, tmpBOX))
+      GroupAddVolList("Grain%i"%(numgrains+1), GRAINS_3D[numgrains])
+      numgrains += 1
+  cubit.cmd("delete volume %i" % CYL_3D[0])
+  return OUTSIDE_3D, GRAINS_3D
+
+def BoxCreateCrystal(l, ngrains):
+  import cubit
+  cubit.cmd("create brick X %f" % l)
+  BOX_3D=[]
+  BOX_3D.append(cubit.get_last_id("volume"))
+  ###
+  BB = [-2*l, 2*l, -2*l, 2*l]
+  rect=[-l/2., l/2., -l/2., l/2.]
+  sites=SitesGenRect2D(ngrains, rect, BB)
+  (vertices, cells) = VoronoiGen(sites)
+  realcells = VoronoiRemoveInfiniteCells(cells)
+  newsites=SitesSmootherBox(sites, vertices, cells, rect)
+  (newvertices, newcells) = VoronoiGen(newsites)
+  newrealcells = VoronoiRemoveInfiniteCells(newcells)
+  ###
+  ### chop grains
+  ###
+  GRAINS_3D=[]
+  for i in range(ngrains):
+    tmpgrain=GrainCreate(newvertices[newrealcells[i],:], l)
+    GRAINS_3D.append([])
+    (BOX_3D, GRAINS_3D[i]) = WebcutTool(BOX_3D, tmpgrain, delete=True)
+    GroupAddVolList("Grain%i"%(i+1), GRAINS_3D[i])
+  return GRAINS_3D
+
+def BoxCreateCrystalNG(l, ngrains):
+  import cubit
+  cubit.cmd("create brick X %f" % l)
+  BOX_3D=cubit.get_last_id("volume")
+  ###
+  BB = [-2*l, 2*l, -2*l, 2*l]
+  rect=[-l/2., l/2., -l/2., l/2.]
+  sites=SitesGenRect2D(ngrains, rect, BB)
+  (vertices, cells) = VoronoiGen(sites)
+  realcells = VoronoiRemoveInfiniteCells(cells)
+  newsites=SitesSmootherBox(sites, vertices, cells, rect)
+  (newvertices, newcells) = VoronoiGen(newsites)
+  newrealcells = VoronoiRemoveInfiniteCells(newcells)
+  ###
+  ### chop grains
+  ###
+  GRAINS_3D=[]
+  numgrains=0
+  for i in range(len(newrealcells)):
+    tmpgrain = GrainCreate(newvertices[newrealcells[i],:], l)
+    cubit.cmd("volume %i copy" % BOX_3D)
+    tmpBOX = cubit.get_last_id("volume")
+    cubit.cmd("intersect %i %i keep" % (tmpBOX, tmpgrain))
+    offset = cubit.get_last_id("volume")
+    if offset > tmpBOX:
+      GRAINS_3D.append([])
+      for j in range(tmpBOX, offset):
+        GRAINS_3D[numgrains].append(j+1)
+      cubit.cmd("delete volume %i %i" % (tmpgrain, tmpBOX))
+      GroupAddVolList("Grain%i"%(numgrains+1), GRAINS_3D[numgrains])
+      numgrains += 1
+  cubit.cmd("delete volume %i" % BOX_3D)
+  return GRAINS_3D
