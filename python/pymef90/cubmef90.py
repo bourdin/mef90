@@ -816,7 +816,7 @@ def CylCrackCreateCrystalCoinNG(R, r, lz, thetac, lc, ngrains, debug=False):
     tmpgrain = GrainCreate(newvertices[newrealcells[i],:], lz)
     cubit.cmd("volume %i copy" % CYL_3D[0])
     tmpBOX = cubit.get_last_id("volume")
-    cubit.cmd("intersect %i %i keep" % (tmpBOX, tmpgrain))
+    cubit.cmd("intersect volume %i %i keep" % (tmpBOX, tmpgrain))
     offset = cubit.get_last_id("volume")
     if offset > tmpBOX:
       GRAINS_3D.append([])
@@ -875,7 +875,7 @@ def BoxCreateCrystalNG(l, ngrains):
     tmpgrain = GrainCreate(newvertices[newrealcells[i],:], l)
     cubit.cmd("volume %i copy" % BOX_3D)
     tmpBOX = cubit.get_last_id("volume")
-    cubit.cmd("intersect %i %i keep" % (tmpBOX, tmpgrain))
+    cubit.cmd("intersect volume %i %i keep" % (tmpBOX, tmpgrain))
     offset = cubit.get_last_id("volume")
     if offset > tmpBOX:
       GRAINS_3D.append([])
