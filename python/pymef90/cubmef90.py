@@ -66,12 +66,11 @@ def IsInBox(X, box):
       result=False
   return result
 
-
 def SitesGenRect2D(N, rect, BB):
 ### box is given in the form xmin, xmax, ymin, ymax
 ### BB is given in the form xmin. xmax, ymin, ymax
   import numpy as np
-
+  
   sites=np.empty([N+4,2])
   sites[:N,0]  = np.random.uniform(rect[0], rect[1], N)
   sites[:N,1]  = np.random.uniform(rect[2], rect[3], N)
@@ -85,7 +84,7 @@ def SitesGenCircle2D(N, circle, BB):
 ### circle is given in the form xc, yc, R
 ### BB is given in the form xmin, xmax, ymin, ymax
   import numpy as np
-
+  
   sites=np.empty([N+4,2])
   R = circle[2]*(np.random.power(2, size=N))
   Theta = np.random.uniform(0, 2*np.pi, N)
@@ -99,19 +98,19 @@ def SitesGenCircle2D(N, circle, BB):
 
 def SitesRead(filename):
   import numpy as np
-
+  
   inputfile=open(filename, 'r')
   ### read file header
   buffer=inputfile.readline()
   numsites=int(buffer.split()[3])
   numdim=int(buffer.split()[0])
-
+  
   ### Throw away line 2
   buffer=inputfile.readline()
-
+  
   coords=np.empty([numsites, numdim])
   ### Read coordinates
-
+  
   for i in range(numsites):
     buffer=inputfile.readline()
     coords[i,:] = buffer.split()
@@ -120,7 +119,7 @@ def SitesRead(filename):
 
 def SitesWrite(filename, sitecoords):
   import numpy as np
-
+  
   sitefile=open(filename, 'w')
   sitefile.write('%i  rbox D%i %i\n' % (sitecoords.shape[0], sitecoords.shape[0], sitecoords.shape[1]))
   sitefile.write('%i\n' % sitecoords.shape[0])
@@ -132,7 +131,7 @@ def SitesWrite(filename, sitecoords):
 
 def SitesToStr(sitecoords):
   import numpy as np
-
+  
   sitestr='%i  rbox D%i %i\n%i\n' % (sitecoords.shape[0], sitecoords.shape[0], sitecoords.shape[1], sitecoords.shape[1])
   for site in sitecoords:
     for coord in site:
@@ -143,13 +142,13 @@ def SitesToStr(sitecoords):
 def SitesPlot(sites, pattern='ro'):
   import matplotlib.pyplot as plt
   import numpy as np
-
+  
   for site in sites:
     plt.plot(site[0], site[1], pattern)
 
 def VoronoiRead():
   verbose = False
-
+  
   inputfile=open(filename, 'r')
   ### read file header
   f = open(inputfile, mode = 'r')
@@ -159,20 +158,20 @@ def VoronoiRead():
   buffer=f.readline()
   numvertices = int(buffer.split()[0])
   numcells    = int(buffer.split()[1])
-
+  
   if verbose:
     print( "number of vertices: %i \nnumber of cells:    %i\n" % (numvertices, numcells))
-
+    
   #### Read vertices
   vertices=np.empty([numvertices,2])
   for i in range(numvertices):
     buffer = f.readline()
     vertices[i,:]= buffer.split()
-
+    
   if verbose:
     print("vertices:\n")
     print(vertices)
-
+    
   ### Read cells, and filter through
   cells=[]
   for i in range(numcells):
@@ -186,13 +185,13 @@ def VoronoiRead():
       print(i, tmpcell, is_infinity)
     if not is_infinity:
       cells.append(tmpcell)
-
+  
   numcells=len(cells)
   if verbose:
     print('number of interior cells: %i\n' % numcells)
     print(cells)
   inputfile.close()
-
+  
   return vertices, cells
 
 def VoronoiPlot(vertices, cells, pattern=None, legend=False):
@@ -201,15 +200,9 @@ def VoronoiPlot(vertices, cells, pattern=None, legend=False):
   from matplotlib.patches import Polygon
   from matplotlib.collections import PatchCollection
   import pylab
-
+  
   ax=matplotlib.pyplot.subplot(111, aspect='equal')
-
-###$  ### draw vertices
-###$  if not pattern:
-###$    pattern='b*'
-###$  for vertex in vertices[1:]:
-###$    matplotlib.pyplot.plot(vertex[0], vertex[1], pattern)
-###$  
+  
   ### draw cells
   patches = []
   for cell in cells:
@@ -218,7 +211,7 @@ def VoronoiPlot(vertices, cells, pattern=None, legend=False):
   p = PatchCollection(patches, cmap=matplotlib.cm.hsv, alpha=0.4)
   p.set_array(pylab.array(colors))
   ax.add_collection(p)
-
+  
   if legend:
     for i in range(len(cells)):
       cell = cells[i]
@@ -229,7 +222,7 @@ def VoronoiPlot(vertices, cells, pattern=None, legend=False):
 def VoronoiGen(sites):
   import subprocess
   import numpy as np
-
+  
   verbose = False
   qvoronoi = subprocess.Popen('qvoronoi o',
                           shell=True,
@@ -238,29 +231,28 @@ def VoronoiGen(sites):
                           )
   qvoronoi.stdin.write(SitesToStr(sites))
   voronoistr=qvoronoi.communicate()[0].split('\n')
-
+  
   if verbose:
     print(voronoistr)
-
+  
   numdim=int(voronoistr[0])
   (numvertices, numcells, junk) = [int(s) for s in voronoistr[1].split()]
   if verbose:
     print('Number of vertices: \t%i\nNumber of cells: \t%i\n' % (numvertices, numcells))
-
+  
   vertices=np.empty([numvertices, numdim])
   for i in range(numvertices):
     vertices[i] = [float(s) for s in voronoistr[i+2].split()]
-
+  
   if verbose:
     print("vertices:\n")
     print(vertices)
-
+  
   ### Read cells, and filter through
   cells=[]
   for i in range(numcells):
     if not int(voronoistr[numvertices+2+i].split()[0]) == 0:
       cells.append([int(s) for s in voronoistr[numvertices+2+i].split()[1:]])
-
   return vertices, cells
 
 def VoronoiRemoveInfiniteCells(cells):
@@ -275,10 +267,10 @@ def SitesSmoother(sites, vertices, cells):
 ### replace sites with center of their voronoi cells
 ### leave sites associated with infinite cells unmoved
   import numpy as np
-
+  
   newsites=np.empty(sites.shape)
   newsites[:]=sites
-
+  
   for i in range(sites.shape[0]):
     cell = cells[i]
     if 0 not in cell:
@@ -292,10 +284,10 @@ def SitesSmootherBox(sites, vertices, cells, box):
 ### leave sites outside of the box unchanged
 ### does not move sites outside of the box
   import numpy as np
-
+  
   newsites=np.empty(sites.shape)
   newsites[:]=sites
-
+  
   print("number of sites: %i vertices: %i cells: %i" % (len(sites), len(vertices), len(cells)) )
   for i in range(sites.shape[0]):
     cell = cells[i]
@@ -309,22 +301,22 @@ def SitesSmootherSphere(sites, vertices, cells, sphere):
   ### leave sites associated with infinite cells unmoved
   ### leave sites outside of the box unchanged
   ### does not move sites outside of the box
-    import numpy as np
-
-    newsites=np.empty(sites.shape)
-    newsites[:]=sites
-
-    for i in range(sites.shape[0]):
-      cell = cells[i]
-      if 0 not in cell:
-        R=np.sqrt(sum(pow(sites[i,:]-sphere[:-1],2)))
-        if R<=sphere[2]:
-          for j in range(sites.shape[1]):
-            newsites[i,j] = sum(vertices[cell,j]) / len(cell)
-          R=np.sqrt(sum(pow(newsites[i,:]-sphere[:-1],2)))
-          if R>=sphere[2]:
-            newsites[i,:] = sphere[:-1] + (newsites[i,:]-sphere[:-1]) / R * sphere[2]
-    return newsites
+  import numpy as np
+  
+  newsites=np.empty(sites.shape)
+  newsites[:]=sites
+  
+  for i in range(sites.shape[0]):
+    cell = cells[i]
+    if 0 not in cell:
+      R=np.sqrt(sum(pow(sites[i,:]-sphere[:-1],2)))
+      if R<=sphere[2]:
+        for j in range(sites.shape[1]):
+          newsites[i,j] = sum(vertices[cell,j]) / len(cell)
+        R=np.sqrt(sum(pow(newsites[i,:]-sphere[:-1],2)))
+        if R>=sphere[2]:
+          newsites[i,:] = sphere[:-1] + (newsites[i,:]-sphere[:-1]) / R * sphere[2]
+  return newsites
 
 def BoxDraw(box):
   import matplotlib
@@ -338,7 +330,7 @@ def BoxDraw(box):
 def CircleDraw(circle):
   import matplotlib
   from matplotlib.patches import Circle
-
+  
   ax=matplotlib.pyplot.subplot(111, aspect='equal')
   circ = Circle((circle[0], circle[1]), circle[2])
   circ.set_fill(False)
@@ -464,7 +456,6 @@ def MilledLayer(Body_IDs, BB, Alpha, Theta1, Theta2, secmin, Xoffset=.5):
 ### 
 ### Various geometry constructors
 ###
-
 def DCBCreate(LX, LY1, LY, LZ, EPSCRACK, LCRACK):
   import cubit
   import numpy as np
@@ -505,15 +496,15 @@ def DCBCreate(LX, LY1, LY, LZ, EPSCRACK, LCRACK):
   cubit.cmd("sweep surface %i direction Z distance %f" % (s_ID, LZ))
   DCB_3D=[cubit.get_last_id("volume")]
   return DCB_3D
-  
+
 def GroupAddVolList(groupname, vol_IDs):
   import cubit
   cmd='group "%s" add volume ' % groupname
   for vol in vol_IDs:
     cmd += ' %i' % vol
   cubit.cmd(cmd)
-    
-def CylCrackCreate(lx, ly, lz, thetacrack):
+
+def PacmanCreate(lx, ly, lz, thetacrack):
    import cubit
    import numpy as np
    import pymef90
@@ -546,7 +537,7 @@ def CylCrackCreate(lx, ly, lz, thetacrack):
    ###
    return CYL
 
-def CylCrackCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5, ):
+def PacmanLayeredCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5, ):
   import cubit
   import numpy as np
   import pymef90
@@ -598,7 +589,7 @@ def CylCrackCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=
   ###
   return LAYER1_3D, LAYER2_3D
   
-def CylCrackCreateLayeredCoin(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5):
+def PacmanCoinLayeredCreate(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5):
   import cubit
   import numpy as np
   import pymef90
@@ -658,7 +649,7 @@ def CylCrackCreateLayeredCoin(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, 
   ###
   ### Generate the pacman geometry
   ###
-  (OUTSIDE_3D, CYL_3D) = pymef90.CylCrackCreateCoin(R, r, r, lz, thetac, lc)
+  (OUTSIDE_3D, CYL_3D) = pymef90.PacmanCoinCreate(R, r, r, lz, thetac, lc)
   ###
   ### Create grains geometry
   ###
@@ -691,7 +682,7 @@ def CylCrackCreateLayeredCoin(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, 
     (CYL_3D, Grain_3D[i]) = pymef90.WebcutTool(CYL_3D, tmpgrain, delete=True)
     pymef90.GroupAddVolList("Grain%i"%i, Grain_3D[i])
 
-def CylCrackCreateCoin(R, lx, ly, lz, thetacrack, lcrack=.5):
+def PacmanCoinCreate(R, lx, ly, lz, thetacrack, lcrack=.5):
   import cubit
   import numpy as np
   import pymef90
@@ -740,51 +731,13 @@ def CylCrackCreateCoin(R, lx, ly, lz, thetacrack, lcrack=.5):
   ### return LAYER1_3D and LAYER2_3D
   ###
   return OUTSIDE_3D, CYL_3D
-  
-def CylCrackCreateCrystalCoin(R, r, lz, thetac, lc, ngrains, debug=False):
-  ###
-  ### create initial pacman
-  ###
-  (OUTSIDE_3D, CYL_3D) = CylCrackCreateCoin(R, r, r, lz, thetac, lc)
-  ###
-  ### Create grains geometry
-  ###
-  circle = [0., 0., r]
-  BB = [-R, R, -R, R]
-  sites=SitesGenCircle2D(ngrains, circle, BB)
-  (vertices, cells) = VoronoiGen(sites)
-  realcells = VoronoiRemoveInfiniteCells(cells)
-  newsites=SitesSmootherSphere(sites, vertices, cells, circle)
-  (newvertices, newcells) = VoronoiGen(newsites)
-  newrealcells = VoronoiRemoveInfiniteCells(newcells)
-  ###
-  if debug:
-    print('\nregularized sites:')
-    for site in newsites:
-      print(site)
-    print('\ncells:')
-    for cell in newrealcells:
-      print(cell)
-    print('\nvertices:')
-    for vertex in newvertices:
-      print(vertex)
-  ###    
-  ### Create grains bodies
-  ### 
-  GRAINS_3D=[]
-  for i in range(ngrains):
-    tmpgrain=GrainCreate(newvertices[newrealcells[i],:], lz)
-    GRAINS_3D.append([])
-    (CYL_3D, GRAINS_3D[i]) = WebcutTool(CYL_3D, tmpgrain, delete=True)
-    GroupAddVolList("Grain%i"%i, GRAINS_3D[i])
-  return OUTSIDE_3D, GRAINS_3D
 
-def CylCrackCreateCrystalCoinNG(R, r, lz, thetac, lc, ngrains, debug=False):
+def PacmanCoinCrystalCreate(R, r, lz, thetac, lc, ngrains, debug=False):
   import cubit
   ###
   ### create initial pacman
   ###
-  (OUTSIDE_3D, CYL_3D) = CylCrackCreateCoin(R, r, r, lz, thetac, lc)
+  (OUTSIDE_3D, CYL_3D) = PacmanCoinCreate(R, r, r, lz, thetac, lc)
   ###
   ### Create grains geometry
   ###
@@ -828,32 +781,8 @@ def CylCrackCreateCrystalCoinNG(R, r, lz, thetac, lc, ngrains, debug=False):
   cubit.cmd("delete volume %i" % CYL_3D[0])
   return OUTSIDE_3D, GRAINS_3D
 
-def BoxCreateCrystal(l, ngrains):
-  import cubit
-  cubit.cmd("create brick X %f" % l)
-  BOX_3D=[]
-  BOX_3D.append(cubit.get_last_id("volume"))
-  ###
-  BB = [-2*l, 2*l, -2*l, 2*l]
-  rect=[-l/2., l/2., -l/2., l/2.]
-  sites=SitesGenRect2D(ngrains, rect, BB)
-  (vertices, cells) = VoronoiGen(sites)
-  realcells = VoronoiRemoveInfiniteCells(cells)
-  newsites=SitesSmootherBox(sites, vertices, cells, rect)
-  (newvertices, newcells) = VoronoiGen(newsites)
-  newrealcells = VoronoiRemoveInfiniteCells(newcells)
-  ###
-  ### chop grains
-  ###
-  GRAINS_3D=[]
-  for i in range(ngrains):
-    tmpgrain=GrainCreate(newvertices[newrealcells[i],:], l)
-    GRAINS_3D.append([])
-    (BOX_3D, GRAINS_3D[i]) = WebcutTool(BOX_3D, tmpgrain, delete=True)
-    GroupAddVolList("Grain%i"%(i+1), GRAINS_3D[i])
-  return GRAINS_3D
 
-def BoxCreateCrystalNG(l, ngrains):
+def BoxCrystalCreateCrystal(l, ngrains):
   import cubit
   cubit.cmd("create brick X %f" % l)
   BOX_3D=cubit.get_last_id("volume")
