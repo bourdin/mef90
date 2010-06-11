@@ -730,7 +730,7 @@ def PacmanCoinCreate(R, lx, ly, lz, thetacrack, lcrack=.5):
   ###
   ### return LAYER1_3D and LAYER2_3D
   ###
-  return OUTSIDE_3D, CYL_3D
+  return OUTSIDE_3D[0], CYL_3D
 
 def PacmanCoinCrystalCreate(R, r, lz, thetac, lc, ngrains, debug=False):
   import cubit
@@ -779,10 +779,11 @@ def PacmanCoinCrystalCreate(R, r, lz, thetac, lc, ngrains, debug=False):
       GroupAddVolList("Grain%i"%(numgrains+1), GRAINS_3D[numgrains])
       numgrains += 1
   cubit.cmd("delete volume %i" % CYL_3D[0])
+  cubit.cmd("delete CYL_3D")
   return OUTSIDE_3D, GRAINS_3D
 
 
-def BoxCrystalCreateCrystal(l, ngrains):
+def BoxCrystalCreate(l, ngrains):
   import cubit
   cubit.cmd("create brick X %f" % l)
   BOX_3D=cubit.get_last_id("volume")
