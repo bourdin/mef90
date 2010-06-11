@@ -3,12 +3,10 @@ Module m_Elast2D
 #elif defined PB_3D
 Module m_Elast3D
 #endif
-
 #include "finclude/petscdef.h"
 
    Use m_MEF90
    Use m_VarFrac_Struct
-   Use petsc
 
    Implicit NONE   
 #include "include/finclude/tao_solver.h"

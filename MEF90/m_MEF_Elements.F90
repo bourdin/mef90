@@ -1,8 +1,5 @@
 Module m_MEF_Elements
-
 #include "finclude/petscdef.h"
-#include "finclude/petscmeshdef.h"
-#include "finclude/petscviewerdef.h"
 
    Use m_MEF_LinAlg
    Use m_MEF_Types

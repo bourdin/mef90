@@ -1,8 +1,8 @@
 Module m_MEF_Parameters
 #include "finclude/petscdef.h"
+
    Use petsc
    IMPLICIT NONE
-!   PRIVATE
 
    include "exodusII.inc"  
    

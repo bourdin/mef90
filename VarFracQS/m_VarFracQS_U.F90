@@ -3,13 +3,7 @@ Module m_VarFracQS_U2D
 #elif defined PB_3D
 Module m_VarFracQS_U3D
 #endif
-
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petsckspdef.h"
-#include "finclude/petscmeshdef.h"
-#include "finclude/petscviewerdef.h"
 
 #if defined PB_2D
    Use m_VarFracQS_Types2D
@@ -20,11 +14,6 @@ Module m_VarFracQS_U3D
 #endif   
    Use m_MEF90
    Use m_VarFrac_Struct
-   Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscksp
-   Use petscmesh
 
    Implicit NONE
    Private   

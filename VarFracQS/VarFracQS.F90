@@ -1,11 +1,6 @@
 Program  VarFracQS
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petsckspdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
 #if defined PB_2D
    Use m_VarFracQS2D
@@ -14,14 +9,8 @@ Program  VarFracQS
 #endif   
    Use m_MEF90
    Use m_VarFrac_Struct
-   Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscksp
-   Use petscmesh
    
    Implicit NONE   
-
 
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr, iBlk
