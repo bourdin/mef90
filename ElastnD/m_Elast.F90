@@ -5,19 +5,10 @@ Module m_Elast3D
 #endif
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petsckspdef.h"
-#include "finclude/petscmeshdef.h"
-#include "finclude/petscviewerdef.h"
 
    Use m_MEF90
    Use m_VarFrac_Struct
    Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscksp
-   Use petscmesh
 
    Implicit NONE   
 #include "include/finclude/tao_solver.h"
@@ -558,6 +549,25 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergies
 
+   Subroutine ComputeVolumeChange(VolumeChange, AppCtx)
+      PetscReal                                    :: VolumeChange
+      Type(AppCtx_Type)                            :: AppCtx
+   
+      PetscInt                                     :: iBlk, iErr     
+      PetscReal                                    :: MyVolumeChange, VolumeChangeBlock
+   
+      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
+
+      MyVolumeChange = 0.0_Kr
+      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Call ComputeVolumeChangeBlock(iBlk, AppCtx%U%Sec, VolumeChangeBlock, AppCtx)
+         MyVolumeChange = MyVolumeChange + VolumeChangeBlock
+      End Do Do_iBlk
+      Call MPI_AllReduce(myVolumeChange, VolumeChange, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   End Subroutine ComputeVolumeChange
+
    Subroutine RHSAssembly(RHS, AppCtx)
       Type(Field)                                  :: RHS
       Type(AppCtx_Type)                            :: AppCtx
@@ -812,6 +822,50 @@ Contains
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergiesBlock
+
+   Subroutine ComputeVolumeChangeBlock(iBlk, X_Sec, VolumeChange, AppCtx)
+      PetscInt                                     :: iBlk
+      PetscReal, Dimension(:), Pointer             :: X_Loc
+      Type(SectionReal)                            :: X_Sec
+      PetscReal                                    :: VolumeChange
+      Type(AppCtx_Type)                            :: AppCtx
+      
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
+#if defined PB_2D
+      Type(Mats2D)                                 :: Strain_Elem
+#elif defined PB_3D  
+      Type(Mats3D)                                 :: Strain_Elem
+#endif
+      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+      PetscInt                                     :: NumDoFVect
+      PetscInt                                     :: iDoF, iGauss
+      PetscLogDouble                               :: flops       
+
+      Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+      flops  = 0.0
+      VolumeChange = 0.0_Kr
+
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Allocate(X_Loc(NumDoFVect))
+      Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Call SectionRealRestrictClosure(X_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, X_Loc, iErr); CHKERRQ(ierr)
+         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+            Strain_Elem = 0.0_Kr
+            Do iDoF = 1, NumDoFVect
+               Strain_Elem = Strain_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
+            End Do
+            VolumeChange = VolumeChange + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Trace(Strain_Elem)
+         End Do Do_iGauss
+      End Do Do_iEloc
+      DeAllocate(X_Loc)
+      Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+   End Subroutine ComputeVolumeChangeBlock
 
    Subroutine RHSAssemblyBlock_Elast(RHS_Sec, iBlk, AppCtx)
       PetscInt                                     :: iBlk

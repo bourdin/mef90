@@ -1,11 +1,6 @@
 Program  Elast
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petsckspdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
    Use m_MEF90
 #if defined PB_2D
@@ -15,10 +10,6 @@ Program  Elast
 #endif
 
    Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscksp
-   Use petscmesh
 
    Implicit NONE   
 
@@ -26,13 +17,9 @@ Program  Elast
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: i, iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   PetscReal                                    :: rDummy
-   Character                                    :: cDummy
    PetscInt                                     :: vers
    
-   PetscReal, Dimension(:), Pointer             :: CoordElem
-   Type(SectionReal)                            :: CoordSec
-   PetscInt                                     :: iE
+   PetscReal                                    :: VolChange
 
    Call ElastInit(AppCtx)
    
@@ -69,14 +56,17 @@ Program  Elast
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call ComputeEnergies(AppCtx)
-
       Write(IOBuffer, 108) AppCtx%TimeStep, AppCtx%Time, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
 108 Format('TS ',I4, ' Time:', ES10.3, ' Load:', ES10.3, ' Elast:', ES10.3, ' Work:', ES10.3, ' Total:', ES10.3, '\n')
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-
       Write(IOBuffer, 110) AppCtx%TimeStep, AppCtx%Load, AppCtx%ElasticEnergy, AppCtx%ExtForcesWork, 0.0_Kr, AppCtx%ElasticEnergy - AppCtx%ExtForcesWork
 110 Format(I4, 5(ES13.5, '   '), '\n')
       Call PetscViewerASCIIPrintf(AppCtx%AppParam%EnergyViewer, IOBuffer, iErr); CHKERRQ(iErr)
+
+      Call ComputeVolumeChange(VolChange, AppCtx)
+      Write(IOBuffer, 120) VolChange / AppCtx%Load
+120 Format('Volume change: ', ES12.5, ' \n')
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. ( AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          Call ComputeStrainStress(AppCtx)
