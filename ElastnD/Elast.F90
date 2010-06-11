@@ -1,5 +1,4 @@
 Program  Elast
-
 #include "finclude/petscdef.h"
 
    Use m_MEF90
@@ -8,8 +7,6 @@ Program  Elast
 #elif defined PB_3D 
    Use m_Elast3D
 #endif
-
-   Use petsc
 
    Implicit NONE   
 

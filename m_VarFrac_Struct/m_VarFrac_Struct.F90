@@ -1,13 +1,10 @@
 Module m_VarFrac_Struct
-
 #include "finclude/petscdef.h"
 
    Use m_MEF90
-   Use petsc
 
    Implicit NONE
    Private
-
    
    Public :: GenHL_Iso3D_Enu
    Public :: GenHL_Iso2D_EnuPlaneStress

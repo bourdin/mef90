@@ -1,17 +1,11 @@
 Module m_MEF_Sieve
 #include "finclude/petscdef.h"
-#include "finclude/petscmeshdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
 
    Use m_MEF_LinAlg
    Use m_MEF_Types
    Use m_MEF_Utils
-
    Use petsc
    Use petscmesh
-   Use petscvec
-   Use petscmat
          
    IMPLICIT NONE
    Private

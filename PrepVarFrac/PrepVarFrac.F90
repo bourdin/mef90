@@ -1,20 +1,11 @@
 Program PrepVarFrac
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petsckspdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
    Use m_MEF90
    Use m_VarFrac_Struct
 
    Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscksp
-   Use petscmesh
 
    Implicit NONE   
    

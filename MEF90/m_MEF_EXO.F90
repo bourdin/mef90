@@ -1,7 +1,5 @@
 Module m_MEF_EXO
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmeshdef.h"
 
    Use m_MEF_LinAlg
    Use m_MEF_Parameters
@@ -10,7 +8,6 @@ Module m_MEF_EXO
    Use m_MEF_Elements
    Use m_MEF_Utils
    Use petsc
-   Use petscvec
    Use petscmesh
    
    
