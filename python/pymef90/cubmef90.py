@@ -727,9 +727,6 @@ def PacmanCoinCreate(R, lx, ly, lz, thetacrack, lcrack=.5):
   ###
   pymef90.GroupAddVolList("CYL_3D",  CYL_3D)
   pymef90.GroupAddVolList("OUTSIDE_3D", OUTSIDE_3D)
-  ###
-  ### return LAYER1_3D and LAYER2_3D
-  ###
   return OUTSIDE_3D[0], CYL_3D
 
 def PacmanCoinCrystalCreate(R, r, lz, thetac, lc, ngrains, debug=False):
