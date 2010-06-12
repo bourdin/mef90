@@ -69,16 +69,18 @@ Program PrepVarFrac
       Call MEF90_Finalize()
       STOP
    End If
+   EraseBatch=.False.
    Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
    If (IsBatch) Then
       Write(IOBuffer, *) "Processing batch file ", Trim(BatchFileName), "\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Open(Unit=BatchUnit, File=BatchFileName, Status='Old', readonly)
+      Open(Unit=BatchUnit, File=BatchFileName, Status='Old', Action='Read')
       Rewind(BatchUnit)
    Else
       BatchFileName = Trim(prefix)//'.args'
       Inquire(File=BatchFileName, EXIST=HasBatchFile)
+      write(*,*) MEF90_MyRank, HasBatchFile, EraseBatch
       Write(IOBuffer, *) "Running interactively and generating batch file ", trim(BatchFileName), "\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
@@ -667,11 +669,10 @@ Program PrepVarFrac
    Call MEF90_Finalize()
 
  100 Format('*** Element Block ', T24, I3, '\n')
- 101 Format('*** Side Set      ', T24, I3, '\n')
+! 101 Format('*** Side Set      ', T24, I3, '\n')
  102 Format('*** Node Set      ', T24, I3, '\n')
- !200 Format(A,t60, ': ')
  300 Format('EB', I4.4, ': ', A)
- 301 Format('SS', I4.4, ': ', A)
+! 301 Format('SS', I4.4, ': ', A)
  302 Format('NS', I4.4, ': ', A)
 
 Contains
@@ -687,6 +688,9 @@ Contains
             Read(ArgUnit,*) Val
          End If
          Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+         Write(IOBuffer, *) '[', MEF90_MyRank, ']: Read ', Val, '\n'
+         Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Else
          Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -710,6 +714,9 @@ Contains
             Read(ArgUnit,*) Val
          End If
          Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
+         Write(IOBuffer, *) '[', MEF90_MyRank, ']: Read ', Val, '\n'
+         Call PetscSynChronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Else
          Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -772,7 +779,6 @@ Contains
  100 Format('*** Element Block ', T24, I3, '\n')
  101 Format('*** Side Set      ', T24, I3, '\n')
  102 Format('*** Node Set      ', T24, I3, '\n')
- 110 Format(T24, A, T60, ': ')
  200 Format('EB', I4.4, ': ', A)
  201 Format('SS', I4.4, ': ', A)
  202 Format('NS', I4.4, ': ', A)

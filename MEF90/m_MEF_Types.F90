@@ -242,8 +242,6 @@ Contains
  100 Format('Communicator:       ', A,       '\n')
  101 Format('exo ID:             ', I3,      '\n')
  102 Format('filename:           ', A,       '\n')
- 103 Format('title:              ', A,       '\n')
- 104 Format('QA_rec ', I2.2, '         ', A, '\n')
  105 Format('Communicator:       ', A, I3,   '\n')
  106 Format('Number of EB Properties: ', I3, '\n')
  107 Format('Number of SS Properties: ', I3, '\n')

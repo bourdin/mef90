@@ -926,7 +926,6 @@ Module m_MEF_Elements
          Write(CharBuffer, *) '\n'
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       End Do
-101 Format('*** Element  ', I9, '\n')
 102 Format('    Nb_DoF   ', I9, '\n')
 103 Format('    Nb_Gauss ', I9, '\n')
 104 Format('    *** DoF  ', I9, '\n')
@@ -1014,7 +1013,6 @@ Module m_MEF_Elements
          Write(CharBuffer, *) '\n    '
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       End Do
-101 Format('*** Element  ', I9, '\n')
 102 Format('    Nb_DoF   ', I9, '\n')
 103 Format('    Nb_Gauss ', I9, '\n')
 104 Format('    *** DoF  ', I9, '\n')
@@ -1095,7 +1093,6 @@ Module m_MEF_Elements
          End Do
          Write(CharBuffer, *) '\n    '
       End Do
-101 Format('*** Element  ', I9, '\n')
 102 Format('    Nb_DoF   ', I9, '\n')
 103 Format('    Nb_Gauss ', I9, '\n')
 104 Format('    *** DoF  ', I9, '\n')
@@ -1171,7 +1168,6 @@ Module m_MEF_Elements
          Write(CharBuffer, *) '\n    '
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)         
       End Do
-101 Format('*** Element  ', I9, '\n')
 102 Format('    Nb_DoF   ', I9, '\n')
 103 Format('    Nb_Gauss ', I9, '\n')
 104 Format('    *** DoF  ', I9, '\n')
@@ -1295,7 +1291,6 @@ Module m_MEF_Elements
          End Do
          Write(CharBuffer, *) '\n'
       End Do
-101 Format('*** Element  ', I9, '\n')
 102 Format('    Nb_DoF   ', I9, '\n')
 103 Format('    Nb_Gauss ', I9, '\n')
 104 Format('    *** DoF  ', I9, '\n')
@@ -1397,7 +1392,6 @@ Module m_MEF_Elements
          End Do
          Write(CharBuffer, *) '\n    '
       End Do
-101 Format('*** Element  ', I9, '\n')
 102 Format('    Nb_DoF   ', I9, '\n')
 103 Format('    Nb_Gauss ', I9, '\n')
 104 Format('    *** DoF  ', I9, '\n')
