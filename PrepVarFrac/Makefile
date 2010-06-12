@@ -1,4 +1,3 @@
-PROJ      = PrepVarFrac
 MEF90DIR  = ../MEF90/${PETSC_ARCH}
 MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
@@ -8,7 +7,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
 M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 
-all: ${PROJ}
+all: PrepVarFrac PrepVarFracPolyCrystal
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
@@ -25,7 +24,8 @@ endif
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 
-#${PROJ}.o: ${PETSC_ARCH}
-
-${PROJ}: ${PETSC_ARCH} ${PROJ}.o ${PETSC_ARCH}/${PROJ}.o
-	${FLINKER} -o ${PETSC_ARCH}/${PROJ} ${PETSC_ARCH}/${PROJ}.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -lm
+PrepVarFrac: ${PETSC_ARCH} PrepVarFrac.o ${PETSC_ARCH}/PrepVarFrac.o
+	${FLINKER} -o ${PETSC_ARCH}/PrepVarFrac ${PETSC_ARCH}/PrepVarFrac.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	
+PrepVarFracPolyCrystal: ${PETSC_ARCH} PrepVarFracPolyCrystal.o ${PETSC_ARCH}/PrepVarFracPolyCrystal.o
+    ${FLINKER} -o ${PETSC_ARCH}/PrepVarFracPolyCrystal ${PETSC_ARCH}/PrepVarFracPolyCrystal.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
