@@ -72,6 +72,7 @@ Program PrepVarFrac
    EraseBatch=.False.
    Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
+   If (MEF90_MyRank==0) Then
    If (IsBatch) Then
       Write(IOBuffer, *) "Processing batch file ", Trim(BatchFileName), "\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -80,7 +81,6 @@ Program PrepVarFrac
    Else
       BatchFileName = Trim(prefix)//'.args'
       Inquire(File=BatchFileName, EXIST=HasBatchFile)
-      write(*,*) MEF90_MyRank, HasBatchFile, EraseBatch
       Write(IOBuffer, *) "Running interactively and generating batch file ", trim(BatchFileName), "\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
@@ -92,7 +92,7 @@ Program PrepVarFrac
       Open(Unit=BatchUnit, File=BatchFileName, Status='Unknown')
       Rewind(BatchUnit)
    End If
-   
+End If
    NumTestCase = 11
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
@@ -688,9 +688,6 @@ Contains
             Read(ArgUnit,*) Val
          End If
          Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
-         Write(IOBuffer, *) '[', MEF90_MyRank, ']: Read ', Val, '\n'
-         Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Else
          Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -714,9 +711,6 @@ Contains
             Read(ArgUnit,*) Val
          End If
          Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
-         Write(IOBuffer, *) '[', MEF90_MyRank, ']: Read ', Val, '\n'
-         Call PetscSynChronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Else
          Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
