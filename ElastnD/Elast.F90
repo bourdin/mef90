@@ -62,8 +62,11 @@ Program  Elast
 
       Call ComputeVolumeChange(VolChange, AppCtx)
       Write(IOBuffer, 120) VolChange / AppCtx%Load
-120 Format('Volume change: ', ES12.5, ' \n')
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, 130) VolChange 
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+120 Format('Relative volume change: ', ES12.5, ' \n')
+130 Format('Absolute volume change: ', ES12.5, ' \n')
 
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. ( AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          Call ComputeStrainStress(AppCtx)

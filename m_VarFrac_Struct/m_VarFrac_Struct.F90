@@ -164,7 +164,7 @@ Module m_VarFrac_Struct
       Type(SectionInt)                             :: dBCFlag 
       
       PetscInt                                     :: iErr, NumDoF, i, j
-      PetscInt, Dimension(:), Pointer              :: Flag
+      PetscInt, Dimension(:), Pointer              :: iFlag
       
       Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
       !!! Side Sets
@@ -172,12 +172,12 @@ Module m_VarFrac_Struct
       
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
-         Allocate(Flag(1))
-         Flag = dEXO%NSProperty( VarFrac_NSProp_BCVType )%Value( dMeshTopology%Node_Set(i)%ID )
+         Allocate(iFlag(1))
+         iFlag = dEXO%NSProperty( VarFrac_NSProp_BCVType )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-            Call SectionIntUpdate(dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, iFlag, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do
-         DeAllocate(Flag)
+         DeAllocate(iFlag)
       End Do
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
    End Subroutine EXOProperty_InitBCVFlag
@@ -188,7 +188,7 @@ Module m_VarFrac_Struct
       Type(Flag)                                   :: dBCFlag 
       
       PetscInt                                     :: iErr, NumDoF, i, j
-      PetscInt, Dimension(:), Pointer              :: Flag
+      PetscInt, Dimension(:), Pointer              :: iFlag
       
       Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
       !!! Side Sets
@@ -196,12 +196,12 @@ Module m_VarFrac_Struct
       
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
-         Allocate(Flag(1))
-         Flag(1) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+         Allocate(iFlag(1))
+         iFlag(1) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-            Call SectionIntUpdate(dBCFlag%Sec, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag%Sec, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, iFlag, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do
-         DeAllocate(Flag)
+         DeAllocate(iFlag)
       End Do
    End Subroutine EXOProperty_InitBCUFlag2DA
    
@@ -258,7 +258,6 @@ Module m_VarFrac_Struct
       End Do
       Close(F_OUT)
       
-110   Format(I6,'      Toughness    A1111        A1112        A1122        A1212        A1222        A2222        Alpha')
 120   Format(I6, '      ', 10(ES12.5,' '))   
    End Subroutine MatProp2D_Write
  
@@ -278,7 +277,6 @@ Module m_VarFrac_Struct
       End Do
       Close(F_OUT)
       
-110   Format(I6,'      Toughness    A_1111       A_1112       A_1113       A_1122       A_1123       A_1133       A_1212       A_1213       A_1222       A_1223       A_12133      A_1313       A_1322       A_1323       A_1333       A_2222       A_2223       A_2233       A_2323       A_2333       A_3333       Alpha')
 120   Format(I6, '      ', 28(ES12.5,' '))
    End Subroutine MatProp3D_Write
  
@@ -361,8 +359,6 @@ Module m_VarFrac_Struct
          MatProp(Idx)%Therm_Exp  = Therm_Exp
       End Do
       Close(F_IN)
-      
-220   Format(I6, 28(ES12.5,' '))
    End Subroutine MatProp3D_Read
 
    Subroutine VarFracSchemeParam_View(dSchemeParam, viewer)
