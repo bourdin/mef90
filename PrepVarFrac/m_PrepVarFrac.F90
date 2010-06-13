@@ -78,7 +78,7 @@ Contains
             dEXO%EBProperty(j)%Value(i) = TmpEBProperty
          End Do
       End Do
-      If (.NOT. IsBatch) Then
+      If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0))Then
          Write(BatchUnit, *)
       End If
       Do i = NumGrains+1, dMeshTopology%Num_Elem_Blks_Global
@@ -119,7 +119,7 @@ Contains
             Write(IOBuffer, 201) i, Trim(dEXO%SSProperty(j)%Name)
             Call AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
-         If (.NOT. IsBatch) Then
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)
          End If
       End Do
@@ -147,7 +147,7 @@ Contains
             Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
             Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
-         If (.NOT. IsBatch) Then
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)
          End If
       End Do
@@ -177,7 +177,7 @@ Contains
             Write(IOBuffer, 200) i, Trim(dEXO%EBProperty(j)%Name)
             Call AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
-         If (.NOT. IsBatch) Then
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)
          End If
       End Do
@@ -205,7 +205,7 @@ Contains
             Write(IOBuffer, 201) i, Trim(dEXO%SSProperty(j)%Name)
             Call AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
-         If (.NOT. IsBatch) Then
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)
          End If
       End Do
@@ -234,7 +234,7 @@ Contains
             Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
             Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
-         If (.NOT. IsBatch) Then
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)
          End If
       End Do

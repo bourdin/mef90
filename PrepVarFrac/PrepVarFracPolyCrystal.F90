@@ -58,11 +58,14 @@ Program PrepVarFrac
    PetscReal                                    :: alphaGrain, alphamin, alphamax
    PetscReal                                    :: Eeff, nueff, Kappa, mu
    PetscRandom                                  :: RandomCtx
+   PetscInt                                     :: Seed
+   PetscLogDouble                               :: Time
+   PetscTruth                                   :: Has_Seed
    
-   PetscReal                                    ::R, Ctheta, CTheta2, Stheta, STheta2
+   PetscReal                                    :: R, Ctheta, CTheta2, Stheta, STheta2
 
    Call MEF90_Initialize()
-   
+
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, HasPrefix, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr); CHKERRQ(iErr)
    If (.NOT. HasPrefix) Then
@@ -75,14 +78,13 @@ Program PrepVarFrac
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
    If (MEF90_MyRank==0) Then
       If (IsBatch) Then
-         Write(IOBuffer, *) "Processing batch file ", Trim(BatchFileName), "\n"
+         Write(IOBuffer, *) "\nProcessing batch file ", Trim(BatchFileName), "\n"
          Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
          Open(Unit=BatchUnit, File=BatchFileName, Status='Old', Action='Read')
          Rewind(BatchUnit)
       Else
          BatchFileName = Trim(prefix)//'.args'
          Inquire(File=BatchFileName, EXIST=HasBatchFile)
-         Write(*,*) 'HasBatchFile ', HasBatchFile, 'EraseBatch', EraseBatch
          If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
             Write(IOBuffer, *) "Batch file ", trim(BatchFileName), " already exists. Erase it or use -force flag\n"
             Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
@@ -95,7 +97,20 @@ Program PrepVarFrac
          End If
       End If
    End If
-
+   
+   !!! Initialize random number generator
+   Call PetscRandomCreate(PETSC_COMM_WORLD, RandomCtx, iErr); CHKERRQ(iErr)
+   Call PetscRandomSetFromOptions(RandomCtx, iErr); CHKERRQ(iErr)
+   Call PetscOptionsGetReal(PETSC_NULL_CHARACTER, '-seed', Seed, Has_Seed, iErr); CHKERRQ(iErr)
+   If (.NOT. Has_Seed) Then
+      Call PetscGetTime(Time, iErr); CHKERRQ(iErr)
+      Seed =  Time * (Time - Int(Time))
+   End If
+   !Write(IOBuffer, *) 'Seeding random number generator with seed ', Seed, '\n'
+   !Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call PetscRandomSetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
+   Call PetscRandomSeed(RandomCtx, iErr); CHKERRQ(iErr)
+   Call PetscRandomGetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
    NumTestCase = 3
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
@@ -254,8 +269,6 @@ Program PrepVarFrac
          Call AskReal(mu2Grain,          'Grains: mu2   ',      BatchUnit, IsBatch)
          Call AskReal(ThermExpScalGrain, 'Grains: therm. exp.', BatchUnit, IsBatch)
       End If
-      Call PetscRandomCreate(PETSC_COMM_WORLD, RandomCtx, iErr); CHKERRQ(iErr)
-      Call PetscRandomSetFromOptions(RandomCtx, iErr); CHKERRQ(iErr)
       alphamin = 0.0_Kr
       alphamax = PETSC_PI
       Call PetscRandomSetInterval(RandomCtx, alphamin, alphamax, iErr); CHKERRQ(iErr)
