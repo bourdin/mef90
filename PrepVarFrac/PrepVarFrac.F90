@@ -4,7 +4,7 @@ Program PrepVarFrac
 
    Use m_MEF90
    Use m_VarFrac_Struct
-
+   Use m_PrepVarFrac
    Use petsc
 
    Implicit NONE   
@@ -35,8 +35,6 @@ Program PrepVarFrac
    PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
-   PetscReal                                    :: Beta, eta, tau, Y
-   PetscReal                                    :: FixedPoint
    PetscInt                                     :: NumSteps
    PetscInt                                     :: Num_DoF
    PetscReal                                    :: RealBuffer
@@ -45,19 +43,20 @@ Program PrepVarFrac
    Type(Tens4OS2D)                              :: TmpHL_2D
    Type(Tens4OS3D)                              :: TmpHL_3D   
    Type(Vect2D)                                 :: k_2D
-   type(Vect3D)                                 :: k_3D
-   PetscReal                                    :: m
+   Type(Vect3D)                                 :: k_3D
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
    PetscReal                                    :: Lambda, Mu
-   PetscInt                                     :: NumLayers
    PetscReal, Dimension(:), Pointer             :: GlobVars
-   PetscReal                                    :: rDummy
-   Character                                    :: cDummy
    PetscInt                                     :: vers
    PetscTruth                                   :: IsBatch, HasBatchFile
    PetscInt                                     :: BatchUnit=99
    Character(len=MEF90_MXSTRLEN)                :: BatchFileName
    PetscTruth                                   :: EraseBatch
+   
+   PetscReal                                    :: Beta, eta, tau, Y
+   PetscReal                                    :: FixedPoint
+   PetscReal                                    :: m
+   PetscInt                                     :: NumLayers
    PetscReal                                    :: CTheta, CTheta2, STheta2, R, Kappa
 
    Call MEF90_Initialize()
@@ -73,26 +72,27 @@ Program PrepVarFrac
    Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
    If (MEF90_MyRank==0) Then
-   If (IsBatch) Then
-      Write(IOBuffer, *) "Processing batch file ", Trim(BatchFileName), "\n"
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Open(Unit=BatchUnit, File=BatchFileName, Status='Old', Action='Read')
-      Rewind(BatchUnit)
-   Else
-      BatchFileName = Trim(prefix)//'.args'
-      Inquire(File=BatchFileName, EXIST=HasBatchFile)
-      Write(IOBuffer, *) "Running interactively and generating batch file ", trim(BatchFileName), "\n"
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
-         Write(IOBuffer, *) "Batch file ", trim(BatchFileName), " already exists. Erase it and restart\n"
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call MEF90_Finalize()
-         STOP
+      If (IsBatch) Then
+         Write(IOBuffer, *) "Processing batch file ", Trim(BatchFileName), "\n"
+         Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+         Open(Unit=BatchUnit, File=BatchFileName, Status='Old', Action='Read')
+         Rewind(BatchUnit)
+      Else
+         BatchFileName = Trim(prefix)//'.args'
+         Inquire(File=BatchFileName, EXIST=HasBatchFile)
+         Write(*,*) 'HasBatchFile ', HasBatchFile, 'EraseBatch', EraseBatch
+         If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
+            Write(IOBuffer, *) "Batch file ", trim(BatchFileName), " already exists. Erase it or use -force flag\n"
+            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+            SETERRQ(PETSC_COMM_SELF, PETSC_ERR_FILE_UNEXPECTED, IOBuffer, iErr)
+         Else
+            Write(IOBuffer, *) "Running interactively and generating batch file ", trim(BatchFileName), "\n"
+            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+            Open(Unit=BatchUnit, File=BatchFileName, Status='Unknown')
+            Rewind(BatchUnit)
+         End If
       End If
-      Open(Unit=BatchUnit, File=BatchFileName, Status='Unknown')
-      Rewind(BatchUnit)
    End If
-End If
    NumTestCase = 11
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
@@ -397,7 +397,7 @@ End If
             Write(IOBuffer, 300) i, 'Fy'
             Call AskReal(F(i)%Y, IOBuffer, BatchUnit, IsBatch)
 
-            Write(IOBuffer, 300) i, 'FZ'
+            Write(IOBuffer, 300) i, 'Fz'
             Call AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
             If (iCase == 7) Then
                Write(IOBuffer, 300) i, 'Px'
@@ -406,7 +406,7 @@ End If
                Write(IOBuffer, 300) i, 'Py'
                Call AskReal(P(i)%Y, IOBuffer, BatchUnit, IsBatch)
    
-               Write(IOBuffer, 300) i, 'PZ'
+               Write(IOBuffer, 300) i, 'Pz'
                Call AskReal(P(i)%Z, IOBuffer, BatchUnit, IsBatch)
             End If
          End If
@@ -628,7 +628,7 @@ End If
                   Velem = V(i)
                   Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
                   Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
-                  Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+                  Call SectionRealRestore(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
                End Do   
             Case(11)
                !!! this will break when we do P2 elements, just like everything else here...
@@ -676,52 +676,6 @@ End If
  302 Format('NS', I4.4, ': ', A)
 
 Contains
-   Subroutine AskInt(val, msg, ArgUnit, IsBatch)
-      PetscInt                                  :: Val
-      Character(len=*)                          :: msg 
-      PetscInt                                  :: argunit
-      PetscTruth                                :: IsBatch
-
-      Character(len=MEF90_MXSTRLEN)             :: prefix, IOBuffer      
-      If (IsBatch) Then
-         If (MEF90_MyRank == 0) Then
-            Read(ArgUnit,*) Val
-         End If
-         Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
-      Else
-         Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         If (MEF90_MyRank == 0) Then
-            Read(*,*) Val
-            Write(ArgUnit, "(I4, t60, A)") val, Trim(msg)
-         End If
-         Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
-      End If
-   End Subroutine AskInt   
-   
-   Subroutine AskReal(val, msg, ArgUnit, IsBatch)
-      PetscReal                                 :: Val
-      Character(len=*)                          :: msg 
-      PetscInt                                  :: argunit
-      PetscTruth                                :: IsBatch
-
-      Character(len=MEF90_MXSTRLEN)             :: prefix, IOBuffer      
-      If (IsBatch) Then
-         If (MEF90_MyRank == 0) Then
-            Read(ArgUnit,*) Val
-         End If
-         Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
-      Else
-         Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         If (MEF90_MyRank == 0) Then
-            Read(*,*) Val
-            Write(ArgUnit, "(ES12.5, t60, A)") val, Trim(msg)
-         End If
-         Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
-      End If
-   End Subroutine AskReal
-
    Subroutine EXOProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
@@ -776,7 +730,5 @@ Contains
  200 Format('EB', I4.4, ': ', A)
  201 Format('SS', I4.4, ': ', A)
  202 Format('NS', I4.4, ': ', A)
-   End Subroutine EXOProperty_AskWithBatch
-      
-
+    End Subroutine EXOProperty_AskWithBatch
 End Program PrepVarFrac
