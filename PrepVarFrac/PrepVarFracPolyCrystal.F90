@@ -495,39 +495,39 @@ Program PrepVarFrac
          Select Case(iCase)
          !!! Write special cases here 
          Case(2)
-         Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
-            Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
-            R        = sqrt(CoordElem(1)**2 + CoordElem(2)**2)
-            CTheta   = CoordElem(1) / R
-            Ctheta2 = sqrt((1.0_Kr + CTheta) * .5_Kr)
-            If (CoordElem(2) > 0.) Then
-               Stheta2 = sqrt((1.0_Kr - CTheta) * .5_Kr)
-            Else
-               Stheta2 = -sqrt((1.0_Kr - CTheta) * .5_Kr)
-            End If
-            Uelem(1) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (Kappa - CTheta) * U(i)%X
-            Uelem(2) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa - CTheta) * U(i)%Y
-            Uelem(3) = 0.
-            Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
-         End Do   
+            Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+               Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+               R        = sqrt(CoordElem(1)**2 + CoordElem(2)**2)
+               CTheta   = CoordElem(1) / R
+               Ctheta2 = sqrt((1.0_Kr + CTheta) * .5_Kr)
+               If (CoordElem(2) > 0.) Then
+                  Stheta2 = sqrt((1.0_Kr - CTheta) * .5_Kr)
+               Else
+                  Stheta2 = -sqrt((1.0_Kr - CTheta) * .5_Kr)
+               End If
+               Uelem(1) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (Kappa - CTheta) * U(i)%X
+               Uelem(2) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa - CTheta) * U(i)%Y
+               Uelem(3) = 0.
+               Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+            End Do   
          Case(3)
-         Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
-            Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
-            R        = sqrt((CoordElem(1)-T(iStep))**2 + CoordElem(2)**2)
-            CTheta   = (CoordElem(1)-T(iStep))/R
-            Ctheta2 = sqrt((1.0_Kr + CTheta) * .5_Kr)
-            If (CoordElem(2) > 0.) Then
-               Stheta2 = sqrt((1.0_Kr - CTheta) * .5_Kr)
-            Else
-               Stheta2 = -sqrt((1.0_Kr - CTheta) * .5_Kr)
-            End If
-            Uelem(1) = sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (Kappa - CTheta) * U(i)%X
-            Uelem(2) = sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa - CTheta) * U(i)%Y
-            Uelem(3) = 0.
-            Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
-         End Do   
+            Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+               Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+               R        = sqrt((CoordElem(1)-T(iStep))**2 + CoordElem(2)**2)
+               CTheta   = (CoordElem(1)-T(iStep))/R
+               Ctheta2 = sqrt((1.0_Kr + CTheta) * .5_Kr)
+               If (CoordElem(2) > 0.) Then
+                  Stheta2 = sqrt((1.0_Kr - CTheta) * .5_Kr)
+               Else
+                  Stheta2 = -sqrt((1.0_Kr - CTheta) * .5_Kr)
+               End If
+               Uelem(1) = sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (Kappa - CTheta) * U(i)%X
+               Uelem(2) = sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa - CTheta) * U(i)%Y
+               Uelem(3) = 0.
+               Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+            End Do   
          Case default
             !!! Default is MIL
             Uelem(1) = T(iStep) * U(i)%X
