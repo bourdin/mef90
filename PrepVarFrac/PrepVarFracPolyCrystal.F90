@@ -44,8 +44,6 @@ Program PrepVarFrac
    Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp3D
    Type(Tens4OS2D)                              :: TmpHL_2D
    Type(Tens4OS3D)                              :: TmpHL_3D   
-   Type(Vect2D)                                 :: k_2D
-   Type(Vect3D)                                 :: k_3D
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
    PetscReal, Dimension(:), Pointer             :: GlobVars
    PetscInt                                     :: vers
@@ -58,7 +56,10 @@ Program PrepVarFrac
    PetscReal                                    :: ToughnessGrain, ThermExpScalGrain
    PetscReal                                    :: lambdaGrain, mu1Grain, mu2Grain
    PetscReal                                    :: alphaGrain, alphamin, alphamax
+   PetscReal                                    :: Eeff, nueff, Kappa, mu
    PetscRandom                                  :: RandomCtx
+   
+   PetscReal                                    ::R, Ctheta, CTheta2, Stheta, STheta2
 
    Call MEF90_Initialize()
    
@@ -187,10 +188,6 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-!!! Initialize Sections   
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
-   
 !!! List all test cases and wait for case number 
    Do i = 1, NumTestCase
       Write(IOBuffer, "('[',I2.2,'] ',A)"), TestCase(i)%Index, Trim(TestCase(i)%Description)//'\n'
@@ -247,6 +244,7 @@ Program PrepVarFrac
    Write(IOBuffer, *) '\nMaterial Properties\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    Select Case(iCase)
+   !!! Write special cases here
    Case Default
       If (NumGrains > 0) Then 
          !!! Default behavior is that the grains are the first element block and share the same properties (but not orientation)
@@ -327,9 +325,9 @@ Program PrepVarFrac
 90 Format('Grain ', I4.4, ' angle ', F43.1, '\n')
 
 !!!
-!!! EB Variables: Temperature and Forces
+!!! Temperature and Forces
 !!!
-   Write(IOBuffer, *) '\nFields and Loads\n'
+   Write(IOBuffer, *) '\nTemperature and Forces\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    !!! Variable initialized on EB: F and Theta
    Allocate(F(MeshTopology%Num_Elem_Blks_Global))
@@ -338,7 +336,7 @@ Program PrepVarFrac
    F%Y = 0.0_Kr
    F%Z = 0.0_Kr
    Theta = 0.0_Kr
-   If ( NumGrains>0) Then
+   If (NumGrains>0) Then
       If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(1) /= 0) Then
          !!! Force
          Write(IOBuffer, 310) 'Fx'
@@ -371,8 +369,12 @@ Program PrepVarFrac
       !!! Temperature
       Write(IOBuffer, 300) i, 'Theta'
       Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
+      !!!
+      If (.NOT. IsBatch) Then
+         Write(BatchUnit, *)
+      End If
+      
    End Do
-
    !!!
    !!! Compute the value of the force field at the vertices
    !!! Here is the place to request additional parameters if needed
@@ -386,7 +388,9 @@ Program PrepVarFrac
          Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
          Allocate(Felem(3*Num_DoF))
          Select Case(iCase)
+         !!! Write special cases here
          Case default
+            !!! Default is MIL
             If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
                Do k = 0, Num_DoF-1
                   Felem(3*k+1) = T(iStep) * F(i)%X
@@ -403,7 +407,7 @@ Program PrepVarFrac
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, iStep, FSec) 
    End Do Do_Step_F
    Call SectionRealDestroy(FSec, iErr); CHKERRQ(iErr)
-
+   DeAllocate(F)
    !!!
    !!! Compute the value of the force field at the vertices
    !!! Here is the place to request additional parameters if needed
@@ -417,34 +421,158 @@ Program PrepVarFrac
          Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
          Allocate(Thetaelem(Num_DoF))
          Select Case(iCase)
+         !!! Write special cases here
          Case default
-            If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
-               Do k = 0, Num_DoF-1
-                  Thetaelem(k) = T(iStep) * Theta(i)
-               End Do
-               Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
-                  Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
-               End Do
-            End If
+            !!! Default is MIL
+            Do k = 1, Num_DoF
+               Thetaelem(k) = T(iStep) * Theta(i)
+            End Do
+            Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+               Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+            End Do
          End Select      
          DeAllocate(Thetaelem)
       End Do Do_Blk_Theta
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, iStep, ThetaSec) 
    End Do Do_Step_Theta
    Call SectionRealDestroy(ThetaSec, iErr); CHKERRQ(iErr)
+   DeAllocate(Theta)
 
 
-
-
-   If (.NOT. IsBatch) Then
-      Write(BatchUnit, *)
+   !!!
+   !!! U and V
+   !!!
+   Write(IOBuffer, *) '\nU and V\n'
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
+   !!! Variable initialized on EB: F and Theta
+   Allocate(U(MeshTopology%Num_Node_Sets_Global))
+   Allocate(V(MeshTopology%Num_Node_Sets_Global))
+   U%X = 0.0_Kr
+   U%Y = 0.0_Kr
+   U%Z = 0.0_Kr
+   V   = 1.0_Kr
+   Do i = 1, MeshTopology%Num_Node_Sets_Global
+      Write(IOBuffer, 102) i
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
+         Write(IOBuffer, 302) i, 'Ux'
+         Call AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
+      End If
+      If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
+         Write(IOBuffer, 302) i, 'Uy'
+         Call AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
+      End If
+      If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
+         Write(IOBuffer, 302) i, 'Uz'
+         Call AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
+      End If
+      If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
+         Write(IOBuffer, 302) i, 'V'
+         Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+      End If
+      If (.NOT. IsBatch) Then
+         Write(BatchUnit, *)
+      End If
+   End Do
+   Write(IOBuffer, *) '   \n\n'
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   !!!
+   !!! Compute the value of the Displacement at the vertices
+   !!! Here is the place to request additional parameters if needed
+   !!!
+   If ((iCase == 2) .OR. (iCase==3)) Then
+      Call AskReal(Eeff,  'E effective (for displacement field)',  BatchUnit, IsBatch)
+      Call AskReal(nueff, 'nu effective (for displacement field)', BatchUnit, IsBatch)
+      Kappa = (3.0-nu)/(1.0+nu)
+      Mu = E / (1.0_Kr + nu) * .5_Kr
    End If
-!!!
-!!! Nodal variables: 
-!!!
-
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
+   Allocate(Uelem(3))
+   Do iStep = 1, NumSteps
+      Call SectionRealSet(USec, 0.0_Kr, iErr); CHKERRQ(iErr)
+      Do iloc = 1, MeshTopology%Num_Node_Sets         
+         i = MeshTopology%Node_Set(iloc)%ID
+         Select Case(iCase)
+         !!! Write special cases here 
+         Case(2)
+         Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+            Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+            R        = sqrt(CoordElem(1)**2 + CoordElem(2)**2)
+            CTheta   = CoordElem(1) / R
+            Ctheta2 = sqrt((1.0_Kr + CTheta) * .5_Kr)
+            If (CoordElem(2) > 0.) Then
+               Stheta2 = sqrt((1.0_Kr - CTheta) * .5_Kr)
+            Else
+               Stheta2 = -sqrt((1.0_Kr - CTheta) * .5_Kr)
+            End If
+            Uelem(1) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (Kappa - CTheta) * U(i)%X
+            Uelem(2) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa - CTheta) * U(i)%Y
+            Uelem(3) = 0.
+            Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+         End Do   
+         Case(3)
+         Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+            Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+            R        = sqrt((CoordElem(1)-T(iStep))**2 + CoordElem(2)**2)
+            CTheta   = (CoordElem(1)-T(iStep))/R
+            Ctheta2 = sqrt((1.0_Kr + CTheta) * .5_Kr)
+            If (CoordElem(2) > 0.) Then
+               Stheta2 = sqrt((1.0_Kr - CTheta) * .5_Kr)
+            Else
+               Stheta2 = -sqrt((1.0_Kr - CTheta) * .5_Kr)
+            End If
+            Uelem(1) = sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (Kappa - CTheta) * U(i)%X
+            Uelem(2) = sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa - CTheta) * U(i)%Y
+            Uelem(3) = 0.
+            Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+         End Do   
+         Case default
+            !!! Default is MIL
+            Uelem(1) = T(iStep) * U(i)%X
+            Uelem(2) = T(iStep) * U(i)%Y
+            Uelem(3) = T(iStep) * U(i)%Z
+            Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+               Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            End Do
+         End Select
+      End Do
+      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, iStep, USec)
+   End Do
+   DeAllocate(Uelem)
+   Call SectionRealDestroy(USec, iErr); CHKERRQ(iErr)
+   DeAllocate(U)
+   !!!
+   !!! Compute the value of the fracture field at the vertices
+   !!! Here is the place to request additional parameters if needed
+   !!!
+   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
+   Allocate(Velem(1))
+   Do iStep = 1, NumSteps
+      Call SectionRealSet(VSec, 1.0_Kr, iErr); CHKERRQ(iErr)
+      Do iloc = 1, MeshTopology%Num_Node_Sets         
+         i = MeshTopology%Node_Set(iloc)%ID
+         Select Case(iCase)
+         !!! Write special cases here 
+         Case default
+            Velem(1) = V(i)
+            Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+               Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            End Do
+         End Select
+      End Do
+      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
+   End Do
+   DeAllocate(Velem)
+   Call SectionRealDestroy(VSec, iErr); CHKERRQ(iErr)
+   DeAllocate(V)
 
    Close(BatchUnit)
+   DeAllocate(TestCase)
+   DeAllocate(T)
+   Call SectionRealDestroy(CoordSec, iErr); CHKERRQ(iErr)
+   Call MeshTopologyDestroy(MeshTopology)
    Call MEF90_Finalize()
 
  100 Format('*** Element Block ', T24, I3, '\n')

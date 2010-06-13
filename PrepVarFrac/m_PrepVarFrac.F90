@@ -127,6 +127,92 @@ Contains
 201 Format('SS', I4.4, ': ', A)
    End Subroutine EXOSSProperty_AskWithBatchGrains
    
+   Subroutine EXONSProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
+      Type(EXO_Type)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      PetscInt                                       :: BatchUnit
+      PetscTruth                                     :: IsBatch
+
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i, j, IntBuffer
+
+      PetscInt                                       :: NumNS
+      PetscInt                                       :: EXO_MyRank
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+
+      Do i = 1, dMeshTopology%Num_Node_Sets_Global
+         Write(IOBuffer, 102) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_NSProperties
+            Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
+            Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+102 Format('*** Node Set      ', T24, I3, '\n')
+202 Format('NS', I4.4, ': ', A)
+   End Subroutine EXONSProperty_AskWithBatch
+
+
+   Subroutine EXOEBProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
+      Type(EXO_Type)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      PetscInt                                       :: BatchUnit
+      PetscTruth                                     :: IsBatch
+
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i, j, IntBuffer
+
+      PetscInt                                       :: NumEB
+      PetscInt                                       :: EXO_MyRank
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+      PetscReal                                      :: TmpEBProperty
+
+      Do i = 1, dMeshTopology%Num_Elem_Blks_Global
+         Write(IOBuffer, 100) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_EBProperties
+            Write(IOBuffer, 200) i, Trim(dEXO%EBProperty(j)%Name)
+            Call AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+100 Format('*** Element Block ', T24, I3, '\n')
+200 Format('EB', I4.4, ': ', A)
+   End Subroutine EXOEBProperty_AskWithBatch
+   
+   Subroutine EXOSSProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
+      Type(EXO_Type)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      PetscInt                                       :: BatchUnit
+      PetscTruth                                     :: IsBatch
+
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i, j, IntBuffer
+
+      PetscInt                                       :: NumSS
+      PetscInt                                       :: EXO_MyRank
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+
+      Do i = 1, dMeshTopology%Num_Side_Sets_Global
+         Write(IOBuffer, 101) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_SSProperties
+            Write(IOBuffer, 201) i, Trim(dEXO%SSProperty(j)%Name)
+            Call AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+101 Format('*** Side Set      ', T24, I3, '\n')
+201 Format('SS', I4.4, ': ', A)
+   End Subroutine EXOSSProperty_AskWithBatch
+   
    Subroutine EXONSProperty_AskWithBatchGrains(dEXO, dMeshTopology, BatchUnit, IsBatch, NumGrains)
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
