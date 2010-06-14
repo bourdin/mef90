@@ -78,7 +78,7 @@ Program  Elast
       Call Save(AppCtx)
    End Do
 
-   Open (Unit=73, file = 'EffectiveProperties.log', status = 'Unknown')
+   Open (Unit=73, file = 'EffectiveProperties.log', status = 'unknown', position = 'append')
    Write(73,*) 2.0_Kr * AppCtx%ElasticEnergy, 1.0_Kr - VolChange
    Close(73)
    Call ElastFinalize(AppCtx)
