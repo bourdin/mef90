@@ -161,7 +161,7 @@ Program PrepVarFrac
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
 
    !!! Get number of grains from command line
-   numGrains = 0
+   numGrains = MeshTopology%Num_Elem_Blks_Global
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-n', NumGrains, has_n, iErr) 
    If (NumGrains > MeshTopology%Num_Elem_Blks_Global) Then
       Write(IOBuffer, *) "Number of grains cannot be greater than number of blocks! ", NumGrains, MeshTopology%Num_Elem_Blks_Global, "\n"
