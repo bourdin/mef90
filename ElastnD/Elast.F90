@@ -78,8 +78,10 @@ Program  Elast
       Call Save(AppCtx)
    End Do
 
-   Open (Unit=73, file = 'EffectiveProperties.log', status = 'unknown', position = 'append')
-   Write(73,*) 2.0_Kr * AppCtx%ElasticEnergy, 1.0_Kr - VolChange
-   Close(73)
+   If (MEF90_MyRank == 0) Then
+      Open (Unit=73, file = 'EffectiveProperties.log', status = 'unknown', position = 'append')
+      Write(73,*) 2.0_Kr * AppCtx%ElasticEnergy, 1.0_Kr - VolChange
+      Close(73)
+   End If
    Call ElastFinalize(AppCtx)
 End Program  Elast
