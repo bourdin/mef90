@@ -6,6 +6,7 @@ Module m_VarFrac_Struct
    Implicit NONE
    Private
    
+   Public :: GenHL_Iso_LambdaMu
    Public :: GenHL_Iso3D_Enu
    Public :: GenHL_Iso2D_EnuPlaneStress
    Public :: GenHL_Iso2D_EnuPlaneStrain
@@ -670,17 +671,30 @@ Module m_VarFrac_Struct
 
    Subroutine GenHL_Ortho2D_LambdaMu(lambda, mu1, mu2, theta, A)
       PetscReal, Intent(IN)               :: Lambda, mu1, mu2, theta
+      Type(Tens4OS2D)                     :: TmpTens
       Type(Tens4OS2D), Intent(OUT)        :: A
+      PetscReal, DImension(:,:), Pointer  :: R
+      !!!$A = 0.0_Kr
+      !!!$A%XXXX = lambda + mu1 * (1.0_Kr + (cos(theta))**2) +  mu2 * (sin(theta))**2
+      !!!$A%XXXY = (mu1-mu2) * cos(theta) * sin(theta)
+      !!!$A%XXYY = lambda + (mu1-mu2) * (sin(theta))**2
+      !!!$A%XYXY = mu1 * (sin(theta))**2 + mu2 * (cos(theta))**2
+      !!!$A%XYYY = -A%XXXY
+      !!!$A%YYYY =  A%XXXX
+      TmpTens = 0.0_Kr
+      TmpTens%XXXX = lambda + 2.0_Kr * mu1
+      TmpTens%XXXY = 0.0_Kr
+      TmpTens%XXYY = lambda
+      TmpTens%XYXY = mu2
+      TmpTens%XYYY = 0.0_Kr
+      TmpTens%YYYY = lambda + 2.0_Kr * mu1
       
-      A = 0.0_Kr
-      A%XXXX = lambda + mu1 * (1.0_Kr + (cos(theta))**2) +  mu2 * (sin(theta))**2
-      A%XXXY = (mu1-mu2) * cos(theta) * sin(theta)
-      A%XXYY = lambda + (mu1-mu2) * (sin(theta))**2
-
-      A%XYXY = mu1 * (sin(theta))**2 + mu2 * (cos(theta))**2
-      A%XYYY = -A%XXXY
-
-      A%YYYY =  A%XXXX
+      Allocate(R(2,2))
+      R(1,1) = cos(theta) ; R(1,2) = -sin(theta)
+      R(2,1) = sin(theta) ; R(2,2) = cos(theta)
+      
+      A = Tens4OS2DTransform(TmpTens, R)
+      DeAllocate(R)
    End Subroutine GenHL_Ortho2D_LambdaMu
    
    PetscReal Function StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu)

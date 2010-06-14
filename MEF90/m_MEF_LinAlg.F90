@@ -2190,4 +2190,59 @@ Contains
       ! GaussJordan does not report flops, so there is no point in calling PetscLogFLops
    End Function InvertTens4OS3D
    
+   Function Tens4OS2DTransform(T, M)
+      !!! Apply the transformation given by the matrix R to a 4th order tensor
+      !!! i.e. C_{ijkl} = R_{ip}.R_{jq}.R_{kr}.R{ls} A_{pqrs}
+      Type (Tens4OS2D), Intent(IN)                   :: T
+      PetscReal, Dimension(:,:), Pointer             :: M
+      
+      Type(Tens4OS2D)                                :: Tens4OS2DTransform
+   
+      PetscReal, Dimension(2,2,2,2)                  :: A, C
+      Integer                                        :: i,j,k,l
+      Integer                                        :: p,q,r,s
+      
+      A(1,1,1,1) = T%XXXX
+      A(1,1,1,2) = T%XXXY
+      A(1,1,2,1) = T%XXXY
+      A(1,1,2,2) = T%XXYY
+      A(1,2,1,1) = T%XXXY
+      A(1,2,1,2) = T%XYXY
+      A(1,2,2,1) = T%XYXY
+      A(1,2,2,2) = T%XYYY
+      A(2,1,1,1) = T%XXXY
+      A(2,1,1,2) = T%XYXY
+      A(2,1,2,1) = T%XYXY
+      A(2,1,2,2) = T%XYYY
+      A(2,2,1,1) = T%XXYY
+      A(2,2,1,2) = T%XYYY
+      A(2,2,2,1) = T%XYYY
+      A(2,2,2,2) = T%YYYY
+      
+      C = 0.0_Kr
+      Do i = 1, 2
+         Do j = 1, 2
+            Do k = 1,2
+               Do l = 1,2
+                  Do p = 1, 2
+                     Do q = 1, 2
+                        Do r = 1, 2
+                           Do s = 1, 2
+                              C(i,j,k,l) = C(i,j,k,l) + M(i,p) * M(j,q) * M(k,r) * M(l,s) * A(p,q,r,s)
+                           End Do
+                        End Do
+                     End Do
+                  End Do
+               End Do
+            End Do
+         End Do
+      End Do
+       
+       Tens4OS2DTransform%XXXX = C(1,1,1,1) 
+       Tens4OS2DTransform%XXXY = C(1,1,1,2) 
+       Tens4OS2DTransform%XXYY = C(1,1,2,2) 
+       Tens4OS2DTransform%XYXY = C(1,2,1,2) 
+       Tens4OS2DTransform%XYYY = C(1,2,2,2) 
+       Tens4OS2DTransform%YYYY = C(2,2,2,2) 
+   End Function Tens4OS2DTransform
 End Module m_MEF_LinAlg
