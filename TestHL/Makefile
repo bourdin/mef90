@@ -26,3 +26,6 @@ ${PETSC_ARCH}:
 
 TestHL:      ${PETSC_ARCH} TestHL.o ${PETSC_ARCH}/TestHL.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestHL ${PETSC_ARCH}/TestHL.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
+TestTransform:      ${PETSC_ARCH} TestTransform.o ${PETSC_ARCH}/TestTransform.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestTransform ${PETSC_ARCH}/TestTransform.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
