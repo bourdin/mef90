@@ -60,7 +60,7 @@ Program PrepVarFrac
    PetscRandom                                  :: RandomCtx
    PetscInt                                     :: Seed
    PetscLogDouble                               :: Time
-   PetscTruth                                   :: Has_Seed
+   PetscTruth                                   :: Has_Seed, Has_n
    
    PetscReal                                    :: R, Ctheta, CTheta2, Stheta, STheta2
 
@@ -159,7 +159,14 @@ Program PrepVarFrac
    
    Write(IOBuffer, *) '\nElement Block and Node Set Properties\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-   Call AskInt(NumGrains, 'Number of grains', BatchUnit, IsBatch)
+
+   !!! Get number of grains from command line
+   numGrains = 0
+   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-n', NumGrains, has_n, iErr) 
+   If (NumGrains > MeshTopology%Num_Elem_Blks_Global) Then
+      Write(IOBuffer, *) "Number of grains cannot be greater than number of blocks! ", NumGrains, MeshTopology%Num_Elem_Blks_Global, "\n"
+      SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_ARG_SIZ, IOBuffer, iErr)
+   End If
    Call EXOEBProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
    Call EXOSSProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
    Call EXONSProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
@@ -292,7 +299,6 @@ Program PrepVarFrac
             MatProp3D(iBlock)%Therm_Exp%ZZ = ThermExpScalGrain
          End Select 
       End Do
-      Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)
       !!! Non grain EB if necessary
       Do iBlock = NumGrains+1, MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) iBlock
@@ -324,6 +330,7 @@ Program PrepVarFrac
          End Select 
       End Do
    End Select
+   
    !!! Write EB Properties
    If (MEF90_MyRank == 0) Then
       Select Case(MeshTopology%Num_Dim)
@@ -335,7 +342,7 @@ Program PrepVarFrac
          DeAllocate(MatProp3D)
       End Select
    End If
-90 Format('Grain ', I4.4, ' angle ', F43.1, '\n')
+90 Format('Grain ', I4.4, ' angle ', F6.2, '\n')
 
 !!!
 !!! Temperature and Forces
@@ -581,6 +588,7 @@ Program PrepVarFrac
    Call SectionRealDestroy(VSec, iErr); CHKERRQ(iErr)
    DeAllocate(V)
 
+   Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)
    Close(BatchUnit)
    DeAllocate(TestCase)
    DeAllocate(T)
