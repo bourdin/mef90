@@ -11,7 +11,8 @@ Module m_VarFrac_Struct
    Public :: GenHL_Iso2D_EnuPlaneStress
    Public :: GenHL_Iso2D_EnuPlaneStrain
    Public :: GenHL_Ortho2D_LambdaMu
-   Public :: GenHL_Ortho2D_Enu
+   Public :: GenHL_Ortho2D_EGnu
+   Public :: GenHL_Ortho2D_EGmu
    Public :: GenHL_Laminate_LambdaMu
    
    Public :: VarFracSchemeParam_View
@@ -698,7 +699,7 @@ Module m_VarFrac_Struct
       DeAllocate(R)
    End Subroutine GenHL_Ortho2D_LambdaMu
    
-   Subroutine GenHL_Ortho2D_Enu(E, G, nu, theta, A)
+   Subroutine GenHL_Ortho2D_EGnu(E, G, nu, theta, A)
       PetscReal, Intent(IN)               :: E, G, nu, theta
       Type(Tens4OS2D), Intent(OUT)        :: A
       
@@ -706,9 +707,22 @@ Module m_VarFrac_Struct
       
       lambda = E * nu / (1.0_Kr - nu**2)
       mu1    = E / (1.0_Kr + nu) * .5_Kr
-      mu2    = G * .5_Kr 
+      mu2    = G
       Call GenHL_Ortho2D_LambdaMu(lambda, mu1, mu2, theta, A)
-   End Subroutine GenHL_Ortho2D_Enu
+   End Subroutine GenHL_Ortho2D_EGnu
+   
+   Subroutine GenHL_Ortho2D_EGmu(E, G, mu, theta, A)
+      PetscReal, Intent(IN)               :: E, G, mu, theta
+      Type(Tens4OS2D), Intent(OUT)        :: A
+      
+      PetscReal                           :: nu, lambda, mu1, mu2
+      
+      nu     = E / mu * .5_Kr - 1.0_Kr
+      lambda = E * nu / (1.0_Kr - nu**2)
+      mu1    = mu
+      mu2    = G
+      Call GenHL_Ortho2D_LambdaMu(lambda, mu1, mu2, theta, A)
+   End Subroutine GenHL_Ortho2D_EGmu
    
    PetscReal Function StrainProjectionComponent2D_LambdaMu(xi, k, lambda, mu)
       !!! Compute the projection operator on strain fields as in Allaire 1997 Corollary 1.14.13
