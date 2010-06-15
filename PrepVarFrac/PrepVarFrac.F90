@@ -80,7 +80,6 @@ Program PrepVarFrac
       Else
          BatchFileName = Trim(prefix)//'.args'
          Inquire(File=BatchFileName, EXIST=HasBatchFile)
-         Write(*,*) 'HasBatchFile ', HasBatchFile, 'EraseBatch', EraseBatch
          If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
             Write(IOBuffer, *) "Batch file ", trim(BatchFileName), " already exists. Erase it or use -force flag\n"
             Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
