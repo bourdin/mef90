@@ -118,7 +118,7 @@ Program PrepVarFrac
    End Do
    TestCase(1)%Description = "Polycrystal, MIL"
    TestCase(2)%Description = "Polycrystal, Mode-I loading, using asymptotic form of displacement (MIL)"
-   TestCase(3)%Description = "Polycrystal, Mode-I loading, using asymptotic form of displacement (Crack tip at (t,0,0))"
+   TestCase(3)%Description = "Polycrystal, Mode-I loading, using asymptotic form of displacement (Surfing BC)"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
