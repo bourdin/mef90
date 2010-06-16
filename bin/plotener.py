@@ -13,6 +13,7 @@ parser.add_option("-o", "--output", dest="outputfile", help="output file name")
 parser.add_option("-m", "--stepmin", dest="stepmin", help="first time step")
 parser.add_option("-M", "--stepmax", dest="stepmax", help="last time step")
 parser.add_option("--old", dest="old", action="store_true", default=False, help="old style energy file (no forces)")
+parser.add_option("-r", "--relative", dest="relative", action="store_true", default=False, help="offset surface energy")
 
 (options, args) = parser.parse_args()
 if options.debug:
@@ -48,7 +49,8 @@ if options.outputfile != None:
   matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-
+if options.relative:
+  energies[:,4] -= energies[tmin,4]
 ### plot
 pymef90.energies.plot(energies[tmin:tmax,:], options.forces)
   
