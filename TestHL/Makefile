@@ -7,7 +7,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
 M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 
-all: TestHL
+all: TestHL TestHLOrtho TestHLTransform
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
@@ -26,6 +26,9 @@ ${PETSC_ARCH}:
 
 TestHL:      ${PETSC_ARCH} TestHL.o ${PETSC_ARCH}/TestHL.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestHL ${PETSC_ARCH}/TestHL.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
+TestHLOrtho: ${PETSC_ARCH} TestHLOrtho.o ${PETSC_ARCH}/TestHLOrtho.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestHLOrtho ${PETSC_ARCH}/TestHLOrtho.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
 TestTransform:      ${PETSC_ARCH} TestTransform.o ${PETSC_ARCH}/TestTransform.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestTransform ${PETSC_ARCH}/TestTransform.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}

@@ -707,7 +707,7 @@ Module m_VarFrac_Struct
       
       lambda = E * nu / (1.0_Kr - nu**2)
       mu1    = E / (1.0_Kr + nu) * .5_Kr
-      mu2    = G
+      mu2    = G 
       Call GenHL_Ortho2D_LambdaMu(lambda, mu1, mu2, theta, A)
    End Subroutine GenHL_Ortho2D_EGnu
    
@@ -720,7 +720,7 @@ Module m_VarFrac_Struct
       nu     = E / mu * .5_Kr - 1.0_Kr
       lambda = E * nu / (1.0_Kr - nu**2)
       mu1    = mu
-      mu2    = G
+      mu2    = G 
       Call GenHL_Ortho2D_LambdaMu(lambda, mu1, mu2, theta, A)
    End Subroutine GenHL_Ortho2D_EGmu
    
