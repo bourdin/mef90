@@ -537,7 +537,7 @@ def PacmanCreate(lx, ly, lz, thetacrack):
    ###
    return CYL
 
-def PacmanLayeredCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5, ):
+def PacmanLayeredCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, xc=0):
   import cubit
   import numpy as np
   import pymef90
@@ -550,7 +550,7 @@ def PacmanLayeredCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, lc
   ### Create wedge
   ###
   w_ID=[]
-  cubit.cmd("create vertex X %f Y 0 Z %f" % ( (2. * lcrack - 1.) *lx, -lz))
+  cubit.cmd("create vertex X %f Y 0 Z %f" % ( xc, -lz))
   #  cubit.cmd("create vertex X 0 Y 0 Z %f" % ( -lz))
   w_ID.append(cubit.get_last_id("vertex"))
   X = 1.1 * np.max(lx, ly) * np.cos(np.radians(thetacrack/2.))
@@ -589,7 +589,7 @@ def PacmanLayeredCreateLayered(lx, ly, lz, alpha, theta1, theta2, thetacrack, lc
   ###
   return LAYER1_3D, LAYER2_3D
   
-def PacmanCoinLayeredCreate(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, lcrack=.5):
+def PacmanCoinLayeredCreate(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, xc=0):
   import cubit
   import numpy as np
   import pymef90
@@ -603,7 +603,7 @@ def PacmanCoinLayeredCreate(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, lc
   ### Create wedge
   ###
   w_ID=[]
-  cubit.cmd("create vertex X %f Y 0 Z %f" % ( (2. * lcrack - 1.) * R, -lz))
+  cubit.cmd("create vertex X %f Y 0 Z %f" % ( xc, -lz))
   w_ID.append(cubit.get_last_id("vertex"))
   X = 1.1 * R * np.cos(np.radians(thetacrack/2.))
   Y = 1.1 * R * np.sin(np.radians(thetacrack/2.))
@@ -649,7 +649,7 @@ def PacmanCoinLayeredCreate(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, lc
   ###
   ### Generate the pacman geometry
   ###
-  (OUTSIDE_3D, CYL_3D) = pymef90.PacmanCoinCreate(R, r, r, lz, thetac, lc)
+  (OUTSIDE_3D, CYL_3D) = pymef90.PacmanCoinCreate(R, r, r, lz, thetac, xc)
   ###
   ### Create grains geometry
   ###
@@ -682,7 +682,7 @@ def PacmanCoinLayeredCreate(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, lc
     (CYL_3D, Grain_3D[i]) = pymef90.WebcutTool(CYL_3D, tmpgrain, delete=True)
     pymef90.GroupAddVolList("Grain%i"%i, Grain_3D[i])
 
-def PacmanCoinCreate(R, lx, ly, lz, thetacrack, lcrack=.5):
+def PacmanCoinCreate(R, lx, ly, lz, thetacrack, xc=0.):
   import cubit
   import numpy as np
   import pymef90
@@ -696,7 +696,7 @@ def PacmanCoinCreate(R, lx, ly, lz, thetacrack, lcrack=.5):
   ### Create wedge
   ###
   w_ID=[]
-  cubit.cmd("create vertex X %f Y 0 Z %f" % ( (2. * lcrack - 1.) * R, -lz))
+  cubit.cmd("create vertex X %f Y 0 Z %f" % ( xc, -lz))
   w_ID.append(cubit.get_last_id("vertex"))
   X = 1.1 * R * np.cos(np.radians(thetacrack/2.))
   Y = 1.1 * R * np.sin(np.radians(thetacrack/2.))
@@ -729,12 +729,12 @@ def PacmanCoinCreate(R, lx, ly, lz, thetacrack, lcrack=.5):
   pymef90.GroupAddVolList("OUTSIDE_3D", OUTSIDE_3D)
   return OUTSIDE_3D[0], CYL_3D
 
-def PacmanCoinCrystalCreate(R, r, lz, thetac, lc, ngrains, debug=False):
+def PacmanCoinCrystalCreate(R, r, lz, thetac, xc, ngrains, debug=False):
   import cubit
   ###
   ### create initial pacman
   ###
-  (OUTSIDE_3D, CYL_3D) = PacmanCoinCreate(R, r, r, lz, thetac, lc)
+  (OUTSIDE_3D, CYL_3D) = PacmanCoinCreate(R, r, r, lz, thetac, xc)
   ###
   ### Create grains geometry
   ###

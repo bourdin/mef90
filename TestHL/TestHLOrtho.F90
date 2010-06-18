@@ -14,14 +14,14 @@ Program TestHLOrtho
    
    N=11
 
-   !!!$ Write(*, 100, advance = 'no') '(E, nu): '
-   !!!$ Read(*,*)    E, nu
-   !!!$ Call GenHL_Iso2D_EnuPlaneStress(E, nu, A) 
-   !!!$ Write(*, 200) "Isotropic Hookes law:", A
-   !!!$ lambda = E * nu / (1.0_Kr - nu**2) 
-   !!!$ mu     = E / (1.0_Kr + nu) * .5_Kr
-   !!!$ G      = mu
-   !!!$ Write(*, 300) "lambda / mu / G: ", lambda, mu, G
+   Write(*, 100, advance = 'no') '(E, nu): '
+   Read(*,*)    E, nu
+   Call GenHL_Iso2D_EnuPlaneStress(E, nu, A) 
+   Write(*, 200) "Isotropic Hookes law:", A
+   lambda = E * nu / (1.0_Kr - nu**2) 
+   mu     = E / (1.0_Kr + nu) * .5_Kr
+   G      = mu
+   Write(*, 300) "lambda / mu / G: ", lambda, mu, G
 
    !!!$ !Write(*, 100, advance = 'no') '(lambda, mu1, mu2): '
    !!!$ !Read(*,*) lambda, mu1, mu2
