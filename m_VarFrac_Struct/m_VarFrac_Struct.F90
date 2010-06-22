@@ -13,6 +13,8 @@ Module m_VarFrac_Struct
    Public :: GenHL_Ortho2D_LambdaMu
    Public :: GenHL_Ortho2D_EGnu
    Public :: GenHL_Ortho2D_EGmu
+   Public :: GenHL_Cubic2DPlaneStress_Voigt
+   Public :: GenHL_Cubic2DPlaneStress_Zener
    Public :: GenHL_Laminate_LambdaMu
    
    Public :: VarFracSchemeParam_View
@@ -697,34 +699,15 @@ Module m_VarFrac_Struct
       PetscReal, Intent(IN)               :: B, C, Cp, theta
       Type(Tens4OS2D)                     :: TmpTens
       Type(Tens4OS2D), Intent(OUT)        :: A
-      PetscReal, Dimension(:,:), Pointer  :: R
 
       PetscReal                           :: C11, C12, C44
-      PetscReal                           :: lambda_s
       
       !!! C11, C12, C44 are the coefficients of the 3D Hookes law
       C11 = B + Cp * 4.0_Kr / 3.0_Kr
-      C12 = B * 1.5_Kr - Cp
+      C12 = B - Cp * 2.0_Kr / 3.0_Kr
       C44 = C
       
-      !!! lambda = C12
-      !!! 2mu1    = C11-C12
-      !!! lambda^* = 2lambda mu1 / (lambda + 2mu1) = C12(C11-C12) / C11
-      !!! lambda^2 + 2mu1 = (C11^2-C12^2)/C11
-      TmpTens = 0.0_Kr
-      TmpTens%XXXX = (C11**2 - C12**2) / C11
-      TmpTens%XXXY = 0.0_Kr
-      TmpTens%XXYY = C11 - C12
-      TmpTens%XYXY = C44
-      TmpTens%XYYY = 0.0_Kr
-      TmpTens%YYYY = (C11**2 - C12**2) / C11
-      
-      Allocate(R(2,2))
-      R(1,1) = cos(theta) ; R(1,2) = -sin(theta)
-      R(2,1) = sin(theta) ; R(2,2) = cos(theta)
-
-      A = Tens4OS2DTransform(TmpTens, R)
-      DeAllocate(R)
+      Call GenHL_Cubic2DPlaneStress_Voigt(C11, C12, C44, theta, A)
    End Subroutine GenHL_Cubic2DPlaneStress_Zener
    
    
@@ -734,14 +717,10 @@ Module m_VarFrac_Struct
       Type(Tens4OS2D), Intent(OUT)        :: A
       PetscReal, Dimension(:,:), Pointer  :: R
       
-      !!! lambda = C12
-      !!! 2mu1    = C11-C12
-      !!! lambda^* = 2lambda mu1 / (lambda + 2mu1) = C12(C11-C12) / C11
-      !!! lambda^2 + 2mu1 = (C11^2-C12^2)/C11
       TmpTens = 0.0_Kr
       TmpTens%XXXX = (C11**2 - C12**2) / C11
       TmpTens%XXXY = 0.0_Kr
-      TmpTens%XXYY = C11 - C12
+      TmpTens%XXYY = (C11 - C12) * C12 / C11
       TmpTens%XYXY = C44
       TmpTens%XYYY = 0.0_Kr
       TmpTens%YYYY = (C11**2 - C12**2) / C11
