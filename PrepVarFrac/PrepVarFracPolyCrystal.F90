@@ -54,7 +54,7 @@ Program PrepVarFrac
    
    PetscInt                                     :: NumGrains
    PetscReal                                    :: ToughnessGrain, ThermExpScalGrain
-   PetscReal                                    :: EGrain, GGrain, muGrain
+   PetscReal                                    :: BGrain, CGrain, CpGrain
    PetscReal                                    :: alphaGrain, alphamin, alphamax
    PetscReal                                    :: Eeff, nueff, Kappa, mu
    PetscRandom                                  :: RandomCtx
@@ -274,9 +274,9 @@ Program PrepVarFrac
       If (NumGrains > 0) Then 
          !!! Default behavior is that the grains are the first element block and share the same properties (but not orientation)
          Call AskReal(ToughnessGrain,    'Grains: toughness',   BatchUnit, IsBatch)
-         Call AskReal(EGrain,            'Grains: E',           BatchUnit, IsBatch)
-         Call AskReal(GGrain,            'Grains: G   ',        BatchUnit, IsBatch)
-         Call AskReal(muGrain,           'Grains: mu   ',       BatchUnit, IsBatch)
+         Call AskReal(BGrain,            'Grains: Bulk modulus B',         BatchUnit, IsBatch)
+         Call AskReal(CGrain,            'Grains: Shear modulus C',        BatchUnit, IsBatch)
+         Call AskReal(CpGrain,           'Grains: Shear modulus Cp',       BatchUnit, IsBatch)
          Call AskReal(ThermExpScalGrain, 'Grains: therm. exp.', BatchUnit, IsBatch)
       End If
       alphamin = 0.0_Kr
@@ -289,7 +289,7 @@ Program PrepVarFrac
             Call PetscRandomGetValue(RandomCtx, alphaGrain, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 90) iBlock, alphaGrain * 180.0_kr / PETSC_PI
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Call GenHL_Ortho2D_EGMu(EGrain, GGrain, muGrain, alphaGrain, MatProp2D(iBlock)%Hookes_Law)
+            Call GenHL_Cubic2DPlaneStress_Zener(BGrain, CGrain, CpGrain, alphaGrain, MatProp2D(iBlock)%Hookes_Law)
             MatProp2D(iBlock)%Therm_Exp    = 0.0_Kr
             MatProp2D(iBlock)%Therm_Exp%XX = ThermExpScalGrain
             MatProp2D(iBlock)%Therm_Exp%YY = ThermExpScalGrain
