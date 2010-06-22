@@ -714,7 +714,7 @@ Module m_VarFrac_Struct
       TmpTens = 0.0_Kr
       TmpTens%XXXX = (C11**2 - C12**2) / C11
       TmpTens%XXXY = 0.0_Kr
-      TmpTens%XXYY = C12
+      TmpTens%XXYY = C11 - C12
       TmpTens%XYXY = C44
       TmpTens%XYYY = 0.0_Kr
       TmpTens%YYYY = (C11**2 - C12**2) / C11
@@ -741,7 +741,7 @@ Module m_VarFrac_Struct
       TmpTens = 0.0_Kr
       TmpTens%XXXX = (C11**2 - C12**2) / C11
       TmpTens%XXXY = 0.0_Kr
-      TmpTens%XXYY = C12
+      TmpTens%XXYY = C11 - C12
       TmpTens%XYXY = C44
       TmpTens%XYYY = 0.0_Kr
       TmpTens%YYYY = (C11**2 - C12**2) / C11
