@@ -697,6 +697,7 @@ Module m_VarFrac_Struct
       PetscReal, Intent(IN)               :: B, C, Cp, theta
       Type(Tens4OS2D)                     :: TmpTens
       Type(Tens4OS2D), Intent(OUT)        :: A
+      PetscReal, Dimension(:,:), Pointer  :: R
 
       PetscReal                           :: C11, C12, C44
       PetscReal                           :: lambda_s
@@ -751,7 +752,7 @@ Module m_VarFrac_Struct
 
       A = Tens4OS2DTransform(TmpTens, R)
       DeAllocate(R)
-   End Subroutine GenHL_Cubic2DPlaneStressVoigt
+   End Subroutine GenHL_Cubic2DPlaneStress_Voigt
    
 
    Subroutine GenHL_Ortho2D_LambdaMu(lambda, mu1, mu2, theta, A)
