@@ -501,6 +501,8 @@ Program PrepVarFrac
          Allocate(Thetaelem(Num_DoF))
          Select Case(iCase)
          !!! Write special cases here
+         Case(2,3,4)
+            Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
          Case default
             !!! Default is MIL
             Do k = 1, Num_DoF
@@ -559,7 +561,7 @@ Program PrepVarFrac
    !!! Compute the value of the Displacement at the vertices
    !!! Here is the place to request additional parameters if needed
    !!!
-   If ((iCase == 2) .OR. (iCase==3)) Then
+   If ((iCase == 2) .OR. (iCase==3) .OR. (iCase==4)) Then
       Call AskReal(Eeff,  'E effective (for displacement field)',  BatchUnit, IsBatch)
       Call AskReal(nueff, 'nu effective (for displacement field)', BatchUnit, IsBatch)
       Kappa = (3.0-nu)/(1.0+nu)
