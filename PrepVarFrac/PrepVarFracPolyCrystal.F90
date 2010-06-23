@@ -573,7 +573,7 @@ Program PrepVarFrac
          i = MeshTopology%Node_Set(iloc)%ID
          Select Case(iCase)
          !!! Write special cases here 
-         Case(2)
+         Case(2,4)
             Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
                Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
                R        = sqrt(CoordElem(1)**2 + CoordElem(2)**2)
