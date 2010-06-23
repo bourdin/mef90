@@ -51,6 +51,7 @@ import matplotlib.pyplot as plt
 
 if options.relative:
   energies[:,4] -= energies[tmin,4]
+  energies[:,5] -= energies[tmin,4]
 ### plot
 pymef90.energies.plot(energies[tmin:tmax,:], options.forces)
   
