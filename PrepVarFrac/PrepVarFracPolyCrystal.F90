@@ -111,14 +111,15 @@ Program PrepVarFrac
    Call PetscRandomSetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
    Call PetscRandomSeed(RandomCtx, iErr); CHKERRQ(iErr)
    Call PetscRandomGetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
-   NumTestCase = 3
+   NumTestCase = 4
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
    End Do
    TestCase(1)%Description = "Polycrystal, MIL"
-   TestCase(2)%Description = "Polycrystal, Mode-I loading, using asymptotic form of displacement (MIL)"
-   TestCase(3)%Description = "Polycrystal, Mode-I loading, using asymptotic form of displacement (Surfing BC)"
+   TestCase(2)%Description = "Polycrystal, Mode-I scaling experiment"
+   TestCase(3)%Description = "Polycrystal, Mode-I surfing experiment"
+   TestCase(4)%Description = "Polycrystal, Mode-I isotropic scaling experiment"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -307,6 +308,61 @@ Program PrepVarFrac
          Write(IOBuffer, 100) iBlock
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          
+         Write(IOBuffer, 300) iBlock, 'Toughness'
+         Call AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) iBlock, 'Young Modulus'
+         Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) iBlock, 'Poisson Ratio'
+         Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) iBlock, 'Therm Exp'
+         Call AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
+
+         Select Case(MeshTopology%Num_Dim)
+         Case(2)
+            MatProp2D(iBlock)%Toughness = Toughness
+            Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(iBlock)%Hookes_Law)
+            MatProp2D(iBlock)%Therm_Exp    = 0.0_Kr
+            MatProp2D(iBlock)%Therm_Exp%XX = Therm_ExpScal
+            MatProp2D(iBlock)%Therm_Exp%YY = Therm_ExpScal
+         Case(3)
+            MatProp3D(iBlock)%Toughness = Toughness
+            Call GenHL_Iso3D_Enu(E, nu, MatProp3D(iBlock)%Hookes_Law)
+            MatProp3D(iBlock)%Therm_Exp    = 0.0_Kr
+            MatProp3D(iBlock)%Therm_Exp%XX = Therm_ExpScal
+            MatProp3D(iBlock)%Therm_Exp%YY = Therm_ExpScal
+            MatProp3D(iBlock)%Therm_Exp%ZZ = Therm_ExpScal
+         End Select 
+      End Do
+   Case(4)
+      If (NumGrains > 0) Then 
+         !!! Default behavior is that the grains are the first element block and share the same properties (but not orientation)
+         Call AskReal(ToughnessGrain,    'Grains: toughness', BatchUnit, IsBatch)
+         Call AskReal(E,                 'Grains: Young''s modulus E', BatchUnit, IsBatch)
+         Call AskReal(nu,                'Grains: Poisson Ration nu', BatchUnit, IsBatch)
+         Call AskReal(ThermExpScalGrain, 'Grains: therm. exp.', BatchUnit, IsBatch)
+      End If
+      Do iBlock = 1, NumGrains
+         Select Case(MeshTopology%Num_Dim)
+         Case(2)
+            MatProp2D(iBlock)%Toughness = ToughnessGrain
+            Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(iBlock)%Hookes_Law)
+            MatProp2D(iBlock)%Therm_Exp    = 0.0_Kr
+            MatProp2D(iBlock)%Therm_Exp%XX = ThermExpScalGrain
+            MatProp2D(iBlock)%Therm_Exp%YY = ThermExpScalGrain
+         Case(3)
+            MatProp3D(iBlock)%Toughness = ToughnessGrain
+            SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Polycrystal only supported in 2D at this point\n', iErr)
+            MatProp3D(iBlock)%Therm_Exp    = 0.0_Kr
+            MatProp3D(iBlock)%Therm_Exp%XX = ThermExpScalGrain
+            MatProp3D(iBlock)%Therm_Exp%YY = ThermExpScalGrain
+            MatProp3D(iBlock)%Therm_Exp%ZZ = ThermExpScalGrain
+         End Select 
+      End Do
+      !!! Non grain EB if necessary
+      Do iBlock = NumGrains+1, MeshTopology%Num_Elem_Blks_Global
+         Write(IOBuffer, 100) iBlock
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      
          Write(IOBuffer, 300) iBlock, 'Toughness'
          Call AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'Young Modulus'

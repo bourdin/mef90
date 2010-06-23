@@ -17,10 +17,10 @@ Program TestHLOrtho
    
    N=10
 
-   !!!$ Write(*, 100, advance = 'no') '(E, nu): '
-   !!!$ Read(*,*)    E, nu
-   !!!$ Call GenHL_Iso2D_EnuPlaneStress(E, nu, A) 
-   !!!$ Write(*, 200) "Isotropic Hookes law:", A
+    Write(*, 100, advance = 'no') '(E, nu): '
+    Read(*,*)    E, nu
+    Call GenHL_Iso2D_EnuPlaneStress(E, nu, A) 
+    Write(*, 200) "Isotropic Hookes law:", A
    !!!$ lambda = E * nu / (1.0_Kr - nu**2) 
    !!!$ mu     = E / (1.0_Kr + nu) * .5_Kr
    !!!$ C11 = 2.0_Kr * lambda *mu / (lambda + 2.0_Kr * mu) + 2.0_Kr * mu
@@ -40,19 +40,19 @@ Program TestHLOrtho
    !!!$    Write(*, 400) "Orthotropic Hookes law:", real(i) * 90 / real(N), A
    !!!$ End Do
 
-   Write(*, 100, advance = 'no') '(C11, C12, C44): '
-   Read(*,*) C11, C12, C44
-   Write(*, 300) "C11 / C12 / C44: ", C11, C12, C44
-   B  = (C11 + 2.0_Kr * C12) / 3.0_Kr 
-   C  = C44
-   Cp = (C11 - C12) / 2.0_Kr
-   Write(*, 300) "B / C / Cp: ", B, C, Cp
-
-   Do i = 0, N
-      theta = PETSC_PI * 0.5_Kr * real(i) / real(N) 
-      Call GenHL_Cubic2DPlaneStress_Voigt(C11, C12, C44, theta, A)
-      Write(*, 400) "Cubic Hookes law:", real(i) * 90 / real(N), A
-   End Do
+   !!!$ Write(*, 100, advance = 'no') '(C11, C12, C44): '
+   !!!$ Read(*,*) C11, C12, C44
+   !!!$ Write(*, 300) "C11 / C12 / C44: ", C11, C12, C44
+   !!!$ B  = (C11 + 2.0_Kr * C12) / 3.0_Kr 
+   !!!$ C  = C44
+   !!!$ Cp = (C11 - C12) / 2.0_Kr
+   !!!$ Write(*, 300) "B / C / Cp: ", B, C, Cp
+   !!!$ 
+   !!!$ Do i = 0, N
+   !!!$    theta = PETSC_PI * 0.5_Kr * real(i) / real(N) 
+   !!!$    Call GenHL_Cubic2DPlaneStress_Voigt(C11, C12, C44, theta, A)
+   !!!$    Write(*, 400) "Cubic Hookes law:", real(i) * 90 / real(N), A
+   !!!$ End Do
 
    Write(*, 100, advance = 'no') '(B, C, C''): '
    Read(*,*) B, C, Cp

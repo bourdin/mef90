@@ -627,7 +627,7 @@ Module m_VarFrac_Struct
    End Subroutine GenHL_Iso2D_EnuPlaneStrain         
 
    Subroutine GenHL_Iso3D_LambdaMu(lambda, mu, A)
-      PetscReal, Intent(IN)               :: Lambda, Mu
+      PetscReal, Intent(IN)               :: lambda, mu
       Type(Tens4OS3D), Intent(OUT)        :: A
    
       A = 0.0_Kr
