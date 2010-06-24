@@ -713,7 +713,7 @@ Contains
             If (ThermExpNorm > 0.0_Kr) Then
                Theta_Elem = 0.0_Kr
                Do iDoF = 1, NumDoFScal
-                  Theta_Elem  = Theta_Elem  + AppCtx%ElemScal(iE)%BF(iDoF, iGauss)       * Theta_Loc(iDoF)
+                  Theta_Elem  = Theta_Elem  + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
                   flops = flops + 2.0
                End Do
                EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
