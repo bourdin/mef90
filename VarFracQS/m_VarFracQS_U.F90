@@ -272,6 +272,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: V_Loc
       PetscReal                                    :: V_Elem, CoefV
       PetscLogDouble                               :: flops
+      PetscLogDouble, Parameter                    :: oneflop = 1.0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
@@ -302,6 +303,7 @@ Contains
             Do iDoF1 = 1, NumDoFScal
                V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * V_Loc(iDoF1)
                flops = flops + 2.0
+               Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
             End Do
             CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
             flops = flops + 2.0
@@ -309,6 +311,7 @@ Contains
                If (BCFlag_Loc(iDoF1) == VarFrac_BC_Type_NONE) Then
                   Do iDoF2 = 1, NumDoFVect
                      Mat_Loc(iDoF2, iDoF1) =  Mat_Loc(iDoF2, iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * CoefV * ((AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
+                     Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
                      flops = flops + 3.0
                   End Do
                End If
@@ -317,7 +320,7 @@ Contains
          Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       
-      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
+!      Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       DeAllocate(Mat_Loc)
       DeAllocate(V_Loc)
       DeAllocate(BCFlag_Loc)
@@ -631,19 +634,26 @@ Contains
                X_Elem      = X_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)
                Strain_Elem = Strain_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
             End Do
-            Theta_Elem = 0.0_Kr
             V_Elem = 0.0_Kr        
             Do iDoF = 1, NumDoFScal
                V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V_Loc(iDoF)
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
-               flops = flops + 4.0
+               flops = flops + 2.0
             End Do
-            CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
+
             !!! CoefV = (1+\eta_\varepsilon)v^2 if Is_Brittle, 1 otherwise
+            CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
             flops = flops + 2.0
 
-            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-            
+            If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
+                  flops = flops + 2.0
+               End Do
+               EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            Else
+               EffectiveStrain_Elem = Strain_Elem
+            End If
             Do iDoF = 1, NumDofVect
                Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * CoefV * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))
             End Do
@@ -708,20 +718,27 @@ Contains
                X_Elem      = X_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)
                Strain_Elem = Strain_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
             End Do
-            Theta_Elem = 0.0_Kr
             V_Elem = 0.0_Kr        
             Do iDoF = 1, NumDoFScal
                V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V_Loc(iDoF)
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
-               flops = flops + 4.0
+               flops = flops + 2.0
             End Do
             CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
             !!! CoefV = (1+\eta_\varepsilon)v^2 if Is_Brittle, 1 otherwise
             flops = flops + 2.0
 
-            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
+                  flops = flops + 2.0
+               End Do
+               EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            Else
+               EffectiveStrain_Elem = Strain_Elem
+            End If
+
             Strain_Trace = Trace(Strain_Elem)
-            
             If (Strain_Trace >= 0.0_Kr) Then
                Do iDoF = 1, NumDofVect
                   Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * CoefV * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))
@@ -791,18 +808,25 @@ Contains
                X_Elem      = X_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)
                Strain_Elem = Strain_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
             End Do
-            Theta_Elem = 0.0_Kr
             V_Elem = 0.0_Kr        
             Do iDoF = 1, NumDoFScal
                V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V_Loc(iDoF)
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
-               flops = flops + 4.0
+               flops = flops + 2.0
             End Do
             CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
             !!! CoefV = (1+\eta_\varepsilon)v^2 if Is_Brittle, 1 otherwise
             flops = flops + 2.0
 
-            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
+                  flops = flops + 2.0
+               End Do
+               EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            Else
+               EffectiveStrain_Elem = Strain_Elem
+            End If
 
             Do iDoF = 1, NumDofVect
                Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (CoefV * ((AppCtx%MatProp(iBlkId)%Hookes_Law * DeviatoricPart(EffectiveStrain_Elem)) .DotP. DeviatoricPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))) + ((AppCtx%MatProp(iBlkId)%Hookes_Law * SphericalPart(EffectiveStrain_Elem)) .DotP. SphericalPart(AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))) )
@@ -860,18 +884,20 @@ Contains
          Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             X_Elem = 0.0_Kr
-            Strain_Elem = 0.0_Kr
             Do iDoF = 1, NumDoFVect
                X_Elem      = X_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)
                Strain_Elem = Strain_Elem + X_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
             End Do
-            Theta_Elem = 0.0_Kr
-            Do iDoF = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
-               flops = flops + 2.0
-            End Do
-            EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-            
+            If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
+                  flops = flops + 2.0
+               End Do
+               EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            Else 
+               EffectiveStrain_Elem = Strain_Elem
+            End If
             Do iDoF = 1, NumDofVect
                Gradient_Loc(iDoF) = Gradient_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss))
             End Do
@@ -972,34 +998,35 @@ Contains
       Allocate(Theta_Loc(NumDoFScal))
 
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         RHS_Loc = 0.0_Kr
-         Call SectionRealRestrictClosure(AppCtx%V%Sec,      AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,      iErr); CHKERRQ(ierr)
-         Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta%Sec,  AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc,  iErr); CHKERRQ(ierr)
-         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
-            V_Elem = 0.0_Kr        
-            Theta_Elem = 0.0_Kr
-            Do iDoF = 1, NumDoFScal
-               V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V_Loc(iDoF)
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
-               flops = flops + 4.0
-            End Do
-            CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
-            !!! CoefV = (1+\eta_\varepsilon)v^2 if Is_Brittle, 1 otherwise
-            flops = flops + 2.0
-            Do iDoF = 1, NumDoFVect
-               If (BCFlag_Loc(iDoF) == 0) Then
-                  ! RHS terms due to inelastic strains
-                  RHS_Loc(iDoF) = RHS_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * CoefV * ((AppCtx%MatProp(iBlkId)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) .DotP. AppCtx%MatProp(iBlkId)%Therm_Exp)
-                  flops = flops + 5.0
-               End If
-            End Do
-         End Do Do_iGauss
-         Call SectionRealUpdateClosure(RHS_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
-      End Do Do_iEloc
-      
+      If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+         Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            RHS_Loc = 0.0_Kr
+            Call SectionRealRestrictClosure(AppCtx%V%Sec,      AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,      iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%Theta%Sec,  AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc,  iErr); CHKERRQ(ierr)
+            Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+               V_Elem = 0.0_Kr        
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V_Loc(iDoF)
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
+                  flops = flops + 4.0
+               End Do
+               CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
+               !!! CoefV = (1+\eta_\varepsilon)v^2 if Is_Brittle, 1 otherwise
+               flops = flops + 2.0
+               Do iDoF = 1, NumDoFVect
+                  If (BCFlag_Loc(iDoF) == 0) Then
+                     ! RHS terms due to inelastic strains
+                     RHS_Loc(iDoF) = RHS_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * CoefV * ((AppCtx%MatProp(iBlkId)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) .DotP. AppCtx%MatProp(iBlkId)%Therm_Exp)
+                     flops = flops + 5.0
+                  End If
+               End Do
+            End Do Do_iGauss
+            Call SectionRealUpdateClosure(RHS_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+         End Do Do_iEloc
+      End If
       DeAllocate(BCFlag_Loc)
       DeAllocate(RHS_Loc)
       DeAllocate(Theta_Loc)
@@ -1027,45 +1054,45 @@ Contains
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
       flops      = 0.0
       
-      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
-      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
-
-      Allocate(BCFlag_Loc(NumDoFVect))
-      Allocate(RHS_Loc(NumDoFVect))
-      Allocate(Theta_Loc(NumDoFScal))
-
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         RHS_Loc = 0.0_Kr
-         Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta%Sec , AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc,  iErr); CHKERRQ(ierr)
-         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
-            Theta_Elem = 0.0_Kr
-            Do iDoF = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
-               flops = flops + 2.0
-            End Do
-            Do iDoF = 1, NumDoFVect
-               If (BCFlag_Loc(iDoF) == 0) Then
-                  ! RHS terms due to inelastic strains
-                  RHS_Loc(iDoF) = RHS_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((AppCtx%MatProp(iBlkId)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) .DotP. AppCtx%MatProp(iBlkId)%Therm_Exp)
-                  flops = flops + 5.0
-               End If
-            End Do
-         End Do Do_iGauss
-         Call SectionRealUpdateClosure(RHS_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
-      End Do Do_iEloc
-      
-      DeAllocate(BCFlag_Loc)
-      DeAllocate(RHS_Loc)
-      DeAllocate(Theta_Loc)
+      If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+         NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+         NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+
+         Allocate(BCFlag_Loc(NumDoFVect))
+         Allocate(RHS_Loc(NumDoFVect))
+         Allocate(Theta_Loc(NumDoFScal))
+         Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            RHS_Loc = 0.0_Kr
+            Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%Theta%Sec , AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc,  iErr); CHKERRQ(ierr)
+            Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta_Loc(iDoF)
+                  flops = flops + 2.0
+               End Do
+               Do iDoF = 1, NumDoFVect
+                  If (BCFlag_Loc(iDoF) == 0) Then
+                     ! RHS terms due to inelastic strains
+                     RHS_Loc(iDoF) = RHS_Loc(iDoF) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((AppCtx%MatProp(iBlkId)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)) .DotP. AppCtx%MatProp(iBlkId)%Therm_Exp)
+                     flops = flops + 5.0
+                  End If
+               End Do
+            End Do Do_iGauss
+            Call SectionRealUpdateClosure(RHS_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+         End Do Do_iEloc
+         DeAllocate(BCFlag_Loc)
+         DeAllocate(RHS_Loc)
+         DeAllocate(Theta_Loc)
+      End If
       
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSAssemblyBlock_ElastNonBrittle
    
-      Subroutine RHSAssemblyBlock_Force(RHS_Sec, iBlk, AppCtx)
+   Subroutine RHSAssemblyBlock_Force(RHS_Sec, iBlk, AppCtx)
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: RHS_Sec
       Type(AppCtx_Type)                            :: AppCtx
