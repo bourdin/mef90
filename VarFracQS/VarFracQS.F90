@@ -118,10 +118,10 @@ Program  VarFracQS
                   Write(AppCtx%AppParam%Ener_Unit, *)
                   Write(AppCtx%AppParam%Ener_Unit, *)
                
-                  Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-                     Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-                     Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-                  End Do
+                  !!!$Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+                  !!!$   Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+                  !!!$   Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+                  !!!$End Do
                End If
                
                !!! Exit the AltMin loop
@@ -196,10 +196,10 @@ Program  VarFracQS
                Write(AppCtx%AppParam%Ener_Unit, *)
                Write(AppCtx%AppParam%Ener_Unit, *)
             
-               Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-                  Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-                  Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-               End Do
+               !!!$Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+               !!!$   Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+               !!!$   Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+               !!!$End Do
             End If
          Else
             AppCtx%IsBT = PETSC_FALSE
