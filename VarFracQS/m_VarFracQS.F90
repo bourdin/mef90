@@ -341,15 +341,15 @@ Contains
       
       If (MEF90_MyRank == 0) Then
          AppCtx%AppParam%Ener_Unit = 71
-         Allocate(AppCtx%AppParam%EnerBlock_Unit(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+         !!!$Allocate(AppCtx%AppParam%EnerBlock_Unit(AppCtx%MeshTopology%Num_Elem_Blks_Global))
          Open(File = AppCtx%AppParam%Ener_FileName, Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
          Rewind(AppCtx%AppParam%Ener_Unit)
-         Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-            AppCtx%AppParam%EnerBlock_Unit(iBlk) = 170+iBlk
-            Write(AppCtx%AppParam%EnerBlock_FileName, 110) Trim(AppCtx%AppParam%Prefix), iBlk, Trim(AppCtx%AppParam%EnerBlock_Suffix)
-            Open(File = AppCtx%AppParam%EnerBlock_FileName, Unit = AppCtx%AppParam%EnerBlock_Unit(iBlk), Status = 'Unknown')
-            Rewind(AppCtx%AppParam%EnerBlock_Unit(iBlk))
-         End Do
+         !!!$Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+         !!!$   AppCtx%AppParam%EnerBlock_Unit(iBlk) = 170+iBlk
+         !!!$   Write(AppCtx%AppParam%EnerBlock_FileName, 110) Trim(AppCtx%AppParam%Prefix), iBlk, Trim(AppCtx%AppParam%EnerBlock_Suffix)
+         !!!$   Open(File = AppCtx%AppParam%EnerBlock_FileName, Unit = AppCtx%AppParam%EnerBlock_Unit(iBlk), Status = 'Unknown')
+         !!!$   Rewind(AppCtx%AppParam%EnerBlock_Unit(iBlk))
+         !!!$End Do
  110 Format(A, '-', I4.4, '.', A)
       End If
       
@@ -502,9 +502,9 @@ Contains
       
       If (MEF90_MyRank == 0) Then
          Write(AppCtx%AppParam%Ener_Unit, 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx%TotalEnergy(AppCtx%TimeStep)
-         Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-            Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock(iBlk), AppCtx%ExtForcesWorkBlock(iBlk), AppCtx%SurfaceEnergyBlock(iBlk), AppCtx%TotalEnergyBlock(iBlk)
-         End Do    
+         !!!$Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+         !!!$   Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock(iBlk), AppCtx%ExtForcesWorkBlock(iBlk), AppCtx%SurfaceEnergyBlock(iBlk), AppCtx%TotalEnergyBlock(iBlk)
+         !!!$End Do    
       End If
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100   Format(I6, 5(ES13.5,'  '))  
@@ -586,10 +586,10 @@ Contains
       
       If (MEF90_MyRank == 0) Then
          Close(AppCtx%AppParam%Ener_Unit)
-         Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-            Close(AppCtx%AppParam%EnerBlock_Unit(iBlk))
-         End Do
-         DeAllocate(AppCtx%AppParam%EnerBlock_Unit)
+         !!!$Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+         !!!$   Close(AppCtx%AppParam%EnerBlock_Unit(iBlk))
+         !!!$End Do
+         !!!$DeAllocate(AppCtx%AppParam%EnerBlock_Unit)
       End If
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
