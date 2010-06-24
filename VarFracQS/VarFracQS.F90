@@ -117,11 +117,13 @@ Program  VarFracQS
                   !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
                   Write(AppCtx%AppParam%Ener_Unit, *)
                   Write(AppCtx%AppParam%Ener_Unit, *)
-               
-                  !!!$Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-                  !!!$   Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-                  !!!$   Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-                  !!!$End Do
+                  
+                  If (AppCtx%VarFracSchemeParam%SaveBlk) Then
+                     Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+                        Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+                        Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+                     End Do
+                  End If
                End If
                
                !!! Exit the AltMin loop
@@ -196,10 +198,12 @@ Program  VarFracQS
                Write(AppCtx%AppParam%Ener_Unit, *)
                Write(AppCtx%AppParam%Ener_Unit, *)
             
-               !!!$Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-               !!!$   Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-               !!!$   Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-               !!!$End Do
+               If (AppCtx%VarFracSchemeParam%SaveBlk) Then
+                  Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+                     Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+                     Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+                  End Do
+               End If
             End If
          Else
             AppCtx%IsBT = PETSC_FALSE
