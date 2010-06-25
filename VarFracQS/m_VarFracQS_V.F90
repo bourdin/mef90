@@ -473,7 +473,9 @@ Contains
          MatElem  = 0.0_Kr
          !! Get the local nodal values of U, Theta, and BCs
          Call SectionRealRestrictClosure(AppCtx%U%Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U,     iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         If (Has_ThermExp) Then
+            Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         End If
          If (DoBC) Then
             Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag,    iErr); CHKERRQ(ierr)
             Call SectionIntRestrictClosure(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
@@ -482,11 +484,12 @@ Contains
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
             !! Calculate the strain at the gauss point
             Strain_Elem = 0.0_Kr
-            Theta_Elem  = 0.0_Kr
             Do iDoF1 = 1, NumDoFVect
                Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
             End Do
-            If (Has_THermExp) Then
+            
+            If (Has_ThermExp) Then
+               Theta_Elem  = 0.0_Kr
                !! Calculate the temperature at the gauss point
                Do iDoF1 = 1, NumDoFScal
                   Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
@@ -497,6 +500,7 @@ Contains
             Else
                EffectiveStrain_Elem = Strain_Elem
             End If
+            
             ElasticEnergyDensity  = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
             !! Assemble the element stiffness
             Do iDoF1 = 1, NumDoFScal
@@ -576,7 +580,9 @@ Contains
          MatElem  = 0.0_Kr
          !! Get the local nodal values of U, Theta, and BCs
          Call SectionRealRestrictClosure(AppCtx%U%Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U,     iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         If (Has_ThermExp) Then
+            Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         End If
          If (DoBC) Then
             Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag,    iErr); CHKERRQ(ierr)
             Call SectionIntRestrictClosure(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
@@ -585,11 +591,11 @@ Contains
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
             !! Calculate the strain at the gauss point
             Strain_Elem = 0.0_Kr
-            Theta_Elem  = 0.0_Kr
             Do iDoF1 = 1, NumDoFVect
                Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
             End Do
             If (Has_ThermExp) Then
+               Theta_Elem  = 0.0_Kr
                !! Calculate the temperature at the gauss point
                Do iDoF1 = 1, NumDoFScal
                   Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
@@ -686,7 +692,9 @@ Contains
          MatElem  = 0.0_Kr
          !! Get the local nodal values of U, Theta, and BCs
          Call SectionRealRestrictClosure(AppCtx%U%Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U,     iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         If (Has_ThermExp) Then
+            Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+         End If
          If (DoBC) Then
             Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag,    iErr); CHKERRQ(ierr)
             Call SectionIntRestrictClosure(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
@@ -695,12 +703,12 @@ Contains
          Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
             !! Calculate the strain at the gauss point
             Strain_Elem = 0.0_Kr
-            Theta_Elem  = 0.0_Kr
             Do iDoF1 = 1, NumDoFVect
                Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
             End Do
             !! Calculate the temperature at the gauss point
             If (Has_ThermExp) Then
+               Theta_Elem  = 0.0_Kr
                Do iDoF1 = 1, NumDoFScal
                   Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
                   Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
@@ -710,6 +718,7 @@ Contains
             Else 
                EffectiveStrain_Elem  = Strain_Elem
             End If
+
             EffectiveStrain_Elem_D = DeviatoricPart(EffectiveStrain_Elem)
             ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D
 
@@ -786,10 +795,9 @@ Contains
                   Do iDoF2 = 1, NumDoFScal
                   !! Terms in V^2
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_V * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
-                     Call PetscLogFlops(4*oneflop, iErr); CHKERRQ(iErr)
                   !! Terms in GradV^2
                      MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradV * (AppCtx%ElemScal(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss) )               
-                     Call PetscLogFlops(3*oneflop, iErr); CHKERRQ(iErr)
+                     Call PetscLogFlops(7*oneflop, iErr); CHKERRQ(iErr)
                   End Do
                End If
             End Do
@@ -959,7 +967,9 @@ Contains
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          GradientV_Loc = 0.0_Kr
          Call SectionRealRestrictClosure(U_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         If (Has_THermExp) Then
+            Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         End If
          Call SectionRealRestrictClosure(V_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             Strain_Elem = 0.0_Kr
@@ -969,13 +979,13 @@ Contains
             V_Elem     = 0.0_Kr
             Do iDoF = 1, NumDoFScal
                V_Elem     = V_Elem     + V_Loc(iDoF)     * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-               Call PetscLogFlops(4*oneflop, iErr); CHKERRQ(iErr)
+               Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
             End Do
             If (Has_ThermExp) Then
                Theta_Elem = 0.0_Kr
                Do iDoF = 1, NumDoFScal
                   Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-                  Call PetscLogFlops(4*oneflop, iErr); CHKERRQ(iErr)
+                  Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
                End Do
                Theta_Elem = 0.0_Kr
                EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
@@ -1019,38 +1029,55 @@ Contains
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
+      PetscTruth                                   :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
 
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+         Has_ThermExp = PETSC_TRUE
+      Else
+         Has_ThermExp = PETSC_FALSE
+      End If
 
       Allocate(U_Loc(NumDoFVect))
-      Allocate(Theta_Loc(NumDoFScal))
+      If (Has_ThermExp) Then
+         Allocate(Theta_Loc(NumDoFScal))
+      End If
       Allocate(GradientV_Loc(NumDoFScal))
       Allocate(V_Loc(NumDoFScal))
 
-      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          GradientV_Loc = 0.0_Kr
          Call SectionRealRestrictClosure(U_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         If (Has_ThermExp) Then
+            Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         End If
          Call SectionRealRestrictClosure(V_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             Strain_Elem = 0.0_Kr
             Do iDoF = 1, NumDoFVect
                Strain_Elem = Strain_Elem + U_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
             End Do
-            Theta_Elem = 0.0_Kr
             V_Elem     = 0.0_Kr
             Do iDoF = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
                V_Elem     = V_Elem     + V_Loc(iDoF)     * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-               Call PetscLogFlops(4*oneflop, iErr); CHKERRQ(iErr)
+               Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
             End Do
-            EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            If (Has_ThermExp) Then
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
+                  Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
+               End Do
+               EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            Else
+               EffectiveStrain_Elem  = Strain_Elem
+            End If
+
             Strain_Trace = Trace(Strain_Elem)
-            
             If (Strain_Trace >= 0.0_Kr) Then
                ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
             Else
@@ -1066,7 +1093,9 @@ Contains
       End Do Do_iEloc
 
       DeAllocate(U_Loc)
-      DeAllocate(Theta_Loc)
+      If (Has_ThermExp) Then
+         DeAllocate(Theta_Loc)
+      End If
       DeAllocate(GradientV_Loc)
       DeAllocate(V_Loc)
    End Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateralFull
@@ -1092,36 +1121,55 @@ Contains
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
+      PetscTruth                                   :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
 
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+         Has_ThermExp = PETSC_TRUE
+      Else
+         Has_ThermExp = PETSC_FALSE
+      End If
 
       Allocate(U_Loc(NumDoFVect))
-      Allocate(Theta_Loc(NumDoFScal))
+      If (Has_ThermExp) Then
+         Allocate(Theta_Loc(NumDoFScal))
+      End If
       Allocate(GradientV_Loc(NumDoFScal))
       Allocate(V_Loc(NumDoFScal))
 
-      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          GradientV_Loc = 0.0_Kr
          Call SectionRealRestrictClosure(U_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc,     iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         If (Has_ThermExp) Then
+            Call SectionRealRestrictClosure(Theta_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr); CHKERRQ(ierr)
+         End If   
          Call SectionRealRestrictClosure(V_Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc,     iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             Strain_Elem = 0.0_Kr
             Do iDoF = 1, NumDoFVect
                Strain_Elem = Strain_Elem + U_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
             End Do
-            Theta_Elem = 0.0_Kr
+
             V_Elem     = 0.0_Kr
             Do iDoF = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-               V_Elem     = V_Elem     + V_Loc(iDoF)     * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
-               Call PetscLogFlops(4*oneflop, iErr); CHKERRQ(iErr)
+               V_Elem = V_Elem + V_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
+               Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
             End Do
-            EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+
+            If (Has_ThermExp) Then
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
+                  Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
+               End Do
+               EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            Else
+               EffectiveStrain_Elem = Strain_Elem
+            End If
             
             EffectiveStrain_Elem_D = DeviatoricPart(EffectiveStrain_Elem)
             ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D
@@ -1134,7 +1182,9 @@ Contains
       End Do Do_iEloc
 
       DeAllocate(U_Loc)
-      DeAllocate(Theta_Loc)
+      If (Has_ThermExp) Then
+         DeAllocate(Theta_Loc)
+      End If
       DeAllocate(GradientV_Loc)
       DeAllocate(V_Loc)
    End Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateralShear
