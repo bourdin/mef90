@@ -149,8 +149,9 @@ Contains
             Do i = 1, AppCtx%MeshTopology%Num_Verts
                Call SectionRealRestrict(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(ierr)      
                If (VIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
+                  VIrrev_Ptr(1) = 0.0_Kr
                   Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-                  Call SectionRealUpdate(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                  !Call SectionRealUpdate(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
                   MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
                End If
                Call SectionRealRestore(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr);
@@ -443,6 +444,7 @@ Contains
       Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #endif      
       PetscReal                                    :: ElasticEnergyDensity
+      PetscTruth                                   :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
@@ -450,9 +452,16 @@ Contains
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+         Has_ThermExp = PETSC_TRUE
+      Else
+         Has_ThermExp = PETSC_FALSE
+      End If
 
       Allocate(U(NumDoFVect))
-      Allocate(Theta(NumDoFScal))
+      If (Has_THermExp) Then
+         Allocate(Theta(NumDoFScal))
+      End If
       Allocate(BCFlag(NumDoFScal))
       BCFlag = VarFrac_BC_Type_NONE
       Allocate(IrrevFlag(NumDoFScal))
@@ -477,7 +486,7 @@ Contains
             Do iDoF1 = 1, NumDoFVect
                Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
             End Do
-            If (Norm(AppCtx%MatProp(iBlkID)%Therm_Exp) > 0.0_Kr) Then
+            If (Has_THermExp) Then
                !! Calculate the temperature at the gauss point
                Do iDoF1 = 1, NumDoFScal
                   Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
@@ -504,7 +513,9 @@ Contains
       End Do Do_Elem_iE
       DeAllocate(MatElem)
       DeAllocate(U)      
-      DeAllocate(Theta)
+      If (Has_ThermExp) Then
+         DeAllocate(Theta)
+      End If
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
@@ -536,6 +547,7 @@ Contains
 #endif      
       PetscReal                                    :: Strain_Trace
       PetscReal                                    :: ElasticEnergyDensity
+      PetscTruth                                   :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
@@ -543,9 +555,16 @@ Contains
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+         Has_ThermExp = PETSC_TRUE
+      Else
+         Has_ThermExp = PETSC_FALSE
+      End If
 
       Allocate(U(NumDoFVect))
-      Allocate(Theta(NumDoFScal))
+      If (Has_THermExp) Then
+         Allocate(Theta(NumDoFScal))
+      End If
       Allocate(BCFlag(NumDoFScal))
       BCFlag = VarFrac_BC_Type_NONE
       Allocate(IrrevFlag(NumDoFScal))
@@ -570,7 +589,7 @@ Contains
             Do iDoF1 = 1, NumDoFVect
                Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
             End Do
-            If (Norm(AppCtx%MatProp(iBlkID)%Therm_Exp) > 0) Then
+            If (Has_ThermExp) Then
                !! Calculate the temperature at the gauss point
                Do iDoF1 = 1, NumDoFScal
                   Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
@@ -604,8 +623,10 @@ Contains
          Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       DeAllocate(MatElem)
-      DeAllocate(U)      
-      DeAllocate(Theta)
+      DeAllocate(U)    
+      If (Has_ThermExp) Then     
+         DeAllocate(Theta)
+      End If 
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
@@ -636,6 +657,7 @@ Contains
       Type(MatS3D)                                 :: EffectiveStrain_Elem_D
 #endif      
       PetscReal                                    :: ElasticEnergyDensity
+      PetscTruth                                   :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
@@ -643,9 +665,16 @@ Contains
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+         Has_ThermExp = PETSC_TRUE
+      Else
+         Has_ThermExp = PETSC_FALSE
+      End If
 
       Allocate(U(NumDoFVect))
-      Allocate(Theta(NumDoFScal))
+      If (Has_ThermExp) Then
+         Allocate(Theta(NumDoFScal))
+      End If
       Allocate(BCFlag(NumDoFScal))
       BCFlag = VarFrac_BC_Type_NONE
       Allocate(IrrevFlag(NumDoFScal))
@@ -671,13 +700,16 @@ Contains
                Strain_Elem = Strain_Elem + (AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss) * U(iDoF1))
             End Do
             !! Calculate the temperature at the gauss point
-            Do iDoF1 = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
-               Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
-            End Do
-            !! Calculate the Effective Strain at the gauss point
-            EffectiveStrain_Elem  = Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
-
+            If (Has_ThermExp) Then
+               Do iDoF1 = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * Theta(iDoF1)
+                  Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
+               End Do
+               !! Calculate the Effective Strain at the gauss point
+               EffectiveStrain_Elem  = Strain_Elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)   
+            Else 
+               EffectiveStrain_Elem  = Strain_Elem
+            End If
             EffectiveStrain_Elem_D = DeviatoricPart(EffectiveStrain_Elem)
             ElasticEnergyDensity = (AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_Elem_D) .DotP. EffectiveStrain_Elem_D
 
@@ -696,7 +728,9 @@ Contains
       End Do Do_Elem_iE
       DeAllocate(MatElem)
       DeAllocate(U)      
-      DeAllocate(Theta)
+      If (Has_ThermExp) Then
+         DeAllocate(Theta)
+      End If
       DeAllocate(BCFlag)
       DeAllocate(IrrevFlag)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
@@ -902,17 +936,25 @@ Contains
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
+      PetscTruth                                   :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
 
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
+         Has_ThermExp = PETSC_TRUE
+      Else
+         Has_ThermExp = PETSC_FALSE
+      End If
 
       Allocate(U_Loc(NumDoFVect))
-      Allocate(Theta_Loc(NumDoFScal))
+      If (Has_ThermExp) Then
+         Allocate(Theta_Loc(NumDoFScal))
+      End If
       Allocate(GradientV_Loc(NumDoFScal))
       Allocate(V_Loc(NumDoFScal))
 
-      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          GradientV_Loc = 0.0_Kr
@@ -924,14 +966,22 @@ Contains
             Do iDoF = 1, NumDoFVect
                Strain_Elem = Strain_Elem + U_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss)
             End Do
-            Theta_Elem = 0.0_Kr
             V_Elem     = 0.0_Kr
             Do iDoF = 1, NumDoFScal
-               Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
                V_Elem     = V_Elem     + V_Loc(iDoF)     * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
                Call PetscLogFlops(4*oneflop, iErr); CHKERRQ(iErr)
             End Do
-            EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            If (Has_ThermExp) Then
+               Theta_Elem = 0.0_Kr
+               Do iDoF = 1, NumDoFScal
+                  Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
+                  Call PetscLogFlops(4*oneflop, iErr); CHKERRQ(iErr)
+               End Do
+               Theta_Elem = 0.0_Kr
+               EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+            Else
+               EffectiveStrain_Elem  = Strain_Elem
+            End If
             ElasticEnergyDensity  = (AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem
             Do iDoF = 1, NumDofScal
                GradientV_Loc(iDoF) = GradientV_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * ElasticEnergyDensity * V_Elem * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
@@ -941,7 +991,9 @@ Contains
       End Do Do_iEloc
 
       DeAllocate(U_Loc)
-      DeAllocate(Theta_Loc)
+         If (Has_ThermExp) Then
+         DeAllocate(Theta_Loc)
+      End If
       DeAllocate(GradientV_Loc)
       DeAllocate(V_Loc)
    End Subroutine GradientV_AssemblyBlk_ElastBrittle
@@ -1245,6 +1297,7 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
          End If
 
+         Call VecSet(AppCtx%RHSV%Vec, 0.0_Kr, iErr); CHKERRQ(iErr)
          Call RHSV_Assembly(AppCtx%RHSV%Vec, AppCtx)
          Call MatV_Assembly(AppCtx%KV, AppCtx)
          
