@@ -129,7 +129,11 @@ Contains
  99  Format(A, '-', I4.4, '.gen')
    
       !!! Initializes the values and names of the properties and variables
-      Call VarFracEXOVariable_Init(AppCtx%MyEXO)
+      If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
+         Call VarFracEXOVariable_Init(AppCtx%MyEXO,.FALSE.)
+      Else
+         Call VarFracEXOVariable_Init(AppCtx%MyEXO)
+      End If
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with VarFracQSEXOVariable_Init and VarFracQSEXOProperty_Read\n"
