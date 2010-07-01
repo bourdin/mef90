@@ -167,7 +167,7 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
-   Call VarFracEXOVariable_Init(MyEXO)
+   Call VarFracEXOVariable_Init(MyEXO,.FALSE.)
    Call EXOVariable_Write(MyEXO)
    If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'
