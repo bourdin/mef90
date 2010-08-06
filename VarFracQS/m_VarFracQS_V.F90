@@ -987,7 +987,6 @@ Contains
                   Theta_Elem = Theta_Elem + Theta_Loc(iDoF) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
                   Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
                End Do
-               Theta_Elem = 0.0_Kr
                EffectiveStrain_Elem  = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
             Else
                EffectiveStrain_Elem  = Strain_Elem
