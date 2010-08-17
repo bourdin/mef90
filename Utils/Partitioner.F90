@@ -167,12 +167,12 @@ Program Partitioner
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
    
    !!! Print mesh
-   Call MeshView(MeshTopology%Mesh, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   !Call MeshView(MeshTopology%Mesh, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    !!! Flushing the parallel mesh onto the disk
-   filename = trim(prefix) // '.mesh'
-   Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename, FILE_MODE_WRITE, MeshViewer, iErr); CHKERRQ(iErr)
-   Call MeshView(MeshTopology%Mesh, MeshViewer, iErr); CHKERRQ(iErr)
-   Call PetscViewerDestroy(MeshViewer, iErr); CHKERRQ(iErr)
+   !filename = trim(prefix) // '.mesh'
+   !Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename, FILE_MODE_WRITE, MeshViewer, iErr); CHKERRQ(iErr)
+   !Call MeshView(MeshTopology%Mesh, MeshViewer, iErr); CHKERRQ(iErr)
+   !Call PetscViewerDestroy(MeshViewer, iErr); CHKERRQ(iErr)
    
    Call MeshTopologyDestroy(MeshTopology)
    If (verbose > 0) Then

@@ -110,7 +110,7 @@ def CrackRemove(partlist, threshold):
 
 #def TempIsolines(partlist):
 
-def ExportPNG(filename):
+def ExportPNG(filename,window_size=None):
   ensight.file.image_file(filename)
   ensight.file.image_format("png")
   ensight.file.image_format_options("Compression Default")
@@ -118,10 +118,14 @@ def ExportPNG(filename):
   ensight.file.image_numpasses(4)
   ensight.file.image_stereo("current")
   ensight.file.image_screen_tiling(1,1)
-  ensight.file.image_window_size("HD720p")
+  if window_size == None:
+    ensight.file.image_window_size("HD720p")
+  else:
+    ensight.file.image_window_size("user_defined")
+    ensight.file.image_window_xy(window_size)
   ensight.file.save_image()
 
-def ExportMOV(filename):
+def ExportMOV(filename,window_size=None):
   ensight.file.animation_file(filename)
   ensight.file.image_format("mov")
   ensight.anim_recorders.render_offscreen("ON")
@@ -134,7 +138,10 @@ def ExportMOV(filename):
   ensight.file.image_stereo("current")
   ensight.file.image_screen_tiling(1,1)
   ensight.file.animation_window_size("user_defined")
-  ensight.file.animation_window_xy(1280,720)
+  if window_size == None:
+    ensight.file.animation_window_xy(1280,720)
+  else:
+    ensight.file.animation_window_xy(window_size)
   ensight.file.animation_multiple_images("OFF")
   ensight.file.animation_play_flipbook("OFF")
   ensight.file.animation_play_time("ON")
