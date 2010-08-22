@@ -158,7 +158,7 @@ Contains
  99  Format(A, '-', I4.4, '.gen')
    
       !!! Initializes the values and names of the properties and variables
-      Call VarFracEXOVariable_Init(AppCtx%MyEXO)
+      Call VarFracEXOVariable_Init(AppCtx%MyEXO,.False.)
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose > 1) Then
          Write(IOBuffer, *) "Done with VarFracEXOVariable_Init and VarFracEXOProperty_Read\n"
