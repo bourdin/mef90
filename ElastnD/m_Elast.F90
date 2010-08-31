@@ -92,6 +92,7 @@ Contains
       PetscInt                                     :: vers
       Type(Vec)                                    :: TAO_WorkVec
       PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
+      PetscTruth                                   :: saveElemVar
       
       Call MEF90_Initialize()
       Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
@@ -158,7 +159,12 @@ Contains
  99  Format(A, '-', I4.4, '.gen')
    
       !!! Initializes the values and names of the properties and variables
-      Call VarFracEXOVariable_Init(AppCtx%MyEXO,.False.)
+      If ( (AppCtx%VarFracSchemeParam%SaveStrain) .OR. (AppCtx%VarFracSchemeParam%SaveStress) ) Then
+         saveElemVar = .True.
+      Else
+         saveElemVar = .False.
+      End If
+      Call VarFracEXOVariable_Init(AppCtx%MyEXO,saveElemVar)
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose > 1) Then
          Write(IOBuffer, *) "Done with VarFracEXOVariable_Init and VarFracEXOProperty_Read\n"

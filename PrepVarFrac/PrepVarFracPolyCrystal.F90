@@ -61,6 +61,7 @@ Program PrepVarFrac
    PetscInt                                     :: Seed
    PetscLogDouble                               :: Time
    PetscTruth                                   :: Has_Seed, Has_n
+   PetscTruth                                   :: saveElemVar
    
    PetscReal                                    :: R, Ctheta, CTheta2, Stheta, STheta2
 
@@ -75,6 +76,8 @@ Program PrepVarFrac
    End If
    EraseBatch=.False.
    Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
+   saveElemVar=.True.
+   Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-saveelemvar', saveElemVar, HasPrefix, iErr);CHKERRQ(iErr)
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
    If (MEF90_MyRank==0) Then
       If (IsBatch) Then
@@ -192,7 +195,7 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
-   Call VarFracEXOVariable_Init(MyEXO)
+   Call VarFracEXOVariable_Init(MyEXO,saveElemVar)
    Call EXOVariable_Write(MyEXO)
    If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'

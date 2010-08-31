@@ -542,11 +542,12 @@ Module m_VarFrac_Struct
       End Do
    End Subroutine VarFracEXOProperty_Init   
 
-   Subroutine VarFracEXOVariable_Init(dEXO, dSkipElementVariables)
+   Subroutine VarFracEXOVariable_Init(dEXO, dSaveElementVariables)
       Type(EXO_Type)                      :: dEXO
       PetscInt                            :: i
-      PetscTruth, optional                :: dSkipElementVariables
+      PetscTruth, optional                :: dSaveElementVariables
       
+      !!! The default is now to save element variables
       dEXO%Num_GlobVariables = VarFrac_Num_GlobVar
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
       dEXO%GlobVariable(VarFrac_GlobVar_SurfaceEnergy)%Name = 'Surface energy'
@@ -557,7 +558,9 @@ Module m_VarFrac_Struct
       dEXO%GlobVariable(VarFrac_GlobVar_Load)%Name          = 'Load'
       dEXO%GlobVariable(:)%Offset = (/ (i, i=1,dEXO%Num_GlobVariables) /)
       
-      If ( Present(dSkipElementVariables) .AND. (.NOT. dSkipElementVariables)) Then
+      If ( Present(dSaveElementVariables) .AND. (.NOT. dSaveElementVariables)) Then
+         dEXO%Num_CellVariables = 0
+      Else
          dEXO%Num_CellVariables = VarFrac_Num_CellVar
          Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))
          dEXO%CellVariable(VarFrac_CellVar_StrainXX)%Name = 'Strain XX'
@@ -573,8 +576,6 @@ Module m_VarFrac_Struct
          dEXO%CellVariable(VarFrac_CellVar_StressYZ)%Name = 'Stress YZ'
          dEXO%CellVariable(VarFrac_CellVar_StressZX)%Name = 'Stress ZX'
          dEXO%CellVariable(:)%Offset = (/ (i, i=1,dEXO%Num_CellVariables) /)
-      Else
-         dEXO%Num_CellVariables = 0
       End If
          
       dEXO%Num_VertVariables = VarFrac_Num_VertVar

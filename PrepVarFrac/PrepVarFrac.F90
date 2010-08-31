@@ -58,6 +58,7 @@ Program PrepVarFrac
    PetscReal                                    :: m
    PetscInt                                     :: NumLayers
    PetscReal                                    :: CTheta, CTheta2, STheta2, R, Kappa
+   PetscTruth                                   :: saveElemVar
 
    Call MEF90_Initialize()
    
@@ -69,8 +70,10 @@ Program PrepVarFrac
       STOP
    End If
    EraseBatch=.False.
-   Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
-   Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
+   Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr);CHKERRQ(iErr)
+   saveElemVar=.True.
+   Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-saveelemvar', saveElemVar, HasPrefix, iErr);CHKERRQ(iErr)
+   Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr);CHKERRQ(iErr)
    If (MEF90_MyRank==0) Then
       If (IsBatch) Then
          Write(IOBuffer, *) "Processing batch file ", Trim(BatchFileName), "\n"
@@ -167,7 +170,7 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
-   Call VarFracEXOVariable_Init(MyEXO,.FALSE.)
+   Call VarFracEXOVariable_Init(MyEXO,saveElemVar)
    Call EXOVariable_Write(MyEXO)
    If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'

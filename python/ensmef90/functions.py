@@ -51,6 +51,24 @@ def FractureActivate():
   ensight.function.rgb(0.0000e+00,0.0000e+00,1.0000e+00)
   ensight.function.modify_end()
 
+def StressCreate()::
+  ensight.variables.activate("_Stress_XX")
+  ensight.variables.activate("_Stress_YY")
+  ensight.variables.activate("_Stress_ZZ")
+  ensight.variables.activate("_Stress_XY")
+  ensight.variables.activate("_Stress_YZ")
+  ensight.variables.activate("_Stress_XZ")
+  ensight.variables.evaluate("Stress = TensorMake(plist,_Stress_XX,_Stress_YY,_Stress_ZZ,_Stress_XY,_Stress_XZ,_Stress_YZ)")
+  
+def StressCreate()::
+  ensight.variables.activate("_Strain_XX")
+  ensight.variables.activate("_Strain_YY")
+  ensight.variables.activate("_Strain_ZZ")
+  ensight.variables.activate("_Strain_XY")
+  ensight.variables.activate("_Strain_YZ")
+  ensight.variables.activate("_Strain_XZ")
+  ensight.variables.evaluate("Strain = TensorMake(plist,_Strain_XX,_Strain_YY,_Strain_ZZ,_Strain_XY,_Strain_XZ,_Strain_YZ)")
+
 def BrittlePart(partlist):
   ensight.part.select_begin(partlist)
   ensight.part.modify_begin()

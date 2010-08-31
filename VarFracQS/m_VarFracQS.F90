@@ -130,9 +130,9 @@ Contains
    
       !!! Initializes the values and names of the properties and variables
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
-         Call VarFracEXOVariable_Init(AppCtx%MyEXO,.FALSE.)
+         Call VarFracEXOVariable_Init(AppCtx%MyEXO,.TRUE.)
       Else
-         Call VarFracEXOVariable_Init(AppCtx%MyEXO)
+         Call VarFracEXOVariable_Init(AppCtx%MyEXO,.FALSE.)
       End If
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose > 0) Then
