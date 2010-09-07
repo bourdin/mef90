@@ -175,8 +175,20 @@ Program PrepVarFrac
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_ARG_SIZ, IOBuffer, iErr)
    End If
    Call EXOEBProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
+   If (verbose > 0) Then
+      Write(IOBuffer, *) "Done with EXOEBProperty_AskWithBatchGrains\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    Call EXOSSProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
+   If (verbose > 0) Then
+      Write(IOBuffer, *) "Done with EXOSSProperty_AskWithBatchGrains\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    Call EXONSProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
+   If (verbose > 0) Then
+      Write(IOBuffer, *) "Done with EXONSProperty_AskWithBatchGrains\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    
    Do i = 1, MeshTopology%num_elem_blks
       MeshTopology%elem_blk(i)%Elem_Type = MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( MeshTopology%elem_blk(i)%ID )
