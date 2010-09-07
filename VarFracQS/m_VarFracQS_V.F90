@@ -73,6 +73,13 @@ Contains
 
          Call SectionRealToVec(AppCtx%LowerBoundV%Sec, AppCtx%LowerBoundV%Scatter, SCATTER_FORWARD, LowerBoundV_Vec, iErr); CHKERRQ(iErr)
          Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_FORWARD, UpperBoundV_Vec, iErr); CHKERRQ(iErr)
+      Case (VarFrac_Irrev_NONE)
+         !!! Regular Boundary Conditions
+         Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+         Call FieldInsertVertexBoundaryValues(AppCtx%UpperBoundV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+
+         Call SectionRealToVec(AppCtx%LowerBoundV%Sec, AppCtx%LowerBoundV%Scatter, SCATTER_FORWARD, LowerBoundV_Vec, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_FORWARD, UpperBoundV_Vec, iErr); CHKERRQ(iErr)         
       End Select
 
    End Subroutine InitTaoBoundsV
@@ -92,6 +99,13 @@ Contains
 
          Call FieldInsertVertexBoundaryValues(AppCtx%V, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
          Call FieldInsertVertexBoundaryValues(AppCtx%V, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
+      Case(VarFrac_INIT_V_ONE)
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
+         Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)      
+         Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)      
 
       Case Default   
          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
@@ -408,7 +422,7 @@ Contains
       
       !!! Set Dirichlet Boundary Values
       Call FieldInsertVertexBoundaryValues(AppCtx%RHSV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
-      If ( AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_Eq ) Then
+      If ( AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_Eq .OR. AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_NONE ) Then
          Call FieldInsertVertexBoundaryValues(AppCtx%RHSV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
       End If
 
