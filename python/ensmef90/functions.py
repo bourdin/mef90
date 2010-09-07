@@ -51,7 +51,7 @@ def FractureActivate():
   ensight.function.rgb(0.0000e+00,0.0000e+00,1.0000e+00)
   ensight.function.modify_end()
 
-def StressCreate()::
+def StressCreate():
   ensight.variables.activate("_Stress_XX")
   ensight.variables.activate("_Stress_YY")
   ensight.variables.activate("_Stress_ZZ")
@@ -60,7 +60,7 @@ def StressCreate()::
   ensight.variables.activate("_Stress_XZ")
   ensight.variables.evaluate("Stress = TensorMake(plist,_Stress_XX,_Stress_YY,_Stress_ZZ,_Stress_XY,_Stress_XZ,_Stress_YZ)")
   
-def StressCreate()::
+def StrainCreate():
   ensight.variables.activate("_Strain_XX")
   ensight.variables.activate("_Strain_YY")
   ensight.variables.activate("_Strain_ZZ")
