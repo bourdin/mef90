@@ -57,6 +57,7 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_Init_V_CRACKS  = 3
    PetscInt, Parameter, Public                     :: VarFrac_Init_V_ONE     = 4
    PetscInt, Parameter, Public                     :: VarFrac_Init_V_OSC     = 5
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_FILE    = 6
    
    
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_NONE = 0
@@ -435,6 +436,7 @@ Module m_VarFrac_Struct
       dSchemeParam%BTScope          = 10000
       dSchemeParam%Unilateral       = 0
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
+      dSchemeParam%Irrevtype        = VarFrac_Irrev_Eq
       dSchemeParam%nbCracks         = 0
       dSchemeParam%MaxCrackLength   = 0.0D0  
       dSchemeParam%AltMinMaxIter    = 1000
