@@ -363,7 +363,7 @@ Contains
                AppCtx%TimeStep = iTS
             End If
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Restarting from step', AppCtx%TimeStep, '\n'
+               Write(IOBuffer, *) '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Restarting from step', AppCtx%TimeStep, '\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
          Else
@@ -390,10 +390,28 @@ Contains
  110 Format(A, '-', I4.4, '.', A)
       End If
       
-      !!! Set V=1
+      !!! Broacasting Energies in case we are restarting and it is needed for backtracking
+      If (AppCtx%AppParam%Restart) Then
+         Call MPI_BCast(AppCtx%TimeStep, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+         Do iTS = 1, AppCtx%TimeStep
+            Call MPI_BCast(AppCtx%ElasticEnergy(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+            Call MPI_BCast(AppCtx%ExtForcesWork(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+            Call MPI_BCast(AppCtx%ElasticEnergy(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+            Call MPI_BCast(AppCtx%TotalEnergy(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+         End Do
+      End If
+      
+      !!! Set V=1 if we are not restarting, and rekoad last time step if not
       Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
-      Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-      Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%Restart .AND. (AppCtx%TimeSTep > 1) ) Then
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%V)
+         Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep-1, AppCtx%U)
+         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+      Else
+         Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
+         Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)
+      End If
       
       !!! We are not backTracking
       AppCtx%IsBT = PETSC_FALSE

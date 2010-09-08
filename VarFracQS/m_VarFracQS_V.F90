@@ -126,8 +126,11 @@ Contains
          Call PetscRandomCreate(PETSC_COMM_WORLD, RandomCtx, iErr); CHKERRQ(iErr)
          Call PetscRandomSetFromOptions(RandomCtx, iErr); CHKERRQ(iErr)
          Call PetscRandomGetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
-         Call PetscGetTime(Time, iErr); CHKERRQ(iErr)
-         Seed =  Time * (Time - Int(Time))
+         If (MEF90_MyRank == 0) Then
+            Call PetscGetTime(Time, iErr); CHKERRQ(iErr)
+            Seed =  Time * (Time - Int(Time))
+         End If
+         Call MPI_BCast(Seed, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
          Call PetscRandomSetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
          Call PetscRandomSeed(RandomCtx, iErr); CHKERRQ(iErr)
          
@@ -178,6 +181,13 @@ Contains
          DeAllocate(RotationMatrix)
          DeAllocate(CoordLocal)
          Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)
+      Case (VarFrac_Init_V_File)
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, " (reading from file)\n"
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V)
+         Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
       Case Default   
          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
       End Select
