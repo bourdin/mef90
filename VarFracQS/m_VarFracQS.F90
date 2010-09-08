@@ -360,7 +360,7 @@ Contains
             Write(AppCtx%AppParam%Ener_Unit, *)
             Write(AppCtx%AppParam%Ener_Unit, *)
             If (AppCtx%TimeStep == 0) Then
-               AppCtx%TimeStep = iTS
+               AppCtx%TimeStep = iTS+1
             End If
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Restarting from step', AppCtx%TimeStep, '\n'
