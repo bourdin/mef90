@@ -55,7 +55,9 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_Init_V_RND     = 1
    PetscInt, Parameter, Public                     :: VarFrac_Init_V_SPH     = 2
    PetscInt, Parameter, Public                     :: VarFrac_Init_V_CRACKS  = 3
-   PetscInt, Parameter, Public                     :: VarFrac_Init_V_ONE     =4
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_ONE     = 4
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_OSC     = 5
+   
    
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_NONE = 0
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_Eq   = 1

@@ -88,7 +88,18 @@ Contains
    Subroutine Init_TS_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
+      PetscInt                                     :: i
+      PetscReal, Dimension(:,:), Pointer           :: CoordArray
+      PetscReal, Dimension(:), Pointer             :: Vlocal
+      PetscReal, Dimension(:), Pointer             :: Coordlocal
+      
+      PetscRandom                                  :: RandomCtx
+      PetscReal                                    :: alpha, beta, gamma, xc, yc, zc
+      PetscReal, Dimension(:,:), Pointer           :: RotationMatrix
+      PetscInt                                     :: Seed
+      PetscLogDouble                               :: Time
+      
       
       Select Case(AppCtx%VarFracSchemeParam%InitV)
       Case(VarFrac_INIT_V_PREV)
@@ -106,7 +117,67 @@ Contains
          End If
          Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)      
          Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)      
-
+      Case(VarFrac_Init_V_OSC)
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
+         
+         Call PetscRandomCreate(PETSC_COMM_WORLD, RandomCtx, iErr); CHKERRQ(iErr)
+         Call PetscRandomSetFromOptions(RandomCtx, iErr); CHKERRQ(iErr)
+         Call PetscRandomGetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
+         Call PetscGetTime(Time, iErr); CHKERRQ(iErr)
+         Seed =  Time * (Time - Int(Time))
+         Call PetscRandomSetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
+         Call PetscRandomSeed(RandomCtx, iErr); CHKERRQ(iErr)
+         
+         Call PetscRandomSetInterval(RandomCtx, 0._Kr, 1._Kr, iErr); CHKERRQ(iErr)
+         Call PetscRandomGetValue(RandomCtx, alpha, iErr); CHKERRQ(iErr)
+         alpha = alpha * 2._Kr * PETSC_PI
+         Call PetscRandomGetValue(RandomCtx, beta, iErr); CHKERRQ(iErr)
+         beta = beta * 2._Kr * PETSC_PI
+         Call PetscRandomGetValue(RandomCtx, gamma, iErr); CHKERRQ(iErr)
+         gamma = gamma * PETSC_PI
+         
+         Allocate(RotationMatrix(AppCtx%MeshTopology%Num_Dim,AppCtx%MeshTopology%Num_Dim))
+         Allocate(CoordLocal(AppCtx%MeshTopology%Num_Dim))
+         Call PetscRandomGetValue(RandomCtx, xc, iErr); CHKERRQ(iErr)
+         Call PetscRandomGetValue(RandomCtx, yc, iErr); CHKERRQ(iErr)
+         Call PetscRandomGetValue(RandomCtx, zc, iErr); CHKERRQ(iErr)
+         
+         If (AppCtx%MeshTopology%Num_Dim == 2) Then
+            RotationMatrix(1,1) = cos(gamma) ; RotationMatrix(1,2) = -sin(gamma)
+            RotationMatrix(2,1) = sin(gamma) ; RotationMatrix(2,2) =  cos(gamma)
+         Else
+            RotationMatrix(1,1) =  cos(alpha) * cos(gamma) - sin(alpha) * cos(beta) * sin(gamma)
+            RotationMatrix(1,2) =  sin(alpha) * cos(gamma) + cos(alpha) * cos(beta) * sin(gamma)
+            RotationMatrix(1,3) =  sin(alpha) * sin(gamma)
+            RotationMatrix(2,1) = -cos(alpha) * sin(gamma) - sin(alpha) * cos(beta) * cos(gamma)
+            RotationMatrix(2,2) = -sin(alpha) * sin(gamma) + cos(alpha) * cos(beta) * cos(gamma)
+            RotationMatrix(2,3) =  sin(beta) * cos(gamma)
+            RotationMatrix(3,1) =  sin(alpha) * sin(beta)
+            RotationMatrix(3,2) = -cos(alpha) * sin(beta)
+            RotationMatrix(3,3) =  cos(beta)
+         End If
+            
+         !!! WARNING: This assumes that the section for V is a vertex section and will break otherwise
+         Call MeshGetCoordinatesF90(AppCtx%MeshTopology%mesh, CoordArray, iErr); CHKERRQ(iErr)
+         Allocate(Vlocal(1))
+         Do i = 1, AppCtx%MeshTopology%Num_Verts
+            Coordlocal = MatMul(RotationMatrix, CoordArray(i,:))
+            If (AppCtx%MeshTopology%Num_Dim == 2) Then
+               Vlocal(1) = ABS(1.0_Kr - sin(PETSC_PI*(Coordlocal(1) / AppCtx%VarFracSchemeParam%Epsilon)-xc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon)-yc))
+            Else
+               Vlocal(1) = ABS(1.0_Kr - sin(PETSC_PI*(Coordlocal(1) / AppCtx%VarFracSchemeParam%Epsilon)-xc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon)-yc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon)-zc))
+            End If
+            Call SectionRealUpdate(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, Vlocal, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+         End Do
+         DeAllocate(Vlocal)
+         Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
+         Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%mesh, CoordArray, iErr); CHKERRQ(iErr)
+         DeAllocate(RotationMatrix)
+         DeAllocate(CoordLocal)
+         Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)
       Case Default   
          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
       End Select
