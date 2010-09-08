@@ -21,6 +21,7 @@ Program  VarFracQS
    Character(len=MEF90_MXSTRLEN)                :: filename
    Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
    PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
+   PetscTruth                                   :: restart
 
    Call VarFracQSInit(AppCtx)
    
@@ -30,7 +31,6 @@ Program  VarFracQS
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer) 
    End If   
    
-   AppCtx%TimeStep = 1
    iDebug = 0
    Write(stagename(1), "(A)") "Outer loop"
    Write(stagename(2), "(A)") "AltMin loop"
