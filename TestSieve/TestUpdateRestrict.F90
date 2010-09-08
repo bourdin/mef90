@@ -28,6 +28,7 @@ Program TestSectionInt
    Type(SectionInt)                             :: iSec
 
    PetscInt                                     :: Point
+   PetscInt                                     :: SecSize
 
    PetscReal                                    :: rVal
    PetscReal, Dimension(:), Pointer             :: rVals
@@ -207,6 +208,13 @@ Program TestSectionInt
    Write(IOBuffer, *) ' iSec(1)=', iVals, '\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    DeAllocate(iVals)
+   
+!!! Testing SectionRealGetSize
+   Call SectionRealGetSize(rSec, SecSize, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, *) 'size(rSec)=', SecSize, '\n'   
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+   
 
    Call MeshTopologyDestroy(MeshTopology)
    Call SectionRealDestroy(rSec, iErr); CHKERRQ(iErr)
