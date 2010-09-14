@@ -145,7 +145,7 @@ Module m_VarFrac_Struct
       
       PetscInt                                     :: InitV
       PetscInt                                     :: nbCracks
-      PetscReal                                    :: MaxCrackLength     
+      PetscReal                                    :: InitVLength     
       
       PetscInt                                     :: AltMinMaxIter
       PetscReal                                    :: AltMinTol
@@ -395,7 +395,7 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-nbcracks ', I5, A)")            dSchemeParam%NbCracks, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-maxcracklength ', ES12.5, A)")  dSchemeParam%MaxCrackLength, '\n'
+      Write(IOBuffer, "('-initvlength ', ES12.5, A)")  dSchemeParam%InitVLength, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-altminmaxiter ', I5, A)")       dSchemeParam%AltMinMaxIter, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -438,7 +438,7 @@ Module m_VarFrac_Struct
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
       dSchemeParam%Irrevtype        = VarFrac_Irrev_Eq
       dSchemeParam%nbCracks         = 0
-      dSchemeParam%MaxCrackLength   = 0.0D0  
+      dSchemeParam%InitVLength      = 1.0D0  
       dSchemeParam%AltMinMaxIter    = 1000
       dSchemeParam%AltMinTol        = 1.0D-4
       dSchemeParam%AltMinSaveInt    = 25
@@ -462,7 +462,7 @@ Module m_VarFrac_Struct
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-unilateral',     dSchemeParam%Unilateral, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-maxcracklength', dSchemeParam%MaxCrackLength, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-InitVLength',    dSchemeParam%InitVLength, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminmaxiter',  dSchemeParam%AltMinMaxIter, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-altmintol',      dSchemeParam%AltMinTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminsaveint',  dSchemeParam%AltMinSaveInt, flag, iErr); CHKERRQ(iErr)
