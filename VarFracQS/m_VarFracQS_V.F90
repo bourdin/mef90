@@ -101,28 +101,18 @@ Contains
       PetscLogDouble                               :: Time
       
       
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If      
       Select Case(AppCtx%VarFracSchemeParam%InitV)
       Case(VarFrac_INIT_V_PREV)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If      
-
          Call FieldInsertVertexBoundaryValues(AppCtx%V, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
          Call FieldInsertVertexBoundaryValues(AppCtx%V, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
       Case(VarFrac_INIT_V_ONE)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If
          Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)      
          Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)      
       Case(VarFrac_Init_V_OSC)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If
-         
          Call PetscRandomCreate(PETSC_COMM_WORLD, RandomCtx, iErr); CHKERRQ(iErr)
          Call PetscRandomSetFromOptions(RandomCtx, iErr); CHKERRQ(iErr)
          Call PetscRandomGetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
@@ -182,10 +172,6 @@ Contains
          DeAllocate(CoordLocal)
          Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)
       Case (VarFrac_Init_V_File)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, " (reading from file)\n"
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If
          Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%V)
          Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
       Case Default   
