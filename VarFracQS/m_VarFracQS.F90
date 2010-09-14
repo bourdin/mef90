@@ -363,7 +363,7 @@ Contains
                AppCtx%TimeStep = iTS+1
             End If
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Restarting from step', AppCtx%TimeStep, '\n'
+               Write(IOBuffer, *) 'Restarting from step', AppCtx%TimeStep, '\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
          Else

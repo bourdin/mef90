@@ -52,7 +52,7 @@ Program  VarFracQS
 
 
       !!! Update U at fixed nodes
-      Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCUFlag, AppCtx%MeshTopology)
+      Call Init_TS_U(AppCtx)
       
      !!! Rebuild AppCtx%VIrrev and AppCtx%IrrevFlag
       Call Update_Irrev(AppCtx)
@@ -69,7 +69,6 @@ Program  VarFracQS
          Write(IOBuffer, *) 'Done with Init_TS_V \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      
       
       AltMinIter = 1
       AltMin: Do 
