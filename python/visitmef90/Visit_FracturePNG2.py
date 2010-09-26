@@ -1,14 +1,16 @@
-#        Visit Script to generate and save PNG images of a mef90-sieve output
+###############################################################################
+# Visit Script to generate and save PNG images of a mef90-sieve output
 #
-#                  How to use
+# How to use:
 #  
-# 1) run VisIt IN THE DIRECTORY WHERE THE FILE IS LOCATED with Command Line Interface and No Windows:
-#    "visit -cli -nowin -s Visit_FracturePNG2.py"
+#  run VisIt IN THE DIRECTORY WHERE THE FILE IS LOCATED with Command Line Interface and No Windows:
+#    "visit -cli -nowin -s $MEF_HOME/python/visitmef90/Visit_FracturePNG2.py"
 #
 # Note: the script identify the database name from the .e2c filename 
 #
 # Author: Corrado Maurini: cmaurini@gmail.com
-#
+###############################################################################
+
 import os; import sys; import glob;
 # --------------------------------------------------
 # Step 0; Files and directories

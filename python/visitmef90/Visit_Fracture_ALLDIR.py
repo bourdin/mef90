@@ -1,15 +1,16 @@
 ###############################################################################
-# Process all the jobs in all the subdirectoris to extract PNG images with visit
+# Process all the jobs in all the subdirectories of the current directory to extract PNG images with visit
 #
-# How to use : It assue that the visit script to process the images is the current directory. If not the path must be specified (see the variable visitscript)
+# How to use :  "python $MEF_HOME/python/visitmef90/Visit_Fracture_ALLDIR.py"
 #
 # Author: Corrado Maurini: cmaurini@gmail.com
 ###############################################################################
 import os; import sys; import glob;
 # get root directory
 rootdir=os.getcwd()
+mef_home=os.environ.get('MEF_HOME') 
 filelist=os.listdir('.')
-visitscript_default=rootdir+'/'+'Visit_FracturePNG2.py'
+visitscript_default=mef_home+'/python/visitmef90/Visit_FracturePNG2.py'
 ### Parse input
 from optparse import OptionParser
 parser = OptionParser()
@@ -24,17 +25,16 @@ for DIR in filelist:
         os.chdir(rootdir+'/'+DIR) 
         # Postprocessing with VisIT
         print "----------------------------------------------------------"
-        print "    Start postprocessing of files in the directory        "
+        print "--    Start postprocessing of files in the directory        "
         print "    %s "%DIR
         print "----------------------------------------------------------"
         command='visit -cli -nowin  -s '+ options.visitscript
         os.system(command)
         print "----------------------------------------------------------"
-        print "-   Done postprocessing of files in the current directory "
+        print "--   Done postprocessing of files in the current directory "
         print "----------------------------------------------------------"
         os.chdir(rootdir) 
-       "----------------------------------------------------------"
-print ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
-print ': Done postprocessing all directories '
-print ':::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+print "----------------------------------------------------------"
+print '-    Done postprocessing all directories '
+print "----------------------------------------------------------"
    
