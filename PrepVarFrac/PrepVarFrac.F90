@@ -59,6 +59,7 @@ Program PrepVarFrac
    PetscInt                                     :: NumLayers
    PetscReal                                    :: CTheta, CTheta2, STheta2, R, Kappa
    PetscTruth                                   :: saveElemVar
+   Type(PetscViewer)                            :: MeshViewer
 
    Call MEF90_Initialize()
    
@@ -109,8 +110,8 @@ Program PrepVarFrac
    TestCase(7)%Description = "Afine forces: F=P+t*F_0"
    TestCase(8)%Description = "MIL, 2D plane stresses / 3D Sequential Iterated Laminate"
    TestCase(9)%Description = "Cooling: steady-state propagation of a front"
-   TestCase(10)%Description = "Mode-I loading, using asymptotic form of displacement (MIL)"
-   TestCase(11)%Description = "Mode-I loading, using asymptotic form of displacement (Crack tip at (t,0,0))"
+   TestCase(10)%Description = "Mode-I loading, using asymptotic form of displacement (scaling)"
+   TestCase(11)%Description = "Mode-I loading, using asymptotic form of displacement (surfing)"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -122,6 +123,7 @@ Program PrepVarFrac
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
    End If
 
+   
    !!! Reading and distributing sequential mesh
    If (MEF90_NumProcs == 1) Then
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
@@ -130,6 +132,19 @@ Program PrepVarFrac
       Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
       Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
+   
+   !!! Save the binary mesh file
+   filename = Trim(prefix) // '.dat'
+   Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename, FILE_MODE_WRITE, MeshViewer, iErr);CHKERRQ(iErr)
+   Call MeshView(MeshTopology%Mesh,MeshViewer,iErr);CHKERRQ(iErr)
+   Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
+   Call MeshDestroy(MeshTopology%Mesh, iErr);CHKERRQ(iErr)
+
+   Call MeshCreate(PETSC_COMM_WORLD,MeshTopology%Mesh,iErr);CHKERRQ(iErr)
+   filename = Trim(prefix) // '.dat'
+   Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename, FILE_MODE_READ, MeshViewer, iErr);CHKERRQ(iErr)
+   Call MeshLoad(MeshViewer,MeshTopology%Mesh,iErr);CHKERRQ(iErr)
+   Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    If (verbose > 0) Then

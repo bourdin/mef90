@@ -82,6 +82,12 @@ TestSaveMesh:   ${PETSC_ARCH} TestSaveMesh.o ${PETSC_ARCH}/TestSaveMesh.o
 FindMPIProblem:   ${PETSC_ARCH} FindMPIProblem.o ${PETSC_ARCH}/FindMPIProblem.o
 	-${FLINKER} -o ${PETSC_ARCH}/FindMPIProblem ${PETSC_ARCH}/FindMPIProblem.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+TestH5:   ${PETSC_ARCH} TestH5.o ${PETSC_ARCH}/TestH5.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestH5 ${PETSC_ARCH}/TestH5.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
+TestMeshLoad:   ${PETSC_ARCH} TestMeshLoad.o ${PETSC_ARCH}/TestMeshLoad.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestMeshLoad ${PETSC_ARCH}/TestMeshLoad.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}

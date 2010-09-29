@@ -17,15 +17,20 @@ Module m_MEF_Elements
 
 
    Interface ElementInit
-      Module Procedure Init_Element2D_Scal, Init_Element2D, Init_Element2D_Elast, Init_Element3D_Scal, Init_Element3D, Init_Element3D_Elast, Init_AllElement2D_Scal, Init_AllElement2D, Init_AllElement2D_Elast, Init_AllElement3D_Scal, Init_AllElement3D, Init_AllElement3D_Elast
+      Module Procedure Init_Element2D_Scal, Init_Element2D, Init_Element2D_Elast, Init_Element3D_Scal, Init_Element3D,  &
+      Init_Element3D_Elast, Init_AllElement2D_Scal, Init_AllElement2D, Init_AllElement2D_Elast, Init_AllElement3D_Scal,  &
+      Init_AllElement3D, Init_AllElement3D_Elast
    End Interface ElementInit
    
    Interface ElementDestroy
-      Module Procedure Destroy_Element2D_Scal, Destroy_Element2D, Destroy_Element2D_Elast, Destroy_Element3D_Scal, Destroy_Element3D, Destroy_Element3D_Elast
+      Module Procedure Destroy_Element2D_Scal, Destroy_Element2D, Destroy_Element2D_Elast, Destroy_Element3D_Scal,  &
+      Destroy_Element3D, Destroy_Element3D_Elast
    End Interface ElementDestroy
    
    Interface ElementView
-      Module Procedure Element2D_ScalView, Element2D_ScalPtrView, Element2DView, Element2DPtrView, Element2D_ElastView, Element2D_ElastPtrView, Element3D_ScalView, Element3D_ScalPtrView, Element3DView, Element3DPtrView, Element3D_ElastView, Element3D_ElastPtrView
+      Module Procedure Element2D_ScalView, Element2D_ScalPtrView, Element2DView, Element2DPtrView, Element2D_ElastView,  &
+      Element2D_ElastPtrView, Element3D_ScalView, Element3D_ScalPtrView, Element3DView, Element3DPtrView, Element3D_ElastView,  &
+      Element3D_ElastPtrView
    End Interface ElementView
    
    PetscInt, Parameter, Public                   :: MEF90_P1_Lagrange = 1
@@ -91,14 +96,14 @@ Module m_MEF_Elements
       
       Allocate(dElem(dMeshTopology%Num_Elems))
       !!! Initialize the Basis Functions in each element
-      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr); CHKERRQ(iErr)
+      Call MeshGetSectionReal(dMeshTopology%mesh, 'coordinates', CoordSection, iErr);CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, dMeshTopology%Num_Elem_Blks
          Allocate(TmpCoords(dMeshTopology%Num_Dim * dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
          Allocate(Coords   (dMeshTopology%Num_Dim,  dMeshTopology%Elem_Blk(iBlk)%Num_Vert))
 
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
              Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
              !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
@@ -151,7 +156,7 @@ Module m_MEF_Elements
 
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
              Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
              !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
@@ -203,7 +208,7 @@ Module m_MEF_Elements
 
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
             !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
@@ -256,7 +261,7 @@ Module m_MEF_Elements
 
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
              Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
              !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
@@ -308,7 +313,7 @@ Module m_MEF_Elements
 
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
              Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
              !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
@@ -360,7 +365,7 @@ Module m_MEF_Elements
 
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr); CHKERRQ(iErr)
+            Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
              Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
              !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)

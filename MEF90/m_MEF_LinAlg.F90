@@ -112,11 +112,11 @@ Module m_MEF_LinAlg
 
    Interface Operator (*)
       Module Procedure DbleXVect2D, Vect2DXDble, DbleXVect3D, Vect3DXDble, &
-         DbleXMat2D, Mat2DXDble, DbleXMat3D, Mat3DXDble,               &
-         DbleXMatS2D, MatS2DXDble, DbleXMatS3D, MatS3DXDble,           &
-         MatXVect2D, MatXVect3D, MatXVect2DS, MatXVect3DS,             &
-         DbleXTens4OS2D, Tens4OS2DXDble, Tens4OS2DXMatS2D,             &
-         DbleXTens4OS3D, Tens4OS3DXDble, Tens4OS3DXMatS3D,             &
+         DbleXMat2D, Mat2DXDble, DbleXMat3D, Mat3DXDble,                   &
+         DbleXMatS2D, MatS2DXDble, DbleXMatS3D, MatS3DXDble,               &
+         MatXVect2D, MatXVect3D, MatXVect2DS, MatXVect3DS,                 &
+         DbleXTens4OS2D, Tens4OS2DXDble, Tens4OS2DXMatS2D,                 &
+         DbleXTens4OS3D, Tens4OS3DXDble, Tens4OS3DXMatS3D,                 &
          Mat2DXMat2D, MatS2DXMatS2D, Mat3DXMat3D, MatS3DXMatS3D
    End Interface
 
@@ -162,10 +162,10 @@ Module m_MEF_LinAlg
    
    Interface Assignment (=)
       Module Procedure Vect2D_Get_Real, Vect3D_Get_Real,                 &
-         Vect2D_Get_VectR, Vect3D_Get_VectR,                         &
-         Vect2DEQ, Vect3DEQ, Mat2D_Get_Real, Mat3D_Get_Real,         &
-         Mat2DEQ, Mat3DEQ, MatS2D_Get_Real, MatS3D_Get_Real,         &
-         MatS2DEQ, MatS3DEQ, Tens4OS2D_Get_Real, Tens4OS2DEQ,        &
+         Vect2D_Get_VectR, Vect3D_Get_VectR,                             &
+         Vect2DEQ, Vect3DEQ, Mat2D_Get_Real, Mat3D_Get_Real,             &
+         Mat2DEQ, Mat3DEQ, MatS2D_Get_Real, MatS3D_Get_Real,             &
+         MatS2DEQ, MatS3DEQ, Tens4OS2D_Get_Real, Tens4OS2DEQ,            &
          Tens4OS3D_Get_Real, Tens4OS3DEQ   
    End Interface
   
@@ -856,14 +856,20 @@ Contains
       PetscLogDouble                              :: flops = 0
       PetscInt                                    :: iErr
       
-      Tens4OS3DXMatS3D%XX = T1%XXXX * M1%XX + T1%XXXY * M1%XY * 2.0_Kr + T1%XXXZ * M1%XZ * 2.0_Kr + T1%XXYY * M1%YY + T1%XXYZ * M1%YZ * 2.0_Kr + T1%XXZZ * M1%ZZ 
-      Tens4OS3DXMatS3D%XY = T1%XXXY * M1%XX + T1%XYXY * M1%XY * 2.0_Kr + T1%XYXZ * M1%XZ * 2.0_Kr + T1%XYYY * M1%YY + T1%XYYZ * M1%YZ * 2.0_Kr + T1%XYZZ * M1%ZZ 
-      Tens4OS3DXMatS3D%XZ = T1%XXXZ * M1%XX + T1%XYXZ * M1%XY * 2.0_Kr + T1%XZXZ * M1%XZ * 2.0_Kr + T1%XZYY * M1%YY + T1%XZYZ * M1%YZ * 2.0_Kr + T1%XZZZ * M1%ZZ 
+      Tens4OS3DXMatS3D%XX = T1%XXXX * M1%XX + T1%XXXY * M1%XY * 2.0_Kr + T1%XXXZ * M1%XZ * 2.0_Kr &
+                          + T1%XXYY * M1%YY + T1%XXYZ * M1%YZ * 2.0_Kr + T1%XXZZ * M1%ZZ 
+      Tens4OS3DXMatS3D%XY = T1%XXXY * M1%XX + T1%XYXY * M1%XY * 2.0_Kr + T1%XYXZ * M1%XZ * 2.0_Kr &
+                          + T1%XYYY * M1%YY + T1%XYYZ * M1%YZ * 2.0_Kr + T1%XYZZ * M1%ZZ 
+      Tens4OS3DXMatS3D%XZ = T1%XXXZ * M1%XX + T1%XYXZ * M1%XY * 2.0_Kr + T1%XZXZ * M1%XZ * 2.0_Kr &
+                          + T1%XZYY * M1%YY + T1%XZYZ * M1%YZ * 2.0_Kr + T1%XZZZ * M1%ZZ 
       
-      Tens4OS3DXMatS3D%YY = T1%XXYY * M1%XX + T1%XYYY * M1%XY * 2.0_Kr + T1%XZYY * M1%XZ * 2.0_Kr + T1%YYYY * M1%YY + T1%YYYZ * M1%YZ * 2.0_Kr + T1%YYZZ * M1%ZZ 
-      Tens4OS3DXMatS3D%YZ = T1%XXYZ * M1%XX + T1%XYYZ * M1%XY * 2.0_Kr + T1%XZYZ * M1%XZ * 2.0_Kr + T1%YYYZ * M1%YY + T1%YZYZ * M1%YZ * 2.0_Kr + T1%YZZZ * M1%ZZ 
+      Tens4OS3DXMatS3D%YY = T1%XXYY * M1%XX + T1%XYYY * M1%XY * 2.0_Kr + T1%XZYY * M1%XZ * 2.0_Kr &
+                          + T1%YYYY * M1%YY + T1%YYYZ * M1%YZ * 2.0_Kr + T1%YYZZ * M1%ZZ 
+      Tens4OS3DXMatS3D%YZ = T1%XXYZ * M1%XX + T1%XYYZ * M1%XY * 2.0_Kr + T1%XZYZ * M1%XZ * 2.0_Kr &
+                          + T1%YYYZ * M1%YY + T1%YZYZ * M1%YZ * 2.0_Kr + T1%YZZZ * M1%ZZ 
       
-      Tens4OS3DXMatS3D%ZZ = T1%XXZZ * M1%XX + T1%XYZZ * M1%XY * 2.0_Kr + T1%XZZZ * M1%XZ * 2.0_Kr + T1%YYZZ * M1%YY + T1%YZZZ * M1%YZ * 2.0_Kr + T1%ZZZZ * M1%ZZ 
+      Tens4OS3DXMatS3D%ZZ = T1%XXZZ * M1%XX + T1%XYZZ * M1%XY * 2.0_Kr + T1%XZZZ * M1%XZ * 2.0_Kr &
+                          + T1%YYZZ * M1%YY + T1%YZZZ * M1%YZ * 2.0_Kr + T1%ZZZZ * M1%ZZ 
       flops = 84.0
       Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
    End Function Tens4OS3DXMatS3D
@@ -1152,7 +1158,8 @@ Contains
       PetscLogDouble                              :: flops = 0
       PetscInt                                    :: iErr
       
-      ContP3DS = M1%XX * M2%XX + M1%YY * M2%YY + M1%ZZ * M2%ZZ + 2.0_Kr * M1%YZ * M2%YZ + 2.0_Kr * M1%XZ * M2%XZ + 2.0_Kr * M1%XY * M2%XY
+      ContP3DS = M1%XX * M2%XX + M1%YY * M2%YY + M1%ZZ * M2%ZZ + 2.0_Kr * M1%YZ * M2%YZ &
+               + 2.0_Kr * M1%XZ * M2%XZ + 2.0_Kr * M1%XY * M2%XY
       flops = 14.0
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
    End Function ContP3DS
@@ -1934,7 +1941,8 @@ Contains
       C1 = V1 - V4
       C2 = V2 - V4
       C3 = V3 - V4
-      Vol_Tetra_3D = ABS(C1%X * (C2%Y * C3%Z - C2%Z * C3%Y) - C1%Y * (C2%X * C3%Z - C2%Z * C3%X) + C1%Z * (C2%X * C3%Y - C2%Y * C3%X) ) / 6.0_Kr
+      Vol_Tetra_3D = ABS(C1%X * (C2%Y * C3%Z - C2%Z * C3%Y) - C1%Y * (C2%X * C3%Z - C2%Z * C3%X)  &
+                       + C1%Z * (C2%X * C3%Y - C2%Y * C3%X) ) / 6.0_Kr
       flops = 18.0
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
    End Function Vol_Tetra_3D
