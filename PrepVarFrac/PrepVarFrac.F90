@@ -58,7 +58,7 @@ Program PrepVarFrac
    PetscReal                                    :: m
    PetscInt                                     :: NumLayers
    PetscReal                                    :: CTheta, CTheta2, STheta2, R, Kappa
-   PetscTruth                                   :: saveElemVar
+   PetscBool                                    :: saveElemVar
 
    Call MEF90_Initialize()
    
