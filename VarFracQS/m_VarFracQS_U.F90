@@ -24,6 +24,7 @@ Module m_VarFracQS_U3D
    Public :: FormFunctionAndGradientU
    Public :: InitTaoBoundsU
 #endif
+   Public :: Init_TS_U
    Public :: MatU_Assembly
    Public :: RHSU_Assembly
    Public :: Step_U
@@ -57,6 +58,27 @@ Contains
    End Subroutine InitTaoBoundsU
 #endif
 
+   Subroutine Init_TS_U(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
+      
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) "Initializing U with ", AppCtx%VarFracSchemeParam%InitV, "\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If      
+      
+      Select Case(AppCtx%VarFracSchemeParam%InitV)
+      Case(VarFrac_INIT_V_ONE, VarFrac_INIT_V_OSC)
+         Call SectionRealSet(AppCtx%U%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)      
+         Call VecSet(AppCtx%U%Vec, 0.0_Kr, iErr); CHKERRQ(iErr)      
+      Case(VarFrac_INIT_V_FILE)
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%U)
+         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+      End Select
+      !!! Update boundary values
+      Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCUFlag, AppCtx%MeshTopology)
+   End Subroutine Init_TS_U
 !!!
 !!! Global Assembly Functions
 !!! 

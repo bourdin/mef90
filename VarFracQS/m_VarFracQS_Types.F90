@@ -38,7 +38,7 @@ Module m_VarFracQS_Types3D
    End Type LogInfo_Type
 
    Type AppParam_Type
-      PetscInt                                     :: Restart
+      PetscTruth                                   :: Restart
       PetscInt                                     :: Verbose
       PetscBool                                    :: StopOnError
       Character(len=MEF90_MXSTRLEN)                :: prefix

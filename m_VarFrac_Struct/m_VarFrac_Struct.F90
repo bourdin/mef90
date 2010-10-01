@@ -55,6 +55,10 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_Init_V_RND     = 1
    PetscInt, Parameter, Public                     :: VarFrac_Init_V_SPH     = 2
    PetscInt, Parameter, Public                     :: VarFrac_Init_V_CRACKS  = 3
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_ONE     = 4
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_OSC     = 5
+   PetscInt, Parameter, Public                     :: VarFrac_Init_V_FILE    = 6
+   
    
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_NONE = 0
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_Eq   = 1
@@ -141,7 +145,7 @@ Module m_VarFrac_Struct
       
       PetscInt                                     :: InitV
       PetscInt                                     :: nbCracks
-      PetscReal                                    :: MaxCrackLength     
+      PetscReal                                    :: InitVLength     
       
       PetscInt                                     :: AltMinMaxIter
       PetscReal                                    :: AltMinTol
@@ -391,7 +395,7 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-nbcracks ', I5, A)")            dSchemeParam%NbCracks, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-maxcracklength ', ES12.5, A)")  dSchemeParam%MaxCrackLength, '\n'
+      Write(IOBuffer, "('-initvlength ', ES12.5, A)")  dSchemeParam%InitVLength, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-altminmaxiter ', I5, A)")       dSchemeParam%AltMinMaxIter, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -432,8 +436,9 @@ Module m_VarFrac_Struct
       dSchemeParam%BTScope          = 10000
       dSchemeParam%Unilateral       = 0
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
+      dSchemeParam%Irrevtype        = VarFrac_Irrev_Eq
       dSchemeParam%nbCracks         = 0
-      dSchemeParam%MaxCrackLength   = 0.0D0  
+      dSchemeParam%InitVLength      = 1.0D0  
       dSchemeParam%AltMinMaxIter    = 1000
       dSchemeParam%AltMinTol        = 1.0D-4
       dSchemeParam%AltMinSaveInt    = 25
@@ -457,7 +462,7 @@ Module m_VarFrac_Struct
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-unilateral',     dSchemeParam%Unilateral, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-maxcracklength', dSchemeParam%MaxCrackLength, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-InitVLength',    dSchemeParam%InitVLength, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminmaxiter',  dSchemeParam%AltMinMaxIter, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-altmintol',      dSchemeParam%AltMinTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminsaveint',  dSchemeParam%AltMinSaveInt, flag, iErr); CHKERRQ(iErr)
@@ -542,11 +547,12 @@ Module m_VarFrac_Struct
       End Do
    End Subroutine VarFracEXOProperty_Init   
 
-   Subroutine VarFracEXOVariable_Init(dEXO, dSkipElementVariables)
+   Subroutine VarFracEXOVariable_Init(dEXO, dSaveElementVariables)
       Type(EXO_Type)                      :: dEXO
       PetscInt                            :: i
       PetscBool, optional                 :: dSkipElementVariables
       
+      !!! The default is now to save element variables
       dEXO%Num_GlobVariables = VarFrac_Num_GlobVar
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
       dEXO%GlobVariable(VarFrac_GlobVar_SurfaceEnergy)%Name = 'Surface energy'
@@ -557,7 +563,9 @@ Module m_VarFrac_Struct
       dEXO%GlobVariable(VarFrac_GlobVar_Load)%Name          = 'Load'
       dEXO%GlobVariable(:)%Offset = (/ (i, i=1,dEXO%Num_GlobVariables) /)
       
-      If ( Present(dSkipElementVariables) .AND. (.NOT. dSkipElementVariables)) Then
+      If ( Present(dSaveElementVariables) .AND. (.NOT. dSaveElementVariables)) Then
+         dEXO%Num_CellVariables = 0
+      Else
          dEXO%Num_CellVariables = VarFrac_Num_CellVar
          Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))
          dEXO%CellVariable(VarFrac_CellVar_StrainXX)%Name = 'Strain XX'
@@ -573,8 +581,6 @@ Module m_VarFrac_Struct
          dEXO%CellVariable(VarFrac_CellVar_StressYZ)%Name = 'Stress YZ'
          dEXO%CellVariable(VarFrac_CellVar_StressZX)%Name = 'Stress ZX'
          dEXO%CellVariable(:)%Offset = (/ (i, i=1,dEXO%Num_CellVariables) /)
-      Else
-         dEXO%Num_CellVariables = 0
       End If
          
       dEXO%Num_VertVariables = VarFrac_Num_VertVar
