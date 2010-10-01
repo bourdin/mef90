@@ -550,7 +550,7 @@ Module m_VarFrac_Struct
    Subroutine VarFracEXOVariable_Init(dEXO, dSaveElementVariables)
       Type(EXO_Type)                      :: dEXO
       PetscInt                            :: i
-      PetscBool, optional                 :: dSkipElementVariables
+      PetscBool, optional                 :: dSaveElementVariables
       
       !!! The default is now to save element variables
       dEXO%Num_GlobVariables = VarFrac_Num_GlobVar
