@@ -21,6 +21,7 @@ Program  VarFracQS
    Character(len=MEF90_MXSTRLEN)                :: filename
    Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
    PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
+   PetscTruth                                   :: restart
 
    Call VarFracQSInit(AppCtx)
    
@@ -30,7 +31,6 @@ Program  VarFracQS
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer) 
    End If   
    
-   AppCtx%TimeStep = 1
    iDebug = 0
    Write(stagename(1), "(A)") "Outer loop"
    Write(stagename(2), "(A)") "AltMin loop"
@@ -52,7 +52,7 @@ Program  VarFracQS
 
 
       !!! Update U at fixed nodes
-      Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCUFlag, AppCtx%MeshTopology)
+      Call Init_TS_U(AppCtx)
       
      !!! Rebuild AppCtx%VIrrev and AppCtx%IrrevFlag
       Call Update_Irrev(AppCtx)
@@ -69,7 +69,6 @@ Program  VarFracQS
          Write(IOBuffer, *) 'Done with Init_TS_V \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      
       
       AltMinIter = 1
       AltMin: Do 

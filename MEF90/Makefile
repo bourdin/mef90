@@ -4,8 +4,8 @@ all: m_MEF90.o ${PETSC_ARCH}
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
-ifeq (${FC},gfortran)
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS} --free-line-length-none
+ifeq (${COMPILER},gcc)
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS} -ffixed-line-length-0
 else
 	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS}
 endif
@@ -21,6 +21,7 @@ debug:
 	@echo FCPPFLAGS is ${FCPPFLAGS}
 	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
 	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
+	@echo COMPILER is ${COMPILER}
 
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
@@ -28,7 +29,7 @@ ${PETSC_ARCH}:
 m_MEF_Parameters.o: ${PETSC_ARCH}   
 
 m_MEF_LinAlg.o:     m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o   \
-					m_MEF_Utils.o      ${PETSC_ARCH}/m_MEF_Utils.o
+		    m_MEF_Utils.o      ${PETSC_ARCH}/m_MEF_Utils.o
 
 m_MEF_Utils.o:      m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o
 

@@ -61,6 +61,7 @@ Program PrepVarFrac
    PetscInt                                     :: Seed
    PetscLogDouble                               :: Time
    PetscBool                                    :: Has_Seed, Has_n
+   PetscBool                                    :: saveElemVar
    
    PetscReal                                    :: R, Ctheta, CTheta2, Stheta, STheta2
 
@@ -75,6 +76,8 @@ Program PrepVarFrac
    End If
    EraseBatch=.False.
    Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
+   saveElemVar=.True.
+   Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-saveelemvar', saveElemVar, HasPrefix, iErr);CHKERRQ(iErr)
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
    If (MEF90_MyRank==0) Then
       If (IsBatch) Then
@@ -172,8 +175,20 @@ Program PrepVarFrac
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_ARG_SIZ, IOBuffer, iErr)
    End If
    Call EXOEBProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
+   If (verbose > 0) Then
+      Write(IOBuffer, *) "Done with EXOEBProperty_AskWithBatchGrains\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    Call EXOSSProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
+   If (verbose > 0) Then
+      Write(IOBuffer, *) "Done with EXOSSProperty_AskWithBatchGrains\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    Call EXONSProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
+   If (verbose > 0) Then
+      Write(IOBuffer, *) "Done with EXONSProperty_AskWithBatchGrains\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    
    Do i = 1, MeshTopology%num_elem_blks
       MeshTopology%elem_blk(i)%Elem_Type = MyEXO%EBProperty( VarFrac_EBProp_Elem_Type )%Value( MeshTopology%elem_blk(i)%ID )
@@ -192,7 +207,7 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
-   Call VarFracEXOVariable_Init(MyEXO)
+   Call VarFracEXOVariable_Init(MyEXO,saveElemVar)
    Call EXOVariable_Write(MyEXO)
    If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with EXOVariable_Write\n'

@@ -26,7 +26,7 @@ Contains
    Subroutine VarFracQSInit(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
-      PetscInt                                     :: iErr, i, iBlk
+      PetscInt                                     :: iErr, i, iBlk, iTS
       Type(Mesh)                                   :: Tmp_Mesh
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename
       PetscInt                                     :: NumComponents
@@ -70,6 +70,9 @@ Contains
       Call InitFileNames(AppCtx)    
       AppCtx%AppParam%StopOnError = PETSC_FALSE
       Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-stop_on_error', AppCtx%AppParam%StopOnError, flag, iErr) ; CHKERRQ(iErr)
+      AppCtx%TimeStep = 1
+      AppCtx%AppParam%Restart = PETSC_FALSE
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, "-restart", AppCtx%TimeStep, AppCtx%AppParam%Restart, iErr); CHKERRQ(iErr)
 
       Call VarFracSchemeParam_GetFromOptions(AppCtx%VarFracSchemeParam)
       If (AppCtx%AppParam%verbose > 0) Then
@@ -130,9 +133,9 @@ Contains
    
       !!! Initializes the values and names of the properties and variables
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
-         Call VarFracEXOVariable_Init(AppCtx%MyEXO,.FALSE.)
+         Call VarFracEXOVariable_Init(AppCtx%MyEXO,.TRUE.)
       Else
-         Call VarFracEXOVariable_Init(AppCtx%MyEXO)
+         Call VarFracEXOVariable_Init(AppCtx%MyEXO,.FALSE.)
       End If
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose > 0) Then
@@ -345,24 +348,70 @@ Contains
       
       If (MEF90_MyRank == 0) Then
          AppCtx%AppParam%Ener_Unit = 71
-         Open(File = AppCtx%AppParam%Ener_FileName, Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
-         Rewind(AppCtx%AppParam%Ener_Unit)
+         If (AppCtx%AppParam%Restart) Then
+            Open(File = AppCtx%AppParam%Ener_FileName, Unit = AppCtx%AppParam%Ener_Unit, Status = 'old', Position='Append')
+            Rewind(AppCtx%AppParam%Ener_Unit)
+            Do 
+               Read(AppCtx%AppParam%Ener_Unit, *, end=999, err=999) iTS, rdummy, AppCtx%ElasticEnergy(iTS), AppCtx%ExtForcesWork(iTS), AppCtx%SurfaceEnergy(iTS), AppCtx%TotalEnergy(iTS)
+               CYCLE
+ 999            EXIT               
+            End Do
+            Write(AppCtx%AppParam%Ener_Unit, *)
+            Write(AppCtx%AppParam%Ener_Unit, *)
+            Write(AppCtx%AppParam%Ener_Unit, *)
+            If (AppCtx%TimeStep == 0) Then
+               AppCtx%TimeStep = iTS+1
+            End If
+            If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer, *) 'Restarting from step', AppCtx%TimeStep, '\n'
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
+         Else
+            Open(File = AppCtx%AppParam%Ener_FileName, Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
+            Rewind(AppCtx%AppParam%Ener_Unit)
+         End If
+         
          If (AppCtx%VarFracSchemeParam%SaveBlk) Then
             Allocate(AppCtx%AppParam%EnerBlock_Unit(AppCtx%MeshTopology%Num_Elem_Blks_Global))
             Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
                AppCtx%AppParam%EnerBlock_Unit(iBlk) = 170+iBlk
                Write(AppCtx%AppParam%EnerBlock_FileName, 110) Trim(AppCtx%AppParam%Prefix), iBlk, Trim(AppCtx%AppParam%EnerBlock_Suffix)
-               Open(File = AppCtx%AppParam%EnerBlock_FileName, Unit = AppCtx%AppParam%EnerBlock_Unit(iBlk), Status = 'Unknown')
-               Rewind(AppCtx%AppParam%EnerBlock_Unit(iBlk))
+               If (AppCtx%AppParam%Restart) Then
+                  Open(File = AppCtx%AppParam%EnerBlock_FileName, Unit = AppCtx%AppParam%EnerBlock_Unit(iBlk), Status = 'Old', Position='Append')
+                  Write(AppCtx%AppParam%EnerBlock_Unit(iBlk),*)
+                  Write(AppCtx%AppParam%EnerBlock_Unit(iBlk),*)
+                  Write(AppCtx%AppParam%EnerBlock_Unit(iBlk),*)
+               Else
+                  Open(File = AppCtx%AppParam%EnerBlock_FileName, Unit = AppCtx%AppParam%EnerBlock_Unit(iBlk), Status = 'Unknown')
+                  Rewind(AppCtx%AppParam%EnerBlock_Unit(iBlk))
+               End If
             End Do
          End If
  110 Format(A, '-', I4.4, '.', A)
       End If
       
-      !!! Set V=1
+      !!! Broacasting Energies in case we are restarting and it is needed for backtracking
+      If (AppCtx%AppParam%Restart) Then
+         Call MPI_BCast(AppCtx%TimeStep, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+         Do iTS = 1, AppCtx%TimeStep
+            Call MPI_BCast(AppCtx%ElasticEnergy(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+            Call MPI_BCast(AppCtx%ExtForcesWork(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+            Call MPI_BCast(AppCtx%ElasticEnergy(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+            Call MPI_BCast(AppCtx%TotalEnergy(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+         End Do
+      End If
+      
+      !!! Set V=1 if we are not restarting, and rekoad last time step if not
       Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
-      Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-      Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%Restart .AND. (AppCtx%TimeSTep > 1) ) Then
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%V)
+         Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
+         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep-1, AppCtx%U)
+         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+      Else
+         Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
+         Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)
+      End If
       
       !!! We are not backTracking
       AppCtx%IsBT = PETSC_FALSE
@@ -517,6 +566,16 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100   Format(I6, 5(ES13.5,'  '))  
    End Subroutine Save_Ener
+   
+   Subroutine Load_Ener(AppCtx, TimeStep)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: TimeStep, iErr
+
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   End Subroutine Load_Ener
+   
    
    Subroutine Init_TS_Loads(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
