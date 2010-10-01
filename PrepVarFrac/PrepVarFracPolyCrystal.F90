@@ -21,7 +21,7 @@ Program PrepVarFrac
    Type(Mesh)                                   :: Tmp_Mesh
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2D
    Type(Element3D_Scal), Dimension(:), Pointer  :: Elem3D
-   PetscTruth                                   :: HasPrefix
+   PetscBool                                    :: HasPrefix
    PetscInt                                     :: verbose = 0
    PetscInt                                     :: iErr, iloc, i, j, k, iCase, iStep
    PetscInt                                     :: iBlock
@@ -47,10 +47,10 @@ Program PrepVarFrac
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
    PetscReal, Dimension(:), Pointer             :: GlobVars
    PetscInt                                     :: vers
-   PetscTruth                                   :: IsBatch, HasBatchFile
+   PetscBool                                    :: IsBatch, HasBatchFile
    PetscInt                                     :: BatchUnit=99
    Character(len=MEF90_MXSTRLEN)                :: BatchFileName
-   PetscTruth                                   :: EraseBatch
+   PetscBool                                    :: EraseBatch
    
    PetscInt                                     :: NumGrains
    PetscReal                                    :: ToughnessGrain, ThermExpScalGrain
@@ -60,7 +60,7 @@ Program PrepVarFrac
    PetscRandom                                  :: RandomCtx
    PetscInt                                     :: Seed
    PetscLogDouble                               :: Time
-   PetscTruth                                   :: Has_Seed, Has_n
+   PetscBool                                    :: Has_Seed, Has_n
    
    PetscReal                                    :: R, Ctheta, CTheta2, Stheta, STheta2
 

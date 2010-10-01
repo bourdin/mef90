@@ -3,7 +3,7 @@ Module m_MEF_MPI
 
    Use m_MEF_Parameters
    Use m_MEF_Types
-   Use petsc
+   Use petscdef
    Implicit None
    Private
 

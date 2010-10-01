@@ -27,10 +27,10 @@ Program TestSieve3D
    PetscReal, Dimension(:), Pointer             :: values
    Type(Mat)                                    :: K
    Type(Vec)                                    :: V, V_Loc
-   PetscTruth                                   :: HasF
+   PetscBool                                   :: HasF
    PetscInt                                     :: dof
    PetscLogEvent                                :: integrationEvent
-   PetscTruth                                   :: verbose
+   PetscBool                                   :: verbose
    PetscErrorCode                               :: iErr
    PetscInt                                     :: iBlk, iELoc, iE, iV, iX
    Character(len=256)                           :: CharBuffer

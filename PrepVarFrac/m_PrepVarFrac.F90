@@ -10,7 +10,7 @@ Contains
       PetscInt                                  :: Val
       Character(len=*)                          :: msg 
       PetscInt                                  :: argunit
-      PetscTruth                                :: IsBatch
+      PetscBool                                 :: IsBatch
 
       Character(len=MEF90_MXSTRLEN)             :: prefix, IOBuffer   
       PetscInt                                  :: iErr   
@@ -34,7 +34,7 @@ Contains
       PetscReal                                 :: Val
       Character(len=*)                          :: msg 
       PetscInt                                  :: argunit
-      PetscTruth                                :: IsBatch
+      PetscBool                                 :: IsBatch
 
       Character(len=MEF90_MXSTRLEN)             :: prefix, IOBuffer      
       PetscInt                                  :: iErr
@@ -58,7 +58,7 @@ Contains
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
       PetscInt                                       :: BatchUnit
-      PetscTruth                                     :: IsBatch
+      PetscBool                                      :: IsBatch
       PetscInt                                       :: NumGrains
 
       PetscInt                                       :: iErr
@@ -102,7 +102,7 @@ Contains
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
       PetscInt                                       :: BatchUnit
-      PetscTruth                                     :: IsBatch
+      PetscBool                                      :: IsBatch
       PetscInt                                       :: NumGrains
 
       PetscInt                                       :: iErr
@@ -131,7 +131,7 @@ Contains
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
       PetscInt                                       :: BatchUnit
-      PetscTruth                                     :: IsBatch
+      PetscBool                                      :: IsBatch
 
       PetscInt                                       :: iErr
       PetscInt                                       :: i, j, IntBuffer
@@ -160,7 +160,7 @@ Contains
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
       PetscInt                                       :: BatchUnit
-      PetscTruth                                     :: IsBatch
+      PetscBool                                      :: IsBatch
 
       PetscInt                                       :: iErr
       PetscInt                                       :: i, j, IntBuffer
@@ -189,7 +189,7 @@ Contains
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
       PetscInt                                       :: BatchUnit
-      PetscTruth                                     :: IsBatch
+      PetscBool                                      :: IsBatch
 
       PetscInt                                       :: iErr
       PetscInt                                       :: i, j, IntBuffer
@@ -217,7 +217,7 @@ Contains
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
       PetscInt                                       :: BatchUnit
-      PetscTruth                                     :: IsBatch
+      PetscBool                                      :: IsBatch
       PetscInt                                       :: NumGrains
 
       PetscInt                                       :: iErr

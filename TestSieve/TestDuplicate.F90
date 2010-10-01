@@ -19,8 +19,8 @@ Program TestDuplicate
    Type(EXO_Type)                               :: EXO, MyEXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    
-   PetscTruth                                   :: HasPrefix
-   PetscTruth                                   :: verbose
+   PetscBool                                   :: HasPrefix
+   PetscBool                                   :: verbose
    PetscErrorCode                               :: iErr
    Character(len=256)                           :: filename
    Character(len=256)                           :: prefix

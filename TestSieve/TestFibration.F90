@@ -24,7 +24,7 @@ Program TestFibration
    Type(Mat)                                    :: M
    PetscReal, Dimension(:,:), Pointer           :: MatElem
       
-   PetscTruth                                   :: HasPrefix, flg
+   PetscBool                                   :: HasPrefix, flg
    PetscErrorCode                               :: iErr, i, j, iBlk
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix

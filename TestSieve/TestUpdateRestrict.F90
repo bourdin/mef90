@@ -19,8 +19,8 @@ Program TestSectionInt
    Type (EXO_Type)                              :: EXO, MyEXO
    Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
    
-   PetscTruth                                   :: HasPrefix
-   PetscTruth                                   :: verbose
+   PetscBool                                   :: HasPrefix
+   PetscBool                                   :: verbose
    PetscErrorCode                               :: iErr, iBlk, iE, i
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
