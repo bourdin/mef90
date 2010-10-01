@@ -4,8 +4,8 @@ Module m_MEF_Sieve
    Use m_MEF_LinAlg
    Use m_MEF_Types
    Use m_MEF_Utils
-   Use petsc
-   Use petscmesh
+   Use petscdef
+   Use petscmeshdef
          
    IMPLICIT NONE
    Private

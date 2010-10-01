@@ -2,7 +2,7 @@ Module m_MEF_LinAlg
 #include "finclude/petscdef.h"
    Use m_MEF_Parameters
    Use m_MEF_Utils
-   Use petsc
+   Use petscdef
    
    IMPLICIT NONE
  

@@ -20,8 +20,8 @@ Program TestSectionFromVec
    Type (Vect3D), Dimension(:), Pointer         :: Coords
    
    Type(Mesh)                                   :: Tmp_Mesh
-   PetscTruth                                   :: HasPrefix
-   PetscTruth                                   :: verbose
+   PetscBool                                   :: HasPrefix
+   PetscBool                                   :: verbose
    PetscErrorCode                               :: iErr
    PetscInt                                     :: i
    Character(len=256)                           :: CharBuffer

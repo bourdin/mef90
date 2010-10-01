@@ -21,7 +21,7 @@ Program TestFibration
    Type(Element2D_Scal), Dimension(:), Pointer  :: ElemScal
    Type(Field)                                  :: Field1, Field2
    
-   PetscTruth                                   :: HasPrefix, flg
+   PetscBool                                   :: HasPrefix, flg
    PetscInt                                     :: verbose
    PetscErrorCode                               :: iErr, i, j, iBlk
    Character(len=256)                           :: CharBuffer, IOBuffer, filename

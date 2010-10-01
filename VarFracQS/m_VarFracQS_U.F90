@@ -255,7 +255,7 @@ Contains
       Type(Mat)                                    :: K
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: V_Sec
-      PetscTruth                                   :: DoBC
+      PetscBool                                    :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iBlkID
@@ -326,7 +326,7 @@ Contains
       Type(Mat)                                    :: K
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: X_Sec, Theta_Sec, V_Sec
-      PetscTruth                                   :: DoBC
+      PetscBool                                    :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iBlkID
@@ -351,7 +351,7 @@ Contains
       PetscReal                                    :: Strain_Trace
       PetscReal                                    :: Theta_Elem, V_Elem, CoefV
       PetscLogDouble, Parameter                    :: oneflop = 1.0
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
@@ -451,7 +451,7 @@ Contains
       Type(Mat)                                    :: K
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: X_Sec, Theta_Sec, V_Sec
-      PetscTruth                                   :: DoBC
+      PetscBool                                    :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iBlkID
@@ -475,7 +475,7 @@ Contains
 #endif
       PetscReal                                    :: Theta_Elem, V_Elem, CoefV
       PetscLogDouble, Parameter                    :: oneflop = 1.0
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
@@ -561,7 +561,7 @@ Contains
    Subroutine MatU_AssemblyBlk_NonBrittle(K, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: K
       PetscInt                                     :: iBlk
-      PetscTruth                                   :: DoBC
+      PetscBool                                    :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iBlkID
@@ -634,7 +634,7 @@ Contains
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
       PetscLogDouble, Parameter                    :: oneflop = 1.0
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
@@ -728,7 +728,7 @@ Contains
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
       PetscLogDouble, Parameter                    :: oneflop = 1.0
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
@@ -828,7 +828,7 @@ Contains
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
       PetscLogDouble, Parameter                    :: oneflop = 1.0
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
@@ -920,7 +920,7 @@ Contains
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
       PetscLogDouble, Parameter                    :: oneflop = 1.0
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
@@ -1049,7 +1049,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: V_Loc
       PetscReal                                    :: V_Elem, CoefV
       PetscLogDouble, Parameter                    :: oneflop  = 1.0
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
       
@@ -1118,7 +1118,7 @@ Contains
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
       PetscLogDouble, Parameter                    :: oneflop = 1.0
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
       

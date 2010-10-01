@@ -26,7 +26,7 @@ Module m_Elast3D
    End Type LogInfo_Type
 
    Type AppParam_Type
-      PetscTruth                                   :: Restart
+      PetscBool                                    :: Restart
       PetscInt                                     :: Verbose
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
@@ -85,7 +85,7 @@ Contains
       Type(Mesh)                                   :: Tmp_Mesh
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename
       PetscInt                                     :: NumComponents
-      PetscTruth                                   :: HasPrefix, flag
+      PetscBool                                    :: HasPrefix, flag
       
       PetscReal                                    :: rDummy
       Character                                    :: cDummy
@@ -354,7 +354,7 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       Integer                                      :: iDum
       PetscReal                                    :: rDum
-      PetscTruth                                   :: flg
+      PetscBool                                    :: flg
       PetscInt, Dimension(:), Pointer              :: BCFlag_Ptr
       PetscReal, Dimension(:), Pointer             :: UBC_Ptr, U_Ptr, LowerBoundU_Ptr, UpperBoundU_Ptr
       PetscInt                                     :: iDoF1, iDoF2

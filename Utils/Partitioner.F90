@@ -18,7 +18,7 @@ Program Partitioner
    Type(Mesh)                                   :: Tmp_Mesh
    Type(EXO_Type)                               :: EXO, MyEXO
    
-   PetscTruth                                   :: HasPrefix, flg
+   PetscBool                                    :: HasPrefix, flg
    PetscInt                                     :: verbose
    PetscErrorCode                               :: iErr, iBlk
    Character(len=256)                           :: CharBuffer, IOBuffer, filename

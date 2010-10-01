@@ -30,11 +30,11 @@ Contains
       Type(Mesh)                                   :: Tmp_Mesh
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename
       PetscInt                                     :: NumComponents
-      PetscTruth                                   :: HasPrefix
+      PetscBool                                    :: HasPrefix
       PetscReal                                    :: rDummy
       Character                                    :: cDummy
       PetscInt                                     :: vers
-      PetscTruth                                   :: flag
+      PetscBool                                    :: flag
       
       PetscReal                                    :: KSP_Default_rtol
       PetscReal                                    :: KSP_Default_atol
@@ -373,7 +373,7 @@ Contains
    Subroutine InitFileNames(dAppCtx) 
       Type(AppCtx_Type)                            :: dAppCtx
       PetscInt                                     :: iErr
-      PetscTruth                                   :: HasPrefix
+      PetscBool                                    :: HasPrefix
       Character(len=MEF90_MXSTRLEN)                :: tmpStr
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', dAppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       If (.NOT. HasPrefix) Then

@@ -14,7 +14,7 @@ Program EXOGetBB
    Type(Vect2D), Dimension(:), Pointer          :: CoordVect2D
    Type(Vect3D), Dimension(:), Pointer          :: CoordVect3D
    
-   PetscTruth                                   :: HasPrefix
+   PetscBool                                    :: HasPrefix
    PetscReal, Dimension(:,:), Pointer           :: CoordArray
    PetscErrorCode                               :: iErr
    Character(len=256)                           :: prefix

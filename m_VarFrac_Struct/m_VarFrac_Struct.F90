@@ -132,7 +132,7 @@ Module m_VarFrac_Struct
       PetscInt                                     :: IrrevType
       PetscReal                                    :: IrrevTol
       
-      PetscTruth                                   :: DoBT
+      PetscBool                                    :: DoBT
       PetscReal                                    :: BTTol
       PetscInt                                     :: BTInt
       PetscInt                                     :: BTScope
@@ -155,12 +155,12 @@ Module m_VarFrac_Struct
 
       PetscInt                                     :: IntegOrder
       
-      PetscTruth                                   :: SaveBlk
-      PetscTruth                                   :: SaveStress
-      PetscTruth                                   :: SaveStrain
+      PetscBool                                    :: SaveBlk
+      PetscBool                                    :: SaveStress
+      PetscBool                                    :: SaveStrain
       
-      PetscTruth                                   :: U_UseTao
-      PetscTruth                                   :: V_UseTao
+      PetscBool                                    :: U_UseTao
+      PetscBool                                    :: V_UseTao
    End Type VarFracSchemeParam_Type
    
  Contains
@@ -422,7 +422,7 @@ Module m_VarFrac_Struct
    Subroutine VarFracSchemeParam_GetFromOptions(dSchemeParam)
       Type(VarFracSchemeParam_Type)                :: dSchemeParam
       PetscInt                                     :: iErr
-      PetscTruth                                   :: flag
+      PetscBool                                    :: flag
 
       dSchemeParam%IrrevType        = VarFrac_Irrev_Ineq
       dSchemeParam%IrrevTol         = 1.0D-2
@@ -545,7 +545,7 @@ Module m_VarFrac_Struct
    Subroutine VarFracEXOVariable_Init(dEXO, dSkipElementVariables)
       Type(EXO_Type)                      :: dEXO
       PetscInt                            :: i
-      PetscTruth, optional                :: dSkipElementVariables
+      PetscBool, optional                 :: dSkipElementVariables
       
       dEXO%Num_GlobVariables = VarFrac_Num_GlobVar
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
