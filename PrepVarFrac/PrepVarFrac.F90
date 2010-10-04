@@ -21,7 +21,7 @@ Program PrepVarFrac
    Type(Mesh)                                   :: Tmp_Mesh
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2D
    Type(Element3D_Scal), Dimension(:), Pointer  :: Elem3D
-   PetscTruth                                   :: HasPrefix
+   PetscBool                                    :: HasPrefix
    PetscInt                                     :: verbose = 0
    PetscInt                                     :: iErr, iloc, i, j, k, iCase, iStep
 
@@ -48,10 +48,10 @@ Program PrepVarFrac
    PetscReal                                    :: Lambda, Mu
    PetscReal, Dimension(:), Pointer             :: GlobVars
    PetscInt                                     :: vers
-   PetscTruth                                   :: IsBatch, HasBatchFile
+   PetscBool                                    :: IsBatch, HasBatchFile
    PetscInt                                     :: BatchUnit=99
    Character(len=MEF90_MXSTRLEN)                :: BatchFileName
-   PetscTruth                                   :: EraseBatch
+   PetscBool                                    :: EraseBatch
    
    PetscReal                                    :: Beta, eta, tau, Y
    PetscReal                                    :: FixedPoint
@@ -697,7 +697,7 @@ Contains
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
       PetscInt                                       :: BatchUnit
-      PetscTruth                                     :: IsBatch
+      PetscBool                                      :: IsBatch
       
       PetscInt                                       :: iErr
       PetscInt                                       :: i, j, IntBuffer

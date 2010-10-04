@@ -19,7 +19,7 @@ Program TestCoordinates
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    Type(Vect2D), DImension(:), Pointer          :: CoordVect2D
    
-   PetscTruth                                   :: HasPrefix
+   PetscBool                                   :: HasPrefix
    PetscReal, Dimension(:,:), Pointer           :: array
    PetscErrorCode                               :: iErr
    PetscInt                                     :: NumVert
