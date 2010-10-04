@@ -505,7 +505,7 @@ Contains
    Subroutine MatV_AssemblyBlk_ElastBrittle(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
-      PetscTruth                                   :: DoBC
+      PetscBool                                    :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlkID
@@ -525,7 +525,7 @@ Contains
       Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
 #endif      
       PetscReal                                    :: ElasticEnergyDensity
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
@@ -609,7 +609,7 @@ Contains
    Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralFull(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
-      PetscTruth                                   :: DoBC
+      PetscBool                                    :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlkID
@@ -632,7 +632,7 @@ Contains
 #endif      
       PetscReal                                    :: Strain_Trace
       PetscReal                                    :: ElasticEnergyDensity
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
@@ -722,7 +722,7 @@ Contains
    Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralShear(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
-      PetscTruth                                   :: DoBC
+      PetscBool                                    :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlkID
@@ -744,7 +744,7 @@ Contains
       Type(MatS3D)                                 :: EffectiveStrain_Elem_D
 #endif      
       PetscReal                                    :: ElasticEnergyDensity
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
@@ -829,7 +829,7 @@ Contains
    Subroutine MatV_AssemblyBlk_SurfaceAT2(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
-      PetscTruth                                   :: DoBC
+      PetscBool                                    :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlkID
@@ -894,7 +894,7 @@ Contains
    Subroutine MatV_AssemblyBlk_SurfaceAT1(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
-      PetscTruth                                   :: DoBC
+      PetscBool                                    :: DoBC
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlkID
@@ -1025,7 +1025,7 @@ Contains
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
 
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
@@ -1109,7 +1109,7 @@ Contains
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
 
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
@@ -1201,7 +1201,7 @@ Contains
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
       PetscInt                                     :: iDoF, iGauss
-      PetscTruth                                   :: Has_ThermExp
+      PetscBool                                    :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
 
       NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim

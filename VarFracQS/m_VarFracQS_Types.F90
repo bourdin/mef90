@@ -40,7 +40,7 @@ Module m_VarFracQS_Types3D
    Type AppParam_Type
       PetscTruth                                   :: Restart
       PetscInt                                     :: Verbose
-      PetscTruth                                   :: StopOnError
+      PetscBool                                    :: StopOnError
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Character(len=MEF90_MXSTRLEN)                :: CST_FileName
       Character(len=MEF90_MXSTRLEN)                :: Ener_FileName
@@ -90,7 +90,7 @@ Module m_VarFracQS_Types3D
       Type(KSP)                                    :: KSPU, KSPV
       Type(PC)                                     :: PCU, PCV
       Type(LogInfo_Type)                           :: LogInfo
-      PetscTruth                                   :: IsBT
+      PetscBool                                    :: IsBT
 #if defined WITH_TAO
       TAO_SOLVER                                   :: taoV
       TAO_APPLICATION                              :: taoAppV

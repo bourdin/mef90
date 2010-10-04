@@ -1,7 +1,7 @@
 Module m_MEF_Parameters
 #include "finclude/petscdef.h"
 
-   Use petsc
+   Use petscdef
    IMPLICIT NONE
 
    include "exodusII.inc"  

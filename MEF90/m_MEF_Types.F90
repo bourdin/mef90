@@ -2,8 +2,8 @@ Module m_MEF_Types
 #include "finclude/petscdef.h"
 
    Use m_MEF_LinAlg
-   Use petsc
-   Use petscmesh
+   Use petscdef
+   Use petscmeshdef
    
    IMPLICIT NONE
    Private

@@ -2,7 +2,7 @@ Module m_MEF_Utils
 #include "finclude/petscdef.h"
 
    Use m_MEF_Parameters
-   Use petsc
+   Use petscdef
 
    Implicit None
 
@@ -163,7 +163,7 @@ Module m_MEF_Utils
       ! 
       PetscReal, Dimension(:,:), Pointer          :: A
       PetscReal, Dimension(:), Pointer            :: b
-      PetscTruth, Intent(OUT)                     :: Status
+      PetscBool, Intent(OUT)                      :: Status
       
       Integer, Dimension(:), Pointer              :: ipiv,indxr,indxc 
       Logical, Dimension(:), Pointer              :: lpiv 

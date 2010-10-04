@@ -18,8 +18,8 @@ Program TestNodeSet
    Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
    Type (Vect3D), Dimension(:), Pointer         :: Coords
    
-   PetscTruth                                   :: HasPrefix
-   PetscTruth                                   :: verbose
+   PetscBool                                   :: HasPrefix
+   PetscBool                                   :: verbose
    PetscErrorCode                               :: iErr
    Integer                                      :: iBlk
    Character(len=256)                           :: CharBuffer, filename
