@@ -21,7 +21,7 @@ Program  VarFracQS
    Character(len=MEF90_MXSTRLEN)                :: filename
    Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
    PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
-   PetscTruth                                   :: restart
+   PetscBool                                    :: restart
 
    Call VarFracQSInit(AppCtx)
    
@@ -49,7 +49,6 @@ Program  VarFracQS
          Write(IOBuffer, *) 'Done with Init_TS_Loads \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-
 
       !!! Update U at fixed nodes
       Call Init_TS_U(AppCtx)
