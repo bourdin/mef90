@@ -36,14 +36,19 @@ Contains
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
       PetscInt                                     :: embedDim
       PetscInt                                     :: iE, iElem, numIds, blkId, setId
-      PetscInt, Dimension(:), Pointer              :: blkIds
       PetscInt, Dimension(:), Pointer              :: setIds
+      PetscInt, Dimension(:), Pointer              :: blkIds
       PetscInt, Dimension(:), Pointer              :: Tmp_ID, Tmp_GlobalID
 
 
       
       ! Read Global Geometric Parameters
       Call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
+      Write(*,*) 'dMeshTopology%Num_Dim            ',dMeshTopology%Num_Dim
+      Write(*,*) 'dMeshTopology%Num_Verts          ',dMeshTopology%Num_Verts
+      Write(*,*) 'dMeshTopology%Num_Elems          ',dMeshTopology%Num_Elems
+      Write(*,*) 'dMeshTopology%Num_Elem_Blk       ',dMeshTopology%Num_Elem_Blks
+      Write(*,*) 'dMeshTopology%Num_Node_Sets      ',dMeshTopology%Num_Node_Sets
       !!! Extracts sizes from the Mesh oject
 
       ! Read Elem block information
@@ -55,9 +60,13 @@ Contains
       End If
       !!! Compare to the number initialized in MeshTopology
       
-      Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
       Allocate(blkIds(numIds))
+      blkIds = -11
+      print*, 'numIds',numIds,'blkIds', blkIds
+      CHKMEMQ
+      
       Call MeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
+      Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
       If (dMeshTopology%Num_Elem_blks > 0) Then
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
             blkId = blkIds(iBlk)
