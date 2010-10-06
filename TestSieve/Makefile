@@ -88,6 +88,10 @@ TestH5:   ${PETSC_ARCH} TestH5.o ${PETSC_ARCH}/TestH5.o
 TestMeshLoad:   ${PETSC_ARCH} TestMeshLoad.o ${PETSC_ARCH}/TestMeshLoad.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestMeshLoad ${PETSC_ARCH}/TestMeshLoad.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	
+TestCorruption:   ${PETSC_ARCH} TestCorruption.o m_TestCorruption.o ${PETSC_ARCH}/TestCorruption.o ${PETSC_ARCH}/m_TestCorruption.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestCorruption ${PETSC_ARCH}/TestCorruption.o ${PETSC_ARCH}/m_TestCorruption.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+m_TestCorruption.o: ${PETSC_ARCH}
+
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}

@@ -7,9 +7,7 @@ Module m_MEF_EXO
    Use m_MEF_MPI
    Use m_MEF_Elements
    Use m_MEF_Utils
-   Use petscdef
-   Use petscmeshdef
-   
+   Use petsc
    
    IMPLICIT NONE
 

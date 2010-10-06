@@ -4,8 +4,7 @@ Module m_MEF_Elements
    Use m_MEF_LinAlg
    Use m_MEF_Types
    Use m_MEF_Utils
-   Use petscdef
-   Use petscmeshdef
+   Use petsc
       
    IMPLICIT NONE
    Private
