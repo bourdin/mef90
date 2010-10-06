@@ -134,17 +134,17 @@ Program PrepVarFrac
    End If
    
    !!! Save the binary mesh file
-   filename = Trim(prefix) // '.dat'
-   Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename, FILE_MODE_WRITE, MeshViewer, iErr);CHKERRQ(iErr)
-   Call MeshView(MeshTopology%Mesh,MeshViewer,iErr);CHKERRQ(iErr)
-   Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
-   Call MeshDestroy(MeshTopology%Mesh, iErr);CHKERRQ(iErr)
-
-   Call MeshCreate(PETSC_COMM_WORLD,MeshTopology%Mesh,iErr);CHKERRQ(iErr)
-   filename = Trim(prefix) // '.dat'
-   Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename, FILE_MODE_READ, MeshViewer, iErr);CHKERRQ(iErr)
-   Call MeshLoad(MeshViewer,MeshTopology%Mesh,iErr);CHKERRQ(iErr)
-   Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
+   !!!filename = Trim(prefix) // '.dat'
+   !!!Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename, FILE_MODE_WRITE, MeshViewer, iErr);CHKERRQ(iErr)
+   !!!Call MeshView(MeshTopology%Mesh,MeshViewer,iErr);CHKERRQ(iErr)
+   !!!Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
+   !!!Call MeshDestroy(MeshTopology%Mesh, iErr);CHKERRQ(iErr)
+   !!!
+   !!!Call MeshCreate(PETSC_COMM_WORLD,MeshTopology%Mesh,iErr);CHKERRQ(iErr)
+   !!!filename = Trim(prefix) // '.dat'
+   !!!Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename, FILE_MODE_READ, MeshViewer, iErr);CHKERRQ(iErr)
+   !!!Call MeshLoad(MeshViewer,MeshTopology%Mesh,iErr);CHKERRQ(iErr)
+   !!!Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
    If (verbose > 0) Then
