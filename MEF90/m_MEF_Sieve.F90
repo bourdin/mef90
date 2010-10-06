@@ -4,8 +4,7 @@ Module m_MEF_Sieve
    Use m_MEF_LinAlg
    Use m_MEF_Types
    Use m_MEF_Utils
-   Use petscdef
-   Use petscmeshdef
+   Use petsc
          
    IMPLICIT NONE
    Private
@@ -43,13 +42,9 @@ Contains
 
       
       ! Read Global Geometric Parameters
-      Call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
-      Write(*,*) 'dMeshTopology%Num_Dim            ',dMeshTopology%Num_Dim
-      Write(*,*) 'dMeshTopology%Num_Verts          ',dMeshTopology%Num_Verts
-      Write(*,*) 'dMeshTopology%Num_Elems          ',dMeshTopology%Num_Elems
-      Write(*,*) 'dMeshTopology%Num_Elem_Blk       ',dMeshTopology%Num_Elem_Blks
-      Write(*,*) 'dMeshTopology%Num_Node_Sets      ',dMeshTopology%Num_Node_Sets
       !!! Extracts sizes from the Mesh oject
+      Call MeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
+
 
       ! Read Elem block information
       CharBuffer = 'CellBlocks'
@@ -61,10 +56,6 @@ Contains
       !!! Compare to the number initialized in MeshTopology
       
       Allocate(blkIds(numIds))
-      blkIds = -11
-      print*, 'numIds',numIds,'blkIds', blkIds
-      CHKMEMQ
-      
       Call MeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
       If (dMeshTopology%Num_Elem_blks > 0) Then

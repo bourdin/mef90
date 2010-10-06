@@ -2,7 +2,7 @@ Module m_MEF_Utils
 #include "finclude/petscdef.h"
 
    Use m_MEF_Parameters
-   Use petscdef
+   Use petsc
 
    Implicit None
 
