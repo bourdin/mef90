@@ -92,7 +92,7 @@ Contains
       PetscInt                                     :: vers
       Type(Vec)                                    :: TAO_WorkVec
       PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
-      PetscTruth                                   :: saveElemVar
+      PetscBool                                    :: saveElemVar
       
       Call MEF90_Initialize()
       Call TaoInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
