@@ -69,7 +69,7 @@ Contains
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, flag, iErr); CHKERRQ(iErr)
       Call InitFileNames(AppCtx)    
       AppCtx%AppParam%StopOnError = PETSC_FALSE
-      Call PetscOptionsGetTruth(PETSC_NULL_CHARACTER, '-stop_on_error', AppCtx%AppParam%StopOnError, flag, iErr) ; CHKERRQ(iErr)
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-stop_on_error', AppCtx%AppParam%StopOnError, flag, iErr) ; CHKERRQ(iErr)
       AppCtx%TimeStep = 1
       AppCtx%AppParam%Restart = PETSC_FALSE
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, "-restart", AppCtx%TimeStep, AppCtx%AppParam%Restart, iErr); CHKERRQ(iErr)
