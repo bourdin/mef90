@@ -1,26 +1,13 @@
 Program  SimplePoisson
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petsckspdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
    Use m_MEF90
 #if defined PB_2D
    Use m_SimplePoisson2D
-   Use m_SimplePoissonTao2D
 #elif defined PB_3D 
    Use m_SimplePoisson3D
-   Use m_SimplePoissonTao3D
 #endif
-
-   Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscksp
-   Use petscmesh
 
    Implicit NONE   
 

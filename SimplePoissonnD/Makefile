@@ -7,9 +7,15 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 
 all: SimplePoisson${DIM}
 
-include ${TAO_DIR}/bmake/tao_common
+ifeq (${WITH_TAO},)
+  include ${PETSC_DIR}/conf/rules
+  include ${PETSC_DIR}/conf/variables
+  FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR}
+else
+  include ${TAO_DIR}/bmake/tao_common
+  FFLAGS = -DPB_${DIM} -DWITH_TAO -module ${PETSC_ARCH} -I. -I${MEF90DIR}
+endif
 
-FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR} -ftrace=full -ffree-line-length-huge
 
 .F90.o: 
 	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/${DIM}$@ $<
@@ -28,3 +34,7 @@ m_SimplePoisson.o: ${PETSC_ARCH}
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}
+
+debug:
+	@echo WITH_TAO is ${WITH_TAO}
+	@echo FFLAGS is ${FFLAGS}
