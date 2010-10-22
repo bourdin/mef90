@@ -24,28 +24,26 @@ Program  SimplePoisson
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)
    End If   
 
-   If (.NOT. AppCtx%AppParam%Use_Tao) Then
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Assembling the matrix\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call MatAssembly(AppCtx)
-      If (AppCtx%AppParam%verbose > 1) Then
-         Write(IOBuffer, *) 'Matrix\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-      End If
-   
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Assembling the RHS\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call RHSAssembly(AppCtx)
-      If (AppCtx%AppParam%verbose > 1) Then
-         Write(IOBuffer, *) 'RHS\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-      End If
+   If (AppCtx%AppParam%verbose > 0) Then
+      Write(IOBuffer, *) 'Assembling the matrix\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   Call MatAssembly(AppCtx)
+   If (AppCtx%AppParam%verbose > 1) Then
+      Write(IOBuffer, *) 'Matrix\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   End If
+
+   If (AppCtx%AppParam%verbose > 0) Then
+      Write(IOBuffer, *) 'Assembling the RHS\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   Call RHSAssembly(AppCtx)
+   If (AppCtx%AppParam%verbose > 1) Then
+      Write(IOBuffer, *) 'RHS\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End If
    
    If (AppCtx%AppParam%verbose > 0) Then
