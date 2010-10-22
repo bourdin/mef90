@@ -379,7 +379,6 @@ Contains
          MatElem = 0.0_Kr
          BCFlag = 0
          Call SectionIntRestrictClosure(AppCtx%BCFlag, AppCtx%MeshTopology%mesh, iE-1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
-         Write(MEF90_MyRank+300, *) iE, BCFlag
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
             Do iDoF1 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
                If (BCFlag(iDoF1) == 0) Then

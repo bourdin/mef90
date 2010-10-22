@@ -29,7 +29,7 @@ Program  SimplePoisson
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    Call MatAssembly(AppCtx)
-   If (AppCtx%AppParam%verbose > 1) Then
+   If (AppCtx%AppParam%verbose > 3) Then
       Write(IOBuffer, *) 'Matrix\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
@@ -40,7 +40,7 @@ Program  SimplePoisson
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    Call RHSAssembly(AppCtx)
-   If (AppCtx%AppParam%verbose > 1) Then
+   If (AppCtx%AppParam%verbose > 2) Then
       Write(IOBuffer, *) 'RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
