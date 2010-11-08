@@ -61,8 +61,9 @@ Module m_VarFrac_Struct
    
    
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_NONE = 0
-   PetscInt, Parameter, Public                     :: VarFrac_Irrev_Eq   = 1
-   PetscInt, Parameter, Public                     :: VarFrac_Irrev_Ineq = 2
+   PetscInt, Parameter, Public                     :: VarFrac_Irrev_Eq   = 1 ! Equality constrainst with threshold
+   PetscInt, Parameter, Public                     :: VarFrac_Irrev_Ineq = 2 ! Inequality constrains with threshold
+   !PetscInt, Parameter, Public                     :: VarFrac_Irrev_Comp = 3 ! Inequality constraints with threshold
 
    PetscInt, Parameter, Public                     :: VarFrac_Unilateral_NONE  = 0
    PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Full  = 1
@@ -429,7 +430,6 @@ Module m_VarFrac_Struct
       PetscBool                                    :: flag
 
       dSchemeParam%IrrevType        = VarFrac_Irrev_Ineq
-      dSchemeParam%IrrevTol         = 1.0D-2
       dSchemeParam%DoBT             = PETSC_FALSE
       dSchemeParam%BTTol            = 1.0D-2
       dSchemeParam%BTInt            = 10
@@ -454,8 +454,13 @@ Module m_VarFrac_Struct
       dSchemeParam%V_UseTao         = PETSC_TRUE
 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-irrev',          dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
+      If (dSchemeParam%IrrevType == VarFrac_Irrev_Eq) Then
+         dSchemeParam%IrrevTol = 1.0D-2
+      Else
+         dSchemeParam%IrrevTol = 1.0_Kr
+      End If
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-bt',             dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-bt',             dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-bttol',          dSchemeParam%BTTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',          dSchemeParam%BTInt, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btscope',        dSchemeParam%BTScope, flag, iErr); CHKERRQ(iErr) 
