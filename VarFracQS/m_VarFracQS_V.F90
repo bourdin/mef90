@@ -295,7 +295,7 @@ Contains
 !!!$!            Call VecCopy(AppCtx%V%Vec, AppCtx%VIrrev%Vec, iErr); CHKERRQ(iErr)
 !!!$            Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
 
-         End If
+!!!         End If
 
       Case(VarFrac_Irrev_NONE)
             Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
