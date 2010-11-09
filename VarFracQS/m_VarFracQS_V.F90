@@ -35,6 +35,7 @@ Contains
 
 #if defined WITH_TAO
    Subroutine InitTaoBoundsV(TaoApp, LowerBoundV_Vec, UpperBoundV_Vec, AppCtx, iErr)
+      !!! Called by TAO: initializes bounds vectors from VIrrev Section
       TAO_APPLICATION                              :: taoapp
       Type(Vec)                                    :: LowerBoundV_Vec, UpperBoundV_Vec
       Type(AppCtx_Type)                            :: AppCtx
@@ -64,8 +65,9 @@ Contains
       Case (VarFrac_Irrev_InEq)      
          !!! Irreversibility
          !!! This is a total nonsense. I need a SectionRealCopy
-         Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%VIrrev%Scatter, SCATTER_FORWARD, AppCtx%UpperBoundV%Vec, iErr); CHKERRQ(iErr)
-         Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_REVERSE, AppCtx%UpperBoundV%Vec, iErr); CHKERRQ(iErr)
+         !Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%VIrrev%Scatter, SCATTER_FORWARD, AppCtx%UpperBoundV%Vec, iErr); CHKERRQ(iErr)
+         !Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_REVERSE, AppCtx%UpperBoundV%Vec, iErr); CHKERRQ(iErr)
+         Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
          
          !!! Regular Boundary Conditions
          Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
@@ -86,6 +88,7 @@ Contains
 #endif
 
    Subroutine Init_TS_V(AppCtx)
+      !!! Set the initial value of V at the beginning of each alternate minimizatins iterations
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
@@ -180,6 +183,7 @@ Contains
    End Subroutine Init_TS_V
    
    Subroutine Update_Irrev(AppCtx)
+      !!! Updates the VIrrev vector used in InitTaoBoundsV
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: i, iErr
@@ -268,24 +272,24 @@ Contains
                Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
             End If
          Else
+            !!! This is again a convoluted way of copying data from V Section to VIrrev Section
+            Call VecCopy(AppCtx%V%Vec, AppCtx%VIrrev%Vec, iErr); CHKERRQ(iErr)
+            Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
+            
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) "Not Backtracking, so getting upper bound from V\n"
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             Do i = 1, AppCtx%MeshTopology%Num_Verts
-               Call SectionRealRestrict(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(ierr)      
+               Call SectionRealRestrict(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(ierr)      
                If (VIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                  !VIrrev_Ptr(1) = 0.0_Kr
-                  Call SectionRealUpdate(AppCtx%V%Sec,        AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr,    INSERT_VALUES, iErr); CHKERRQ(ierr)      
                   Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-                  !Call SectionRealUpdate(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
                   MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
                End If
                Call SectionRealRestore(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr);
             End Do
          End If
          DeAllocate(IrrevFlag_Ptr)
-         !Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
          If (AppCtx%AppParam%verbose > 0) Then
             Call MPI_AllReduce(MyIrrevEQ_Counter, IrrevEQ_Counter, 1, MPI_INTEGER, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
             Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"
@@ -310,6 +314,7 @@ Contains
 !!!
    
    Subroutine MatV_Assembly(K, AppCtx)
+   !!! Global dispatch routine for the FE matrix of the V-problem when using KSP
       Type(Mat)                                    :: K
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -358,6 +363,7 @@ Contains
 
 #if defined WITH_TAO
    Subroutine HessianV_Assembly(tao, X, H, Hpre, flg, AppCtx, iErr)
+   !!! Global dispatch routine for Hessian of the V-problem when using TAO
       TAO_SOLVER         :: tao
       Type(Vec)          :: X
       Type(Mat)          :: H, Hpre
@@ -415,6 +421,7 @@ Contains
 
 #if defined WITH_TAO
    Subroutine FormFunctionAndGradientV(tao, V_Vec, ObjFunc, GradientV_Vec, AppCtx, iErr)
+   !!! Global dispatch routine for Gradient and objectiove function of the V-problem when using TAO
       TAO_SOLVER                                   :: tao
       Type(Vec)                                    :: V_Vec, GradientV_Vec
       PetscInt                                     :: iErr
@@ -492,6 +499,7 @@ Contains
 #endif
 
    Subroutine RHSV_Assembly(RHSV_Vec, AppCtx)
+   !!! Global dispatch routine for RHS of the V-problem when using KSP
       Type(AppCtx_Type)                            :: AppCtx
       Type(Vec)                                    :: RHSV_Vec
 
@@ -1397,6 +1405,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Step_V"
    Subroutine Step_V(AppCtx)
+   !!! Do one V-step in teh alternate minimizations algorithm
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
