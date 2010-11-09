@@ -193,7 +193,7 @@ Contains
       IrrevEq_Counter   = 0
 
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
-      Case(VarFrac_Irrev_Eq,VarFrac_Irrev_InEq)
+      Case(VarFrac_Irrev_Eq)
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) "Irreversibility with Irrev_EQ\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -246,7 +246,7 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
 
-      Case(-3)
+      Case(VarFrac_Irrev_InEq)
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) "Irreversibility with Irrev_InEQ\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -276,7 +276,7 @@ Contains
             End If
          Else
             If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) "Not Backtracking, so getting blocked nodes from V\n"
+               Write(IOBuffer, *) "Not Backtracking, so getting upper bound from V\n"
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             End If
             Do i = 1, AppCtx%MeshTopology%Num_Verts
