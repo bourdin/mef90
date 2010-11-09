@@ -65,7 +65,7 @@ Contains
          !!! Irreversibility
          !!! This is a total nonsense. I need a SectionRealCopy
          Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%VIrrev%Scatter, SCATTER_FORWARD, AppCtx%UpperBoundV%Vec, iErr); CHKERRQ(iErr)
-         !Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_REVERSE, AppCtx%UpperBoundV%Vec, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%UpperBoundV%Sec, AppCtx%UpperBoundV%Scatter, SCATTER_REVERSE, AppCtx%UpperBoundV%Vec, iErr); CHKERRQ(iErr)
          
          !!! Regular Boundary Conditions
          Call FieldInsertVertexBoundaryValues(AppCtx%LowerBoundV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
