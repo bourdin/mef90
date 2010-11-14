@@ -5,7 +5,7 @@ include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
 ifeq (${COMPILER},gcc)
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS} -ffixed-line-length-0
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS} -ffixed-line-length-none  -ffree-line-length-none
 else
 	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} ${FC_FLAGS}
 endif

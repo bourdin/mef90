@@ -14,8 +14,8 @@ all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
 #include ${PETSC_DIR}/conf/variables
 include ${TAO_DIR}/bmake/tao_common
 
-ifeq (${FC},gfortran)
-	MEF90_FC_FLAGS=-DWITH_TAO -DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} --free-line-length-none
+ifeq (${COMPILER},gcc)
+	MEF90_FC_FLAGS=-DWITH_TAO -DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none
 else
 	MEF90_FC_FLAGS=-DWITH_TAO -DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}
 endif
