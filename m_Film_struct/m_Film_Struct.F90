@@ -69,33 +69,33 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Full  = 1
    PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Shear = 2
 
-	PetscInt, Parameter, Public			:: VarFrac_Num_VertVar           = 7
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_Fracture      = 1
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_Delamination      = 2
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementX = 3   
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementY = 4
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_ForceX        = 5   
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_ForceY        = 6
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_Temperature   = 7
+	PetscInt, Parameter, Public			:: VarFrac_Num_VertVar			= 7
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_Fracture		= 1
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_Delamination		= 2
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementX	= 3   
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementY	= 4
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_ForceX		= 5   
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_ForceY		= 6
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_Temperature		= 7
    
-	PetscInt, Parameter, Public			:: VarFrac_Num_CellVar      = 6
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StrainXX = 1
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StrainYY = 2 
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StrainXY = 3
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressXX = 4
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressYY = 5
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressXY = 6
+	PetscInt, Parameter, Public			:: VarFrac_Num_CellVar		= 6
+	PetscInt, Parameter, Public			:: VarFrac_CellVar_StrainXX	= 1
+	PetscInt, Parameter, Public			:: VarFrac_CellVar_StrainYY	= 2 
+	PetscInt, Parameter, Public			:: VarFrac_CellVar_StrainXY	= 3
+	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressXX	= 4
+	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressYY	= 5
+	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressXY	= 6
 
-	PetscInt, Parameter, Public			:: VarFrac_Num_GlobVar           = 5
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_ElasticEnergy = 1
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_FractureEnergy = 2 
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_DelaminationEnergy = 3 
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_TotalEnergy   = 4
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_Load          = 5
+	PetscInt, Parameter, Public			:: VarFrac_Num_GlobVar			= 5
+	PetscInt, Parameter, Public			:: VarFrac_GlobVar_ElasticEnergy	= 1
+	PetscInt, Parameter, Public			:: VarFrac_GlobVar_FractureEnergy	= 2 
+	PetscInt, Parameter, Public			:: VarFrac_GlobVar_DelaminationEnergy	= 3 
+	PetscInt, Parameter, Public			:: VarFrac_GlobVar_TotalEnergy		= 4
+	PetscInt, Parameter, Public			:: VarFrac_GlobVar_Load			= 5
    
-	PetscInt, Parameter, Public                     :: VarFrac_Num_EBProperties  = 2
-	PetscInt, Parameter, Public                     :: VarFrac_EBProp_IsBrittle  = 1
-	PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type  = 2
+	PetscInt, Parameter, Public                     :: VarFrac_Num_EBProperties	= 2
+	PetscInt, Parameter, Public                     :: VarFrac_EBProp_IsBrittle	= 1
+	PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type	= 2
    
 	PetscInt, Parameter, Public			:: VarFrac_Num_NSProperties  = 5
 	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCUTypeX   = 1
@@ -103,10 +103,12 @@ Module m_VarFrac_Struct
 	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCVType    = 4
 	PetscInt, Parameter, Public			:: VarFrac_NSProp_HasPForce  = 5
    
+	PetscInt, Parameter, Public			:: VarFrac_Num_MatProp2D	= 4
+	
    Type MatProp2D_Type
 	PetscReal				::	DelamToughness
 	PetscReal				::	FracToughness
-	Type(Tens4OS2D				::	Hookes_Law
+	Type(Tens4OS2D)				::	Hookes_Law
 	Type(MatS2D)				::	Therm_Exp  
     	PetscReal				:: 	Ksubst
    End Type MatProp2D_Type
@@ -445,7 +447,6 @@ Module m_VarFrac_Struct
 		   Allocate(dEXO%EBProperty(i)%Value(NumEB))
 		   dEXO%EBProperty(i)%Value = 0
 		End Do
-		!!! Not needed 
 		
 		dEXO%Num_NSProperties = VarFrac_Num_NSProperties
 		Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
