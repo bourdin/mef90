@@ -278,39 +278,15 @@ Program PrepVarFrac
 !!! Write special cases here
 	Case Default
 ! ask for fracture toughness, delam toughness, poisson, thermal exp xx, yy, xy, ksubst, Y mod
-		Do iBlock = 1, MeshTopology%Num_Elem_Blks_Global
+		Do iBlock=1, MeshTopology%Num_Elem_Blks_Global
 			Write(IOBuffer, 100) iBlock
 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-	
-			Write(IOBuffer, 300) iBlock, 'Fracture toughness'			! Why not an EBPropAsk ?
-			Call AskReal(fractough, IOBuffer, BatchUnit, IsBatch)
-			Write(IOBuffer, 300) iBlock, 'Delamination toughness'
-			Call AskReal(deltough, IOBuffer, BatchUnit, IsBatch)
-			Write(IOBuffer, 300) iBlock, 'Substrate stiffness'
-			Call AskReal(ksubst, IOBuffer, BatchUnit, IsBatch)
-			Write(IOBuffer, 300) iBlock, 'Young Modulus'
-			Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
-			Write(IOBuffer, 300) iBlock, 'Poisson Ratio'
-			Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
-			Write(IOBuffer, 300) iBlock, 'Therm Exp xx'
-			Call AskReal(thermalexpxx, IOBuffer, BatchUnit, IsBatch)	
-			Write(IOBuffer, 300) iBlock, 'Therm Exp yy'
-			Call AskReal(thermalexpyy, IOBuffer, BatchUnit, IsBatch)	
-			Write(IOBuffer, 300) iBlock, 'Therm Exp xy'
-			Call AskReal(thermalexpxy, IOBuffer, BatchUnit, IsBatch)	
-		
-			Select Case(MeshTopology%Num_Dim)
-			Case(2)
-				MatProp2D(iBlock)%FracToughness = fractough
-				MatProp2D(iBlock)%DelamToughness = deltough
-				MatProp2D(iBlock)%Ksubst = ksubst
-				MatProp2D(iBlock)%Therm_Exp    = 0.0_Kr
-				MatProp2D(iBlock)%Therm_Exp%XX = thermalexpxx
-				MatProp2D(iBlock)%Therm_Exp%YY = thermalexpyy
-				MatProp2D(iBlock)%Therm_Exp%XY = thermalexpxy
-				Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(iBlock)%Hookes_Law)
-			End Select
-		End Do
+			Call getmaterialprop(MeshTopology, MatProp2D(iBlock))
+		End Do		
+		If (verbose > 0) Then
+			Write(IOBuffer, *) "Done with getmaterialprop\n"
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		End If
 		
 	End Select 
 
@@ -553,11 +529,8 @@ Program PrepVarFrac
 	Call MEF90_Finalize()
 
  100 Format('*** Element Block ', T24, I3, '\n')
-! 101 Format('*** Side Set      ', T24, I3, '\n')
  102 Format('*** Node Set      ', T24, I3, '\n')
  300 Format('EB', I4.4, ': ', A)
- 310 Format('Grains: ', A)
-! 301 Format('SS', I4.4, ': ', A)
  302 Format('NS', I4.4, ': ', A)
 
 End Program PrepVarFrac
