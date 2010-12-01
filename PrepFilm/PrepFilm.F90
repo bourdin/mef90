@@ -28,12 +28,12 @@ Program PrepVarFrac
    PetscInt                                     :: NumTestCase
    Type(TestCase_Type), Dimension(:) , Pointer  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
-   Type(SectionReal)                            :: USec, FSec, VSec, WSec, ThetaSec, CoordSec
-   Type(Vect3D), Dimension(:), Pointer          :: U, F
+   Type(SectionReal)                            :: USec VSec, WSec, ThetaSec, CoordSec
+   Type(Vect3D), Dimension(:), Pointer          :: U
    Type(Vect3D)                                 :: FGrain
-   PetscReal, Dimension(:), Pointer             :: V, Theta
+   PetscReal, Dimension(:), Pointer             :: V, W, Theta
    PetscReal                                    :: ThetaGrain
-   PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem
+   PetscReal, Dimension(:), Pointer             :: Uelem, Velem, Welem, Thetaelem, Coordelem
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
    PetscInt                                     :: NumSteps
@@ -250,9 +250,11 @@ Program PrepVarFrac
 		MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
 		Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
 		Call EXCLOS(MyEXO%exoid, iErr)
-		MyEXO%exoid = 0							
+		MyEXO%exoid = 0
 	End Do
    
+!!! Save timesteps in EXO file
+
 	T(NumSteps) = Tmax
 	GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
 	Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
@@ -306,47 +308,19 @@ Program PrepVarFrac
 !!!
 	Write(IOBuffer, *) '\nTemperature and Forces\n'
 	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-	!!! Variable initialized on EB: F and Theta
-	Allocate(F(MeshTopology%Num_Elem_Blks_Global))
+	!!! Variable initialized on EB: Theta
 	Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
-	F%X = 0.0_Kr
-	F%Y = 0.0_Kr
-	F%Z = 0.0_Kr
 	Theta = 0.0_Kr
-   If (NumGrains>0) Then
-      If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(1) /= 0) Then
-         !!! Force
-         Write(IOBuffer, 310) 'Fx'
-         Call AskReal(FGrain%X, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 310) 'Fy'
-         Call AskReal(FGrain%Y, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 310) 'Fz'
-         Call AskReal(FGrain%Z, IOBuffer, BatchUnit, IsBatch)
-      End If
-      F(1:NumGrains)=F
 
-      !!! Temperature
-      Write(IOBuffer, 310) 'Theta'
-      Call AskReal(ThetaGrain, IOBuffer, BatchUnit, IsBatch)
-      Theta(1:NumGrains) = ThetaGrain
-   End If
    
-   Do i = Numgrains+1, MeshTopology%Num_Elem_Blks_Global
+   Do i =1, MeshTopology%Num_Elem_Blks_Global
       Write(IOBuffer, 100) i
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      !!! Force
-      If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
-         Write(IOBuffer, 300) i, 'Fx'
-         Call AskReal(F(i)%X, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) i, 'Fy'
-         Call AskReal(F(i)%Y, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) i, 'Fz'
-         Call AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
-      End If
+
       !!! Temperature
       Write(IOBuffer, 300) i, 'Theta'
       Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
-      !!!
+
       If (.NOT. IsBatch) Then
          Write(BatchUnit, *)
       End If
@@ -361,45 +335,47 @@ Program PrepVarFrac
 
 	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
 	Do_Step_Theta: Do iStep = 1, NumSteps
-	Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
-	
-	Do_Blk_Theta: Do iloc = 1, MeshTopology%Num_Elem_Blks
-		i = MeshTopology%Elem_Blk(iLoc)%ID
-		!!! Initialize the Section
-		Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
-		Allocate(Thetaelem(Num_DoF))
+		Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
 		
-		Select Case(iCase)
-		!!! Write special cases here
-		Case default
-			!!! Default is MIL
-			Do k = 1, Num_DoF
-				Thetaelem(k) = T(iStep) * Theta(i)
-			End Do
-			Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
-				Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
-			End Do
-		End Select      
-		DeAllocate(Thetaelem)
-	End Do Do_Blk_Theta
-	Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, iStep, ThetaSec) 
+		Do_Blk_Theta: Do iloc = 1, MeshTopology%Num_Elem_Blks
+			i = MeshTopology%Elem_Blk(iLoc)%ID
+			!!! Initialize the Section
+			Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
+			Allocate(Thetaelem(Num_DoF))
+			
+			Select Case(iCase)
+			!!! Write special cases here
+			Case default
+				!!! Default is MIL
+				Do k = 1, Num_DoF
+					Thetaelem(k) = T(iStep) * Theta(i)
+				End Do
+				Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+					Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+				End Do
+			End Select      
+			DeAllocate(Thetaelem)
+		End Do Do_Blk_Theta
+		Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, iStep, ThetaSec) 
 	End Do Do_Step_Theta
 	Call SectionRealDestroy(ThetaSec, iErr); CHKERRQ(iErr)
 	DeAllocate(Theta)
 
 
    !!!
-   !!! U and V
+   !!! U, V and W
    !!!
-	Write(IOBuffer, *) '\nU and V\n'
+	Write(IOBuffer, *) '\nU, V and W\n'
 	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-	!!! Variable initialized on EB: F and Theta
+	!!! Variable initialized on NS: U, V and W
 	Allocate(U(MeshTopology%Num_Node_Sets_Global))
 	Allocate(V(MeshTopology%Num_Node_Sets_Global))
+	Allocate(W(MeshTopology%Num_Node_Sets_Global))
 	U%X = 0.0_Kr
 	U%Y = 0.0_Kr
 	U%Z = 0.0_Kr
 	V   = 1.0_Kr
+	W   = 0.0_Kr ! We start with a bonded film
 	Do i = 1, MeshTopology%Num_Node_Sets_Global
 		Write(IOBuffer, 102) i
 		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -417,6 +393,10 @@ Program PrepVarFrac
 		End If
 		If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
 			Write(IOBuffer, 302) i, 'V'
+			Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+		End If
+		If (MyEXO%NSProperty(VarFrac_NSProp_BCWType)%Value(i) /= 0 ) Then
+			Write(IOBuffer, 302) i, 'W'
 			Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
 		End If
 		If (.NOT. IsBatch) Then
@@ -486,7 +466,44 @@ Program PrepVarFrac
 	DeAllocate(Velem)
 	Call SectionRealDestroy(VSec, iErr); CHKERRQ(iErr)
 	DeAllocate(V)
-	
+
+!!!
+!!! Compute the value of the delamination field at the vertices
+!!! Here is the place to request additional parameters if needed
+!!!
+!!! get the section
+!!! loop over steps
+!!! 	initialize to 0
+!!!	loop over blocks
+!!!	    loop over elements in block
+!!!	    set Welem value
+!!!	    loop over elem nodes
+!!!	    	update the section
+!!!	write exo
+!!! destroy all
+!!!
+	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'W', 1, Wsec, ierr); CHKERRQ(iErr)
+	Allocate(Welem(1))
+	Do iStep=1, NumSteps
+		Call SectionRealSet(Wsec, 0.0_Kr, iErr); CHKERRQ(iErr) ! Bonded everywhere
+		Do iloc=1, MeshTopology%Num_Node_Sets
+			i=MeshTopology%Node_Set(iloc)%ID
+			Select Case(iCase)
+			Case default
+				Welem(1)=W(i) ! Set the local value of debonding
+				Do j=1, MeshTopology%Node_Set(iloc)%Num_Nodes
+					Call SectionRealUpdate(Wsec, MeshTopology%Num_Elems+MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Welem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+				End Do
+			End Select
+		End Do
+		Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, iStep, Wsec)
+	End Do
+	DeAllocate(Welem)
+	Call SectionRealDestroy(Wsec, iErr); CHKERRQ(iErr)
+	DeAllocate(W)
+
+
+
 	Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)
 	Close(BatchUnit)
 	DeAllocate(TestCase)
