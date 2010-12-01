@@ -352,39 +352,6 @@ Program PrepVarFrac
       End If
       
    End Do
-   !!!
-   !!! Compute the value of the force field at the vertices
-   !!! Here is the place to request additional parameters if needed
-   !!!
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'F', 3, FSec, iErr); CHKERRQ(iErr)
-   Do_Step_F: Do iStep = 1, NumSteps
-      Call SectionRealSet(FSec, 0.0_Kr, iErr); CHKERRQ(iErr)
-      Do_Blk_F: Do iloc = 1, MeshTopology%Num_Elem_Blks
-         i = MeshTopology%Elem_Blk(iLoc)%ID
-         !!! Initialize the Section
-         Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
-         Allocate(Felem(3*Num_DoF))
-         Select Case(iCase)
-         !!! Write special cases here
-         Case default
-            !!! Default is MIL
-            If ( MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
-               Do k = 0, Num_DoF-1
-                  Felem(3*k+1) = T(iStep) * F(i)%X
-                  Felem(3*k+2) = T(iStep) * F(i)%Y
-                  Felem(3*k+3) = T(iStep) * F(i)%Z
-               End Do
-               Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
-                  Call SectionRealUpdateClosure(FSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Felem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
-               End Do
-            End If
-         End Select      
-         DeAllocate(Felem)
-      End Do Do_Blk_F
-      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, iStep, FSec) 
-   End Do Do_Step_F
-   Call SectionRealDestroy(FSec, iErr); CHKERRQ(iErr)
-   DeAllocate(F)
 
 
    !!!
