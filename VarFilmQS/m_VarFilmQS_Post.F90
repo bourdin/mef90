@@ -1,4 +1,4 @@
-Module m_VarFracQS_Post
+Module m_VarFilmQS_Post
 #include "finclude/petscdef.h"
 
    Use m_VarFilmQS_Types
@@ -66,10 +66,6 @@ Contains
       MyExtForcesWorkBlock = 0.0_Kr
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-         If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
-            Call ExtForcesWork_AssemblyBlk(MyExtForcesWorkBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%F%Sec, AppCtx)
-            MyExtForcesWork = MyExtForcesWork + MyExtForcesWorkBlock(iBlkID)
-         End If
       End Do
 
       Call MPI_AllReduce(MyExtForcesWork, ExtForcesWork, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
@@ -79,40 +75,40 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ExtForcesWork_Assembly
    
-   Subroutine SurfaceEnergy_Assembly(SurfaceEnergy, SurfaceEnergyBlock, AppCtx)     
-      PetscReal, Intent(OUT)                       :: SurfaceEnergy
-      PetscReal, Dimension(:), Pointer             :: SurfaceEnergyBlock
+   Subroutine FractureEnergy_Assembly(FractureEnergy, FractureEnergyBlock, AppCtx)     
+      PetscReal, Intent(OUT)                       :: FractureEnergy
+      PetscReal, Dimension(:), Pointer             :: FractureEnergyBlock
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, iBlkId, iErr
-      PetscReal                                    :: MySurfaceEnergy
-      PetscReal, Dimension(:), Pointer             :: MySurfaceEnergyBlock
+      PetscReal                                    :: MyFractureEnergy
+      PetscReal, Dimension(:), Pointer             :: MyFractureEnergyBlock
      
 
       Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       
-      MySurfaceEnergy = 0.0_Kr
-      Allocate(MySurfaceEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+      MyFractureEnergy = 0.0_Kr
+      Allocate(MyFractureEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(1)
-            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock(iBlkID), iBlk, AppCtx%V%Sec, AppCtx)
+            Call FractureEnergy_AssemblyBlk_AT1(MyFractureEnergyBlock(iBlkID), iBlk, AppCtx%V%Sec, AppCtx)
          Case(2)
-            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock(iBlkID), iBlk, AppCtx%V%Sec, AppCtx)
+            Call FractureEnergy_AssemblyBlk_AT2(MyFractureEnergyBlock(iBlkID), iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
           SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
-         MySurfaceEnergy = MySurfaceEnergy + MySurfaceEnergyBlock(iBlkID)
+         MyFractureEnergy = MyFractureEnergy + MyFractureEnergyBlock(iBlkID)
       End Do
 
-      Call MPI_AllReduce(MySurfaceEnergy, SurfaceEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Call MPI_AllReduce(MySurfaceEnergyBlock, SurfaceEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      DeAllocate(MySurfaceEnergyBlock)
+      Call MPI_AllReduce(MyFractureEnergy, FractureEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      Call MPI_AllReduce(MyFractureEnergyBlock, FractureEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+      DeAllocate(MyFractureEnergyBlock)
       Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine SurfaceEnergy_Assembly
+   End Subroutine FractureEnergy_Assembly
    
 !!!
 !!! Block Assembly Routines
@@ -405,8 +401,9 @@ Contains
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
    End Subroutine ExtForcesWork_AssemblyBlk
 
-   Subroutine SurfaceEnergy_AssemblyBlk_AT2(SurfaceEnergyBLock, iBlk, V_Sec, AppCtx)
-      PetscReal, Intent(OUT)                       :: SurfaceEnergyBlock
+   Subroutine FractureEnergy_AssemblyBlk_AT2(FractureEnergyBlock, iBlk, V_Sec, AppCtx)
+	PetscReal, Intent(OUT)                       :: FractureEnergyBlock 
+!	PetscReal, Intent(OUT)                       :: DelaminationEnergyBlock 
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: V_Sec
       Type(AppCtx_Type)                            :: AppCtx
@@ -422,7 +419,8 @@ Contains
       PetscLogDouble                               :: flops       
       
       flops = 0.0
-      SurfaceEnergyBlock = 0.0_Kr
+		FractureEnergyBlock = 0.0_Kr
+!		DelaminationEnergyBlock = 0.0_Kr
 
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
 
@@ -441,17 +439,18 @@ Contains
                GradV_Elem = GradV_Elem + V_Loc(iDoF2) * AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss)
             End Do
             
-            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (1.0_Kr-V_Elem)**2 / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)  )
+            FractureEnergyBlock = FractureEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ( (1.0_Kr-V_Elem)**2 / AppCtx%VarFracSchemeParam%Epsilon + AppCtx%VarFracSchemeParam%Epsilon * (GradV_Elem .DotP. GradV_Elem)  )
          End Do Do_iGauss
       End Do Do_iEloc
-      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr
+      FractureEnergyBlock = FractureEnergyBlock * AppCtx%MatProp(iBlkID)%FracToughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-   End Subroutine SurfaceEnergy_AssemblyBlk_AT2
+   End Subroutine FractureEnergy_AssemblyBlk_AT2
 
-   Subroutine SurfaceEnergy_AssemblyBlk_AT1(SurfaceEnergyBlock, iBlk, V_Sec, AppCtx)
-      PetscReal, Intent(OUT)                       :: SurfaceEnergyBlock
+   Subroutine FractureEnergy_AssemblyBlk_AT1(FractureEnergyBlock, iBlk, V_Sec, AppCtx)
+		PetscReal, Intent(OUT)                       :: FractureEnergyBlock
+!		PetscReal, Intent(OUT)                       :: DelaminationEnergyBlock
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: V_Sec
       Type(AppCtx_Type)                            :: AppCtx
@@ -467,7 +466,8 @@ Contains
       PetscLogDouble                               :: flops       
       
       flops = 0.0
-      SurfaceEnergyBlock = 0.0_Kr
+		FractureEnergyBlock = 0.0_Kr
+!		DelaminationEnergyBlock = 0.0_Kr
 
       NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
 
@@ -486,15 +486,15 @@ Contains
                GradV_Elem = GradV_Elem + V_Loc(iDoF2) * AppCtx%ElemScal(iE)%Grad_BF(iDoF2, iGauss)
             End Do
             
-            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (1.0_Kr-V_Elem) / AppCtx%VarFracSchemeParam%Epsilon
-            SurfaceEnergyBlock = SurfaceEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (GradV_Elem .DotP. GradV_Elem) * AppCtx%VarFracSchemeParam%Epsilon 
+            FractureEnergyBlock = FractureEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (1.0_Kr-V_Elem) / AppCtx%VarFracSchemeParam%Epsilon
+            FractureEnergyBlock = FractureEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (GradV_Elem .DotP. GradV_Elem) * AppCtx%VarFracSchemeParam%Epsilon 
          End Do Do_iGauss
       End Do Do_iEloc
-      SurfaceEnergyBlock = SurfaceEnergyBlock * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr 
+      FractureEnergyBlock = FractureEnergyBlock * AppCtx%MatProp(iBlkID)%FracToughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr 
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-   End Subroutine SurfaceEnergy_AssemblyBlk_AT1
+   End Subroutine FractureEnergy_AssemblyBlk_AT1
 
 !----------------------------------------------------------------------------------------!      
 ! ComputeStrainStress (CM)  
