@@ -7,7 +7,6 @@ Module m_VarFrac_Struct
    Private
    
    Public :: GenHL_Iso_LambdaMu
-   Public :: GenHL_Iso3D_Enu
    Public :: GenHL_Iso2D_EnuPlaneStress
    Public :: GenHL_Iso2D_EnuPlaneStrain
    Public :: GenHL_Ortho2D_LambdaMu
@@ -23,29 +22,28 @@ Module m_VarFrac_Struct
    Public :: VarFracEXOProperty_Init
    Public :: VarFracEXOVariable_Init
    
-   Public :: MatProp2D_Type, MatProp3D_Type
+   Public :: MatProp2D_Type
    Public :: MatProp_Write, MatProp_Read
    
    Public :: EXOProperty_InitBCVFlag
-   Public :: EXOProperty_InitBCUFlag2DA
    Public :: EXOProperty_InitBCUFlag
    
    Public :: VarFracSchemeParam_Type
    
    Interface MatProp_Write
-      Module Procedure MatProp2D_Write, MatProp3D_Write
+      Module Procedure MatProp2D_Write
    End Interface
   
    Interface MatProp_Read
-      Module Procedure MatProp2D_Read, MatProp3D_Read
+      Module Procedure MatProp2D_Read
    End Interface
    
    Interface GenHL_Iso_LambdaMu
-      Module Procedure GenHL_Iso2D_LambdaMu, GenHL_Iso3D_LambdaMu
+      Module Procedure GenHL_Iso2D_LambdaMu
    End Interface
    
    Interface GenHL_Laminate_LambdaMu
-      Module Procedure GenHL_Laminate2D_LambdaMu, GenHL_Laminate3D_LambdaMu
+      Module Procedure GenHL_Laminate2D_LambdaMu
    End Interface
 
    PetscInt, Parameter, Public                     :: VarFrac_BC_Type_NONE = 0
@@ -175,28 +173,6 @@ Module m_VarFrac_Struct
       Call SectionIntComplete(dBCFlag, iErr); CHKERRQ(iErr)
    End Subroutine EXOProperty_InitBCVFlag
    
-   Subroutine EXOProperty_InitBCUFlag2DA(dBCFlag, dEXO, dMeshTopology)
-      Type(EXO_Type)                               :: dEXO
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(Flag)                                   :: dBCFlag 
-      
-      PetscInt                                     :: iErr, NumDoF, i, j
-      PetscInt, Dimension(:), Pointer              :: iFlag
-      
-      Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
-      !!! Side Sets
-      !!! To be implemented
-      
-      !!! Node Sets
-      Do i = 1, dMeshTopology%Num_Node_Sets
-         Allocate(iFlag(1))
-         iFlag(1) = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
-         Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-            Call SectionIntUpdate(dBCFlag%Sec, dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, iFlag, ADD_VALUES, iErr); CHKERRQ(iErr)
-         End Do
-         DeAllocate(iFlag)
-      End Do
-   End Subroutine EXOProperty_InitBCUFlag2DA
    
    !!! Rewrite as FlagInitNSProperty(Flag, Property, MeshTopology)
    Subroutine EXOProperty_InitBCUFlag(dBCFlag, dEXO, dMeshTopology)
@@ -217,10 +193,10 @@ Module m_VarFrac_Struct
          FlagX = dEXO%NSProperty( VarFrac_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
          Allocate(FlagY(1))
          FlagY = dEXO%NSProperty( VarFrac_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
-         If (dMeshTopology%num_dim == 3) Then
-            Allocate(FlagZ(1))
-            FlagZ = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
-         End If
+!          If (dMeshTopology%num_dim == 3) Then
+!             Allocate(FlagZ(1))
+!             FlagZ = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
+!          End If
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
             Call SectionIntUpdate(dBCFlag%Component_Sec(1), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagX, ADD_VALUES, iErr); CHKERRQ(iErr)
             Call SectionIntUpdate(dBCFlag%Component_Sec(2), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagY, ADD_VALUES, iErr); CHKERRQ(iErr)
@@ -254,47 +230,49 @@ Module m_VarFrac_Struct
 120   Format(3I6, '      ', 10(ES12.5,' '))   
    End Subroutine MatProp2D_Write
 
-   Subroutine MatProp2D_Read(MeshTopology, MatProp, filename)
-      Type(MeshTopology_Type)                      :: MeshTopology
-      Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
-      Character(len=*)                             :: filename
+	Subroutine MatProp2D_Read(MeshTopology, MatProp, filename)
+		Type(MeshTopology_Type)                      :: MeshTopology
+		Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
+		Character(len=*)                             :: filename
+		
+		PetscInt                                     :: iBlk, iErr
+		
+		PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
+		Type(Tens4OS2D)                              :: Hookes_Law
+		PetscReal                                    :: FracToughness, DelamToughness, Ksubst
+		Type(MatS2D)                                 :: Therm_Exp
+		
+		Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
+		Rewind(F_IN)
+		Read(F_IN, *) NumBlks
+		If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
+		   SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
+		End If
+		!!! Reading the file once first to get the right number of blocks
+			IdxMin =  100000000
+			IdxMax = -100000000
+		Do iBlk = 1, NumBlks
+			Read(F_IN, *) Idx
+			IdxMin = Min(IdxMin, Idx)
+			IdxMax = Max(IdxMax, Idx)
+		End Do
+		Allocate(MatProp(IdxMin:IdxMax))
+		Rewind(F_IN)
+		Read(F_IN, *) Idx
+		Do iBlk = 1, NumBlks
+			Read(F_IN, *) Idx, FracToughness, DelamToughness, Ksubst, Hookes_Law, Therm_exp
 
-      PetscInt                                     :: iBlk, iErr
-      
-      PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
-      Type(Tens4OS2D)                              :: Hookes_Law
-      PetscReal                                    :: Toughness
-      Type(MatS2D)                                 :: Therm_Exp
-   
-      Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
-      Rewind(F_IN)
-      Read(F_IN, *) NumBlks
-      If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
-         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
-      End If
-      !!! Reading the file once first to get the right number of blocks
-      IdxMin =  100000000
-      IdxMax = -100000000
-      Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx
-         IdxMin = Min(IdxMin, Idx)
-         IdxMax = Max(IdxMax, Idx)
-      End Do
-      Allocate(MatProp(IdxMin:IdxMax))
-      Rewind(F_IN)
-      Read(F_IN, *) Idx
-      Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
-
-         MatProp(Idx)%Toughness  = Toughness
-         MatProp(Idx)%Hookes_Law = Hookes_Law
-         MatProp(Idx)%Therm_Exp  = Therm_Exp
-      End Do
-      Close(F_IN)
-      Return
+			MatProp(Idx)%FracToughness  = FracToughness
+			MatProp(Idx)%DelamToughness  = DelamToughness
+			MatProp(Idx)%Ksubst  = Ksubst
+			MatProp(Idx)%Hookes_Law = Hookes_Law
+			MatProp(Idx)%Therm_Exp  = Therm_Exp
+		End Do
+		Close(F_IN)
+		Return
 !120   Format(I6, '      ', 10(ES12.5,' '))   
 !120   Format(*)
-   End Subroutine MatProp2D_Read
+	End Subroutine MatProp2D_Read
 
    Subroutine VarFracSchemeParam_View(dSchemeParam, viewer)
       Type(VarFracSchemeParam_Type)                :: dSchemeParam
@@ -454,6 +432,7 @@ Module m_VarFrac_Struct
 		dEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
 		dEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
 		dEXO%NSProperty(VarFrac_NSProp_BCVType)%Name   = 'BCV_Type'
+		dEXO%NSProperty(VarFrac_NSProp_BCWType)%Name   = 'BCW_Type'
 		dEXO%NSProperty(VarFrac_NSProp_HasPForce)%Name = 'Has_PForce'
 		Do i = 1, dEXO%Num_NSProperties
          Allocate(dEXO%NSProperty(i)%Value(NumNS))
@@ -478,7 +457,7 @@ Module m_VarFrac_Struct
         	
 		If ( Present(dSaveElementVariables) .AND. (.NOT. dSaveElementVariables)) Then
         	 dEXO%Num_CellVariables = 0
-      El	se
+		Else
         	 dEXO%Num_CellVariables = VarFrac_Num_CellVar
         	 Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))
         	 dEXO%CellVariable(VarFrac_CellVar_StrainXX)%Name = 'Strain XX'
@@ -486,10 +465,9 @@ Module m_VarFrac_Struct
         	 dEXO%CellVariable(VarFrac_CellVar_StrainXY)%Name = 'Strain XY'
         	 dEXO%CellVariable(VarFrac_CellVar_StressXX)%Name = 'Stress XX'
         	 dEXO%CellVariable(VarFrac_CellVar_StressYY)%Name = 'Stress YY'
-        	 dEXO%CellVariable(VarFrac_CellVar_StressZZ)%Name = 'Stress ZZ'
         	 dEXO%CellVariable(VarFrac_CellVar_StressXY)%Name = 'Stress XY'
         	 dEXO%CellVariable(:)%Offset = (/ (i, i=1,dEXO%Num_CellVariables) /)
-      En	d If
+		End If
         	 
 		dEXO%Num_VertVariables = VarFrac_Num_VertVar
 		Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))
