@@ -4,10 +4,10 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF90.o          $(MEF90DIR)/m_MEF_Utils.o         \
             $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
             $(MEF90DIR)/m_MEF_Sieve.o 
-M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
-M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
+M_VARFRACSTRUCTDIR  = ../m_Film_Struct/${PETSC_ARCH}
+M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_Film_Struct.o
 
-all: PrepVarFrac PrepVarFracPolyCrystal
+all: PrepFilm
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
@@ -24,13 +24,9 @@ endif
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 
-PrepVarFrac: ${PETSC_ARCH} PrepVarFrac.o ${PETSC_ARCH}/PrepVarFrac.o m_PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o
-	${FLINKER} -o ${PETSC_ARCH}/PrepVarFrac ${PETSC_ARCH}/PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+PrepFilm: ${PETSC_ARCH} PrepFilm.o ${PETSC_ARCH}/PrepFilm.o m_PrepFilm.o ${PETSC_ARCH}/m_PrepFilm.o
+	${FLINKER} -o ${PETSC_ARCH}/PrepFilm ${PETSC_ARCH}/PrepFilm.o ${PETSC_ARCH}/m_PrepFilm.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
-PrepVarFracPolyCrystal: ${PETSC_ARCH} PrepVarFracPolyCrystal.o ${PETSC_ARCH}/PrepVarFracPolyCrystal.o m_PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o
-	${FLINKER} -o ${PETSC_ARCH}/PrepVarFracPolyCrystal ${PETSC_ARCH}/PrepVarFracPolyCrystal.o ${PETSC_ARCH}/m_PrepVarFrac.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+PrepFilm.o: ${PETSC_ARCH} m_PrepFilm.o ${PETSC_ARCH}/m_PrepFilm.o
 
-PrepVarFrac.o: ${PETSC_ARCH} m_PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o
-PrepVarFracPolyCrystal.o: ${PETSC_ARCH} m_PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o
-
-m_PrepVarFrac.o: ${PETSC_ARCH}
+m_PrepFilm.o: ${PETSC_ARCH}
