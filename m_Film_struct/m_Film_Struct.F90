@@ -97,11 +97,12 @@ Module m_VarFrac_Struct
 	PetscInt, Parameter, Public                     :: VarFrac_EBProp_IsBrittle	= 1
 	PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type	= 2
    
-	PetscInt, Parameter, Public			:: VarFrac_Num_NSProperties  = 5
+	PetscInt, Parameter, Public			:: VarFrac_Num_NSProperties  = 6
 	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCUTypeX   = 1
 	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCUTypeY   = 2
 	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCVType    = 4
-	PetscInt, Parameter, Public			:: VarFrac_NSProp_HasPForce  = 5
+	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCWType    = 5
+	PetscInt, Parameter, Public			:: VarFrac_NSProp_HasPForce  = 6
    
 	PetscInt, Parameter, Public			:: VarFrac_Num_MatProp2D	= 4
 	
