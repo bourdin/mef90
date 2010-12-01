@@ -115,12 +115,13 @@ Contains
 	
 	end subroutine EXONSProperty_AskWithBatchFilm
 
-	subroutine getmaterialprop(dMeshTopology, dMatProp2D)
+	subroutine getmaterialprop(dMeshTopology, dMatProp2D, BatchUnit, IsBatch)
 		Type(MeshTopology_Type)				:: dMeshTopology
 		Type(MatProp2D_Type)				:: dMatProp2D
-		Character(len=MEF90_MXSTRLEN)			:: IOBuffer
 		PetscInt					:: BatchUnit
 		PetscBool					:: IsBatch
+		
+		Character(len=MEF90_MXSTRLEN)			:: IOBuffer
 		PetscReal					:: fractough, deltough, ksubst, E, nu
 		PetscReal					:: thermalexpxx, thermalexpyy, thermalexpxy
 		
