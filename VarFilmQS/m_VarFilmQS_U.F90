@@ -2,10 +2,10 @@ Module m_VarFilmQS_U
 
 #include "finclude/petscdef.h"
 
-   Use m_VarFilmQS_Types2D
-   Use m_VarFilmQS_Post2D
+   Use m_VarFilmQS_Types
+   Use m_VarFilmQS_Post
    Use m_MEF90
-   Use m_VarFrac_Struct
+   Use m_Film_Struct
 
    Implicit NONE
    Private   
@@ -191,11 +191,7 @@ Contains
          End If
          MyObjFunc = MyObjFunc + MyElasticEnergyBlock
 
-         MyExtForcesWorkBlock = 0.0_Kr
-         If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
-            Call ElasticEnergy_AssemblyBlk_Brittle(MyExtForcesWorkBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%F%Sec, AppCtx)
-            MyObjFunc = MyObjFunc + MyExtForcesWorkBlock
-         End If
+
       End Do Do_iBlk
       Call MPI_AllReduce(MyObjFunc, ObjFunc, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       
@@ -246,9 +242,7 @@ Contains
          Else
             Call RHSAssemblyBlock_ElastNonBrittle(AppCtx%RHSU%Sec, iBlk, AppCtx)
          End If         
-         If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(iBlkID) /= 0) Then
-            Call RHSAssemblyBlock_Force(AppCtx%RHSU%Sec, iBlk, AppCtx)
-         End If
+
       End Do Do_iBlk
 
       Call SectionRealComplete(AppCtx%RHSU%Sec, iErr); CHKERRQ(iErr)

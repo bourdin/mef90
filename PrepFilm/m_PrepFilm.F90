@@ -64,7 +64,7 @@ Contains
 		PetscInt					:: i, j, IntBuffer
 		PetscInt					:: NumEB
 		PetscInt					:: EXO_MyRank
-		Character(len=MEF90_MXSTRLEN			:: IOBuffer
+		Character(len=MEF90_MXSTRLEN)			:: IOBuffer
 		PetscReal					:: TmpEBProperty
 			
 		Do i = 1, dMeshTopology%Num_Elem_Blks_Global

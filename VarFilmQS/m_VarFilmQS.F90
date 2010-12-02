@@ -300,9 +300,7 @@ Contains
       Call SectionIntZero(AppCtx%BCUFlag%Sec, iErr); CHKERRQ(iErr)
       Call SectionIntAddNSProperty(AppCtx%BCUFlag%Component_Sec(1), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX), AppCtx%MeshTopology)
       Call SectionIntAddNSProperty(AppCtx%BCUFlag%Component_Sec(2), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY), AppCtx%MeshTopology)
-      If (AppCtx%MeshTopology%Num_Dim == 3) Then
-         Call SectionIntAddNSProperty(AppCtx%BCUFlag%Component_Sec(3), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ), AppCtx%MeshTopology)
-      End If
+
 
       Call SectionIntZero(AppCtx%BCVFlag%Sec, iErr); CHKERRQ(iErr)
       Call SectionIntAddNSProperty(AppCtx%BCVFlag%Sec, AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCVType), AppCtx%MeshTopology)
@@ -325,13 +323,13 @@ Contains
       End If
       
       !!! Allocate energies, and open matching files
-      Allocate(AppCtx%SurfaceEnergy(AppCtx%NumTimeSteps))
+      Allocate(AppCtx%FractureEnergy(AppCtx%NumTimeSteps))
       Allocate(AppCtx%ElasticEnergy(AppCtx%NumTimeSteps))
       Allocate(AppCtx%ExtForcesWork(AppCtx%NumTimeSteps))
       Allocate(AppCtx%TotalEnergy(AppCtx%NumTimeSteps))
       Allocate(AppCtx%Load(AppCtx%NumTimeSteps))
       
-      Allocate(AppCtx%SurfaceEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+      Allocate(AppCtx%FractureEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
       Allocate(AppCtx%ElasticEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
       Allocate(AppCtx%ExtForcesWorkBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
       Allocate(AppCtx%TotalEnergyblock  (AppCtx%MeshTopology%Num_Elem_Blks_Global))
@@ -342,7 +340,7 @@ Contains
             Open(File = AppCtx%AppParam%Ener_FileName, Unit = AppCtx%AppParam%Ener_Unit, Status = 'old', Position='Append')
             Rewind(AppCtx%AppParam%Ener_Unit)
             Do 
-               Read(AppCtx%AppParam%Ener_Unit, *, end=999, err=999) iTS, rdummy, AppCtx%ElasticEnergy(iTS), AppCtx%ExtForcesWork(iTS), AppCtx%SurfaceEnergy(iTS), AppCtx%TotalEnergy(iTS)
+               Read(AppCtx%AppParam%Ener_Unit, *, end=999, err=999) iTS, rdummy, AppCtx%ElasticEnergy(iTS), AppCtx%ExtForcesWork(iTS), AppCtx%FractureEnergy(iTS), AppCtx%TotalEnergy(iTS)
                CYCLE
  999            EXIT               
             End Do
@@ -529,9 +527,9 @@ Contains
 
       Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock, AppCtx)
       Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%ExtForcesWorkBlock, AppCtx)
-      Call SurfaceEnergy_Assembly(AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx%SurfaceEnergyBlock, AppCtx)
-      AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%SurfaceEnergy(AppCtx%TimeStep)
-      AppCtx%TotalEnergyBlock = AppCtx%ElasticEnergyBlock - AppCtx%ExtForcesWorkBlock + AppCtx%SurfaceEnergyBlock
+      Call FractureEnergy_Assembly(AppCtx%FractureEnergy(AppCtx%TimeStep), AppCtx%FractureEnergyBlock, AppCtx)
+      AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%FractureEnergy(AppCtx%TimeStep)
+      AppCtx%TotalEnergyBlock = AppCtx%ElasticEnergyBlock - AppCtx%ExtForcesWorkBlock + AppCtx%FractureEnergyBlock
    End Subroutine ComputeEnergies
 
    Subroutine Save_Ener(AppCtx)
@@ -539,17 +537,16 @@ Contains
       PetscInt                                     :: iErr, iBlk
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_SurfaceEnergy)%Offset, AppCtx%TimeStep, AppCtx%SurfaceEnergy(AppCtx%TimeStep))
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_FractureEnergy)%Offset, AppCtx%TimeStep, AppCtx%FractureEnergy(AppCtx%TimeStep))
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy(AppCtx%TimeStep))
-      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ExtForcesWork)%Offset, AppCtx%TimeStep, AppCtx%ExtForcesWork(AppCtx%TimeStep))
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Offset, AppCtx%TimeStep, AppCtx%TotalEnergy(AppCtx%TimeStep))
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep))
       
       If (MEF90_MyRank == 0) Then
-         Write(AppCtx%AppParam%Ener_Unit, 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%SurfaceEnergy(AppCtx%TimeStep), AppCtx%TotalEnergy(AppCtx%TimeStep)
+         Write(AppCtx%AppParam%Ener_Unit, 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%FractureEnergy(AppCtx%TimeStep), AppCtx%TotalEnergy(AppCtx%TimeStep)
          If (AppCtx%VarFracSchemeParam%SaveBlk) Then
             Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-               Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock(iBlk), AppCtx%ExtForcesWorkBlock(iBlk), AppCtx%SurfaceEnergyBlock(iBlk), AppCtx%TotalEnergyBlock(iBlk)
+               Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock(iBlk), AppCtx%ExtForcesWorkBlock(iBlk), AppCtx%FractureEnergyBlock(iBlk), AppCtx%TotalEnergyBlock(iBlk)
             End Do    
       End If
       End If
@@ -625,12 +622,12 @@ Contains
       Call MatDestroy(AppCtx%KV, iErr); CHKERRQ(iErr)
       Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 
-      DeAllocate(AppCtx%SurfaceEnergy)
+      DeAllocate(AppCtx%FractureEnergy)
       DeAllocate(AppCtx%ElasticEnergy)
       DeAllocate(AppCtx%ExtForcesWork)
       DeAllocate(AppCtx%TotalEnergy)
       DeAllocate(AppCtx%Load)
-      DeAllocate(AppCtx%SurfaceEnergyBlock)
+      DeAllocate(AppCtx%FractureEnergyBlock)
       DeAllocate(AppCtx%ElasticEnergyBlock)
       DeAllocate(AppCtx%ExtForcesWorkBlock)
       DeAllocate(AppCtx%TotalEnergyBlock)
@@ -679,40 +676,6 @@ Contains
 103 Format(A,'-logsummary.txt')
    End Subroutine VarFracQSFinalize
 
-
-   ! Bactracking subroutine
-   !    - Assumes that the energies have been computed
-   !    - Returns iBTStep
-   Subroutine BackTracking(AppCtx, iBTStep)
-      Type(AppCtx_Type)                            :: AppCtx
-      PetscInt, Intent(OUT)                        :: iBTStep
-      
-      PetscInt                                     :: iErr
-      PetscReal                                    :: EnerBT, EnerRef
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   
-      !!! Check the BT condition
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Doing BackTracking\n' 
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-      End If
-      Do iBTStep = max(1, AppCtx%TimeStep-AppCtx%VarFracSchemeParam%BTScope), AppCtx%TimeStep-1
-         EnerBT  = AppCtx%Load(iBTStep)**2 * (AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep)) + AppCtx%Load(AppCtx%TimeStep)**2 * AppCtx%SurfaceEnergy(AppCtx%TimeStep)
-         EnerRef = AppCtx%Load(AppCtx%TimeStep)**2 * (AppCtx%TotalEnergy(iBTStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep))
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) 'Checking against timestep', iBTStep, ':', EnerBT, EnerRef, (1.0_Kr - AppCtx%VarFracSchemeParam%BTTol) * EnerRef, '\n'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-         End If
-         
-         If (EnerBT < (1.0_Kr - AppCtx%VarFracSchemeParam%BTTol) * EnerRef) Then
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'BackTracking to step', iBTStep, '\n' 
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-            End If
-            EXIT
-         End If
-      End Do
-   End Subroutine BackTracking   
    
 End Module m_VarFilmQS
 

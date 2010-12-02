@@ -68,11 +68,11 @@ Module m_VarFilmQS_Types
       PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
       PetscReal, Dimension(:), Pointer             :: Load                 ! All Time Steps
-      PetscReal, Dimension(:), Pointer             :: SurfaceEnergy        ! All Time Steps
+      PetscReal, Dimension(:), Pointer             :: FractureEnergy        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: ElasticEnergy        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: ExtForcesWork        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: TotalEnergy
-      PetscReal, Dimension(:), Pointer             :: SurfaceEnergyBlock   ! Current TS, All Blocks
+      PetscReal, Dimension(:), Pointer             :: FractureEnergyBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: ElasticEnergyBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: ExtForcesWorkBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: TotalEnergyBlock     ! Current TS, All Blocks

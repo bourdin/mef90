@@ -1,9 +1,9 @@
 Program  VarFracQSRecomputeEnergy
 #include "finclude/petscdef.h"
 
-   Use m_VarFilmQS2D
+   Use m_VarFilmQS
    Use m_MEF90
-   Use m_VarFrac_Struct
+   Use m_Film_Struct
    
    Implicit NONE   
 
@@ -43,7 +43,7 @@ Program  VarFracQSRecomputeEnergy
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 102) AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+      Write(IOBuffer, 102) AppCtx%FractureEnergy(AppCtx%TimeStep)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -52,7 +52,7 @@ Program  VarFracQSRecomputeEnergy
 
 100   Format('Elastic energy:       ', ES12.5, '\n')    
 101   Format('External Forces Work: ', ES12.5, '\n')    
-102   Format('Surface energy:       ', ES12.5, '\n')    
+102   Format('Fracture energy:       ', ES12.5, '\n')    
 103   Format('Total energy:         ', ES12.5, '\n')    
 104   Format('Load:                 ', ES12.5, '\n')    
 
