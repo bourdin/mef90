@@ -1,4 +1,4 @@
-Module m_VarFrac_Struct
+Module m_Film_Struct
 #include "finclude/petscdef.h"
 
    Use m_MEF90
@@ -718,4 +718,4 @@ Module m_VarFrac_Struct
       Astar = Invert(Invert(A-B)  + (1.0_Kr-theta) * StrainProjection2D_LambdaMu(k, lambda, mu)) * theta + B
    End Subroutine GenHL_Laminate2D_LambdaMu
 
-End Module m_VarFrac_Struct
+End Module m_Film_Struct
