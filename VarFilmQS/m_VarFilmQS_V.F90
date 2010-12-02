@@ -447,9 +447,9 @@ Contains
          MySurfaceEnergyBlock = 0.0_Kr
          Select Case (AppCtx%VarFracSchemeParam%ATNum)
          Case(1)
-            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
+            Call FractureEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case(2)
-            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
+            Call FractureEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
@@ -866,9 +866,9 @@ Contains
       IrrevFlag = VarFrac_BC_Type_NONE
       Allocate(MatElem(NumDoFScal, NumDoFScal))
       
-      C2_V = AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      C2_V = AppCtx%MatProp(iBlkID)%FracToughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
       Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
-      C2_GradV = AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      C2_GradV = AppCtx%MatProp(iBlkID)%FracToughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
       Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -931,7 +931,7 @@ Contains
       IrrevFlag = VarFrac_BC_Type_NONE
       Allocate(MatElem(NumDoFScal, NumDoFScal))
       
-      C2_GradV = AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      C2_GradV = AppCtx%MatProp(iBlkID)%FracToughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
       Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -987,7 +987,7 @@ Contains
       Allocate(RHS_Loc(NumDoFScal))
 
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      C1_V =  AppCtx%MatProp(iBlkId)%Toughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      C1_V =  AppCtx%MatProp(iBlkId)%FracToughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
       Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
 
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -1301,7 +1301,7 @@ Contains
                Call PetscLogFlops(7*oneflop, iErr); CHKERRQ(iErr)
             End Do
          End Do Do_iGauss
-         GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr
+         GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%FracToughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr
          Call PetscLogFlops(3*oneflop, iErr); CHKERRQ(iErr)
          Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
@@ -1347,7 +1347,7 @@ Contains
                Call PetscLogFlops(7*oneflop, iErr); CHKERRQ(iErr)
             End Do
          End Do Do_iGauss
-         GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+         GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%FracToughness / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
          Call PetscLogFlops(3*oneflop, iErr); CHKERRQ(iErr)
          Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
