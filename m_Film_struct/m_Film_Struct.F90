@@ -95,12 +95,12 @@ Module m_Film_Struct
 	PetscInt, Parameter, Public                     :: VarFrac_EBProp_IsBrittle	= 1
 	PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type	= 2
    
-	PetscInt, Parameter, Public			:: VarFrac_Num_NSProperties  = 6
+	PetscInt, Parameter, Public			:: VarFrac_Num_NSProperties  = 5
 	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCUTypeX   = 1
 	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCUTypeY   = 2
-	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCVType    = 4
-	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCWType    = 5
-	PetscInt, Parameter, Public			:: VarFrac_NSProp_HasPForce  = 6
+	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCVType    = 3
+	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCWType    = 4
+	PetscInt, Parameter, Public			:: VarFrac_NSProp_HasPForce  = 5
    
 	PetscInt, Parameter, Public			:: VarFrac_Num_MatProp2D	= 4
 	
@@ -227,7 +227,7 @@ Module m_Film_Struct
       End Do
       Close(F_OUT)
       
-120   Format(3I6, '      ', 10(ES12.5,' '))   
+120   Format(I6, '      ', ES12.5, ES12.5, 10(ES12.5,' '))   
    End Subroutine MatProp2D_Write
 
 	Subroutine MatProp2D_Read(MeshTopology, MatProp, filename)
