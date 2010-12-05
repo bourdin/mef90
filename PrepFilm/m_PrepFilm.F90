@@ -1,8 +1,9 @@
-Module m_PrepVarFrac
+Module m_PrepFilm
 #include "finclude/petscdef.h"
 
    Use m_MEF90
-
+	Use m_Film_Struct
+	
    Implicit NONE
 
 Contains
@@ -102,7 +103,7 @@ Contains
 			Write(IOBuffer, 102) i
 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 			Do j = 1, dEXO%Num_NSProperties
-				Write(IOBuffer, 200) i, Trim(dEXO%NSProperty(j)%Name)
+				Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
 				Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
 			End Do
 			If (.NOT. IsBatch) Then
@@ -117,7 +118,7 @@ Contains
 
 	subroutine getmaterialprop(dMeshTopology, dMatProp2D, BatchUnit, IsBatch)
 		Type(MeshTopology_Type)				:: dMeshTopology
-		Type(MatProp2D_Type)				:: dMatProp2D
+		Type(MatProp2D_Type), Intent(OUT)		:: dMatProp2D
 		PetscInt					:: BatchUnit
 		PetscBool					:: IsBatch
 		
@@ -142,7 +143,7 @@ Contains
 		Write(IOBuffer, 300) 'Therm Exp xy'
 		Call AskReal(thermalexpxy, IOBuffer, BatchUnit, IsBatch)	
 	
-		Select Case(MeshTopology%Num_Dim)
+		Select Case(dMeshTopology%Num_Dim)
 		Case(2)
 			dMatProp2D%FracToughness = fractough
 			dMatProp2D%DelamToughness = deltough
@@ -151,7 +152,7 @@ Contains
 			dMatProp2D%Therm_Exp%XX = thermalexpxx
 			dMatProp2D%Therm_Exp%YY = thermalexpyy
 			dMatProp2D%Therm_Exp%XY = thermalexpxy
-			Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(iBlock)%Hookes_Law)
+			Call GenHL_Iso2D_EnuPlaneStress(E, nu, dMatProp2D%Hookes_Law)
 		End Select
 		
 		300 Format(A)
@@ -287,4 +288,4 @@ Contains
 102 Format('*** Node Set      ', T24, I3, '\n')
 202 Format('NS', I4.4, ': ', A)
    End Subroutine EXONSProperty_AskWithBatchGrains
-End Module m_PrepVarFrac
+End Module m_PrepFilm
