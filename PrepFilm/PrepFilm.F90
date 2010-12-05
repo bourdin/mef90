@@ -3,8 +3,8 @@ Program PrepVarFrac
 #include "finclude/petscdef.h"
 
    Use m_MEF90
-   Use m_VarFrac_Struct
-   Use m_PrepVarFrac
+   Use m_Film_Struct
+   Use m_PrepFilm
    Use petsc
 
    Implicit NONE   
@@ -14,7 +14,8 @@ Program PrepVarFrac
       Character(len=MEF90_MXSTRLEN)             :: Description
    End Type
    
-   
+!!!startregion VARIABLES
+
    Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename
    Type(MeshTopology_Type)                      :: MeshTopology, GlobalMeshTopology
    Type(EXO_Type)                               :: EXO, MyEXO
@@ -28,7 +29,7 @@ Program PrepVarFrac
    PetscInt                                     :: NumTestCase
    Type(TestCase_Type), Dimension(:) , Pointer  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
-   Type(SectionReal)                            :: USec VSec, WSec, ThetaSec, CoordSec
+   Type(SectionReal)                            :: USec, VSec, WSec, ThetaSec, CoordSec
    Type(Vect3D), Dimension(:), Pointer          :: U
    Type(Vect3D)                                 :: FGrain
    PetscReal, Dimension(:), Pointer             :: V, W, Theta
@@ -50,21 +51,19 @@ Program PrepVarFrac
    Character(len=MEF90_MXSTRLEN)                :: BatchFileName
    PetscBool                                    :: EraseBatch
    
-   PetscInt                                     :: NumGrains
 
 	PetscReal				:: fractough, deltough, ksubst
 	
    PetscReal                                    :: ToughnessGrain, ThermExpScalGrain
-   PetscReal                                    :: BGrain, CGrain, CpGrain
-   PetscReal                                    :: alphaGrain, alphamin, alphamax
-   PetscReal                                    :: Eeff, nueff, Kappa, mu
    PetscRandom                                  :: RandomCtx
    PetscInt                                     :: Seed
    PetscLogDouble                               :: Time
    PetscBool                                    :: Has_Seed, Has_n
    PetscBool                                    :: saveElemVar
    
-   PetscReal                                    :: R, Ctheta, CTheta2, Stheta, STheta2
+!!!endregion VARIABLES 
+
+!!!startregion INIT
 
    Call MEF90_Initialize()
 
@@ -134,6 +133,10 @@ Program PrepVarFrac
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
    End If
 
+!!!endregion INIT
+
+!!!startregion READ & DISTIB MESH
+
    !!! Reading and distributing sequential mesh
    If (MEF90_NumProcs == 1) Then
       Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
@@ -150,6 +153,8 @@ Program PrepVarFrac
    End If
 
 !!! Done reading and distributing sequential mesh
+!!!endregion READ & DISTIB MESH
+
 
    MyEXO%comm = PETSC_COMM_SELF
    MyEXO%exoid = EXO%exoid
@@ -228,7 +233,8 @@ Program PrepVarFrac
    
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
-!!!
+!!!startregion COMPUTE TIMESTEPS AND LOAD, WRITE TO EXO
+
 !!! Global Variables: Time Steps and Load
 !!!
 	Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -264,8 +270,12 @@ Program PrepVarFrac
 	MyEXO%exoid = 0
    End Select
    DeAllocate(GlobVars)
-   
-!!!
+
+!!!endregion COMPUTE TIMESTEPS AND LOAD, WRITE TO EXO
+
+
+!!!startregion GET MATERIAL PROPERTIES, WRITE TO CST
+
 !!! EB Material Properties
 !!!
 	Select Case(MeshTopology%Num_Dim)
@@ -283,7 +293,8 @@ Program PrepVarFrac
 		Do iBlock=1, MeshTopology%Num_Elem_Blks_Global
 			Write(IOBuffer, 100) iBlock
 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-			Call getmaterialprop(MeshTopology, MatProp2D(iBlock))
+			Call getmaterialprop(MeshTopology, MatProp2D(iBlock), BatchUnit, IsBatch)
+			Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(iBlock)%Hookes_Law)
 		End Do		
 		If (verbose > 0) Then
 			Write(IOBuffer, *) "Done with getmaterialprop\n"
@@ -303,8 +314,12 @@ Program PrepVarFrac
 	End If
 !!! Done EB properties
 
-!!!
-!!! Temperature and Forces
+!!!endregion GET MATERIAL PROPERTIES
+
+
+!!!startregion COMPUTE THETA
+
+!!! Temperature
 !!!
 	Write(IOBuffer, *) '\nTemperature and Forces\n'
 	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
@@ -361,8 +376,11 @@ Program PrepVarFrac
 	Call SectionRealDestroy(ThetaSec, iErr); CHKERRQ(iErr)
 	DeAllocate(Theta)
 
+!!!endregion COMPUTE THETA
 
-   !!!
+
+!!!startregion COMPUTE U, V AND W FOR BC's
+
    !!! U, V and W
    !!!
 	Write(IOBuffer, *) '\nU, V and W\n'
@@ -387,10 +405,6 @@ Program PrepVarFrac
 			Write(IOBuffer, 302) i, 'Uy'
 			Call AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
 		End If
-		If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
-			Write(IOBuffer, 302) i, 'Uz'
-			Call AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
-		End If
 		If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
 			Write(IOBuffer, 302) i, 'V'
 			Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
@@ -409,12 +423,6 @@ Program PrepVarFrac
    !!! Compute the value of the Displacement at the vertices
    !!! Here is the place to request additional parameters if needed
    !!!
-	If ((iCase == 2) .OR. (iCase==3) .OR. (iCase==4)) Then
-		Call AskReal(Eeff,  'E effective (for displacement field)',  BatchUnit, IsBatch)
-		Call AskReal(nueff, 'nu effective (for displacement field)', BatchUnit, IsBatch)
-		Kappa = (3.0-nu)/(1.0+nu)
-		Mu = E / (1.0_Kr + nu) * .5_Kr
-	End If
 	
 	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
 	Allocate(Uelem(3))
@@ -502,6 +510,7 @@ Program PrepVarFrac
 	Call SectionRealDestroy(Wsec, iErr); CHKERRQ(iErr)
 	DeAllocate(W)
 
+!!!endregion COMPUTE U, V AND W FOR BC's
 
 
 	Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)
