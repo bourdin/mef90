@@ -294,7 +294,6 @@ Program PrepVarFrac
 			Write(IOBuffer, 100) iBlock
 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 			Call getmaterialprop(MeshTopology, MatProp2D(iBlock), BatchUnit, IsBatch)
-			Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(iBlock)%Hookes_Law)
 		End Do		
 		If (verbose > 0) Then
 			Write(IOBuffer, *) "Done with getmaterialprop\n"
