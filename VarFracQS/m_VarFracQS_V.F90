@@ -164,7 +164,7 @@ Contains
             If (AppCtx%MeshTopology%Num_Dim == 2) Then
                Vlocal(1) = (1.0_Kr - sin(PETSC_PI*(Coordlocal(1) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-xc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-yc)) * 0.5_Kr
             Else
-               Vlocal(1) = (1.0_Kr - sin(PETSC_PI*(Coordlocal(1) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-xc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-yc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-zc)) * 0.5_Kr
+               Vlocal(1) = (1.0_Kr - sin(PETSC_PI*(Coordlocal(1) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-xc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-yc) * sin(PETSC_PI*(Coordlocal(3) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-zc)) * 0.5_Kr
             End If
             Call SectionRealUpdate(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, Vlocal, INSERT_VALUES, iErr); CHKERRQ(iErr) 
          End Do
