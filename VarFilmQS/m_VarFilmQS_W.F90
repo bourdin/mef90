@@ -1,19 +1,10 @@
-#if defined PB_2D  
-Module m_VarFracQS_V2D
-#elif defined PB_3D
-Module m_VarFracQS_V3D
-#endif
+Module m_VarFilmQS_V
 #include "finclude/petscdef.h"
 
-#if defined PB_2D
-   Use m_VarFracQS_Types2D
-   Use m_VarFracQS_Post2D
-#elif defined PB_3D
-   Use m_VarFracQS_Types3D
-   Use m_VarFracQS_Post3D
-#endif   
+   Use m_VarFilmQS_Types
+   Use m_VarFilmQS_Post
    Use m_MEF90
-   Use m_VarFrac_Struct
+   Use m_Film_Struct
 
    Implicit NONE
    Private 
@@ -164,7 +155,7 @@ Contains
             If (AppCtx%MeshTopology%Num_Dim == 2) Then
                Vlocal(1) = (1.0_Kr - sin(PETSC_PI*(Coordlocal(1) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-xc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-yc)) * 0.5_Kr
             Else
-               Vlocal(1) = (1.0_Kr - sin(PETSC_PI*(Coordlocal(1) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-xc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-yc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-zc)) * 0.5_Kr
+               Vlocal(1) = (1.0_Kr - sin(PETSC_PI*(Coordlocal(1) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-xc) * sin(PETSC_PI*(Coordlocal(2) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-yc) * sin(PETSC_PI*(Coordlocal(3) / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%InitVLength)-zc)) * 0.5_Kr
             End If
             Call SectionRealUpdate(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, Vlocal, INSERT_VALUES, iErr); CHKERRQ(iErr) 
          End Do
@@ -456,9 +447,9 @@ Contains
          MySurfaceEnergyBlock = 0.0_Kr
          Select Case (AppCtx%VarFracSchemeParam%ATNum)
          Case(1)
-            Call SurfaceEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
+            Call FractureEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case(2)
-            Call SurfaceEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
+            Call FractureEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
          Case Default
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
@@ -552,11 +543,7 @@ Contains
       
       PetscReal, Dimension(:), Pointer             :: U, Theta
       PetscReal                                    :: Theta_Elem, ElasEnDens_Elem
-#if defined PB_2D
       Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
-#endif      
       PetscReal                                    :: ElasticEnergyDensity
       PetscBool                                    :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
@@ -656,13 +643,8 @@ Contains
       
       PetscReal, Dimension(:), Pointer             :: U, Theta
       PetscReal                                    :: Theta_Elem
-#if defined PB_2D
       Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
-      Type(MatS2D)                                 :: EffectiveStrain_Elem_D
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
-      Type(MatS3D)                                 :: EffectiveStrain_Elem_D
-#endif      
+      Type(MatS2D)                                 :: EffectiveStrain_Elem_D      
       PetscReal                                    :: Strain_Trace
       PetscReal                                    :: ElasticEnergyDensity
       PetscBool                                    :: Has_ThermExp
@@ -769,13 +751,8 @@ Contains
       
       PetscReal, Dimension(:), Pointer             :: U, Theta
       PetscReal                                    :: Theta_Elem
-#if defined PB_2D
       Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
       Type(MatS2D)                                 :: EffectiveStrain_Elem_D
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
-      Type(MatS3D)                                 :: EffectiveStrain_Elem_D
-#endif      
       PetscReal                                    :: ElasticEnergyDensity
       PetscBool                                    :: Has_ThermExp
       PetscLogDouble, Parameter                    :: oneflop = 1.0
@@ -889,9 +866,9 @@ Contains
       IrrevFlag = VarFrac_BC_Type_NONE
       Allocate(MatElem(NumDoFScal, NumDoFScal))
       
-      C2_V = AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      C2_V = AppCtx%MatProp(iBlkID)%FracToughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
       Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
-      C2_GradV = AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      C2_GradV = AppCtx%MatProp(iBlkID)%FracToughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
       Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -954,7 +931,7 @@ Contains
       IrrevFlag = VarFrac_BC_Type_NONE
       Allocate(MatElem(NumDoFScal, NumDoFScal))
       
-      C2_GradV = AppCtx%MatProp(iBlkID)%Toughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      C2_GradV = AppCtx%MatProp(iBlkID)%FracToughness * AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
       Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -1010,7 +987,7 @@ Contains
       Allocate(RHS_Loc(NumDoFScal))
 
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      C1_V =  AppCtx%MatProp(iBlkId)%Toughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+      C1_V =  AppCtx%MatProp(iBlkId)%FracToughness / AppCtx%VarFracSchemeParam%Epsilon / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
       Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
 
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -1049,11 +1026,7 @@ Contains
       !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
       PetscReal, Dimension(:), Pointer             :: U_Loc, Theta_Loc, V_Loc, GradientV_Loc
       PetscReal                                    :: Theta_Elem, V_Elem
-#if defined PB_2D
       Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
-#endif      
       PetscReal                                    :: ElasticEnergyDensity
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
@@ -1130,13 +1103,8 @@ Contains
 
       PetscReal, Dimension(:), Pointer             :: U_Loc, Theta_Loc, V_Loc, GradientV_Loc
       PetscReal                                    :: Theta_Elem, V_Elem
-#if defined PB_2D
       Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
       Type(MatS2D)                                 :: EffectiveStrain_Elem_D
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
-      Type(MatS3D)                                 :: EffectiveStrain_Elem_D
-#endif      
       PetscReal                                    :: Strain_Trace
       PetscReal                                    :: ElasticEnergyDensity
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
@@ -1223,13 +1191,8 @@ Contains
 
       PetscReal, Dimension(:), Pointer             :: U_Loc, Theta_Loc, V_Loc, GradientV_Loc
       PetscReal                                    :: Theta_Elem, V_Elem
-#if defined PB_2D
       Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem
       Type(MatS2D)                                 :: EffectiveStrain_Elem_D
-#elif defined PB_3D
-      Type(MatS3D)                                 :: Strain_Elem, EffectiveStrain_Elem
-      Type(MatS3D)                                 :: EffectiveStrain_Elem_D
-#endif      
       PetscReal                                    :: ElasticEnergyDensity
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal, NumDoFVect
@@ -1310,11 +1273,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscReal, Dimension(:), Pointer             :: V_Loc, GradientV_Loc
-#if defined PB_2D
       Type(Vect2D)                                 :: GradV_Elem
-#elif defined PB_3D
-      Type(Vect3D)                                 :: GradV_Elem
-#endif      
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal
       PetscInt                                     :: iDoF, iGauss
@@ -1342,7 +1301,7 @@ Contains
                Call PetscLogFlops(7*oneflop, iErr); CHKERRQ(iErr)
             End Do
          End Do Do_iGauss
-         GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr
+         GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%FracToughness / AppCtx%VarFracSchemeParam%ATCv * 0.25_Kr
          Call PetscLogFlops(3*oneflop, iErr); CHKERRQ(iErr)
          Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
@@ -1359,11 +1318,7 @@ Contains
 
       PetscReal, Dimension(:), Pointer             :: V_Loc, GradientV_Loc
       PetscReal                                    :: V_Elem
-#if defined PB_2D
       Type(Vect2D)                                 :: GradV_Elem
-#elif defined PB_3D
-      Type(Vect3D)                                 :: GradV_Elem
-#endif      
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
       PetscInt                                     :: NumDoFScal
       PetscInt                                     :: iDoF, iGauss
@@ -1392,7 +1347,7 @@ Contains
                Call PetscLogFlops(7*oneflop, iErr); CHKERRQ(iErr)
             End Do
          End Do Do_iGauss
-         GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%Toughness / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
+         GradientV_Loc = GradientV_Loc * AppCtx%MatProp(iBlkID)%FracToughness / AppCtx%VarFracSchemeParam%ATCv * 0.5_Kr
          Call PetscLogFlops(3*oneflop, iErr); CHKERRQ(iErr)
          Call SectionRealUpdateClosure(GradientV_Sec, AppCtx%MeshTopology%Mesh, iE-1, GradientV_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
@@ -1512,8 +1467,4 @@ Contains
 
    
    
-#if defined PB_2D
-End Module m_VarFracQS_V2D
-#elif defined PB_3D
-End Module m_VarFracQS_V3D
-#endif
+End Module m_VarFilmQS_V
