@@ -209,7 +209,7 @@ Contains
 	End If
 	Call FlagCreateVertex(AppCtx%BCUFlag,   'BCUFlag',   AppCtx%MeshTopology, SizeVect)
 	Call FlagCreateVertex(AppCtx%BCVFlag,   'BCVFlag',   AppCtx%MeshTopology, SizeScal)
-	Call FlagCreateVertex(AppCtx%BCVFlag,   'BCWFlag',   AppCtx%MeshTopology, SizeScal)
+	Call FlagCreateVertex(AppCtx%BCWFlag,   'BCWFlag',   AppCtx%MeshTopology, SizeScal)
 	Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeVect)
       DeAllocate(SizeScal)
