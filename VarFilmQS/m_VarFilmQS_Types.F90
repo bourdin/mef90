@@ -57,29 +57,33 @@ Module m_VarFilmQS_Types
       Type(Field)                                  :: UBC
       Type(Field)                                  :: F
       Type(Field)                                  :: V
+	Type(Field)                                  :: W
+	Type(Field)                                  :: WBC, WIrrev
       Type(Field)                                  :: VBC, VIrrev
       Type(Field)                                  :: Theta
       Type(Field)                                  :: RHSU, GradientU, LowerBoundU, UpperBoundU
       Type(Field)                                  :: RHSV, GradientV, LowerBoundV, UpperBoundV
       Type(Vec)                                    :: V_Old
-      Type(Flag)                                   :: BCUFlag, BCVFlag, IrrevFlag
+	Type(Flag)                                   :: BCUFlag, BCVFlag, BCWFlag, IrrevFlag
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
       PetscReal, Dimension(:), Pointer             :: Load                 ! All Time Steps
-      PetscReal, Dimension(:), Pointer             :: FractureEnergy        ! All Time Steps
+	PetscReal, Dimension(:), Pointer             :: FractureEnergy        ! All Time Steps
+	PetscReal, Dimension(:), Pointer             :: DelaminationEnergy        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: ElasticEnergy        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: ExtForcesWork        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: TotalEnergy
-      PetscReal, Dimension(:), Pointer             :: FractureEnergyBlock   ! Current TS, All Blocks
+	PetscReal, Dimension(:), Pointer             :: FractureEnergyBlock   ! Current TS, All Blocks
+	PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: ElasticEnergyBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: ExtForcesWorkBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: TotalEnergyBlock     ! Current TS, All Blocks
       PetscReal                                    :: ErrV
-      Type(Mat)                                    :: KU, KV
-      Type(KSP)                                    :: KSPU, KSPV
-      Type(PC)                                     :: PCU, PCV
+      Type(Mat)                                    :: KU, KV, KW
+      Type(KSP)                                    :: KSPU, KSPV, KSPW
+      Type(PC)                                     :: PCU, PCV, PCW
       Type(LogInfo_Type)                           :: LogInfo
       PetscBool                                    :: IsBT
 #if defined WITH_TAO

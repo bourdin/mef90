@@ -32,3 +32,7 @@ debug:
 	@echo FCPPFLAGS is ${FCPPFLAGS}
 	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
 	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
+
+clean::
+	@rm -rf ${PETSC_ARCH}/
+	@rmdir ${PETSC_ARCH}
