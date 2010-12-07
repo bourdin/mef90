@@ -15,7 +15,7 @@ Program  VarFilmQS
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: AltMinIter
    Character(len=MEF90_MXSTRLEN)                :: filename
-   Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
+   Character(len=MEF90_MXSTRLEN), Dimension(5)  :: stagename
    PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
    PetscBool                                    :: restart
 
@@ -32,6 +32,9 @@ Program  VarFilmQS
    Write(stagename(2), "(A)") "AltMin loop"
    Write(stagename(3), "(A)") "U-step"
    Write(stagename(4), "(A)") "V-step"
+   Write(stagename(5), "(A)") "W-step"
+
+
    TimeStep: Do 
       Call ALEStagePush(stagename(1), iDebug, iErr); CHKERRQ(iErr)
 

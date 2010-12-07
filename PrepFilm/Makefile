@@ -30,3 +30,6 @@ PrepFilm: ${PETSC_ARCH} PrepFilm.o ${PETSC_ARCH}/PrepFilm.o m_PrepFilm.o ${PETSC
 PrepFilm.o: ${PETSC_ARCH} m_PrepFilm.o ${PETSC_ARCH}/m_PrepFilm.o
 
 m_PrepFilm.o: ${PETSC_ARCH}
+
+clean::
+	@rm -Rf ${PETSC_ARCH}/

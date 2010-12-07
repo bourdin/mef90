@@ -189,8 +189,6 @@ Contains
 
       Select Case(AppCtx%VarFracSchemeParam%IrrevType)
       Case(VarFrac_Irrev_Eq)
-!!!startregion IRREV: EQ
-
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) "Irreversibility with Irrev_EQ\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -243,11 +241,7 @@ Contains
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If      
 
-!!!endregion IRREV: EQ
-
       Case(VarFrac_Irrev_InEq)
-!!!startregion IRREV: INEQ
-
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) "Irreversibility with Irrev_InEQ\n"
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -297,13 +291,9 @@ Contains
 !!!$            Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
 
 !!!         End If
-!!!endregion IRREV: INEQ
 
       Case(VarFrac_Irrev_NONE)
-!!!startregion IRREV: NONE
-
             Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-!!!endregion IRREV: NONE
 
       Case Default
          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONG, 'Wrong value for AppCtx./.VarFracSchemeParam./.IrrevType \n', iErr)
