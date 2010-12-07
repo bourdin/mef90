@@ -198,13 +198,8 @@ Contains
 	Call FieldCreateVertex(AppCtx%WBC,    'WBC',    AppCtx%MeshTopology, SizeScal)
 	
 	Call FieldCreateVertex(AppCtx%Theta,  'Theta',  AppCtx%MeshTopology, SizeScal)
-	If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-		Call FieldCreateVertex(AppCtx%GradientU,   'GradientU',   AppCtx%MeshTopology, SizeVect)
-		Call FieldCreateVertex(AppCtx%LowerBoundU, 'LowerBoundU', AppCtx%MeshTopology, SizeVect)
-		Call FieldCreateVertex(AppCtx%UpperBoundU, 'UpperBoundU', AppCtx%MeshTopology, SizeVect)
-	Else
-		Call FieldCreateVertex(AppCtx%RHSU, 'RHSU', AppCtx%MeshTopology, SizeVect)
-	End If
+	Call FieldCreateVertex(AppCtx%RHSU, 'RHSU', AppCtx%MeshTopology, SizeVect)
+
 	If (AppCtx%VarFracSchemeParam%V_UseTao) Then
 		Call FieldCreateVertex(AppCtx%GradientV,   'GradientV',   AppCtx%MeshTopology, SizeScal)
 		Call FieldCreateVertex(AppCtx%LowerBoundV, 'LowerBoundV', AppCtx%MeshTopology, SizeScal)
@@ -374,9 +369,9 @@ Contains
 	Allocate(AppCtx%ExtForcesWorkBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
 	Allocate(AppCtx%TotalEnergyblock  (AppCtx%MeshTopology%Num_Elem_Blks_Global))
       
-      If (MEF90_MyRank == 0) Then
+      if_rank0: If (MEF90_MyRank == 0) Then
          AppCtx%AppParam%Ener_Unit = 71
-         If (AppCtx%AppParam%Restart) Then
+         if_restart: If (AppCtx%AppParam%Restart) Then
             Open(File = AppCtx%AppParam%Ener_FileName, Unit = AppCtx%AppParam%Ener_Unit, Status = 'old', Position='Append')
             Rewind(AppCtx%AppParam%Ener_Unit)
             Do 
@@ -397,9 +392,9 @@ Contains
          Else
             Open(File = AppCtx%AppParam%Ener_FileName, Unit = AppCtx%AppParam%Ener_Unit, Status = 'Unknown')
             Rewind(AppCtx%AppParam%Ener_Unit)
-         End If
+         End If if_restart
          
-         If (AppCtx%VarFracSchemeParam%SaveBlk) Then
+         if_saveblk: If (AppCtx%VarFracSchemeParam%SaveBlk) Then
             Allocate(AppCtx%AppParam%EnerBlock_Unit(AppCtx%MeshTopology%Num_Elem_Blks_Global))
             Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
                AppCtx%AppParam%EnerBlock_Unit(iBlk) = 170+iBlk
@@ -414,9 +409,9 @@ Contains
                   Rewind(AppCtx%AppParam%EnerBlock_Unit(iBlk))
                End If
             End Do
-         End If
+         End If if_saveblk
  110 Format(A, '-', I4.4, '.', A)
-      End If
+      End If if_rank0
       
       !!! Broacasting Energies in case we are restarting and it is needed for backtracking
       If (AppCtx%AppParam%Restart) Then
