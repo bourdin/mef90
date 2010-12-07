@@ -89,8 +89,6 @@ Module m_VarFilmQS_Types
 #if defined WITH_TAO
       TAO_SOLVER                                   :: taoV
       TAO_APPLICATION                              :: taoAppV
-      TAO_SOLVER                                   :: taoU
-      TAO_APPLICATION                              :: taoAppU
 #endif
       
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp

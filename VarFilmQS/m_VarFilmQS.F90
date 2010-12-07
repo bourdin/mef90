@@ -231,34 +231,9 @@ Contains
 
 
 !!!startregion Solver context for U      
-      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-#if defined WITH_TAO
-         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoU, iErr); CHKERRQ(iErr)
-         Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappU, iErr); CHKERRQ(iErr)
-         Call TaoAppendOptionsPrefix(AppCtx%taoU, "U_", iErr); CHKERRQ(iErr)
-
-         Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappU, FormFunctionAndGradientU, AppCtx, iErr); CHKERRQ(iErr)
-         Call TaoAppSetHessianRoutine(AppCtx%taoappU, HessianU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
-         Call TaoAppSetVariableBoundsRoutine(AppCtx%taoappU, InitTaoBoundsU, AppCtx, iErr); CHKERRQ(iErr)
-
-         Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%KU, AppCtx%KU, iErr); CHKERRQ(iErr)
-
-         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-         
-         Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
-         Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
-         Call TaoSetTolerances(AppCtx%taoU, TAO_Default_fatol, TAO_Default_frtol, TAO_Default_catol, TAO_Default_crtol, iErr); CHKERRQ(iErr)
-         Call TaoSetGradientTolerances(AppCtx%taoU, TAO_Default_gatol, TAO_Default_grtol, TAO_Default_gttol, iErr); CHKERRQ(iErr)
-         Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
-         Call KSPSetType(AppCtx%KSPU, KSPSTCG, iErr); CHKERRQ(iErr)
-         Call PetscPrintf(PETSC_COMM_WORLD, "TAO U Solver:\n", iErr); CHKERRQ(iErr)
-         Call TaoView(AppCtx%taoU, iErr); CHKERRQ(iErr)
-#endif
-      Else
-         Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
-         Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
-         Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
-      End If
+	Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
+	Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+	Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
       Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPU, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
@@ -486,13 +461,8 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       
-      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call PetscLogEventRegister('Hessian Local U',  0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
-         Call PetscLogEventRegister('Obj+Grad Local U', 0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
-      Else
-         Call PetscLogEventRegister('MatAssembly Local U', 0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
-         Call PetscLogEventRegister('RHSAssembly Local U', 0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
-      End If
+	Call PetscLogEventRegister('MatAssembly Local U', 0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
+	Call PetscLogEventRegister('RHSAssembly Local U', 0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
          Call PetscLogEventRegister('Hessian Local V',  0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
          Call PetscLogEventRegister('Obj+Grad Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
@@ -504,13 +474,8 @@ Contains
 
       Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
       Call PetscLogStageRegister("MeshDistribute",   AppCtx%LogInfo%MeshDistribute_Stage,   iErr)
-      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call PetscLogStageRegister("Hessian U",  AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
-         Call PetscLogStageRegister("Obj+Grad U", AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
-      Else
-         Call PetscLogStageRegister("Mat Assembly U",   AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
-         Call PetscLogStageRegister("RHS Assembly U",   AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
-      End If      
+	Call PetscLogStageRegister("Mat Assembly U",   AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
+	Call PetscLogStageRegister("RHS Assembly U",   AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
       Call PetscLogStageRegister("U-Step",      AppCtx%LogInfo%UStep_Stage,        iErr)
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
          Call PetscLogStageRegister("Hessian V",  AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
@@ -627,13 +592,7 @@ Contains
       Call FieldDestroy(AppCtx%VIrrev); CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%F);      CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%Theta);  CHKERRQ(iErr)
-      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call FieldDestroy(AppCtx%GradientU);   CHKERRQ(iErr)
-         Call FieldDestroy(AppCtx%LowerBoundU); CHKERRQ(iErr)
-         Call FieldDestroy(AppCtx%UpperBoundU); CHKERRQ(iErr)
-      Else
-         Call FieldDestroy(AppCtx%RHSU); CHKERRQ(iErr)
-      End If
+	Call FieldDestroy(AppCtx%RHSU); CHKERRQ(iErr)
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
          Call FieldDestroy(AppCtx%GradientV);   CHKERRQ(iErr)
          Call FieldDestroy(AppCtx%LowerBoundV); CHKERRQ(iErr)
@@ -686,14 +645,9 @@ Contains
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       
-      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-#if defined WITH_TAO
-         Call TaoDestroy(AppCtx%taoU, iErr); CHKERRQ(iErr)
-         Call TaoApplicationDestroy(AppCtx%taoAppU, iErr); CHKERRQ(iErr)
-#endif
-      Else
-         Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
-      End If
+
+	Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
+
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
 #if defined WITH_TAO
          Call TaoDestroy(AppCtx%taoV, iErr); CHKERRQ(iErr)

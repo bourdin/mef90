@@ -342,10 +342,6 @@ Contains
                Select Case (AppCtx%VarFracSchemeParam%Unilateral)
                Case (VarFrac_Unilateral_NONE)
                   Call MatV_AssemblyBlk_ElastBrittle(K, iBlk, .TRUE., AppCtx)
-               Case (VarFrac_Unilateral_Full)
-                  Call MatV_AssemblyBlk_ElastBrittleUnilateralFull(K, iBlk, .TRUE., AppCtx)
-               Case (VarFrac_Unilateral_Shear)
-                  Call MatV_AssemblyBlk_ElastBrittleUnilateralShear(K, iBlk, .TRUE., AppCtx)
                End Select
             End If
             Call MatV_AssemblyBlk_SurfaceAT2(K, iBlk, .TRUE., AppCtx)
@@ -394,10 +390,6 @@ Contains
                Select Case (AppCtx%VarFracSchemeParam%Unilateral)
                Case (VarFrac_Unilateral_NONE)
                   Call MatV_AssemblyBlk_ElastBrittle(H, iBlk, .FALSE., AppCtx)
-               Case (VarFrac_Unilateral_Full)
-                  Call MatV_AssemblyBlk_ElastBrittleUnilateralFull(H, iBlk, .FALSE., AppCtx)
-               Case (VarFrac_Unilateral_Shear)
-                  Call MatV_AssemblyBlk_ElastBrittleUnilateralShear(H, iBlk, .FALSE., AppCtx)
                End Select
             End If
             Call MatV_AssemblyBlk_SurfaceAT1(H, iBlk, .FALSE., AppCtx)
@@ -446,10 +438,6 @@ Contains
             Select Case (AppCtx%VarFracSchemeParam%Unilateral)
             Case (VarFrac_Unilateral_NONE)
                Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            Case (VarFrac_Unilateral_Full)
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralFull(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            Case (VarFrac_Unilateral_Shear)
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralShear(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             End Select
             MyObjFunc = MyObjFunc + MyElasticEnergyBlock
          End If
@@ -476,10 +464,6 @@ Contains
             Select Case (AppCtx%VarFracSchemeParam%Unilateral)
             Case (VarFrac_Unilateral_NONE)
                Call GradientV_AssemblyBlk_ElastBrittle(AppCtx%GradientV%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            Case (VarFrac_Unilateral_Full)
-               Call GradientV_AssemblyBlk_ElastBrittleUnilateralFull(AppCtx%GradientV%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            Case (VarFrac_Unilateral_Shear)
-               Call GradientV_AssemblyBlk_ElastBrittleUnilateralShear(AppCtx%GradientV%Sec, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             End Select
          End If
          !!! Contribution of the surface term
