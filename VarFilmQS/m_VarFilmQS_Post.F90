@@ -30,10 +30,6 @@ Contains
             Select Case (AppCtx%VarFracSchemeParam%Unilateral)
             Case (VarFrac_Unilateral_NONE)
                Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            Case (VarFrac_Unilateral_Full)
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralFull(MyElasticEnergyBlock(iBlkId), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-            Case (VarFrac_Unilateral_Shear)
-               Call ElasticEnergy_AssemblyBlk_BrittleUnilateralShear(MyElasticEnergyBlock(iBlkId), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             End Select
          Else
             Call ElasticEnergy_AssemblyBlk_NonBrittle(MyElasticEnergyBlock(iBlkId), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx)

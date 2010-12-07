@@ -87,9 +87,9 @@ End Subroutine MatU_Assembly
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
-            Call RHSAssemblyBlock_ElastBrittle(AppCtx%RHSU%Sec, iBlk, AppCtx)
+            Call RHS_AssemblyBlock_ElastBrittle(AppCtx%RHSU%Sec, iBlk, AppCtx)
          Else
-            Call RHSAssemblyBlock_ElastNonBrittle(AppCtx%RHSU%Sec, iBlk, AppCtx)
+            Call RHS_AssemblyBlock_ElastNonBrittle(AppCtx%RHSU%Sec, iBlk, AppCtx)
          End If         
 
       End Do Do_iBlk
@@ -235,7 +235,7 @@ End Subroutine MatU_AssemblyBlk_Brittle
    End Subroutine MatU_AssemblyBlk_NonBrittle
    
 
-Subroutine RHSAssemblyBlock_ElastBrittle(RHS_Sec, iBlk, AppCtx)
+Subroutine RHS_AssemblyBlock_ElastBrittle(RHS_Sec, iBlk, AppCtx)
 	PetscInt                                     :: iBlk
 	Type(SectionReal)                            :: RHS_Sec
 	Type(AppCtx_Type)                            :: AppCtx
@@ -304,9 +304,9 @@ Subroutine RHSAssemblyBlock_ElastBrittle(RHS_Sec, iBlk, AppCtx)
 	End If
       
 	Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
-End Subroutine RHSAssemblyBlock_ElastBrittle
+End Subroutine RHS_AssemblyBlock_ElastBrittle
 
-   Subroutine RHSAssemblyBlock_ElastNonBrittle(RHS_Sec, iBlk, AppCtx)
+   Subroutine RHS_AssemblyBlock_ElastNonBrittle(RHS_Sec, iBlk, AppCtx)
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: RHS_Sec
       Type(AppCtx_Type)                            :: AppCtx
@@ -364,7 +364,7 @@ End Subroutine RHSAssemblyBlock_ElastBrittle
       End If
       
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
-   End Subroutine RHSAssemblyBlock_ElastNonBrittle
+   End Subroutine RHS_AssemblyBlock_ElastNonBrittle
    
 
 Subroutine Step_U(AppCtx)
@@ -377,70 +377,43 @@ Subroutine Step_U(AppCtx)
 	PetscReal                                    :: VMin, VMax
 	PetscReal                                    :: rDum
 	PetscInt                                     :: iDum
-#if defined WITH_TAO
-	TaoTerminateReason                           :: TaoReason
-	PetscReal                                    :: TaoResidual
-#endif
 
 	Call PetscLogStagePush(AppCtx%LogInfo%UStep_Stage, iErr); CHKERRQ(iErr)
   
-	If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-#if defined WITH_TAO
-		Call TaoAppGetSolutionVec(AppCtx%taoappU, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-		If (AppCtx%AppParam%verbose > 0) Then
-			Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
-			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-		End If
-		Call TaoSolveApplication(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
-		Call TaoGetSolutionStatus(AppCtx%taoU, KSPNumIter, rDum, TaoResidual, rDum, rDum, TaoReason, iErr); CHKERRQ(iErr)
-		If ( TaoReason > 0) Then
-			Write(IOBuffer, 102) KSPNumiter, TAOReason
-			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-		Else
-			Write(IOBuffer, 103) TaoReason
-			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-			If (AppCtx%AppParam%StopOnError) Then
-				SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'TAO failed to converge, aborting...\n', iErr)
-			EndIf
-		End If    
-#endif      
+	Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+	If (AppCtx%AppParam%verbose > 0) Then
+		Write(IOBuffer, *) 'Assembling the Matrix and RHS for the U-subproblem \n' 
+		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+	End If
+	Call RHSU_Assembly(AppCtx%RHSU%Vec, AppCtx)
+	If (AppCtx%AppParam%verbose > 2) Then
+		Call VecView(AppCtx%RHSU%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+	End If
+	
+	Call MatU_Assembly(AppCtx%KU, AppCtx)
+	If (AppCtx%AppParam%verbose > 2) Then
+	   Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+	End If
+	
+	If (AppCtx%AppParam%verbose > 0) Then
+	   Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n' 
+	   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+	End If
+	
+	Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
+	Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+	
+	Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
+	If ( reason > 0) Then
+	   Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
+	   Write(IOBuffer, 100) KSPNumIter, reason
+	   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 	Else
-		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-		If (AppCtx%AppParam%verbose > 0) Then
-			Write(IOBuffer, *) 'Assembling the Matrix and RHS for the U-subproblem \n' 
-			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-		End If
-		Call RHSU_Assembly(AppCtx%RHSU%Vec, AppCtx)
-		If (AppCtx%AppParam%verbose > 2) Then
-			Call VecView(AppCtx%RHSU%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-		End If
-		
-		Call MatU_Assembly(AppCtx%KU, AppCtx)
-		If (AppCtx%AppParam%verbose > 2) Then
-		   Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-		End If
-		
-		If (AppCtx%AppParam%verbose > 0) Then
-		   Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n' 
-		   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-		End If
-		
-		Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-		
-		Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
-		If ( reason > 0) Then
-		   Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
-		   Write(IOBuffer, 100) KSPNumIter, reason
-		   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-		Else
-		   Write(IOBuffer, 101) reason
-		   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-		   If (AppCtx%AppParam%StopOnError) Then
-		      SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
-		   EndIf
-		End If
+	   Write(IOBuffer, 101) reason
+	   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+	   If (AppCtx%AppParam%StopOnError) Then
+	      SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
+	   EndIf
 	End If
 	Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
