@@ -1,4 +1,4 @@
-PROJ      = m_VarFrac_Struct
+PROJ      = m_Film_Struct
 MEF90DIR  = ../MEF90/${PETSC_ARCH}
 MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
@@ -32,3 +32,7 @@ debug:
 	@echo FCPPFLAGS is ${FCPPFLAGS}
 	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
 	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
+
+clean::
+	@rm -rf ${PETSC_ARCH}/
+	@rmdir ${PETSC_ARCH}

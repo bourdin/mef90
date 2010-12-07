@@ -1,12 +1,8 @@
-#if defined PB_2D
-Module m_VarFracQS_Types2D
-#elif defined PB_3D
-Module m_VarFracQS_Types3D
-#endif
+Module m_VarFilmQS_Types
 #include "finclude/petscdef.h"
 
    Use m_MEF90
-   Use m_VarFrac_Struct
+   Use m_Film_Struct
 
    Implicit NONE   
    Private
@@ -55,40 +51,39 @@ Module m_VarFracQS_Types3D
    Type AppCtx_Type
       Type (MeshTopology_Type)                     :: MeshTopology
       Type (EXO_Type)                              :: EXO, MyEXO
-#if defined PB_2D
       Type(Element2D_Elast), Dimension(:), Pointer :: ElemVect
       Type(Element2D_Scal), Dimension(:), Pointer  :: ElemScal
-#elif defined PB_3D
-      Type(Element3D_Elast), Dimension(:), Pointer :: ElemVect
-      Type(Element3D_Scal), Dimension(:), Pointer  :: ElemScal
-#endif
       Type(Field)                                  :: U
       Type(Field)                                  :: UBC
       Type(Field)                                  :: F
       Type(Field)                                  :: V
+	Type(Field)                                  :: W
+	Type(Field)                                  :: WBC, WIrrev
       Type(Field)                                  :: VBC, VIrrev
       Type(Field)                                  :: Theta
       Type(Field)                                  :: RHSU, GradientU, LowerBoundU, UpperBoundU
       Type(Field)                                  :: RHSV, GradientV, LowerBoundV, UpperBoundV
       Type(Vec)                                    :: V_Old
-      Type(Flag)                                   :: BCUFlag, BCVFlag, IrrevFlag
+	Type(Flag)                                   :: BCUFlag, BCVFlag, BCWFlag, IrrevFlag
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
       PetscReal, Dimension(:), Pointer             :: Load                 ! All Time Steps
-      PetscReal, Dimension(:), Pointer             :: SurfaceEnergy        ! All Time Steps
+	PetscReal, Dimension(:), Pointer             :: FractureEnergy        ! All Time Steps
+	PetscReal, Dimension(:), Pointer             :: DelaminationEnergy        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: ElasticEnergy        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: ExtForcesWork        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: TotalEnergy
-      PetscReal, Dimension(:), Pointer             :: SurfaceEnergyBlock   ! Current TS, All Blocks
+	PetscReal, Dimension(:), Pointer             :: FractureEnergyBlock   ! Current TS, All Blocks
+	PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: ElasticEnergyBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: ExtForcesWorkBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: TotalEnergyBlock     ! Current TS, All Blocks
       PetscReal                                    :: ErrV
-      Type(Mat)                                    :: KU, KV
-      Type(KSP)                                    :: KSPU, KSPV
-      Type(PC)                                     :: PCU, PCV
+      Type(Mat)                                    :: KU, KV, KW
+      Type(KSP)                                    :: KSPU, KSPV, KSPW
+      Type(PC)                                     :: PCU, PCV, PCW
       Type(LogInfo_Type)                           :: LogInfo
       PetscBool                                    :: IsBT
 #if defined WITH_TAO
@@ -98,18 +93,10 @@ Module m_VarFracQS_Types3D
       TAO_APPLICATION                              :: taoAppU
 #endif
       
-#if defined PB_2D
-      Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp      
-#elif defined PB_3D
-      Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp
-#endif
+      Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
       Type(AppParam_Type)                          :: AppParam
       Type(VarFracSchemeParam_Type)                :: VarFracSchemeParam
    End Type AppCtx_Type
       
    
-#if defined PB_2D
-End Module m_VarFracQS_Types2D
-#elif defined PB_3D
-End Module m_VarFracQS_Types3D
-#endif
+End Module m_VarFilmQS_Types

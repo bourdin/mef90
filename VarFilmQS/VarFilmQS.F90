@@ -1,14 +1,10 @@
-Program  VarFracQS
+Program  VarFilmQS
 
 #include "finclude/petscdef.h"
 
-#if defined PB_2D
-   Use m_VarFracQS2D
-#elif defined PB_3D
-   Use m_VarFracQS3D
-#endif   
+   Use m_VarFilmQS
    Use m_MEF90
-   Use m_VarFrac_Struct
+   Use m_Film_Struct
    
    Implicit NONE   
 
@@ -19,7 +15,7 @@ Program  VarFracQS
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: AltMinIter
    Character(len=MEF90_MXSTRLEN)                :: filename
-   Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
+   Character(len=MEF90_MXSTRLEN), Dimension(5)  :: stagename
    PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
    PetscBool                                    :: restart
 
@@ -36,6 +32,9 @@ Program  VarFracQS
    Write(stagename(2), "(A)") "AltMin loop"
    Write(stagename(3), "(A)") "U-step"
    Write(stagename(4), "(A)") "V-step"
+   Write(stagename(5), "(A)") "W-step"
+
+
    TimeStep: Do 
       Call ALEStagePush(stagename(1), iDebug, iErr); CHKERRQ(iErr)
 
@@ -103,35 +102,35 @@ Program  VarFracQS
          ! Check For BackTracking 
          !------------------------------------------------------------------- 
          !
-         If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) .AND. (.NOT. AppCtx%IsBT)) Then
-            Call ComputeEnergies(AppCtx)
-            Call BackTracking(AppCtx, iBTStep)
-            AppCtx%IsBT = PETSC_FALSE   
-            If (iBTStep < AppCtx%TimeStep) Then
-               AppCtx%IsBT = PETSC_TRUE
-               AppCtx%TimeStep = max(1, iBTStep-1)
-
-               If (MEF90_MyRank ==0) Then
-                  !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
-                  Write(AppCtx%AppParam%Ener_Unit, *)
-                  Write(AppCtx%AppParam%Ener_Unit, *)
-                  
-                  If (AppCtx%VarFracSchemeParam%SaveBlk) Then
-                     Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-                        Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-                        Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-                     End Do
-                  End If
-               End If
-               
-               !!! Exit the AltMin loop
-               Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-               If (AppCtx%AppParam%verbose > 0) Then
-                  Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
-               End If
-               EXIT 
-            End If
-         End If
+!          If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) .AND. (.NOT. AppCtx%IsBT)) Then
+!             Call ComputeEnergies(AppCtx)
+!             Call BackTracking(AppCtx, iBTStep)
+!             AppCtx%IsBT = PETSC_FALSE   
+!             If (iBTStep < AppCtx%TimeStep) Then
+!                AppCtx%IsBT = PETSC_TRUE
+!                AppCtx%TimeStep = max(1, iBTStep-1)
+! 
+!                If (MEF90_MyRank ==0) Then
+!                   !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
+!                   Write(AppCtx%AppParam%Ener_Unit, *)
+!                   Write(AppCtx%AppParam%Ener_Unit, *)
+!                   
+!                   If (AppCtx%VarFracSchemeParam%SaveBlk) Then
+!                      Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+!                         Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+!                         Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+!                      End Do
+!                   End If
+!                End If
+!                
+!                !!! Exit the AltMin loop
+!                Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+!                If (AppCtx%AppParam%verbose > 0) Then
+!                   Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+!                End If
+!                EXIT 
+!             End If
+!          End If
    
          !------------------------------------------------------------------- 
          ! Check the exit condition: tolerance on the error in V 
@@ -156,7 +155,7 @@ Program  VarFracQS
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 102) AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+            Write(IOBuffer, 102) AppCtx%FractureEnergy(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
             Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -183,33 +182,33 @@ Program  VarFracQS
       !------------------------------------------------------------------- 
       ! Check For BackTracking again
       !------------------------------------------------------------------- 
-      If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT)) Then
-         Call ComputeEnergies(AppCtx)
-         Call BackTracking(AppCtx, iBTStep)
-         
-         If (iBTStep < AppCtx%TimeStep) Then
-            AppCtx%IsBT = PETSC_TRUE
-            AppCtx%TimeStep = max(1, iBTStep-1)
-            !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
-            If (MEF90_MyRank ==0) Then
-               !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
-               Write(AppCtx%AppParam%Ener_Unit, *)
-               Write(AppCtx%AppParam%Ener_Unit, *)
-            
-               If (AppCtx%VarFracSchemeParam%SaveBlk) Then
-                  Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-                     Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-                     Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-                  End Do
-               End If
-            End If
-         Else
-            AppCtx%IsBT = PETSC_FALSE
-         End If
-      Else 
-         AppCtx%IsBT = PETSC_FALSE
-      End If
-      
+!       If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT)) Then
+!          Call ComputeEnergies(AppCtx)
+!          Call BackTracking(AppCtx, iBTStep)
+!          
+!          If (iBTStep < AppCtx%TimeStep) Then
+!             AppCtx%IsBT = PETSC_TRUE
+!             AppCtx%TimeStep = max(1, iBTStep-1)
+!             !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
+!             If (MEF90_MyRank ==0) Then
+!                !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
+!                Write(AppCtx%AppParam%Ener_Unit, *)
+!                Write(AppCtx%AppParam%Ener_Unit, *)
+!             
+!                If (AppCtx%VarFracSchemeParam%SaveBlk) Then
+!                   Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
+!                      Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+!                      Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
+!                   End Do
+!                End If
+!             End If
+!          Else
+!             AppCtx%IsBT = PETSC_FALSE
+!          End If
+!       Else 
+!          AppCtx%IsBT = PETSC_FALSE
+!       End If
+!       
       !------------------------------------------------------------------- 
       ! Save the results
       !-------------------------------------------------------------------
@@ -236,4 +235,4 @@ Program  VarFracQS
 106   Format('Time Loop')
 
    Call VarFracQSFinalize(AppCtx)
-End Program  VarFracQS
+End Program  VarFilmQS
