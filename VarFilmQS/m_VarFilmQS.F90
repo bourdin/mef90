@@ -463,30 +463,34 @@ Contains
       
 	Call PetscLogEventRegister('MatAssembly Local U', 0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
 	Call PetscLogEventRegister('RHSAssembly Local U', 0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
-      If (AppCtx%VarFracSchemeParam%V_UseTao) Then
-         Call PetscLogEventRegister('Hessian Local V',  0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
-         Call PetscLogEventRegister('Obj+Grad Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
-      Else
-         Call PetscLogEventRegister('MatAssembly Local V', 0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
-         Call PetscLogEventRegister('RHSAssembly Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
-      End If
-      Call PetscLogEventRegister('Post Processing',     0, AppCtx%LogInfo%PostProc_Event,          ierr); CHKERRQ(ierr)
+	If (AppCtx%VarFracSchemeParam%V_UseTao) Then
+        	Call PetscLogEventRegister('Hessian Local V',  0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+        	Call PetscLogEventRegister('Obj+Grad Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+	Else
+		Call PetscLogEventRegister('MatAssembly Local V', 0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+		Call PetscLogEventRegister('RHSAssembly Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+	End If
+	Call PetscLogEventRegister('MatAssembly Local W', 0, AppCtx%LogInfo%MatAssemblyLocalW_Event, ierr); CHKERRQ(ierr)
+	Call PetscLogEventRegister('RHSAssembly Local W', 0, AppCtx%LogInfo%RHSAssemblyLocalW_Event, ierr); CHKERRQ(ierr)
+	Call PetscLogEventRegister('Post Processing',     0, AppCtx%LogInfo%PostProc_Event,          ierr); CHKERRQ(ierr)
 
-      Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
-      Call PetscLogStageRegister("MeshDistribute",   AppCtx%LogInfo%MeshDistribute_Stage,   iErr)
+	Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
+	Call PetscLogStageRegister("MeshDistribute",   AppCtx%LogInfo%MeshDistribute_Stage,   iErr)
 	Call PetscLogStageRegister("Mat Assembly U",   AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
 	Call PetscLogStageRegister("RHS Assembly U",   AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
-      Call PetscLogStageRegister("U-Step",      AppCtx%LogInfo%UStep_Stage,        iErr)
-      If (AppCtx%VarFracSchemeParam%V_UseTao) Then
-         Call PetscLogStageRegister("Hessian V",  AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
-         Call PetscLogStageRegister("Obj+Grad V", AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
-      Else
-         Call PetscLogStageRegister("Mat Assembly V",   AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
-         Call PetscLogStageRegister("RHS Assembly V",   AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
-      End If
-      Call PetscLogStageRegister("V-Step",      AppCtx%LogInfo%VStep_Stage,        iErr)
-      Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
-      Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
+	Call PetscLogStageRegister("U-Step",      AppCtx%LogInfo%UStep_Stage,        iErr)
+	If (AppCtx%VarFracSchemeParam%V_UseTao) Then
+		Call PetscLogStageRegister("Hessian V",  AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
+		Call PetscLogStageRegister("Obj+Grad V", AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
+	Else
+		Call PetscLogStageRegister("Mat Assembly V",   AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
+		Call PetscLogStageRegister("RHS Assembly V",   AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
+	End If
+	Call PetscLogStageRegister("Mat Assembly W",   AppCtx%LogInfo%MatAssemblyW_Stage,     iErr)
+	Call PetscLogStageRegister("RHS Assembly W",   AppCtx%LogInfo%RHSAssemblyW_Stage,     iErr)
+	Call PetscLogStageRegister("V-Step",      AppCtx%LogInfo%VStep_Stage,        iErr)
+	Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
+	Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
    End Subroutine InitLog
    
    Subroutine Save_U(AppCtx)

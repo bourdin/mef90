@@ -98,40 +98,7 @@ Program  VarFilmQS
          If (AppCtx%AppParam%verbose > 0) Then
             Call ALEStagePrintMemory(stagename(4), iErr); CHKERRQ(iErr)
          EndIf      
-         !------------------------------------------------------------------- 
-         ! Check For BackTracking 
-         !------------------------------------------------------------------- 
-         !
-!          If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) .AND. (.NOT. AppCtx%IsBT)) Then
-!             Call ComputeEnergies(AppCtx)
-!             Call BackTracking(AppCtx, iBTStep)
-!             AppCtx%IsBT = PETSC_FALSE   
-!             If (iBTStep < AppCtx%TimeStep) Then
-!                AppCtx%IsBT = PETSC_TRUE
-!                AppCtx%TimeStep = max(1, iBTStep-1)
-! 
-!                If (MEF90_MyRank ==0) Then
-!                   !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
-!                   Write(AppCtx%AppParam%Ener_Unit, *)
-!                   Write(AppCtx%AppParam%Ener_Unit, *)
-!                   
-!                   If (AppCtx%VarFracSchemeParam%SaveBlk) Then
-!                      Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-!                         Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-!                         Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-!                      End Do
-!                   End If
-!                End If
-!                
-!                !!! Exit the AltMin loop
-!                Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-!                If (AppCtx%AppParam%verbose > 0) Then
-!                   Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
-!                End If
-!                EXIT 
-!             End If
-!          End If
-   
+
          !------------------------------------------------------------------- 
          ! Check the exit condition: tolerance on the error in V 
          !------------------------------------------------------------------- 
@@ -179,36 +146,7 @@ Program  VarFilmQS
             Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
          End If
       End Do AltMin
-      !------------------------------------------------------------------- 
-      ! Check For BackTracking again
-      !------------------------------------------------------------------- 
-!       If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT)) Then
-!          Call ComputeEnergies(AppCtx)
-!          Call BackTracking(AppCtx, iBTStep)
-!          
-!          If (iBTStep < AppCtx%TimeStep) Then
-!             AppCtx%IsBT = PETSC_TRUE
-!             AppCtx%TimeStep = max(1, iBTStep-1)
-!             !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
-!             If (MEF90_MyRank ==0) Then
-!                !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
-!                Write(AppCtx%AppParam%Ener_Unit, *)
-!                Write(AppCtx%AppParam%Ener_Unit, *)
-!             
-!                If (AppCtx%VarFracSchemeParam%SaveBlk) Then
-!                   Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-!                      Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-!                      Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
-!                   End Do
-!                End If
-!             End If
-!          Else
-!             AppCtx%IsBT = PETSC_FALSE
-!          End If
-!       Else 
-!          AppCtx%IsBT = PETSC_FALSE
-!       End If
-!       
+       
       !------------------------------------------------------------------- 
       ! Save the results
       !-------------------------------------------------------------------
