@@ -144,7 +144,6 @@ Module m_Film_Struct
       PetscBool                                    :: SaveStress
       PetscBool                                    :: SaveStrain
       
-      PetscBool                                    :: U_UseTao
       PetscBool                                    :: V_UseTao
    End Type VarFracSchemeParam_Type
    
@@ -320,8 +319,6 @@ Module m_Film_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-savestrain ', L1, A)")          dSchemeParam%SaveStrain, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-u_tao ', L1, A)")               dSchemeParam%U_UseTao, '\n'
-      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-v_tao ', L1, A)")               dSchemeParam%V_UseTao, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine VarFracSchemeParam_View
@@ -352,7 +349,6 @@ Module m_Film_Struct
       dSchemeParam%SaveBlk          = PETSC_FALSE
       dSchemeParam%SaveStress       = PETSC_FALSE
       dSchemeParam%SaveStrain       = PETSC_FALSE
-      dSchemeParam%U_UseTao         = PETSC_FALSE
       dSchemeParam%V_UseTao         = PETSC_TRUE
 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-irrev',          dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
@@ -380,7 +376,6 @@ Module m_Film_Struct
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-saveblk',        dSchemeParam%SaveBlk, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-u_tao',          dSchemeParam%U_UseTao, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
       
       Select Case(dSchemeParam%ATNum)
