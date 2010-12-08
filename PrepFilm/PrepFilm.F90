@@ -115,13 +115,14 @@ Program PrepVarFrac
    Call PetscRandomSeed(RandomCtx, iErr); CHKERRQ(iErr)
    Call PetscRandomGetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
 
-	NumTestCase = 2
+	NumTestCase = 3
 	Allocate(TestCase(NumTestCase))
 	Do i = 1, NumTestCase
 		TestCase(i)%Index = i
 	End Do
 	TestCase(1)%Description = "Thin film bonded to substrate, MIL"
-	TestCase(2)%Description = "What else..."
+	TestCase(2)%Description = "Delamination test: 2:[ W=1 (2) |      W=0   (1)         | W=1 (2) ]:1"
+	TestCase(3)%Description = "What else..."
 
 
 	Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -410,7 +411,7 @@ Program PrepVarFrac
 		End If
 		If (MyEXO%NSProperty(VarFrac_NSProp_BCWType)%Value(i) /= 0 ) Then
 			Write(IOBuffer, 302) i, 'W'
-			Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+			Call AskReal(W(i), IOBuffer, BatchUnit, IsBatch)
 		End If
 		If (.NOT. IsBatch) Then
 			Write(BatchUnit, *)
