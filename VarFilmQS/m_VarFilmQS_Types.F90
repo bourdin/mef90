@@ -14,24 +14,27 @@ Module m_VarFilmQS_Types
    Public :: AppParam_Type
    Public :: AppCtx_Type
 
-   Type LogInfo_Type
-      PetscLogStage               :: IO_Stage
-      PetscLogStage               :: Setup_Stage      
-      PetscLogStage               :: MeshDistribute_Stage
-      PetscLogStage               :: MatAssemblyU_Stage
-      PetscLogStage               :: RHSAssemblyU_Stage
-      PetscLogStage               :: UStep_Stage
-      PetscLogStage               :: MatAssemblyV_Stage
-      PetscLogStage               :: RHSAssemblyV_Stage
-      PetscLogStage               :: VStep_Stage
-      PetscLogStage               :: PostProc_Stage
-      
-      PetscLogEvent               :: MatAssemblyLocalU_Event
-      PetscLogEvent               :: RHSAssemblyLocalU_Event
-      PetscLogEvent               :: MatAssemblyLocalV_Event
-      PetscLogEvent               :: RHSAssemblyLocalV_Event
-      PetscLogEvent               :: PostProc_Event
-   End Type LogInfo_Type
+Type LogInfo_Type
+	PetscLogStage               :: IO_Stage
+	PetscLogStage               :: Setup_Stage      
+	PetscLogStage               :: MeshDistribute_Stage
+	PetscLogStage               :: MatAssemblyU_Stage
+	PetscLogStage               :: RHSAssemblyU_Stage
+	PetscLogStage               :: UStep_Stage
+	PetscLogStage               :: MatAssemblyV_Stage
+	PetscLogStage               :: RHSAssemblyV_Stage
+	PetscLogStage               :: VStep_Stage
+	PetscLogStage               :: FWAssemblyW_Stage
+	PetscLogStage               :: WStep_Stage
+	PetscLogStage               :: PostProc_Stage
+	
+	PetscLogEvent               :: MatAssemblyLocalU_Event
+	PetscLogEvent               :: RHSAssemblyLocalU_Event
+	PetscLogEvent               :: MatAssemblyLocalV_Event
+	PetscLogEvent               :: RHSAssemblyLocalV_Event
+	PetscLogEvent               :: FWAssemblyLocalW_Event
+	PetscLogEvent               :: PostProc_Event
+End Type LogInfo_Type
 
    Type AppParam_Type
       PetscBool                                    :: Restart
@@ -54,6 +57,7 @@ Module m_VarFilmQS_Types
       Type(Element2D_Elast), Dimension(:), Pointer :: ElemVect
       Type(Element2D_Scal), Dimension(:), Pointer  :: ElemScal
       Type(Field)                                  :: U
+	Type(Field)                                  :: U0
       Type(Field)                                  :: UBC
       Type(Field)                                  :: F
       Type(Field)                                  :: V
@@ -63,7 +67,9 @@ Module m_VarFilmQS_Types
       Type(Field)                                  :: Theta
       Type(Field)                                  :: RHSU, GradientU, LowerBoundU, UpperBoundU
       Type(Field)                                  :: RHSV, GradientV, LowerBoundV, UpperBoundV
-      Type(Vec)                                    :: V_Old
+	Type(Field)                                  :: FW
+	Type(Vec)                                    :: V_Old
+	Type(Vec)                                    :: W_Old
 	Type(Flag)                                   :: BCUFlag, BCVFlag, BCWFlag, IrrevFlag
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
