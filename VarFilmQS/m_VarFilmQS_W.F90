@@ -262,7 +262,7 @@ Subroutine W_Solve(AppCtx)
 	PetscReal, Dimension(:), Pointer		:: zero
 	
 	Allocate(Fi_ptr(1))
-	Allocate(one(1))
+	Allocate(zero(1))
 	
 	zero=0.0_Kr
 	
@@ -273,7 +273,7 @@ Subroutine W_Solve(AppCtx)
 		End If
 	End Do
 	Deallocate(Fi_ptr)
-	Deallocate(one)
+	Deallocate(zero)
 End Subroutine W_Solve
 
 #undef __FUNCT__
