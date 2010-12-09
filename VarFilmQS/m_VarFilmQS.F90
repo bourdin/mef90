@@ -508,6 +508,17 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_V
 
+Subroutine Save_W(AppCtx)
+   	Type(AppCtx_Type)                            :: AppCtx
+   	PetscInt                                     :: iErr
+   	
+   	Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+   	Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W) 
+   	Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+End Subroutine Save_V
+
+
+
    Subroutine Save_StrainStress(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
