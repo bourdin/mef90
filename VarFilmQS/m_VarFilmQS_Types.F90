@@ -59,7 +59,6 @@ End Type LogInfo_Type
       Type(Field)                                  :: U
 	Type(Field)                                  :: U0
       Type(Field)                                  :: UBC
-      Type(Field)                                  :: F
       Type(Field)                                  :: V
 	Type(Field)                                  :: W
 	Type(Field)                                  :: WBC, WIrrev
