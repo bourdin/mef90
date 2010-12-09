@@ -12,10 +12,10 @@ Module m_VarFilmQS_W
 
 
    Public :: Init_TS_W
-   Public :: Update_Irrev
-   Public :: MatW_Assembly
-   Public :: RHSW_Assembly
+   Public :: Update_IrrevW
+   Public :: FW_Assembly
    Public :: Step_W
+   Public :: W_Solve
 
 Contains
 
@@ -37,7 +37,7 @@ Subroutine Init_TS_W(AppCtx)
 	  
 End Subroutine Init_TS_W
    
-   Subroutine Update_Irrev(AppCtx)
+   Subroutine Update_IrrevW(AppCtx)
       !!! Updates the VIrrev vector used in InitTaoBoundsV
       Type(AppCtx_Type)                            :: AppCtx
 
@@ -162,7 +162,7 @@ End Subroutine Init_TS_W
       Case Default
          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONG, 'Wrong value for AppCtx./.VarFracSchemeParam./.IrrevType \n', iErr)
       End Select
-   End Subroutine Update_Irrev
+   End Subroutine Update_IrrevW
 
 !!!
 !!! Global assembly functions
@@ -187,12 +187,8 @@ Subroutine FW_Assembly(AppCtx)
 	Call SectionRealComplete(AppCtx%FW%Sec, iErr); CHKERRQ(iErr)
       
       !!! Set Dirichlet Boundary Values
-      Call FieldInsertVertexBoundaryValues(AppCtx%RHSV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
-      If ( AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_Eq .OR. AppCtx%VarFracSchemeParam%IrrevType == VarFrac_Irrev_NONE ) Then
-         Call FieldInsertVertexBoundaryValues(AppCtx%RHSV, AppCtx%VIrrev, AppCtx%IrrevFlag, AppCtx%MeshTopology)
-      End If
 
-      Call SectionRealToVec(AppCtx%RHSV%Sec, AppCtx%RHSV%Scatter, SCATTER_FORWARD, RHSV_Vec, iErr); CHKERRQ(iErr)
+ 
 
       If (AppCtx%AppParam%verbose > 2) Then
          Call VecView(AppCtx%RHSV%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
@@ -202,23 +198,26 @@ Subroutine FW_Assembly(AppCtx)
 End Subroutine FW_Assembly
    
 Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
-      Type(SectionReal)                            :: F_Sec
-      PetscInt                                     :: iBlk
-      Type(AppCtx_Type)                            :: AppCtx
+	Type(SectionReal)				:: F_Sec
+	PetscInt					:: iBlk
+	Type(AppCtx_Type)				:: AppCtx
 
       !!!   _Loc are restriction of fields to local patch (the element)
       !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
-      PetscReal, Dimension(:), Pointer             :: U_loc
-      PetscInt                                     :: iE, iEloc, iErr
-      Type(Vect2D)                                 :: U_elem
+	PetscInt					:: iE, iEloc, iErr, iBlk_glob
+	Type(Vect2D)					:: U_elem
 	PetscReal, Dimension(:), Pointer		:: F_loc
+	PetscReal, Dimension(:), Pointer		:: U_loc
 
-      PetscInt                                     :: NumDoFScal, NumDoFVect
-      PetscInt                                     :: iDoF, iGauss
-      PetscLogDouble, Parameter                    :: oneflop = 1.0
-      
+
+	PetscInt                                     :: NumDoFScal, NumDoFVect
+	PetscInt                                     :: iDoF, iGauss
+	PetscLogDouble, Parameter                    :: oneflop = 1.0
+	
 	NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
-	NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Dim
+	NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+
+	iBlk_glob=AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
 	
 	Allocate(F_loc(NumDoFScal))
 	Allocate(U_loc(NumDoFVect))
@@ -226,7 +225,9 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
 	Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
 		iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
 		
-		Call SectionIntRestrictClosure(AppCtx%U%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, U_loc, iErr); CHKERRQ(ierr)
+		Call SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_loc, iErr); CHKERRQ(ierr)
+! 		Call SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_loc, iErr); CHKERRQ(ierr)
+		Call SectionRealRestrictClosure(F_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, F_loc, iErr); CHKERRQ(ierr)
 	
 		U_elem = 0.0_Kr	
 		
@@ -236,13 +237,11 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
 				U_elem=U_elem+AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * U_loc(iDoF)
 			End Do
 		End Do
-		
 		Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
 			Do iDoF = 1, NumDoFScal
-				F_loc(iDoF) = F_loc(iDoF) +  (AppCtx%MatProp(iBlk)%DelamToughness - AppCtx%MatProp(iBlk)%Ksubst * 0.5_Kr * U_elem .dotP. U_elem )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
+				F_loc(iDoF) = F_loc(iDoF) +  (AppCtx%MatProp(iBlk_glob)%DelamToughness - AppCtx%MatProp(iBlk_glob)%Ksubst * 0.5_Kr * (U_elem .DotP. U_elem) )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
 			End Do
 		End Do Do_iGauss
-	
 		Call SectionRealUpdateClosure(F_Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
 	End Do Do_iEloc
 
@@ -251,6 +250,29 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
 !       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
 
 End Subroutine FW_AssemblyBlk
+
+Subroutine W_Solve(AppCtx)
+	Type(AppCtx_Type)				:: AppCtx
+	
+	PetscInt					:: i
+	PetscReal, Dimension(:), Pointer		:: Fi_ptr
+	PetscInt					:: iErr
+	PetscReal, Dimension(:), Pointer		:: one
+	
+	Allocate(Fi_ptr(1))
+	Allocate(one(1))
+	
+	one=1.0_Kr
+	
+	Do i=1, AppCtx%MeshTopology%Num_Verts
+		Call SectionRealRestrict(AppCtx%FW%Sec, AppCtx%MeshTopology%Num_Elems + i-1, Fi_ptr, iErr); CHKERRQ(iErr);
+		If (Fi_ptr(1) .GE. 0.0_Kr) Then
+			Call SectionRealUpdate(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, one, INSERT_VALUES, iErr); CHKERRQ(iErr)
+		End If
+	End Do
+	Deallocate(Fi_ptr)
+	Deallocate(one)
+End Subroutine W_Solve
 
 #undef __FUNCT__
 #define __FUNCT__ "Step_W"
@@ -281,11 +303,6 @@ Subroutine Step_W(AppCtx)
 !		!!! Set Dirichlet Boundary Values
 ! 		Call FieldInsertVertexBoundaryValues(AppCtx%RHSV, AppCtx%VBC, AppCtx%BCVFlag, AppCtx%MeshTopology)
 !	
-
-
-
-!
-	
 	
 	If (AppCtx%AppParam%verbose > 0) Then
 	   Write(IOBuffer, *) 'Assembling the F for the W-subproblem \n' 
@@ -300,14 +317,15 @@ Subroutine Step_W(AppCtx)
 	End If
 	
 	Call W_Solve(AppCtx)
+!	Impose BC
+	Call FieldInsertVertexBoundaryValues(AppCtx%W, AppCtx%WBC, AppCtx%BCWFlag, AppCtx%MeshTopology)
 	
 !	Log and print
 
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
-   End Subroutine Step_W
+End Subroutine Step_W
 
-   
-   
+
 End Module m_VarFilmQS_W
