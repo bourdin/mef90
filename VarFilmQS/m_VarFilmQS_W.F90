@@ -259,17 +259,17 @@ Subroutine W_Solve(AppCtx)
 	PetscInt					:: i
 	PetscReal, Dimension(:), Pointer		:: Fi_ptr
 	PetscInt					:: iErr
-	PetscReal, Dimension(:), Pointer		:: one
+	PetscReal, Dimension(:), Pointer		:: zero
 	
 	Allocate(Fi_ptr(1))
 	Allocate(one(1))
 	
-	one=1.0_Kr
+	zero=0.0_Kr
 	
 	Do i=1, AppCtx%MeshTopology%Num_Verts
 		Call SectionRealRestrict(AppCtx%FW%Sec, AppCtx%MeshTopology%Num_Elems + i-1, Fi_ptr, iErr); CHKERRQ(iErr);
 		If (Fi_ptr(1) .GE. 0.0_Kr) Then
-			Call SectionRealUpdate(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, one, INSERT_VALUES, iErr); CHKERRQ(iErr)
+			Call SectionRealUpdate(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, zero, INSERT_VALUES, iErr); CHKERRQ(iErr)
 		End If
 	End Do
 	Deallocate(Fi_ptr)
