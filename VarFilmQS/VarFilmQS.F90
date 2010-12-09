@@ -98,6 +98,15 @@ Program  VarFilmQS
          If (AppCtx%AppParam%verbose > 0) Then
             Call ALEStagePrintMemory(stagename(4), iErr); CHKERRQ(iErr)
          EndIf      
+         !------------------------------------------------------------------- 
+         ! Problem for W
+         !-------------------------------------------------------------------
+         Call ALEStagePush(stagename(5), iDebug, iErr); CHKERRQ(iErr)
+         Call Step_W(AppCtx)
+         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         If (AppCtx%AppParam%verbose > 0) Then
+            Call ALEStagePrintMemory(stagename(5), iErr); CHKERRQ(iErr)
+         EndIf      
 
          !------------------------------------------------------------------- 
          ! Check the exit condition: tolerance on the error in V 
