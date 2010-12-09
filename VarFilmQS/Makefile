@@ -30,37 +30,44 @@ VarFilmQS: ${PETSC_ARCH} VarFilmQS.o   ${PETSC_ARCH}/VarFilmQS.o \
                                       m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
                                       m_VarFilmQS_U.o ${PETSC_ARCH}/m_VarFilmQS_U.o \
                                       m_VarFilmQS_V.o ${PETSC_ARCH}/m_VarFilmQS_V.o \
+                                      m_VarFilmQS_W.o ${PETSC_ARCH}/m_VarFilmQS_W.o \
                                       m_VarFilmQS.o ${PETSC_ARCH}/m_VarFilmQS.o \
                                       m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
-	${FLINKER} -o ${PETSC_ARCH}/VarFilmQS ${PETSC_ARCH}/VarFilmQS.o ${PETSC_ARCH}/m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_U.o ${PETSC_ARCH}/m_VarFilmQS_V.o ${PETSC_ARCH}/m_VarFilmQS.o  ${PETSC_ARCH}/m_VarFilmQS_Post.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	${FLINKER} -o ${PETSC_ARCH}/VarFilmQS ${PETSC_ARCH}/VarFilmQS.o ${PETSC_ARCH}/m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_U.o ${PETSC_ARCH}/m_VarFilmQS_V.o ${PETSC_ARCH}/m_VarFilmQS_W.o ${PETSC_ARCH}/m_VarFilmQS.o  ${PETSC_ARCH}/m_VarFilmQS_Post.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
 VarFilmQS.o:   ${PETSC_ARCH} m_VarFilmQS.o ${PETSC_ARCH}/m_VarFilmQS.o \
                                       m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
                                       m_VarFilmQS_U.o ${PETSC_ARCH}/m_VarFilmQS_U.o \
                                       m_VarFilmQS_V.o ${PETSC_ARCH}/m_VarFilmQS_V.o \
+                                      m_VarFilmQS_W.o ${PETSC_ARCH}/m_VarFilmQS_W.o \
                                       m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
 
 VarFilmQSRecomputeEnergy: ${PETSC_ARCH} VarFilmQSRecomputeEnergy.o   ${PETSC_ARCH}/VarFilmQSRecomputeEnergy.o \
                                           m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
                                           m_VarFilmQS_U.o ${PETSC_ARCH}/m_VarFilmQS_U.o \
                                           m_VarFilmQS_V.o ${PETSC_ARCH}/m_VarFilmQS_V.o \
+                                          m_VarFilmQS_W.o ${PETSC_ARCH}/m_VarFilmQS_W.o \
                                           m_VarFilmQS.o ${PETSC_ARCH}/m_VarFilmQS.o \
                                           m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
-	${FLINKER} -o ${PETSC_ARCH}/VarFilmQSRecomputeEnergy ${PETSC_ARCH}/VarFilmQSRecomputeEnergy.o ${PETSC_ARCH}/m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_U.o ${PETSC_ARCH}/m_VarFilmQS_V.o ${PETSC_ARCH}/m_VarFilmQS.o  ${PETSC_ARCH}/m_VarFilmQS_Post.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	${FLINKER} -o ${PETSC_ARCH}/VarFilmQSRecomputeEnergy ${PETSC_ARCH}/VarFilmQSRecomputeEnergy.o ${PETSC_ARCH}/m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_U.o ${PETSC_ARCH}/m_VarFilmQS_V.o ${PETSC_ARCH}/m_VarFilmQS_W.o ${PETSC_ARCH}/m_VarFilmQS.o  ${PETSC_ARCH}/m_VarFilmQS_Post.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
 VarFilmQSRecomputeEnergy.o:   ${PETSC_ARCH} m_VarFilmQS.o ${PETSC_ARCH}/m_VarFilmQS.o \
                                               m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
                                               m_VarFilmQS_U.o ${PETSC_ARCH}/m_VarFilmQS_U.o \
                                               m_VarFilmQS_V.o ${PETSC_ARCH}/m_VarFilmQS_V.o \
+                                              m_VarFilmQS_W.o ${PETSC_ARCH}/m_VarFilmQS_W.o \
                                               m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
 
 m_VarFilmQS.o: ${PETSC_ARCH} m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
                                       m_VarFilmQS_U.o ${PETSC_ARCH}/m_VarFilmQS_U.o \
                                       m_VarFilmQS_V.o ${PETSC_ARCH}/m_VarFilmQS_V.o \
+                                      m_VarFilmQS_W.o ${PETSC_ARCH}/m_VarFilmQS_W.o \
                                       m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
 m_VarFilmQS_U.o:  ${PETSC_ARCH} m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
                                 m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
 m_VarFilmQS_V.o:  ${PETSC_ARCH} m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
+                                m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
+m_VarFilmQS_W.o:  ${PETSC_ARCH} m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
                                 m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
 m_VarFilmQS_Post.o:  ${PETSC_ARCH} m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o
 m_VarFilmQS_Types.o: ${PETSC_ARCH}
