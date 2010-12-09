@@ -394,48 +394,49 @@ Module m_Film_Struct
       End Select
    End Subroutine VarFracSchemeParam_GetFromOptions
  
-	Subroutine VarFracEXOProperty_Init(dEXO, dMeshTopology)
-		Type(EXO_Type)                      :: dEXO
-		Type(MeshTopology_Type)             :: dMeshTopology
-		PetscInt                            :: i, iErr
-		PetscInt                            :: NumEB, NumSS, NumNS
-		
-		Integer                             :: EXO_MyRank
-		PetscReal                           :: rDummy
-		Character                           :: cDummy
-		    
-		Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
-		
-		NumEB = dMeshTopology%Num_Elem_Blks_Global
-		NumSS = dMeshTopology%Num_Side_Sets_Global
-		NumNS = dMeshTopology%Num_Node_Sets_Global
-		
-		If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
-		   Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n', iErr); CHKERRQ(iErr)
-		   Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracEXOProperty_Init?\n', iErr); CHKERRQ(iErr)
-		End If
-		
-		dEXO%Num_EBProperties = VarFrac_Num_EBProperties
-		Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
-		dEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Name = 'Is_Brittle'
-		dEXO%EBProperty(VarFrac_EBProp_Elem_Type)%Name = 'Elem_Type'
-		Do i = 1, dEXO%Num_EBProperties
-		   Allocate(dEXO%EBProperty(i)%Value(NumEB))
-		   dEXO%EBProperty(i)%Value = 0
-		End Do
-		
-		dEXO%Num_NSProperties = VarFrac_Num_NSProperties
-		Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
-		dEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
-		dEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
-		dEXO%NSProperty(VarFrac_NSProp_BCVType)%Name   = 'BCV_Type'
-		dEXO%NSProperty(VarFrac_NSProp_BCWType)%Name   = 'BCW_Type'
-		dEXO%NSProperty(VarFrac_NSProp_HasPForce)%Name = 'Has_PForce'
-		Do i = 1, dEXO%Num_NSProperties
-         Allocate(dEXO%NSProperty(i)%Value(NumNS))
-         dEXO%NSProperty(i)%Value = 0
-      End Do
-	End Subroutine VarFracEXOProperty_Init   
+Subroutine VarFracEXOProperty_Init(dEXO, dMeshTopology)
+	Type(EXO_Type)                      :: dEXO
+	Type(MeshTopology_Type)             :: dMeshTopology
+	PetscInt                            :: i, iErr
+	PetscInt                            :: NumEB, NumSS, NumNS
+	
+	Integer                             :: EXO_MyRank
+	PetscReal                           :: rDummy
+	Character                           :: cDummy
+	    
+	Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+	
+	NumEB = dMeshTopology%Num_Elem_Blks_Global
+	NumSS = dMeshTopology%Num_Side_Sets_Global
+	NumNS = dMeshTopology%Num_Node_Sets_Global
+	
+	If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
+	   Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n', iErr); CHKERRQ(iErr)
+	   Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracEXOProperty_Init?\n', iErr); CHKERRQ(iErr)
+	End If
+	
+	dEXO%Num_EBProperties = VarFrac_Num_EBProperties
+	Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
+	dEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Name = 'Is_Brittle'
+	dEXO%EBProperty(VarFrac_EBProp_IsDebondable)%Name = 'Is_Debondable'
+	dEXO%EBProperty(VarFrac_EBProp_Elem_Type)%Name = 'Elem_Type'
+	Do i = 1, dEXO%Num_EBProperties
+	   Allocate(dEXO%EBProperty(i)%Value(NumEB))
+	   dEXO%EBProperty(i)%Value = 0
+	End Do
+	
+	dEXO%Num_NSProperties = VarFrac_Num_NSProperties
+	Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
+	dEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
+	dEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
+	dEXO%NSProperty(VarFrac_NSProp_BCVType)%Name   = 'BCV_Type'
+	dEXO%NSProperty(VarFrac_NSProp_BCWType)%Name   = 'BCW_Type'
+	dEXO%NSProperty(VarFrac_NSProp_HasPForce)%Name = 'Has_PForce'
+	Do i = 1, dEXO%Num_NSProperties
+ Allocate(dEXO%NSProperty(i)%Value(NumNS))
+ dEXO%NSProperty(i)%Value = 0
+End Do
+End Subroutine VarFracEXOProperty_Init   
 
 	Subroutine VarFracEXOVariable_Init(dEXO, dSaveElementVariables)
 		Type(EXO_Type)                      :: dEXO

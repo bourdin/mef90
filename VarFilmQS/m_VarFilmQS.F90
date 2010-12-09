@@ -188,9 +188,7 @@ Contains
       SizeScal=1
 	Call FieldCreateVertex(AppCtx%U,      'U',      AppCtx%MeshTopology, SizeVect)
 	Call FieldCreateVertex(AppCtx%UBC,    'UBC',    AppCtx%MeshTopology, SizeVect)
-	
-	Call FieldCreateVertex(AppCtx%F,      'F',      AppCtx%MeshTopology, SizeVect)
-	
+		
 	Call FieldCreateVertex(AppCtx%V,      'V',      AppCtx%MeshTopology, SizeScal)
 	Call FieldCreateVertex(AppCtx%VBC,    'VBC',    AppCtx%MeshTopology, SizeScal)
 	Call FieldCreateVertex(AppCtx%VIrrev, 'VIrrev', AppCtx%MeshTopology, SizeScal)
@@ -571,10 +569,10 @@ Contains
       PetscInt                                     :: iErr
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceX)%Offset, AppCtx%TimeStep, AppCtx%F) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, AppCtx%TimeStep, AppCtx%Theta) 
       
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%VBC) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep, AppCtx%WBC) 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep, AppCtx%UBC) 
 
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep))
@@ -592,8 +590,10 @@ Contains
       Call FieldDestroy(AppCtx%UBC);    CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%V);      CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%VBC);    CHKERRQ(iErr)
+	Call FieldDestroy(AppCtx%W);      CHKERRQ(iErr)
+	Call FieldDestroy(AppCtx%WBC);    CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%VIrrev); CHKERRQ(iErr)
-      Call FieldDestroy(AppCtx%F);      CHKERRQ(iErr)
+
       Call FieldDestroy(AppCtx%Theta);  CHKERRQ(iErr)
 	Call FieldDestroy(AppCtx%RHSU); CHKERRQ(iErr)
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
