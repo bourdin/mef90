@@ -4,6 +4,7 @@ Module m_VarFilmQS
    Use m_VarFilmQS_Types
    Use m_VarFilmQS_U
    Use m_VarFilmQS_V
+   Use m_VarFilmQS_W
    Use m_VarFilmQS_Post
    
    Use m_MEF90
@@ -470,8 +471,7 @@ Contains
 		Call PetscLogEventRegister('MatAssembly Local V', 0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
 		Call PetscLogEventRegister('RHSAssembly Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
 	End If
-	Call PetscLogEventRegister('MatAssembly Local W', 0, AppCtx%LogInfo%MatAssemblyLocalW_Event, ierr); CHKERRQ(ierr)
-	Call PetscLogEventRegister('RHSAssembly Local W', 0, AppCtx%LogInfo%RHSAssemblyLocalW_Event, ierr); CHKERRQ(ierr)
+	Call PetscLogEventRegister('FWAssembly Local W', 0, AppCtx%LogInfo%FWAssemblyLocalW_Event, ierr); CHKERRQ(ierr)
 	Call PetscLogEventRegister('Post Processing',     0, AppCtx%LogInfo%PostProc_Event,          ierr); CHKERRQ(ierr)
 
 	Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
@@ -486,8 +486,7 @@ Contains
 		Call PetscLogStageRegister("Mat Assembly V",   AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
 		Call PetscLogStageRegister("RHS Assembly V",   AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
 	End If
-	Call PetscLogStageRegister("Mat Assembly W",   AppCtx%LogInfo%MatAssemblyW_Stage,     iErr)
-	Call PetscLogStageRegister("RHS Assembly W",   AppCtx%LogInfo%RHSAssemblyW_Stage,     iErr)
+	Call PetscLogStageRegister("FW Assembly W",   AppCtx%LogInfo%FWAssemblyW_Stage,     iErr)
 	Call PetscLogStageRegister("V-Step",      AppCtx%LogInfo%VStep_Stage,        iErr)
 	Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
 	Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
