@@ -30,152 +30,69 @@ Subroutine Init_TS_W(AppCtx)
 	
      
 	If (AppCtx%AppParam%verbose > 0) Then
-	   Write(IOBuffer, *) "Initializing V with ", AppCtx%VarFracSchemeParam%InitV, "\n"
+	   Write(IOBuffer, *) "Initializing W with Previous Value \n"
 	   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 	End If    
+! 	Select Case(AppCtx%VarFracSchemeParam%InitV)
+! 	Case(VarFrac_INIT_V_PREV)
+	Call FieldInsertVertexBoundaryValues(AppCtx%W, AppCtx%WBC, AppCtx%BCWFlag, AppCtx%MeshTopology)
 	
 	  
 End Subroutine Init_TS_W
    
 Subroutine Update_IrrevW(AppCtx)
-      !!! Updates the VIrrev vector used in InitTaoBoundsV
-      Type(AppCtx_Type)                            :: AppCtx
+	!!! Updates the WBCFlag field to account for irreversibilty 
+	Type(AppCtx_Type)                            :: AppCtx
+	
+	PetscInt                                     :: i, iErr
+	Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
+	PetscInt                                     :: MyIrrevEQ_Counter 
+	PetscInt                                     :: IrrevEQ_Counter
+	PetscReal, Dimension(:), Pointer             :: WIrrev_Ptr
+	PetscInt, Dimension(:), Pointer              :: IrrevFlag_Ptr
+	
+	MyIrrevEq_Counter = 0
+	IrrevEq_Counter   = 0
+	
+	Select Case(AppCtx%VarFracSchemeParam%IrrevType)
+	Case Default
+		If (AppCtx%AppParam%verbose > 0) Then
+		   Write(IOBuffer, *) "Irreversibility for W\n"
+		   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		End If
+		
+		Allocate(IrrevFlag_Ptr(1))
+		IrrevFlag_Ptr = VarFrac_BC_Type_DIRI
+		
+		Do i = 1, AppCtx%MeshTopology%Num_Verts
+			Call SectionRealRestrict(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, iErr); CHKERRQ(ierr)      
+			If (WIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
+				WIrrev_Ptr(1) = 0.0_Kr
+				Call SectionIntUpdate(AppCtx%BCWFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+				Call SectionRealUpdate(AppCtx%WBC%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+				MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
+			End If
+			Call SectionRealRestore(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, iErr); 
+		End Do
 
-      PetscInt                                     :: i, iErr
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
-      PetscInt                                     :: MyIrrevEQ_Counter 
-      PetscInt                                     :: IrrevEQ_Counter
-      PetscReal, Dimension(:), Pointer             :: VIrrev_Ptr
-      PetscInt, Dimension(:), Pointer              :: IrrevFlag_Ptr
+		DeAllocate(IrrevFlag_Ptr)
 
-      MyIrrevEq_Counter = 0
-      IrrevEq_Counter   = 0
-
-      Select Case(AppCtx%VarFracSchemeParam%IrrevType)
-      Case(VarFrac_Irrev_Eq)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Irreversibility with Irrev_EQ\n"
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If
-
-         Allocate(IrrevFlag_Ptr(1))
-         IrrevFlag_Ptr = VarFrac_BC_Type_DIRI
-         
-         If (AppCtx%IsBT) Then
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) "Backtracking, so reading timestep if TS>1\n"
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-
-            Call SectionIntSet(AppCtx%IrrevFlag%Sec, VarFrac_BC_Type_NONE, iErr); CHKERRQ(iErr)
-            Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-            If (AppCtx%TimeStep > 1) Then
-               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%VIrrev)
-               Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%VIrrev%Scatter, SCATTER_REVERSE, AppCtx%VIrrev%Vec, ierr); CHKERRQ(ierr)
-               Do i = 1, AppCtx%MeshTopology%Num_Verts
-                  Call SectionRealRestrict(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(iErr)      
-                  If (VIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                     Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-                     MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
-                  End If
-                  Call SectionRealRestore(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(iErr)
-               End Do
-            End If
-         Else
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) "Not Backtracking, so getting blocked nodes from V\n"
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-            Do i = 1, AppCtx%MeshTopology%Num_Verts
-               Call SectionRealRestrict(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(ierr)      
-               If (VIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                  VIrrev_Ptr(1) = 0.0_Kr
-                  Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-                  !Call SectionRealUpdate(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-                  MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
-               End If
-               Call SectionRealRestore(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr);
-            End Do
-         End If
-         DeAllocate(IrrevFlag_Ptr)
-         Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Call MPI_AllReduce(MyIrrevEQ_Counter, IrrevEQ_Counter, 1, MPI_INTEGER, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If      
-
-      Case(VarFrac_Irrev_InEq)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Write(IOBuffer, *) "Irreversibility with Irrev_InEQ\n"
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If
-
-         Allocate(IrrevFlag_Ptr(1))
-         IrrevFlag_Ptr = VarFrac_BC_Type_DIRI
-         
-         If (AppCtx%IsBT) Then
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) "Backtracking, so reading timestep if TS>1\n"
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-
-            If (AppCtx%TimeStep > 1) Then
-               Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%VIrrev)
-               Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%VIrrev%Scatter, SCATTER_REVERSE, AppCtx%VIrrev%Vec, ierr); CHKERRQ(ierr)
-            Else
-               Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-            End If
-         Else
-            !!! This is again a convoluted way of copying data from V Section to VIrrev Section
-            Call VecCopy(AppCtx%V%Vec, AppCtx%VIrrev%Vec, iErr); CHKERRQ(iErr)
-            Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
-            
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) "Not Backtracking, so getting upper bound from V\n"
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-            Do i = 1, AppCtx%MeshTopology%Num_Verts
-               Call SectionRealRestrict(AppCtx%VIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr); CHKERRQ(ierr)      
-               If (VIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-                  Call SectionIntUpdate(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-                  MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
-               End If
-               Call SectionRealRestore(AppCtx%V%Sec, AppCtx%MeshTopology%Num_Elems + i-1, VIrrev_Ptr, iErr);
-            End Do
-         End If
-         DeAllocate(IrrevFlag_Ptr)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Call MPI_AllReduce(MyIrrevEQ_Counter, IrrevEQ_Counter, 1, MPI_INTEGER, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, *) "Number of blocked nodes for V: ", IrrevEQ_Counter, "\n"
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End If      
-            
-!!!$!            Call VecCopy(AppCtx%V%Vec, AppCtx%VIrrev%Vec, iErr); CHKERRQ(iErr)
-!!!$            Call SectionRealToVec(AppCtx%VIrrev%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
-
-!!!         End If
-
-      Case(VarFrac_Irrev_NONE)
-            Call SectionRealSet(AppCtx%VIrrev%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-
-      Case Default
-         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONG, 'Wrong value for AppCtx./.VarFracSchemeParam./.IrrevType \n', iErr)
-      End Select
-   End Subroutine Update_IrrevW
+	End Select
+End Subroutine Update_IrrevW
 
 !!!
 !!! Global assembly functions
 !!!
 
 
-Subroutine FW_Assembly(AppCtx)
+Subroutine FW_Assembly(FW_Vec, AppCtx)
    !!! Global dispatch routine for F of the W-problem
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
-            
+	Type(Vec)                                    :: FW_Vec
+      
 !       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyV_Stage, iErr); CHKERRQ(iErr)
 
       Call SectionRealZero(AppCtx%FW%Sec, iErr); CHKERRQ(iErr)
@@ -185,14 +102,10 @@ Subroutine FW_Assembly(AppCtx)
 	End Do Do_iBlk
 
 	Call SectionRealComplete(AppCtx%FW%Sec, iErr); CHKERRQ(iErr)
-      
-      !!! Set Dirichlet Boundary Values
 
- 
-
-      If (AppCtx%AppParam%verbose > 2) Then
-         Call VecView(AppCtx%RHSV%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-      End If
+	If (AppCtx%AppParam%verbose > 2) Then
+		Call VecView(FW_Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+	End If
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine FW_Assembly
@@ -205,9 +118,9 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
       !!!   _Loc are restriction of fields to local patch (the element)
       !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
 	PetscInt					:: iE, iEloc, iErr, iBlk_glob
-	Type(Vect2D)					:: U_elem
+	Type(Vect2D)					:: U_eff_elem
 	PetscReal, Dimension(:), Pointer		:: F_loc
-	PetscReal, Dimension(:), Pointer		:: U_loc
+	PetscReal, Dimension(:), Pointer		:: U_loc, U0_loc
 
 
 	PetscInt                                     :: NumDoFScal, NumDoFVect
@@ -223,31 +136,33 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
 	End If
 	Allocate(F_loc(NumDoFScal))
 	Allocate(U_loc(NumDoFVect))
+	Allocate(U0_loc(NumDoFVect))
 	
 	Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
 		iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
 		
 		Call SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_loc, iErr); CHKERRQ(ierr)
-! 		Call SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_loc, iErr); CHKERRQ(ierr)
+ 		Call SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_loc, iErr); CHKERRQ(ierr)
 		Call SectionRealRestrictClosure(F_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, F_loc, iErr); CHKERRQ(ierr)
 	
-		U_elem = 0.0_Kr	
+		U_eff_elem = 0.0_Kr	
 		
 		! Compute U_elem vector
 		Do iDof=1, NumDoFVect
 			Do iGauss=1, Size(AppCtx%ElemVect(iE)%Gauss_C)
-				U_elem=U_elem+AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * U_loc(iDoF)
+				U_eff_elem=U_eff_elem+AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * (U_loc(iDoF)-U0_loc(iDoF))
 			End Do
 		End Do
 		Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
 			Do iDoF = 1, NumDoFScal
-				F_loc(iDoF) = F_loc(iDoF) +  (AppCtx%MatProp(iBlk_glob)%DelamToughness - AppCtx%MatProp(iBlk_glob)%Ksubst * 0.5_Kr * (U_elem .DotP. U_elem) )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
+				F_loc(iDoF) = F_loc(iDoF) +  (AppCtx%MatProp(iBlk_glob)%DelamToughness - AppCtx%MatProp(iBlk_glob)%Ksubst * 0.5_Kr * (U_eff_elem .DotP. U_eff_elem) )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
 			End Do
 		End Do Do_iGauss
 		Call SectionRealUpdateClosure(F_Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
 	End Do Do_iEloc
 
 	DeAllocate(U_loc)
+	DeAllocate(U0_loc)
 	DeAllocate(F_loc)      
 !       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
 
@@ -261,7 +176,6 @@ Subroutine W_Solve(AppCtx)
 	PetscInt					:: iErr
 	PetscReal, Dimension(:), Pointer		:: zero
 	
-	Allocate(Fi_ptr(1))
 	Allocate(zero(1))
 	
 	zero=0.0_Kr
@@ -271,8 +185,9 @@ Subroutine W_Solve(AppCtx)
 		If (Fi_ptr(1) .GE. 0.0_Kr) Then
 			Call SectionRealUpdate(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, zero, INSERT_VALUES, iErr); CHKERRQ(iErr)
 		End If
+		Call SectionRealRestore(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems+i-1, Fi_ptr, iErr); CHKERRQ(iErr)
 	End Do
-	Deallocate(Fi_ptr)
+	
 	Deallocate(zero)
 End Subroutine W_Solve
 
@@ -285,7 +200,7 @@ Subroutine Step_W(AppCtx)
 	PetscInt					:: iBlk
 	PetscInt					:: NumDoFScal, NumDoFVect
 	PetscInt					:: iErr
-	
+	Type(Vec)					:: FW_Vec
 	Character(len=MEF90_MXSTRLEN)			:: IOBuffer
 	Call PetscLogStagePush(AppCtx%LogInfo%WStep_Stage, iErr); CHKERRQ(iErr)
 
@@ -310,8 +225,10 @@ Subroutine Step_W(AppCtx)
 	   Write(IOBuffer, *) 'Assembling the F for the W-subproblem \n' 
 	   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
 	End If
-
-	Call FW_Assembly(AppCtx)
+	
+	Call VecSet(AppCtx%FW%Vec, 0.0_Kr, iErr); CHKERRQ(iErr)
+	
+	Call FW_Assembly(AppCtx%FW%Vec, AppCtx)
 	
 	If (AppCtx%AppParam%verbose > 0) Then
 	   Write(IOBuffer, *) 'Solving for the W-subproblem\n' 
