@@ -29,9 +29,8 @@ Program PrepVarFrac
    PetscInt                                     :: NumTestCase
    Type(TestCase_Type), Dimension(:) , Pointer  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
-   Type(SectionReal)                            :: USec, VSec, WSec, ThetaSec, CoordSec
-   Type(Vect3D), Dimension(:), Pointer          :: U
-   Type(Vect3D)                                 :: FGrain
+   Type(SectionReal)                            :: USec, VSec, WSec, ThetaSec, CoordSec, U0Sec
+   Type(Vect2D), Dimension(:), Pointer          :: U
    PetscReal, Dimension(:), Pointer             :: V, W, Theta
    PetscReal                                    :: ThetaGrain
    PetscReal, Dimension(:), Pointer             :: Uelem, Velem, Welem, Thetaelem, Coordelem
@@ -379,6 +378,29 @@ Program PrepVarFrac
 !!!endregion COMPUTE THETA
 
 
+!!!startregion COMPUTE U0
+
+
+
+	Write(IOBuffer, *) '\nU0 == 0: \n'
+	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
+
+	Write(IOBuffer, *) '   \n\n'
+	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!!!
+!!! Compute/get from file the value of the Imposed Displacement at the vertices
+!!! Here is the place to request additional parameters if needed
+!!!
+	
+	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U0', 2, U0Sec, iErr); CHKERRQ(iErr)
+	Do iStep = 1, NumSteps
+		Call SectionRealSet(U0Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
+		Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_U0X)%Offset, iStep, U0Sec)
+	End Do
+	Call SectionRealDestroy(U0Sec, iErr); CHKERRQ(iErr)
+
+!!!endregion COMPUTE U0
+
 !!!startregion COMPUTE U, V AND W FOR BC's
 
    !!! U, V and W
@@ -391,9 +413,8 @@ Program PrepVarFrac
 	Allocate(W(MeshTopology%Num_Node_Sets_Global))
 	U%X = 0.0_Kr
 	U%Y = 0.0_Kr
-	U%Z = 0.0_Kr
 	V   = 1.0_Kr
-	W   = 0.0_Kr ! We start with a bonded film
+	W   = 1.0_Kr ! We start with a bonded film
 	Do i = 1, MeshTopology%Num_Node_Sets_Global
 		Write(IOBuffer, 102) i
 		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -424,8 +445,8 @@ Program PrepVarFrac
    !!! Here is the place to request additional parameters if needed
    !!!
 	
-	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
-	Allocate(Uelem(3))
+	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 2, USec, iErr); CHKERRQ(iErr)
+	Allocate(Uelem(2))
 	Do iStep = 1, NumSteps
 		Call SectionRealSet(USec, 0.0_Kr, iErr); CHKERRQ(iErr)
 		Do iloc = 1, MeshTopology%Num_Node_Sets         
@@ -436,7 +457,6 @@ Program PrepVarFrac
 			!!! Default is MIL
 				Uelem(1) = T(iStep) * U(i)%X
 				Uelem(2) = T(iStep) * U(i)%Y
-				Uelem(3) = T(iStep) * U(i)%Z
 				Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
 					Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
 				End Do
