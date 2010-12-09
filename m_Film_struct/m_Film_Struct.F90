@@ -27,6 +27,7 @@ Module m_Film_Struct
    
    Public :: EXOProperty_InitBCVFlag
    Public :: EXOProperty_InitBCUFlag
+	Public :: EXOProperty_InitBCWFlag
    
    Public :: VarFracSchemeParam_Type
    
@@ -70,10 +71,10 @@ Module m_Film_Struct
 	PetscInt, Parameter, Public			:: VarFrac_Num_VertVar			= 7
 	PetscInt, Parameter, Public			:: VarFrac_VertVar_Fracture		= 1
 	PetscInt, Parameter, Public			:: VarFrac_VertVar_Delamination		= 2
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementX	= 3   
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementY	= 4
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_ForceX		= 5   
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_ForceY		= 6
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_U0X			= 3
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_U0Y			= 4
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementX	= 5   
+	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementY	= 6
 	PetscInt, Parameter, Public			:: VarFrac_VertVar_Temperature		= 7
    
 	PetscInt, Parameter, Public			:: VarFrac_Num_CellVar		= 6
@@ -194,25 +195,50 @@ Module m_Film_Struct
          FlagX = dEXO%NSProperty( VarFrac_NSProp_BCUTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
          Allocate(FlagY(1))
          FlagY = dEXO%NSProperty( VarFrac_NSProp_BCUTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
-!          If (dMeshTopology%num_dim == 3) Then
-!             Allocate(FlagZ(1))
-!             FlagZ = dEXO%NSProperty( VarFrac_NSProp_BCUTypeZ )%Value( dMeshTopology%Node_Set(i)%ID )
-!          End If
+
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
             Call SectionIntUpdate(dBCFlag%Component_Sec(1), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagX, ADD_VALUES, iErr); CHKERRQ(iErr)
             Call SectionIntUpdate(dBCFlag%Component_Sec(2), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagY, ADD_VALUES, iErr); CHKERRQ(iErr)
-            If (dMeshTopology%num_dim == 3) Then
-               Call SectionIntUpdate(dBCFlag%Component_Sec(3), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagZ, ADD_VALUES, iErr); CHKERRQ(iErr)
-            End If
+
          End Do
          DeAllocate(FlagX)
          DeAllocate(FlagX)
-         If (dMeshTopology%num_dim == 3) Then
-            DeAllocate(FlagZ)
-         End If
       End Do
    End Subroutine EXOProperty_InitBCUFlag
    
+
+   Subroutine EXOProperty_InitBCWFlag(dBCFlag, dEXO, dMeshTopology)
+      Type(EXO_Type)                               :: dEXO
+      Type(MeshTopology_Type)                      :: dMeshTopology
+      Type(Flag)                                   :: dBCFlag 
+      
+      PetscInt                                     :: iErr, NumDoF, i, j, k
+      PetscInt, Dimension(:), Pointer              :: FlagX, FlagY
+      
+      Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
+      !!! Side Sets
+      !!! To be implemented
+      
+      !!! Node Sets
+      Do i = 1, dMeshTopology%Num_Node_Sets
+         Allocate(FlagX(1))
+         FlagX = dEXO%NSProperty( VarFrac_NSProp_BCWTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
+         Allocate(FlagY(1))
+         FlagY = dEXO%NSProperty( VarFrac_NSProp_BCWTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
+
+         Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
+            Call SectionIntUpdate(dBCFlag%Component_Sec(1), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagX, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(dBCFlag%Component_Sec(2), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagY, ADD_VALUES, iErr); CHKERRQ(iErr)
+
+         End Do
+         DeAllocate(FlagX)
+         DeAllocate(FlagX)
+
+      End Do
+   End Subroutine EXOProperty_InitBCWFlag
+
+
+
    Subroutine MatProp2D_Write(MeshTopology, MatProp, filename)
       Type(MeshTopology_Type)                      :: MeshTopology
       Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
@@ -448,6 +474,7 @@ End Subroutine VarFracEXOProperty_Init
 		Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
 		dEXO%GlobVariable(VarFrac_GlobVar_FractureEnergy)%Name = 'Fracture energy'
 		dEXO%GlobVariable(VarFrac_GlobVar_DelaminationEnergy)%Name = 'Delamination energy'
+		dEXO%GlobVariable(VarFrac_GlobVar_CohesiveEnergy)%Name = 'Cohesive energy'
 		dEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Name = 'Elastic energy'
 		dEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Name   = 'Total energy'
 		dEXO%GlobVariable(VarFrac_GlobVar_Load)%Name          = 'Load'
@@ -473,8 +500,8 @@ End Subroutine VarFracEXOProperty_Init
 		dEXO%VertVariable(VarFrac_VertVar_Delamination)%Name	= 'Delamination'
 		dEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Name	= 'Displacement X'   
 		dEXO%VertVariable(VarFrac_VertVar_DisplacementY)%Name	= 'Displacement Y'
-		dEXO%VertVariable(VarFrac_VertVar_ForceX)%Name		= 'Force X'   
-		dEXO%VertVariable(VarFrac_VertVar_ForceY)%Name		= 'Force Y'
+		dEXO%VertVariable(VarFrac_VertVar_U0X)%Name	= 'U0 X'   
+		dEXO%VertVariable(VarFrac_VertVar_U0Y)%Name	= 'U0 Y'
 		dEXO%VertVariable(VarFrac_VertVar_Temperature)%Name	= 'Temperature'
 		dEXO%VertVariable(:)%Offset = (/ (i, i=1,dEXO%Num_VertVariables) /)
 	End Subroutine VarFracEXOVariable_Init
