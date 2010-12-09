@@ -493,7 +493,7 @@ Program PrepVarFrac
 	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'W', 1, Wsec, ierr); CHKERRQ(iErr)
 	Allocate(Welem(1))
 	Do iStep=1, NumSteps
-		Call SectionRealSet(Wsec, 0.0_Kr, iErr); CHKERRQ(iErr) ! Bonded everywhere
+		Call SectionRealSet(Wsec, 1.0_Kr, iErr); CHKERRQ(iErr) ! Bonded everywhere
 		Do iloc=1, MeshTopology%Num_Node_Sets
 			i=MeshTopology%Node_Set(iloc)%ID
 			Select Case(iCase)
