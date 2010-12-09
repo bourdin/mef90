@@ -1,21 +1,21 @@
 Module m_VarFilmQS_W
 #include "finclude/petscdef.h"
 
-   Use m_VarFilmQS_Types
-   Use m_VarFilmQS_Post
-   Use m_MEF90
-   Use m_Film_Struct
+Use m_VarFilmQS_Types
+Use m_VarFilmQS_Post
+Use m_MEF90
+Use m_Film_Struct
 
-   Implicit NONE
-   Private 
-      
+Implicit NONE
+Private 
+   
 
 
-   Public :: Init_TS_W
-   Public :: Update_IrrevW
-   Public :: FW_Assembly
-   Public :: Step_W
-   Public :: W_Solve
+Public :: Init_TS_W
+Public :: Update_IrrevW
+Public :: FW_Assembly
+Public :: Step_W
+Public :: W_Solve
 
 Contains
 
@@ -37,7 +37,7 @@ Subroutine Init_TS_W(AppCtx)
 	  
 End Subroutine Init_TS_W
    
-   Subroutine Update_IrrevW(AppCtx)
+Subroutine Update_IrrevW(AppCtx)
       !!! Updates the VIrrev vector used in InitTaoBoundsV
       Type(AppCtx_Type)                            :: AppCtx
 
@@ -218,7 +218,9 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
 	NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
 
 	iBlk_glob=AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-	
+	If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsDebondable)%Value(iBlk_glob) == 0) Then
+		Call SectionIntSet(AppCtx%WBC%Sec, 1, iErr); CHKERRQ(iErr)			! When the block is non debondable, min wrt W is trivial
+	End If
 	Allocate(F_loc(NumDoFScal))
 	Allocate(U_loc(NumDoFVect))
 	
@@ -278,13 +280,13 @@ End Subroutine W_Solve
 #define __FUNCT__ "Step_W"
 Subroutine Step_W(AppCtx)
    !!! Do one W-step in the alternate minimization algorithm
-	Type(AppCtx_Type)                            :: AppCtx
+	Type(AppCtx_Type)				:: AppCtx
 
 	PetscInt					:: iBlk
 	PetscInt					:: NumDoFScal, NumDoFVect
 	PetscInt					:: iErr
 	
-	Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+	Character(len=MEF90_MXSTRLEN)			:: IOBuffer
 	Call PetscLogStagePush(AppCtx%LogInfo%WStep_Stage, iErr); CHKERRQ(iErr)
 
 ! Minimization wrt to W: W(x)=1 iff FW=>0
