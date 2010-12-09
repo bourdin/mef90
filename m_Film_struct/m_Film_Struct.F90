@@ -84,16 +84,18 @@ Module m_Film_Struct
 	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressYY	= 5
 	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressXY	= 6
 
-	PetscInt, Parameter, Public			:: VarFrac_Num_GlobVar			= 5
+	PetscInt, Parameter, Public			:: VarFrac_Num_GlobVar			= 6
 	PetscInt, Parameter, Public			:: VarFrac_GlobVar_ElasticEnergy	= 1
 	PetscInt, Parameter, Public			:: VarFrac_GlobVar_FractureEnergy	= 2 
 	PetscInt, Parameter, Public			:: VarFrac_GlobVar_DelaminationEnergy	= 3 
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_TotalEnergy		= 4
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_Load			= 5
+	PetscInt, Parameter, Public			:: VarFrac_GlobVar_CohesiveEnergy	= 4 
+	PetscInt, Parameter, Public			:: VarFrac_GlobVar_TotalEnergy		= 5
+	PetscInt, Parameter, Public			:: VarFrac_GlobVar_Load			= 6
    
-	PetscInt, Parameter, Public                     :: VarFrac_Num_EBProperties	= 2
+	PetscInt, Parameter, Public                     :: VarFrac_Num_EBProperties	= 3
 	PetscInt, Parameter, Public                     :: VarFrac_EBProp_IsBrittle	= 1
-	PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type	= 2
+	PetscInt, Parameter, Public                     :: VarFrac_EBProp_IsDebondable	= 2
+	PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type	= 3
    
 	PetscInt, Parameter, Public			:: VarFrac_Num_NSProperties  = 5
 	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCUTypeX   = 1
