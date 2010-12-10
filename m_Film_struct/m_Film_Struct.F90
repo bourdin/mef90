@@ -328,6 +328,8 @@ Module m_Film_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-initv ', I1, A)")               dSchemeParam%InitV, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-initw ', I1, A)")               dSchemeParam%InitW, '\n' 
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-nbcracks ', I5, A)")            dSchemeParam%NbCracks, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-initvlength ', ES12.5, A)")  dSchemeParam%InitVLength, '\n'

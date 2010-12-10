@@ -381,8 +381,6 @@ Program PrepVarFrac
 
 !!!startregion COMPUTE U0
 
-
-
 	Write(IOBuffer, *) '\nU0 == 0: \n'
 	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
 
