@@ -50,14 +50,22 @@ Module m_Film_Struct
    PetscInt, Parameter, Public                     :: VarFrac_BC_Type_NONE = 0
    PetscInt, Parameter, Public                     :: VarFrac_BC_Type_DIRI = 1
 
-   PetscInt, Parameter, Public                     :: VarFrac_Init_V_PREV    = 0
-   PetscInt, Parameter, Public                     :: VarFrac_Init_V_RND     = 1
-   PetscInt, Parameter, Public                     :: VarFrac_Init_V_SPH     = 2
-   PetscInt, Parameter, Public                     :: VarFrac_Init_V_CRACKS  = 3
-   PetscInt, Parameter, Public                     :: VarFrac_Init_V_ONE     = 4
-   PetscInt, Parameter, Public                     :: VarFrac_Init_V_OSC     = 5
-   PetscInt, Parameter, Public                     :: VarFrac_Init_V_FILE    = 6
-   
+	PetscInt, Parameter, Public                     :: VarFrac_Init_V_PREV    = 0
+	PetscInt, Parameter, Public                     :: VarFrac_Init_V_RND     = 1
+	PetscInt, Parameter, Public                     :: VarFrac_Init_V_SPH     = 2
+	PetscInt, Parameter, Public                     :: VarFrac_Init_V_CRACKS  = 3
+	PetscInt, Parameter, Public                     :: VarFrac_Init_V_ONE     = 4
+	PetscInt, Parameter, Public                     :: VarFrac_Init_V_OSC     = 5
+	PetscInt, Parameter, Public                     :: VarFrac_Init_V_FILE    = 6
+	
+	PetscInt, Parameter, Public                     :: VarFrac_Init_W_PREV    = 0
+	PetscInt, Parameter, Public                     :: VarFrac_Init_W_RND     = 1
+	PetscInt, Parameter, Public                     :: VarFrac_Init_W_SPH     = 2
+	PetscInt, Parameter, Public                     :: VarFrac_Init_W_CRACKS  = 3
+	PetscInt, Parameter, Public                     :: VarFrac_Init_W_ONE     = 4
+	PetscInt, Parameter, Public                     :: VarFrac_Init_W_OSC     = 5
+	PetscInt, Parameter, Public                     :: VarFrac_Init_W_FILE    = 6
+
    
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_NONE = 0
    PetscInt, Parameter, Public                     :: VarFrac_Irrev_Eq   = 1 ! Equality constrainst with threshold
@@ -128,6 +136,7 @@ Module m_Film_Struct
       PetscInt                                     :: Unilateral
       
       PetscInt                                     :: InitV
+      PetscInt                                     :: InitW
       PetscInt                                     :: nbCracks
       PetscReal                                    :: InitVLength     
       
@@ -363,6 +372,7 @@ Module m_Film_Struct
       dSchemeParam%BTScope          = 10000
       dSchemeParam%Unilateral       = 0
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
+      dSchemeParam%InitW            = VarFrac_Init_W_PREV
       dSchemeParam%Irrevtype        = VarFrac_Irrev_Eq
       dSchemeParam%nbCracks         = 0
       dSchemeParam%InitVLength      = 1.0D0  
@@ -392,6 +402,7 @@ Module m_Film_Struct
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btscope',        dSchemeParam%BTScope, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-unilateral',     dSchemeParam%Unilateral, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initw',          dSchemeParam%InitW, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-InitVLength',    dSchemeParam%InitVLength, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminmaxiter',  dSchemeParam%AltMinMaxIter, flag, iErr); CHKERRQ(iErr)
