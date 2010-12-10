@@ -20,7 +20,6 @@ PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemor
 PetscBool                                    :: restart
 
 Call VarFracQSInit(AppCtx)
-	Call SectionRealView(AppCtx%W%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
 If (AppCtx%AppParam%verbose > 1) Then
 	Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)

@@ -30,7 +30,7 @@ Subroutine Init_TS_W(AppCtx)
 	
      
 	If (AppCtx%AppParam%verbose > 0) Then
-	   Write(IOBuffer, *) "Initializing WXXX with ", AppCtx%VarFracSchemeParam%InitW, "\n"
+	   Write(IOBuffer, *) "Initializing W with ", AppCtx%VarFracSchemeParam%InitW, "\n"
 	   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 	End If    
 	Select Case(AppCtx%VarFracSchemeParam%InitW)
@@ -39,7 +39,6 @@ Subroutine Init_TS_W(AppCtx)
 		Case(VarFrac_INIT_W_FILE)
 			Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W)
 			Call SectionRealToVec(AppCtx%W%Sec, AppCtx%W%Scatter, SCATTER_REVERSE, AppCtx%W%Vec, ierr); CHKERRQ(ierr)
-			Call SectionRealView(AppCtx%W%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 			
 		Case Default   
 	         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
@@ -190,7 +189,6 @@ Subroutine W_Solve(AppCtx)
 	Do i=1, AppCtx%MeshTopology%Num_Verts
 		Call SectionRealRestrict(AppCtx%FW%Sec, AppCtx%MeshTopology%Num_Elems + i-1, Fi_ptr, iErr); CHKERRQ(iErr);
 		If (Fi_ptr(1) .LE. 0.0_Kr) Then
-			print *, i
 			Call SectionRealUpdate(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, zero, INSERT_VALUES, iErr); CHKERRQ(iErr)
 		End If
 		Call SectionRealRestore(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems+i-1, Fi_ptr, iErr); CHKERRQ(iErr)
