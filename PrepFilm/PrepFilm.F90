@@ -33,8 +33,7 @@ Program PrepVarFrac
    Type(Vect2D), Dimension(:), Pointer          :: U
    PetscReal, Dimension(:), Pointer             :: V, W, Theta
    PetscReal                                    :: ThetaGrain
-   PetscReal, Dimension(:), Pointer             :: Uelem, Velem, Welem, Thetaelem, Coordelem
-	PetscReal, Dimension(:), Pointer             :: Welem_Ptr
+   PetscReal, Dimension(:), Pointer             :: Uelem, Velem, Wnodal, Welem, Thetaelem, Coordelem
 
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
@@ -513,36 +512,39 @@ Program PrepVarFrac
 !!! destroy all
 !!!
 	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'W', 1, Wsec, ierr); CHKERRQ(iErr)
-	Allocate(Welem(1))
+	Allocate(Wnodal(1))
 	Do iStep=1, NumSteps
 		Call SectionRealSet(Wsec, 1.0_Kr, iErr); CHKERRQ(iErr) ! Bonded everywhere
 		Do iloc=1, MeshTopology%Num_Node_Sets
 			i=MeshTopology%Node_Set(iloc)%ID
 			Select Case(iCase)
 			Case default
-				Welem(1)=W(i) ! Set the local value of debonding
+				Wnodal(1)=W(i) ! Set the local value of debonding
 				Do j=1, MeshTopology%Node_Set(iloc)%Num_Nodes
-					Call SectionRealUpdate(Wsec, MeshTopology%Num_Elems+MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Welem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+					Call SectionRealUpdate(Wsec, MeshTopology%Num_Elems+MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Wnodal, INSERT_VALUES, iErr); CHKERRQ(iErr)
 				End Do
 			End Select
 		End Do
 		Do iloc=1, MeshTopology%Num_Elem_Blks
+			Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
+			Allocate(Welem(Num_DoF))
 			Select Case(iCase)
 			Case(2) ! Delamination test
 				If (MeshTopology%Elem_Blk(iloc)%ID == 2) Then ! Set the two side blocks to be debonded
-					Do j=1, MeshTopology%Elem_Blk(iloc)%Num_Vert
-						Call SectionRealRestrict(Wsec, MeshTopology%Elem_Blk(iloc)%Num_Elems + j-1, Welem_ptr, iErr); CHKERRQ(ierr)      
-						Welem_ptr(1)=0.0_Kr			! Debonded!
-						Call SectionRealUpdate(Wsec, MeshTopology%Elem_Blk(iloc)%Num_Elems+j-1, Welem_ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+					Do k = 1, Num_DoF
+						Welem(k)=0.0_Kr			! Debonded!
 					End Do
-					Call SectionRealRestore(WSec, MeshTopology%Elem_Blk(iloc)%Num_Elems + j-1, Welem_Ptr, iErr); 			
+				
+					Do j=1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+						Call SectionRealUpdateClosure(WSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Welem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+					End Do
 				End If
 			End Select
-		
+			Deallocate(Welem)
 		End Do
 		Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, iStep, Wsec)
 	End Do
-	DeAllocate(Welem)
+	DeAllocate(Wnodal)
 	Call SectionRealDestroy(Wsec, iErr); CHKERRQ(iErr)
 	DeAllocate(W)
 
