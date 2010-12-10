@@ -132,7 +132,7 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
 
 	iBlk_glob=AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
 	If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsDebondable)%Value(iBlk_glob) == 0) Then
-		Call SectionIntSet(AppCtx%WBC%Sec, 1, iErr); CHKERRQ(iErr)			! When the block is non debondable, min wrt W is trivial
+		Call SectionRealZero(AppCtx%WBC%Sec, iErr); CHKERRQ(iErr)			! When the block is non debondable, (min wrt W is trivial)
 	End If
 	Allocate(F_loc(NumDoFScal))
 	Allocate(U_loc(NumDoFVect))
