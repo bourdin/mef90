@@ -222,7 +222,7 @@ Module m_Film_Struct
       Type(Flag)                                   :: dBCFlag 
       
       PetscInt                                     :: iErr, NumDoF, i, j, k
-      PetscInt, Dimension(:), Pointer              :: FlagX, FlagY
+      PetscInt, Dimension(:), Pointer              :: Flag
       
       Call SectionIntZero(dBCFlag, iErr); CHKERRQ(iErr)
       !!! Side Sets
@@ -230,18 +230,14 @@ Module m_Film_Struct
       
       !!! Node Sets
       Do i = 1, dMeshTopology%Num_Node_Sets
-         Allocate(FlagX(1))
-         FlagX = dEXO%NSProperty( VarFrac_NSProp_BCWTypeX )%Value( dMeshTopology%Node_Set(i)%ID )
-         Allocate(FlagY(1))
-         FlagY = dEXO%NSProperty( VarFrac_NSProp_BCWTypeY )%Value( dMeshTopology%Node_Set(i)%ID )
+         Allocate(Flag(1))
+         Flag = dEXO%NSProperty( VarFrac_NSProp_BCWType )%Value( dMeshTopology%Node_Set(i)%ID )
 
          Do j = 1, dMeshTopology%Node_Set(i)%Num_Nodes
-            Call SectionIntUpdate(dBCFlag%Component_Sec(1), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagX, ADD_VALUES, iErr); CHKERRQ(iErr)
-            Call SectionIntUpdate(dBCFlag%Component_Sec(2), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, FlagY, ADD_VALUES, iErr); CHKERRQ(iErr)
-
+            Call SectionIntUpdate(dBCFlag%Component_Sec(1), dMeshTopology%Node_Set(i)%Node_ID(j) + dMeshTopology%Num_Elems-1, Flag, ADD_VALUES, iErr); CHKERRQ(iErr)
+ 
          End Do
-         DeAllocate(FlagX)
-         DeAllocate(FlagX)
+         DeAllocate(Flag)
 
       End Do
    End Subroutine EXOProperty_InitBCWFlag
