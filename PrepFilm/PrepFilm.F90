@@ -34,6 +34,8 @@ Program PrepVarFrac
    PetscReal, Dimension(:), Pointer             :: V, W, Theta
    PetscReal                                    :: ThetaGrain
    PetscReal, Dimension(:), Pointer             :: Uelem, Velem, Welem, Thetaelem, Coordelem
+	PetscReal, Dimension(:), Pointer             :: Welem_Ptr
+
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
    PetscInt                                     :: NumSteps
@@ -248,28 +250,28 @@ Program PrepVarFrac
 	Allocate(T(NumSteps))
 	Select Case(iCase)
 	Case Default								! MIL
-	Do i = 1, NumSteps-1
-		T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
-		GlobVars(VarFrac_GlobVar_Load) = T(i)
-		Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
-		
-		MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
-		Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
-		Call EXCLOS(MyEXO%exoid, iErr)
-		MyEXO%exoid = 0
-	End Do
+		Do i = 1, NumSteps-1
+			T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
+			GlobVars(VarFrac_GlobVar_Load) = T(i)
+			Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
+			
+			MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
+			Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
+			Call EXCLOS(MyEXO%exoid, iErr)
+			MyEXO%exoid = 0
+		End Do
    
 !!! Save timesteps in EXO file
 
-	T(NumSteps) = Tmax
-	GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
-	Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
-	MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
-	Call EXPTIM(MyEXO%exoid, NumSteps, T(NumSteps), iErr)
-	Call EXCLOS(MyEXO%exoid, iErr)
-	MyEXO%exoid = 0
-   End Select
-   DeAllocate(GlobVars)
+		T(NumSteps) = Tmax
+		GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
+		Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
+		MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
+		Call EXPTIM(MyEXO%exoid, NumSteps, T(NumSteps), iErr)
+		Call EXCLOS(MyEXO%exoid, iErr)
+		MyEXO%exoid = 0
+		End Select
+	DeAllocate(GlobVars)
 
 !!!endregion COMPUTE TIMESTEPS AND LOAD, WRITE TO EXO
 
@@ -327,19 +329,19 @@ Program PrepVarFrac
 	Theta = 0.0_Kr
 
    
-   Do i =1, MeshTopology%Num_Elem_Blks_Global
-      Write(IOBuffer, 100) i
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-
-      !!! Temperature
-      Write(IOBuffer, 300) i, 'Theta'
-      Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
-
-      If (.NOT. IsBatch) Then
-         Write(BatchUnit, *)
-      End If
-      
-   End Do
+	Do i =1, MeshTopology%Num_Elem_Blks_Global
+		Write(IOBuffer, 100) i
+		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		
+		!!! Temperature
+		Write(IOBuffer, 300) i, 'Theta'
+		Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
+		
+		If (.NOT. IsBatch) Then
+			Write(BatchUnit, *)
+		End If
+		
+	End Do
 
 
    !!!
@@ -523,6 +525,20 @@ Program PrepVarFrac
 					Call SectionRealUpdate(Wsec, MeshTopology%Num_Elems+MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Welem, INSERT_VALUES, iErr); CHKERRQ(iErr)
 				End Do
 			End Select
+		End Do
+		Do iloc=1, MeshTopology%Num_Elem_Blks
+			Select Case(iCase)
+			Case(2) ! Delamination test
+				If (MeshTopology%Elem_Blk(iloc)%ID == 2) Then ! Set the two side blocks to be debonded
+					Do j=1, MeshTopology%Elem_Blk(iloc)%Num_Vert
+						Call SectionRealRestrict(Wsec, MeshTopology%Elem_Blk(iloc)%Num_Elems + j-1, Welem_ptr, iErr); CHKERRQ(ierr)      
+						Welem_ptr(1)=0.0_Kr			! Debonded!
+						Call SectionRealUpdate(Wsec, MeshTopology%Elem_Blk(iloc)%Num_Elems+j-1, Welem_ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+					End Do
+					Call SectionRealRestore(WSec, MeshTopology%Elem_Blk(iloc)%Num_Elems + j-1, Welem_Ptr, iErr); 			
+				End If
+			End Select
+		
 		End Do
 		Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, iStep, Wsec)
 	End Do
