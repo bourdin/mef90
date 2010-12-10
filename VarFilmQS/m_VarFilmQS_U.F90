@@ -376,7 +376,7 @@ Subroutine RHS_AssemblyBlock_ElastNonBrittle(RHS_Sec, iBlk, AppCtx)
 		Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
 		Call SectionRealRestrictClosure(AppCtx%Theta%Sec , AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc,  iErr); CHKERRQ(ierr)
 		Call SectionRealRestrictClosure(AppCtx%W%Sec , AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, W_Loc,  iErr); CHKERRQ(ierr)
-		Call SectionRealRestrictClosure(AppCtx%U0%Sec , AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, U0_Loc,  iErr); CHKERRQ(ierr)
+		Call SectionRealRestrictClosure(AppCtx%U0%Sec , AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_Loc,  iErr); CHKERRQ(ierr)
 		Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
 			Theta_Elem = 0.0_Kr
 			W_Elem = 0.0_Kr
