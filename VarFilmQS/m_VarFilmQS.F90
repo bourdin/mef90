@@ -659,7 +659,7 @@ End Subroutine Save_W
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
-      Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
+      Call PetscLogView(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       
 
 	Call KSPDestroy(AppCtx%KSPU, iErr); CHKERRQ(iErr)
