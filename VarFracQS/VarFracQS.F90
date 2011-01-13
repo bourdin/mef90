@@ -219,7 +219,8 @@ Program  VarFracQS
       End If
       AppCtx%TimeStep = AppCtx%TimeStep + 1
       Write(filename, 105) Trim(AppCtx%AppParam%prefix)
-      Call PetscLogView(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
+      !Blaise check this change
+      !Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose > 0) Then
          Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
