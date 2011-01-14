@@ -19,6 +19,7 @@ Program  VarFracQS
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: AltMinIter
    Character(len=MEF90_MXSTRLEN)                :: filename
+   Type(PetscViewer)                            :: LogViewer
    Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
    PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
    PetscBool                                    :: restart
@@ -218,14 +219,18 @@ Program  VarFracQS
          EXIT
       End If
       AppCtx%TimeStep = AppCtx%TimeStep + 1
+      Call PetscPrintf(PETSC_COMM_WORLD, "oulala\n",ierr)
       Write(filename, 105) Trim(AppCtx%AppParam%prefix)
-      !Blaise check this change
-      !Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
+      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
+      Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
+      Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
       Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose > 0) Then
          Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
       End If
    End Do TimeStep
+   
 
 100   Format('Elastic energy:       ', ES12.5, '\n')    
 101   Format('External Forces Work: ', ES12.5, '\n')    

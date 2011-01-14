@@ -663,9 +663,7 @@ Contains
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
-      !Blaise check this change
-      !Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
-      
+
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
 #if defined WITH_TAO
          Call TaoDestroy(AppCtx%taoU, iErr); CHKERRQ(iErr)
