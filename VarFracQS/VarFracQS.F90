@@ -219,7 +219,6 @@ Program  VarFracQS
          EXIT
       End If
       AppCtx%TimeStep = AppCtx%TimeStep + 1
-      Call PetscPrintf(PETSC_COMM_WORLD, "oulala\n",ierr)
       Write(filename, 105) Trim(AppCtx%AppParam%prefix)
       Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
       Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)

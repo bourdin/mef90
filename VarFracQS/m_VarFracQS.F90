@@ -594,9 +594,9 @@ Contains
    
    Subroutine VarFracQSFinalize(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
-
       PetscInt                                     :: iErr, iBlk
       Character(len=MEF90_MXSTRLEN)                :: filename
+      Type(PetscViewer)                            :: LogViewer
    
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%U);      CHKERRQ(iErr)
@@ -662,7 +662,12 @@ Contains
       End If
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
+      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
+      Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
+      Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
 
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
 #if defined WITH_TAO
