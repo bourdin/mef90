@@ -61,6 +61,14 @@ Program PrepVarFrac
    PetscBool                                    :: saveElemVar
    Type(PetscViewer)                            :: MeshViewer
 
+   PetscRandom                                  :: RandomCtx
+   PetscInt                                     :: NumCracks
+   PetscReal                                    :: MaxCrackLength
+   PetscReal, Dimension(:), Allocatable         :: CrackPosition,CrackLength 
+   PetscReal                                    :: Xmin,Xmax
+   PetscInt                                     :: Seed
+
+
    Call MEF90_Initialize()
    
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, HasPrefix, iErr)    
@@ -96,7 +104,7 @@ Program PrepVarFrac
          End If
       End If
    End If
-   NumTestCase = 11
+   NumTestCase = 12
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -112,6 +120,7 @@ Program PrepVarFrac
    TestCase(9)%Description = "Cooling: steady-state propagation of a front"
    TestCase(10)%Description = "Mode-I loading, using asymptotic form of displacement (scaling)"
    TestCase(11)%Description = "Mode-I loading, using asymptotic form of displacement (surfing)"
+   TestCase(12)%Description = "Cooling: infinite domain, thermal conduction only with randomly spaced initial cracks (2D)"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -227,7 +236,7 @@ Program PrepVarFrac
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4,5,6,7,8,9,10, 11)! MIL, geothermal PoC
+   Case (1,2,3,4,5,6,7,8,9,10,11,12)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -271,7 +280,7 @@ Program PrepVarFrac
       GlobVars = 0.0_Kr
       Allocate(T(NumSteps))
       Do i = 1, NumSteps-1
-         If ( (iCase == 3) .OR. (iCase == 4) ) Then
+         If ( (iCase == 3) .OR. (iCase == 4) .OR. (iCase == 12)) Then
             !! Non uniform time stepping adapted to the time scale of the thermal problem in tau=sqrt(t)
             !! Time in our simulation is the physical time, while Bahr et al. (TAFM 1998) use tau
             !! Pay attention in visualization softwares
@@ -500,7 +509,7 @@ Program PrepVarFrac
                   ThetaElem = Theta(i) * (1.0-ThetaElem)
                   Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
                End Do
-            Case(3)
+            Case(3,12)
                Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
                   Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
                   Do k = 1, Num_DoF
@@ -549,7 +558,48 @@ Program PrepVarFrac
       DeAllocate(Theta)
       If (iCase == 7) Then
          DeAllocate(P)
-      End If      
+      End If    
+      
+      If (iCase == 12)
+         !!! Random initial cracks: initialize random context and generate crack information
+         Write(IOBuffer, 400) 'Number of cracks'
+         Call AskInt(NumCracks, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 400) 'Number of cracks'
+         Call AskInt(MaxCrackLength, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 400) 'Xmin'
+         Call AskInt(Xmin, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 400) 'Xmax'
+         Call AskInt(Xmax, IOBuffer, BatchUnit, IsBatch)
+
+         Call PetscRandomCreate(PETSC_COMM_WORLD, RandomCtx, iErr); CHKERRQ(iErr)
+         Call PetscRandomSetFromOptions(RandomCtx, iErr); CHKERRQ(iErr)
+         Call PetscRandomGetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
+         If (MEF90_MyRank == 0) Then
+            Call PetscGetTime(Time, iErr); CHKERRQ(iErr)
+            Seed =  Time * (Time - Int(Time))
+         End If
+         Call MPI_BCast(Seed, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+         Call PetscRandomSetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
+         Call PetscRandomSeed(RandomCtx, iErr); CHKERRQ(iErr)
+
+         Allocate(CrackPosition(NumCrack))
+         Allocate(CrackLength(NumCrack))
+         
+         !!! Check if this can be done without a loop
+         Call PetscRandomSetInterval(RandomCtx, Xmin, Xmax, iErr); CHKERRQ(iErr)
+         Do i = 1, NumCrack
+            Call PetscRandomGetValue(RandomCtx, CrackPosition(i), iErr); CHKERRQ(iErr)
+         End Do
+         Call PetscRandomSetInterval(RandomCtx, 0., MaxCrackLength, iErr); CHKERRQ(iErr)
+         Do i = 1, NumCrack
+            Call PetscRandomGetValue(RandomCtx, CrackLength(i), iErr); CHKERRQ(iErr)
+         End Do
+         Do i = 1, NumCracks
+            Write(IOBuffer, *) i, CrackPosition(i), CrackLength(i)
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End Do
+      End If
+        
 
      !!! Variables Initialized at NS
       Allocate(U(MeshTopology%Num_Node_Sets_Global))
@@ -667,6 +717,26 @@ Program PrepVarFrac
                   Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
                   Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
                End Do   
+            Case(12)
+               !!! Slab cooling with pre-existing cracks
+               Uelem(1) = T(iStep) * U(i)%X
+               Uelem(2) = T(iStep) * U(i)%Y
+               Uelem(3) = T(iStep) * U(i)%Z
+               If (iStep == 1) Then
+               Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+                  Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+                  Velem = V(i)
+                  Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+                  Call SectionRealRestore(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+               End Do   
+               
+               Else
+                  Velem    = V(i)
+               End Do
+               Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+                  Call SectionRealUpdateClosure(USec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+                  Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
+               End Do
             End Select
          End Do
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
@@ -691,6 +761,7 @@ Program PrepVarFrac
  300 Format('EB', I4.4, ': ', A)
 ! 301 Format('SS', I4.4, ': ', A)
  302 Format('NS', I4.4, ': ', A)
+ 400 Format(A)
 
 Contains
    Subroutine EXOProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
