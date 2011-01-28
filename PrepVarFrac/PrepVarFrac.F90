@@ -67,6 +67,7 @@ Program PrepVarFrac
    PetscReal, Dimension(:), Allocatable         :: CrackPosition,CrackLength 
    PetscReal                                    :: Xmin,Xmax
    PetscInt                                     :: Seed
+   PetscLogDouble                               :: Time
 
 
    Call MEF90_Initialize()
@@ -565,16 +566,16 @@ Program PrepVarFrac
          DeAllocate(P)
       End If    
       
-      If (iCase == 12)
+      If (iCase == 12) Then
          !!! Random initial cracks: initialize random context and generate crack information
          Write(IOBuffer, 400) 'Number of cracks'
          Call AskInt(NumCracks, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 400) 'Number of cracks'
-         Call AskInt(MaxCrackLength, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 400) 'Max. crack Length'
+         Call AskReal(MaxCrackLength, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 400) 'Xmin'
-         Call AskInt(Xmin, IOBuffer, BatchUnit, IsBatch)
+         Call AskReal(Xmin, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 400) 'Xmax'
-         Call AskInt(Xmax, IOBuffer, BatchUnit, IsBatch)
+         Call AskReal(Xmax, IOBuffer, BatchUnit, IsBatch)
 
          Call PetscRandomCreate(PETSC_COMM_WORLD, RandomCtx, iErr); CHKERRQ(iErr)
          Call PetscRandomSetFromOptions(RandomCtx, iErr); CHKERRQ(iErr)
@@ -587,22 +588,22 @@ Program PrepVarFrac
          Call PetscRandomSetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
          Call PetscRandomSeed(RandomCtx, iErr); CHKERRQ(iErr)
 
-         Allocate(CrackPosition(NumCrack))
-         Allocate(CrackLength(NumCrack))
+         Allocate(CrackPosition(NumCracks))
+         Allocate(CrackLength(NumCracks))
          
          !!! Check if this can be done without a loop
          Call PetscRandomSetInterval(RandomCtx, Xmin, Xmax, iErr); CHKERRQ(iErr)
-         Do i = 1, NumCrack
+         Do i = 1, NumCracks
             Call PetscRandomGetValue(RandomCtx, CrackPosition(i), iErr); CHKERRQ(iErr)
          End Do
          Call PetscRandomSetInterval(RandomCtx, 0., MaxCrackLength, iErr); CHKERRQ(iErr)
-         Do i = 1, NumCrack
+         Do i = 1, NumCracks
             Call PetscRandomGetValue(RandomCtx, CrackLength(i), iErr); CHKERRQ(iErr)
          End Do
-         Do i = 1, NumCracks
-            Write(IOBuffer, *) i, CrackPosition(i), CrackLength(i)
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         End Do
+         !!! Do i = 1, NumCracks
+         !!!    Write(IOBuffer, *) i, CrackPosition(i), CrackLength(i), '\n'
+         !!!    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         !!! End Do
       End If
         
 
@@ -728,16 +729,15 @@ Program PrepVarFrac
                Uelem(2) = T(iStep) * U(i)%Y
                Uelem(3) = T(iStep) * U(i)%Z
                If (iStep == 1) Then
-               Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
-                  Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
-                  Velem = V(i)
-                  Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
-                  Call SectionRealRestore(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
-               End Do   
-               
+                  Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+                     Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+                     Velem = V(i)
+                     Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+                     Call SectionRealRestore(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+                  End Do                  
                Else
                   Velem    = V(i)
-               End Do
+               End If
                Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
                   Call SectionRealUpdateClosure(USec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
                   Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
