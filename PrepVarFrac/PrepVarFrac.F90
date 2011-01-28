@@ -58,7 +58,7 @@ Program PrepVarFrac
    PetscReal                                    :: m
    PetscInt                                     :: NumLayers
    PetscReal                                    :: CTheta, CTheta2, STheta2, R, Kappa
-   PetscBool                                    :: saveElemVar
+   PetscBool                                    :: saveElemVar, PlaneStrain=PETSC_FALSE
    Type(PetscViewer)                            :: MeshViewer
 
    PetscRandom                                  :: RandomCtx
@@ -81,6 +81,7 @@ Program PrepVarFrac
    EraseBatch=.False.
    Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr);CHKERRQ(iErr)
    saveElemVar=.True.
+   Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-planestrain', PlaneStrain, HasPrefix, iErr);CHKERRQ(iErr)
    Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-saveelemvar', saveElemVar, HasPrefix, iErr);CHKERRQ(iErr)
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr);CHKERRQ(iErr)
    If (MEF90_MyRank==0) Then
@@ -89,7 +90,7 @@ Program PrepVarFrac
          Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
          Open(Unit=BatchUnit, File=BatchFileName, Status='Old', Action='Read')
          Rewind(BatchUnit)
-      Else
+      Else  
          BatchFileName = Trim(prefix)//'.args'
          Inquire(File=BatchFileName, EXIST=HasBatchFile)
          If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
@@ -334,7 +335,11 @@ Program PrepVarFrac
          Select Case(MeshTopology%Num_Dim)
          Case(2)
             MatProp2D(i)%Toughness = Toughness
-            Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
+                If (PlaneStrain) Then
+                    Call GenHL_Iso2D_EnuPlaneStrain(E, nu, MatProp2D(i)%Hookes_Law)
+                Else 
+                    Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
+                End If       
             MatProp2D(i)%Therm_Exp    = 0.0_Kr
             MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
             MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal

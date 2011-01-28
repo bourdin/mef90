@@ -1098,6 +1098,7 @@ Contains
 
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename
+      Type(PetscViewer)                            :: LogViewer
    
 
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
@@ -1135,11 +1136,17 @@ Contains
          Call PetscViewerDestroy(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
       Call PetscViewerDestroy(AppCtx%AppParam%EnergyViewer, iErr); CHKERRQ(iErr)
+
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
-      Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
+103 Format(A,'-logsummary.txt')
+      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
+      Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
+      Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
+
+
       Call TaoFinalize(iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
-103 Format(A,'-logsummary.txt')
    End Subroutine ElastFinalize
    
    
