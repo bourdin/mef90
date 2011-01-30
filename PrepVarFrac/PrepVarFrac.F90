@@ -68,6 +68,8 @@ Program PrepVarFrac
    PetscReal                                    :: Xmin,Xmax
    PetscInt                                     :: Seed
    PetscLogDouble                               :: Time
+   PetscInt                                     :: c
+   PetscReal                                    :: epsilon
 
 
    Call MEF90_Initialize()
@@ -576,6 +578,8 @@ Program PrepVarFrac
          Call AskReal(Xmin, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 400) 'Xmax'
          Call AskReal(Xmax, IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 400) 'epsilon'
+         Call AskReal(epsilon, IOBuffer, BatchUnit, IsBatch)
 
          Call PetscRandomCreate(PETSC_COMM_WORLD, RandomCtx, iErr); CHKERRQ(iErr)
          Call PetscRandomSetFromOptions(RandomCtx, iErr); CHKERRQ(iErr)
@@ -731,9 +735,20 @@ Program PrepVarFrac
                If (iStep == 1) Then
                   Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
                      Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
-                     Velem = V(i)
-                     Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+                     dist = 1.0E+30
+					      Do c = 1, NumCracks
+   				         !!! if Y > lc, 
+   				         !!!   d = ( |x-xc|^2 + |y-yc|^2)^{1/2}
+   				         !!! else
+   				         !!!   d = |x-xc|
+					         If (CoordElem(2) >= CrackLength(c)) Then
+					            dist = min(dist, sqrt( (CoordElem(1)-CrackPosition(c))**2 + (CoordElem(2)-CrackLength(c))**2))
+					         Else
+				               dist = min(dist, abs(CoordElem(1)-CrackPosition(c))
+					         End If
+					      End Do
                      Call SectionRealRestore(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+					      Velem = 1.- exp(-dist/epsilon)
                   End Do                  
                Else
                   Velem    = V(i)
