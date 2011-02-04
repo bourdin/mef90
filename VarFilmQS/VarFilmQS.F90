@@ -180,10 +180,10 @@ TimeStep: Do
 	End If
 	AppCtx%TimeStep = AppCtx%TimeStep + 1
    Write(filename, 105) Trim(AppCtx%AppParam%prefix)
-   Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
-   Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
-   Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
-   Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
+  ! Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
+   ! Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
+!   Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
+  !  Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
 	Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
 	If (AppCtx%AppParam%verbose > 0) Then
 	   Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
