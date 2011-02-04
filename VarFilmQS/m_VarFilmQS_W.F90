@@ -248,7 +248,7 @@ Subroutine Step_W(AppCtx)
 !	Log and print
 
       
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
 End Subroutine Step_W
 
