@@ -1,0 +1,17 @@
+## 
+## Cubit Version 12.2
+## Cubit Build 44761
+## Revised 2010-11-04 14:41:13 -0600 (Thu, 04 Nov 2010)
+## Running 02/07/2011 12:55:43 PM
+## Command Options:
+## -warning = On
+## -information = On
+reset
+set echo off
+create surface rectangle width 1 height 0.01 zplane
+surface 1 size 0.01 scheme tridelaunay
+mesh surface 1
+block 1 surface 1
+nodeset 1 curve 2
+nodeset 2 curve 4
+export mesh "Cubit/Traction-mesh-1.000e-02.gen" dimension 2 overwrite
