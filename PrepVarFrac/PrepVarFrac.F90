@@ -63,7 +63,7 @@ Program PrepVarFrac
 
    PetscRandom                                  :: RandomCtx
    PetscInt                                     :: NumCracks
-   PetscReal                                    :: MaxCrackLength
+   PetscReal                                    :: MaxCrackLength, dist
    PetscReal, Dimension(:), Allocatable         :: CrackPosition,CrackLength 
    PetscReal                                    :: Xmin,Xmax
    PetscInt                                     :: Seed
@@ -744,7 +744,7 @@ Program PrepVarFrac
 					         If (CoordElem(2) >= CrackLength(c)) Then
 					            dist = min(dist, sqrt( (CoordElem(1)-CrackPosition(c))**2 + (CoordElem(2)-CrackLength(c))**2))
 					         Else
-				               dist = min(dist, abs(CoordElem(1)-CrackPosition(c))
+				               dist = min(dist, abs(CoordElem(1)-CrackPosition(c)))
 					         End If
 					      End Do
                      Call SectionRealRestore(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
