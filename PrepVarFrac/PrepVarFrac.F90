@@ -54,6 +54,7 @@ Program PrepVarFrac
    PetscBool                                    :: EraseBatch
    
    PetscReal                                    :: Beta, eta, tau, Y
+   PetscReal                                    :: a
    PetscReal                                    :: FixedPoint
    PetscReal                                    :: m
    PetscInt                                     :: NumLayers
@@ -108,7 +109,7 @@ Program PrepVarFrac
          End If
       End If
    End If
-   NumTestCase = 12
+   NumTestCase = 13
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -125,6 +126,7 @@ Program PrepVarFrac
    TestCase(10)%Description = "Mode-I loading, using asymptotic form of displacement (scaling)"
    TestCase(11)%Description = "Mode-I loading, using asymptotic form of displacement (surfing)"
    TestCase(12)%Description = "Cooling: infinite domain, thermal conduction only with randomly spaced initial cracks (2D)"
+   TestCase(13)%Description = "Cooling: Sphere with a spherical cavity, Dirichlet BC"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -240,7 +242,7 @@ Program PrepVarFrac
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4,5,6,7,8,9,10,11,12)! MIL, geothermal PoC
+   Case (1,2,3,4,5,6,7,8,9,10,11,12,13)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -276,6 +278,10 @@ Program PrepVarFrac
          Kappa = (3.0-nu)/(1.0+nu)
          Mu = E / (1.0_Kr + nu) * .5_Kr
       End If
+      If (iCase == 13) Then
+         Call AskReal(a,  'Internal cavity radius',  BatchUnit, IsBatch)
+      End If
+      
       If (.NOT. IsBatch) Then
          Write(BatchUnit, *)
       End If
@@ -284,7 +290,7 @@ Program PrepVarFrac
       GlobVars = 0.0_Kr
       Allocate(T(NumSteps))
       Do i = 1, NumSteps-1
-         If ( (iCase == 3) .OR. (iCase == 4) .OR. (iCase == 12)) Then
+         If ( (iCase == 3) .OR. (iCase == 4) .OR. (iCase == 12) .OR. (iCase == 13)) Then
             !! Non uniform time stepping adapted to the time scale of the thermal problem in tau=sqrt(t)
             !! Time in our simulation is the physical time, while Bahr et al. (TAFM 1998) use tau
             !! Pay attention in visualization softwares
@@ -544,15 +550,29 @@ Program PrepVarFrac
                   Do k = 1, Num_DoF
                      eta = CoordElem((k-1) * MeshTopology%Num_Dim + 2)
                      If (eta < T(iStep)) Then
-                     ThetaElem(k) = 1-eta/T(iStep)
+                        ThetaElem(k) = 1-eta/T(iStep)
                      Else 
-                     ThetaElem(k) = 0
+                        ThetaElem(k) = 0
                      End If
                   End Do
                   ThetaElem = Theta(i) * ThetaElem
                   Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
                End Do
-    
+            Case(13)
+               Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
+                  Call SectionRealRestrictClosure(CoordSec, MeshTopology%mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Num_DoF * MeshTopology%Num_Dim, CoordElem, iErr); CHKERRQ(iErr)
+                  tau  = sqrt(T(iStep))  !! tau=sqrt(t) is the time scale of the thermal problem (see Bahr at, TAFM 1998). The code keeps t as time and non-uniform time-stepping (see Time Steps)                  
+                  Do k = 1, Num_DoF
+                     If (MeshTopology%Num_Dim == 2) Then
+                        R = sqrt( CoordElem((k-1) * 2 + 1)**2 + CoordElem((k-1) * 2 + 2)**2)
+                     Else
+                        R = sqrt( CoordElem((k-1) * 2 + 1)**2 + CoordElem((k-1) * 2 + 2)**2  + CoordElem((k-1) * 2 + 3)**2)
+                     End If
+                    ThetaElem(k) = erf( -(R-1)**2 / tau * 0.25_Kr )
+                  End Do
+                  ThetaElem = Theta(i) * (1.0-ThetaElem)
+                  Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+               End Do
             End Select
             DeAllocate(Felem)
             DeAllocate(Thetaelem)         
