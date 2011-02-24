@@ -566,7 +566,7 @@ Program PrepVarFrac
                      If (MeshTopology%Num_Dim == 2) Then
                         R = sqrt( CoordElem((k-1) * 2 + 1)**2 + CoordElem((k-1) * 2 + 2)**2)
                      Else
-                        R = sqrt( CoordElem((k-1) * 2 + 1)**2 + CoordElem((k-1) * 2 + 2)**2  + CoordElem((k-1) * 2 + 3)**2)
+                        R = sqrt( CoordElem((k-1) * 3 + 1)**2 + CoordElem((k-1) * 3 + 2)**2  + CoordElem((k-1) * 3 + 3)**2)
                      End If
                     ThetaElem(k) = erf( -(R-1)**2 / tau * 0.25_Kr )
                   End Do
