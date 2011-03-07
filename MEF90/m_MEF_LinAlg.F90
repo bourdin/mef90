@@ -1581,7 +1581,9 @@ Contains
   
    Subroutine Tens4OS2DGetArrayF90(T, A)
       Type(Tens4OS2D), Intent(IN)                         :: T
-      PetscReal, Dimension(:,:), Pointer, Intent(OUT)     :: A
+!	Was:   PetscReal, Dimension(:,:), Pointer, Intent(OUT)     :: A
+!	but gfortran says: Error: POINTER attribute conflicts with INTENT attribute at (1)
+      PetscReal, Dimension(:,:), Pointer    :: A
 
       PetscReal                                           :: sqrt2
       
@@ -1600,7 +1602,8 @@ Contains
 
    Subroutine Tens4OS3DGetArrayF90(T, A)
       Type(Tens4OS3D), Intent(IN)                         :: T
-      PetscReal, Dimension(:,:), Pointer, Intent(OUT)     :: A
+! see line 1584
+      PetscReal, Dimension(:,:), Pointer     :: A
 
       PetscReal                                           :: sqrt2
    
@@ -1651,7 +1654,7 @@ Contains
 
    Subroutine Tens4OS2DRestoreArrayF90(T, A)
       Type(Tens4OS2D), Intent(OUT)                        :: T
-      PetscReal, Dimension(:,:), Pointer, Intent(INOUT)   :: A
+      PetscReal, Dimension(:,:), Pointer   :: A
 
       PetscReal                                           :: sqrt2over2
 
@@ -1667,7 +1670,7 @@ Contains
 
    Subroutine Tens4OS3DRestoreArrayF90(T, A)
       Type(Tens4OS3D), Intent(OUT)                        :: T
-      PetscReal, Dimension(:,:), Pointer, Intent(INOUT)   :: A
+      PetscReal, Dimension(:,:), Pointer   :: A
 
       PetscReal                                           :: sqrt2over2
 

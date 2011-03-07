@@ -7,13 +7,21 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
 M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 
+
 all: PrepVarFrac PrepVarFracPolyCrystal
+debug:
+	@echo FLINKER is ${FLINKER}
+	@echo PETSC_FORTRAN_LIB is ${PETSC_FORTRAN_LIB}
+	@echo PETSC_LIB is ${PETSC_LIB}
+	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
+	@echo M_VARFRACSTRUCTOBJS is ${M_VARFRACSTRUCTOBJS}
+	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
 
 ifeq (${COMPILER},gcc)
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} -I${PETSC_ARCH} ${FC_FLAGS}  -ffree-form -ffree-line-length-none -ffixed-line-length-none
 else
 	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}
 endif
