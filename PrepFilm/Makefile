@@ -13,7 +13,7 @@ include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
 
 ifeq (${COMPILER},gcc)
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} -I${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}  -ffree-form -ffree-line-length-none -ffixed-line-length-none
 else
 	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}
 endif
