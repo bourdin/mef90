@@ -238,7 +238,5 @@ Program  VarFracQS
 104   Format('Load:                 ', ES12.5, '\n')    
 
 105   Format(A,'-logsummary.txt')
-106   Format('Time Loop')
-
    Call VarFracQSFinalize(AppCtx)
 End Program  VarFracQS

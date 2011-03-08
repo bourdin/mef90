@@ -15,9 +15,9 @@ all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
 include ${TAO_DIR}/bmake/tao_common
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
+	MEF90_FC_FLAGS=-DPB_${DIM} -DWITH_TAO ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
 else
-	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}
+	MEF90_FC_FLAGS=-DPB_${DIM} -DWITH_TAO ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}
 endif
 
 .F90.o:
