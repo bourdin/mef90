@@ -14,27 +14,27 @@ Module m_VarFilmQS_Types
    Public :: AppParam_Type
    Public :: AppCtx_Type
 
-Type LogInfo_Type
-	PetscLogStage               :: IO_Stage
-	PetscLogStage               :: Setup_Stage      
-	PetscLogStage               :: MeshDistribute_Stage
-	PetscLogStage               :: MatAssemblyU_Stage
-	PetscLogStage               :: RHSAssemblyU_Stage
-	PetscLogStage               :: UStep_Stage
-	PetscLogStage               :: MatAssemblyV_Stage
-	PetscLogStage               :: RHSAssemblyV_Stage
-	PetscLogStage               :: VStep_Stage
-	PetscLogStage               :: FWAssemblyW_Stage
-	PetscLogStage               :: WStep_Stage
-	PetscLogStage               :: PostProc_Stage
+   Type LogInfo_Type
+   	PetscLogStage               :: IO_Stage
+   	PetscLogStage               :: Setup_Stage      
+   	PetscLogStage               :: MeshDistribute_Stage
+   	PetscLogStage               :: MatAssemblyU_Stage
+   	PetscLogStage               :: RHSAssemblyU_Stage
+   	PetscLogStage               :: UStep_Stage
+   	PetscLogStage               :: MatAssemblyV_Stage
+   	PetscLogStage               :: RHSAssemblyV_Stage
+   	PetscLogStage               :: VStep_Stage
+   	PetscLogStage               :: FWAssemblyW_Stage
+   	PetscLogStage               :: WStep_Stage
+   	PetscLogStage               :: PostProc_Stage
 	
-	PetscLogEvent               :: MatAssemblyLocalU_Event
-	PetscLogEvent               :: RHSAssemblyLocalU_Event
-	PetscLogEvent               :: MatAssemblyLocalV_Event
-	PetscLogEvent               :: RHSAssemblyLocalV_Event
-	PetscLogEvent               :: FWAssemblyLocalW_Event
-	PetscLogEvent               :: PostProc_Event
-End Type LogInfo_Type
+   	PetscLogEvent               :: MatAssemblyLocalU_Event
+   	PetscLogEvent               :: RHSAssemblyLocalU_Event
+   	PetscLogEvent               :: MatAssemblyLocalV_Event
+   	PetscLogEvent               :: RHSAssemblyLocalV_Event
+   	PetscLogEvent               :: FWAssemblyLocalW_Event
+   	PetscLogEvent               :: PostProc_Event
+   End Type LogInfo_Type
 
    Type AppParam_Type
       PetscBool                                    :: Restart
@@ -57,31 +57,31 @@ End Type LogInfo_Type
       Type(Element2D_Elast), Dimension(:), Pointer :: ElemVect
       Type(Element2D_Scal), Dimension(:), Pointer  :: ElemScal
       Type(Field)                                  :: U
-	Type(Field)                                  :: U0
+	   Type(Field)                                  :: U0
       Type(Field)                                  :: UBC
       Type(Field)                                  :: V
-	Type(Field)                                  :: W
-	Type(Field)                                  :: WBC, WIrrev
+	   Type(Field)                                  :: W
+	   Type(Field)                                  :: WBC, WIrrev
       Type(Field)                                  :: VBC, VIrrev
       Type(Field)                                  :: Theta
       Type(Field)                                  :: RHSU, GradientU, LowerBoundU, UpperBoundU
       Type(Field)                                  :: RHSV, GradientV, LowerBoundV, UpperBoundV
-	Type(Field)                                  :: FW
-	Type(Vec)                                    :: V_Old
-	Type(Vec)                                    :: W_Old
-	Type(Flag)                                   :: BCUFlag, BCVFlag, BCWFlag, IrrevFlag
+	   Type(Field)                                  :: FW
+   	Type(Vec)                                    :: V_Old
+   	Type(Vec)                                    :: W_Old
+   	Type(Flag)                                   :: BCUFlag, BCVFlag, BCWFlag, IrrevFlag
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
       PetscReal, Dimension(:), Pointer             :: Load                 ! All Time Steps
-	PetscReal, Dimension(:), Pointer             :: FractureEnergy        ! All Time Steps
-	PetscReal, Dimension(:), Pointer             :: DelaminationEnergy        ! All Time Steps
+   	PetscReal, Dimension(:), Pointer             :: FractureEnergy        ! All Time Steps
+   	PetscReal, Dimension(:), Pointer             :: DelaminationEnergy        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: ElasticEnergy        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: ExtForcesWork        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: TotalEnergy
-	PetscReal, Dimension(:), Pointer             :: FractureEnergyBlock   ! Current TS, All Blocks
-	PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock   ! Current TS, All Blocks
+   	PetscReal, Dimension(:), Pointer             :: FractureEnergyBlock   ! Current TS, All Blocks
+   	PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: ElasticEnergyBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: ExtForcesWorkBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: TotalEnergyBlock     ! Current TS, All Blocks
