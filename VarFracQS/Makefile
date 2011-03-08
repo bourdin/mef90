@@ -14,10 +14,10 @@ all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
 #include ${PETSC_DIR}/conf/variables
 include ${TAO_DIR}/bmake/tao_common
 
-ifeq (${COMPILER},gcc)
-	MEF90_FC_FLAGS=-DWITH_TAO -DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
+ifneq (,$(findstring gcc,$(PETSC_ARCH)))
+	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
 else
-	MEF90_FC_FLAGS=-DWITH_TAO -DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}
+	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}
 endif
 
 .F90.o:
@@ -65,7 +65,15 @@ m_VarFracQS_V.o:  ${PETSC_ARCH} m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFra
 m_VarFracQS_Post.o:  ${PETSC_ARCH} m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o
 m_VarFracQS_Types.o: ${PETSC_ARCH}
 
-
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}
+
+debug::
+	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
+	@echo FC is ${FC}
+	@echo FC_FLAGS is ${FC_FLAGS}
+	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
+	@echo FCPPFLAGS is ${FCPPFLAGS}
+	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
+	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}

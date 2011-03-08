@@ -1,4 +1,4 @@
-PROJ      = m_VarFrac_Struct
+PROJ      = m_Film_Struct
 MEF90DIR  = ../MEF90/${PETSC_ARCH}
 MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
@@ -22,7 +22,7 @@ endif
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 
-$(PROJ).o: ${PETSC_ARCH} 
+$(PROJ).o: ${PETSC_ARCH}
 
 clean::
 	@rm -rf ${PETSC_ARCH}/
