@@ -1281,6 +1281,8 @@ Contains
                SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'TAO failed to converge, aborting...\n', iErr)
             EndIf
          End If    
+#else
+	 Call SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,'VarFracQS must be compiled with -DWITH_TAO in order to use tao', iErr)
 #endif      
       Else
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
