@@ -537,7 +537,7 @@ Contains
       PetscReal                                    :: MyElasticEnergy, MyExtForcesWork 
       
       
-      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
+      !Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
 
       MyElasticEnergy = 0.0_Kr
       MyExtForcesWork = 0.0_Kr
@@ -550,7 +550,7 @@ Contains
       Call MPI_AllReduce(myElasticEnergy, AppCtx%ElasticEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Call MPI_AllReduce(myExtForcesWork, AppCtx%ExtForcesWork, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
 
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      !Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergies
 
    Subroutine ComputeVolumeChange(VolumeChange, AppCtx)
@@ -769,7 +769,7 @@ Contains
       PetscReal                                    :: ThermExpNorm
       PetscLogDouble                               :: flops       
 
-      Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+      !Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
       flops  = 0.0
       ElasticEnergy = 0.0_Kr
       ExtForcesWork = 0.0_Kr
@@ -824,7 +824,7 @@ Contains
          DeAllocate(Theta_Loc)
       End If
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+      !Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergiesBlock
 
    Subroutine ComputeVolumeChangeBlock(iBlk, X_Sec, VolumeChange, AppCtx)
@@ -916,7 +916,7 @@ Contains
                   If (BCFlag_Loc(iDoF1) == 0) Then
                      ! RHS terms due to inelastic strains
                      RHS_Loc(iDoF1) = RHS_Loc(iDoF1) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Theta_Elem * ((AppCtx%MatProp(iBlkId)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%MatProp(iBlkId)%Therm_Exp)
-                     flops = flops + 5.0
+                     flops = flops + 3.0
                   End If
                End Do
             End Do Do_iGauss
@@ -963,9 +963,9 @@ Contains
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Call SectionRealRestrictClosure(AppCtx%F%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F_Loc, iErr); CHKERRQ(ierr)
          RHS_Loc = 0.0_Kr
          Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%F%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F_Loc, iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             F_Elem = 0.0_Kr
             Do iDoF2 = 1, NumDoFVect
