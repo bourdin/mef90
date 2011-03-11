@@ -7,7 +7,7 @@ include ${PETSC_DIR}/conf/rules
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
 	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} ${FC_FLAGS} -ffixed-line-length-none  -ffree-line-length-none -ffree-form -I../MEF90/${PETSC_ARCH}
 else
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} ${FC_FLAGS} -I../MEF90/$PETSC_ARCH}
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} ${FC_FLAGS} -I../MEF90/${PETSC_ARCH}
 endif
 
 .F90.o:
