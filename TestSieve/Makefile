@@ -49,6 +49,9 @@ TestDuplicate:     ${PETSC_ARCH} TestDuplicate.o ${PETSC_ARCH}/TestDuplicate.o
 TestSectionInt:   ${PETSC_ARCH} TestSectionInt.o ${PETSC_ARCH}/TestSectionInt.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestSectionInt ${PETSC_ARCH}/TestSectionInt.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+TestMeshDistribute:   ${PETSC_ARCH} TestMeshDistribute.o ${PETSC_ARCH}/TestMeshDistribute.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestMeshDistribute ${PETSC_ARCH}/TestMeshDistribute.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 TestCoordinates:   ${PETSC_ARCH} TestCoordinates.o ${PETSC_ARCH}/TestCoordinates.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestCoordinates ${PETSC_ARCH}/TestCoordinates.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
