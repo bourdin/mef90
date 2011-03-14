@@ -541,8 +541,10 @@ End Subroutine Save_W
       Call ElasticEnergy_Assembly(AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock, AppCtx)
       Call ExtForcesWork_Assembly(AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%ExtForcesWorkBlock, AppCtx)
       Call FractureEnergy_Assembly(AppCtx%FractureEnergy(AppCtx%TimeStep), AppCtx%FractureEnergyBlock, AppCtx)
-      AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%FractureEnergy(AppCtx%TimeStep)
-      AppCtx%TotalEnergyBlock = AppCtx%ElasticEnergyBlock - AppCtx%ExtForcesWorkBlock + AppCtx%FractureEnergyBlock
+      Call DelaminationEnergy_Assembly(AppCtx%DelaminationEnergy(AppCtx%TimeStep), AppCtx%DelaminationEnergyBlock, AppCtx)
+      Call CohesiveEnergy_Assembly(AppCtx%CohesiveEnergy(AppCtx%TimeStep), AppCtx%CohesiveEnergyBlock, AppCtx)
+      AppCtx%TotalEnergy(AppCtx%TimeStep) = AppCtx%ElasticEnergy(AppCtx%TimeStep) - AppCtx%ExtForcesWork(AppCtx%TimeStep) + AppCtx%FractureEnergy(AppCtx%TimeStep) + AppCtx%DelaminationEnergy(AppCtx%TimeStep) + AppCtx%CohesiveEnergy(AppCtx%TimeStep)
+      AppCtx%TotalEnergyBlock = AppCtx%ElasticEnergyBlock - AppCtx%ExtForcesWorkBlock + AppCtx%FractureEnergyBlock + AppCtx%DelaminationEnergyBlock + AppCtx%CohesiveEnergyBlock 
    End Subroutine ComputeEnergies
 
    Subroutine Save_Ener(AppCtx)
