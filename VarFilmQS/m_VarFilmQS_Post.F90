@@ -106,6 +106,35 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine FractureEnergy_Assembly
    
+
+
+Subroutine DelaminationEnergy_Assembly(DelaminationEnergy, DelaminationEnergyBlock, AppCtx)     
+	PetscReal, Intent(OUT)                       :: DelaminationEnergy
+	PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock
+	Type(AppCtx_Type)                            :: AppCtx
+	
+	PetscInt                                     :: iBlk, iBlkId, iErr
+	PetscReal                                    :: MyDelaminationEnergy
+	PetscReal, Dimension(:), Pointer             :: MyDelaminationEnergyBlock
+	
+	
+	Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+	Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+	
+	MyDelaminationEnergy = 0.0_Kr
+	Allocate(MyDelaminationEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+	Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+		iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+		Call DelaminationEnergy_AssemblyBlk(MyDelaminationEnergyBlock(iBlkID), iBlk, AppCtx%V%Sec, AppCtx)
+		MyDelaminationEnergy = MyDelaminationEnergy + MyDelaminationEnergyBlock(iBlkID)
+	End Do
+	
+	Call MPI_AllReduce(MyDelaminationEnergy, DelaminationEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+	Call MPI_AllReduce(MyDelaminationEnergyBlock, DelaminationEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+	DeAllocate(MyDelaminationEnergyBlock)
+	Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+	Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+End Subroutine DelaminationEnergy_Assembly
 !!!
 !!! Block Assembly Routines
 !!!
@@ -219,6 +248,51 @@ Contains
       DeAllocate(Theta_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
    End Subroutine ElasticEnergy_AssemblyBlk_NonBrittle
+
+	Subroutine DelaminationEnergy_AssemblyBlk(DelaminationEnergyBlock, iBlk, W_Sec, AppCtx)
+	   PetscReal, Intent(OUT)                       :: DelaminationEnergyBlock
+	   PetscInt                                     :: iBlk
+	   Type(SectionReal)                            :: W_Sec
+	   Type(AppCtx_Type)                            :: AppCtx
+	
+	   !!!   _Loc are restriction of fields to local patch (the element)
+	   !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+	   PetscReal, Dimension(:), Pointer             :: W_Loc
+	   PetscReal                                    :: W_Elem, Delamination_Elem
+	   PetscInt                                     :: iE, iEloc, iBlkId, iErr
+	   PetscInt                                     :: NumDoFScal
+	   PetscInt                                     :: iDoF, iGauss
+	   PetscLogDouble                               :: flops       
+	   
+	   flops = 0.0
+	   DelaminationEnergyBlock = 0.0_Kr
+	
+	   NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+	
+	   Allocate(W_Loc(NumDoFScal))
+	
+	   iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+	
+	   Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+		iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+		Call SectionRealRestrictClosure(W_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, W_Loc, iErr); CHKERRQ(ierr)
+		
+		Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+			Delamination_Elem = 0.0_Kr
+			Do iDoF = 1, NumDoFScal
+				Delamination_Elem = Delamination_Elem + AppCtx%MatProp(iBlkId)%DelamToughness * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * W_Loc(iDoF)
+				flops = flops + 1.0
+			End Do
+			
+			DelaminationEnergyBLock = DelaminationEnergyblock + Delamination_Elem 
+		End Do Do_iGauss
+	   End Do Do_iEloc
+	
+	   DeAllocate(W_Loc)
+	   Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
+	End Subroutine DelaminationEnergy_AssemblyBlk
+
+
 
    Subroutine ExtForcesWork_AssemblyBlk(ExtForcesWorkBlock, iBlk, U_Sec, F_Sec, AppCtx)
       PetscReal, Intent(OUT)                       :: ExtForcesWorkBlock
