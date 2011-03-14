@@ -153,7 +153,8 @@ Subroutine CohesiveEnergy_Assembly(CohesiveEnergy, CohesiveEnergyBlock, AppCtx)
 	Allocate(MyCohesiveEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
 	Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
 		iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-		Call CohesiveEnergy_AssemblyBlk(MyCohesiveEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%U0%Sec, AppCtx)
+		Call CohesiveEnergy_AssemblyBlk(MyCohesiveEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx)
+! 		Call CohesiveEnergy_AssemblyBlk(MyCohesiveEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%U0%Sec, AppCtx)
 		MyCohesiveEnergy = MyCohesiveEnergy + MyCohesiveEnergyBlock(iBlkID)
 	End Do
 	
@@ -323,7 +324,8 @@ Subroutine DelaminationEnergy_AssemblyBlk(DelaminationEnergyBlock, iBlk, W_Sec, 
 End Subroutine DelaminationEnergy_AssemblyBlk
 
 
-Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, AppCtx)
+! Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, AppCtx)
+Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, AppCtx)
 	PetscReal, Intent(OUT)                       :: CohesiveEnergyBlock
 	PetscInt                                     :: iBlk
 	Type(SectionReal)                            :: U_Sec, U0_Sec
@@ -344,18 +346,20 @@ Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, 
 	NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF*AppCtx%MeshTopology%Num_Dim
 	
 	Allocate(U_Loc(NumDoFVect))
+! 	Allocate(U0_Loc(NumDoFVect))
 	
 	iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
 	
 	Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
 	     iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
 	     Call SectionRealRestrictClosure(U_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc, iErr); CHKERRQ(ierr)
-	     Call SectionRealRestrictClosure(U0_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_Loc, iErr); CHKERRQ(ierr)
+! 	     Call SectionRealRestrictClosure(U0_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_Loc, iErr); CHKERRQ(ierr)
 	     
 	     Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
 	     	Cohesive_Elem = 0.0_Kr
 	     	Do iDoF = 1, NumDoFVect
-	     		Cohesive_Elem = Cohesive_Elem + AppCtx%MatProp(iBlkId)%Ksubst * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * (U_Loc(iDoF)-U0_Loc(iDoF)) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * (U_Loc(iDoF)-U0_Loc(iDoF))
+	     		Cohesive_Elem = Cohesive_Elem + AppCtx%MatProp(iBlkId)%Ksubst * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * (U_Loc(iDoF)) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * (U_Loc(iDoF))
+! 	     		Cohesive_Elem = Cohesive_Elem + AppCtx%MatProp(iBlkId)%Ksubst * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * (U_Loc(iDoF)-U0_Loc(iDoF)) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * (U_Loc(iDoF)-U0_Loc(iDoF))
 	     		flops = flops + 2.0
 	     	End Do
 	     	
@@ -364,7 +368,7 @@ Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, 
 	End Do Do_iEloc
 
 	DeAllocate(U_Loc)
-	DeAllocate(U0_Loc)
+! 	DeAllocate(U0_Loc)
 	Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
 End Subroutine CohesiveEnergy_AssemblyBlk
 
