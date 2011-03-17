@@ -144,7 +144,7 @@ Program PrepVarFrac
       Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
 
-   Call DMMeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyReadEXO(MeshTopology, EXO)
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -474,7 +474,7 @@ Program PrepVarFrac
    !!! Compute the value of the force field at the vertices
    !!! Here is the place to request additional parameters if needed
    !!!
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'F', 3, FSec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'F', 3, FSec, iErr); CHKERRQ(iErr)
    Do_Step_F: Do iStep = 1, NumSteps
       Call SectionRealSet(FSec, 0.0_Kr, iErr); CHKERRQ(iErr)
       Do_Blk_F: Do iloc = 1, MeshTopology%Num_Elem_Blks
@@ -507,7 +507,7 @@ Program PrepVarFrac
    !!! Compute the value of the force field at the vertices
    !!! Here is the place to request additional parameters if needed
    !!!
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
    Do_Step_Theta: Do iStep = 1, NumSteps
       Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
       Do_Blk_Theta: Do iloc = 1, MeshTopology%Num_Elem_Blks
@@ -583,7 +583,7 @@ Program PrepVarFrac
       Kappa = (3.0-nu)/(1.0+nu)
       Mu = E / (1.0_Kr + nu) * .5_Kr
    End If
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
    Allocate(Uelem(3))
    Do iStep = 1, NumSteps
       Call SectionRealSet(USec, 0.0_Kr, iErr); CHKERRQ(iErr)
@@ -644,7 +644,7 @@ Program PrepVarFrac
    !!! Compute the value of the fracture field at the vertices
    !!! Here is the place to request additional parameters if needed
    !!!
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
    Allocate(Velem(1))
    Do iStep = 1, NumSteps
       Call SectionRealSet(VSec, 1.0_Kr, iErr); CHKERRQ(iErr)
