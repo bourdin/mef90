@@ -12,6 +12,10 @@ all: PrepVarFrac PrepVarFracPolyCrystal
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
 
+ifneq (,$(findstring xlf,$(FC)))
+	FC_MODULE_OUTPUT_FLAG=-qmoddir=
+endif
+
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
 	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
 else

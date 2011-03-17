@@ -10,6 +10,10 @@ all: ${PROJ}.o
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
+ifneq (,$(findstring xlf,$(FC)))
+	FC_MODULE_OUTPUT_FLAG=-qmoddir=
+endif
+
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
 	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} ${FC_FLAGS} -ffixed-line-length-none  -ffree-line-length-none -ffree-form -I../MEF90/${PETSC_ARCH}
 else
