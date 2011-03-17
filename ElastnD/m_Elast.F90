@@ -266,8 +266,13 @@ Contains
       End If
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
 #ifdef PETSC_HAVE_HYPRE
+<<<<<<< mine
+      !Call PCSetType(AppCtx%PCU, PCHYPRE, iErr); CHKERRQ(iErr)
+      !Call PCHYPRESetType(AppCtx%PCU, "boomeramg", iErr); CHKERRQ(iErr)
+=======
 !      Call PCSetType(AppCtx%PCU, PCHYPRE, iErr); CHKERRQ(iErr)
 !      Call PCHYPRESetType(AppCtx%PCU, "boomeramg", iErr); CHKERRQ(iErr)
+>>>>>>> theirs
 #else
       Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
 #endif      
