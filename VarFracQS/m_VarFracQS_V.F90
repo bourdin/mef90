@@ -157,7 +157,7 @@ Contains
          End If
             
          !!! WARNING: This assumes that the section for V is a vertex section and will break otherwise
-         Call MeshGetCoordinatesF90(AppCtx%MeshTopology%mesh, CoordArray, iErr); CHKERRQ(iErr)
+         Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%mesh, CoordArray, iErr); CHKERRQ(iErr)
          Allocate(Vlocal(1))
          Do i = 1, AppCtx%MeshTopology%Num_Verts
             Coordlocal = MatMul(RotationMatrix, CoordArray(i,:))
@@ -170,7 +170,7 @@ Contains
          End Do
          DeAllocate(Vlocal)
          Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
-         Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%mesh, CoordArray, iErr); CHKERRQ(iErr)
+         Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%mesh, CoordArray, iErr); CHKERRQ(iErr)
          DeAllocate(RotationMatrix)
          DeAllocate(CoordLocal)
          Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)

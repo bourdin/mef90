@@ -6,7 +6,7 @@ Program PrepVarFrac
    Use m_VarFrac_Struct
    Use m_PrepVarFrac
    Use petsc
-
+   
    Implicit NONE   
    
    Type TestCase_Type
@@ -18,7 +18,7 @@ Program PrepVarFrac
    Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename
    Type(MeshTopology_Type)                      :: MeshTopology, GlobalMeshTopology
    Type(EXO_Type)                               :: EXO, MyEXO
-   Type(Mesh)                                   :: Tmp_Mesh
+   Type(DM)                                   :: Tmp_Mesh
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2D
    Type(Element3D_Scal), Dimension(:), Pointer  :: Elem3D
    PetscBool                                    :: HasPrefix
@@ -141,11 +141,11 @@ Program PrepVarFrac
    
    !!! Reading and distributing sequential mesh
    If (MEF90_NumProcs == 1) Then
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Else
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
    
    !!! Save the binary mesh file
@@ -161,7 +161,7 @@ Program PrepVarFrac
    !!!Call MeshLoad(MeshViewer,MeshTopology%Mesh,iErr);CHKERRQ(iErr)
    !!!Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
 
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call DMMeshTopologyReadEXO(MeshTopology, EXO)
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -171,7 +171,7 @@ Program PrepVarFrac
    MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 99) trim(prefix), MEF90_MyRank
  99  Format(A, '-', I4.4, '.gen')
-   Call MeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
+   Call DMMeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
    
    Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
    If (verbose > 0) Then
@@ -223,10 +223,10 @@ Program PrepVarFrac
    End If
    
 !!! Initialize Sections   
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'F', 3, FSec, iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'F', 3, FSec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
    
    If (verbose > 0) Then
       Write(IOBuffer, '(A)') 'Done with Initializing Sections\n'
