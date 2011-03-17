@@ -27,7 +27,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr, i, iBlk, iTS
-      Type(Mesh)                                   :: Tmp_Mesh
+      Type(DM)                                   :: Tmp_Mesh
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename
       PetscInt                                     :: NumComponents
       PetscBool                                    :: HasPrefix
@@ -117,7 +117,7 @@ Contains
          Call PetscLogStagePush(AppCtx%LogInfo%MeshDistribute_Stage, iErr); CHKERRQ(iErr)
          Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-         Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
       End If
    
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
@@ -219,7 +219,7 @@ Contains
       End If
 
       !!! Create the Mat, KSP, PC
-      Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
+      Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
       Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V%Sec, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
       
@@ -633,7 +633,7 @@ Contains
 
       Call MatDestroy(AppCtx%KU, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%KV, iErr); CHKERRQ(iErr)
-      Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
+      Call DMDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
 
       DeAllocate(AppCtx%SurfaceEnergy)
       DeAllocate(AppCtx%ElasticEnergy)
