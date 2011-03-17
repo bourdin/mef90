@@ -123,7 +123,7 @@ Module m_MEF_Types
       ! Side Sets DATAS
       PetscInt                                       :: num_side_sets_global
       PetscInt                                       :: num_side_sets
-      Type(Mesh)                                     :: mesh
+      Type(DM)                                       :: mesh
    End Type MeshTopology_Type
    
    Type EXO_Type

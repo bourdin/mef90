@@ -2,29 +2,25 @@ Program FindMPIProblem
 
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
 	Use m_MEF90
 	Use petsc
 	Use petscvec
 	Use petscmat
-	Use petscmesh
+	Use petscdm
 	
 	Implicit NONE   
 	
-	Type (MeshTopology_Type)                     :: MeshTopology
-	Type (EXO_Type)                              :: EXO, MyEXO
+	Type(MeshTopology_Type)                      :: MeshTopology
+	Type(EXO_Type)                               :: EXO, MyEXO
 	Type(Vec)                                    :: LocalVec
 	PetscReal, Dimension(:), Pointer             :: LocalPtr
 	      
-	PetscBool                                   :: HasPrefix
+	PetscBool                                    :: HasPrefix
 	PetscErrorCode                               :: iErr
 	Character(len=256)                           :: CharBuffer, IOBuffer, filename
 	Character(len=256)                           :: prefix
-	Type(Mesh)                                   :: Tmp_Mesh
+	Type(DM)                                     :: Tmp_Mesh
 	PetscInt, Dimension(:), Pointer              :: component_length 
 	PetscInt                                     :: MySize
 	Character(len=MEF90_MXSTRLEN)                :: stagename
@@ -50,11 +46,11 @@ Program FindMPIProblem
 	Else
 		Write(IOBuffer, *) "Calling MeshCreateExodus\n"
 		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-		Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+		Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
 		Write(IOBuffer, *) "Calling MeshDistribute\n"
 		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-		Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-		Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+		Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+		Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
 	End If
 	
 	Call MEF90_Finalize()

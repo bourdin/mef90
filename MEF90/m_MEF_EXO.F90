@@ -585,12 +585,12 @@ Module m_MEF_EXO
          End Do
    
          ! Write vertex coordinates
-         Call MeshGetCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr)
+         Call DMMeshGetCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr)
          Call EXPCOR(dEXO%exoid, Coordinates(:,1), Coordinates(:,2), Coordinates(:,3), iErr)
-         Call MeshRestoreCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr)
+         Call DMMeshRestoreCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr)
          
           ! Write Connectivity tables
-         Call MeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
+         Call DMMeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
             If (dMeshTopology%Elem_Blk(iBlk)%Num_Elems > 0) Then
                Allocate (ConnectBlk(dMeshTopology%Elem_Blk(iBlk)%Num_Elems * dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
@@ -604,7 +604,7 @@ Module m_MEF_EXO
                 DeAllocate(ConnectBlk)
              End If
           End Do
-          Call MeshRestoreElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
+          Call DMMeshRestoreElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
 
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
