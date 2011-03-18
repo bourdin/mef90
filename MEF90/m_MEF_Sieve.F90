@@ -42,7 +42,7 @@ Contains
 
       !!! Zero out all informations
       dMeshTopology%num_dim = 0
-      dMeshTopology%num_vert = 0
+      dMeshTopology%num_verts = 0
       dMeshTopology%num_elems = 0
       dMeshTopology%num_elem_blks = 0
       dMeshTopology%num_elem_blks_global = 0
