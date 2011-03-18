@@ -40,6 +40,16 @@ Contains
       PetscInt, Dimension(:), Pointer              :: Tmp_ID, Tmp_GlobalID
 
 
+      !!! Zero out all informations
+      dMeshTopology%num_dim = 0
+      dMeshTopology%num_vert = 0
+      dMeshTopology%num_elems = 0
+      dMeshTopology%num_elem_blks = 0
+      dMeshTopology%num_elem_blks_global = 0
+      dMeshTopology%num_side_sets = 0
+      dMeshTopology%num_side_sets_global = 0
+      dMeshTopology%num_node_sets = 0
+      dMeshTopology%num_node_sets_global = 0
       
       ! Read Global Geometric Parameters
       !!! Extracts sizes from the Mesh oject
