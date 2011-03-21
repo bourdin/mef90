@@ -10,10 +10,10 @@ all: TestSieve TestSieve3D TestNodeSet TestLocal TestAssembly TestSectionInt
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
 
-ifeq (${FC},gfortran)
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} --free-line-length-none  -ffree-form
+ifneq (,$(findstring gcc,$(PETSC_ARCH)))
+        MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
 else
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I. -I../MEF90/${PETSC_ARCH} ${FC_FLAGS}
+        MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS}
 endif
 
 .F90.o:

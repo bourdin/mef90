@@ -118,6 +118,9 @@ Contains
 104 Format('Collective output redirected to file ', A, '\n')
 
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
+      AppCtx%EXO%num_nsproperties = 0
+      AppCtx%EXO%num_ssproperties = 0
+      AppCtx%EXO%num_ebproperties = 0
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
       !!! Read and partition the mesh
       If (MEF90_NumProcs == 1) Then
