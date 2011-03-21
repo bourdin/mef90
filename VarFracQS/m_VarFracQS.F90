@@ -27,7 +27,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr, i, iBlk, iTS
-      Type(DM)                                   :: Tmp_Mesh
+      Type(DM)                                     :: Tmp_Mesh
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename
       PetscInt                                     :: NumComponents
       PetscBool                                    :: HasPrefix
@@ -119,7 +119,7 @@ Contains
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
       End If
-   
+
       Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
@@ -132,6 +132,7 @@ Contains
  99  Format(A, '-', I4.4, '.gen')
    
       !!! Initializes the values and names of the properties and variables
+      Call VarFracEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology)   
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          Call VarFracEXOVariable_Init(AppCtx%MyEXO,.TRUE.)
       Else
