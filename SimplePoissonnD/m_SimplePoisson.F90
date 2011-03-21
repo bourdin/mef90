@@ -76,7 +76,7 @@ Contains
       PetscInt                                     :: iE, iELoc
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename   
       PetscLogDouble                               :: TS, TF
-      Type(Mesh)                                   :: Tmp_Mesh
+      Type(DM)                                   :: Tmp_Mesh
       Type(Vec)                                    :: F
       PetscReal                                    :: Val, tol
 
@@ -122,16 +122,16 @@ Contains
       !!! Read and partition the mesh
       If (MEF90_NumProcs == 1) Then
          Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
-         Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+         Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Else
          Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
-         Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       
          Call PetscLogStagePush(AppCtx%LogInfo%MeshDistribute_Stage, iErr); CHKERRQ(iErr)
-         Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
-         Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+         Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       End If
 
@@ -147,15 +147,15 @@ Contains
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
 
       !!! Allocate the Section for U and F
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', 1,   AppCtx%U, iErr); CHKERRQ(iErr)
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU',  AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', 1,   AppCtx%F, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHS', 1, AppCtx%RHS, iErr); CHKERRQ(iErr)
-      Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', 1,   AppCtx%U, iErr); CHKERRQ(iErr)
+      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU',  AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', 1,   AppCtx%F, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHS', 1, AppCtx%RHS, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
 
       !!! Allocate and initialize the Section for the flag
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlag', 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlag', 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Allocate(TmpFlag(1))
       Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
          Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
@@ -166,8 +166,8 @@ Contains
       DeAllocate(TmpFlag)
 
       !!! Initialize the matrix and vector for the linear system
-      Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
-      Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
+      Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
+      Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
       
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call KSPSetOperators(AppCtx%KSP, AppCtx%K, AppCtx%K, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
@@ -221,7 +221,7 @@ Contains
             Allocate(ValPtr(1))
             ValPtr = 0.0_Kr
             Call SectionRealSet(AppCtx%F, 0.0_Kr, iErr); CHKERRQ(iErr);
-            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
                
             Do iDoF = 1, Size(Coords,1)
 #if defined PB_2D
@@ -234,7 +234,7 @@ Contains
                Call SectionRealUpdate(AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
             DeAllocate(ValPtr)
-            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
          Case(3)
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Solving Test Case 3: F=sgn(x) . sgn(y) [. sgn(z)] \n'
@@ -245,7 +245,7 @@ Contains
             Allocate(ValPtr(1))
             ValPtr = 0.0_Kr
             Call SectionRealSet(AppCtx%U, 1.0_Kr, iErr); CHKERRQ(iErr);
-            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             
             Do iDoF = 1, Size(Coords,1)
 #if defined PB_2D
@@ -263,7 +263,7 @@ Contains
 #endif
                Call SectionRealUpdate(AppCtx%F, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
-            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
          End Select            
       End If
       
@@ -328,7 +328,7 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_FORWARD, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
 
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%RHS, RHS_Vec, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%RHS, RHS_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%RHS, AppCtx%Scatter, SCATTER_FORWARD, RHS_Vec, iErr); CHKERRQ(iErr)
 
       Call KSPSolve(AppCtx%KSP, RHS_Vec, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
@@ -594,7 +594,7 @@ Contains
       Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
       Call VecDestroy(AppCtx%U_Vec, iErr); CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
-      Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
+      Call DMDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
       
       If (AppCtx%AppParam%verbose > 1) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
@@ -603,7 +603,7 @@ Contains
          Call PetscViewerDestroy(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
-      Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
+!       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
 103 Format(A,'.log.txt')
    End Subroutine SimplePoissonFinalize

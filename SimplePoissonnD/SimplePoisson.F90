@@ -18,7 +18,7 @@ Program  SimplePoisson
 
    Call SimplePoissonInit(AppCtx)
    
-   If (AppCtx%AppParam%verbose > 1) Then
+   If (AppCtx%AppParam%verbose > 4) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer)

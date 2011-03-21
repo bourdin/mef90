@@ -9,7 +9,11 @@ all: SimplePoisson${DIM}
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
-FFLAGS = -DPB_${DIM} -module ${PETSC_ARCH} -I. -I${MEF90DIR}
+FFLAGS = -DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I. -I${MEF90DIR} 
+
+ifneq (,$(findstring gcc,$(PETSC_ARCH)))
+	FFLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I. -I${MEF90DIR} -I${PETSC_ARCH}
+endif
 
 
 .F90.o: 
