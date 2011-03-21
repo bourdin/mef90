@@ -9,15 +9,16 @@ all: SimplePoisson${DIM}
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
-FFLAGS = -DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I. -I${MEF90DIR} 
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	FFLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I. -I${MEF90DIR} -I${PETSC_ARCH}
+	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
+else
+	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS}
 endif
 
 
 .F90.o: 
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${FFLAGS} ${FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/${DIM}$@ $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/${DIM}$@ $<
 
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
