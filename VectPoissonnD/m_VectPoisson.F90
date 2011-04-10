@@ -5,18 +5,8 @@ Module m_VectPoisson3D
 #endif
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petsckspdef.h"
-#include "finclude/petscmeshdef.h"
-#include "finclude/petscviewerdef.h"
 
    Use m_MEF90
-   Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscksp
-   Use petscmesh
 
    Implicit NONE   
    
@@ -35,8 +25,8 @@ Module m_VectPoisson3D
    End Type LogInfo_Type
 
    Type AppParam_Type
-      PetscTruth                                   :: Restart
-      PetscTruth                                   :: Verbose
+      PetscBool                                   :: Restart
+      PetscBool                                   :: Verbose
       PetscInt                                     :: TestCase
       Character(len=MEF90_MXSTRLEN)                :: prefix
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
@@ -72,17 +62,17 @@ Contains
       
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk, iDoF      
-      PetscTruth                                   :: HasPrefix
+      PetscBool                                    :: HasPrefix
       PetscInt, Dimension(:), Pointer              :: TmpFlag
       PetscInt                                     :: TmpPoint
       
       Type(SectionReal)                            :: CoordSection
-      PetscReal, Dimension(:), Pointer             :: TmpCoords, Value
+      PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
       PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscInt                                     :: iE, iELoc
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename   
       PetscLogDouble                               :: TS, TF
-      Type(Mesh)                                   :: Tmp_Mesh
+      Type(DM)                                     :: Tmp_Mesh
       Type(Vec)                                    :: F
 
       Call MEF90_Initialize()
@@ -119,16 +109,16 @@ Contains
       !!! Read and partition the mesh
       If (MEF90_NumProcs == 1) Then
          Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-         Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+         Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Else
          Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-         Call MeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          
          Call PetscLogStagePush(AppCtx%LogInfo%Distribute_Stage, iErr); CHKERRQ(iErr)
-         Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
-         Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+         Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
+         Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       End If
 
@@ -153,28 +143,28 @@ Contains
 
       Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Allocate the Section for U and F
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
-      Call MeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'GradU', AppCtx%MeshTopology%Num_Dim**2, AppCtx%GradU, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
-      Call MeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHS, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', AppCtx%MeshTopology%Num_Dim, AppCtx%U, iErr); CHKERRQ(iErr)
+      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'GradU', AppCtx%MeshTopology%Num_Dim**2, AppCtx%GradU, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', AppCtx%MeshTopology%Num_Dim, AppCtx%F, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%RHS, iErr); CHKERRQ(iErr)
      
       !!! Allocate and initialize the Section for the flag 
-      Call MeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlag', AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlag', AppCtx%MeshTopology%Num_Dim, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Allocate(TmpFlag(AppCtx%MeshTopology%Num_Dim))
 
       Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
          Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
             TmpPoint = AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iBlk)%Node_ID(iDoF)-1
             TmpFlag = 1
-            Call MeshUpdateClosureInt(AppCtx%MeshTopology%Mesh, AppCtx%BCFlag, TmpPoint, TmpFlag, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(AppCtx%BCFlag, TmpPoint, TmpFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
          End Do
       End Do
       DeAllocate(TmpFlag)
 
       !!! Initialize the matrix and vector for the linear system
-      Call MeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
-      Call MeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
+      Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
+      Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
       
       !!! Create the KSP and PCs
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSP, iErr); CHKERRQ(iErr)
@@ -223,19 +213,20 @@ Contains
 
             !!! Test of non homogeneous Dirichlet BC
             Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
-            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             
-            Allocate(Value(1))
+            Allocate(ValPtr(1))
             Do iDoF = 1, Size(Coords,1)
 #if defined PB_2D
-               Value = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2
+               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2
 #elif defined PB_3D
-               Value = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
+               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
 #endif
-               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
-            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-            DeAllocate(Value)
+            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            DeAllocate(ValPtr)
+
          Case(3)
             If (AppCtx%AppParam%verbose) Then
                Write(IOBuffer, *) 'Solving Test Case 3\n'
@@ -244,27 +235,27 @@ Contains
 
             !!! Test of non homogeneous Dirichlet BC
             Call SectionRealSet(AppCtx%F, 1.0_Kr, iErr); CHKERRQ(iErr);
-            Call MeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
             
-            Allocate(Value(1))
+            Allocate(ValPtr(1))
             Do iDoF = 1, Size(Coords,1)
 #if defined PB_2D
                If ( Coords(iDoF,1) * Coords(iDoF,2) < 0.0_Kr ) Then
-                  Value = -1.0_Kr
+                  ValPtr = -1.0_Kr
                Else
-                  Value = 1.0_Kr
+                  ValPtr = 1.0_Kr
                End If
 #elif defined PB_3D
                If ( Coords(iDoF,1) * Coords(iDoF,2) * Coords(iDoF,3) < 0.0_Kr ) Then
-                  Value = -1.0_Kr
+                  ValPtr = -1.0_Kr
                Else
-                  Value = 1.0_Kr
+                  ValPtr = 1.0_Kr
                End If
 #endif
-               Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%F, AppCtx%MeshTopology%Num_Elems+iDoF-1, Value, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(AppCtx%U, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
-            Call MeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-            DeAllocate(Value)
+            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
+            DeAllocate(ValPtr)
          End Select            
       End If
 
@@ -324,7 +315,7 @@ Contains
       Type(Vec)                                    :: U_Vec
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
-      Call MeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, U_Vec, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, U_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U, AppCtx%Scatter, SCATTER_FORWARD, U_Vec, ierr); CHKERRQ(ierr)
       Call KSPSolve(AppCtx%KSP, AppCtx%RHS, U_Vec, iErr); CHKERRQ(iErr)
       !!! Solve and store the solution in AppCtx%RHS
@@ -356,8 +347,6 @@ Contains
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call MatAssemblyLocal(iE, AppCtx, MatElem)
-            Write(MEF90_MyRank+100, *) 'ELement ', iE
-            Write(MEF90_MyRank+100, *)  MatElem
             Call assembleMatrix(AppCtx%K, AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(MatElem)
@@ -385,7 +374,7 @@ Contains
       NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
       NumGauss = Size(AppCtx%Elem(iE)%BF,2)
       Allocate(BCFlag(NumDoF))
-     Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
+      Call SectionIntRestrictClosure(AppCtx%BCFlag, AppCtx%MeshTopology%mesh, iE-1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
       Do iGauss = 1, NumGauss
          Do iDoF1 = 1, NumDoF
             If (BCFlag(iDoF1) == 0) Then
@@ -415,13 +404,13 @@ Contains
       
       !!! Hopefully one day we will use assemble Vector instead of going through a section
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
-      Call MeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSSec', 0NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHSSec', NumDoFPerVertex, RHSSec, iErr); CHKERRQ(iErr)
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Allocate(RHSElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim))
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call RHSAssemblyLocal(iE, AppCtx, RHSElem)
-            Call MeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
+            Call DMMeshUpdateAddClosure(AppCtx%MeshTopology%Mesh, RHSSec, iE-1, RHSElem, iErr); CHKERRQ(iErr)
          End Do Do_Elem_iE
          DeAllocate(RHSElem)
       End Do Do_Elem_iBlk
@@ -453,9 +442,9 @@ Contains
       NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
       NumGauss = Size(AppCtx%Elem(iE)%BF,2)
       Allocate(BCFlag(NumDoF))
-      Call MeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
+      Call DMMeshRestrictClosureInt(AppCtx%MeshTopology%mesh, AppCtx%BCFlag, iE-1, NumDoF, BCFlag, iErr); CHKERRQ(ierr)
       Allocate(F(NumDoF))
-      Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
+      Call DMMeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
       Do iGauss = 1, NumGauss
          TmpRHS = 0.0_Kr
          Do iDoF2 = 1, NumDoF
@@ -502,9 +491,9 @@ Contains
             NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
             NumGauss = Size(AppCtx%Elem(iE)%BF,2)
             Allocate(F(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
+            Call DMMeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%F, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
             Allocate(U(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
+            Call DMMeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
             Do iGauss = 1, NumGauss
                Strain_Elem = 0.0_Kr
                Stress_Elem = 0.0_Kr
@@ -553,7 +542,7 @@ Contains
             NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
             NumGauss = Size(AppCtx%Elem(iE)%BF,2)
             Allocate(U(NumDoF))
-            Call MeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
+            Call DMMeshRestrictClosure(AppCtx%MeshTopology%mesh, AppCtx%U, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
             Grad = 0.0_Kr
             Vol  = 0.0_Kr
             Do iGauss = 1, NumGauss
@@ -570,7 +559,7 @@ Contains
 #elif defined PB_3D
             Grad_Ptr = (/ Grad%XX, Grad%XY, Grad%XZ, Grad%YX, Grad%YY, Grad%YZ,Grad%ZX, Grad%ZY, Grad%ZZ /)
 #endif
-            Call MeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%GradU, iE-1, Grad_Ptr, iErr)
+            Call DMMeshUpdateClosure(AppCtx%MeshTopology%Mesh, AppCtx%GradU, iE-1, Grad_Ptr, iErr)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
       DeAllocate(Grad_Ptr)
@@ -593,7 +582,7 @@ Contains
       Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
       Call VecDestroy(AppCtx%RHS, iErr); CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
-      Call MeshDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
+      Call DMDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
       
       If (AppCtx%AppParam%verbose) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
