@@ -79,7 +79,7 @@ else:
       # Save images of all time steps and add each image filename to a list.
       #
       names = []
-      for state in range(1,TimeSliderGetNStates()):
+      for state in range(0,TimeSliderGetNStates()):
          SetTimeSliderState(state)
          # Save the image
          s.fileName = Directory+ Prefix+'-%04i'%state
