@@ -1,11 +1,6 @@
 Program  VectPoisson
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petsckspdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
    Use m_MEF90
 #if defined PB_2D
@@ -13,12 +8,6 @@ Program  VectPoisson
 #elif defined PB_3D 
    Use m_VectPoisson3D
 #endif
-
-   Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscksp
-   Use petscmesh
 
    Implicit NONE   
 
