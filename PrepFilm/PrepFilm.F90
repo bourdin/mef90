@@ -19,7 +19,7 @@ Program PrepVarFrac
    Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename
    Type(MeshTopology_Type)                      :: MeshTopology, GlobalMeshTopology
    Type(EXO_Type)                               :: EXO, MyEXO
-   Type(Mesh)                                   :: Tmp_Mesh
+   Type(DM)                                   :: Tmp_Mesh
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2D
    PetscBool                                    :: HasPrefix
    PetscInt                                     :: verbose = 0
@@ -140,11 +140,11 @@ Program PrepVarFrac
 
    !!! Reading and distributing sequential mesh
    If (MEF90_NumProcs == 1) Then
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-   Else
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Else    
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
@@ -161,7 +161,7 @@ Program PrepVarFrac
    MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 99) trim(prefix), MEF90_MyRank
  99  Format(A, '-', I4.4, '.gen')
-   Call MeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr) ! What do we need CoordSec for? Non uniform loads, future use
+   Call DMMeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr) ! What do we need CoordSec for? Non uniform loads, future use
 
 !!! Init EXO Properties   
 	Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
@@ -348,7 +348,7 @@ Program PrepVarFrac
    !!! Here is the place to request additional parameters if needed
    !!!
 
-	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
+	Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
 	Do_Step_Theta: Do iStep = 1, NumSteps
 		Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
 		
@@ -391,7 +391,7 @@ Program PrepVarFrac
 !!! Here is the place to request additional parameters if needed
 !!!
 	
-	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U0', 2, U0Sec, iErr); CHKERRQ(iErr)
+	Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'U0', 2, U0Sec, iErr); CHKERRQ(iErr)
 	Do iStep = 1, NumSteps
 		Call SectionRealSet(U0Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
 		Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_U0X)%Offset, iStep, U0Sec)
@@ -444,7 +444,7 @@ Program PrepVarFrac
    !!! Here is the place to request additional parameters if needed
    !!!
 	
-	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', 2, USec, iErr); CHKERRQ(iErr)
+	Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'U', 2, USec, iErr); CHKERRQ(iErr)
 	Allocate(Uelem(2))
 	Do iStep = 1, NumSteps
 		Call SectionRealSet(USec, 0.0_Kr, iErr); CHKERRQ(iErr)
@@ -473,7 +473,7 @@ Program PrepVarFrac
    !!! Compute the value of the fracture field at the vertices
    !!! Here is the place to request additional parameters if needed
    !!!
-	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
+	Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V', 1, VSec, iErr); CHKERRQ(iErr)
 	Allocate(Velem(1))
 	Do iStep = 1, NumSteps
 		Call SectionRealSet(VSec, 1.0_Kr, iErr); CHKERRQ(iErr)
@@ -509,7 +509,7 @@ Program PrepVarFrac
 !!!	write exo
 !!! destroy all
 !!!
-	Call MeshGetVertexSectionReal(MeshTopology%mesh, 'W', 1, Wsec, ierr); CHKERRQ(iErr)
+	Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'W', 1, Wsec, ierr); CHKERRQ(iErr)
 	Allocate(Wnodal(1))
 	Do iStep=1, NumSteps
 		Call SectionRealSet(Wsec, 1.0_Kr, iErr); CHKERRQ(iErr) ! Bonded everywhere

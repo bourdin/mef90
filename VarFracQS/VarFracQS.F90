@@ -25,7 +25,10 @@ Program  VarFracQS
    PetscBool                                    :: restart
 
    Call VarFracQSInit(AppCtx)
-   
+   If (AppCtx%AppParam%verbose > 0) Then
+      Write(IOBuffer, *) 'Done with VarFracQSInit'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
    If (AppCtx%AppParam%verbose > 1) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer) 
@@ -40,9 +43,9 @@ Program  VarFracQS
    TimeStep: Do 
       Call ALEStagePush(stagename(1), iDebug, iErr); CHKERRQ(iErr)
 
-      Write(IOBuffer, 99) AppCtx%TimeStep
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-99    Format('\n=== Solving time step ', I4, '\n\n')
+!       Write(IOBuffer, 99) AppCtx%TimeStep
+!       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+! 99    Format('\n=== Solving time step ', I4, '\n\n')
 
       !!! Init the fields:
       Call Init_TS_Loads(AppCtx)      
