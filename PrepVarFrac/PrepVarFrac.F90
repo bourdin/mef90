@@ -18,7 +18,7 @@ Program PrepVarFrac
    Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename
    Type(MeshTopology_Type)                      :: MeshTopology, GlobalMeshTopology
    Type(EXO_Type)                               :: EXO, MyEXO
-   Type(DM)                                   :: Tmp_Mesh
+   Type(DM)                                     :: Tmp_Mesh
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2D
    Type(Element3D_Scal), Dimension(:), Pointer  :: Elem3D
    PetscBool                                    :: HasPrefix
@@ -109,7 +109,7 @@ Program PrepVarFrac
          End If
       End If
    End If
-   NumTestCase = 13
+   NumTestCase = 14
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -127,6 +127,7 @@ Program PrepVarFrac
    TestCase(11)%Description = "Mode-I loading, using asymptotic form of displacement (surfing)"
    TestCase(12)%Description = "Cooling: infinite domain, thermal conduction only with randomly spaced initial cracks (2D)"
    TestCase(13)%Description = "Cooling: Sphere with a spherical cavity, Dirichlet BC"
+   TestCase(14)%Description = "Mixed mode I-III 3D"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -188,9 +189,9 @@ Program PrepVarFrac
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(i), MeshTopology%num_dim)
    End Do
 
-   Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
+   Call MeshTopologyWriteGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
    If (verbose > 0) Then
-      Write(IOBuffer, *) "Done with Write_MeshTopologyGlobal\n"
+      Write(IOBuffer, *) "Done with MeshTopologyWriteGlobal\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
