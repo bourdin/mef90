@@ -196,9 +196,9 @@ Program PrepVarFrac
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(i), MeshTopology%num_dim)
    End Do
 
-   Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
+   Call MeshTopologyWriteGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
    If (verbose > 0) Then
-      Write(IOBuffer, *) "Done with Write_MeshTopologyGlobal\n"
+      Write(IOBuffer, *) "Done with MeshTopologyWriteGlobal\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 

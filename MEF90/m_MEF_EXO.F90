@@ -18,8 +18,8 @@ Module m_MEF_EXO
    
    Public :: Write_EXO_Case
    Public :: EXO_Check_Numbering
-   Public :: Write_MeshTopology
-   Public :: Write_MeshTopologyGlobal
+   Public :: MeshTopologyWrite
+   Public :: MeshTopologyWriteGlobal
 
    Public :: Read_EXO_Result_Global
    Public :: Write_EXO_Result_Global   
@@ -56,6 +56,8 @@ Module m_MEF_EXO
    End Interface Write_EXO_Result_Cell
 
  Contains
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Case"
     Subroutine Write_EXO_Case(prefix, formatstring, numprocs)
       Character(len=*)                               :: prefix, formatstring
       PetscInt                                       :: numprocs
@@ -76,6 +78,8 @@ Module m_MEF_EXO
 102 Format('TIMESET_TEMPLATE "', A, '-', A, '.gen"')
    End Subroutine Write_EXO_Case
    
+#undef __FUNCT__
+#define __FUNCT__ "EXO_Check_Numbering"
    Subroutine EXO_Check_Numbering(dEXO, ErrorCode)
       Type(EXO_Type)                                 :: dEXO
       PetscInt, Intent(OUT)                          :: ErrorCode
@@ -148,7 +152,8 @@ Module m_MEF_EXO
    End Subroutine EXO_Check_Numbering
 
 
-   
+#undef __FUNCT__
+#define __FUNCT__ "EXOProperty_Copy"
    Subroutine EXOProperty_Copy(dEXO_in, dEXO_out)
       Type(EXO_Type)                                 :: dEXO_in, dEXO_out
       PetscInt                                       :: i
@@ -180,6 +185,8 @@ Module m_MEF_EXO
 
    End Subroutine EXOProperty_Copy
    
+#undef __FUNCT__
+#define __FUNCT__ "EXOProperty_Write"
    Subroutine EXOProperty_Write(dEXO)
       Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
@@ -224,7 +231,8 @@ Module m_MEF_EXO
       End If
    End Subroutine EXOProperty_Write
    
-   
+#undef __FUNCT__
+#define __FUNCT__ "EXOProperty_Ask"   
    Subroutine EXOProperty_Ask(dEXO, dMeshTopology)
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
@@ -279,6 +287,8 @@ Module m_MEF_EXO
  110 Format(T24, A, T60, ': ')
    End Subroutine EXOProperty_Ask
       
+#undef __FUNCT__
+#define __FUNCT__ "EXOProperty_Read"
    Subroutine EXOProperty_Read(dEXO)
       Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
@@ -385,6 +395,8 @@ Module m_MEF_EXO
       End Do
    End Subroutine EXOProperty_Read
 
+#undef __FUNCT__
+#define __FUNCT__ "EXOVariable_Copy"
    Subroutine EXOVariable_Copy(dEXO_in, dEXO_out)
       Type(EXO_Type)                                 :: dEXO_in, dEXO_out
 
@@ -412,6 +424,8 @@ Module m_MEF_EXO
    End Subroutine EXOVariable_Copy
 
 
+#undef __FUNCT__
+#define __FUNCT__ "EXOVariable_Write"
    Subroutine EXOVariable_Write(dEXO)
       Type(EXO_Type)                                 :: dEXO
  
@@ -441,6 +455,8 @@ Module m_MEF_EXO
       End If
    End Subroutine EXOVariable_Write 
    
+#undef __FUNCT__
+#define __FUNCT__ "EXOVariable_Read"
    Subroutine EXOVariable_Read(dEXO)
       Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
@@ -509,7 +525,9 @@ Module m_MEF_EXO
       End Do
    End Subroutine EXOVariable_Read
    
-   Subroutine Write_MeshTopology(dMeshTopology, dEXO)
+#undef __FUNCT__
+#define __FUNCT__ "MeshTopologyWrite"
+   Subroutine MeshTopologyWrite(dMeshTopology, dEXO)
       Type(MeshTopology_Type)                        :: dMeshTopology
       Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
@@ -533,6 +551,11 @@ Module m_MEF_EXO
       Coord_Names(2) = 'Y'
       Coord_Names(3) = 'Z'
       
+      write(*,*) '1. In Write_MeshTopology'
+      write(*,*) '1. dMeshTopology%Num_Node_Sets', dMeshTopology%Num_Node_Sets
+      write(*,*) '1. dMeshTopology%Num_Side_Sets', dMeshTopology%Num_Side_Sets
+      write(*,*) '1. dMeshTopology%Num_Elem_Blks', dMeshTopology%Num_Elem_Blks
+
       Is_IO: If (dEXO%comm == PETSC_COMM_SELF) Then
          ! Open File
          dEXO%exoid = EXCRE (dEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
@@ -570,11 +593,13 @@ Module m_MEF_EXO
             End Select
             Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
          End Do
-   
+         
+         write(*,*) '1. Done with Elem Blks'
          ! Write Side sets informations
          If (dMeshTopology%Num_Side_Sets > 0) Then
             SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Side sets not supported yet', iErr)
          End If
+         write(*,*) '2. Done with Side Sets'
          
          ! Write Node sets informations
          Do iSet = 1, dMeshTopology%Num_Node_Sets
@@ -583,14 +608,32 @@ Module m_MEF_EXO
                Call EXPNS(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Node_ID(:), iErr)
             End If
          End Do
+         write(*,*) '3. Done with Node Sets'
    
          ! Write vertex coordinates
-         Call DMMeshGetCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr)
-         Call EXPCOR(dEXO%exoid, Coordinates(:,1), Coordinates(:,2), Coordinates(:,3), iErr)
-         Call DMMeshRestoreCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr)
+         Call DMMeshGetCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr);CHKERRQ(iErr)
+         Coordinates(:,1) = 1.
+         Coordinates(:,2) = 2.
+         !Coordinates(:,3) = 3.
+         CHKMEMQ
+         If (dMeshTopology%num_dim == 2) Then
+            Call EXPCOR(dEXO%exoid, Coordinates(:,1), Coordinates(:,2), 0, iErr)
+         Else
+            Call EXPCOR(dEXO%exoid, Coordinates(:,1), Coordinates(:,2), Coordinates(:,3), iErr)
+         End If
+         CHKMEMQ
+         write(*,*) 'X'
+         write(*,*) Coordinates(:,1)
+         write(*,*) 'Y'
+         write(*,*) Coordinates(:,2)
+         !write(*,*) 'Z'
+         !write(*,*) Coordinates(:,3)
+         write(*,*) size(coordinates,1), size(coordinates,2)
+         Call DMMeshRestoreCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr);CHKERRQ(iErr)
+         write(*,*) '4. Done with coordinates'
          
           ! Write Connectivity tables
-         Call DMMeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
+         Call DMMeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr);CHKERRQ(iErr)
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
             If (dMeshTopology%Elem_Blk(iBlk)%Num_Elems > 0) Then
                Allocate (ConnectBlk(dMeshTopology%Elem_Blk(iBlk)%Num_Elems * dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
@@ -604,17 +647,19 @@ Module m_MEF_EXO
                 DeAllocate(ConnectBlk)
              End If
           End Do
-          Call DMMeshRestoreElementsF90(dMeshTopology%mesh, ConnectMesh, iErr)
+          Call DMMeshRestoreElementsF90(dMeshTopology%mesh, ConnectMesh, iErr);CHKERRQ(iErr)
+          write(*,*) '5. Done with elements'
 
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
       Else
          SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Synchronized I/O on PETSC_COMM_WORLD not supported yet', ierr)
       End If Is_IO
-   End Subroutine Write_MeshTopology
+   End Subroutine MeshTopologyWrite
    
-   
-   Subroutine Write_MeshTopologyGlobal(dMeshTopology, dEXO, dGlobalComm)
+#undef __FUNCT__
+#define __FUNCT__ "MeshTopologyWriteGlobal"   
+   Subroutine MeshTopologyWriteGlobal(dMeshTopology, dEXO, dGlobalComm)
       !!! Reconstruct the topology informatins for of all meshes in dGlobalComm then write it
       Type(MeshTopology_Type)                        :: dMeshTopology
       Type(EXO_Type)                                 :: dEXO
@@ -627,12 +672,18 @@ Module m_MEF_EXO
       
       Type(MeshTopology_Type)                        :: GlobalMeshTopology
       PetscInt, Dimension(:), Pointer                :: Tmp_GlobalID, Tmp_ID
+      
+      Type(PetscViewer)                              :: viewer 
+      
+      viewer = PetscViewer(PETSC_VIEWER_STDOUT_WORLD)
 
 
       ! Gather Global Sizes
       GlobalMeshTopology%num_dim   = dMeshTopology%num_dim
       GlobalMeshTopology%num_verts = dMeshTopology%num_verts
       GlobalMeshTopology%num_elems = dMeshTopology%num_elems
+      
+      write(*,*) '*** dMeshTopology%num_elem_blks ', dMeshTopology%num_elem_blks
       
       Allocate(Tmp_ID(dMeshTopology%num_elem_blks))
       Tmp_ID = dMeshTopology%elem_blk(:)%ID
@@ -644,6 +695,8 @@ Module m_MEF_EXO
 
       GlobalMeshTopology%num_side_sets = 0
 
+      write(*,*) '*** dMeshTopology%num_node_sets ', dMeshTopology%num_node_sets
+      
       Allocate(Tmp_ID(dMeshTopology%num_node_sets))
       Tmp_ID = dMeshTopology%node_set(:)%ID
       Call Uniq(dGlobalComm, Tmp_ID, Tmp_GlobalID)            
@@ -652,6 +705,7 @@ Module m_MEF_EXO
       GlobalMeshTopology%node_set(:)%ID = Tmp_GlobalID
       DeAllocate(Tmp_ID)
       
+      write(*,*) '*** GlobalMeshTopology%num_elem_blks', GlobalMeshTopology%num_elem_blks
       ! Element Blocks
       Allocate(Tmp_ID(GlobalMeshTopology%num_elem_blks))
       Tmp_ID = 0
@@ -678,6 +732,7 @@ Module m_MEF_EXO
          Call MPI_AllReduce(MPI_IN_PLACE, GlobalMeshTopology%elem_blk(iBlk)%Num_DoF, 1, MPI_INTEGER, MPI_MAX, dGlobalComm, iErr)
       End Do
       
+      write(*,*) '*** GlobalMeshTopology%num_node_sets', GlobalMeshTopology%num_node_sets
       ! Node Sets
       GlobalMeshTopology%node_set(:)%num_nodes = 0
       Do i = 1, GlobalMeshTopology%num_node_sets
@@ -689,13 +744,20 @@ Module m_MEF_EXO
             End If
          End Do
       End Do
-      Do iSet = 1, GlobalMeshTopology%num_node_sets
-      End Do
+      write(*,*) '==='
+      !Do iSet = 1, GlobalMeshTopology%num_node_sets
+      !End Do
 
+   
       GlobalMeshTopology%mesh = dMeshTopology%mesh
-      Call Write_MeshTopology(GlobalMeshTopology, dEXO)
+      Call PetscPrintf(PETSC_COMM_WORLD,'MeshTopology\n\n',ierr);CHKERRQ(ierr);
+      Call MeshTopologyView(dMeshTopology,viewer)
+      Call PetscPrintf(PETSC_COMM_WORLD,'GlobalMeshTopology\n\n',ierr);CHKERRQ(ierr);
+      Call MeshTopologyView(GlobalMeshTopology,viewer)
+      
+      Call MeshTopologyWrite(GlobalMeshTopology, dEXO)
       Call MeshTopologyDestroy(GlobalMeshTopology)
-   End Subroutine Write_MeshTopologyGlobal
+   End Subroutine MeshTopologyWriteGlobal
    
 !!!
 !!! RESULT FILES
@@ -704,6 +766,8 @@ Module m_MEF_EXO
 !!! READ
 !!! In the sequel, we always assume that we are doing distributed I/O when EXO%comm == PETSC_COMM_SELF (i.e. 1 file per CPU) and sequential (i.e. IO operation on a single file on CPU 0) when EXO%comm == PETSC_COM_WORLD
    
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_Global"
    Subroutine Read_EXO_Result_Global(dEXO, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       PetscInt                                       :: dIdx
@@ -744,6 +808,8 @@ Module m_MEF_EXO
 !!!
 !!! READ VERTEX BASED VARIABLES (NODAL VARIABLES)
 !!!
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexPtrInterlaced"
    Subroutine Read_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -769,6 +835,8 @@ Module m_MEF_EXO
       dEXO%exoid = 0
    End Subroutine Read_EXO_Result_VertexPtrInterlaced
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexField"
    Subroutine Read_EXO_Result_VertexField(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -786,6 +854,8 @@ Module m_MEF_EXO
       Call SectionRealToVec(dRes%Sec, dRes%Scatter, SCATTER_FORWARD, dRes%Vec, iErr); CHKERRQ(iErr)
    End Subroutine Read_EXO_Result_VertexField
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexSection"
    Subroutine Read_EXO_Result_VertexSection(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -805,6 +875,8 @@ Module m_MEF_EXO
       Call VecDestroy(Res_Vec, iErr); CHKERRQ(iErr)
    End Subroutine Read_EXO_Result_VertexSection
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexVec"
    Subroutine Read_EXO_Result_VertexVec(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -821,6 +893,8 @@ Module m_MEF_EXO
       Call VecRestoreArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
    End Subroutine Read_EXO_Result_VertexVec
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexVect2D"
    Subroutine Read_EXO_Result_VertexVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -843,6 +917,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_VertexVect2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexVect3D"
    Subroutine Read_EXO_Result_VertexVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -867,6 +943,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_VertexVect3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexMat2D"
    Subroutine Read_EXO_Result_VertexMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -893,6 +971,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_VertexMat2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexMatS2D"
    Subroutine Read_EXO_Result_VertexMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -917,6 +997,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_VertexMatS2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexMat3D"
    Subroutine Read_EXO_Result_VertexMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -953,6 +1035,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_VertexMat3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_VertexMatS3D"
    Subroutine Read_EXO_Result_VertexMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -986,7 +1070,8 @@ Module m_MEF_EXO
 !!!
 !!! READ CELL BASED VARIABLE (ELEMENTAL VARIABLES)
 !!!
-
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_CellPtrInterlaced"
    Subroutine Read_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1022,6 +1107,8 @@ Module m_MEF_EXO
       dEXO%exoid = 0
    End Subroutine Read_EXO_Result_CellPtrInterlaced
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_CellSection"
    Subroutine Read_EXO_Result_CellSection(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1041,6 +1128,8 @@ Module m_MEF_EXO
       Call VecDestroy(Res_Vec, iErr); CHKERRQ(iErr)
    End Subroutine Read_EXO_Result_CellSection
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_CellVec"
    Subroutine Read_EXO_Result_CellVec(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1057,6 +1146,8 @@ Module m_MEF_EXO
       Call VecRestoreArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
    End Subroutine Read_EXO_Result_CellVec
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_CellPtrVect2D"
    Subroutine Read_EXO_Result_CellVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1079,6 +1170,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_CellVect2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_CellVect3D"
    Subroutine Read_EXO_Result_CellVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1103,6 +1196,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_CellVect3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_CellMat2D"
    Subroutine Read_EXO_Result_CellMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1129,6 +1224,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_CellMat2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_CellMatS2D"
    Subroutine Read_EXO_Result_CellMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1153,6 +1250,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_CellMatS2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_CellMat3D"
    Subroutine Read_EXO_Result_CellMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1189,6 +1288,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Read_EXO_Result_CellMat3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Read_EXO_Result_CellMatS3D"
    Subroutine Read_EXO_Result_CellMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1220,6 +1321,8 @@ Module m_MEF_EXO
    End Subroutine Read_EXO_Result_CellMatS3D
 
 !!! WRITE
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_AllResult_Global"
    Subroutine Write_EXO_AllResult_Global(dEXO, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       PetscInt                                       :: dTS
@@ -1243,6 +1346,8 @@ Module m_MEF_EXO
       End If
    End Subroutine Write_EXO_AllResult_Global
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_Global"
    Subroutine Write_EXO_Result_Global(dEXO, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       PetscInt                                       :: dIdx
@@ -1275,6 +1380,8 @@ Module m_MEF_EXO
       End If
    End Subroutine Write_EXO_Result_Global
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexPtrInterlaced"
    Subroutine Write_EXO_Result_VertexPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1299,6 +1406,8 @@ Module m_MEF_EXO
       dEXO%exoid = 0
    End Subroutine Write_EXO_Result_VertexPtrInterlaced
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexField"
    Subroutine Write_EXO_Result_VertexField(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1314,6 +1423,8 @@ Module m_MEF_EXO
       Call VecRestoreArrayF90(dRes%LocalVec, Res_Ptr, iErr); CHKERRQ(iErr)
    End Subroutine Write_EXO_Result_VertexField
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexSection"
    Subroutine Write_EXO_Result_VertexSection(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1332,6 +1443,8 @@ Module m_MEF_EXO
       Call VecDestroy(Res_Vec, iErr); CHKERRQ(iErr)
    End Subroutine Write_EXO_Result_VertexSection
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexVec"
    Subroutine Write_EXO_Result_VertexVec(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1347,6 +1460,8 @@ Module m_MEF_EXO
       Call VecRestoreArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
    End Subroutine Write_EXO_Result_VertexVec
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexVect2D"
    Subroutine Write_EXO_Result_VertexVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1368,6 +1483,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_VertexVect2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexVect3D"
    Subroutine Write_EXO_Result_VertexVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1391,6 +1508,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_VertexVect3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexMat2D"
    Subroutine Write_EXO_Result_VertexMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1416,6 +1535,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_VertexMat2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexMatS2D"
    Subroutine Write_EXO_Result_VertexMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1439,6 +1560,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_VertexMatS2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexMat3D"
    Subroutine Write_EXO_Result_VertexMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1474,6 +1597,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_VertexMat3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_VertexMatS3D"
    Subroutine Write_EXO_Result_VertexMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1506,6 +1631,8 @@ Module m_MEF_EXO
 !!!
 !!! WRITE CELL BASED VARIABLES (ELEMENTAL)
 !!!   
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_CellPtrInterlaced"
    Subroutine Write_EXO_Result_CellPtrInterlaced(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1541,6 +1668,8 @@ Module m_MEF_EXO
       dEXO%exoid = 0
    End Subroutine Write_EXO_Result_CellPtrInterlaced
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_CellPtrSection"
    Subroutine Write_EXO_Result_CellSection(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1559,6 +1688,8 @@ Module m_MEF_EXO
       Call VecDestroy(Res_Vec, iErr); CHKERRQ(iErr)
    End Subroutine Write_EXO_Result_CellSection
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_CellVec"
    Subroutine Write_EXO_Result_CellVec(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1574,6 +1705,8 @@ Module m_MEF_EXO
       Call VecRestoreArrayF90(dRes, Res_Ptr, iErr); CHKERRQ(iErr)
    End Subroutine Write_EXO_Result_CellVec
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_CellVect2D"
    Subroutine Write_EXO_Result_CellVect2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1595,6 +1728,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_CellVect2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_CellVect3D"
    Subroutine Write_EXO_Result_CellVect3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1618,6 +1753,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_CellVect3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_CellMat2D"
    Subroutine Write_EXO_Result_CellMat2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1643,6 +1780,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_CellMat2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_CellMatS2D"
    Subroutine Write_EXO_Result_CellMatS2D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1666,6 +1805,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_CellMatS2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_CellMat3D"
    Subroutine Write_EXO_Result_CellMat3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
@@ -1701,6 +1842,8 @@ Module m_MEF_EXO
       DeAllocate(Res_Ptr)
    End Subroutine Write_EXO_Result_CellMat3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Write_EXO_Result_CellMatS3D"
    Subroutine Write_EXO_Result_CellMatS3D(dExo, dMeshTopology, dIdx, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       Type (MeshTopology_Type)                       :: dMeshTopology
