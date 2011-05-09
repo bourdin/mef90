@@ -163,6 +163,9 @@ Program PrepVarFrac
    !!!Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
+!   write(*,*) '============ BACK IN PREPVARFRAC ='
+!   write(*,*) 'Associated(MeshTopology%elem_blk) ', Associated(MeshTopology%elem_blk)
+
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
