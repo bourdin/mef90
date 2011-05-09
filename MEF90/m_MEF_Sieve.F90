@@ -54,6 +54,13 @@ Contains
       ! Read Global Geometric Parameters
       !!! Extracts sizes from the Mesh oject
       Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
+!      write(*,*) '********* AFTER DMMeshExodusGetInfo ********* '
+!      write(*,*) 'dMeshTopology%Num_Dim        ', dMeshTopology%Num_Dim
+!      write(*,*) 'dMeshTopology%Num_Verts      ', dMeshTopology%Num_Verts
+!      write(*,*) 'dMeshTopology%Num_Elems      ', dMeshTopology%Num_Elems
+!      write(*,*) 'dMeshTopology%Num_Elems_Blks ', dMeshTopology%Num_Elem_Blks
+!      write(*,*) 'dMeshTopology%Num_Node_Sets  ', dMeshTopology%Num_Node_Sets
+      
 
 
       ! Read Elem block information
@@ -68,6 +75,10 @@ Contains
       Allocate(blkIds(numIds))
       Call DMMeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
+
+!      write(*,*) 'Associated(dMeshTopology%Elem_blk) ', Associated(dMeshTopology%Elem_blk)
+!      write(*,*) 'Size(dMeshTopology%Elem_blk)      ', Size(dMeshTopology%Elem_blk)
+
       If (dMeshTopology%Num_Elem_blks > 0) Then
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
             blkId = blkIds(iBlk)
