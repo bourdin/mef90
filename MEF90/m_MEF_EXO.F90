@@ -612,8 +612,8 @@ Module m_MEF_EXO
    
          ! Write vertex coordinates
          Call DMMeshGetCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr);CHKERRQ(iErr)
-         Coordinates(:,1) = 1.
-         Coordinates(:,2) = 2.
+         !Coordinates(:,1) = 1.
+         !Coordinates(:,2) = 2.
          !Coordinates(:,3) = 3.
          CHKMEMQ
          If (dMeshTopology%num_dim == 2) Then
@@ -622,10 +622,10 @@ Module m_MEF_EXO
             Call EXPCOR(dEXO%exoid, Coordinates(:,1), Coordinates(:,2), Coordinates(:,3), iErr)
          End If
          CHKMEMQ
-         write(*,*) 'X'
-         write(*,*) Coordinates(:,1)
-         write(*,*) 'Y'
-         write(*,*) Coordinates(:,2)
+         !write(*,*) 'X'
+         !write(*,*) Coordinates(:,1)
+         !write(*,*) 'Y'
+         !write(*,*) Coordinates(:,2)
          !write(*,*) 'Z'
          !write(*,*) Coordinates(:,3)
          write(*,*) size(coordinates,1), size(coordinates,2)

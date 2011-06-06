@@ -79,7 +79,6 @@ Program  VarFracQS
          If (AppCtx%AppParam%verbose > 0) Then
             Call PetscMemoryGetCurrentUsage(CurrentMemoryUsage,iErr); CHKERRQ(iErr)
             Call PetscMemoryGetMaximumUsage(MaximumMemoryUsage,iErr); CHKERRQ(iErr)
-            Write(MEF90_MyRank+100, *) AppCtx%TimeStep, AltMinIter, CurrentMemoryUsage, MaximumMemoryUsage
             Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage output for PETSC_COMM_WORLD: ", iErr); CHKERRQ(iErr)
          End If
          Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") AppCtx%TimeStep, AltMinIter,'\n'
