@@ -32,14 +32,13 @@ Program PrepVarFrac
    PetscInt, Parameter                          :: QuadOrder=2
    Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec, CoordSec
    Type(Vect3D), Dimension(:), Pointer          :: U, F
-   Type(Vect3D)                                 :: FGrain
    PetscReal, Dimension(:), Pointer             :: V, Theta
-   PetscReal                                    :: ThetaGrain
    PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
    PetscInt                                     :: NumSteps
    PetscInt                                     :: Num_DoF
+
    PetscReal                                    :: RealBuffer
    Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp2D
    Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp3D
@@ -53,20 +52,25 @@ Program PrepVarFrac
    Character(len=MEF90_MXSTRLEN)                :: BatchFileName
    PetscBool                                    :: EraseBatch
    
-   PetscInt                                     :: NumGrains
-   PetscReal                                    :: ToughnessGrain, ThermExpScalGrain
-   PetscReal                                    :: BGrain, CGrain, CpGrain
-   PetscReal                                    :: alphaGrain, alphamin, alphamax
-   PetscReal                                    :: Eeff, nueff, Kappa, mu
    PetscRandom                                  :: RandomCtx
    PetscInt                                     :: Seed
    PetscLogDouble                               :: Time
    PetscBool                                    :: Has_Seed, Has_n
    PetscBool                                    :: saveElemVar
    
-   PetscReal                                    :: R, Ctheta, CTheta2, Stheta, STheta2
+   PetscReal                                    :: R
 
    Call MEF90_Initialize()
+
+   NumTestCase = 4
+   Allocate(TestCase(NumTestCase))
+   Do i = 1, NumTestCase
+      TestCase(i)%Index = i
+   End Do
+   TestCase(1)%Description = "MIL"
+   TestCase(2)%Description = "Mode-I scaling experiment"
+   TestCase(3)%Description = "Mode-I surfing experiment"
+   TestCase(4)%Description = "Mixed mode (I+III)"
 
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, HasPrefix, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr); CHKERRQ(iErr)
@@ -75,11 +79,14 @@ Program PrepVarFrac
       Call MEF90_Finalize()
       STOP
    End If
-   EraseBatch=.False.
-   Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
+   
    saveElemVar=.True.
+
    Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-saveelemvar', saveElemVar, HasPrefix, iErr);CHKERRQ(iErr)
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
+
+   EraseBatch=.False.
+   Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
    If (MEF90_MyRank==0) Then
       If (IsBatch) Then
          Write(IOBuffer, *) "\nProcessing batch file ", Trim(BatchFileName), "\n"
@@ -109,23 +116,19 @@ Program PrepVarFrac
    If (.NOT. Has_Seed) Then
       Call PetscGetTime(Time, iErr); CHKERRQ(iErr)
       Seed =  Time * (Time - Int(Time))
+   Else 
+      Write(IOBuffer, *) 'Seeding random number generator with seed ', Seed, '\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   !Write(IOBuffer, *) 'Seeding random number generator with seed ', Seed, '\n'
-   !Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
    Call PetscRandomSetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
    Call PetscRandomSeed(RandomCtx, iErr); CHKERRQ(iErr)
    Call PetscRandomGetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
-   NumTestCase = 4
-   Allocate(TestCase(NumTestCase))
-   Do i = 1, NumTestCase
-      TestCase(i)%Index = i
-   End Do
-   TestCase(1)%Description = "Polycrystal, MIL"
-   TestCase(2)%Description = "Polycrystal, Mode-I scaling experiment"
-   TestCase(3)%Description = "Polycrystal, Mode-I surfing experiment"
-   TestCase(4)%Description = "Polycrystal, Mode-I isotropic scaling experiment"
-   
 
+   
+   !!!
+   !!! Read mesh, partition
+   !!!!
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
@@ -156,6 +159,9 @@ Program PrepVarFrac
  99  Format(A, '-', I4.4, '.gen')
    Call DMMeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
    
+   !!!
+   !!! EB, SS, NS Properties
+   !!!
    Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done with VarFracEXOProperty_Init\n"
@@ -165,29 +171,19 @@ Program PrepVarFrac
    Write(IOBuffer, *) '\nElement Block and Node Set Properties\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
 
-   !!! Get number of grains from command line
-   numGrains = MeshTopology%Num_Elem_Blks_Global
-   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-n', NumGrains, has_n, iErr) 
-   If (NumGrains < 0) Then
-      NumGrains = MeshTopology%Num_Elem_Blks_Global + NumGrains
-   End If
-   If (NumGrains > MeshTopology%Num_Elem_Blks_Global) Then
-      Write(IOBuffer, *) "Number of grains cannot be greater than number of blocks! ", NumGrains, MeshTopology%Num_Elem_Blks_Global, "\n"
-      SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_ARG_SIZ, IOBuffer, iErr)
-   End If
-   Call EXOEBProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
+   Call EXOEBProperty_AskWithBatch(MyEXO, MeshTopology, BatchUnit, IsBatch)
    If (verbose > 0) Then
-      Write(IOBuffer, *) "Done with EXOEBProperty_AskWithBatchGrains\n"
+      Write(IOBuffer, *) "Done with EXOEBProperty_AskWithBatch\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call EXOSSProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
+   Call EXOSSProperty_AskWithBatch(MyEXO, MeshTopology, BatchUnit, IsBatch)
    If (verbose > 0) Then
-      Write(IOBuffer, *) "Done with EXOSSProperty_AskWithBatchGrains\n"
+      Write(IOBuffer, *) "Done with EXOSSProperty_AskWithBatch\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call EXONSProperty_AskWithBatchGrains(MyEXO, MeshTopology, BatchUnit, IsBatch, NumGrains)
+   Call EXONSProperty_AskWithBatch(MyEXO, MeshTopology, BatchUnit, IsBatch)
    If (verbose > 0) Then
-      Write(IOBuffer, *) "Done with EXONSProperty_AskWithBatchGrains\n"
+      Write(IOBuffer, *) "Done with EXONSProperty_AskWithBatch\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
@@ -208,6 +204,9 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
+   !!!
+   !!! Transient variables
+   !!!
    Call VarFracEXOVariable_Init(MyEXO,saveElemVar)
    Call EXOVariable_Write(MyEXO)
    If (verbose > 0) Then
@@ -215,8 +214,10 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
-
-!!! Now we are done with the geometry, the variable definition and properties, so we can pre-compute the loads, displacement, time steps etc
+   !!!
+   !!! Now we are done with the geometry, the variable definition and properties, so we can 
+   !!! pre-compute the loads, displacement, time steps etc
+   !!!
    Select Case (MeshTopology%Num_Dim)
    Case (2) 
       Call ElementInit(MeshTopology, Elem2D, QuadOrder)
@@ -230,7 +231,7 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-!!! List all test cases and wait for case number 
+   !!! List all test cases and wait for case number 
    Do i = 1, NumTestCase
       Write(IOBuffer, "('[',I2.2,'] ',A)"), TestCase(i)%Index, Trim(TestCase(i)%Description)//'\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -238,9 +239,9 @@ Program PrepVarFrac
    
    Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
-!!!
-!!! Global Variables: Time Steps and Load
-!!!
+   !!!
+   !!! Global Variables: Time Steps and Load
+   !!!
    Write(IOBuffer, *) '\nGlobal Variables\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    Call AskReal(TMin, 'TMin', BatchUnit, IsBatch)
@@ -273,12 +274,13 @@ Program PrepVarFrac
    End Select
    DeAllocate(GlobVars)
    
-!!!
-!!! EB Properties
-!!!
+   !!!
+   !!! EB Properties
+   !!!
    Select Case(MeshTopology%Num_Dim)
    Case(2)
       Allocate(MatProp2D(MeshTopology%Num_Elem_Blks_Global))
+      Call GenHL_Cubic2DPlaneStress_Zener(BGrain, CGrain, CpGrain, alphaGrain, MatProp2D(iBlock)%Hookes_Law)
    Case(3)
       Allocate(MatProp3D(MeshTopology%Num_Elem_Blks_Global))
    End Select
@@ -288,123 +290,42 @@ Program PrepVarFrac
    Select Case(iCase)
    !!! Write special cases here
    Case Default
-      If (NumGrains > 0) Then 
-         !!! Default behavior is that the grains are the first element block and share the same properties (but not orientation)
-         Call AskReal(ToughnessGrain,    'Grains: toughness',   BatchUnit, IsBatch)
-         Call AskReal(BGrain,            'Grains: Bulk modulus B',         BatchUnit, IsBatch)
-         Call AskReal(CGrain,            'Grains: Shear modulus C',        BatchUnit, IsBatch)
-         Call AskReal(CpGrain,           'Grains: Shear modulus Cp',       BatchUnit, IsBatch)
-         Call AskReal(ThermExpScalGrain, 'Grains: therm. exp.', BatchUnit, IsBatch)
-      End If
-      alphamin = 0.0_Kr
-      alphamax = PETSC_PI
-      Call PetscRandomSetInterval(RandomCtx, alphamin, alphamax, iErr); CHKERRQ(iErr)
-      Do iBlock = 1, NumGrains
-         Select Case(MeshTopology%Num_Dim)
-         Case(2)
-            MatProp2D(iBlock)%Toughness = ToughnessGrain
-            Call PetscRandomGetValue(RandomCtx, alphaGrain, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 90) iBlock, alphaGrain * 180.0_kr / PETSC_PI
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Call GenHL_Cubic2DPlaneStress_Zener(BGrain, CGrain, CpGrain, alphaGrain, MatProp2D(iBlock)%Hookes_Law)
-            MatProp2D(iBlock)%Therm_Exp    = 0.0_Kr
-            MatProp2D(iBlock)%Therm_Exp%XX = ThermExpScalGrain
-            MatProp2D(iBlock)%Therm_Exp%YY = ThermExpScalGrain
-         Case(3)
-            MatProp3D(iBlock)%Toughness = ToughnessGrain
-            SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Polycrystal only supported in 2D at this point\n', iErr)
-            MatProp3D(iBlock)%Therm_Exp    = 0.0_Kr
-            MatProp3D(iBlock)%Therm_Exp%XX = ThermExpScalGrain
-            MatProp3D(iBlock)%Therm_Exp%YY = ThermExpScalGrain
-            MatProp3D(iBlock)%Therm_Exp%ZZ = ThermExpScalGrain
-         End Select 
-      End Do
-      !!! Non grain EB if necessary
-      Do iBlock = NumGrains+1, MeshTopology%Num_Elem_Blks_Global
-         Write(IOBuffer, 100) iBlock
+      Do i = 1, MeshTopology%Num_Elem_Blks_Global
+         Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          
-         Write(IOBuffer, 300) iBlock, 'Toughness'
+         Write(IOBuffer, 300) i, 'Toughness'
          Call AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlock, 'Young Modulus'
+         Write(IOBuffer, 300) i, 'Young Modulus'
          Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlock, 'Poisson Ratio'
+         Write(IOBuffer, 300) i, 'Poisson Ratio'
          Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlock, 'Therm Exp'
+         Write(IOBuffer, 300) i, 'Therm Exp'
          Call AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
 
          Select Case(MeshTopology%Num_Dim)
          Case(2)
-            MatProp2D(iBlock)%Toughness = Toughness
-            Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(iBlock)%Hookes_Law)
-            MatProp2D(iBlock)%Therm_Exp    = 0.0_Kr
-            MatProp2D(iBlock)%Therm_Exp%XX = Therm_ExpScal
-            MatProp2D(iBlock)%Therm_Exp%YY = Therm_ExpScal
+            MatProp2D(i)%Toughness = Toughness
+                If (PlaneStrain) Then
+                    Call GenHL_Iso2D_EnuPlaneStrain(E, nu, MatProp2D(i)%Hookes_Law)
+                Else 
+                    Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
+                End If       
+            MatProp2D(i)%Therm_Exp    = 0.0_Kr
+            MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
+            MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
          Case(3)
-            MatProp3D(iBlock)%Toughness = Toughness
-            Call GenHL_Iso3D_Enu(E, nu, MatProp3D(iBlock)%Hookes_Law)
-            MatProp3D(iBlock)%Therm_Exp    = 0.0_Kr
-            MatProp3D(iBlock)%Therm_Exp%XX = Therm_ExpScal
-            MatProp3D(iBlock)%Therm_Exp%YY = Therm_ExpScal
-            MatProp3D(iBlock)%Therm_Exp%ZZ = Therm_ExpScal
-         End Select 
-      End Do
-   Case(4)
-      If (NumGrains > 0) Then 
-         !!! Default behavior is that the grains are the first element block and share the same properties (but not orientation)
-         Call AskReal(ToughnessGrain,    'Grains: toughness', BatchUnit, IsBatch)
-         Call AskReal(E,                 'Grains: Young''s modulus E', BatchUnit, IsBatch)
-         Call AskReal(nu,                'Grains: Poisson Ration nu', BatchUnit, IsBatch)
-         Call AskReal(ThermExpScalGrain, 'Grains: therm. exp.', BatchUnit, IsBatch)
-      End If
-      Do iBlock = 1, NumGrains
-         Select Case(MeshTopology%Num_Dim)
-         Case(2)
-            MatProp2D(iBlock)%Toughness = ToughnessGrain
-            Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(iBlock)%Hookes_Law)
-            MatProp2D(iBlock)%Therm_Exp    = 0.0_Kr
-            MatProp2D(iBlock)%Therm_Exp%XX = ThermExpScalGrain
-            MatProp2D(iBlock)%Therm_Exp%YY = ThermExpScalGrain
-         Case(3)
-            MatProp3D(iBlock)%Toughness = ToughnessGrain
-            SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Polycrystal only supported in 2D at this point\n', iErr)
-            MatProp3D(iBlock)%Therm_Exp    = 0.0_Kr
-            MatProp3D(iBlock)%Therm_Exp%XX = ThermExpScalGrain
-            MatProp3D(iBlock)%Therm_Exp%YY = ThermExpScalGrain
-            MatProp3D(iBlock)%Therm_Exp%ZZ = ThermExpScalGrain
-         End Select 
-      End Do
-      !!! Non grain EB if necessary
-      Do iBlock = NumGrains+1, MeshTopology%Num_Elem_Blks_Global
-         Write(IOBuffer, 100) iBlock
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      
-         Write(IOBuffer, 300) iBlock, 'Toughness'
-         Call AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlock, 'Young Modulus'
-         Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlock, 'Poisson Ratio'
-         Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlock, 'Therm Exp'
-         Call AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
-
-         Select Case(MeshTopology%Num_Dim)
-         Case(2)
-            MatProp2D(iBlock)%Toughness = Toughness
-            Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(iBlock)%Hookes_Law)
-            MatProp2D(iBlock)%Therm_Exp    = 0.0_Kr
-            MatProp2D(iBlock)%Therm_Exp%XX = Therm_ExpScal
-            MatProp2D(iBlock)%Therm_Exp%YY = Therm_ExpScal
-         Case(3)
-            MatProp3D(iBlock)%Toughness = Toughness
-            Call GenHL_Iso3D_Enu(E, nu, MatProp3D(iBlock)%Hookes_Law)
-            MatProp3D(iBlock)%Therm_Exp    = 0.0_Kr
-            MatProp3D(iBlock)%Therm_Exp%XX = Therm_ExpScal
-            MatProp3D(iBlock)%Therm_Exp%YY = Therm_ExpScal
-            MatProp3D(iBlock)%Therm_Exp%ZZ = Therm_ExpScal
+            MatProp3D(i)%Toughness = Toughness
+            Call GenHL_Iso3D_Enu(E, nu, MatProp3D(i)%Hookes_Law)
+            MatProp3D(i)%Therm_Exp    = 0.0_Kr
+            MatProp3D(i)%Therm_Exp%XX = Therm_ExpScal
+            MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
+            MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
          End Select 
       End Do
    End Select
+   
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    
    !!! Write EB Properties
    If (MEF90_MyRank == 0) Then
@@ -417,11 +338,10 @@ Program PrepVarFrac
          DeAllocate(MatProp3D)
       End Select
    End If
-90 Format('Grain ', I4.4, ' angle ', F6.2, '\n')
 
-!!!
-!!! Temperature and Forces
-!!!
+   !!!
+   !!! Temperature and Forces
+   !!!
    Write(IOBuffer, *) '\nTemperature and Forces\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    !!! Variable initialized on EB: F and Theta
