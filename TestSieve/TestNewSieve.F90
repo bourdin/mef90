@@ -19,7 +19,7 @@ Program TestNewSieve
 #ifdef PETSC_HAVE_EXODUSII
 	Call DMMeshCreateExodus(PETSC_COMM_WORLD,infile,mesh,ierr);CHKERRQ(ierr)
 	
-   Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-o',outfile,flg,ierr);CHKERRQ(ierr)
+        Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-o',outfile,flg,ierr);CHKERRQ(ierr)
 	If (flg) Then
 		Call PetscViewerBinaryOpen(PETSC_COMM_WORLD,outfile,FILE_MODE_WRITE,meshViewer,ierr);CHKERRQ(ierr)
 		Call DMView(mesh,meshViewer,ierr); CHKERRQ(ierr)
