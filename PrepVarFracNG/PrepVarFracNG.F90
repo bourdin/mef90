@@ -45,6 +45,8 @@ Program PrepVarFrac
    Type(Tens4OS2D)                              :: TmpHL_2D
    Type(Tens4OS3D)                              :: TmpHL_3D   
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
+   PetscReal                                    :: Eeff,nueff,Kappa,Mu
+   PetscReal                                    :: CTheta,CTheta2,STheta,STheta2
    PetscReal, Dimension(:), Pointer             :: GlobVars
    PetscInt                                     :: vers
    PetscBool                                    :: IsBatch, HasBatchFile
@@ -56,7 +58,7 @@ Program PrepVarFrac
    PetscInt                                     :: Seed
    PetscLogDouble                               :: Time
    PetscBool                                    :: Has_Seed, Has_n
-   PetscBool                                    :: saveElemVar
+   PetscBool                                    :: saveElemVar, PlaneStrain
    
    PetscReal                                    :: R
 
@@ -70,7 +72,7 @@ Program PrepVarFrac
    TestCase(1)%Description = "MIL"
    TestCase(2)%Description = "Mode-I scaling experiment"
    TestCase(3)%Description = "Mode-I surfing experiment"
-   TestCase(4)%Description = "Mixed mode (I+III)"
+   TestCase(4)%Description = "Single well, constant flux"
 
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, HasPrefix, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr); CHKERRQ(iErr)
@@ -80,9 +82,10 @@ Program PrepVarFrac
       STOP
    End If
    
-   saveElemVar=.True.
-
+   saveElemVar=PETSC_TRUE
    Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-saveelemvar', saveElemVar, HasPrefix, iErr);CHKERRQ(iErr)
+   PlaneStrain=PETSC_FALSE
+   Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-planestrain', PlaneStrain, HasPrefix, iErr);CHKERRQ(iErr)
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr); CHKERRQ(iErr)
 
    EraseBatch=.False.
@@ -280,7 +283,6 @@ Program PrepVarFrac
    Select Case(MeshTopology%Num_Dim)
    Case(2)
       Allocate(MatProp2D(MeshTopology%Num_Elem_Blks_Global))
-      Call GenHL_Cubic2DPlaneStress_Zener(BGrain, CGrain, CpGrain, alphaGrain, MatProp2D(iBlock)%Hookes_Law)
    Case(3)
       Allocate(MatProp3D(MeshTopology%Num_Elem_Blks_Global))
    End Select
@@ -325,8 +327,6 @@ Program PrepVarFrac
       End Do
    End Select
    
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   
    !!! Write EB Properties
    If (MEF90_MyRank == 0) Then
       Select Case(MeshTopology%Num_Dim)
@@ -338,7 +338,7 @@ Program PrepVarFrac
          DeAllocate(MatProp3D)
       End Select
    End If
-
+   
    !!!
    !!! Temperature and Forces
    !!!
@@ -351,45 +351,34 @@ Program PrepVarFrac
    F%Y = 0.0_Kr
    F%Z = 0.0_Kr
    Theta = 0.0_Kr
-   If (NumGrains>0) Then
-      If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(1) /= 0) Then
-         !!! Force
-         Write(IOBuffer, 310) 'Fx'
-         Call AskReal(FGrain%X, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 310) 'Fy'
-         Call AskReal(FGrain%Y, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 310) 'Fz'
-         Call AskReal(FGrain%Z, IOBuffer, BatchUnit, IsBatch)
-      End If
-      F(1:NumGrains)=F
-
-      !!! Temperature
-      Write(IOBuffer, 310) 'Theta'
-      Call AskReal(ThetaGrain, IOBuffer, BatchUnit, IsBatch)
-      Theta(1:NumGrains) = ThetaGrain
-   End If
+   Select Case(iCase)
+   !!! Write special cases here
+   Case Default
+      Do i = 1, MeshTopology%Num_Elem_Blks_Global
+         Write(IOBuffer, 100) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    
-   Do i = Numgrains+1, MeshTopology%Num_Elem_Blks_Global
-      Write(IOBuffer, 100) i
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      !!! Force
-      If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
-         Write(IOBuffer, 300) i, 'Fx'
-         Call AskReal(F(i)%X, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) i, 'Fy'
-         Call AskReal(F(i)%Y, IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) i, 'Fz'
-         Call AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
-      End If
-      !!! Temperature
-      Write(IOBuffer, 300) i, 'Theta'
-      Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
-      !!!
-      If (.NOT. IsBatch) Then
-         Write(BatchUnit, *)
-      End If
-      
-   End Do
+         !!! Force
+         If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 300) i, 'Fx'
+            Call AskReal(F(i)%X, IOBuffer, BatchUnit, IsBatch)
+
+            Write(IOBuffer, 300) i, 'Fy'
+            Call AskReal(F(i)%Y, IOBuffer, BatchUnit, IsBatch)
+
+            Write(IOBuffer, 300) i, 'Fz'
+            Call AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
+         End If
+
+         !!! Temperature
+         Write(IOBuffer, 300) i, 'Theta'
+         Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+   End Select
+   
    !!!
    !!! Compute the value of the force field at the vertices
    !!! Here is the place to request additional parameters if needed
@@ -423,9 +412,9 @@ Program PrepVarFrac
    End Do Do_Step_F
    Call SectionRealDestroy(FSec, iErr); CHKERRQ(iErr)
    DeAllocate(F)
+   
    !!!
    !!! Compute the value of the force field at the vertices
-   !!! Here is the place to request additional parameters if needed
    !!!
    Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
    Do_Step_Theta: Do iStep = 1, NumSteps
@@ -437,8 +426,8 @@ Program PrepVarFrac
          Allocate(Thetaelem(Num_DoF))
          Select Case(iCase)
          !!! Write special cases here
-         Case(2,3,4)
-            Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
+         Case(5) !!! Single well, cst flux
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,'Not implemented yet\n',iErr)
          Case default
             !!! Default is MIL
             Do k = 1, Num_DoF
@@ -468,41 +457,43 @@ Program PrepVarFrac
    U%Y = 0.0_Kr
    U%Z = 0.0_Kr
    V   = 1.0_Kr
-   Do i = 1, MeshTopology%Num_Node_Sets_Global
-      Write(IOBuffer, 102) i
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
-         Write(IOBuffer, 302) i, 'Ux'
-         Call AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
-      End If
-      If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
-         Write(IOBuffer, 302) i, 'Uy'
-         Call AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
-      End If
-      If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
-         Write(IOBuffer, 302) i, 'Uz'
-         Call AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
-      End If
-      If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
-         Write(IOBuffer, 302) i, 'V'
-         Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
-      End If
-      If (.NOT. IsBatch) Then
-         Write(BatchUnit, *)
-      End If
-   End Do
-   Write(IOBuffer, *) '   \n\n'
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   !!!
-   !!! Compute the value of the Displacement at the vertices
-   !!! Here is the place to request additional parameters if needed
-   !!!
-   If ((iCase == 2) .OR. (iCase==3) .OR. (iCase==4)) Then
+   Select Case(iCase)
+   !!! Write special cases here
+   Case(2,3) !!! Scaling, surfing
       Call AskReal(Eeff,  'E effective (for displacement field)',  BatchUnit, IsBatch)
       Call AskReal(nueff, 'nu effective (for displacement field)', BatchUnit, IsBatch)
       Kappa = (3.0-nu)/(1.0+nu)
       Mu = E / (1.0_Kr + nu) * .5_Kr
-   End If
+   Case Default
+      Do i = 1, MeshTopology%Num_Node_Sets_Global
+         Write(IOBuffer, 102) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'Ux'
+            Call AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
+         End If
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'Uy'
+            Call AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
+         End If
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'Uz'
+            Call AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
+         End If
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'V'
+            Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+         End If
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+   End Select
+   Write(IOBuffer, *) '   \n\n'
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   !!!
+   !!! Compute the value of the Displacement at the vertices
+   !!!
    Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'U', 3, USec, iErr); CHKERRQ(iErr)
    Allocate(Uelem(3))
    Do iStep = 1, NumSteps
@@ -511,7 +502,7 @@ Program PrepVarFrac
          i = MeshTopology%Node_Set(iloc)%ID
          Select Case(iCase)
          !!! Write special cases here 
-         Case(2,4)
+         Case(2)
             Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
                Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
                R        = sqrt(CoordElem(1)**2 + CoordElem(2)**2)
@@ -545,7 +536,7 @@ Program PrepVarFrac
                Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
                Call SectionRealRestore (CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
             End Do   
-         Case default
+         Case Default
             !!! Default is MIL
             Uelem(1) = T(iStep) * U(i)%X
             Uelem(2) = T(iStep) * U(i)%Y
@@ -597,7 +588,7 @@ Program PrepVarFrac
 ! 101 Format('*** Side Set      ', T24, I3, '\n')
  102 Format('*** Node Set      ', T24, I3, '\n')
  300 Format('EB', I4.4, ': ', A)
- 310 Format('Grains: ', A)
+! 310 Format('Grains: ', A)
 ! 301 Format('SS', I4.4, ': ', A)
  302 Format('NS', I4.4, ': ', A)
 

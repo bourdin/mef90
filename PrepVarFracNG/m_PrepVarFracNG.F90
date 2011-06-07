@@ -55,6 +55,35 @@ Contains
       End If
    End Subroutine AskReal
 
+   Subroutine EXONSProperty_AskWithBatchGrains(dEXO, dMeshTopology, BatchUnit, IsBatch, NumGrains)
+      Type(EXO_Type)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      PetscInt                                       :: BatchUnit
+      PetscBool                                      :: IsBatch
+      PetscInt                                       :: NumGrains
+
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i, j, IntBuffer
+
+      PetscInt                                       :: NumNS
+      PetscInt                                       :: EXO_MyRank
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+
+      Do i = 1, dMeshTopology%Num_Node_Sets_Global
+         Write(IOBuffer, 102) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_NSProperties
+            Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
+            Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+102 Format('*** Node Set      ', T24, I3, '\n')
+202 Format('NS', I4.4, ': ', A)
+   End Subroutine EXONSProperty_AskWithBatchGrains
+
    Subroutine EXOEBProperty_AskWithBatchGrains(dEXO, dMeshTopology, BatchUnit, IsBatch, NumGrains)
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
@@ -213,33 +242,4 @@ Contains
 101 Format('*** Side Set      ', T24, I3, '\n')
 201 Format('SS', I4.4, ': ', A)
    End Subroutine EXOSSProperty_AskWithBatch
-   
-   Subroutine EXONSProperty_AskWithBatchGrains(dEXO, dMeshTopology, BatchUnit, IsBatch, NumGrains)
-      Type(EXO_Type)                                 :: dEXO
-      Type(MeshTopology_Type)                        :: dMeshTopology
-      PetscInt                                       :: BatchUnit
-      PetscBool                                      :: IsBatch
-      PetscInt                                       :: NumGrains
-
-      PetscInt                                       :: iErr
-      PetscInt                                       :: i, j, IntBuffer
-
-      PetscInt                                       :: NumNS
-      PetscInt                                       :: EXO_MyRank
-      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
-
-      Do i = 1, dMeshTopology%Num_Node_Sets_Global
-         Write(IOBuffer, 102) i
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Do j = 1, dEXO%Num_NSProperties
-            Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
-            Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
-         End Do
-         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
-            Write(BatchUnit, *)
-         End If
-      End Do
-102 Format('*** Node Set      ', T24, I3, '\n')
-202 Format('NS', I4.4, ': ', A)
-   End Subroutine EXONSProperty_AskWithBatchGrains
 End Module m_PrepVarFrac
