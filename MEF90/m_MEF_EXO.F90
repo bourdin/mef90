@@ -551,10 +551,10 @@ Module m_MEF_EXO
       Coord_Names(2) = 'Y'
       Coord_Names(3) = 'Z'
       
-      write(*,*) '1. In Write_MeshTopology'
-      write(*,*) '1. dMeshTopology%Num_Node_Sets', dMeshTopology%Num_Node_Sets
-      write(*,*) '1. dMeshTopology%Num_Side_Sets', dMeshTopology%Num_Side_Sets
-      write(*,*) '1. dMeshTopology%Num_Elem_Blks', dMeshTopology%Num_Elem_Blks
+      !write(*,*) '1. In Write_MeshTopology'
+      !write(*,*) '1. dMeshTopology%Num_Node_Sets', dMeshTopology%Num_Node_Sets
+      !write(*,*) '1. dMeshTopology%Num_Side_Sets', dMeshTopology%Num_Side_Sets
+      !write(*,*) '1. dMeshTopology%Num_Elem_Blks', dMeshTopology%Num_Elem_Blks
 
       Is_IO: If (dEXO%comm == PETSC_COMM_SELF) Then
          ! Open File
@@ -594,12 +594,12 @@ Module m_MEF_EXO
             Call EXPELB(dEXO%exoid, dMeshTopology%elem_blk(iBlk)%ID, Elem_Type, dMeshTopology%elem_blk(iBlk)%Num_Elems, dMeshTopology%elem_blk(iBlk)%Num_DoF, Num_Attr, iErr)
          End Do
          
-         write(*,*) '1. Done with Elem Blks'
+         !write(*,*) '1. Done with Elem Blks'
          ! Write Side sets informations
          If (dMeshTopology%Num_Side_Sets > 0) Then
             SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Side sets not supported yet', iErr)
          End If
-         write(*,*) '2. Done with Side Sets'
+         !write(*,*) '2. Done with Side Sets'
          
          ! Write Node sets informations
          Do iSet = 1, dMeshTopology%Num_Node_Sets
@@ -608,7 +608,7 @@ Module m_MEF_EXO
                Call EXPNS(dEXO%exoid, dMeshTopology%Node_Set(iSet)%ID, dMeshTopology%Node_Set(iSet)%Node_ID(:), iErr)
             End If
          End Do
-         write(*,*) '3. Done with Node Sets'
+         !write(*,*) '3. Done with Node Sets'
    
          ! Write vertex coordinates
          Call DMMeshGetCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr);CHKERRQ(iErr)
@@ -628,9 +628,9 @@ Module m_MEF_EXO
          !write(*,*) Coordinates(:,2)
          !write(*,*) 'Z'
          !write(*,*) Coordinates(:,3)
-         write(*,*) size(coordinates,1), size(coordinates,2)
+         !write(*,*) size(coordinates,1), size(coordinates,2)
          Call DMMeshRestoreCoordinatesF90(dMeshTopology%mesh, Coordinates, iErr);CHKERRQ(iErr)
-         write(*,*) '4. Done with coordinates'
+         !write(*,*) '4. Done with coordinates'
          
           ! Write Connectivity tables
          Call DMMeshGetElementsF90(dMeshTopology%mesh, ConnectMesh, iErr);CHKERRQ(iErr)
@@ -648,7 +648,7 @@ Module m_MEF_EXO
              End If
           End Do
           Call DMMeshRestoreElementsF90(dMeshTopology%mesh, ConnectMesh, iErr);CHKERRQ(iErr)
-          write(*,*) '5. Done with elements'
+          !write(*,*) '5. Done with elements'
 
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
@@ -683,7 +683,7 @@ Module m_MEF_EXO
       GlobalMeshTopology%num_verts = dMeshTopology%num_verts
       GlobalMeshTopology%num_elems = dMeshTopology%num_elems
       
-      write(*,*) '*** dMeshTopology%num_elem_blks ', dMeshTopology%num_elem_blks
+      !write(*,*) '*** dMeshTopology%num_elem_blks ', dMeshTopology%num_elem_blks
       
       Allocate(Tmp_ID(dMeshTopology%num_elem_blks))
       Tmp_ID = dMeshTopology%elem_blk(:)%ID
@@ -695,7 +695,7 @@ Module m_MEF_EXO
 
       GlobalMeshTopology%num_side_sets = 0
 
-      write(*,*) '*** dMeshTopology%num_node_sets ', dMeshTopology%num_node_sets
+      !write(*,*) '*** dMeshTopology%num_node_sets ', dMeshTopology%num_node_sets
       
       Allocate(Tmp_ID(dMeshTopology%num_node_sets))
       Tmp_ID = dMeshTopology%node_set(:)%ID
@@ -705,7 +705,7 @@ Module m_MEF_EXO
       GlobalMeshTopology%node_set(:)%ID = Tmp_GlobalID
       DeAllocate(Tmp_ID)
       
-      write(*,*) '*** GlobalMeshTopology%num_elem_blks', GlobalMeshTopology%num_elem_blks
+      !write(*,*) '*** GlobalMeshTopology%num_elem_blks', GlobalMeshTopology%num_elem_blks
       ! Element Blocks
       Allocate(Tmp_ID(GlobalMeshTopology%num_elem_blks))
       Tmp_ID = 0
@@ -732,7 +732,7 @@ Module m_MEF_EXO
          Call MPI_AllReduce(MPI_IN_PLACE, GlobalMeshTopology%elem_blk(iBlk)%Num_DoF, 1, MPI_INTEGER, MPI_MAX, dGlobalComm, iErr)
       End Do
       
-      write(*,*) '*** GlobalMeshTopology%num_node_sets', GlobalMeshTopology%num_node_sets
+      !write(*,*) '*** GlobalMeshTopology%num_node_sets', GlobalMeshTopology%num_node_sets
       ! Node Sets
       GlobalMeshTopology%node_set(:)%num_nodes = 0
       Do i = 1, GlobalMeshTopology%num_node_sets
@@ -744,15 +744,15 @@ Module m_MEF_EXO
             End If
          End Do
       End Do
-      write(*,*) '==='
+      !write(*,*) '==='
       !Do iSet = 1, GlobalMeshTopology%num_node_sets
       !End Do
 
    
       GlobalMeshTopology%mesh = dMeshTopology%mesh
-      Call PetscPrintf(PETSC_COMM_WORLD,'MeshTopology\n\n',ierr);CHKERRQ(ierr);
+      !Call PetscPrintf(PETSC_COMM_WORLD,'MeshTopology\n\n',ierr);CHKERRQ(ierr);
       Call MeshTopologyView(dMeshTopology,viewer)
-      Call PetscPrintf(PETSC_COMM_WORLD,'GlobalMeshTopology\n\n',ierr);CHKERRQ(ierr);
+      !Call PetscPrintf(PETSC_COMM_WORLD,'GlobalMeshTopology\n\n',ierr);CHKERRQ(ierr);
       Call MeshTopologyView(GlobalMeshTopology,viewer)
       
       Call MeshTopologyWrite(GlobalMeshTopology, dEXO)
