@@ -32,7 +32,8 @@ Program PrepVarFrac
    PetscInt, Parameter                          :: QuadOrder=2
    Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec, CoordSec
    Type(Vect3D), Dimension(:), Pointer          :: U, F
-   PetscReal, Dimension(:), Pointer             :: V, Theta
+   PetscReal, Dimension(:), Pointer             :: V
+   PetscReal                                    :: Theta, Beta, Tau
    PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
@@ -64,7 +65,7 @@ Program PrepVarFrac
 
    Call MEF90_Initialize()
 
-   NumTestCase = 4
+   NumTestCase = 7
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -73,6 +74,9 @@ Program PrepVarFrac
    TestCase(2)%Description = "Mode-I scaling experiment"
    TestCase(3)%Description = "Mode-I surfing experiment"
    TestCase(4)%Description = "Single well, constant flux"
+   TestCase(5)%Description = "Cooling along y=0, Dirichlet BC"
+   TestCase(6)%Description = "Cooling along y=0, Robin BC"
+   TestCase(7)%Description = "Cooling along y=0 and y=ymax, Dirichlet BC"
 
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, HasPrefix, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr); CHKERRQ(iErr)
@@ -235,8 +239,10 @@ Program PrepVarFrac
    End If
    
    !!! List all test cases and wait for case number 
+   Write(IOBuffer, *) '\nTest Case:\n'
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    Do i = 1, NumTestCase
-      Write(IOBuffer, "('[',I2.2,'] ',A)"), TestCase(i)%Index, Trim(TestCase(i)%Description)//'\n'
+      Write(IOBuffer, "('   [',I2.2,'] ',A)"), TestCase(i)%Index, Trim(TestCase(i)%Description)//'\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End Do
    
@@ -254,27 +260,30 @@ Program PrepVarFrac
    Allocate(GlobVars(VarFrac_Num_GlobVar))
    GlobVars = 0.0_Kr
    Allocate(T(NumSteps))
-   Select Case(iCase)
+   MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
+   Do i = 1, NumSteps-1
+      Select Case(iCase)
+      Case(4,5,6,7)
+         !! Non uniform time stepping adapted to the time scale of the thermal problem in tau=sqrt(t)
+         !! Time in our simulation is the physical time, while Bahr et al. (TAFM 1998) use tau
+         !! Pay attention in visualization softwares
+         T(i) = Tmin + (Real(i-1) * (sqrt(Tmax-TMin))/Real(NumSteps-1))**2
       Case Default
-      Do i = 1, NumSteps-1
          T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
-         GlobVars(VarFrac_GlobVar_Load) = T(i)
-         Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
+      End Select
+
+      GlobVars(VarFrac_GlobVar_Load) = T(i)
+      Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
+
+      Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
+   End Do
    
-         MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
-         Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
-         Call EXCLOS(MyEXO%exoid, iErr)
-         MyEXO%exoid = 0
-      End Do
-   
-      T(NumSteps) = Tmax
-      GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
-      Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
-      MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
-      Call EXPTIM(MyEXO%exoid, NumSteps, T(NumSteps), iErr)
-      Call EXCLOS(MyEXO%exoid, iErr)
-      MyEXO%exoid = 0
-   End Select
+   T(NumSteps) = Tmax
+   GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
+   Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
+   Call EXPTIM(MyEXO%exoid, NumSteps, T(NumSteps), iErr)
+   Call EXCLOS(MyEXO%exoid, iErr)
+   MyEXO%exoid = 0
    DeAllocate(GlobVars)
    
    !!!
@@ -308,11 +317,11 @@ Program PrepVarFrac
          Select Case(MeshTopology%Num_Dim)
          Case(2)
             MatProp2D(i)%Toughness = Toughness
-                If (PlaneStrain) Then
-                    Call GenHL_Iso2D_EnuPlaneStrain(E, nu, MatProp2D(i)%Hookes_Law)
-                Else 
-                    Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
-                End If       
+            If (PlaneStrain) Then
+               Call GenHL_Iso2D_EnuPlaneStrain(E, nu, MatProp2D(i)%Hookes_Law)
+            Else 
+               Call GenHL_Iso2D_EnuPlaneStress(E, nu, MatProp2D(i)%Hookes_Law)
+            End If       
             MatProp2D(i)%Therm_Exp    = 0.0_Kr
             MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
             MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
@@ -340,17 +349,19 @@ Program PrepVarFrac
    End If
    
    !!!
-   !!! Temperature and Forces
+   !!! Forces
    !!!
-   Write(IOBuffer, *) '\nTemperature and Forces\n'
+   Write(IOBuffer, *) '\nForces\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    !!! Variable initialized on EB: F and Theta
    Allocate(F(MeshTopology%Num_Elem_Blks_Global))
-   Allocate(Theta(MeshTopology%Num_Elem_Blks_Global))
    F%X = 0.0_Kr
    F%Y = 0.0_Kr
    F%Z = 0.0_Kr
-   Theta = 0.0_Kr
+   
+   !!!
+   !!! Get parameters for each case here
+   !!!
    Select Case(iCase)
    !!! Write special cases here
    Case Default
@@ -369,19 +380,11 @@ Program PrepVarFrac
             Write(IOBuffer, 300) i, 'Fz'
             Call AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
          End If
-
-         !!! Temperature
-         Write(IOBuffer, 300) i, 'Theta'
-         Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
-         If (.NOT. IsBatch) Then
-            Write(BatchUnit, *)
-         End If
       End Do
    End Select
    
    !!!
    !!! Compute the value of the force field at the vertices
-   !!! Here is the place to request additional parameters if needed
    !!!
    Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'F', 3, FSec, iErr); CHKERRQ(iErr)
    Do_Step_F: Do iStep = 1, NumSteps
@@ -391,6 +394,8 @@ Program PrepVarFrac
          !!! Initialize the Section
          Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
          Allocate(Felem(3*Num_DoF))
+         Felem = 0.0_Kr
+         
          Select Case(iCase)
          !!! Write special cases here
          Case default
@@ -414,41 +419,69 @@ Program PrepVarFrac
    DeAllocate(F)
    
    !!!
-   !!! Compute the value of the force field at the vertices
+   !!! Compute the value of the temperature field at the vertices
    !!!
+   Write(IOBuffer, *) '\nTemperature\n'
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
+   
+   !!!
+   !!! Get extra parameters if necessary
+   !!!
+   Select Case(iCase)
+   Case(5)
+      Call AskReal(Theta, 'Temperature contrast (Delta Theta)', BatchUnit, IsBatch)
+   Case(6)
+      Call AskReal(Theta, 'Temperature contrast (Delta Theta)', BatchUnit, IsBatch)
+      Call AskReal(Beta, 'Beta', BatchUnit, IsBatch)
+   Case default
+      !!! Default is MIL
+      Call AskReal(Theta, 'Temperature multiplier', BatchUnit, IsBatch)
+   End Select
+
+   !!!
+   !!! Initialize ThetaSec
+   !!!
+   Allocate(Thetaelem(1))
    Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
    Do_Step_Theta: Do iStep = 1, NumSteps
       Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
-      Do_Blk_Theta: Do iloc = 1, MeshTopology%Num_Elem_Blks
-         i = MeshTopology%Elem_Blk(iLoc)%ID
-         !!! Initialize the Section
-         Num_DoF = MeshTopology%Elem_Blk(iloc)%Num_DoF
-         Allocate(Thetaelem(Num_DoF))
-         Select Case(iCase)
-         !!! Write special cases here
-         Case(5) !!! Single well, cst flux
-            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,'Not implemented yet\n',iErr)
-         Case default
-            !!! Default is MIL
-            Do k = 1, Num_DoF
-               Thetaelem(k) = T(iStep) * Theta(i)
-            End Do
-            Do j = 1, MeshTopology%Elem_Blk(iloc)%Num_Elems
-               Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, MeshTopology%Elem_Blk(iloc)%Elem_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
-            End Do
-         End Select      
-         DeAllocate(Thetaelem)
-      End Do Do_Blk_Theta
+      Select Case(iCase)
+      !!! Write special cases here
+      Case(4) !!! Single well, cst flux
+         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,'Not implemented yet\n',iErr)
+      Case(5) !!! Cooling, Dirichlet
+         Do k = 1, MeshTopology%Num_Verts
+            Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + k-1, Coordelem, iErr); CHKERRQ(iErr)
+            !! tau=sqrt(t) is the time scale of the thermal problem (see Bahr at, TAFM 1998). The code keeps t as time and non-uniform time-stepping (see Time Steps)
+            Tau  = sqrt(T(iStep))  
+            ThetaElem = Theta * (1.0_Kr - erf( CoordElem(2) / tau * 0.5_Kr ))
+            Call SectionRealUpdate(ThetaSec, MeshTopology%Num_Elems + k-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+         End Do
+      Case(6) !!! Cooling, Robin
+         Do k = 1, MeshTopology%Num_Verts
+            Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + k-1, Coordelem, iErr); CHKERRQ(iErr)
+            !! tau=sqrt(t) is the time scale of the thermal problem (see Bahr at, TAFM 1998). The code keeps t as time and non-uniform time-stepping (see Time Steps)
+            Tau = sqrt(T(iStep))  
+            ThetaElem = Theta * erfc(CoordElem(2) / tau * 0.5_Kr ) - exp(beta * CoordElem(2) + beta**2 * tau**2) * erfc(CoordElem(2) / tau * 0.5_Kr + beta * tau)
+            Call SectionRealUpdate(ThetaSec, MeshTopology%Num_Elems + k-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+         End Do
+      Case default
+         !!! Default is MIL
+         ThetaElem = Theta * T(iStep)
+         Do k = 1, MeshTopology%Num_Verts
+            Call SectionRealUpdate(ThetaSec, MeshTopology%Num_Elems + k-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+         End Do
+      End Select      
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, iStep, ThetaSec) 
    End Do Do_Step_Theta
    Call SectionRealDestroy(ThetaSec, iErr); CHKERRQ(iErr)
-   DeAllocate(Theta)
+   DeAllocate(Thetaelem)
 
 
    !!!
-   !!! U and V
+   !!! U
    !!!
-   Write(IOBuffer, *) '\nU and V\n'
+   Write(IOBuffer, *) '\nU\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    !!! Variable initialized on EB: F and Theta
    Allocate(U(MeshTopology%Num_Node_Sets_Global))
@@ -489,7 +522,7 @@ Program PrepVarFrac
          End If
       End Do
    End Select
-   Write(IOBuffer, *) '   \n\n'
+   Write(IOBuffer, *) '   \n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    !!!
    !!! Compute the value of the Displacement at the vertices
@@ -551,6 +584,13 @@ Program PrepVarFrac
    DeAllocate(Uelem)
    Call SectionRealDestroy(USec, iErr); CHKERRQ(iErr)
    DeAllocate(U)
+
+
+   !!!
+   !!! V
+   !!!
+   Write(IOBuffer, *) 'V\n'
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
    !!!
    !!! Compute the value of the fracture field at the vertices
    !!! Here is the place to request additional parameters if needed
@@ -584,12 +624,9 @@ Program PrepVarFrac
    Call MeshTopologyDestroy(MeshTopology)
    Call MEF90_Finalize()
 
- 100 Format('*** Element Block ', T24, I3, '\n')
-! 101 Format('*** Side Set      ', T24, I3, '\n')
- 102 Format('*** Node Set      ', T24, I3, '\n')
+ 100 Format('    Element Block ', T24, I3, '\n')
+ 102 Format('    Node Set      ', T24, I3, '\n')
  300 Format('EB', I4.4, ': ', A)
-! 310 Format('Grains: ', A)
-! 301 Format('SS', I4.4, ': ', A)
  302 Format('NS', I4.4, ': ', A)
 
 End Program PrepVarFrac

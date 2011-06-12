@@ -80,7 +80,7 @@ Contains
             Write(BatchUnit, *)
          End If
       End Do
-102 Format('*** Node Set      ', T24, I3, '\n')
+102 Format('    Node Set      ', T24, I3, '\n')
 202 Format('NS', I4.4, ': ', A)
    End Subroutine EXONSProperty_AskWithBatchGrains
 
@@ -122,8 +122,8 @@ Contains
             Write(BatchUnit, *)
          End If
       End Do
-100 Format('*** Element Block ', T24, I3, '\n')
-110 Format('*** Grains 1-', I4.4, '\n')
+100 Format('    Element Block ', T24, I3, '\n')
+110 Format('    Grains 1-', I4.4, '\n')
 200 Format('EB', I4.4, ': ', A)
 210 Format('Grains: ', A)
    End Subroutine EXOEBProperty_AskWithBatchGrains
@@ -153,7 +153,7 @@ Contains
             Write(BatchUnit, *)
          End If
       End Do
-101 Format('*** Side Set      ', T24, I3, '\n')
+101 Format('    Side Set      ', T24, I3, '\n')
 201 Format('SS', I4.4, ': ', A)
    End Subroutine EXOSSProperty_AskWithBatchGrains
    
@@ -181,7 +181,7 @@ Contains
             Write(BatchUnit, *)
          End If
       End Do
-102 Format('*** Node Set      ', T24, I3, '\n')
+102 Format('    Node Set      ', T24, I3, '\n')
 202 Format('NS', I4.4, ': ', A)
    End Subroutine EXONSProperty_AskWithBatch
 
@@ -211,7 +211,7 @@ Contains
             Write(BatchUnit, *)
          End If
       End Do
-100 Format('*** Element Block ', T24, I3, '\n')
+100 Format('    Element Block ', T24, I3, '\n')
 200 Format('EB', I4.4, ': ', A)
    End Subroutine EXOEBProperty_AskWithBatch
    
@@ -239,7 +239,7 @@ Contains
             Write(BatchUnit, *)
          End If
       End Do
-101 Format('*** Side Set      ', T24, I3, '\n')
+101 Format('    Side Set      ', T24, I3, '\n')
 201 Format('SS', I4.4, ': ', A)
    End Subroutine EXOSSProperty_AskWithBatch
 End Module m_PrepVarFrac
