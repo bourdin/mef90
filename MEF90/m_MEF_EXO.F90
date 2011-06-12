@@ -781,10 +781,14 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Vars, Num_TS
       PetscReal                                      :: fDum
       Character                                      :: cDum
+      Logical                                        :: EXONeedsOpen = .FALSE.
       
       dRes = 0.0_Kr
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         If (dEXO%exoid == 0) Then
+            dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+            EXONeedsOpen = .TRUE.
+         End If
          ! Get the number of global variables stored in the database    
          Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
          Allocate(Tmp_Res(Num_Vars))
@@ -794,8 +798,10 @@ Module m_MEF_EXO
          Call EXGGV(dEXO%exoid, dTS, Num_Vars, Tmp_Res, iErr)
          MyRes = Tmp_Res(dIdx)
          DeAllocate (Tmp_Res)
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+         If (EXONeedsOpen) Then
+            Call EXCLOS(dEXO%exoid, iErr)
+            dEXO%exoid = 0
+         End If
       End If
             
       !!! Broacast if dEXO%comm == PETSC_COMM_WORLD
@@ -820,8 +826,12 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Rec, iRec
       PetscInt                                       :: iErr
       PetscReal                                      :: Vers
+      Logical                                        :: EXONeedsOpen = .FALSE.
       
-      dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+      If (dEXO%exoid == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         EXONeedsOpen = .TRUE.
+      End If
       
       If (Mod(Size(dRes), dMeshTopology%Num_Verts) /= 0) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexPtrInterlaced: The argument does not match the number of vertices in the mesh', iErr)
@@ -831,8 +841,10 @@ Module m_MEF_EXO
       Do iRec = 1, Num_Rec
          Call EXGNV(dEXO%exoid, dTS, dIdx + iRec-1, dMeshTopology%Num_Verts, dRes(iRec:dMeshTopology%Num_Verts*Num_Rec:Num_Rec), iErr); CHKERRQ(iErr)
       End Do
-      Call EXCLOS(dEXO%exoid, iErr)
-      dEXO%exoid = 0
+      If (EXONeedsOpen) Then
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
    End Subroutine Read_EXO_Result_VertexPtrInterlaced
 
 #undef __FUNCT__
@@ -1326,23 +1338,29 @@ Module m_MEF_EXO
    Subroutine Write_EXO_AllResult_Global(dEXO, dTS, dRes)
       Type (EXO_Type), Intent(INOUT)                 :: dEXO
       PetscInt                                       :: dTS
-      PetscReal, DImension(:), Pointer               :: dRes
+      PetscReal, Dimension(:), Pointer               :: dRes
       
       PetscInt                                       :: iErr
       PetscReal                                      :: Vers
       PetscInt                                       :: Num_Vars
       PetscReal                                      :: fDum
       Character                                      :: cDum
+      Logical                                        :: EXONeedsOpen = .FALSE.
       
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         If (dEXO%exoid == 0) Then
+            EXONeedsOpen = .TRUE.
+            dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         End If
          Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
          If (Num_Vars /= Size(dRes)) Then
             SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_AllResult_Global: The argument does not match the number of global variables in the mesh', iErr)
          End If
          Call EXPGV(dEXO%exoid, dTS, Num_Vars, dRes, iErr)
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+         If (EXONeedsOpen) Then
+            Call EXCLOS(dEXO%exoid, iErr)
+            dEXO%exoid = 0
+         End If
       End If
    End Subroutine Write_EXO_AllResult_Global
 
@@ -1360,9 +1378,13 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Vars
       PetscReal                                      :: fDum
       Character                                      :: cDum
+      PetscBool                                      :: EXONeedsOpen = .FALSE.
       
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         If (dEXO%exoid == 0) Then
+            EXONeedsOpen = .TRUE.
+            dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         End If
          ! Get the number of global variables stored in the database    
          Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
          Allocate(Tmp_Res(Num_Vars))
@@ -1375,8 +1397,10 @@ Module m_MEF_EXO
          
          Call EXPGV(dEXO%exoid, dTS, Num_Vars, Tmp_Res, iErr)
          DeAllocate (Tmp_Res)
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+         If (EXONeedsOpen) Then
+            Call EXCLOS(dEXO%exoid, iErr)
+            dEXO%exoid = 0
+         End If
       End If
    End Subroutine Write_EXO_Result_Global
 
@@ -1392,8 +1416,12 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Rec, iRec
       PetscInt                                       :: iErr
       PetscReal                                      :: Vers
+      PetscBool                                      :: EXONeedsOpen = .FALSE.
       
-      dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+      If (dEXO%exoid == 0) Then
+         EXONeedsOpen = .TRUE.
+         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+      End If
       
       If (Mod(Size(dRes), dMeshTopology%Num_Verts) /= 0) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexPtrInterlaced: The argument does not match the number of vertices in the mesh', iErr)
@@ -1402,8 +1430,10 @@ Module m_MEF_EXO
       Do iRec = 1, Num_Rec
          Call EXPNV(dEXO%exoid, dTS, dIdx + iRec-1, dMeshTopology%Num_Verts, dRes(iRec:dMeshTopology%Num_Verts*Num_Rec:Num_Rec), iErr); CHKERRQ(iErr)
       End Do
-      Call EXCLOS(dEXO%exoid, iErr)
-      dEXO%exoid = 0
+      If (EXONeedsOpen) Then
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
    End Subroutine Write_EXO_Result_VertexPtrInterlaced
 
 #undef __FUNCT__
@@ -1644,9 +1674,13 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Rec, iRec, iBlk, iE
       PetscInt                                       :: iErr
       PetscReal                                      :: Vers
+      PetscBool                                      :: EXONeedsOpen = .FALSE.
       
-      dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
-      
+      If (dEXO%exoid == 0) Then
+         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         EXONeedsOpen = .TRUE.
+      End If
+        
       If (Mod(Size(dRes), dMeshTopology%Num_Elems) /= 0) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
       End If
@@ -1664,8 +1698,10 @@ Module m_MEF_EXO
             DeAllocate(Res_Tmp)
          End If
       End Do Do_iBlk
-      Call EXCLOS(dEXO%exoid, iErr)
-      dEXO%exoid = 0
+      If (EXONeedsOpen) Then
+         Call EXCLOS(dEXO%exoid, iErr)
+         dEXO%exoid = 0
+      End If
    End Subroutine Write_EXO_Result_CellPtrInterlaced
 
 #undef __FUNCT__
