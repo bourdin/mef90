@@ -751,9 +751,9 @@ Module m_MEF_EXO
    
       GlobalMeshTopology%mesh = dMeshTopology%mesh
       !Call PetscPrintf(PETSC_COMM_WORLD,'MeshTopology\n\n',ierr);CHKERRQ(ierr);
-      Call MeshTopologyView(dMeshTopology,viewer)
+      !Call MeshTopologyView(dMeshTopology,viewer)
       !Call PetscPrintf(PETSC_COMM_WORLD,'GlobalMeshTopology\n\n',ierr);CHKERRQ(ierr);
-      Call MeshTopologyView(GlobalMeshTopology,viewer)
+      !Call MeshTopologyView(GlobalMeshTopology,viewer)
       
       Call MeshTopologyWrite(GlobalMeshTopology, dEXO)
       Call MeshTopologyDestroy(GlobalMeshTopology)
