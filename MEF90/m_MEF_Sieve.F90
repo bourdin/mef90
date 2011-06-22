@@ -419,7 +419,7 @@ Contains
       !!! As soon as I can get access to the layout data of a SectionReal, I won't need the MeshTopology and the specific Vertex case
 
       !!!
-      !!! assembleMatrix does not work with fibrated sections at this point
+      !!! DMMeshAssembleMatrix does not work with fibrated sections at this point
       !!! in order to INSERT boundary values, I need to insert a block for ALL dof associated to a given point
       !!! therefre erasing exsting values....
       !!! MatInsertBoundaryValues needs to be called BEFORE building the hessian of stifness matrix
@@ -436,7 +436,7 @@ Contains
                   MatElem(j,j) = 1.0_Kr
                End If  
             End Do
-            Call assembleMatrix(M, MeshTopology%mesh, U%Sec, MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            Call DMMeshAssembleMatrix(M, MeshTopology%mesh, U%Sec, MeshTopology%Num_Elems+i-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
          End If
       End Do
       DeAllocate(MatElem)
@@ -450,7 +450,7 @@ Contains
 !!!$         Do i = 1, MeshTopology%Num_Verts
 !!!$            Call SectionIntRestrict(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
 !!!$            If (BCFlag_Ptr(1) /= 0) Then
-!!!$               Call assembleMatrix(M, MeshTopology%mesh, U%Component_Sec(j), MeshTopology%Num_Elems+i-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+!!!$               Call DMMeshAssembleMatrix(M, MeshTopology%mesh, U%Component_Sec(j), MeshTopology%Num_Elems+i-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
 !!!$            End If
 !!!$            Call SectionIntRestore(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
 !!!$         End Do

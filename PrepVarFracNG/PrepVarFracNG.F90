@@ -61,7 +61,7 @@ Program PrepVarFrac
    PetscBool                                    :: Has_Seed, Has_n
    PetscBool                                    :: saveElemVar, PlaneStrain
    
-   PetscReal                                    :: R
+   PetscReal                                    :: R, Ymax
 
    Call MEF90_Initialize()
 
@@ -274,7 +274,6 @@ Program PrepVarFrac
 
       GlobVars(VarFrac_GlobVar_Load) = T(i)
       Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
-
       Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
    End Do
    
@@ -454,7 +453,11 @@ Program PrepVarFrac
             Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + k-1, Coordelem, iErr); CHKERRQ(iErr)
             !! tau=sqrt(t) is the time scale of the thermal problem (see Bahr at, TAFM 1998). The code keeps t as time and non-uniform time-stepping (see Time Steps)
             Tau  = sqrt(T(iStep))  
-            ThetaElem = Theta * (1.0_Kr - erf( CoordElem(2) / tau * 0.5_Kr ))
+            If (tau == 0.) Then
+               ThetaElem = 0.0_Kr
+            Else
+               ThetaElem = Theta * (1.0_Kr - erf( CoordElem(2) / tau * 0.5_Kr ))
+            End If
             Call SectionRealUpdate(ThetaSec, MeshTopology%Num_Elems + k-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
          End Do
       Case(6) !!! Cooling, Robin
@@ -462,9 +465,15 @@ Program PrepVarFrac
             Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + k-1, Coordelem, iErr); CHKERRQ(iErr)
             !! tau=sqrt(t) is the time scale of the thermal problem (see Bahr at, TAFM 1998). The code keeps t as time and non-uniform time-stepping (see Time Steps)
             Tau = sqrt(T(iStep))  
-            ThetaElem = Theta * erfc(CoordElem(2) / tau * 0.5_Kr ) - exp(beta * CoordElem(2) + beta**2 * tau**2) * erfc(CoordElem(2) / tau * 0.5_Kr + beta * tau)
+            If (tau == 0.) Then
+               ThetaElem = 0.0_Kr
+            Else
+               ThetaElem = Theta * erfc(CoordElem(2) / tau * 0.5_Kr ) - exp(beta * CoordElem(2) + beta**2 * tau**2) * erfc(CoordElem(2) / tau * 0.5_Kr + beta * tau)
+            End If
             Call SectionRealUpdate(ThetaSec, MeshTopology%Num_Elems + k-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
          End Do
+      Case(7) !!! Single well, cst flux
+         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,'Not implemented yet\n',iErr)
       Case default
          !!! Default is MIL
          ThetaElem = Theta * T(iStep)

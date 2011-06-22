@@ -608,7 +608,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call DMMeshAssembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       DeAllocate(MatElem)
       DeAllocate(U)      
@@ -677,7 +677,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call DMMeshAssembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       DeAllocate(MatElem)
       DeAllocate(BCFlag)
@@ -738,7 +738,7 @@ Contains
                End If
             End Do
          End Do
-         Call assembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call DMMeshAssembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       DeAllocate(MatElem)
       DeAllocate(BCFlag)

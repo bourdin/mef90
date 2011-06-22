@@ -140,7 +140,7 @@ Program TestFibration
    Do i = 1, num_components
       Allocate(MatElem(component_length(i),component_length(i)))
       MatElem = 100.0_Kr * i 
-      Call assembleMatrix(M, MeshTopology%mesh, Field1%Component_Sec(i), MeshTopology%Num_Elems+j-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      Call DMMeshAssembleMatrix(M, MeshTopology%mesh, Field1%Component_Sec(i), MeshTopology%Num_Elems+j-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       DeAllocate(MatElem)
    End Do
    

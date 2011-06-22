@@ -72,7 +72,7 @@ Program TestAssembly
    val = 1.0_Kr
    Kelem = 1.0_Kr
    Do i = 0, MeshTopology%Num_Elems-1
-      Call assembleMatrix(K, MeshTopology%mesh, U_Sec, i, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      Call DMMeshAssembleMatrix(K, MeshTopology%mesh, U_Sec, i, Kelem, ADD_VALUES, iErr); CHKERRQ(iErr)
       Call SectionRealUpdateClosure(U_Sec, MeshTopology%mesh, i, val, ADD_VALUES, iErr); CHKERRQ(iErr)  
    End Do
    DeAllocate(val)
