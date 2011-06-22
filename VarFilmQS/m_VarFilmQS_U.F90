@@ -175,7 +175,7 @@ Subroutine MatU_AssemblyBlk_Brittle(K, iBlk, V_Sec, DoBC, AppCtx)
 				End If
 			End Do
 	   End Do
-	   Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+	   Call DMMeshAssembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
 	End Do Do_Elem_iE
       
 	DeAllocate(Mat_Loc)
@@ -240,7 +240,7 @@ Subroutine MatU_AssemblyBlk_NonBrittle(K, iBlk, DoBC, AppCtx)
 				End If
 			End Do
 		End Do
-		Call assembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+		Call DMMeshAssembleMatrix(AppCtx%KU, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, Mat_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
 	End Do Do_Elem_iE
 	
 	Deallocate(Mat_Loc)

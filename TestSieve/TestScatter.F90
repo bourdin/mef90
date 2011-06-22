@@ -73,7 +73,7 @@ Program TestScatter
    Allocate(ValVect( (3 * dof)**2))
    ValVect = 1.0_Kr
    Do i = 1, MeshTopology%Num_Elems
-      Call assembleMatrix(KVect, MeshTopology%mesh, SVect, i-1, ValVect, ADD_VALUES, iErr);! CHKERRQ(iErr)
+      Call DMMeshAssembleMatrix(KVect, MeshTopology%mesh, SVect, i-1, ValVect, ADD_VALUES, iErr);! CHKERRQ(iErr)
    End Do
    Call MatAssemblyBegin(KVect, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
    Call MatAssemblyEnd  (KVect, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
@@ -83,7 +83,7 @@ Program TestScatter
    Allocate(ValScal(9))
    ValScal = 1.0_Kr
    Do i = 1, MeshTopology%Num_Elems
-      Call assembleMatrix(KScal, MeshTopology%mesh, Sscal, i-1, ValScal, ADD_VALUES, iErr); !CHKERRQ(iErr)
+      Call DMMeshAssembleMatrix(KScal, MeshTopology%mesh, Sscal, i-1, ValScal, ADD_VALUES, iErr); !CHKERRQ(iErr)
    End Do
    Call MatAssemblyBegin(KScal, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
    Call MatAssemblyEnd  (KScal, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
