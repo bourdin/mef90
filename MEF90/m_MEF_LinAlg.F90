@@ -201,32 +201,32 @@ Contains
       Type (Vect2D), intent(IN)                   :: V1
       Type (Vect2D), intent(IN)                   :: V2
       Type (Vect2D)                               :: SumVect2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       SumVect2D%X = V1%X + V2%X
       SumVect2D%Y = V1%Y + V2%Y
       flops = 2.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function SumVect2D
 
    Function SumVect3D (V1, V2)
       Type (Vect3D), intent(IN)                   :: V1, V2
       Type (Vect3D)                               :: SumVect3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       SumVect3D%X = V1%X + V2%X 
       SumVect3D%Y = V1%Y + V2%Y
       SumVect3D%Z = V1%Z + V2%Z
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function SumVect3D
 
    Function SumMat2D (M1, M2)
       Type (Mat2D), Intent(IN)                    :: M1, M2
       Type (Mat2D)                                :: SumMat2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       SumMat2D%XX = M1%XX + M2%XX
@@ -234,26 +234,26 @@ Contains
       SumMat2D%YX = M1%YX + M2%YX
       SumMat2D%YY = M1%YY + M2%YY
       flops = 4.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function SumMat2D
    
    Function SumMatS2D (M1, M2)
       Type (MatS2D), Intent(IN)                   :: M1, M2
       Type (MatS2D)                               :: SumMatS2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       SumMatS2D%XX = M1%XX + M2%XX
       SumMatS2D%XY = M1%XY + M2%XY
       SumMatS2D%YY = M1%YY + M2%YY
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function SumMatS2D
    
    Function SumMat3D (M1, M2)
       Type (Mat3D), Intent(IN)                    :: M1, M2
       Type (Mat3D)                                :: SumMat3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       SumMat3D%XX = M1%XX + M2%XX
@@ -266,13 +266,13 @@ Contains
       SumMat3D%ZY = M1%ZY + M2%ZY
       SumMat3D%ZZ = M1%ZZ + M2%ZZ
       flops = 9.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function SumMat3D
    
    Function SumMatS3D (M1, M2)
       Type (MatS3D), Intent(IN)                   :: M1, M2
       Type (MatS3D)                               :: SumMatS3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       SumMatS3D%XX = M1%XX + M2%XX
@@ -282,13 +282,13 @@ Contains
       SumMatS3D%XZ = M1%XZ + M2%XZ
       SumMatS3D%XY = M1%XY + M2%XY
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function SumMatS3D
    
    Function SumTens4OS2D (T1, T2)
       Type (Tens4OS2D), Intent(IN)                :: T1, T2
       Type (Tens4OS2D)                            :: SumTens4OS2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       SumTens4OS2D%XXXX = T1%XXXX + T2%XXXX
@@ -300,13 +300,13 @@ Contains
       
       SumTens4OS2D%YYYY = T1%YYYY + T2%YYYY
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function SumTens4OS2D
    
    Function SumTens4OS3D (T1, T2)
       Type (Tens4OS3D), Intent(IN)                :: T1, T2
       Type (Tens4OS3D)                            :: SumTens4OS3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       SumTens4OS3D%XXXX = T1%XXXX + T2%XXXX  
@@ -336,7 +336,7 @@ Contains
           
       SumTens4OS3D%ZZZZ = T1%ZZZZ + T2%ZZZZ  
       flops = 21.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function SumTens4OS3D
 
    ! Overloading "-"
@@ -344,32 +344,32 @@ Contains
       Type (Vect2D), intent(IN)                   :: V1
       Type (Vect2D), intent(IN)                   :: V2
       Type (Vect2D)                               :: DifVect2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DifVect2D%X = V1%X-V2%X
       DifVect2D%Y = V1%Y-V2%Y
       flops = 2.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DifVect2D
    
    Function DifVect3D (V1, V2)
       Type (Vect3D), intent(IN)                   :: V1, V2
       Type (Vect3D)                               :: DifVect3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DifVect3D%X = V1%X - V2%X 
       DifVect3D%Y = V1%Y - V2%Y
       DifVect3D%Z = V1%Z - V2%Z
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DifVect3D
    
    Function DifMat2D (M1, M2)
       Type (Mat2D), Intent(IN)                    :: M1, M2
       Type (Mat2D)                                :: DifMat2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DifMat2D%XX = M1%XX - M2%XX
@@ -377,26 +377,26 @@ Contains
       DifMat2D%YX = M1%YX - M2%YX
       DifMat2D%YY = M1%YY - M2%YY
       flops = 4.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DifMat2D
    
    Function DifMatS2D (M1, M2)
       Type (MatS2D), Intent(IN)                   :: M1, M2
       Type (MatS2D)                               :: DifMatS2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DifMatS2D%XX = M1%XX - M2%XX
       DifMatS2D%YY = M1%YY - M2%YY
       DifMatS2D%XY = M1%XY - M2%XY
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DifMatS2D
    
    Function DifMat3D (M1, M2)
       Type (Mat3D), Intent(IN)                    :: M1, M2
       Type (Mat3D)                                :: DifMat3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DifMat3D%XX = M1%XX - M2%XX
@@ -409,13 +409,13 @@ Contains
       DifMat3D%ZY = M1%ZY - M2%ZY
       DifMat3D%ZZ = M1%ZZ - M2%ZZ
       flops = 9.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DifMat3D
    
    Function DifMatS3D (M1, M2)
       Type (MatS3D), Intent(IN)                   :: M1, M2
       Type (MatS3D)                               :: DifMatS3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DifMatS3D%XX = M1%XX - M2%XX
@@ -425,13 +425,13 @@ Contains
       DifMatS3D%XZ = M1%XZ - M2%XZ
       DifMatS3D%XY = M1%XY - M2%XY
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DifMatS3D
    
    Function DifTens4OS2D (T1, T2)
       Type (Tens4OS2D), Intent(IN)                :: T1, T2
       Type (Tens4OS2D)                            :: DifTens4OS2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DifTens4OS2D%XXXX = T1%XXXX - T2%XXXX
@@ -443,13 +443,13 @@ Contains
       
       DifTens4OS2D%YYYY = T1%YYYY - T2%YYYY
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DifTens4OS2D
    
    Function DifTens4OS3D (T1, T2)
       Type (Tens4OS3D), Intent(IN)                :: T1, T2
       Type (Tens4OS3D)                            :: DifTens4OS3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DifTens4OS3D%XXXX = T1%XXXX - T2%XXXX  
@@ -479,7 +479,7 @@ Contains
           
       DifTens4OS3D%ZZZZ = T1%ZZZZ - T2%ZZZZ  
       flops = 21.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DifTens4OS3D
 
    ! Overloading "*"
@@ -487,61 +487,61 @@ Contains
       PetscReal,       intent(IN)                 :: D1
       Type (Vect2D), intent(IN)                   :: V1
       Type (Vect2D)                               :: DbleXVect2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DbleXVect2D%X = D1 * V1%X
       DbleXVect2D%Y = D1 * V1%Y
       flops = 2.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DbleXVect2D
    
    Function Vect2DXDble(V1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (Vect2D), intent(IN)                   :: V1
       Type (Vect2D)                               :: Vect2DXDble
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Vect2DXDble%X = D1 * V1%X
       Vect2DXDble%Y = D1 * V1%Y
       flops = 2.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Vect2DXDble
    
    Function DbleXVect3D(D1,V1)
       PetscReal,       intent(IN)                 :: D1
       Type (Vect3D), intent(IN)                   :: V1
       Type (Vect3D)                               :: DbleXVect3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DbleXVect3D%X = D1 * V1%X
       DbleXVect3D%Y = D1 * V1%Y
       DbleXVect3D%Z = D1 * V1%Z
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DbleXVect3D
    
    Function Vect3DXDble(V1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (Vect3D), intent(IN)                   :: V1
       Type (Vect3D)                               :: Vect3DXDble
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Vect3DXDble%X = D1 * V1%X
       Vect3DXDble%Y = D1 * V1%Y
       Vect3DXDble%Z = D1 * V1%Z
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Vect3DXDble
    
    Function DbleXMat2D(D1, M1)
       PetscReal,       intent(IN)                 :: D1
       Type (Mat2D), intent(IN)                    :: M1
       Type (Mat2D)                                :: DbleXMat2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DbleXMat2D%XX = D1 * M1%XX
@@ -549,14 +549,14 @@ Contains
       DbleXMat2D%YX = D1 * M1%YX
       DbleXMat2D%YY = D1 * M1%YY
       flops = 4.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DbleXMat2D
    
    Function Mat2DXDble(M1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (Mat2D), intent(IN)                    :: M1
       Type (Mat2D)                                :: Mat2DXDble
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Mat2DXDble%XX = D1 * M1%XX
@@ -564,42 +564,42 @@ Contains
       Mat2DXDble%YX = D1 * M1%YX
       Mat2DXDble%YY = D1 * M1%YY
       flops = 4.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Mat2DXDble
    
    Function DbleXMatS2D(D1, M1)
       PetscReal,       intent(IN)                 :: D1
       Type (MatS2D), intent(IN)                   :: M1
       Type (MatS2D)                               :: DbleXMatS2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DbleXMatS2D%XX = D1 * M1%XX
       DbleXMatS2D%YY = D1 * M1%YY
       DbleXMatS2D%XY = D1 * M1%XY
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DbleXMatS2D
    
    Function MatS2DXDble(M1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (MatS2D), intent(IN)                   :: M1
       Type (MatS2D)                               :: MatS2DXDble
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatS2DXDble%XX = D1 * M1%XX
       MatS2DXDble%YY = D1 * M1%YY
       MatS2DXDble%XY = D1 * M1%XY
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatS2DXDble
    
    Function DbleXMat3D(D1,M1)
       PetscReal,       intent(IN)                 :: D1
       Type (Mat3D), intent(IN)                    :: M1
       Type (Mat3D)                                :: DbleXMat3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DbleXMat3D%XX = D1 * M1%XX
@@ -612,14 +612,14 @@ Contains
       DbleXMat3D%ZY = D1 * M1%ZY
       DbleXMat3D%ZZ = D1 * M1%ZZ
       flops = 9.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DbleXMat3D
    
    Function Mat3DXDble(M1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (Mat3D), intent(IN)                    :: M1
       Type (Mat3D)                                :: Mat3DXDble
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Mat3DXDble%XX = D1 * M1%XX
@@ -632,14 +632,14 @@ Contains
       Mat3DXDble%ZY = D1 * M1%ZY
       Mat3DXDble%ZZ = D1 * M1%ZZ
       flops = 9.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Mat3DXDble
    
    Function DbleXMatS3D(D1,M1)
       PetscReal,       intent(IN)                 :: D1
       Type (MatS3D), intent(IN)                   :: M1
       Type (MatS3D)                               :: DbleXMatS3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DbleXMatS3D%XX = D1 * M1%XX
@@ -649,14 +649,14 @@ Contains
       DbleXMatS3D%XZ = D1 * M1%XZ
       DbleXMatS3D%XY = D1 * M1%XY
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DbleXMatS3D
    
    Function MatS3DXDble(M1,D1)
       Real (Kind = Kr), intent(IN)                :: D1
       Type (MatS3D), intent(IN)                   :: M1
       Type (MatS3D)                               :: MatS3DXDble
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatS3DXDble%XX = D1 * M1%XX
@@ -666,14 +666,14 @@ Contains
       MatS3DXDble%XZ = D1 * M1%XZ
       MatS3DXDble%XY = D1 * M1%XY
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatS3DXDble
    
    Function DbleXTens4OS2D (D1, T1)
       PetscReal,       Intent(IN)                 :: D1
       Type (Tens4OS2D), Intent(IN)                :: T1
       Type (Tens4OS2D)                            :: DbleXTens4OS2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DbleXTens4OS2D%XXXX = D1 * T1%XXXX
@@ -685,14 +685,14 @@ Contains
       
       DbleXTens4OS2D%YYYY = D1 * T1%YYYY
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DbleXTens4OS2D
    
    Function DbleXTens4OS3D (D1, T1)
       PetscReal,       Intent(IN)                 :: D1
       Type (Tens4OS3D), Intent(IN)                :: T1
       Type (Tens4OS3D)                            :: DbleXTens4OS3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DbleXTens4OS3D%XXXX = D1 * T1%XXXX  
@@ -722,14 +722,14 @@ Contains
           
       DbleXTens4OS3D%ZZZZ = D1 * T1%ZZZZ  
       flops = 21.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function DbleXTens4OS3D
    
    Function Tens4OS2DXDble (T1, D1)
       PetscReal,       Intent(IN)                 :: D1
       Type (Tens4OS2D), Intent(IN)                :: T1
       Type (Tens4OS2D)                            :: Tens4OS2DXDble
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Tens4OS2DXDble%XXXX = D1 * T1%XXXX
@@ -741,14 +741,14 @@ Contains
       
       Tens4OS2DXDble%YYYY = D1 * T1%YYYY
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Tens4OS2DXDble
    
    Function Tens4OS3DXDble (T1, D1)
       Type (Tens4OS3D), Intent(IN)                :: T1
       PetscReal,       Intent(IN)                 :: D1
       Type (Tens4OS3D)                            :: Tens4OS3DXDble
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Tens4OS3DXDble%XXXX = D1 * T1%XXXX  
@@ -778,82 +778,82 @@ Contains
           
       Tens4OS3DXDble%ZZZZ = D1 * T1%ZZZZ  
       flops = 21.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Tens4OS3DXDble
    
    Function  MatXVect2D(M1, V1)
       Type (Mat2D), intent(IN)                    :: M1
       Type (Vect2D), intent(IN)                   :: V1
       Type (Vect2D)                               :: MatXVect2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatXVect2D%X = M1%XX * V1%X + M1%XY * V1%Y
       MatXVect2D%Y = M1%YX * V1%X + M1%YY * V1%Y
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatXVect2D
    
    Function  MatXVect2DS(M1, V1)
       Type (MatS2D), intent(IN)                   :: M1
       Type (Vect2D), intent(IN)                   :: V1
       Type (Vect2D)                               :: MatXVect2DS
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatXVect2DS%X = M1%XX * V1%X + M1%XY * V1%Y
       MatXVect2DS%Y = M1%XY * V1%X + M1%YY * V1%Y
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatXVect2DS
    
    Function  MatXVect3D(M1, V1)
       Type (Mat3D), intent(IN)                    :: M1
       Type (Vect3D), intent(IN)                   :: V1
       Type (Vect3D)                               :: MatXVect3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatXVect3D%X = M1%XX * V1%X + M1%XY * V1%Y + M1%XZ * V1%Z
       MatXVect3D%Y = M1%YX * V1%X + M1%YY * V1%Y + M1%YZ * V1%Z
       MatXVect3D%Z = M1%ZX * V1%X + M1%ZY * V1%Y + M1%ZZ * V1%Z
       flops = 15.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatXVect3D
    
    Function  MatXVect3DS(M1, V1)
       Type (MatS3D), intent(IN)                   :: M1
       Type (Vect3D), intent(IN)                   :: V1
       Type (Vect3D)                               :: MatXVect3DS
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatXVect3DS%X = M1%XX * V1%X + M1%XY * V1%Y + M1%XZ * V1%Z
       MatXVect3DS%Y = M1%XY * V1%X + M1%YY * V1%Y + M1%YZ * V1%Z
       MatXVect3DS%Z = M1%XZ * V1%X + M1%YZ * V1%Y + M1%ZZ * V1%Z
       flops = 15.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatXVect3DS
    
    Function Tens4OS2DXMatS2D(T1, M1)
       Type(Tens4OS2D), Intent(IN)                 :: T1
       Type(MatS2D), Intent(IN)                    :: M1
       Type(MatS2D)                                :: Tens4OS2DXMatS2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Tens4OS2DXMatS2D%XX = T1%XXXX * M1%XX + T1%XXYY * M1%YY + T1%XXXY * M1%XY * 2.0_Kr
       Tens4OS2DXMatS2D%YY = T1%XXYY * M1%XX + T1%YYYY * M1%YY + T1%XYYY * M1%XY * 2.0_Kr
       Tens4OS2DXMatS2D%XY = T1%XXXY * M1%XX + T1%XYYY * M1%YY + T1%XYXY * M1%XY * 2.0_Kr
       flops = 18.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Tens4OS2DXMatS2D
    
    Function Tens4OS3DXMatS3D(T1, M1)
       Type(Tens4OS3D), Intent(IN)                 :: T1
       Type(MatS3D), Intent(IN)                    :: M1
       Type(MatS3D)                                :: Tens4OS3DXMatS3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Tens4OS3DXMatS3D%XX = T1%XXXX * M1%XX + T1%XXXY * M1%XY * 2.0_Kr + T1%XXXZ * M1%XZ * 2.0_Kr &
@@ -871,13 +871,13 @@ Contains
       Tens4OS3DXMatS3D%ZZ = T1%XXZZ * M1%XX + T1%XYZZ * M1%XY * 2.0_Kr + T1%XZZZ * M1%XZ * 2.0_Kr &
                           + T1%YYZZ * M1%YY + T1%YZZZ * M1%YZ * 2.0_Kr + T1%ZZZZ * M1%ZZ 
       flops = 84.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Tens4OS3DXMatS3D
    
    Function Mat2DXMat2D(M1, M2)
       Type(Mat2D), Intent(IN)                     :: M1, M2
       Type(Mat2D)                                 :: Mat2DXMat2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Mat2DXMat2D%XX = M1%XX * M2%XX + M1%XY * M2%YX
@@ -885,13 +885,13 @@ Contains
       Mat2DXMat2D%YX = M1%YX * M2%XX + M1%YY * M2%YX
       Mat2DXMat2D%YY = M1%YX * M2%XY + M1%YY * M2%YY
       flops = 12.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Mat2DXMat2D
    
    Function MatS2DXMatS2D(M1, M2)
       Type(MatS2D), Intent(IN)                    :: M1, M2
       Type(Mat2D)                                :: MatS2DXMatS2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatS2DXMatS2D%XX = M1%XX * M2%XX + M1%XY * M2%XY
@@ -899,13 +899,13 @@ Contains
       MatS2DXMatS2D%YX = M1%XY * M2%XX + M1%YY * M2%XY
       MatS2DXMatS2D%YY = M1%XY * M2%XY + M1%YY * M2%YY
       flops = 12.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatS2DXMatS2D
       
    Function Mat3DXMat3D(M1, M2)
       Type(Mat3D), Intent(IN)                     :: M1, M2
       Type(Mat3D)                                 :: Mat3DXMat3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Mat3DXMat3D%XX = M1%XX * M2%XX + M1%XY * M2%YX + M1%XZ * M2%ZX
@@ -918,13 +918,13 @@ Contains
       Mat3DXMat3D%ZY = M1%ZX * M2%XY + M1%ZY * M2%YY + M1%ZZ * M2%ZY
       Mat3DXMat3D%ZZ = M1%ZX * M2%XZ + M1%ZY * M2%YZ + M1%ZZ * M2%ZZ
       flops = 45.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Mat3DXMat3D
    
    Function MatS3DXMatS3D(M1, M2)
       Type(MatS3D), Intent(IN)                    :: M1, M2
       Type(Mat3D)                                 :: MatS3DXMatS3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatS3DXMatS3D%XX = M1%XX * M2%XX + M1%XY * M2%XY + M1%XZ * M2%XZ
@@ -937,7 +937,7 @@ Contains
       MatS3DXMatS3D%ZY = M1%XZ * M2%XY + M1%YZ * M2%YY + M1%ZZ * M2%YZ
       MatS3DXMatS3D%ZZ = M1%XZ * M2%XZ + M1%YZ * M2%YZ + M1%ZZ * M2%ZZ
       flops = 45.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatS3DXMatS3D
    
    ! Overloading "/"
@@ -945,34 +945,34 @@ Contains
       PetscReal,       intent(IN)                 :: D1
       Type (Vect2D), intent(IN)                   :: V1
       Type (Vect2D)                               :: Vect2DQuot
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Vect2DQuot%X = V1%X / D1
       Vect2DQuot%Y = V1%Y / D1
       flops = 2.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Vect2DQuot
    
    Function Vect3DQuot(V1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (Vect3D), intent(IN)                   :: V1
       Type (Vect3D)                               :: Vect3DQuot
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Vect3DQuot%X = V1%X / D1
       Vect3DQuot%Y = V1%Y / D1
       Vect3DQuot%Z = V1%Z / D1
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Vect3DQuot
    
    Function Mat2DQuot(M1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (Mat2D), intent(IN)                    :: M1
       Type (Mat2D)                                :: Mat2DQuot
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Mat2DQuot%XX = M1%XX / D1
@@ -980,28 +980,28 @@ Contains
       Mat2DQuot%YX = M1%YX / D1
       Mat2DQuot%YY = M1%YY / D1
       flops = 4.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Mat2DQuot
    
    Function MatS2DQuot(M1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (MatS2D), intent(IN)                   :: M1
       Type (MatS2D)                               :: MatS2DQuot
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatS2DQuot%XX = M1%XX / D1
       MatS2DQuot%YY = M1%YY / D1
       MatS2DQuot%XY = M1%XY / D1
       flops = 3.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatS2DQuot
    
    Function Mat3DQuot(M1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (Mat3D), intent(IN)                    :: M1
       Type (Mat3D)                                :: Mat3DQuot
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Mat3DQuot%XX = M1%XX / D1
@@ -1014,14 +1014,14 @@ Contains
       Mat3DQuot%ZY = M1%ZY / D1
       Mat3DQuot%ZZ = M1%ZZ / D1
       flops = 9.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Mat3DQuot
    
    Function MatS3DQuot(M1,D1)
       PetscReal,       intent(IN)                 :: D1
       Type (MatS3D), intent(IN)                   :: M1
       Type (MatS3D)                               :: MatS3DQuot
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       MatS3DQuot%XX = M1%XX / D1
@@ -1031,14 +1031,14 @@ Contains
       MatS3DQuot%XZ = M1%XZ / D1
       MatS3DQuot%XY = M1%XY / D1
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function MatS3DQuot
    
    Function Tens4OS2DQuot(T1, D1)
       Type(Tens4OS2D), Intent(IN)                 :: T1
       PetscReal,       Intent(IN)                 :: D1
       Type(Tens4OS2D)                             :: Tens4OS2DQuot
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Tens4OS2DQuot%XXXX = T1%XXXX / D1
@@ -1050,14 +1050,14 @@ Contains
       
       Tens4OS2DQuot%YYYY = T1%YYYY / D1
       flops = 6.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Tens4OS2DQuot
    
    Function Tens4OS3DQuot (T1, D1)
       Type (Tens4OS3D), Intent(IN)                :: T1
       PetscReal,       Intent(IN)                 :: D1
       Type (Tens4OS3D)                            :: Tens4OS3DQuot
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       Tens4OS3DQuot%XXXX = T1%XXXX / D1  
@@ -1087,14 +1087,14 @@ Contains
           
       Tens4OS3DQuot%ZZZZ = T1%ZZZZ / D1  
       flops = 21.0
-      Call PetscLogFLops(flops, iErr); CHKERRQ(iErr)
+      Call PetscLogFlops(flops,iErr); CHKERRQ(iErr)
    End Function Tens4OS3DQuot
   
    ! dot product in 2D and 3D
    Function DotP2D(V1, V2)
       Type (Vect2D), Intent(IN)                   :: V1, V2
       PetscReal                                   :: DotP2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DotP2D = V1%X * V2%X + V1%Y * V2%Y
@@ -1105,7 +1105,7 @@ Contains
    Function DotP3D(V1, V2)
       Type (Vect3D), Intent(IN)                   :: V1, V2
       PetscReal                                   :: DotP3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       DotP3D = V1%X * V2%X + V1%Y * V2%Y + V1%Z * V2%Z
@@ -1117,7 +1117,7 @@ Contains
       ! tr(A^t x B)
       Type(Mat2D), Intent(IN)                     :: M1, M2
       PetscReal                                   :: ContP2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       ContP2D = M1%XX * M2%XX + M1%XY * M2%XY + M1%YX * M2%YX + M1%YY * M2%YY
@@ -1129,7 +1129,7 @@ Contains
       ! tr(A^t x B)
       Type(MatS2D), Intent(IN)                    :: M1, M2
       PetscReal                                   :: ContP2DS
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       ContP2DS = M1%XX * M2%XX + M1%YY * M2%YY + 2.0_Kr * M1%XY * M2%XY
@@ -1141,7 +1141,7 @@ Contains
       ! tr(A^t x B)
       Type(Mat3D), Intent(IN)                     :: M1, M2
       PetscReal                                   :: ContP3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       ContP3D = M1%XX * M2%XX + M1%XY * M2%XY + M1%XZ * M2%XZ + &
@@ -1155,7 +1155,7 @@ Contains
       ! tr(A^t x B)
       Type(MatS3D), Intent(IN)                    :: M1, M2
       PetscReal                                   :: ContP3DS
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       ContP3DS = M1%XX * M2%XX + M1%YY * M2%YY + M1%ZZ * M2%ZZ + 2.0_Kr * M1%YZ * M2%YZ &
@@ -1168,7 +1168,7 @@ Contains
    Function VectP3D(V1, V2)
       Type (Vect3D), Intent(IN)                   :: V1, V2
       Type (Vect3D)                               :: VectP3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       VectP3D%X =  V1%Y * V2%Z - V1%Z * V2%Y
@@ -1209,7 +1209,7 @@ Contains
       Type (Vect2D), intent(IN)                   :: V1
       Type (Vect2D), intent(IN)                   :: V2
       Type (Mat2D)                                :: TensPVect2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       TensPVect2D%XX = V1%X * V2%X
@@ -1223,7 +1223,7 @@ Contains
    Function TensPVect3D (V1, V2)
       Type (Vect3D), intent(IN)                   :: V1, V2
       Type (Mat3D)                                :: TensPVect3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       TensPVect3D%XX = V1%X * V2%X 
@@ -1242,7 +1242,7 @@ Contains
    Function TensPMat2D (M1, M2)
       Type (Mat2D), Intent(IN)                    :: M1, M2
       Type (Mat2D)                                :: TensPMat2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       TensPMat2D%XX = M1%XX * M2%XX
@@ -1256,7 +1256,7 @@ Contains
    Function TensPMatS2D (M1, M2)
       Type (MatS2D), Intent(IN)                   :: M1, M2
       Type (MatS2D)                               :: TensPMatS2D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       TensPMatS2D%XX = M1%XX * M2%XX
@@ -1269,7 +1269,7 @@ Contains
    Function TensPMat3D (M1, M2)
       Type (Mat3D), Intent(IN)                    :: M1, M2
       Type (Mat3D)                                :: TensPMat3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       TensPMat3D%XX = M1%XX * M2%XX
@@ -1288,7 +1288,7 @@ Contains
    Function TensPMatS3D (M1, M2)
       Type (MatS3D), Intent(IN)                   :: M1, M2
       Type (MatS3D)                               :: TensPMatS3D
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       TensPMatS3D%XX = M1%XX * M2%XX
@@ -1744,7 +1744,7 @@ Contains
    Function Symmetrize2D(M1)
       Type(Mat2D), Intent(IN)                             :: M1
       Type(MatS2D)                                        :: Symmetrize2D
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
                                       
       Symmetrize2D%XX = M1%XX
@@ -1757,7 +1757,7 @@ Contains
    Function Symmetrize3D(M1)
       Type(Mat3D), Intent(IN)                             :: M1
       Type(MatS3D)                                        :: Symmetrize3D
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
       
       Symmetrize3D%XX = M1%XX
@@ -1776,7 +1776,7 @@ Contains
       Type(Mat2D)                                         :: DeviatoricPart2D
       
       PetscReal                                           :: M1_Trace
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
       
       M1_Trace = Trace(M1)
@@ -1794,7 +1794,7 @@ Contains
       Type(MatS2D)                                        :: DeviatoricPart2DS
       
       PetscReal                                           :: M1_Trace
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
       
       M1_Trace = Trace(M1)
@@ -1810,7 +1810,7 @@ Contains
       Type(Mat3D)                                         :: DeviatoricPart3D
       
       PetscReal                                           :: M1_Trace
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
       
       M1_Trace = Trace(M1)
@@ -1835,7 +1835,7 @@ Contains
       Type(MatS3D)                                        :: DeviatoricPart3DS
       
       PetscReal                                           :: M1_Trace
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
       
       M1_Trace = Trace(M1)
@@ -1855,7 +1855,7 @@ Contains
       Type(Mat2D)                                         :: SphericalPart2D
       
       PetscReal                                           :: M1_Trace
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
       
       M1_Trace = Trace(M1)
@@ -1873,7 +1873,7 @@ Contains
       Type(MatS2D)                                        :: SphericalPart2DS
       
       PetscReal                                           :: M1_Trace
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
       
       M1_Trace = Trace(M1)
@@ -1889,7 +1889,7 @@ Contains
       Type(Mat3D)                                         :: SphericalPart3D
       
       PetscReal                                           :: M1_Trace
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
       
       M1_Trace = Trace(M1)
@@ -1914,7 +1914,7 @@ Contains
       Type(MatS3D)                                        :: SphericalPart3DS
       
       PetscReal                                           :: M1_Trace
-      PetscLogDouble                                      :: flops = 0
+      PetscLogDouble                                      :: flops
       PetscInt                                            :: iErr
       
       M1_Trace = Trace(M1)
@@ -1938,7 +1938,7 @@ Contains
       PetscReal                                   :: Vol_Tetra_3D
       
       Type(Vect3D)                                :: C1, C2, C3
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       C1 = V1 - V4
@@ -1955,7 +1955,7 @@ Contains
       PetscReal                                   :: Area_Tri_2D
       
       Type(Vect2D)                                :: C1, C2
-      PetscLogDouble                              :: flops = 0
+      PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
       C1 = S2-S1
@@ -1971,7 +1971,7 @@ Contains
       
       Type (Vect2D)                                  :: C1, C2, C3
       PetscReal                                      :: H1, H2, H3, AreaX2
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       C1 = S2-S3
@@ -1993,7 +1993,7 @@ Contains
       Type (Mat2D), Intent(IN)                       :: M
       Type (Vect2D)                                  :: ValP2D, VPTemp
       PetscReal                                      :: Tmp1
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       Tmp1 = (M%XX - M%YY)**2 + 4.0_Kr * M%XY * M%YX
@@ -2021,7 +2021,7 @@ Contains
       Type (MatS2D), Intent(IN)                      :: M
       Type (Vect2D)                                  :: ValP2DS, VPTemp
       PetscReal                                      :: Tmp1
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       Tmp1 = (M%XX - M%YY)**2 + 4.0_Kr * M%XY**2
@@ -2037,7 +2037,7 @@ Contains
    Function DetMat2D(M)
       Type(Mat2D), intent(IN)                        :: M
       PetscReal                                      :: DetMat2D
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       DetMat2D = M%XX * M%YY - M%XY * M%YX
@@ -2048,7 +2048,7 @@ Contains
    Function DetMatS2D(M)
       Type(MatS2D), intent(IN)                       :: M
       PetscReal                                      :: DetMatS2D
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       DetMatS2D = M%XX * M%YY - M%XY * M%XY
@@ -2060,7 +2060,7 @@ Contains
    Function DetMat3D(M)
       Type(Mat3D), intent(IN)                        :: M
       PetscReal                                      :: DetMat3D
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       DetMat3D = M%XX * (M%YY * M%ZZ - M%ZY * M%YZ) - M%YX * (M%XY * M%ZZ - M%ZY * M%XZ) + M%ZX * (M%XY * M%YZ - M%YY * M%XZ)
@@ -2071,7 +2071,7 @@ Contains
    Function DetMatS3D(M)
       Type(MatS3D), intent(IN)                       :: M
       PetscReal                                      :: DetMatS3D
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       DetMatS3D = M%XX * (M%YY * M%ZZ - M%YZ * M%YZ) - M%XY * (M%XY * M%ZZ - M%YZ * M%XZ) + M%XZ * (M%XY * M%YZ - M%YY * M%XZ)
@@ -2085,7 +2085,7 @@ Contains
       
       Type (Mat2D)                                   :: CofMt
       PetscReal                                      :: DetM
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       DetM = M%XX * M%YY - M%XY * M%YX
@@ -2105,7 +2105,7 @@ Contains
       
       Type (MatS2D)                                  :: CofMt
       PetscReal                                      :: DetM
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       DetM = M%XX * M%YY - M%XY **2
@@ -2124,7 +2124,7 @@ Contains
       
       Type (Mat3D)                                   :: CofMt
       PetscReal                                      :: DetM
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       DetM = M%XX * (M%YY * M%ZZ - M%ZY * M%YZ) - M%YX * (M%XY * M%ZZ - M%ZY * M%XZ) + M%ZX * (M%XY * M%YZ - M%YY * M%XZ)
@@ -2150,7 +2150,7 @@ Contains
       
       Type (MatS3D)                                  :: CofMt
       PetscReal                                      :: DetM
-      PetscLogDouble                                 :: flops = 0
+      PetscLogDouble                                 :: flops
       PetscInt                                       :: iErr
       
       DetM = M%XX * (M%YY * M%ZZ - M%YZ * M%YZ) - M%XY * (M%XY * M%ZZ - M%YZ * M%XZ) + M%XZ * (M%XY * M%YZ - M%YY * M%XZ)
