@@ -464,7 +464,7 @@ Program PrepVarFrac
          Do k = 1, MeshTopology%Num_Verts
             Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + k-1, Coordelem, iErr); CHKERRQ(iErr)
             !! tau=sqrt(t) is the time scale of the thermal problem (see Bahr at, TAFM 1998). The code keeps t as time and non-uniform time-stepping (see Time Steps)
-            Tau = sqrt(T(iStep))  
+            Tau = sqrt(T(iStep))
             If (tau == 0.) Then
                ThetaElem = 0.0_Kr
             Else
