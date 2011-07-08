@@ -73,12 +73,10 @@ def FigureFracture(Prefix,state=1):
     SetTimeSliderState(state)
 
       
-def ExportFigure(FileName,state=-1):     
+def ExportSingleFigure(prefix,state=1):
     SetTimeSliderState(state)
-    s.fileName = Directory+ Prefix+'-%04i'%state
-    SetSaveWindowAttributes(s)
-    n = SaveWindow()
     s = SaveWindowAttributes()
+    s.fileName = prefix
     s.format = s.PNG
     s.saveTiled = 0
     s.family=0
@@ -86,18 +84,18 @@ def ExportFigure(FileName,state=-1):
     s.height = 200
     s.screenCapture = 0
     s.progressive = 1
-    forceMerge = 1
     s.quality = 80
-    print "Saving Image %s.png" %FileName
- 
- #     names = []
- #     for state in range(0,TimeSliderGetNStates()):
- #        SetTimeSliderState(state)
-         # Save the image
- #        s.fileName = Directory+ Prefix+'-%04i'%state
- #        SetSaveWindowAttributes(s)
- #        n = SaveWindow()
- #        names = names + [n]
- #        print "Processing image for frame %s" %state
-         #print "Processing image for frame %s" %n
-      #print names
+    SetSaveWindowAttributes(s)    
+    print "Saving Image %s.png" %prefix
+    n = SaveWindow()
+
+def ExportTimeFigure(prefix):
+    names = []
+    for state in range(0,TimeSliderGetNStates()):
+       SetTimeSliderState(state)
+       # Save the image
+       FigureName = prefix+'-%04i'%state      
+       ExportSingleFigure(FigureName,state)
+       n = SaveWindow()
+       names = names + [n]
+       print "Processing image for frame %s" %state
