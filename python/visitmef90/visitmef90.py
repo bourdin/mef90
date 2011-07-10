@@ -5,8 +5,7 @@
 #  
 #  run VisIt IN THE DIRECTORY WHERE THE FILE IS LOCATED with Command Line Interface and No Windows:
 #    "visit -cli -nowin -s $MEF_HOME/python/visitmef90/Visit_FracturePNG2.py"
-#
-# Note: the script identify the database name from the .e2c filename 
+
 #
 # Author: Corrado Maurini: cmaurini@gmail.com
 ###############################################################################
@@ -99,3 +98,109 @@ def ExportTimeFigure(prefix):
        n = SaveWindow()
        names = names + [n]
        print "Processing image for frame %s" %state
+       
+       
+def MakeFigures(savedir='PNG'):
+    energyfiles=glob.glob('*.ener')
+    
+    if len(energyfiles)==0:
+      print "It seems there are not files to process"
+    else:
+      for energyfilename in energyfiles:
+            # gen prefix
+            prefix=energyfilename.split('.ener')[0]
+            
+            # get last step
+            nsteps = pymef90.getlaststep(prefix+'.ener')
+            
+            # Represt Fracture 
+            FigureFracture(prefix,nsteps-1) 
+            
+            savedir='PNG'
+            saveprefix=savedir+'/'+prefix
+            
+            # Save image of a single time step in the JOB directory (if not up to date)
+            if os.path.isfile(prefix+'.png'):
+                if os.path.getmtime(prefix+'.png') < os.path.getmtime(energyfilename):
+                    ExportSingleFigure(prefix,nsteps- 1)
+                else:
+                    print ' -------------------------------------------------------------'
+                    print '| The last step figure exist and is up to date. Nothing to do |'              
+                    print ' -------------------------------------------------------------'
+            else:  
+                    ExportSingleFigure(prefix,nsteps-1) 
+            
+            # Delete images if not up to date
+            if os.path.isdir(savedir):
+                if os.path.getmtime(savedir)<os.path.getmtime(energyfilename):
+                    ExportTimeFigure(saveprefix)
+                else:
+                    print ' --------------------------------------------------------------'
+                    print "| The figures for all time steps are up to date. Nothing to do |'" 
+                    print ' --------------------------------------------------------------'              
+            else:
+                    os.mkdir(savedir)  
+                    ExportTimeFigure(saveprefix)
+
+
+
+def MakeFiguresLastStep():
+    energyfiles=glob.glob('*.ener')
+    
+    if len(energyfiles)==0:
+      print "It seems there are not files to process"
+    else:
+      for energyfilename in energyfiles:
+            # gen prefix
+            prefix=energyfilename.split('.ener')[0]
+            
+            # get last step
+            nsteps = pymef90.getlaststep(prefix+'.ener')
+            
+            # Represt Fracture 
+            FigureFracture(prefix,nsteps-1) 
+            
+            
+            # Save image of a single time step in the JOB directory (if not up to date)
+            if os.path.isfile(prefix+'.png'):
+                if os.path.getmtime(prefix+'.png') < os.path.getmtime(energyfilename):
+                    ExportSingleFigure(prefix,nsteps- 1)
+                else:
+                    print ' -------------------------------------------------------------'
+                    print '| The last step figure exist and is up to date. Nothing to do |'              
+                    print ' -------------------------------------------------------------'
+            else:  
+                    ExportSingleFigure(prefix,nsteps-1) 
+            
+
+
+def MakeFiguresAllSteps(savedir='PNG'):
+    energyfiles=glob.glob('*.ener')
+    
+    if len(energyfiles)==0:
+      print "It seems there are not files to process"
+    else:
+      for energyfilename in energyfiles:
+            # gen prefix
+            prefix=energyfilename.split('.ener')[0]
+            
+            # get last step
+            nsteps = pymef90.getlaststep(prefix+'.ener')
+            
+            # Represt Fracture 
+            FigureFracture(prefix,nsteps-1) 
+            
+            savedir='PNG'
+            saveprefix=savedir+'/'+prefix
+                        
+            # Delete images if not up to date
+            if os.path.isdir(savedir):
+                if os.path.getmtime(savedir)<os.path.getmtime(energyfilename):
+                    ExportTimeFigure(saveprefix)
+                else:
+                    print ' --------------------------------------------------------------'
+                    print "| The figures for all time steps are up to date. Nothing to do |'" 
+                    print ' --------------------------------------------------------------'              
+            else:
+                    os.mkdir(savedir)  
+                    ExportTimeFigure(saveprefix)
