@@ -707,16 +707,18 @@ Contains
       
       Select Case(AppCtx%VarFracSchemeParam%BTType)
          Case(VarFrac_BTType_MIL)
-            Call BacktrackingLeft(AppCtx,StepIn,StepOUT,BTFound)
-         Case(VarFrac_BTType_Generic)
-            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,'Generic Backtracking not implemented yet\n',ierr)
+            Call BacktrackingMIL(AppCtx,StepIn,StepOUT,BTFound)
+         Case(VarFrac_BTType_GenericLeft)
+            Call BacktrackingGenericLeft(AppCtx,StepIn,StepOUT,BTFound)
          Case Default
             SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,'Unknown Backtracking type\n',ierr)
       End Select         
    End Subroutine Backtracking
+   
+   
 #undef __FUNCT__
-#define __FUNCT__ "BacktrackingLeft"
-   Subroutine BacktrackingLeft(AppCtx,StepIn,StepOUT,BTFound)
+#define __FUNCT__ "BacktrackingMIL"
+   Subroutine BacktrackingMIL(AppCtx,StepIn,StepOUT,BTFound)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt,Intent(IN)                          :: StepIN
       PetscInt,Intent(OUT)                         :: StepOUT
@@ -783,7 +785,108 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
       End If
  101  Format('Leaving ',A,': StepOUT=',I4,' BTFound=',L,'\n')
-   End Subroutine BacktrackingLeft
+   End Subroutine BacktrackingMIL
+
+
+#undef __FUNCT__
+#define __FUNCT__ "BacktrackingGenericLeft"
+   Subroutine BacktrackingGenericLeft(AppCtx,StepIn,StepOUT,BTFound)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt,Intent(IN)                          :: StepIN
+      PetscInt,Intent(OUT)                         :: StepOUT
+      PetscBool,Intent(OUT)                        :: BTFound
+
+      PetscInt                                     :: iErr,BTstep
+      PetscReal                                    :: BTstepEner,RescaledEner,BTthreshold
+      PetscReal                                    :: s,t
+      PetscInt                                     :: minstep,maxstep
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+      Type(Vec)                                    :: TmpUVec
+      PetscReal                                    :: ElasticEnergy
+      PetscReal                                    :: ExtForcesWork
+      PetscReal                                    :: SurfaceEnergy
+      PetscReal, Dimension(:), Pointer             :: Junk
+
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'In '//__FUNCT__//'\n' 
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+      End If
+
+      !!!
+      !!! Save U Field
+      !!!
+      Call VecDuplicate(AppCtx%U%Vec,TmpUVec,iErr);CHKERRQ(iErr)
+      Call VecCopy(AppCtx%U%Vec,TmpUVec,iErr);CHKERRQ(iErr)
+      Allocate(Junk(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+            
+      !!! Backward BT
+      minstep = max(1, AppCtx%TimeStep-AppCtx%VarFracSchemeParam%BTScope)
+      maxstep = StepIn - 1
+      
+      BTFound = .FALSE.
+      StepOUT = StepIN
+      t = AppCtx%Load(StepIN)
+      do_BTstep: Do BTstep = maxstep,minstep,-1
+         !!! Compute the rescaled energy
+         !!!    In the case of MIL, the elastic term scales quadratically 
+         !!!    with the loading parameter, so the rescaled energy for step
+         !!!    s obtained from step t is
+         !!!    RescaledEner = t**2/s**2 * (Ee(t) - W(t)) + Es(t)
+         !!!    which is to be compared with that of step s:
+         !!!    BTstepEner = Ee(s) - W(s) + Es(s)
+         !!! In order to avoid division by 0, we multiply everything by s**2
+         !!!
+         
+         !!! Recompute the displacement and the energy:
+         Call Init_TS_Loads(AppCtx)      
+         !!! Update U at fixed nodes
+         Call Init_TS_U(AppCtx)
+         Call Step_U(AppCtx)
+
+         Call ElasticEnergy_Assembly(ElasticEnergy,Junk,AppCtx)
+         Call ExtForcesWork_Assembly(ExtForcesWork,Junk,AppCtx)
+         Call SurfaceEnergy_Assembly(SurfaceEnergy,Junk,AppCtx)
+
+         s = AppCtx%Load(BTstep)
+         RescaledEner = t**2 * (AppCtx%ElasticEnergy(StepIN) - AppCtx%ExtForcesWork(StepIN))       &
+                      + s**2 * AppCtx%SurfaceEnergy(StepIN)
+         BTstepEner   = s**2 * (AppCtx%ElasticEnergy(BTstep) - AppCtx%ExtForcesWork(BTstep)        &
+                               - AppCtx%SurfaceEnergy(BTstep))
+         BTthreshold = (1.0_Kr - AppCtx%VarFracSchemeParam%BTTol) * BTstepEner
+         If (AppCtx%AppParam%verbose > 0) Then
+            Write(IOBuffer, *) 'Checking against timestep',BTStep,':\n',                           &
+                               '   Rescaled Energy: ',RescaledEner,'\n',                           &
+                               '   BTStep Energy:   ',BTSTepEner,'\n',                             &
+                               '   Threshold:       ',BTthreshold, '\n'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+         End If
+         If (RescaledEner < BTthreshold) Then
+            !!! The rescaled energy is energetically better that the 
+            !!! previously computed one
+            !!! Set StepOUT to BTStep, and continue going backward
+            BTFound = .TRUE.
+            StepOUT = BTStep
+         Else 
+            If (BTFound) Then
+               !!! We have passed the crossing point of 2 branches
+               !!! Exit and return StepOUT = BTstep+1
+               StepOut = BTStep + 1
+               EXIT
+            End If
+         End If
+      End Do do_BTstep
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, 101) __FUNCT__,StepOUT,BTfound
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+      End If
+      
+      Call VecCopy(TmpUVec,AppCtx%U%Vec,iErr);CHKERRQ(iErr)
+      Call VecDestroy(TmpUVec,iErr);CHKERRQ(iErr)
+      DeAllocate(Junk)
+      Call SectionRealToVec(AppCtx%U%Sec,AppCtx%U%Scatter,SCATTER_REVERSE,AppCtx%U%Vec,ierr);CHKERRQ(ierr)
+
+ 101  Format('Leaving ',A,': StepOUT=',I4,' BTFound=',L,'\n')
+   End Subroutine BacktrackingGenericLeft
 
 
    Subroutine BackTrackingBroken(AppCtx, iBTStep)
