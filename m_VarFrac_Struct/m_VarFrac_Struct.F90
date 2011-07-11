@@ -121,6 +121,9 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_NSProp_BCVType    = 4
    PetscInt, Parameter, Public                     :: VarFrac_NSProp_HasPForce  = 5
    
+   PetscInt, Parameter, Public                     :: VarFrac_BTType_MIL        = 0
+   PetscInt, Parameter, Public                     :: VarFrac_BTType_Generic    = 1
+   
    Type MatProp2D_Type
       PetscReal                                    :: Toughness
       Type(Tens4OS2D)                              :: Hookes_Law
@@ -138,6 +141,7 @@ Module m_VarFrac_Struct
       PetscReal                                    :: IrrevTol
       
       PetscBool                                    :: DoBT
+      PetscInt                                     :: BTType
       PetscReal                                    :: BTTol
       PetscInt                                     :: BTInt
       PetscInt                                     :: BTScope
@@ -384,6 +388,8 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-bt ', L1, A)")                  dSchemeParam%DoBT, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-bttype ', I5, A)")              dSchemeParam%BTType, '\n' 
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-bttol ', ES12.5, A)")           dSchemeParam%BTTol, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-btint ', I5, A)")               dSchemeParam%BTInt, '\n' 
@@ -410,7 +416,7 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-atnum ', I1, A)")               dSchemeParam%ATNum, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, "('-integorder', I1, A)")          dSchemeParam%IntegOrder, '\n'
+      Write(IOBuffer, "('-integorder ', I1, A)")          dSchemeParam%IntegOrder, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-savestress ', L1, A)")          dSchemeParam%SaveStress, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
@@ -430,18 +436,19 @@ Module m_VarFrac_Struct
       PetscBool                                    :: flag
 
       dSchemeParam%IrrevType        = VarFrac_Irrev_Ineq
+      dSchemeParam%AltMinMaxIter    = 1000
+      dSchemeParam%AltMinTol        = 1.0D-4
+      dSchemeParam%AltMinSaveInt    = 25
       dSchemeParam%DoBT             = PETSC_FALSE
+      dSchemeParam%BTType           = VarFrac_BTType_MIL
       dSchemeParam%BTTol            = 1.0D-2
-      dSchemeParam%BTInt            = 10
+      dSchemeParam%BTInt            = dSchemeParam%AltMinMaxIter
       dSchemeParam%BTScope          = 10000
       dSchemeParam%Unilateral       = 0
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
       dSchemeParam%Irrevtype        = VarFrac_Irrev_Eq
       dSchemeParam%nbCracks         = 0
       dSchemeParam%InitVLength      = 1.0D0  
-      dSchemeParam%AltMinMaxIter    = 1000
-      dSchemeParam%AltMinTol        = 1.0D-4
-      dSchemeParam%AltMinSaveInt    = 25
 
       dSchemeParam%Epsilon          = .1
       dSchemeParam%KEpsilon         = 1.0E-6
@@ -461,6 +468,7 @@ Module m_VarFrac_Struct
       End If
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-bt',             dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-bttype',         dSchemeParam%BTType, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-bttol',          dSchemeParam%BTTol, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',          dSchemeParam%BTInt, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btscope',        dSchemeParam%BTScope, flag, iErr); CHKERRQ(iErr) 

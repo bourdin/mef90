@@ -23,6 +23,9 @@ Program  VarFracQS
    Character(len=MEF90_MXSTRLEN), Dimension(4)  :: stagename
    PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
    PetscBool                                    :: restart
+   
+   PetscInt                                     :: StepOUT
+   !PetscBool                                    :: AppCtx%IsBT
 
    Call VarFracQSInit(AppCtx)
    If (AppCtx%AppParam%verbose > 0) Then
@@ -73,6 +76,7 @@ Program  VarFracQS
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
+      AppCtx%IsBT = .False.
       AltMinIter = 1
       AltMin: Do 
          Call ALEStagePush(stagename(2), iDebug, iErr); CHKERRQ(iErr)
@@ -106,16 +110,17 @@ Program  VarFracQS
          ! Check For BackTracking 
          !------------------------------------------------------------------- 
          !
-         If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) .AND. (.NOT. AppCtx%IsBT)) Then
+         TestBT1: If ((AppCtx%VarFracSchemeParam%DoBT) .AND.                                                &
+             (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) .AND.                         &
+             (.NOT. AppCtx%IsBT)) Then
             Call ComputeEnergies(AppCtx)
-            Call BackTracking(AppCtx, iBTStep)
-            AppCtx%IsBT = PETSC_FALSE   
-            If (iBTStep < AppCtx%TimeStep) Then
-               AppCtx%IsBT = PETSC_TRUE
-               AppCtx%TimeStep = max(1, iBTStep-1)
+            Call Backtracking(AppCtx,AppCtx%TimeSTep,StepOUT,AppCtx%IsBT)
+            BTFound1: If (AppCtx%IsBT) Then
+               !AppCtx%IsBT = PETSC_TRUE
+               AppCtx%TimeStep = StepOUT
 
+               !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
                If (MEF90_MyRank ==0) Then
-                  !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
                   Write(AppCtx%AppParam%Ener_Unit, *)
                   Write(AppCtx%AppParam%Ener_Unit, *)
                   
@@ -126,20 +131,21 @@ Program  VarFracQS
                      End Do
                   End If
                End If
-               
-               !!! Exit the AltMin loop
                Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
                If (AppCtx%AppParam%verbose > 0) Then
                   Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
                End If
-               EXIT 
-            End If
-         End If
-   
+               !!! Exit AltMin loop
+               EXIT
+            End If BTFound1
+         End If TestBT1
+
          !------------------------------------------------------------------- 
          ! Check the exit condition: tolerance on the error in V 
          !------------------------------------------------------------------- 
-         If ( (Mod(AltMinIter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) .OR. (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR. (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter)) Then
+         If ((Mod(AltMinIter, AppCtx%VarFracSchemeParam%AltMinSaveInt) == 0) .OR.                  &
+             (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR.                              &
+             (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter)) Then
             If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer, *) 'Saving U and V\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
@@ -164,12 +170,14 @@ Program  VarFracQS
             Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-            If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
+            If ((AppCtx%VarFracSchemeParam%SaveStress) .OR.                                        &
+                (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
                Call ComputeStrainStress(AppCtx)
                Call Save_StrainStress(AppCtx)
             End If
          End If
-         If ( (AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR. (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter) ) then 
+         If ((AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR.                              &
+             (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter) ) then 
             Call Save_Ener(AppCtx)
             Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
             If (AppCtx%AppParam%verbose > 0) Then
@@ -186,19 +194,17 @@ Program  VarFracQS
       !------------------------------------------------------------------- 
       ! Check For BackTracking again
       !------------------------------------------------------------------- 
-      If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT)) Then
-         Call ComputeEnergies(AppCtx)
-         Call BackTracking(AppCtx, iBTStep)
-         
-         If (iBTStep < AppCtx%TimeStep) Then
-            AppCtx%IsBT = PETSC_TRUE
-            AppCtx%TimeStep = max(1, iBTStep-1)
-            !!! Insert 2 blank lines in the energy file so that gnuplot breaks lines
+      TestBTFinal: If ((AppCtx%VarFracSchemeParam%DoBT) .AND. (.NOT. AppCtx%IsBT)) Then
+         Call Backtracking(AppCtx,AppCtx%TimeSTep,StepOUT,AppCtx%IsBT)
+         BTFoundFinal: If (AppCtx%IsBT) Then
+            !AppCtx%IsBT = PETSC_TRUE
+            AppCtx%TimeStep = StepOUT
+
+            !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
             If (MEF90_MyRank ==0) Then
-               !!! Insert 2 blank lines in the energy files so that gnuplot breaks lines
                Write(AppCtx%AppParam%Ener_Unit, *)
                Write(AppCtx%AppParam%Ener_Unit, *)
-            
+               
                If (AppCtx%VarFracSchemeParam%SaveBlk) Then
                   Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
                      Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), *)
@@ -206,21 +212,20 @@ Program  VarFracQS
                   End Do
                End If
             End If
-         Else
-            AppCtx%IsBT = PETSC_FALSE
-         End If
-      Else 
-         AppCtx%IsBT = PETSC_FALSE
-      End If
-      
+            Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+            If (AppCtx%AppParam%verbose > 0) Then
+               Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+            End If
+         Else 
+            AppCtx%TimeStep = AppCtx%TimeStep +1
+         End If BTFoundFinal
+      Else
+         AppCtx%TimeStep = AppCtx%TimeStep +1      
+      End If TestBTFinal
+
       !------------------------------------------------------------------- 
       ! Save the results
       !-------------------------------------------------------------------
-      
-      If ( AppCtx%TimeStep == AppCtx%NumTimeSteps ) Then
-         EXIT
-      End If
-      AppCtx%TimeStep = AppCtx%TimeStep + 1
       Write(filename, 105) Trim(AppCtx%AppParam%prefix)
       Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
       Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
@@ -229,6 +234,9 @@ Program  VarFracQS
       Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose > 0) Then
          Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
+      End If
+      If ( AppCtx%TimeStep > AppCtx%NumTimeSteps ) Then
+         EXIT
       End If
    End Do TimeStep
    
