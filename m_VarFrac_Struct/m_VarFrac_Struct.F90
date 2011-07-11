@@ -121,8 +121,9 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_NSProp_BCVType    = 4
    PetscInt, Parameter, Public                     :: VarFrac_NSProp_HasPForce  = 5
    
-   PetscInt, Parameter, Public                     :: VarFrac_BTType_MIL        = 0
-   PetscInt, Parameter, Public                     :: VarFrac_BTType_Generic    = 1
+   PetscInt, Parameter, Public                     :: VarFrac_BTType_MIL          = 0
+   PetscInt, Parameter, Public                     :: VarFrac_BTType_GenericLeft  = 1
+   PetscInt, Parameter, Public                     :: VarFrac_BTType_GenericRight = 2
    
    Type MatProp2D_Type
       PetscReal                                    :: Toughness
