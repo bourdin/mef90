@@ -704,12 +704,18 @@ Contains
       PetscBool,Intent(OUT)                        :: BTFound
       
       PetscInt                                     :: iErr
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
       Select Case(AppCtx%VarFracSchemeParam%BTType)
          Case(VarFrac_BTType_MIL)
             Call BacktrackingMIL(AppCtx,StepIn,StepOUT,BTFound)
          Case(VarFrac_BTType_GenericLeft)
-            Call BacktrackingGenericLeft(AppCtx,StepIn,StepOUT,BTFound)
+            If (AppCtx%TotalEnergy(AppCtx%TimeStep) < AppCtx%TotalEnergy(AppCtx%TimeStep-1)) Then
+               Call BacktrackingGenericLeft(AppCtx,StepIn,StepOUT,BTFound)
+            Else  
+               Write(IOBuffer,*) 'Energy not decreasing, skipping BT\n'
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+            End If
          Case Default
             SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,'Unknown Backtracking type\n',ierr)
       End Select         
@@ -838,11 +844,15 @@ Contains
          !!!
          
          !!! Recompute the displacement and the energy:
+         AppCtx%TimeStep = BTStep
          Call Init_TS_Loads(AppCtx)      
          !!! Update U at fixed nodes
          Call Init_TS_U(AppCtx)
          Call Step_U(AppCtx)
 
+         ElasticEnergy = 0.0_Kr
+         ExtForcesWork = 0.0_Kr
+         SurfaceEnergy = 0.0_Kr
          Call ElasticEnergy_Assembly(ElasticEnergy,Junk,AppCtx)
          Call ExtForcesWork_Assembly(ExtForcesWork,Junk,AppCtx)
          Call SurfaceEnergy_Assembly(SurfaceEnergy,Junk,AppCtx)
@@ -853,13 +863,13 @@ Contains
          BTstepEner   = s**2 * (AppCtx%ElasticEnergy(BTstep) - AppCtx%ExtForcesWork(BTstep)        &
                                - AppCtx%SurfaceEnergy(BTstep))
          BTthreshold = (1.0_Kr - AppCtx%VarFracSchemeParam%BTTol) * BTstepEner
-         If (AppCtx%AppParam%verbose > 0) Then
+         !If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Checking against timestep',BTStep,':\n',                           &
                                '   Rescaled Energy: ',RescaledEner,'\n',                           &
                                '   BTStep Energy:   ',BTSTepEner,'\n',                             &
                                '   Threshold:       ',BTthreshold, '\n'
             Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-         End If
+         !End If
          If (RescaledEner < BTthreshold) Then
             !!! The rescaled energy is energetically better that the 
             !!! previously computed one
@@ -882,6 +892,7 @@ Contains
       
       Call VecCopy(TmpUVec,AppCtx%U%Vec,iErr);CHKERRQ(iErr)
       Call VecDestroy(TmpUVec,iErr);CHKERRQ(iErr)
+      AppCtx%TimeStep = StepIN
       DeAllocate(Junk)
       Call SectionRealToVec(AppCtx%U%Sec,AppCtx%U%Scatter,SCATTER_REVERSE,AppCtx%U%Vec,ierr);CHKERRQ(ierr)
 

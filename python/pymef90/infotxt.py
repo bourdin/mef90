@@ -1,33 +1,27 @@
-def mygetenv(Dict,key,defaultvalue=None):
-  ### I could do better 
-  import os
-  tmp = os.getenv(key)
-  if tmp == None:
-    Dict[key] = defaultvalue
-  else:
-    try:
-      Dict[key] = float(tmp)
-    except ValueError:
-      Dict[key] = tmp
-
-def Dictwritetxt(D,filename):
-  f = open(filename,'a')
-  K = D.keys()
-  K.sort()
-  for key in K:
-    f.write('%s \t\t %s\n'%(key, str(D[key])))
-  f.close()
+def Dictwritetxt(D,filename,overwrite=True):
+    if overwrite:
+        f = open(filename,'w')
+    else:
+        f = open(filename,'a')
+    K = D.keys()
+    K.sort()
+    for key in K:
+        f.write('%s \t\t %s\n'%(key, str(D[key])))
+    f.close()
   
-def DictwriteJSON(D,filename):
-	try:
-		import json
-	
-		jsonfile = open(filename,'w')
-		jsonfile.write(json.encoder.JSONEncoder().encode(D))
-		jsonfile.flush()
-		jsonfile.close()
-	except ImportError:
-		print 'JSON module not available, skipping DictJSONwrite'
+def DictwriteJSON(D,filename,overwrite=True):
+    try:
+        import json
+        if overwrite:
+            jsonfile = open(filename,'w')
+        else:
+            jsonfile = open(filename,'a')
+
+        jsonfile.write(json.encoder.JSONEncoder().encode(D))
+        jsonfile.flush()
+        jsonfile.close()
+    except ImportError:
+        print 'JSON module not available, skipping DictJSONwrite'
 
 
 def Dictreadtxt(filename):
