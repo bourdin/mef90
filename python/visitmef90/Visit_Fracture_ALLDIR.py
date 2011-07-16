@@ -23,7 +23,7 @@ for DIR in filelist:
     if os.path.isdir(DIR)==True:
         print DIR
         os.chdir(rootdir+'/'+DIR) 
-        # Postprocessing with VisIT
+        # Postprocessing with VisIt
         print "----------------------------------------------------------"
         print "--    Start postprocessing of files in the directory        "
         print "    %s "%DIR
