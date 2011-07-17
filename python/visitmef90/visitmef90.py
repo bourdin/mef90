@@ -4,16 +4,15 @@
 # How to use:
 #  
 #  run VisIt IN THE DIRECTORY WHERE THE FILE IS LOCATED with Command Line Interface and No Windows:
-#    "visit -cli -nowin -s $MEF_HOME/python/visitmef90/Visit_FracturePNG2.py"
-
 #
 # Author: Corrado Maurini: cmaurini@gmail.com
 ###############################################################################
 
-import os; import sys; import glob; 
+import os; import sys; import glob;    import math;
 import pymef90;  from visit import * 
 
-def FigureFracture(Prefix,state=1):
+
+def FigureFracture(Prefix,ImageOptions,state=1):
     print Prefix
 
     ##  
@@ -57,10 +56,10 @@ def FigureFracture(Prefix,state=1):
     # Step 3: Draw the plots
     DrawPlots()
     # Set the view
-    #v = GetView2D()
-    #windowCoords = (-0.776642, 1.70354, -0.425681, 0.626574)
-    #viewportCoords = (0, 2, 0, 1)
-    #SetView2D(v)
+    v = GetView2D()
+    v.windowCoords = (ImageOptions['x0'], ImageOptions['lx'],ImageOptions['y0'],ImageOptions['ly'])
+    v.viewportCoords = (ImageOptions['x0v'],ImageOptions['lxv'],ImageOptions['y0v'],ImageOptions['lyv'])
+    SetView2D(v)
     AnnotationAtts = AnnotationAttributes()
     AnnotationAtts.axes2D.visible = 0
     AnnotationAtts.userInfoFlag = 0
@@ -72,21 +71,46 @@ def FigureFracture(Prefix,state=1):
     SetTimeSliderState(state)
 
       
-def ExportSingleFigure(prefix,state=1):
+def ExportSingleFigure(prefix,ImageOptions,state=1):
+    aspectratio=ImageOptions['ly']/ImageOptions['lx']
     SetTimeSliderState(state)
     s = SaveWindowAttributes()
     s.fileName = prefix
     s.format = s.PNG
-    s.saveTiled = 0
+    s.saveTiled = 1
     s.family=0
-    s.width = 600
-    s.height = 200
+    s.width =  ImageOptions['res']
+    s.height =  math.ceil(ImageOptions['res']*aspectratio)
     s.screenCapture = 0
-    s.progressive = 1
+    s.progressive = 0
     s.quality = 80
+    s.resConstraint = 1
     SetSaveWindowAttributes(s)    
     print "Saving Image %s.png" %prefix
     n = SaveWindow()
+    
+    
+def MakeFiguresLastStep(ImageOptions):
+    energyfiles=glob.glob('*.ener')
+    
+    if len(energyfiles)==0:
+      print "It seems there are not files to process"
+    else:
+      for energyfilename in energyfiles:
+            # gen prefix
+            prefix=energyfilename.split('.ener')[0]
+            
+            # get last step
+            nsteps = pymef90.getlaststep(prefix+'.ener')
+            
+            # Represt Fracture 
+            FigureFracture(prefix,ImageOptions,nsteps-1) 
+            
+            
+            # Save image of a single time step in the JOB directory  
+            ExportSingleFigure(prefix,ImageOptions,nsteps- 1) 
+            
+
 
 def ExportTimeFigure(prefix):
     names = []
@@ -99,79 +123,6 @@ def ExportTimeFigure(prefix):
        names = names + [n]
        print "Processing image for frame %s" %state
        
-       
-def MakeFigures(savedir='PNG'):
-    energyfiles=glob.glob('*.ener')
-    
-    if len(energyfiles)==0:
-      print "It seems there are not files to process"
-    else:
-      for energyfilename in energyfiles:
-            # gen prefix
-            prefix=energyfilename.split('.ener')[0]
-            
-            # get last step
-            nsteps = pymef90.getlaststep(prefix+'.ener')
-            
-            # Represt Fracture 
-            FigureFracture(prefix,nsteps-1) 
-            
-            savedir='PNG'
-            saveprefix=savedir+'/'+prefix
-            
-            # Save image of a single time step in the JOB directory (if not up to date)
-            if os.path.isfile(prefix+'.png'):
-                if os.path.getmtime(prefix+'.png') < os.path.getmtime(energyfilename):
-                    ExportSingleFigure(prefix,nsteps- 1)
-                else:
-                    print ' -------------------------------------------------------------'
-                    print '| The last step figure exist and is up to date. Nothing to do |'              
-                    print ' -------------------------------------------------------------'
-            else:  
-                    ExportSingleFigure(prefix,nsteps-1) 
-            
-            # Delete images if not up to date
-            if os.path.isdir(savedir):
-                if os.path.getmtime(savedir)<os.path.getmtime(energyfilename):
-                    ExportTimeFigure(saveprefix)
-                else:
-                    print ' --------------------------------------------------------------'
-                    print "| The figures for all time steps are up to date. Nothing to do |'" 
-                    print ' --------------------------------------------------------------'              
-            else:
-                    os.mkdir(savedir)  
-                    ExportTimeFigure(saveprefix)
-
-
-
-def MakeFiguresLastStep():
-    energyfiles=glob.glob('*.ener')
-    
-    if len(energyfiles)==0:
-      print "It seems there are not files to process"
-    else:
-      for energyfilename in energyfiles:
-            # gen prefix
-            prefix=energyfilename.split('.ener')[0]
-            
-            # get last step
-            nsteps = pymef90.getlaststep(prefix+'.ener')
-            
-            # Represt Fracture 
-            FigureFracture(prefix,nsteps-1) 
-            
-            
-            # Save image of a single time step in the JOB directory (if not up to date)
-            if os.path.isfile(prefix+'.png'):
-                if os.path.getmtime(prefix+'.png') < os.path.getmtime(energyfilename):
-                    ExportSingleFigure(prefix,nsteps- 1)
-                else:
-                    print ' -------------------------------------------------------------'
-                    print '| The last step figure exist and is up to date. Nothing to do |'              
-                    print ' -------------------------------------------------------------'
-            else:  
-                    ExportSingleFigure(prefix,nsteps-1) 
-            
 
 
 def MakeFiguresAllSteps(savedir='PNG'):
