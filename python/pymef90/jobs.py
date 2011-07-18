@@ -2,6 +2,7 @@ def PrepareJob(Geometry,Parameters,debug=False):
     import hashlib
     import shutil
     import os
+    import sys
     
     Parameters['hash'] = hashlib.sha1(repr(Geometry)).hexdigest()
     if os.getenv('PBS_JOBID'):

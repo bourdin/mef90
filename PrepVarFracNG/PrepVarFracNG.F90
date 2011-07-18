@@ -33,7 +33,7 @@ Program PrepVarFrac
    Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec, CoordSec
    Type(Vect3D), Dimension(:), Pointer          :: U, F
    PetscReal, Dimension(:), Pointer             :: V
-   PetscReal                                    :: Theta, Beta, Tau
+   PetscReal                                    :: Theta, Beta, Tau, DL
    PetscReal, Dimension(:), Pointer             :: Uelem, Felem, Velem, Thetaelem, Coordelem
    PetscReal                                    :: Tmin, Tmax
    PetscReal, Dimension(:), Pointer             :: T
@@ -65,7 +65,7 @@ Program PrepVarFrac
 
    Call MEF90_Initialize()
 
-   NumTestCase = 7
+   NumTestCase = 8
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -77,6 +77,7 @@ Program PrepVarFrac
    TestCase(5)%Description = "Cooling along y=0, Dirichlet BC"
    TestCase(6)%Description = "Cooling along y=0, Robin BC"
    TestCase(7)%Description = "Cooling along y=0 and y=ymax, Dirichlet BC"
+   TestCase(8)%Description = "Piecewise linear thermal load translating along y axis"
 
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, HasPrefix, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr); CHKERRQ(iErr)
@@ -432,6 +433,9 @@ Program PrepVarFrac
    Case(6)
       Call AskReal(Theta, 'Temperature contrast (Delta Theta)', BatchUnit, IsBatch)
       Call AskReal(Beta, 'Beta', BatchUnit, IsBatch)
+   Case(8)
+      Call AskReal(Theta, 'Temperature contrast (Delta Theta)', BatchUnit, IsBatch)
+      Call AskReal(DL, 'Diffusion length', BatchUnit, IsBatch)
    Case default
       !!! Default is MIL
       Call AskReal(Theta, 'Temperature multiplier', BatchUnit, IsBatch)
@@ -474,6 +478,14 @@ Program PrepVarFrac
          End Do
       Case(7) !!! Single well, cst flux
          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,'Not implemented yet\n',iErr)
+      Case(8) !!! Translating thermal load
+         Do k = 1, MeshTopology%Num_Verts
+            Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + k-1, Coordelem, iErr); CHKERRQ(iErr)
+            !! tau=sqrt(t) is the time scale of the thermal problem (see Bahr at, TAFM 1998). The code keeps t as time and non-uniform time-stepping (see Time Steps)
+            !ThetaElem = max(0.0_Kr,min(Theta,(CoordElem(2)-T(iSTep)) * Theta / DL))
+            ThetaElem = CoordElem(2)-T(iSTep)
+            Call SectionRealUpdate(ThetaSec, MeshTopology%Num_Elems + k-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+         End Do
       Case default
          !!! Default is MIL
          ThetaElem = Theta * T(iStep)
