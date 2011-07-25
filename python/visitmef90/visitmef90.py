@@ -12,7 +12,7 @@ import os; import sys; import glob;    import math;
 import pymef90;  from visit import * 
 
 
-def FigureFracture(Prefix,ImageOptions,state=1):
+def FigureFracture(Prefix,ImageOptions=None,state=1):
     print Prefix
 
     ##  
@@ -55,11 +55,12 @@ def FigureFracture(Prefix,ImageOptions,state=1):
     SetPlotOptions(p)
     # Step 3: Draw the plots
     DrawPlots()
-    # Set the view
-    v = GetView2D()
-    v.windowCoords = (ImageOptions['x0'], ImageOptions['lx'],ImageOptions['y0'],ImageOptions['ly'])
-    v.viewportCoords = (ImageOptions['x0v'],ImageOptions['lxv'],ImageOptions['y0v'],ImageOptions['lyv'])
-    SetView2D(v)
+    if not ImageOptions == None:
+        # Set the view
+        v = GetView2D()
+        v.windowCoords = (ImageOptions['x0'], ImageOptions['lx'],ImageOptions['y0'],ImageOptions['ly'])
+        v.viewportCoords = (ImageOptions['x0v'],ImageOptions['lxv'],ImageOptions['y0v'],ImageOptions['lyv'])
+        SetView2D(v)
     AnnotationAtts = AnnotationAttributes()
     AnnotationAtts.axes2D.visible = 0
     AnnotationAtts.userInfoFlag = 0
@@ -90,7 +91,7 @@ def ExportSingleFigure(prefix,ImageOptions,state=1):
     n = SaveWindow()
     
     
-def MakeFiguresLastStep(ImageOptions):
+def MakeFiguresLastStep(ImageOptions=None):
     energyfiles=glob.glob('*.ener')
     
     if len(energyfiles)==0:
