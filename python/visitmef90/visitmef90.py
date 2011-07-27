@@ -72,16 +72,18 @@ def FigureFracture(Prefix,ImageOptions=None,state=1):
     SetTimeSliderState(state)
 
       
-def ExportSingleFigure(prefix,ImageOptions,state=1):
-    aspectratio=ImageOptions['ly']/ImageOptions['lx']
+def ExportSingleFigure(prefix,ImageOptions=None,state=1):
+    if not ImageOptions == None:
+        aspectratio=ImageOptions['ly']/ImageOptions['lx']
     SetTimeSliderState(state)
     s = SaveWindowAttributes()
     s.fileName = prefix
     s.format = s.PNG
     s.saveTiled = 1
     s.family=0
-    s.width =  ImageOptions['res']
-    s.height =  math.ceil(ImageOptions['res']*aspectratio)
+    if not ImageOptions == None:
+        s.width =  ImageOptions['res']
+        s.height =  math.ceil(ImageOptions['res']*aspectratio)
     s.screenCapture = 0
     s.progressive = 0
     s.quality = 80
