@@ -12,16 +12,14 @@ import os; import sys; import glob;    import math;
 import pymef90;  from visit import * 
 
 
-def FigureFracture(Prefix,ImageOptions=None,state=1):
-    print Prefix
-
+def FigureFracture(prefix,ImageOptions=None,step=None):
     ##  
     ## Step 1: Open the database
     ##
-    if os.path.exists(Prefix+'-0001.gen'):
-      MyDatabase= Prefix+'-*.gen database'
+    if os.path.exists(prefix+'-0001.gen'):
+      MyDatabase= prefix+'-*.gen database'
     else:
-      MyDatabase= Prefix+'-0000.gen'
+      MyDatabase= prefix+'-0000.gen'
     OpenDatabase(MyDatabase,0)
     # --------------------------------------------------
     # Step 2: Add plots and set their properties
@@ -58,8 +56,12 @@ def FigureFracture(Prefix,ImageOptions=None,state=1):
     if not ImageOptions == None:
         # Set the view
         v = GetView2D()
-        v.windowCoords = (ImageOptions['x0'], ImageOptions['lx'],ImageOptions['y0'],ImageOptions['ly'])
-        v.viewportCoords = (ImageOptions['x0v'],ImageOptions['lxv'],ImageOptions['y0v'],ImageOptions['lyv'])
+        #v.windowCoords = (ImageOptions['x0'], ImageOptions['lx'],ImageOptions['y0'],ImageOptions['ly'])
+        v.windowCoords = ImageOptions['bbox']
+        #v.viewportCoords = (ImageOptions['x0v'],ImageOptions['lxv'],ImageOptions['y0v'],ImageOptions['lyv'])
+        ###v.viewportCoords = ImageOptions['viewport']
+        ### Not sure why this makes visit crash
+        
         SetView2D(v)
     AnnotationAtts = AnnotationAttributes()
     AnnotationAtts.axes2D.visible = 0
@@ -69,21 +71,23 @@ def FigureFracture(Prefix,ImageOptions=None,state=1):
     AnnotationAtts.axesArray.visible = 0
     SetAnnotationAttributes(AnnotationAtts)
     # --------------------------------------------------
-    SetTimeSliderState(state)
-
+    if step == None:
+        print prefix+'.ener'
+        step = pymef90.getlaststep(prefix+'.ener')        
+    SetTimeSliderState(step-1)
+    
       
-def ExportSingleFigure(prefix,ImageOptions=None,state=1):
-    if not ImageOptions == None:
-        aspectratio=ImageOptions['ly']/ImageOptions['lx']
-    SetTimeSliderState(state)
+def ExportSingleFigure(prefix,ImageOptions=None):
+    #SetTimeSliderState(step)
     s = SaveWindowAttributes()
     s.fileName = prefix
     s.format = s.PNG
     s.saveTiled = 1
     s.family=0
     if not ImageOptions == None:
-        s.width =  ImageOptions['res']
-        s.height =  math.ceil(ImageOptions['res']*aspectratio)
+        aspectratio=ImageOptions['bbox'][3]/ImageOptions['bbox'][1]
+        s.width =  int(ImageOptions['res'])
+        s.height =  int(math.ceil(ImageOptions['res']*aspectratio))
     s.screenCapture = 0
     s.progressive = 0
     s.quality = 80
