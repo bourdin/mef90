@@ -17,7 +17,6 @@ def getnumproc(prefix,pattern='%s-%04i.gen'):
     
     np = 0
     while os.path.isfile(pattern%(prefix,np)):
-        print 'found '+ pattern%(prefix,np)
         np += 1
     return np
 
