@@ -44,7 +44,7 @@ Program  VarFracQS
    Write(stagename(3), "(A)") "U-step"
    Write(stagename(4), "(A)") "V-step"
    TimeStep: Do 
-      Call ALEStagePush(stagename(1), iDebug, iErr); CHKERRQ(iErr)
+      !Call ALEStagePush(stagename(1), iDebug, iErr); CHKERRQ(iErr)
 
 !       Write(IOBuffer, 99) AppCtx%TimeStep
 !       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -79,7 +79,7 @@ Program  VarFracQS
       AppCtx%IsBT = .False.
       AltMinIter = 1
       AltMin: Do 
-         Call ALEStagePush(stagename(2), iDebug, iErr); CHKERRQ(iErr)
+         !Call ALEStagePush(stagename(2), iDebug, iErr); CHKERRQ(iErr)
          If (AppCtx%AppParam%verbose > 0) Then
             Call PetscMemoryGetCurrentUsage(CurrentMemoryUsage,iErr); CHKERRQ(iErr)
             Call PetscMemoryGetMaximumUsage(MaximumMemoryUsage,iErr); CHKERRQ(iErr)
@@ -91,21 +91,21 @@ Program  VarFracQS
          !------------------------------------------------------------------- 
          ! Problem for U
          !-------------------------------------------------------------------
-         Call ALEStagePush(stagename(3), iDebug, iErr); CHKERRQ(iErr)
+         !Call ALEStagePush(stagename(3), iDebug, iErr); CHKERRQ(iErr)
          Call Step_U(AppCtx)
-         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Call ALEStagePrintMemory(stagename(3), iErr); CHKERRQ(iErr)
-         End If
+         !Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         !If (AppCtx%AppParam%verbose > 0) Then
+         !   Call ALEStagePrintMemory(stagename(3), iErr); CHKERRQ(iErr)
+         !End If
          !------------------------------------------------------------------- 
          ! Problem for V
          !-------------------------------------------------------------------
-         Call ALEStagePush(stagename(4), iDebug, iErr); CHKERRQ(iErr)
+         !Call ALEStagePush(stagename(4), iDebug, iErr); CHKERRQ(iErr)
          Call Step_V(AppCtx)
-         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Call ALEStagePrintMemory(stagename(4), iErr); CHKERRQ(iErr)
-         EndIf      
+         !Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         !If (AppCtx%AppParam%verbose > 0) Then
+         !   Call ALEStagePrintMemory(stagename(4), iErr); CHKERRQ(iErr)
+         !EndIf      
          !------------------------------------------------------------------- 
          ! Check For BackTracking 
          !------------------------------------------------------------------- 
@@ -114,7 +114,7 @@ Program  VarFracQS
              (Mod(AltMinIter, AppCtx%VarFracSchemeParam%BTInt) == 0) .AND.                         &
              (.NOT. AppCtx%IsBT)) Then
             Call ComputeEnergies(AppCtx)
-            Call Backtracking(AppCtx,AppCtx%TimeSTep,StepOUT,AppCtx%IsBT)
+            Call Backtracking(AppCtx,AppCtx%TimeStep,StepOUT,AppCtx%IsBT)
             BTFound1: If (AppCtx%IsBT) Then
                !AppCtx%IsBT = PETSC_TRUE
                AppCtx%TimeStep = StepOUT
@@ -131,10 +131,10 @@ Program  VarFracQS
                      End Do
                   End If
                End If
-               Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-               If (AppCtx%AppParam%verbose > 0) Then
-                  Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
-               End If
+               !Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+               !If (AppCtx%AppParam%verbose > 0) Then
+               !   Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+               !End If
                !!! Exit AltMin loop
                EXIT
             End If BTFound1
@@ -179,17 +179,17 @@ Program  VarFracQS
          If ((AppCtx%ErrV < AppCtx%VarFracSchemeParam%AltMinTol) .OR.                              &
              (AltMinIter == AppCtx%VarFracSchemeParam%AltMinMaxIter) ) then 
             Call Save_Ener(AppCtx)
-            Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-            If (AppCtx%AppParam%verbose > 0) Then
-               Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
-            End If
+            !Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+            !If (AppCtx%AppParam%verbose > 0) Then
+            !   Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+            !End If
             EXIT 
          End If
          AltMinIter = AltMinIter + 1
-         Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-         If (AppCtx%AppParam%verbose > 0) Then
-            Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
-         End If
+         !Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+         !If (AppCtx%AppParam%verbose > 0) Then
+         !   Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+         !End If
       End Do AltMin
       !------------------------------------------------------------------- 
       ! Check For BackTracking again
@@ -212,15 +212,17 @@ Program  VarFracQS
                   End Do
                End If
             End If
-            Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-            If (AppCtx%AppParam%verbose > 0) Then
-               Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
-            End If
+            !Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+            !If (AppCtx%AppParam%verbose > 0) Then
+            !   Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
+            !End If
          Else 
             AppCtx%TimeStep = AppCtx%TimeStep +1
          End If BTFoundFinal
       Else
-         AppCtx%TimeStep = AppCtx%TimeStep +1      
+         If (.NOT. AppCtx%IsBT) Then
+            AppCtx%TimeStep = AppCtx%TimeStep +1      
+         End If
       End If TestBTFinal
 
       !------------------------------------------------------------------- 
@@ -231,10 +233,10 @@ Program  VarFracQS
       Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
       Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
       Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
-      Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%verbose > 0) Then
-         Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
-      End If
+      !Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
+      !If (AppCtx%AppParam%verbose > 0) Then
+      !   Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
+      !End If
       If ( AppCtx%TimeStep > AppCtx%NumTimeSteps ) Then
          EXIT
       End If
