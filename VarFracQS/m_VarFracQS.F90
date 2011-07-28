@@ -716,6 +716,16 @@ Contains
                Write(IOBuffer,*) 'Energy not decreasing, skipping BT\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If
+         Case(VarFrac_BTType_Simple)
+            If (AppCtx%TotalEnergy(AppCtx%TimeStep) < AppCtx%TotalEnergy(AppCtx%TimeStep-1)) Then
+               Write(IOBuffer,*) 'Going back one step: ',StepIN, STepOUT,'\n'
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+               StepOUT = StepIN - 1
+               BTFound = PETSC_TRUE
+            Else  
+               Write(IOBuffer,*) 'Energy not decreasing, skipping BT\n'
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+            End If
          Case Default
             SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,'Unknown Backtracking type\n',ierr)
       End Select         
