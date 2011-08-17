@@ -12,8 +12,10 @@ Module m_MEF_Types
    Public :: Element1D
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
+   Public :: BoundaryElement2D, BoundaryElement2D_Scal, BoundaryElement2D_Elast 
+   Public :: BoundaryElement3D, BoundaryElement3D_Scal, BoundaryElement3D_Elast 
 
-   Public :: Elem_Blk_Type, Node_Set_Type, MeshTopology_Type
+   Public :: Elem_Blk_Type, Side_Set_Type, Node_Set_Type, MeshTopology_Type
    Public :: EXO_Type, EXO_Property_Type, EXO_Variable_Type
    
    Public :: EXOView
@@ -82,8 +84,44 @@ Module m_MEF_Types
    Type BoundaryElement2D_Scal
       Type(Vect2D)                                   :: NormalVector
       PetscReal, Dimension(:,:), Pointer             :: BF
+      Type(Vect2D), Dimension(:,:), Pointer          :: Grad_BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type BoundaryElement2D_Scal
+    
+   Type BoundaryElement2D
+      Type(Vect2D)                                   :: NormalVector
+      Type(Vect2D), Dimension(:,:), Pointer          :: BF
+      Type(Mat2D), Dimension(:,:), Pointer           :: Der_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
+   End Type BoundaryElement2D
+    
+   Type BoundaryElement2D_Elast
+      Type(Vect2D)                                   :: NormalVector
+      Type(Vect2D), Dimension(:,:), Pointer          :: BF
+      Type(MatS2D), Dimension(:,:), Pointer          :: GradS_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
+   End Type BoundaryElement2D_Elast
+    
+   Type BoundaryElement3D_Scal
+      Type(Vect3D)                                   :: NormalVector
+      PetscReal, Dimension(:,:), Pointer             :: BF
+      Type(Vect3D), Dimension(:,:), Pointer          :: Grad_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
+   End Type BoundaryElement3D_Scal
+    
+   Type BoundaryElement3D
+      Type(Vect3D)                                   :: NormalVector
+      Type(Vect3D), Dimension(:,:), Pointer          :: BF
+      Type(Mat3D), Dimension(:,:), Pointer           :: Der_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
+   End Type BoundaryElement3D
+    
+   Type BoundaryElement3D_Elast
+      Type(Vect3D)                                   :: NormalVector
+      Type(Vect3D), Dimension(:,:), Pointer          :: BF
+      Type(MatS3D), Dimension(:,:), Pointer          :: GradS_BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
+   End Type BoundaryElement3D_Elast
     
    Type Elem_Blk_Type
       PetscInt                                       :: ID
@@ -102,7 +140,7 @@ Module m_MEF_Types
    Type Side_Set_Type
       PetscInt                                       :: ID
       PetscInt                                       :: Elem_Type
-      PetscInt, Dimension(4)                         :: DoF_Location
+      PetscInt, Dimension(3)                         :: DoF_Location
       !!! DoF location is Faces, edges, vertices in 3D and
       !!!                 Edges, vertices in2D
       PetscInt                                       :: Num_DoF !! = sum(DoF_Location)

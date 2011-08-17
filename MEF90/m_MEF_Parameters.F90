@@ -24,4 +24,13 @@ Module m_MEF_Parameters
    PetscInt, Public                     :: MEF90_MyRank
    PetscInt, Public                     :: MEF90_NumProcs
    PetscInt, Parameter, Public          :: MEF90_MXSTRLEN = 256
+
+   !!!   
+   !!! Element names
+   !!!
+   PetscInt, Parameter, Public                   :: MEF90_P1_Lagrange = 1
+   PetscInt, Parameter, Public                   :: MEF90_P2_Lagrange = 2
+   
+!   PetscInt, Parameter, Public                   :: MEF90_Q1_Lagrange = 3
+!   PetscInt, Parameter, Public                   :: MEF90_Q2_Lagrange = 4
 End Module m_MEF_Parameters
