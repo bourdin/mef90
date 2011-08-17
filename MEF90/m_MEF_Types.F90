@@ -99,8 +99,20 @@ Module m_MEF_Types
       PetscInt                                       :: Num_Vert
    End Type Elem_Blk_Type
  
+   Type Side_Set_Type
+      PetscInt                                       :: ID
+      PetscInt                                       :: Elem_Type
+      PetscInt, Dimension(4)                         :: DoF_Location
+      !!! DoF location is Faces, edges, vertices in 3D and
+      !!!                 Edges, vertices in2D
+      PetscInt                                       :: Num_DoF !! = sum(DoF_Location)
+      PetscInt                                       :: Num_Elems
+      PetscInt, Dimension(:), Pointer                :: Elem_ID
+      PetscInt                                       :: Num_Edge
+      PetscInt                                       :: Num_Vert
+   End Type Side_Set_Type
+ 
    Type Node_Set_Type
-!      Sequence
       PetscInt                                       :: ID
       PetscInt                                       :: Num_Nodes
       PetscInt, Dimension(:), Pointer                :: Node_ID
