@@ -34,6 +34,8 @@ Module m_MEF_Elements
    End Interface ElementView
    
  Contains
+#undef __FUNCT__
+#define __FUNCT__ "Init_Elem_Blk_Type"
    Subroutine Init_Elem_Blk_Type(dBlk, dDim)
       Type (Elem_Blk_Type)                   :: dBlk
       PetscInt                               :: dDim
@@ -52,7 +54,7 @@ Module m_MEF_Elements
             dBlk%Num_Edge = 3
             dBlk%Num_Vert = 3
          Case Default
-            Print*, 'Unknown element type', dBlk%Elem_Type
+            Print*, __FUNCT__, ': Unknown element type', dBlk%Elem_Type
             STOP
          End Select
       Case (3)
@@ -68,16 +70,18 @@ Module m_MEF_Elements
             dBlk%Num_Edge = 6
             dBlk%Num_Vert = 4
          Case Default
-            Print*, 'Unknown element type', dBlk%Elem_Type
+            Print*, __FUNCT__, ': Unknown element type', dBlk%Elem_Type
             STOP
          End Select
       Case Default
-         Print*, 'Unknown dimension', dDim
+         Print*, __FUNCT__, ': Unknown dimension', dDim
          STOP
       End Select
       dBlk%Num_DoF = sum(dBlk%DoF_Location)
    End Subroutine Init_Elem_Blk_Type     
    
+#undef __FUNCT__
+#define __FUNCT__ "Init_AllElement2D_Scal"
    Subroutine Init_AllElement2D_Scal(dMeshTopology, dElem, dQuadratureOrder)
       Type(MeshTopology_Type)                     :: dMeshTopology
       Type(Element2D_Scal), Dimension(:), Pointer :: dElem
@@ -98,8 +102,8 @@ Module m_MEF_Elements
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
-             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
-             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+            !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
@@ -108,7 +112,8 @@ Module m_MEF_Elements
       Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
    End Subroutine Init_AllElement2D_Scal
       
-   
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element2D_Scal"
    Subroutine Init_Element2D_Scal(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element2D_Scal)                  :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
@@ -127,10 +132,12 @@ Module m_MEF_Elements
 !         Case (MEF90_Q2_Lagrange)
 !            Call Init_Element_Q_Lagrange_2D_Scal(dElem, dCoord, 2, QuadratureOrder)
          Case Default
-            Print*, 'Element type not implemented yet', Element_Type
+            Print*, __FUNCT__,': Element type not implemented yet', Element_Type
       End Select
    End Subroutine Init_Element2D_Scal                                
    
+#undef __FUNCT__
+#define __FUNCT__ "Init_AllElement2D"
    Subroutine Init_AllElement2D(dMeshTopology, dElem, dQuadratureOrder)
       Type(MeshTopology_Type)                     :: dMeshTopology
       Type(Element2D), Dimension(:), Pointer      :: dElem
@@ -151,8 +158,8 @@ Module m_MEF_Elements
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
-             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
-             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+            !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
@@ -161,6 +168,8 @@ Module m_MEF_Elements
       Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
    End Subroutine Init_AllElement2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element2D"
    Subroutine Init_Element2D(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element2D)                       :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
@@ -179,10 +188,12 @@ Module m_MEF_Elements
 !         Case (MEF90_Q2_Lagrange)
 !            Call Init_Element_Q_Lagrange_2D_Scal(dElem, dCoord, 2, QuadratureOrder)
          Case Default
-            Print*, 'Element type not implemented yet', Element_Type
+            Print*, __FUNCT__, ': Element type not implemented yet', Element_Type
       End Select
    End Subroutine Init_Element2D                                
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_AllElement2D_Elast"
    Subroutine Init_AllElement2D_Elast(dMeshTopology, dElem, dQuadratureOrder)
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element2D_Elast), Dimension(:), Pointer :: dElem
@@ -213,6 +224,8 @@ Module m_MEF_Elements
       Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
    End Subroutine Init_AllElement2D_Elast
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element2D_Elast"
    Subroutine Init_Element2D_Elast(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element2D_Elast)                 :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
@@ -231,11 +244,13 @@ Module m_MEF_Elements
 !         Case (MEF90_Q2_Lagrange)
 !            Call Init_Element_Q_Lagrange_2D_Scal(dElem, dCoord, 2, QuadratureOrder)
          Case Default
-            Print*, 'Element type not implemented yet', Element_Type
+            Print*, __FUNCT__, ': Element type not implemented yet', Element_Type
       End Select
    End Subroutine Init_Element2D_Elast
 
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_AllElement3D_Scal"
    Subroutine Init_AllElement3D_Scal(dMeshTopology, dElem, dQuadratureOrder)
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element3D_Scal), Dimension(:), Pointer  :: dElem
@@ -256,8 +271,8 @@ Module m_MEF_Elements
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
-             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
-             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+            !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
@@ -266,6 +281,8 @@ Module m_MEF_Elements
       Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
    End Subroutine Init_AllElement3D_Scal
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element3D_Scal"
    Subroutine Init_Element3D_Scal(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element3D_Scal)                  :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
@@ -284,10 +301,12 @@ Module m_MEF_Elements
 !         Case (MEF90_Q2_Lagrange)
 !            Call Init_Element_Q_Lagrange_3D_Scal(dElem, dCoord, 2, QuadratureOrder)
          Case Default
-            Print*, 'Element type not implemented yet', Element_Type
+            Print*, __FUNCT__, ': Element type not implemented yet', Element_Type
       End Select
    End Subroutine Init_Element3D_Scal                                
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_AllElement3D"
    Subroutine Init_AllElement3D(dMeshTopology, dElem, dQuadratureOrder)
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element3D), Dimension(:), Pointer       :: dElem
@@ -308,8 +327,8 @@ Module m_MEF_Elements
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
-             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
-             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+            !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
@@ -318,6 +337,8 @@ Module m_MEF_Elements
       Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
    End Subroutine Init_AllElement3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element3D"
    Subroutine Init_Element3D(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element3D)                       :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
@@ -336,10 +357,12 @@ Module m_MEF_Elements
 !         Case (MEF90_Q2_Lagrange)
 !            Call Init_Element_Q_Lagrange_3D(dElem, dCoord, 2, QuadratureOrder)
          Case Default
-            Print*, 'Element type not implemented yet', Element_Type
+            Print*, __FUNCT__, ': Element type not implemented yet', Element_Type
       End Select
    End Subroutine Init_Element3D                                
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_AllElement3DElast"
    Subroutine Init_AllElement3D_Elast(dMeshTopology, dElem, dQuadratureOrder)
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Element3D_Elast), Dimension(:), Pointer :: dElem
@@ -360,8 +383,8 @@ Module m_MEF_Elements
          Do_Elem_iE: Do iELoc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call SectionRealRestrictClosure(CoordSection, dMeshTopology%mesh, iE-1, Size(TmpCoords), TmpCoords, iErr);CHKERRQ(iErr)
-             Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
-             !!! WTF? why not reshaping the arguments in Init_Element? 
+            Coords = Reshape(TmpCoords, (/dMeshTopology%Num_Dim, dMeshTopology%Elem_Blk(iBlk)%Num_Vert /) )
+            !!! WTF? why not reshaping the arguments in Init_Element? 
             Call ElementInit(dElem(iE), Coords, dQuadratureOrder, dMeshTopology%Elem_Blk(iBlk)%Elem_Type)
          End Do Do_Elem_iE
          DeAllocate(TmpCoords)
@@ -370,6 +393,8 @@ Module m_MEF_Elements
       Call SectionRealDestroy(CoordSection, iErr); CHKERRQ(iErr)
    End Subroutine Init_AllElement3D_Elast
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element3D_Elast"
    Subroutine Init_Element3D_Elast(dElem, dCoord, QuadratureOrder, Element_Type)
       Type (Element3D_Elast)                 :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
@@ -388,10 +413,12 @@ Module m_MEF_Elements
 !         Case (MEF90_Q2_Lagrange)
 !            Call Init_Element_Q_Lagrange_3D_Elast(dElem, dCoord, 2, QuadratureOrder)
          Case Default
-            Print*, 'Element type not implemented yet', Element_Type
+            Print*, __FUNCT__, ': Element type not implemented yet', Element_Type
       End Select
    End Subroutine Init_Element3D_Elast                                
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element_P_Lagrange_2D_Scal"
    Subroutine Init_Element_P_Lagrange_2D_Scal(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
@@ -473,7 +500,7 @@ Module m_MEF_Elements
          Xi(7) = (/ 1.0_Kr / 3.0_Kr, 1.0_Kr / 3.0_Kr /)
          
       Case Default
-         Print*, 'Unimplemented quadrature order', dQuadratureOrder
+         Print*, __FUNCT__, ': Unimplemented quadrature order', dQuadratureOrder
          STOP
       End Select
       
@@ -508,7 +535,7 @@ Module m_MEF_Elements
          GradPhiHat(5,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                   GradPhiHat(5,:)%Y = 0.0_Kr
          GradPhiHat(6,:)%X = 0.0_Kr;                                   GradPhiHat(6,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
       Case Default
-         Print*, 'Unimplemented PolynomialOrder', dPolynomialOrder
+         Print*, __FUNCT__, ': Unimplemented PolynomialOrder', dPolynomialOrder
       End Select
       
       Allocate (dElem%BF(Num_DoF, Nb_Gauss)) 
@@ -525,6 +552,8 @@ Module m_MEF_Elements
       DeAllocate(GradPhiHat)
    End Subroutine Init_Element_P_Lagrange_2D_Scal
    
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element_P_Lagrange_2D"
    Subroutine Init_Element_P_Lagrange_2D(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       Type (Element2D)                       :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
@@ -561,6 +590,8 @@ Module m_MEF_Elements
       Call ElementDestroy(Elem_Scal)
    End Subroutine Init_Element_P_Lagrange_2D
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element_P_Lagrange_2D_Elast"
    Subroutine Init_Element_P_Lagrange_2D_Elast(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       Type (Element2D_Elast)                 :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
@@ -595,6 +626,8 @@ Module m_MEF_Elements
       Call ElementDestroy(Elem_Scal)
    End Subroutine Init_Element_P_Lagrange_2D_Elast
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element_P_Lagrange_3D_Scal"
    Subroutine Init_Element_P_Lagrange_3D_Scal(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
@@ -669,7 +702,7 @@ Module m_MEF_Elements
          dElem%Gauss_C(2:5) = 3.0_Kr / 40.0_Kr * detBinv
 
       Case Default
-         Print*, 'Unimplemented quadrature order', dQuadratureOrder
+         Print*, __FUNCT__, ': Unimplemented quadrature order', dQuadratureOrder
          STOP
       End Select
       
@@ -689,7 +722,7 @@ Module m_MEF_Elements
          GradPhiHat(4,:)%X =  0.0_Kr; GradPhiHat(4,:)%Y =  0.0_Kr; GradPhiHat(4,:)%Z =  1.0_Kr;
           
       Case Default
-         Print*, 'Unimplemented PolynomialOrder', dPolynomialOrder
+         Print*, __FUNCT__, ': Unimplemented PolynomialOrder', dPolynomialOrder
       End Select
       
       Allocate (dElem%BF(Num_DoF, Nb_Gauss)) 
@@ -706,6 +739,8 @@ Module m_MEF_Elements
       DeAllocate(GradPhiHat)
    End Subroutine Init_Element_P_Lagrange_3D_Scal
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element_P_Lagrange_3D"
    Subroutine Init_Element_P_Lagrange_3D(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       Type (Element3D)                       :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
@@ -754,6 +789,8 @@ Module m_MEF_Elements
       Call ElementDestroy(Elem_Scal)
    End Subroutine Init_Element_P_Lagrange_3D
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_Element_P_Lagrange_3D_Elast"
    Subroutine Init_Element_P_Lagrange_3D_Elast(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
       Type (Element3D_Elast)                 :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
@@ -801,6 +838,8 @@ Module m_MEF_Elements
       Call ElementDestroy(Elem_Scal)
    End Subroutine Init_Element_P_Lagrange_3D_Elast
    
+#undef __FUNCT__
+#define __FUNCT__ "Destroy_Element2D_Scal"
    Subroutine Destroy_Element2D_Scal(dElem)
       Type (Element2D_Scal)                  :: dElem
       If (Associated(dElem%BF)) Then
@@ -817,6 +856,8 @@ Module m_MEF_Elements
 !      End If
    End Subroutine Destroy_Element2D_Scal
 
+#undef __FUNCT__
+#define __FUNCT__ "Destroy_Element2D"
    Subroutine Destroy_Element2D(dElem)
       Type (Element2D)                       :: dElem
       If (Associated(dElem%BF)) Then
@@ -833,6 +874,8 @@ Module m_MEF_Elements
 !      End If
    End Subroutine Destroy_Element2D
    
+#undef __FUNCT__
+#define __FUNCT__ "Destroy_Element2D_Elast"
    Subroutine Destroy_Element2D_Elast(dElem)
       Type (Element2D_Elast)                 :: dElem
       If (Associated(dElem%BF)) Then
@@ -849,6 +892,8 @@ Module m_MEF_Elements
 !      End If
    End Subroutine Destroy_Element2D_Elast
    
+#undef __FUNCT__
+#define __FUNCT__ "Destroy_Element3D_Scal"
    Subroutine Destroy_Element3D_Scal(dElem)
       Type (Element3D_Scal)                  :: dElem
       If (Associated(dElem%BF)) Then
@@ -865,6 +910,8 @@ Module m_MEF_Elements
 !      End If
    End Subroutine Destroy_Element3D_Scal
 
+#undef __FUNCT__
+#define __FUNCT__ "Destroy_Element3D"
    Subroutine Destroy_Element3D(dElem)
       Type (Element3D)                       :: dElem
       If (Associated(dElem%BF)) Then
@@ -881,6 +928,8 @@ Module m_MEF_Elements
 !      End If
    End Subroutine Destroy_Element3D
    
+#undef __FUNCT__
+#define __FUNCT__ "Destroy_Element3D_Elast"
    Subroutine Destroy_Element3D_Elast(dElem)
       Type (Element3D_Elast)                 :: dElem
       If (Associated(dElem%BF)) Then
@@ -901,6 +950,8 @@ Module m_MEF_Elements
 !!! ELEMENT VIEWERS
 !!!
 
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_ScalView"
    Subroutine Element2D_ScalView(dElem, viewer)
       Type(Element2D_Scal)                           :: dElem
       Type(PetscViewer)                              :: viewer
@@ -951,6 +1002,8 @@ Module m_MEF_Elements
 201 Format('   ', F5.2)
    End Subroutine Element2D_ScalView
    
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_ScalPtrView"
    Subroutine Element2D_ScalPtrView(dElems, viewer)
       Type(Element2D_Scal), Dimension(:), Pointer    :: dElems
       Type(PetscViewer)                              :: viewer
@@ -970,6 +1023,8 @@ Module m_MEF_Elements
 101 Format('*** Element  ', I9, '\n')
    End Subroutine Element2D_ScalPtrView
 
+#undef __FUNCT__
+#define __FUNCT__ "Element2DView"
    Subroutine Element2DView(dElem, viewer)
       Type(Element2D)                                :: dElem
       Type(PetscViewer)                              :: viewer
@@ -1038,6 +1093,8 @@ Module m_MEF_Elements
 201 Format('   ', F5.2)
    End Subroutine Element2DView
    
+#undef __FUNCT__
+#define __FUNCT__ "Element2DPtrView"
    Subroutine Element2DPtrView(dElems, viewer)
       Type(Element2D), Dimension(:), Pointer         :: dElems
       Type(PetscViewer)                              :: viewer
@@ -1057,6 +1114,8 @@ Module m_MEF_Elements
 101 Format('*** Element  ', I9, '\n')
    End Subroutine Element2DPtrView
 
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_ElastPtrView"
    Subroutine Element2D_ElastView(dElem, viewer)
       Type(Element2D_Elast)                          :: dElem
       Type(PetscViewer)                              :: viewer
@@ -1118,6 +1177,8 @@ Module m_MEF_Elements
 201 Format('   ', F5.2)
    End Subroutine Element2D_ElastView
    
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_ElastPtrView"
    Subroutine Element2D_ElastPtrView(dElems, viewer)
       Type(Element2D_Elast), Dimension(:), Pointer   :: dElems
       Type(PetscViewer)                              :: viewer
@@ -1137,6 +1198,8 @@ Module m_MEF_Elements
 101 Format('*** Element  ', I9, '\n')
    End Subroutine Element2D_ElastPtrView
 
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_ScalView"
    Subroutine Element3D_ScalView(dElem, viewer)
       Type(Element3D_Scal)                           :: dElem
       Type(PetscViewer)                              :: viewer
@@ -1193,6 +1256,8 @@ Module m_MEF_Elements
 201 Format('   ', F5.2)
    End Subroutine Element3D_ScalView
    
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_ScalPtrView"
    Subroutine Element3D_ScalPtrView(dElems, viewer)
       Type(Element3D_Scal), Dimension(:), Pointer    :: dElems
       Type(PetscViewer)                              :: viewer
@@ -1213,6 +1278,8 @@ Module m_MEF_Elements
 101 Format('*** Element  ', I9, '\n')
    End Subroutine Element3D_ScalPtrView
 
+#undef __FUNCT__
+#define __FUNCT__ "Element3DView"
    Subroutine Element3DView(dElem, viewer)
       Type(Element3D)                                :: dElem
       Type(PetscViewer)                              :: viewer
@@ -1316,6 +1383,8 @@ Module m_MEF_Elements
 201 Format('   ', F5.2)
    End Subroutine Element3DView
    
+#undef __FUNCT__
+#define __FUNCT__ "Element3DPtrView"
    Subroutine Element3DPtrView(dElems, viewer)
       Type(Element3D), Dimension(:), Pointer         :: dElems
       Type(PetscViewer)                              :: viewer
@@ -1417,6 +1486,8 @@ Module m_MEF_Elements
 201 Format('   ', F5.2)
    End Subroutine Element3D_ElastView
    
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_ElastPtrView"
    Subroutine Element3D_ElastPtrView(dElems, viewer)
       Type(Element3D_Elast), Dimension(:), Pointer   :: dElems
       Type(PetscViewer)                              :: viewer
