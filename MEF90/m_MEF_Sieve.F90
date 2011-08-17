@@ -422,7 +422,7 @@ Contains
       !!! DMMeshAssembleMatrix does not work with fibrated sections at this point
       !!! in order to INSERT boundary values, I need to insert a block for ALL dof associated to a given point
       !!! therefre erasing exsting values....
-      !!! MatInsertBoundaryValues needs to be called BEFORE building the hessian of stifness matrix
+      !!! MatInsertBoundaryValues needs to be called BEFORE building the hessian or stiffness matrix
       !!!
       zero = 0
       num_dof = sum(BCFlag%component_size)

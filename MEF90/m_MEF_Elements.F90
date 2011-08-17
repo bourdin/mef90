@@ -623,6 +623,7 @@ Module m_MEF_Elements
       
       
       Type (Vect3D), Dimension(:), Pointer   :: Xi          ! The quadrature points coordinates in the reference element
+      PetscReal                              :: a,b         ! Location of integration points in Aiken p. 272 table 10.4
       
       !!! The transformation matrix and the determinant of its inverse
       Bt%XX = dCoord(1,2) - dCoord(1,1) 
@@ -641,8 +642,26 @@ Module m_MEF_Elements
       Bt = Invert(Bt)
       
       Select Case (dQuadratureOrder)
-      Case(1,2,3)
-         !!! 3rd order cubature on a tetrahedron forula from J.E. Akin' book
+      Case (1)
+         Nb_Gauss = 1
+         Allocate(Xi(Nb_Gauss))
+         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Xi(1) = (/ .25_Kr, .25_Kr, .25_Kr /)
+         dElem%Gauss_C(1) = 1.0_Kr / 6.0_Kr * detBinv
+         
+      Case(2)
+         a = (5.0_Kr + 3.0_Kr * sqrt(5.0_Kr)) / 20.0_Kr
+         b = (5.0_Kr - sqrt(5.0_Kr)) / 20.0_Kr
+         Nb_Gauss = 4
+         Allocate(Xi(Nb_Gauss))
+         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Xi(1) = (/ a, b, b /)
+         Xi(2) = (/ b, a, b /)
+         Xi(3) = (/ b, b, a /)
+         Xi(4) = (/ b, b, b /)
+         dElem%Gauss_C(1:4) = 1.0_Kr / 24.0_Kr * detBinv
+            
+      Case(3)
          Nb_Gauss = 5
          Allocate(Xi(Nb_Gauss))
          Allocate(dElem%Gauss_C(Nb_Gauss))
