@@ -13,6 +13,7 @@ Module m_MEF_Elements
    Public :: ElementDestroy
    Public :: ElementView
    Public :: Init_Elem_Blk_Type
+   Public :: Init_Side_Set_Type
 
 
    Interface ElementInit
@@ -82,6 +83,46 @@ Module m_MEF_Elements
       End Select
       dBlk%Num_DoF = sum(dBlk%DoF_Location)
    End Subroutine Init_Elem_Blk_Type     
+   
+   Subroutine Init_Side_Set_Type(dSet, dDim)
+      Type (Side_Set_Type)                   :: dSet
+      PetscInt                               :: dDim
+      
+      Select Case (dDim)
+      Case (2)
+         Select Case (dSet%Elem_Type)
+         Case (MEF90_P1_Lagrange)         
+            dSet%DoF_Location = (/ 0, 0, 2/)
+            dSet%Num_Edge = 1
+            dSet%Num_Vert = 2
+         Case (MEF90_P2_Lagrange)
+            dSet%DoF_Location = (/ 0, 1, 2/)
+            dSet%Num_Edge = 1
+            dSet%Num_Vert = 2
+         Case Default
+            Print*, 'Unknown element type', dSet%Elem_Type
+            STOP
+         End Select
+      Case (3)
+         Select Case (dSet%Elem_Type)
+         Case (MEF90_P1_Lagrange)         
+            dSet%DoF_Location = (/ 0, 0, 3/)
+            dSet%Num_Edge = 3
+            dSet%Num_Vert = 3
+         Case (MEF90_P2_Lagrange)
+            dSet%DoF_Location = (/ 0, 3, 3/)
+            dSet%Num_Edge = 3
+            dSet%Num_Vert = 3
+         Case Default
+            Print*, 'Unknown element type', dSet%Elem_Type
+            STOP
+         End Select
+      Case Default
+         Print*, 'Unknown dimension', dDim
+         STOP
+      End Select
+      dSet%Num_DoF = sum(dSet%DoF_Location)
+   End Subroutine Init_Side_Set_Type     
    
    Subroutine Init_AllElement2D_Scal(dMeshTopology, dElem, dQuadratureOrder)
       Type(MeshTopology_Type)                     :: dMeshTopology
