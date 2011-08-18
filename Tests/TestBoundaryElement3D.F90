@@ -15,8 +15,8 @@ Program TestBoundaryElement3D
    PetscInt                                     :: num_vert,num_vert_set
    PetscInt                                     :: num_side,num_side_set
    PetscInt                                     :: num_dim
-   PetscReal, Dimension(:), Pointer             :: U1,U2
-   Type(Vect3D), Dimension(:), Pointer          :: UVect
+   PetscReal, Dimension(:), Pointer             :: U1
+   Type(Vect3D), Dimension(:), Pointer          :: U2
    PetscReal                                    :: average2,average3,flux
    Real, Dimension(:), Pointer                  :: X,Y,Z
    PetscReal, Dimension(:,:), Pointer           :: Coord3, Coord2
@@ -71,8 +71,11 @@ Program TestBoundaryElement3D
    Allocate(U1(num_vert))
    Allocate(U2(num_vert))
    Do i = 1, num_vert
-      U1(i) = Y(i)
-      U2(i) = Z(i)
+      U1(i) = X(i)**2 + Y(i)**2 + Z(i)**2
+      U2(i)%X = 0.0_Kr!X(i)
+      U2(i)%Y = 0.0_Kr!Y(i)
+      U2(i)%Z = 1.0_Kr!Z(i)
+      
    End Do
    
    average2 = 0.0_Kr
@@ -97,10 +100,11 @@ Program TestBoundaryElement3D
       Do iG = 1, Num_Gauss
          area3  = area3 + bElem%Gauss_C(iG)
          Do iDof = 1, Num_DoF
-            average3 = average3 + bElem%Gauss_C(iG) * (bElem%BF(iDoF,iG) * U1(connect(iE,iDoF)))
-            flux     = flux + bElem%Gauss_C(iG) * (bElem%Grad_BF(iDoF,iG) .DotP. bElem%NormalVector) * U2(connect(iE,iDoF))
+            average3 = average3 + bElem%Gauss_C(iG) * (bElem%BF(iDoF,iG) * U1(connect(iDoF,iE)))
+            flux     = flux + bElem%Gauss_C(iG) * bElem%BF(iDoF,iG) * (bElem%NormalVector .DotP.  U2(connect(iDoF,iE)))
          End Do
       End Do
+      Call BoundaryElement_Destroy(bElem)
       
       Coord2(1,:) = X(connect(:,iE))
       Coord2(2,:) = Y(connect(:,iE))
@@ -110,10 +114,9 @@ Program TestBoundaryElement3D
       Do iG = 1, Num_Gauss
          area2 = area2 + Elem%Gauss_C(iG)
          Do iDof = 1, Num_DoF
-            average2  = average2 + Elem%Gauss_C(iG) * (Elem%BF(iDoF,iG) * U1(connect(iE,iDoF)))
+            average2  = average2 + Elem%Gauss_C(iG) * (Elem%BF(iDoF,iG) * U1(connect(iDoF,iE)))
          End Do
       End Do
-      Call BoundaryElement_Destroy(bElem)
       Call ElementDestroy(Elem)
    End Do
    Write(*,*) 'Area2 (using 2D body elements) is     ', area2
