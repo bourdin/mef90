@@ -53,13 +53,13 @@ Contains
       
       ! Read Global Geometric Parameters
       !!! Extracts sizes from the Mesh oject
-      Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
-!      write(*,*) '********* AFTER DMMeshExodusGetInfo ********* '
-!      write(*,*) 'dMeshTopology%Num_Dim        ', dMeshTopology%Num_Dim
-!      write(*,*) 'dMeshTopology%Num_Verts      ', dMeshTopology%Num_Verts
-!      write(*,*) 'dMeshTopology%Num_Elems      ', dMeshTopology%Num_Elems
-!      write(*,*) 'dMeshTopology%Num_Elems_Blks ', dMeshTopology%Num_Elem_Blks
-!      write(*,*) 'dMeshTopology%Num_Node_Sets  ', dMeshTopology%Num_Node_Sets
+      !Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
+      !write(*,*) '********* AFTER DMMeshExodusGetInfo ********* '
+      !write(*,*) 'dMeshTopology%Num_Dim        ', dMeshTopology%Num_Dim
+      !write(*,*) 'dMeshTopology%Num_Verts      ', dMeshTopology%Num_Verts
+      !write(*,*) 'dMeshTopology%Num_Elems      ', dMeshTopology%Num_Elems
+      !write(*,*) 'dMeshTopology%Num_Elems_Blks ', dMeshTopology%Num_Elem_Blks
+      !write(*,*) 'dMeshTopology%Num_Node_Sets  ', dMeshTopology%Num_Node_Sets
       
 
 

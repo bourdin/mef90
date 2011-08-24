@@ -22,17 +22,17 @@ Module m_MEF_Utils
       Call MPI_Comm_Rank(PETSC_COMM_WORLD, rank, iErr)
 
       MySize = Size(dMyVals)
-      Call MPI_AllReduce(MySize, MaxSize, 1, MPI_INTEGER, MPI_MAX, dComm, iErr)
+      Call MPI_AllReduce(MySize, MaxSize, 1, MPIU_INTEGER, MPI_MAX, dComm, iErr)
       If (MaxSize>0) Then
          MyMinVal = MinVal(dMyVals)
          MyMaxVal = MaxVal(dMyVals)
-         Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPI_INTEGER, MPI_MIN, dComm, iErr)
-         Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPI_INTEGER, MPI_MAX, dComm, iErr)
+         Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPIU_INTEGER, MPI_MIN, dComm, iErr)
+         Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPIU_INTEGER, MPI_MAX, dComm, iErr)
 !!!$         openmpi doesn't like these so we do a Reduce followed by a Bcast
-!!!$         Call MPI_Reduce(MyMinVal, GlobMinVal, 1, MPI_INTEGER, MPI_MIN, 0, dComm, iErr)
-!!!$         Call MIP_Bcast(GlobMinVal, 1, MPI_INTEGER, 0, dComm, iErr)   
-!!!$         Call MPI_Reduce(MyMaxVal, GlobMaxVal, 1, MPI_INTEGER, MPI_MAX, 0, dComm, iErr)
-!!!$         Call MIP_Bcast(GlobMaxVal, 1, MPI_INTEGER, 0, dComm, iErr)   
+!!!$         Call MPI_Reduce(MyMinVal, GlobMinVal, 1, MPIU_INTEGER, MPI_MIN, 0, dComm, iErr)
+!!!$         Call MIP_Bcast(GlobMinVal, 1, MPIU_INTEGER, 0, dComm, iErr)   
+!!!$         Call MPI_Reduce(MyMaxVal, GlobMaxVal, 1, MPIU_INTEGER, MPI_MAX, 0, dComm, iErr)
+!!!$         Call MIP_Bcast(GlobMaxVal, 1, MPIU_INTEGER, 0, dComm, iErr)   
 !!!$   
          Allocate(ValCount(GlobMinVal:GlobMaxVal))
          ValCount = .FALSE.
