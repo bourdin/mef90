@@ -156,6 +156,19 @@ Program PrepVarFrac
    End If
 
    Call MeshTopologyReadEXO(MeshTopology, EXO)
+   !!Call MeshTopologyView(MeshTopology, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
+   !!!
+   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_dim              ', MeshTopology%num_dim
+   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_verts            ', MeshTopology%num_verts
+   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_elems            ', MeshTopology%num_elems
+   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_elem_blks_global ', MeshTopology%num_elem_blks_global
+   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_elem_blks        ', MeshTopology%num_elem_blks
+   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_node_sets_global ', MeshTopology%num_node_sets_global
+   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_node_sets        ', MeshTopology%num_node_sets
+   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_side_sets_global ', MeshTopology%num_side_sets_global
+   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_side_sets        ', MeshTopology%num_side_sets
+
+
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -257,7 +270,7 @@ Program PrepVarFrac
    Call AskReal(TMin, 'TMin', BatchUnit, IsBatch)
    Call AskReal(TMax, 'TMax', BatchUnit, IsBatch)
    Call AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
-
+   
    Allocate(GlobVars(VarFrac_Num_GlobVar))
    GlobVars = 0.0_Kr
    Allocate(T(NumSteps))

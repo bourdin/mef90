@@ -19,7 +19,7 @@ Contains
          If (MEF90_MyRank == 0) Then
             Read(ArgUnit,*) Val
          End If
-         Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+         Call MPI_BCast(Val, 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr)
       Else
          Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -27,7 +27,7 @@ Contains
             Read(*,*) Val
             Write(ArgUnit, "(I4, t60, A)") val, Trim(msg)
          End If
-         Call MPI_BCast(Val, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+         Call MPI_BCast(Val, 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr)
       End If
    End Subroutine AskInt   
    

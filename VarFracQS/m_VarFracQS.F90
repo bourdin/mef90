@@ -394,7 +394,7 @@ Contains
       
       !!! Broacasting Energies in case we are restarting and it is needed for backtracking
       If (AppCtx%AppParam%Restart) Then
-         Call MPI_BCast(AppCtx%TimeStep, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+         Call MPI_BCast(AppCtx%TimeStep, 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
          Do iTS = 1, AppCtx%TimeStep
             Call MPI_BCast(AppCtx%ElasticEnergy(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
             Call MPI_BCast(AppCtx%ExtForcesWork(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)

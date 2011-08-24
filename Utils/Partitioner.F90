@@ -1,21 +1,14 @@
 Program Partitioner
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
    Use m_MEF90
    Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscmesh
 
    Implicit NONE   
 
    Type(MeshTopology_Type)                      :: MeshTopology
-   Type(Mesh)                                   :: Tmp_Mesh
+   Type(DM)                                     :: Tmp_Mesh
    Type(EXO_Type)                               :: EXO, MyEXO
    
    PetscBool                                    :: HasPrefix, flg
@@ -79,7 +72,7 @@ Program Partitioner
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call ALEStagePush(stagename(2), iDebug, iErr); CHKERRQ(iErr)
       End If
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
       If (verbose > 0) Then
          Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
          Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
@@ -89,11 +82,11 @@ Program Partitioner
       End If
    Else
       If (verbose > 0) Then
-         Write(IOBuffer, *) "Calling MeshCreateExodus\n"
+         Write(IOBuffer, *) "Calling DMMeshCreateExodus\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call ALEStagePush(stagename(2), iDebug, iErr); CHKERRQ(iErr)
       End If
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
       If (verbose > 0) Then
          Call ALEStagePrintMemory(stagename(2), iErr); CHKERRQ(iErr)
          Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
@@ -107,7 +100,7 @@ Program Partitioner
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call ALEStagePush(stagename(3), iDebug, iErr); CHKERRQ(iErr)
       End If
-      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
       If (verbose > 0) Then
          Call ALEStagePrintMemory(stagename(3), iErr); CHKERRQ(iErr)
          Call ALEStagePop(iDebug, iErr); CHKERRQ(iErr)
@@ -120,7 +113,7 @@ Program Partitioner
          Write(IOBuffer, *) "Calling MeshDestroy\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
       If (verbose > 0) Then
          Call ALEStagePrintMemory(stagename(1), iErr); CHKERRQ(iErr)
          Call PetscMemoryShowUsage(PETSC_VIEWER_STDOUT_WORLD, "PetscMemoryShowUsage After MeshDestroy: ", iErr); CHKERRQ(iErr)
@@ -163,7 +156,7 @@ Program Partitioner
       Write(IOBuffer, *) "Writing EXO files\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call Write_MeshTopologyGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
+   Call MeshTopologyWriteGlobal(MeshTopology, MyEXO, PETSC_COMM_WORLD)
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
    
    !!! Print mesh
