@@ -199,7 +199,7 @@ Contains
       Else
          !!! Prepare and format the output mesh   
          Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-         Call Write_MeshTopologyGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
+         Call MeshTopologyWriteGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
          Call EXOFormat_SimplePoisson(AppCtx)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          
