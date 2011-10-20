@@ -128,8 +128,8 @@ Module m_MEF_LinAlg
       Module Procedure DotP2D, DotP3D, ContP2D, ContP3D, ContP2DS, ContP3DS
    End Interface
    
-   Interface Operator (.VectP.)
-      Module Procedure VectP3D
+   Interface Operator (.CrossP.)
+      Module Procedure CrossP3D
    End Interface
    
    Interface Transpose
@@ -1165,18 +1165,18 @@ Contains
    End Function ContP3DS
    
    ! cross product 3D
-   Function VectP3D(V1, V2)
+   Function CrossP3D(V1, V2)
       Type (Vect3D), Intent(IN)                   :: V1, V2
-      Type (Vect3D)                               :: VectP3D
+      Type (Vect3D)                               :: CrossP3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: iErr
       
-      VectP3D%X =  V1%Y * V2%Z - V1%Z * V2%Y
-      VectP3D%Y =  V1%Z * V2%X - V1%X * V2%Z
-      VectP3D%Z =  V1%X * V2%Y - V1%Y * V2%X
+      CrossP3D%X =  V1%Y * V2%Z - V1%Z * V2%Y
+      CrossP3D%Y =  V1%Z * V2%X - V1%X * V2%Z
+      CrossP3D%Z =  V1%X * V2%Y - V1%Y * V2%X
       flops = 9.0
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
-   End Function VectP3D
+   End Function CrossP3D
    
    ! Transpose
    Function Transpose2D(M1)

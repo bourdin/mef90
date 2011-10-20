@@ -612,7 +612,7 @@ Program PrepVarFrac
             Call PetscGetTime(Time, iErr); CHKERRQ(iErr)
             Seed =  Time * (Time - Int(Time))
          End If
-         Call MPI_BCast(Seed, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+         Call MPI_BCast(Seed, 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
          Call PetscRandomSetSeed(RandomCtx, Seed, iErr); CHKERRQ(iErr)
          Call PetscRandomSeed(RandomCtx, iErr); CHKERRQ(iErr)
 

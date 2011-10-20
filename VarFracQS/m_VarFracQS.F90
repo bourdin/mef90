@@ -394,7 +394,7 @@ Contains
       
       !!! Broacasting Energies in case we are restarting and it is needed for backtracking
       If (AppCtx%AppParam%Restart) Then
-         Call MPI_BCast(AppCtx%TimeStep, 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
+         Call MPI_BCast(AppCtx%TimeStep, 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
          Do iTS = 1, AppCtx%TimeStep
             Call MPI_BCast(AppCtx%ElasticEnergy(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
             Call MPI_BCast(AppCtx%ExtForcesWork(iTS), 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr);CHKERRQ(iErr)
@@ -703,16 +703,36 @@ Contains
       PetscInt,Intent(OUT)                         :: StepOUT
       PetscBool,Intent(OUT)                        :: BTFound
       
+      PetscReal                                    :: DeltaE
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
+      DeltaE = (AppCtx%TotalEnergy(AppCtx%TimeStep) - AppCtx%TotalEnergy(AppCtx%TimeStep-1))! /                                     &
+               !ABS(AppCtx%TotalEnergy(AppCtx%TimeStep))
+               
       Select Case(AppCtx%VarFracSchemeParam%BTType)
          Case(VarFrac_BTType_MIL)
             Call BacktrackingMIL(AppCtx,StepIn,StepOUT,BTFound)
          Case(VarFrac_BTType_GenericLeft)
-            If (AppCtx%TotalEnergy(AppCtx%TimeStep) < AppCtx%TotalEnergy(AppCtx%TimeStep-1)) Then
+            If ( DeltaE < -AppCtx%VarFracSchemeParam%BTTol ) Then
+               If (AppCtx%AppParam%verbose > 0) Then
+                  Write(IOBuffer,*) 'Calling BT BT\n'
+                  Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+               End If
                Call BacktrackingGenericLeft(AppCtx,StepIn,StepOUT,BTFound)
-            Else  
+            Else If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer,*) 'Energy not decreasing, skipping BT\n'
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+            End If
+         Case(VarFrac_BTType_Simple)
+            If ( DeltaE < -AppCtx%VarFracSchemeParam%BTTol ) Then
+               If (AppCtx%AppParam%verbose > 0) Then
+                  Write(IOBuffer,*) 'Going back one step: ',StepIN, STepOUT,'\n'
+                  Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+               End If
+               StepOUT = StepIN - 1
+               BTFound = PETSC_TRUE
+            Else If (AppCtx%AppParam%verbose > 0) Then
                Write(IOBuffer,*) 'Energy not decreasing, skipping BT\n'
                Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
             End If

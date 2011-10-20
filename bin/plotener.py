@@ -6,12 +6,12 @@ def parse(args=None):
     ### Get options from the command line
     parser = argparse.ArgumentParser(description='Plot energy evolution for VarFracQS.')
     parser.add_argument("-f","--forces",default=False,action="store_true",help="displays forces work")
-    parser.add_argument('inputfile',type=argparse.FileType('r'),help='Input file',default=None)
-    parser.add_argument('outputfile',nargs='?',help='(optional) output file',default=None)
+    parser.add_argument('inputfile',type=argparse.FileType('r'),nargs='?',help='Input file',default=sys.stdin)
+    parser.add_argument('-o','--outputfile',help='output file',default=None)
     parser.add_argument("-d","--debug",action="store_true",default=False,help="Display useless debugging information")
     parser.add_argument("-m","--stepmin",type=int,help="first time step")
     parser.add_argument("-M","--stepmax",type=int,help="last time step")
-    parser.add_argument("-o","--old",action="store_true",default=False,help="old style energy file (no forces)")
+    parser.add_argument("--old",action="store_true",default=False,help="old style energy file (no forces)")
     parser.add_argument("-r","--relative",action="store_true",default=False,help="offset surface energy")
     return parser.parse_args()
 

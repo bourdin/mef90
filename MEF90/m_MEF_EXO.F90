@@ -145,7 +145,7 @@ Module m_MEF_EXO
          Call EXCLOS(dEXO%exoid, iErr)
          dEXO%exoid = 0
       End If
-      Call MPI_BCast(ErrorCode, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(ErrorCode, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
  100 Format('[ERROR] in MeshTopology_Check Numbering. Element block ', I3, ' index is ', I3, '\n')   
  101 Format('[ERROR] in MeshTopology_Check Numbering. Side Set ', I3, ' index is ', I3, '\n')   
  102 Format('[ERROR] in MeshTopology_Check Numbering. Node Set ', I3, ' index is ', I3, '\n')   
@@ -252,7 +252,7 @@ Module m_MEF_EXO
             If (MEF90_MyRank == 0) Then
                Read(*,*) dEXO%EBProperty(j)%Value(i)
             End If
-            Call MPI_BCast(dEXO%EBProperty(j)%Value(i), 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+            Call MPI_BCast(dEXO%EBProperty(j)%Value(i), 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr)
          End Do
       End Do
       
@@ -265,7 +265,7 @@ Module m_MEF_EXO
             If (MEF90_MyRank == 0) Then
                Read(*,*) dEXO%SSProperty(j)%Value(i)
             End If
-            Call MPI_BCast(dEXO%SSProperty(j)%Value(i), 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+            Call MPI_BCast(dEXO%SSProperty(j)%Value(i), 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr)
          End Do
       End Do
 
@@ -278,7 +278,7 @@ Module m_MEF_EXO
             If (MEF90_MyRank == 0) Then
                Read(*,*) dEXO%NSProperty(j)%Value(i)
             End If
-            Call MPI_BCast(dEXO%NSProperty(j)%Value(i), 1, MPI_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+            Call MPI_BCast(dEXO%NSProperty(j)%Value(i), 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr)
          End Do
       End Do
  100 Format('*** Element Block ', T24, I3, '\n')
@@ -354,9 +354,9 @@ Module m_MEF_EXO
          dEXO%exoid = 0
       End If
       !!! Broadcast everything now
-      Call MPI_BCast(dEXO%Num_EBProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-      Call MPI_BCast(dEXO%Num_SSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-      Call MPI_BCast(dEXO%Num_NSProperties, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_EBProperties, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_SSProperties, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_NSProperties, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
 
       If (EXO_MyRank /= 0) Then
          Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
@@ -367,31 +367,31 @@ Module m_MEF_EXO
       Do i = 1, dEXO%Num_EBProperties
          Call MPI_BCast(dEXO%EBProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
          NumProp = Size(dEXO%EBProperty(i)%Value)
-         Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         Call MPI_BCast(NumProp, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
          If (EXO_MyRank /= 0) Then
             Allocate(dEXO%EBProperty(i)%Value(NumProp))
          End If
-         Call MPI_BCast(dEXO%EBProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         Call MPI_BCast(dEXO%EBProperty(i)%Value, NumProp, MPIU_INTEGER, 0, dEXO%Comm, iErr)
       End Do
       !!! Side Sets
       Do i = 1, dEXO%Num_SSProperties
          Call MPI_BCast(dEXO%SSProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
          NumProp = Size(dEXO%SSProperty(i)%Value)
-         Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         Call MPI_BCast(NumProp, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
          If (EXO_MyRank /= 0) Then
             Allocate(dEXO%SSProperty(i)%Value(NumProp))
          End If
-         Call MPI_BCast(dEXO%SSProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         Call MPI_BCast(dEXO%SSProperty(i)%Value, NumProp, MPIU_INTEGER, 0, dEXO%Comm, iErr)
       End Do
       !!! Node Sets
       Do i = 1, dEXO%Num_NSProperties
          Call MPI_BCast(dEXO%NSProperty(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
          NumProp = Size(dEXO%NSProperty(i)%Value)
-         Call MPI_BCast(NumProp, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         Call MPI_BCast(NumProp, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
          If (EXO_MyRank /= 0) Then
             Allocate(dEXO%NSProperty(i)%Value(NumProp))
          End If
-         Call MPI_BCast(dEXO%NSProperty(i)%Value, NumProp, MPI_INTEGER, 0, dEXO%Comm, iErr)
+         Call MPI_BCast(dEXO%NSProperty(i)%Value, NumProp, MPIU_INTEGER, 0, dEXO%Comm, iErr)
       End Do
    End Subroutine EXOProperty_Read
 
@@ -495,9 +495,9 @@ Module m_MEF_EXO
          dEXO%exoid = 0
       End If
 
-      Call MPI_BCast(dEXO%Num_GlobVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-      Call MPI_BCast(dEXO%Num_CellVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
-      Call MPI_BCast(dEXO%Num_VertVariables, 1, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_GlobVariables, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_CellVariables, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%Num_VertVariables, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
 
       If (EXO_MyRank /= 0) Then
          If (dEXO%Num_GlobVariables > 0) Then
@@ -511,15 +511,15 @@ Module m_MEF_EXO
          End If
       End If      
 
-      Call MPI_BCast(dEXO%GlobVariable(:)%Offset, dEXO%Num_GlobVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%GlobVariable(:)%Offset, dEXO%Num_GlobVariables, MPIU_INTEGER, 0, dEXO%Comm, iErr)
       Do i = 1, dEXO%Num_GlobVariables
          Call MPI_BCast(dEXO%GlobVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
       End Do
-      Call MPI_BCast(dEXO%CellVariable(:)%Offset, dEXO%Num_CellVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%CellVariable(:)%Offset, dEXO%Num_CellVariables, MPIU_INTEGER, 0, dEXO%Comm, iErr)
       Do i = 1, dEXO%Num_CellVariables
          Call MPI_BCast(dEXO%CellVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
       End Do
-      Call MPI_BCast(dEXO%VertVariable(:)%Offset, dEXO%Num_VertVariables, MPI_INTEGER, 0, dEXO%Comm, iErr)
+      Call MPI_BCast(dEXO%VertVariable(:)%Offset, dEXO%Num_VertVariables, MPIU_INTEGER, 0, dEXO%Comm, iErr)
       Do i = 1, dEXO%Num_VertVariables
          Call MPI_BCast(dEXO%VertVariable(i)%Name, MXSTLN, MPI_CHARACTER, 0, dEXO%Comm, iErr)
       End Do
@@ -702,12 +702,12 @@ Module m_MEF_EXO
             End If
          End Do
       End Do
-      Call MPI_AllReduce(MPI_IN_PLACE, Tmp_ID, GlobalMeshTopology%num_elem_blks, MPI_INTEGER, MPI_MAX, dGlobalComm, iErr)
+      Call MPI_AllReduce(MPI_IN_PLACE, Tmp_ID, GlobalMeshTopology%num_elem_blks, MPIU_INTEGER, MPI_MAX, dGlobalComm, iErr)
       GlobalMeshTopology%elem_blk(:)%Elem_Type = Tmp_ID
       DeAllocate(Tmp_ID)
       Do iBlk = 1, GlobalMeshTopology%num_elem_blks
-         Call MPI_AllReduce(MPI_IN_PLACE, GlobalMeshTopology%elem_blk(iBlk)%DoF_Location, 4, MPI_INTEGER, MPI_MAX, dGlobalComm, iErr)
-         Call MPI_AllReduce(MPI_IN_PLACE, GlobalMeshTopology%elem_blk(iBlk)%Num_DoF, 1, MPI_INTEGER, MPI_MAX, dGlobalComm, iErr)
+         Call MPI_AllReduce(MPI_IN_PLACE, GlobalMeshTopology%elem_blk(iBlk)%DoF_Location, 4, MPIU_INTEGER, MPI_MAX, dGlobalComm, iErr)
+         Call MPI_AllReduce(MPI_IN_PLACE, GlobalMeshTopology%elem_blk(iBlk)%Num_DoF, 1, MPIU_INTEGER, MPI_MAX, dGlobalComm, iErr)
       End Do
       
       ! Node Sets
