@@ -12,8 +12,10 @@ Module m_MEF_Types
    Public :: Element1D
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
+   Public :: BoundaryElement2D, BoundaryElement2D_Scal
+   Public :: BoundaryElement3D, BoundaryElement3D_Scal
 
-   Public :: Elem_Blk_Type, Node_Set_Type, MeshTopology_Type
+   Public :: Elem_Blk_Type, Side_Set_Type, Node_Set_Type, MeshTopology_Type
    Public :: EXO_Type, EXO_Property_Type, EXO_Variable_Type
    
    Public :: EXOView
@@ -85,6 +87,23 @@ Module m_MEF_Types
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type BoundaryElement2D_Scal
     
+   Type BoundaryElement2D
+      Type(Vect2D)                                   :: NormalVector
+      Type(Vect2D), Dimension(:,:), Pointer          :: BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
+   End Type BoundaryElement2D
+
+   Type BoundaryElement3D_Scal
+      Type(Vect3D)                                   :: NormalVector
+      PetscReal, Dimension(:,:), Pointer             :: BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
+   End Type BoundaryElement3D_Scal
+    
+   Type BoundaryElement3D
+      Type(Vect3D)                                   :: NormalVector
+      Type(Vect3D), Dimension(:,:), Pointer          :: BF
+      PetscReal, Dimension(:), Pointer               :: Gauss_C
+   End Type BoundaryElement3D
    Type Elem_Blk_Type
       PetscInt                                       :: ID
       PetscInt                                       :: Elem_Type
@@ -99,8 +118,20 @@ Module m_MEF_Types
       PetscInt                                       :: Num_Vert
    End Type Elem_Blk_Type
  
+   Type Side_Set_Type
+      PetscInt                                       :: ID
+      PetscInt                                       :: Elem_Type
+      PetscInt, Dimension(3)                         :: DoF_Location
+      !!! DoF location is Faces, edges, vertices in 3D and
+      !!!                 Edges, vertices in2D
+      PetscInt                                       :: Num_DoF !! = sum(DoF_Location)
+      PetscInt                                       :: Num_Elems
+      PetscInt, Dimension(:), Pointer                :: Elem_ID
+      PetscInt                                       :: Num_Edge
+      PetscInt                                       :: Num_Vert
+   End Type Side_Set_Type
+ 
    Type Node_Set_Type
-!      Sequence
       PetscInt                                       :: ID
       PetscInt                                       :: Num_Nodes
       PetscInt, Dimension(:), Pointer                :: Node_ID
