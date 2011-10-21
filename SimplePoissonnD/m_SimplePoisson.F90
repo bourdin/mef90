@@ -88,11 +88,11 @@ Contains
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-restart', AppCtx%AppParam%restart, Flag, iErr); CHKERRQ(iErr)
       
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',       AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
-		   If (.NOT. HasPrefix) Then
-		      Call PetscPrintf(PETSC_COMM_WORLD, "No mesh prefix given\n", iErr)
-		      Call MEF90_Finalize()
-		      STOP
-		   End If
+      If (.NOT. HasPrefix) Then
+         Call PetscPrintf(PETSC_COMM_WORLD, "No mesh prefix given\n", iErr)
+         Call MEF90_Finalize()
+         STOP
+      End If
 
       AppCtx%AppParam%TestCase = 1
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-test',       AppCtx%AppParam%TestCase, Flag, iErr); CHKERRQ(iErr)
@@ -294,6 +294,7 @@ Contains
       Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
 
       Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+      AppCtx%MyEXO%exoid = 0
    End Subroutine EXOFormat_SimplePoisson
    
    Subroutine InitLog(AppCtx)
