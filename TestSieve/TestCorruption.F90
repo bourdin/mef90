@@ -9,7 +9,7 @@ Program Partitioner
    Implicit NONE   
 
    Type(MeshTopology_Type)                      :: MeshTopology
-   Type(Mesh)                                   :: Tmp_Mesh
+   Type(DM)                                     :: Tmp_Mesh
    Type(EXO_Type)                               :: EXO
    
    PetscBool                                    :: HasPrefix, flg
