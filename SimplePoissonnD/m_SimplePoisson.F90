@@ -42,7 +42,7 @@ Module m_SimplePoisson3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
 #endif
       Type(Field)                                  :: U
-      Type(Field)                                  :: GradU
+      Type(SectionReal)                            :: GradU
       Type(Field)                                  :: F
       PetscReal                                    :: ElasticEnergy
       PetscReal                                    :: ExtForcesWork
@@ -149,16 +149,12 @@ Contains
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
 
       !!! Allocate the Section for U and F
-!      Allocate(SizeVect(AppCtx%MeshTopology%Num_dim))
-!      SizeVect= 1
       Allocate(SizeScal(1))
       SizeScal=1
 
       Call FieldCreateVertex(AppCtx%U,     'U',         AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%GradU,     'GradU',     AppCtx%MeshTopology, SizeVect)
       Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%RHS,     'RHS',       AppCtx%MeshTopology, SizeScal)
-!!!!!! TODO Verifier les dimensions 
 
 
       !!! Allocate and initialize the Section for the flag
@@ -555,6 +551,8 @@ Contains
 
       Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU', AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
+
       Allocate(Grad_Ptr(AppCtx%MeshTopology%Num_Dim))
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
@@ -578,7 +576,7 @@ Contains
 #elif defined PB_3D
             Grad_Ptr = (/ Grad%X, Grad%Y, Grad%Z /)
 #endif
-            Call SectionRealUpdateClosure(AppCtx%GradU%Sec, AppCtx%MeshTopology%Mesh, iE-1, Grad_Ptr, INSERT_VALUES, iErr)
+            Call SectionRealUpdateClosure(AppCtx%GradU, AppCtx%MeshTopology%Mesh, iE-1, Grad_Ptr, INSERT_VALUES, iErr)
             DeAllocate(U)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
@@ -594,8 +592,9 @@ Contains
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename
 
+      Call SectionRealDestroy(AppCtx%GradU, iErr); CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%U)
-      Call FieldDestroy(AppCtx%GradU)
+      !Call FieldDestroy(AppCtx%GradU)
       Call FieldDestroy(AppCtx%F)
       Call FieldDestroy(AppCtx%RHS)
 
