@@ -29,8 +29,6 @@ Program  SimplePoisson
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call SectionRealview(AppCtx%U%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr)
-
    Call MatAssembly(AppCtx)
    If (AppCtx%AppParam%verbose > 3) Then
       Write(IOBuffer, *) 'Matrix\n'

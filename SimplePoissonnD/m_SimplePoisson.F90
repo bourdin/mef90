@@ -41,21 +41,14 @@ Module m_SimplePoisson3D
 #elif defined PB_3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
 #endif
-!      Type(SectionReal)                            :: U
-!      Type(Vec)                                    :: U_Vec
-!      Type(SectionReal)                            :: GradU
-!      Type(SectionReal)                            :: F
       Type(Field)                                  :: U
       Type(Field)                                  :: GradU
       Type(Field)                                  :: F
       PetscReal                                    :: ElasticEnergy
       PetscReal                                    :: ExtForcesWork
       PetscReal                                    :: TotalEnergy
-!      Type(VecScatter)                             :: Scatter
-!      Type(SectionInt)                             :: BCFlag
       Type(Flag)                                   :: BCFlag
       Type(Mat)                                    :: K
-!      Type(SectionReal)                            :: RHS
       Type(Field)                                  :: RHS
       Type(KSP)                                    :: KSP
       Type(PC)                                     :: PC
@@ -156,13 +149,6 @@ Contains
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
 
       !!! Allocate the Section for U and F
-!      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', 1,   AppCtx%U, iErr); CHKERRQ(iErr)
-!      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU',  AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
-!      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', 1,   AppCtx%F, iErr); CHKERRQ(iErr)
-!      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHS', 1, AppCtx%RHS, iErr); CHKERRQ(iErr)
-!      Call DMMeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
-!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
-
 !      Allocate(SizeVect(AppCtx%MeshTopology%Num_dim))
 !      SizeVect= 1
       Allocate(SizeScal(1))
@@ -176,9 +162,7 @@ Contains
 
 
       !!! Allocate and initialize the Section for the flag
-!      Call DMMeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlag', 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Call FlagCreateVertex(AppCtx%BCFlag, 'BC', AppCtx%MeshTopology, SizeScal)
-!could we use    Call FieldInsertVertexBoundaryValues() from m_MEF_sieve
 !could we use    Call SectionIntAddNsProperty()  yes 
       
       Allocate(TmpFlag(1))
@@ -194,7 +178,6 @@ Contains
       Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
       Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
      
-!      Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr)
 
       Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call KSPSetOperators(AppCtx%KSP, AppCtx%K, AppCtx%K, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
@@ -351,13 +334,11 @@ Contains
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       PetscInt                                     :: iDum
-!      Type(Vec)                                    :: RHS_Vec
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 
       Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%RHS, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
-!      Call SectionRealToVec(AppCtx%RHS, AppCtx%Scatter, SCATTER_FORWARD, RHS_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
 
       Call KSPSolve(AppCtx%KSP, AppCtx%RHS%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
@@ -366,7 +347,6 @@ Contains
       Call KSPGetConvergedReason(AppCtx%KSP, KSPreason, iErr); CHKERRQ(iErr)
       Write(IOBuffer, 100) KSPNumIter, KSPreason
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!      Call VecDestroy(RHS_Vec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
  
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
@@ -418,7 +398,6 @@ Contains
                End If
             End Do
          End Do
-!         Write (*, *) matelem
          Call DMMeshAssembleMatrix(AppCtx%K, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iELoc
    
@@ -615,19 +594,13 @@ Contains
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename
 
-!      Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
-!      Call SectionRealDestroy(AppCtx%GradU, iErr); CHKERRQ(iErr)
-!      Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
-!      Call SectionRealDestroy(AppCtx%RHS, iErr); CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%U)
       Call FieldDestroy(AppCtx%GradU)
       Call FieldDestroy(AppCtx%F)
       Call FieldDestroy(AppCtx%RHS)
 
-!      Call VecScatterDestroy(AppCtx%Scatter, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
-!      Call VecDestroy(AppCtx%U_Vec, iErr); CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call DMDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
       
