@@ -58,7 +58,8 @@ Module m_SimplePoisson3D
    
    
 Contains
-
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonInit"
    Subroutine SimplePoissonInit(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -278,6 +279,8 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine SimplePoissonInit
    
+#undef __FUNCT__
+#define __FUNCT__ "ExoFormat_SimplePoisson"
    Subroutine EXOFormat_SimplePoisson(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
@@ -300,6 +303,8 @@ Contains
       AppCtx%MyEXO%exoid = 0
    End Subroutine EXOFormat_SimplePoisson
    
+#undef __FUNCT__
+#define __FUNCT__ "InitLog"
    Subroutine InitLog(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
@@ -318,6 +323,8 @@ Contains
       Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
    End Subroutine InitLog
    
+#undef __FUNCT__
+#define __FUNCT__ "Solve"
    Subroutine Solve(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -349,7 +356,9 @@ Contains
 100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n')
    End Subroutine Solve
    
-      
+ 
+#undef __FUNCT__
+#define __FUNCT__ "MatAssembly"
    Subroutine MatAssembly(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk, iErr
@@ -403,6 +412,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatAssemblyBlock
 
+#undef __FUNCT__
+#define __FUNCT__ "RHSAssembly"
    Subroutine RHSAssembly(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -422,6 +433,8 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
 
+#undef __FUNCT__
+#define __FUNCT__ "RHSAssemblyBlock"
    Subroutine RHSAssemblyBlock(iBlk, AppCtx)
       PetscInt                                     :: iBlk
       Type(AppCtx_Type)                            :: AppCtx
@@ -472,6 +485,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyBlock_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSAssemblyBlock
 
+#undef __FUNCT__
+#define __FUNCT__ "ComputeEnergy"
    Subroutine ComputeEnergy(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -531,7 +546,9 @@ Contains
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
-   
+ 
+#undef __FUNCT__
+#define __FUNCT__ "ComputeGradU"
    Subroutine ComputeGradU(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -585,7 +602,9 @@ Contains
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeGradU
-  
+ 
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonFinalize"
    Subroutine SimplePoissonFinalize(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
 
