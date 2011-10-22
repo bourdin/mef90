@@ -22,7 +22,7 @@ Program TestBoundaryElement3D
    PetscReal, Dimension(:,:), Pointer           :: Coord3, Coord2
    PetscInt                                     :: i,iE,iG,iDoF
    PetscInt                                     :: num_Gauss,Num_DoF
-   Type(BoundaryElement3d_Scal)                 :: bElem
+   Type(BoundaryElement3d)                      :: bElem
    Type(Element2d_Scal)                         :: Elem
    Type(PetscViewer)                            :: viewer
    PetscInt                                     :: IntegOrder = 3
@@ -100,8 +100,7 @@ Program TestBoundaryElement3D
       Do iG = 1, Num_Gauss
          area3  = area3 + bElem%Gauss_C(iG)
          Do iDof = 1, Num_DoF
-            average3 = average3 + bElem%Gauss_C(iG) * (bElem%BF(iDoF,iG) * U1(connect(iDoF,iE)))
-            flux     = flux + bElem%Gauss_C(iG) * bElem%BF(iDoF,iG) * (bElem%NormalVector .DotP.  U2(connect(iDoF,iE)))
+            flux     = flux + bElem%Gauss_C(iG) * (bElem%BF(iDoF,iG) .DotP.  U2(connect(iDoF,iE)))
          End Do
       End Do
       Call BoundaryElement_Destroy(bElem)
