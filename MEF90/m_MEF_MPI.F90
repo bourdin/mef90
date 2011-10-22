@@ -22,6 +22,8 @@ Module m_MEF_MPI
    Integer, Public                      :: Tens4OS3D_MPIType
    
  Contains
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_Initialize"
    Subroutine MEF90_Initialize()
        PetscInt                          :: iErr
        
@@ -32,6 +34,8 @@ Module m_MEF_MPI
       Call MPI_COMM_SIZE(MPI_COMM_WORLD, MEF90_NumProcs, iErr)
    End Subroutine MEF90_Initialize
    
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_Finalize"
    Subroutine MEF90_Finalize()
       PetscInt                          :: iErr
       
@@ -39,6 +43,8 @@ Module m_MEF_MPI
       Call PetscFinalize(iErr)
    End Subroutine MEF90_Finalize
 
+#undef __FUNCT__
+#define __FUNCT__ "MPIType_Initialize"
    Subroutine MPIType_Initialize()
       PetscInt, Dimension(:), Pointer   :: BlkCounts, Offsets, DataTypes
       PetscInt                          :: NumBlk, iErr
@@ -88,6 +94,8 @@ Module m_MEF_MPI
       DeAllocate(BlkCounts, Offsets, DataTypes)
    End Subroutine MPIType_Initialize
    
+#undef __FUNCT__
+#define __FUNCT__ "MPIType_Finalize"
    Subroutine MPIType_Finalize()
       PetscInt                          :: iErr
       

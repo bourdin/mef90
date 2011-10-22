@@ -12,8 +12,8 @@ Module m_MEF_Types
    Public :: Element1D
    Public :: Element2D, Element2D_Scal, Element2D_Elast 
    Public :: Element3D, Element3D_Scal, Element3D_Elast 
-   Public :: BoundaryElement2D, BoundaryElement2D_Scal
-   Public :: BoundaryElement3D, BoundaryElement3D_Scal
+   Public :: BoundaryElement2D
+   Public :: BoundaryElement3D
 
    Public :: Elem_Blk_Type, Side_Set_Type, Node_Set_Type, MeshTopology_Type
    Public :: EXO_Type, EXO_Property_Type, EXO_Variable_Type
@@ -22,6 +22,9 @@ Module m_MEF_Types
    Public :: MeshTopologyDestroy, MeshTopologyView
       
    Type Field
+      !!! A Field is a general container containing a section, a vector of sections for its components
+      !!! a (global) vec, a local Vec, and the associated scatter.
+      !!! All the Vec and SectionReal share the same memory space for their data storage
       Type(SectionReal)                              :: Sec
       Type(SectionReal), Dimension(:), Pointer       :: Component_Sec
       Type(Vec)                                      :: Vec
@@ -32,6 +35,8 @@ Module m_MEF_Types
    End Type Field
    
    Type Flag
+      !!! a Flag is to field what a SectionInt is to a SectionReal...
+      !!! except that there is not VecInt, so the whole Vec and scatter part is ignored.
       Type(SectionInt)                               :: Sec
       Type(SectionInt), Dimension(:), Pointer        :: Component_Sec
       PetscInt                                       :: num_components
@@ -81,29 +86,16 @@ Module m_MEF_Types
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type Element3D_Elast
    
-   Type BoundaryElement2D_Scal
-      Type(Vect2D)                                   :: NormalVector
-      PetscReal, Dimension(:,:), Pointer             :: BF
-      PetscReal, Dimension(:), Pointer               :: Gauss_C
-   End Type BoundaryElement2D_Scal
-    
    Type BoundaryElement2D
-      Type(Vect2D)                                   :: NormalVector
       Type(Vect2D), Dimension(:,:), Pointer          :: BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type BoundaryElement2D
 
-   Type BoundaryElement3D_Scal
-      Type(Vect3D)                                   :: NormalVector
-      PetscReal, Dimension(:,:), Pointer             :: BF
-      PetscReal, Dimension(:), Pointer               :: Gauss_C
-   End Type BoundaryElement3D_Scal
-    
    Type BoundaryElement3D
-      Type(Vect3D)                                   :: NormalVector
       Type(Vect3D), Dimension(:,:), Pointer          :: BF
       PetscReal, Dimension(:), Pointer               :: Gauss_C
    End Type BoundaryElement3D
+   
    Type Elem_Blk_Type
       PetscInt                                       :: ID
       PetscInt                                       :: Elem_Type
@@ -182,17 +174,22 @@ Module m_MEF_Types
    End Type EXO_Type
    
    Type EXO_Property_Type
+      !!! Derived type used to store the values of a property at ALL NS, EB or SS
+      !!! in an EXO file
       Character(MXSTLN)                              :: Name
       PetscInt, Dimension(:), Pointer                :: Value
    End Type EXO_Property_Type
    
    Type EXO_Variable_Type
+      !!! Links variable name and offset in an exodus file
       Character(MXSTLN)                              :: Name
       PetscInt                                       :: Offset
       !!! the position of the variable in the exo file
    End Type EXO_Variable_Type   
    
 Contains
+#undef __FUNCT__
+#define __FUNCT__ "EXOView"
    Subroutine EXOView(dEXO, viewer)
       Type(EXO_Type)                 :: dEXO
       Type(PetscViewer)              :: viewer
@@ -287,6 +284,8 @@ Contains
    End Subroutine EXOView
 
 
+#undef __FUNCT__
+#define __FUNCT__ "MeshTopologyDestroy"
    Subroutine MeshTopologyDestroy(dMeshTopology)
       Type(MeshTopology_Type)         :: dMeshTopology
       PetscInt                        :: iSet, iBlk
@@ -309,6 +308,8 @@ Contains
       End If
    End Subroutine MeshTopologyDestroy
 
+#undef __FUNCT__
+#define __FUNCT__ "MeshTopologyView"
    Subroutine MeshTopologyView(dMeshTopology, viewer)
       Type(MeshTopology_Type), Intent(IN)           :: dMeshTopology
       Type(PetscViewer)                             :: viewer
