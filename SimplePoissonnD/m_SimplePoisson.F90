@@ -610,6 +610,7 @@ Contains
 
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename
+      Type(PetscViewer)                            :: LogViewer
 
       Call SectionRealDestroy(AppCtx%GradU, iErr); CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%U)
@@ -629,9 +630,13 @@ Contains
          Call PetscViewerDestroy(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
+103 Format(A,'-logsummary.txt')
+      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
+      Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
+      Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
 !       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
-103 Format(A,'.log.txt')
    End Subroutine SimplePoissonFinalize
 
 #if defined PB_2D
