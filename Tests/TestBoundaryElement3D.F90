@@ -17,7 +17,7 @@ Program TestBoundaryElement3D
    PetscInt                                     :: num_dim
    PetscReal, Dimension(:), Pointer             :: U1
    Type(Vect3D), Dimension(:), Pointer          :: U2
-   PetscReal                                    :: average2,average3,flux
+   PetscReal                                    :: average2,flux
    Real, Dimension(:), Pointer                  :: X,Y,Z
    PetscReal, Dimension(:,:), Pointer           :: Coord3, Coord2
    PetscInt                                     :: i,iE,iG,iDoF
@@ -79,7 +79,6 @@ Program TestBoundaryElement3D
    End Do
    
    average2 = 0.0_Kr
-   average3 = 0.0_Kr
    flux    = 0.0_Kr
    
    iE = 1
@@ -121,7 +120,6 @@ Program TestBoundaryElement3D
    Write(*,*) 'Area2 (using 2D body elements) is     ', area2
    Write(*,*) 'Area3 (using 3D boundary elements) is ', area3
    Write(*,*) 'Average2 (using 2D body elements) is     ', average2
-   Write(*,*) 'Average3 (using 3D boundary elements) is ', average3
    Write(*,*) 'Flux is ', flux   
    DeAllocate(X)
    DeAllocate(Y)
