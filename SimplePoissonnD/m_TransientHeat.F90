@@ -23,16 +23,11 @@ Contains
 #define __FUNCT__ "TransientInit"
    Subroutine TransientInit(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
-      
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk, iDoF      
       PetscBool                                    :: HasPrefix, Flag
       PetscInt, Dimension(:), Pointer              :: TmpFlag
       PetscInt                                     :: TmpPoint
-      
-      Type(SectionReal)                            :: CoordSection
-      PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
-      PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscInt                                     :: iE, iELoc
       Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
       PetscLogDouble                               :: TS, TF
@@ -155,111 +150,10 @@ Contains
       
       
       !!! Read Force and BC from Data file or reformat it
-      AppCtx%MyEXO%comm = PETSC_COMM_SELF
-      AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
-      Write(AppCtx%MyEXO%filename, 200) trim(AppCtx%AppParam%prefix), MEF90_MyRank
-   200 Format(A, '-', I4.4, '.gen')
-      AppCtx%MyEXO%title = trim(AppCtx%EXO%title)
-      AppCtx%MyEXO%Num_QA = AppCtx%EXO%Num_QA
-      If (AppCtx%AppParam%Restart) Then
-         Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      Else
-         !!! Prepare and format the output mesh   
-         Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-         Call MeshTopologyWriteGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
-         Call EXOFormat_SimplePoisson(AppCtx)
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-         
-         Select Case (AppCtx%AppParam%TestCase)
-         Case(1)
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Setting U to 0 and F to 1\n'
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-            !!! U = 0, F=1
-            Val = 1.0_Kr
-            Call SectionRealSet(AppCtx%F, Val, iErr); CHKERRQ(iErr);
-            Val = 0.0_Kr
-            Call SectionRealSet(AppCtx%U, Val, iErr); CHKERRQ(iErr);
-         Case(2)
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Solving Test Case 2: pure dirichlet problem, no force\n'
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-
-            !!! Test of non homogeneous Dirichlet BC
-            Allocate(ValPtr(1))
-            ValPtr = 0.0_Kr
-            Call SectionRealSet(AppCtx%F, 0.0_Kr, iErr); CHKERRQ(iErr);
-            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-               
-            Do iDoF = 1, Size(Coords,1)
-#if defined PB_2D
-               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2
-               ValPtr = Coords(iDoF,1)**2 + Coords(iDoF,2)**2
-               ValPtr = Coords(iDoF,1)**3
-#elif defined PB_3D
-               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
-#endif
-               Call SectionRealUpdate(AppCtx%U%Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            End Do
-            DeAllocate(ValPtr)
-            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-         Case(3)
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Solving Test Case 3: F=sgn(x) . sgn(y) [. sgn(z)] \n'
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-
-            !!! Test of non homogeneous Dirichlet BC
-            Allocate(ValPtr(1))
-            ValPtr = 0.0_Kr
-            Call SectionRealSet(AppCtx%U, 1.0_Kr, iErr); CHKERRQ(iErr);
-            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-            
-            Do iDoF = 1, Size(Coords,1)
-#if defined PB_2D
-               If ( Coords(iDoF,1) * Coords(iDoF,2) < 0.0_Kr ) Then
-                  ValPtr = -1.0_Kr
-               Else
-                  ValPtr = 1.0_Kr
-               End If
-#elif defined PB_3D
-               If ( Coords(iDoF,1) * Coords(iDoF,2) * Coords(iDoF,3) < 0.0_Kr ) Then
-                  ValPtr = -1.0_Kr
-               Else
-                  ValPtr = 1.0_Kr
-               End If
-#endif
-               Call SectionRealUpdate(AppCtx%F%Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            End Do
-            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-         Case(4) !Reading BC from .args file 
-            If (IsBatch) Then
-               Write(IOBuffer, *) "Processing batch file ",  Trim(BatchFileName), "\n"
-               Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
-               Open(Unit=BatchUnit, File=BatchFileName, Status='Old', Action='Read')
-               Rewind(BatchUnit)
-            Else
-               BatchFileName = Trim(prefix)//'.args'
-               Inquire(File=BatchFileName, EXIST=HasBatchFile)
-               If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
-                   Write(IOBuffer, *) "Batch file ", trim(BatchFileName), "already exists. Erase it or use -force flag\n"
-                   Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
-                   SETERRQ(PETSC_COMM_SELF, PETSC_ERR_FILE_UNEXPECTED, IOBuffer, iErr)
-               Else
-                  Write(IOBuffer, *) "No batch file STOP Program", "\n"
-                  STOP
-               End If
-            End If
-         End Select            
-      End If
-      
+      call PoissonBC(AppCtx) 
       !!! Create the EXO case file
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
+      
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine TransientInit
    
@@ -272,15 +166,12 @@ Contains
       PetscInt, Dimension(:), Pointer              :: TmpFlag
       PetscInt                                     :: TmpPoint
       
-      Type(SectionReal)                            :: CoordSection
-      PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
-      PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscInt                                     :: iE, iELoc
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename   
       PetscLogDouble                               :: TS, TF
       Type(DM)                                     :: Tmp_Mesh
       Type(Vec)                                    :: F
-      PetscReal                                    :: Val, tol
+      PetscReal                                    :: tol
       PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
 
       Call MEF90_Initialize()
@@ -403,6 +294,23 @@ Contains
        
       
       !!! Read Force and BC from Data file or reformat it
+      call PoissonBC(AppCtx) 
+      
+      !!! Create the EXO case file
+      Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
+
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   End Subroutine TSPoissonInit
+  
+   SubRoutine PoissonBC(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iBlk, iDoF      
+      PetscInt                                     :: iErr
+      PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
+      PetscReal, Dimension(:,:), Pointer           :: Coords
+      PetscReal                                    :: val
+
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
       Write(AppCtx%MyEXO%filename, 200) trim(AppCtx%AppParam%prefix), MEF90_MyRank
@@ -488,12 +396,8 @@ Contains
          End Select            
       End If
       
-      !!! Create the EXO case file
-      Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine TSPoissonInit
-   
-    
+   End SubRoutine PoissonBC
+
    SubRoutine IFunctionPoisson(dummyTS, t, U, Udot, GlobalOut, AppCtx, iErr)
       PetscReal                                    :: t 
       Type(Vec)                                    :: U, Udot, GlobalOut, dummyvec
