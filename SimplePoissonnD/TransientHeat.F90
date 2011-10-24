@@ -18,8 +18,16 @@ Program  TransientHeat
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscReal                                    :: one 
-   Call TransientInit(AppCtx)
-   
+   PetscInt, Parameter                          :: TestCase=2
+
+   Select Case (TestCase)
+   Case (1)
+      Call TransientInit(AppCtx)
+   Case(2)
+        Call TSPoissonInit(AppCtx)
+   End Select
+
+
    If (AppCtx%AppParam%verbose > 4) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer)
@@ -49,12 +57,28 @@ Program  TransientHeat
       Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End If
    
-   If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Calling Solve\n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   End If
-   Call Solve(AppCtx)
    
+   Select Case (TestCase)
+   Case (1) 
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Calling Solve\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call Solve(AppCtx)
+   Case(2)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Assembling the Mass - Variational  Identity   matrix\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call MatMassAssembly(AppCtx)
+       
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Calling Solve\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call SolveTransient(AppCtx)
+   End Select 
+
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Computing Energies\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -81,5 +105,10 @@ Program  TransientHeat
    Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    
-   Call SimplePoissonFinalize(AppCtx)
+   Select Case (TestCase)
+   Case (1)
+      Call SimplePoissonFinalize(AppCtx)
+   Case (2)
+      Call TSPoissonFinalize(AppCtx)
+   End Select 
 End Program  TransientHeat
