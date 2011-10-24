@@ -5,8 +5,10 @@ Program  TSPoisson
    Use m_MEF90
 #if defined PB_2D
    Use m_TSPoisson2D
+   Use m_Poisson2D
 #elif defined PB_3D 
    Use m_TSPoisson3D
+   Use m_Poisson2D
 #endif
 
    Implicit NONE   
@@ -16,7 +18,7 @@ Program  TSPoisson
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
 
-   Call SimplePoissonInit(AppCtx)
+   Call TSPoissonInit(AppCtx)
    
    If (AppCtx%AppParam%verbose > 1) Then
       Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
@@ -62,7 +64,7 @@ Program  TSPoisson
      Write(IOBuffer, *) 'Calling Solve\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call Solve(AppCtx)
+   Call SolveTransient(AppCtx)
    
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Computing Energies\n'
@@ -90,5 +92,5 @@ Program  TSPoisson
    Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    
-   Call SimplePoissonFinalize(AppCtx)
+   Call TSPoissonFinalize(AppCtx)
 End Program  TSPoisson
