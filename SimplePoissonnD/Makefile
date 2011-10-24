@@ -40,13 +40,6 @@ m_Poisson.o: ${PETSC_ARCH}
 TransientHeat.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o \
                              m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_TransientHeat.o
 
-
-TSPoisson${DIM}: ${PETSC_ARCH} TSPoisson.o   ${PETSC_ARCH}/${DIM}TSPoisson.o m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_TransientHeat.o 
-	${FLINKER} -o ${PETSC_ARCH}/TSPoisson${DIM} ${PETSC_ARCH}/${DIM}TSPoisson.o  ${PETSC_ARCH}/${DIM}m_Poisson.o ${PETSC_ARCH}/${DIM}m_TransientHeat.o  ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-
-TSPoisson.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_TransientHeat.o
-
-
 m_TransientHeat.o: ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
 
 clean::
