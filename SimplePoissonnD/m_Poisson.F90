@@ -1,7 +1,7 @@
 #if defined PB_2D
-Module m_SimplePoisson2D
+Module m_Poisson2D
 #elif defined PB_3D
-Module m_SimplePoisson3D
+Module m_Poisson3D
 #endif
 
 #include "finclude/petscdef.h"
@@ -640,7 +640,7 @@ Contains
    End Subroutine SimplePoissonFinalize
 
 #if defined PB_2D
-End Module m_SimplePoisson2D
+End Module m_Poisson2D
 #elif defined PB_3D
-End Module m_SimplePoisson3D
+End Module m_Poisson3D
 #endif

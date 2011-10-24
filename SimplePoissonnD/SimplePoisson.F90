@@ -4,9 +4,9 @@ Program  SimplePoisson
 
    Use m_MEF90
 #if defined PB_2D
-   Use m_SimplePoisson2D
+   Use m_Poisson2D
 #elif defined PB_3D 
-   Use m_SimplePoisson3D
+   Use m_Poisson3D
 #endif
 
    Implicit NONE   
