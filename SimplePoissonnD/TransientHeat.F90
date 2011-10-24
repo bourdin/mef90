@@ -18,7 +18,7 @@ Program  TransientHeat
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscReal                                    :: one 
-   PetscInt, Parameter                          :: TestCase=2
+   PetscInt, Parameter                          :: TestCase=1
 
    Select Case (TestCase)
    Case (1)
