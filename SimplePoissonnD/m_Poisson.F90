@@ -33,6 +33,7 @@ Module m_Poisson3D
       Type(PetscViewer)                            :: LogViewer, MyLogViewer
    End Type AppParam_Type
 
+
    Type AppCtx_Type
       Type (MeshTopology_Type)                     :: MeshTopology
       Type (EXO_Type)                              :: EXO, MyEXO
@@ -41,19 +42,28 @@ Module m_Poisson3D
 #elif defined PB_3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
 #endif
-      Type(Field)                                  :: U
       Type(SectionReal)                            :: GradU
-      Type(Field)                                  :: F
       PetscReal                                    :: ElasticEnergy
+      Type(Field)                                  :: U
+      Type(Field)                                  :: F
       PetscReal                                    :: ExtForcesWork
       PetscReal                                    :: TotalEnergy
-      Type(Flag)                                   :: BCFlag
+      Type(Flag)                                  :: BCFlag
       Type(Mat)                                    :: K
+      Type(Mat)                                    :: M ! Mass matrix 
+      Type(Mat)                                    :: Jac ! jacobian
       Type(Field)                                  :: RHS
       Type(KSP)                                    :: KSP
       Type(PC)                                     :: PC
       Type(LogInfo_Type)                           :: LogInfo
       Type(AppParam_Type)                          :: AppParam
+   !For TS
+      Type(TS)                                     :: TS
+      PetscInt                                     :: maxsteps
+      PetscReal                                    :: maxtime
+      Type(SectionReal)                            :: U_0 !initial solution for t=0
+      Type(Vec)                                    :: U_0_Vec
+
    End Type AppCtx_Type
    
    
