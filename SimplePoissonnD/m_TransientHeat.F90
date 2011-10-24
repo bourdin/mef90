@@ -20,8 +20,8 @@ Module m_TransientHeat3D
    
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "TransientInit"
-   Subroutine TransientInit(AppCtx)
+#define __FUNCT__ "PoissonInit"
+   Subroutine PoissonInit(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk, iDoF      
@@ -155,9 +155,11 @@ Contains
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine TransientInit
+   End Subroutine PoissonInit
    
- Subroutine TSPoissonInit(AppCtx)
+#undef __FUNCT__
+#define __FUNCT__ "TSPoissonInit"
+   Subroutine TSPoissonInit(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
@@ -301,7 +303,10 @@ Contains
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine TSPoissonInit
-  
+
+
+#undef __FUNCT__
+#define __FUNCT__ "PoissonBC"
    SubRoutine PoissonBC(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk, iDoF      
@@ -398,6 +403,8 @@ Contains
       
    End SubRoutine PoissonBC
 
+#undef __FUNCT__
+#define __FUNCT__ "IFunctionPoisson"
    SubRoutine IFunctionPoisson(dummyTS, t, U, Udot, GlobalOut, AppCtx, iErr)
       PetscReal                                    :: t 
       Type(Vec)                                    :: U, Udot, GlobalOut, dummyvec
@@ -419,9 +426,11 @@ Contains
 !TODO Can the constant and result factors be the same ? 
       !Call VecView(GlobalOut,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
        
-      End Subroutine IFunctionPoisson
+   End Subroutine IFunctionPoisson
 
 
+#undef __FUNCT__
+#define __FUNCT__ "IJacobianPoisson"
    SubRoutine IJacobianPoisson(dummyTS, t, U, Udot, a, Jac, PreJac, AppCtx, iErr)
       Type(TS)                                     :: dummyTS
       PetscReal                                    :: t, a 
@@ -438,7 +447,9 @@ Contains
       call MatAXPY(Jac, a, AppCtx%M, AppCtx%K, iErr); CHKERRQ(iErr)
 
    End Subroutine IJacobianPoisson
-   
+ 
+#undef __FUNCT__
+#define __FUNCT__ "RHSPoisson"
    SubRoutine RHSPoisson(dummyTS, t, U, GlobalOut, AppCtx, iErr)
       Type(TS)                                     :: dummyTS
       PetscReal                                    :: t 
@@ -458,8 +469,9 @@ Contains
 
    End Subroutine RHSPoisson
    
-     
    
+#undef __FUNCT__
+#define __FUNCT__ "SolveTransient"
    Subroutine SolveTransient(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
@@ -488,7 +500,10 @@ Contains
 !100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n')
    End Subroutine SolveTransient
    
-      
+ 
+     
+#undef __FUNCT__
+#define __FUNCT__ "MatMassAssembly"
    Subroutine MatMassAssembly(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk, iErr
@@ -503,6 +518,8 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatMassAssembly
       
+#undef __FUNCT__
+#define __FUNCT__ "MatMassAssemblyBlock"
    Subroutine MatMassAssemblyBlock(iBlk, AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk
@@ -547,7 +564,9 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatMassAssemblyBlock
 
-  
+ 
+#undef __FUNCT__
+#define __FUNCT__ "TSPoissonFinalize"
    Subroutine TSPoissonFinalize(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
 
