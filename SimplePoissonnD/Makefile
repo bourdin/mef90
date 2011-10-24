@@ -23,23 +23,24 @@ endif
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 	
-SimplePoisson${DIM}: ${PETSC_ARCH} SimplePoisson.o   ${PETSC_ARCH/${DIM}SimplePoisson.o \
-                             m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o 
-	${FLINKER} -o ${PETSC_ARCH}/SimplePoisson${DIM} ${PETSC_ARCH}/${DIM}SimplePoisson.o  ${PETSC_ARCH}/${DIM}m_SimplePoisson.o  ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+SimplePoisson${DIM}: ${PETSC_ARCH} SimplePoisson.o   ${PETSC_ARCH}/${DIM}SimplePoisson.o \
+                             m_Poisson.o ${PETSC_ARCH/${DIM}m_Poisson.o 
+	echo ${FLINKER} -o ${PETSC_ARCH}/SimplePoisson${DIM} ${PETSC_ARCH}/${DIM}SimplePoisson.o  ${PETSC_ARCH}/${DIM}m_Poisson.o  ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	${FLINKER} -o ${PETSC_ARCH}/SimplePoisson${DIM} ${PETSC_ARCH}/${DIM}SimplePoisson.o  ${PETSC_ARCH}/${DIM}m_Poisson.o  ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
-TransientHeat${DIM}: ${PETSC_ARCH} TransientHeat.o   ${PETSC_ARCH/${DIM}TransientHeat.o \
+TransientHeat${DIM}: ${PETSC_ARCH} TransientHeat.o   ${PETSC_ARCH}/${DIM}TransientHeat.o \
                              m_TransientHeat.o ${PETSC_ARCH}/${DIM}TransientHeat.o \
-                             m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o
-	${FLINKER} -o ${PETSC_ARCH}/TransientHeat${DIM} ${PETSC_ARCH}/${DIM}SimplePoisson.o  ${PETSC_ARCH}/${DIM}m_SimplePoisson.o  ${PETSC_ARCH}/${DIM}TransientHeat.o  ${PETSC_ARCH}/${DIM}m_TransientHeat.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+                             m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
+	${FLINKER} -o ${PETSC_ARCH}/TransientHeat${DIM}  ${PETSC_ARCH}/${DIM}m_Poisson.o  ${PETSC_ARCH}/${DIM}TransientHeat.o  ${PETSC_ARCH}/${DIM}m_TransientHeat.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
-SimplePoisson.o:   ${PETSC_ARCH} m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o
+SimplePoisson.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
 
-m_SimplePoisson.o: ${PETSC_ARCH}
-	
-TransientHeat.o:   ${PETSC_ARCH} m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o \
+m_Poisson.o: ${PETSC_ARCH}
+
+TransientHeat.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o \
                              m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_TransientHeat.o
 
-m_TransientHeat.o: ${PETSC_ARCH} m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o
+m_TransientHeat.o: ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
 
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
