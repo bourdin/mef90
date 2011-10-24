@@ -41,22 +41,16 @@ Module m_TSPoisson3D
 #elif defined PB_3D
       Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
 #endif
-!      Type(SectionReal)                            :: U
-!      Type(Vec)                                    :: U_Vec
       Type(SectionReal)                            :: GradU
-!      Type(SectionReal)                            :: F
       PetscReal                                    :: ElasticEnergy
       Type(Field)                                  :: U
       Type(Field)                                  :: F
       PetscReal                                    :: ExtForcesWork
       PetscReal                                    :: TotalEnergy
-      !Type(VecScatter)                             :: Scatter
-      !Type(SectionInt)                             :: BCFlag
       Type(Flag)                                  :: BCFlag
       Type(Mat)                                    :: K
       Type(Mat)                                    :: M ! Mass matrix 
       Type(Mat)                                    :: Jac ! jacobian
-      !Type(SectionReal)                            :: RHS
       Type(Field)                                  :: RHS
       Type(KSP)                                    :: KSP
       Type(PC)                                     :: PC
@@ -161,12 +155,7 @@ Contains
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
 
       !!! Allocate the Section for U and F
-      !Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U', 1,   AppCtx%U, iErr); CHKERRQ(iErr)
       Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU',  AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
-      !Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'F', 1,   AppCtx%F, iErr); CHKERRQ(iErr)
-      !Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'RHS', 1, AppCtx%RHS, iErr); CHKERRQ(iErr)
-      !Call DMMeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%Scatter, iErr); CHKERRQ(iErr)
-      !Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U, AppCtx%U_Vec, iErr); CHKERRQ(iErr)
       
       Allocate(SizeScal(1))
       SizeScal=1
@@ -177,7 +166,6 @@ Contains
 
 
       !!! Allocate and initialize the Section for the flag
-      !Call DMMeshGetVertexSectionInt(AppCtx%MeshTopology%mesh, 'BCFlag', 1, AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Call FlagCreateVertex(AppCtx%BCFlag, 'BC', AppCtx%MeshTopology, SizeScal)
       Allocate(TmpFlag(1))
       Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
@@ -746,20 +734,14 @@ Contains
       Call FieldDestroy(AppCtx%U)
       Call FieldDestroy(AppCtx%F)
       Call FieldDestroy(AppCtx%RHS)
-      !Call SectionRealDestroy(AppCtx%U, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%U_0, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%GradU, iErr); CHKERRQ(iErr)
-      !Call SectionRealDestroy(AppCtx%F, iErr); CHKERRQ(iErr)
-      !Call SectionRealDestroy(AppCtx%RHS, iErr); CHKERRQ(iErr)
-      !Call VecScatterDestroy(AppCtx%Scatter, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%M, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%Jac, iErr); CHKERRQ(iErr)
-      !Call VecDestroy(AppCtx%U_Vec, iErr); CHKERRQ(iErr)
       Call VecDestroy(AppCtx%U_0_Vec, iErr); CHKERRQ(iErr)
 
-     ! Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
       Call TSDestroy(AppCtx%TS, iErr); CHKERRQ(iErr)
       Call DMDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
       
