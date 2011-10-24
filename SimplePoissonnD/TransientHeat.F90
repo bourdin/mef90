@@ -22,7 +22,7 @@ Program  TransientHeat
 
    Select Case (TestCase)
    Case (1)
-      Call TransientInit(AppCtx)
+      Call PoissonInit(AppCtx)
    Case(2)
         Call TSPoissonInit(AppCtx)
    End Select
