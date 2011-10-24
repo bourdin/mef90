@@ -4,10 +4,10 @@ Program  TSPoisson
 
    Use m_MEF90
 #if defined PB_2D
-   Use m_TSPoisson2D
+   Use m_TransientHeat2D
    Use m_Poisson2D
 #elif defined PB_3D 
-   Use m_TSPoisson3D
+   Use m_TransientHeat3D
    Use m_Poisson2D
 #endif
 
