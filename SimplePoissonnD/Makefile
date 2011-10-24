@@ -5,7 +5,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
             $(MEF90DIR)/m_MEF_Sieve.o 
 
-all: SimplePoisson${DIM}
+all: SimplePoisson${DIM} TransientHeat${DIM}
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
@@ -26,10 +26,20 @@ ${PETSC_ARCH}:
 SimplePoisson${DIM}: ${PETSC_ARCH} SimplePoisson.o   ${PETSC_ARCH/${DIM}SimplePoisson.o \
                              m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o 
 	${FLINKER} -o ${PETSC_ARCH}/SimplePoisson${DIM} ${PETSC_ARCH}/${DIM}SimplePoisson.o  ${PETSC_ARCH}/${DIM}m_SimplePoisson.o  ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
-	
+
+TransientHeat${DIM}: ${PETSC_ARCH} TransientHeat.o   ${PETSC_ARCH/${DIM}TransientHeat.o \
+                             m_TransientHeat.o ${PETSC_ARCH}/${DIM}TransientHeat.o \
+                             m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o
+	${FLINKER} -o ${PETSC_ARCH}/TransientHeat${DIM} ${PETSC_ARCH}/${DIM}SimplePoisson.o  ${PETSC_ARCH}/${DIM}m_SimplePoisson.o  ${PETSC_ARCH}/${DIM}TransientHeat.o  ${PETSC_ARCH}/${DIM}m_TransientHeat.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+
 SimplePoisson.o:   ${PETSC_ARCH} m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o
 
 m_SimplePoisson.o: ${PETSC_ARCH}
+	
+TransientHeat.o:   ${PETSC_ARCH} m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o \
+                             m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_TransientHeat.o
+
+m_TransientHeat.o: ${PETSC_ARCH} m_SimplePoisson.o ${PETSC_ARCH}/${DIM}m_SimplePoisson.o
 
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
