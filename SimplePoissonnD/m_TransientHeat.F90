@@ -193,7 +193,6 @@ Contains
 
       dEXO%Num_EBProperties = Poisson_Num_EBProperties
       Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
-!      dEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Name = 'Is_Brittle'
       dEXO%EBProperty(VarFrac_EBProp_HasBForce)%Name = 'Has_BForce'
       dEXO%EBProperty(VarFrac_EBProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_EBProperties
@@ -203,10 +202,6 @@ Contains
       
       dEXO%Num_SSProperties = Poisson_Num_SSProperties
       Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
-!      dEXO%SSProperty(VarFrac_SSProp_BCUTypeX)%Name  = 'BCU_Type_X'
-!      dEXO%SSProperty(VarFrac_SSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
-!      dEXO%SSProperty(VarFrac_SSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
-!      dEXO%SSProperty(VarFrac_SSProp_BCVType)%Name   = 'BCV_Type'
       dEXO%SSProperty(VarFrac_SSProp_HasSForce)%Name = 'Has_SForce'
       dEXO%SSProperty(VarFrac_SSProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_SSProperties
@@ -216,10 +211,6 @@ Contains
       
       dEXO%Num_NSProperties = Poisson_Num_NSProperties
       Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
-!      dEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
-!      dEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
-!      dEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
-!      dEXO%NSProperty(VarFrac_NSProp_BCVType)%Name   = 'BCV_Type'
       dEXO%NSProperty(VarFrac_NSProp_HasPForce)%Name = 'Has_PForce'
       Do i = 1, dEXO%Num_NSProperties
          Allocate(dEXO%NSProperty(i)%Value(NumNS))
@@ -264,9 +255,6 @@ Contains
       
       AppCtx%AppParam%verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
-      
-      !AppCtx%AppParam%Restart = PETSC_FALSE
-      !Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-restart', AppCtx%AppParam%restart, Flag, iErr); CHKERRQ(iErr)
       
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',       AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       If (.NOT. HasPrefix) Then
@@ -378,13 +366,7 @@ Contains
 200 Format(A, '-', I4.4, '.gen')
       AppCtx%MyEXO%title = trim(AppCtx%EXO%title)
       AppCtx%MyEXO%Num_QA = AppCtx%EXO%Num_QA
-      !If (AppCtx%AppParam%Restart) Then
-      !   Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      !   Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
-      !   Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
-      !   Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      !Else
-         !!! Prepare and format the output mesh   
+!!! Prepare and format the output mesh   
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       Call MeshTopologyWriteGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
       Call EXOFormat_SimplePoisson(AppCtx)
@@ -400,10 +382,6 @@ Contains
    !!!
    !!! EB, SS, NS Properties
    !!!
-!next 3 lines are in VarFracEXOProperty_Init for the Fracture pb 
-!      AppCtx%MyEXO%Num_NSProperties = 0
-!      AppCtx%MyEXO%Num_SSProperties = 1
-!      AppCtx%MyEXO%Num_EBProperties = 2
       Call PoissonEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology) 
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done with VarFracEXOProperty_Init\n"
@@ -434,81 +412,12 @@ Contains
          
       Call AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
 !pk est ce que les SectionRealSet suivant fonctionnent ?????         
-! TODO pb we are just reading the first and seconf lines of the files !!!! 
          !Setting initiale value
       Call AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%U, ValU, iErr); CHKERRQ(iErr);
          !Setting force
       Call AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%F, ValF, iErr); CHKERRQ(iErr);
-      print *, ValU
-      print *, ValF
-
-!         Select Case (AppCtx%AppParam%TestCase)
-!         Case(1)
-!            If (AppCtx%AppParam%verbose > 0) Then
-!               Write(IOBuffer, *) 'Setting U to 0 and F to 1\n'
-!               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!            End If
-!            !!! U = 0, F=1
-!            Val = 1.0_Kr
-!            Call SectionRealSet(AppCtx%F, Val, iErr); CHKERRQ(iErr);
-!            Val = 0.0_Kr
-!            Call SectionRealSet(AppCtx%U, Val, iErr); CHKERRQ(iErr);
-!         Case(2)
-!            If (AppCtx%AppParam%verbose > 0) Then
-!               Write(IOBuffer, *) 'Solving Test Case 2: pure dirichlet problem, no force\n'
-!               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!            End If
-
-!            !!! Test of non homogeneous Dirichlet BC
-!            Allocate(ValPtr(1))
-!            ValPtr = 0.0_Kr
-!            Call SectionRealSet(AppCtx%F, 0.0_Kr, iErr); CHKERRQ(iErr);
-!            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-!               
-!            Do iDoF = 1, Size(Coords,1)
-!#if defined PB_2D
-!               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2
-!               ValPtr = Coords(iDoF,1)**2 + Coords(iDoF,2)**2
-!               ValPtr = Coords(iDoF,1)**3
-!#elif defined PB_3D
-!               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
-!#endif
-!               Call SectionRealUpdate(AppCtx%U%Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!            End Do
-!            DeAllocate(ValPtr)
-!            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-!         Case(3)
-!            If (AppCtx%AppParam%verbose > 0) Then
-!               Write(IOBuffer, *) 'Solving Test Case 3: F=sgn(x) . sgn(y) [. sgn(z)] \n'
-!               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!            End If
-
-            !!! Test of non homogeneous Dirichlet BC
-!            Allocate(ValPtr(1))
-!            ValPtr = 0.0_Kr
-!            Call SectionRealSet(AppCtx%U, 1.0_Kr, iErr); CHKERRQ(iErr);
-!            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-!            
-!            Do iDoF = 1, Size(Coords,1)
-!#if defined PB_2D
-!               If ( Coords(iDoF,1) * Coords(iDoF,2) < 0.0_Kr ) Then
-!                  ValPtr = -1.0_Kr
-!               Else
-!                  ValPtr = 1.0_Kr
-!               End If
-!#elif defined PB_3D
-!               If ( Coords(iDoF,1) * Coords(iDoF,2) * Coords(iDoF,3) < 0.0_Kr ) Then
-!                  ValPtr = -1.0_Kr
-!               Else
-!                  ValPtr = 1.0_Kr
-!               End If
-!#endif
-!               Call SectionRealUpdate(AppCtx%F%Sec, AppCtx%MeshTopology%Num_Elems+iDoF-1, ValPtr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!            End Do
-!            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
-!         End Select            
 
 
 !      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
