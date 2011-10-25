@@ -17,8 +17,6 @@ Program  TransientHeat
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   PetscReal                                    :: one 
-!   PetscInt, Parameter                          :: TestCase=1
    
    Call PoissonInit(AppCtx)
 

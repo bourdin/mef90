@@ -13,7 +13,7 @@ include ${PETSC_DIR}/conf/variables
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
 	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
 else
-	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS}
+	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} -warn unused
 endif
 
 
