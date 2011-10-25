@@ -121,13 +121,8 @@ Contains
       
       PetscInt                                     :: iErr
       KSPConvergedReason                           :: KSPreason
-!#if defined WITH_TAO
-!      TaoTerminateReason                           :: TaoReason
-!#endif
-      !PetscReal                                    :: TaoResidual
       PetscInt                                     :: KSPNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-!      PetscInt                                     :: iDum
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)

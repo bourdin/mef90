@@ -42,10 +42,7 @@ Contains
       Type(MeshTopology_Type)             :: dMeshTopology
       PetscInt                            :: i, iErr
       PetscInt                            :: NumEB, NumSS, NumNS
-
       Integer                             :: EXO_MyRank
-!      PetscReal                           :: rDummy
-!      Character                           :: cDummy
           
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
@@ -91,7 +88,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       PetscBool                                    :: HasPrefix, Flag
-      PetscInt                                     :: iBlk, i, j, iloc !iDof, istep 
+      PetscInt                                     :: iBlk, i, j, iloc 
       Character(len=MEF90_MXSTRLEN)                :: BatchFileName
       PetscInt                                     :: BatchUnit=99
       PetscInt                                     :: NumTestCase
@@ -100,12 +97,8 @@ Contains
       PetscBool                                    :: IsBatch, HasBatchFile
       Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
       Type(DM)                                     :: Tmp_Mesh
-      !PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
-      !PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscReal                                    :: ValU, ValF
       PetscInt, Dimension(:), Pointer              :: SizeScal
-      !PetscInt, Dimension(:), Pointer              :: TmpFlag
-      !PetscInt                                     :: TmpPoint
       PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
       PetscReal, Dimension(:), Pointer             :: U, Uelem
 
@@ -311,14 +304,6 @@ Contains
    Subroutine KSPSetUp(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
-      !PetscInt                                     :: iBlk, iDoF      
-      !PetscInt, Dimension(:), Pointer              :: TmpFlag
-      !PetscInt                                     :: iE, iELoc
-   !   Character(len=MEF90_MXSTRLEN)                :: prefix, filename   
-      !PetscLogDouble                               :: TS, TF
-      !Type(Vec)                                    :: F
-     ! PetscReal                                    :: Val, tol
-
       
 
       !!! Initialize the matrix and vector for the linear system
@@ -352,19 +337,6 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
-      !PetscInt                                     :: iDoF      
- !     PetscBool                                    :: HasPrefix, Flag
-      !PetscInt                                     :: TmpPoint
-      
-      !PetscInt                                     :: iE, iELoc
-      !Character(len=MEF90_MXSTRLEN)                :: filename   
-      !PetscLogDouble                               :: TS, TF
-      !Type(DM)                                     :: Tmp_Mesh
-      !Type(Vec)                                    :: F
-      !PetscReal                                    :: tol
-!      PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
-
-      
 
       !!! Allocate the Section for U and F
 !      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU',  AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
@@ -483,8 +455,6 @@ Contains
       
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-!      PetscInt                                     :: iDum !, steps, maxsteps
-!      PetscReal                                     ::ftime 
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)

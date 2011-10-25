@@ -15,7 +15,6 @@ Program  SimplePoisson
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   !PetscReal                                    :: one 
    Call SimplePoissonInit(AppCtx)
    
    If (AppCtx%AppParam%verbose > 4) Then
@@ -93,14 +92,10 @@ Contains
       PetscInt, Dimension(:), Pointer              :: TmpFlag
       PetscInt                                     :: TmpPoint
       
-!      Type(SectionReal)                            :: CoordSection
       PetscReal, Dimension(:), Pointer             ::  ValPtr
       PetscReal, Dimension(:,:), Pointer           :: Coords
-!      PetscInt                                     :: iE, iELoc
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename   
-!      PetscLogDouble                               :: TS, TF
       Type(DM)                                     :: Tmp_Mesh
-!      Type(Vec)                                    :: F
       PetscReal                                    :: Val
       PetscInt, Dimension(:), Pointer              :: SizeScal
 
