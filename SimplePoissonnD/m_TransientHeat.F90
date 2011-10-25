@@ -17,8 +17,36 @@ Module m_TransientHeat3D
    Implicit NONE   
 
    
-   
+Type TestCase_Type
+   PetscInt                                  :: Index
+   Character(len=MEF90_MXSTRLEN)             :: Description
+End Type
+
 Contains
+
+    Subroutine AskInt(val, msg, ArgUnit, IsBatch)
+      PetscInt                                  :: Val
+      Character(len=*)                          :: msg 
+      PetscInt                                  :: argunit
+      PetscBool                                 :: IsBatch
+
+      Character(len=MEF90_MXSTRLEN)             :: prefix, IOBuffer   
+      PetscInt                                  :: iErr   
+      If (IsBatch) Then
+         If (MEF90_MyRank == 0) Then
+            Read(ArgUnit,*) Val
+         End If
+         Call MPI_BCast(Val, 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+      Else
+         Write(IOBuffer, "(A, t60,':  ')") Trim(msg)
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         If (MEF90_MyRank == 0) Then
+            Read(*,*) Val
+            Write(ArgUnit, "(I4, t60, A)") val, Trim(msg)
+         End If
+         Call MPI_BCast(Val, 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr)
+      End If
+   End Subroutine AskInt   
 
   Subroutine AskReal(val, msg, ArgUnit, IsBatch)
       PetscReal                                 :: Val
@@ -44,6 +72,93 @@ Contains
       End If
    End Subroutine AskReal
 
+ Subroutine EXONSProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
+      Type(EXO_Type)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      PetscInt                                       :: BatchUnit
+      PetscBool                                      :: IsBatch
+
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i, j, IntBuffer
+
+      PetscInt                                       :: NumNS
+      PetscInt                                       :: EXO_MyRank
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+
+      Do i = 1, dMeshTopology%Num_Node_Sets_Global
+         Write(IOBuffer, 102) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_NSProperties
+            Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
+            Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+102 Format('    Node Set      ', T24, I3, '\n')
+202 Format('NS', I4.4, ': ', A)
+   End Subroutine EXONSProperty_AskWithBatch
+
+
+   Subroutine EXOEBProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
+      Type(EXO_Type)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      PetscInt                                       :: BatchUnit
+      PetscBool                                      :: IsBatch
+
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i, j, IntBuffer
+
+      PetscInt                                       :: NumEB
+      PetscInt                                       :: EXO_MyRank
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+      PetscReal                                      :: TmpEBProperty
+
+      Do i = 1, dMeshTopology%Num_Elem_Blks_Global
+         Write(IOBuffer, 100) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_EBProperties
+            Write(IOBuffer, 200) i, Trim(dEXO%EBProperty(j)%Name)
+            Call AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+100 Format('    Element Block ', T24, I3, '\n')
+200 Format('EB', I4.4, ': ', A)
+   End Subroutine EXOEBProperty_AskWithBatch
+   
+   Subroutine EXOSSProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
+      Type(EXO_Type)                                 :: dEXO
+      Type(MeshTopology_Type)                        :: dMeshTopology
+      PetscInt                                       :: BatchUnit
+      PetscBool                                      :: IsBatch
+
+      PetscInt                                       :: iErr
+      PetscInt                                       :: i, j, IntBuffer
+
+      PetscInt                                       :: NumSS
+      PetscInt                                       :: EXO_MyRank
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+
+      Do i = 1, dMeshTopology%Num_Side_Sets_Global
+         Write(IOBuffer, 101) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Do j = 1, dEXO%Num_SSProperties
+            Write(IOBuffer, 201) i, Trim(dEXO%SSProperty(j)%Name)
+            Call AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+         End Do
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+101 Format('    Side Set      ', T24, I3, '\n')
+201 Format('SS', I4.4, ': ', A)
+   End Subroutine EXOSSProperty_AskWithBatch
+
+
 #undef __FUNCT__
 #define __FUNCT__ "PoissonInit"
    Subroutine PoissonInit(AppCtx)
@@ -53,6 +168,8 @@ Contains
       PetscInt                                     :: iBlk, iDoF, i 
       Character(len=MEF90_MXSTRLEN)                :: BatchFileName
       PetscInt                                     :: BatchUnit=99
+      PetscInt                                     :: NumTestCase
+      Type(TestCase_Type), Dimension(:) , Pointer  :: TestCase
       PetscBool                                    :: EraseBatch
       PetscBool                                    :: IsBatch, HasBatchFile
       Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
@@ -64,10 +181,19 @@ Contains
       PetscInt, Dimension(:), Pointer              :: TmpFlag
       PetscInt                                     :: TmpPoint
       PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
-      PetscReal, Dimension(:), Pointer             :: U
+      PetscReal, Dimension(:), Pointer             :: U, Uelem
 
 
       Call MEF90_Initialize()
+      
+      NumTestCase = 2
+      Allocate(TestCase(NumTestCase))
+      Do i = 1, NumTestCase
+         TestCase(i)%Index = i
+      End Do
+      TestCase(1)%Description = "Simple Poisson \Delta u = f"
+      TestCase(2)%Description = "Heat equation u,t - \Delta u = f"
+      
       AppCtx%AppParam%verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
       
@@ -167,19 +293,19 @@ Contains
       Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%RHS,     'RHS',       AppCtx%MeshTopology, SizeScal)
 
-
+      
       !!! Allocate and initialize the Section for the flag
       Call FlagCreateVertex(AppCtx%BCFlag, 'BC', AppCtx%MeshTopology, SizeScal)
-!could we use    Call SectionIntAddNsProperty()  yes 
-      
-      Allocate(TmpFlag(1))
-      Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
-         Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
-            TmpPoint = AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iBlk)%Node_ID(iDoF) - 1
-            Call SectionIntUpdate(AppCtx%BCFlag%Sec, TmpPoint, TmpFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
-         End Do
-      End Do
-      DeAllocate(TmpFlag)
+      DeAllocate(SizeScal)
+
+      !Allocate(TmpFlag(1))
+      !Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
+      !   Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
+      !      TmpPoint = AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iBlk)%Node_ID(iDoF) - 1
+      !      Call SectionIntUpdate(AppCtx%BCFlag%Sec, TmpPoint, TmpFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
+      !   End Do
+      !End Do
+      !DeAllocate(TmpFlag)
       
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
@@ -199,13 +325,28 @@ Contains
          Call EXOFormat_SimplePoisson(AppCtx)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
+         Write(IOBuffer, *) '\nTest Case:\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
+         Do i = 1, NumTestCase
+            Write(IOBuffer, "('   [',I2.2,'] ',A)"), TestCase(i)%Index,   Trim(TestCase(i)%Description)//'\n'
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
+         End Do
+
+
+
+
+         
+         Call AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
 !pk est ce que les SectionRealSet suivant fonctionnent ?????         
+! TODO pb we are just reading the first and seconf lines of the files !!!! 
          !Setting initiale value
          Call AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
          Call SectionRealSet(AppCtx%U, ValU, iErr); CHKERRQ(iErr);
          !Setting force
-         Call AskReal(valF, 'RHS F', BatchUnit, IsBatch)
+         Call AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
          Call SectionRealSet(AppCtx%F, ValF, iErr); CHKERRQ(iErr);
+         print *, ValU
+         print *, ValF
 
 !         Select Case (AppCtx%AppParam%TestCase)
 !         Case(1)
@@ -272,6 +413,7 @@ Contains
 !            End Do
 !            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
 !         End Select            
+      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
 !lines 535-550 PrepVarFracNG
          Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
          U = 0.0_Kr
@@ -287,25 +429,6 @@ Contains
 
 202 Format('    Node Set      ', T24, I3, '\n')
 302 Format('NS', I4.4, ': ', A)
-
-
-!lines 632-650 PreVarFracNG pb en V !  
-!Do iStep = 1, NumSteps
-!   Call SectionRealSet(VSec, 1.0_Kr, iErr); CHKERRQ(iErr)
-!   Do iloc = 1, MeshTopology%Num_Node_Sets         
-!      i = MeshTopology%Node_Set(iloc)%ID
-!      Select Case(iCase)
-!         !!! Write special cases here 
-!      Case default
-!         Velem(1) = V(i)
-!         Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
-!            Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)
-!         End Do
-!      End Select
-!   End Do
-!   Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
-!End Do
-
 
 
    End Subroutine PoissonInit
