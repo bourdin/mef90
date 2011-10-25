@@ -18,11 +18,11 @@ Program  TransientHeat
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscReal                                    :: one 
-   PetscInt, Parameter                          :: TestCase=1
+!   PetscInt, Parameter                          :: TestCase=1
    
    Call PoissonInit(AppCtx)
 
-   Select Case (TestCase)
+   Select Case (AppCtx%AppParam%TestCase)
    Case (1)
       Call KSPSetUp(AppCtx)
    Case(2)
@@ -60,7 +60,7 @@ Program  TransientHeat
    End If
    
    
-   Select Case (TestCase)
+   Select Case (AppCtx%AppParam%TestCase)
    Case (1) 
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Calling Solve\n'
@@ -107,7 +107,7 @@ Program  TransientHeat
    Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    
-   Select Case (TestCase)
+   Select Case (AppCtx%AppParam%TestCase)
    Case (1)
       Call SimplePoissonFinalize(AppCtx)
    Case (2)
