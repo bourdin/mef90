@@ -9,8 +9,8 @@ Module m_MEF_IO
 
  Contains
 #undef __FUNCT__
-#define __FUNCT__ "AskInt"
-   Subroutine AskInt(val, msg, ArgUnit, IsBatch)
+#define __FUNCT__ "MEF90_AskInt"
+   Subroutine MEF90_AskInt(val, msg, ArgUnit, IsBatch)
       PetscInt                                  :: Val
       Character(len=*)                          :: msg 
       PetscInt                                  :: argunit
@@ -32,11 +32,11 @@ Module m_MEF_IO
          End If
          Call MPI_BCast(Val, 1, MPIU_INTEGER, 0, PETSC_COMM_WORLD, iErr)
       End If
-   End Subroutine AskInt   
+   End Subroutine MEF90_AskInt   
    
 #undef __FUNCT__
-#define __FUNCT__ "AskReal"
-   Subroutine AskReal(val, msg, ArgUnit, IsBatch)
+#define __FUNCT__ "MEF90_AskReal"
+   Subroutine MEF90_AskReal(val, msg, ArgUnit, IsBatch)
       PetscReal                                 :: Val
       Character(len=*)                          :: msg 
       PetscInt                                  :: argunit
@@ -58,7 +58,7 @@ Module m_MEF_IO
          End If
          Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
       End If
-   End Subroutine AskReal
+   End Subroutine MEF90_AskReal
  
 #undef __FUNCT__
 #define __FUNCT__ "EXONSProperty_AskWithBatch"
@@ -80,7 +80,7 @@ Module m_MEF_IO
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_NSProperties
             Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
-            Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
          If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)
@@ -112,7 +112,7 @@ Module m_MEF_IO
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_EBProperties
             Write(IOBuffer, 200) i, Trim(dEXO%EBProperty(j)%Name)
-            Call AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
          If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)
@@ -142,7 +142,7 @@ Module m_MEF_IO
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_SSProperties
             Write(IOBuffer, 201) i, Trim(dEXO%SSProperty(j)%Name)
-            Call AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
          If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)

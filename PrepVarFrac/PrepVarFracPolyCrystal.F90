@@ -236,16 +236,16 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End Do
    
-   Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
+   Call MEF90_AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
 !!!
 !!! Global Variables: Time Steps and Load
 !!!
    Write(IOBuffer, *) '\nGlobal Variables\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-   Call AskReal(TMin, 'TMin', BatchUnit, IsBatch)
-   Call AskReal(TMax, 'TMax', BatchUnit, IsBatch)
-   Call AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
+   Call MEF90_AskReal(TMin, 'TMin', BatchUnit, IsBatch)
+   Call MEF90_AskReal(TMax, 'TMax', BatchUnit, IsBatch)
+   Call MEF90_AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
 
    Allocate(GlobVars(VarFrac_Num_GlobVar))
    GlobVars = 0.0_Kr
@@ -290,11 +290,11 @@ Program PrepVarFrac
    Case Default
       If (NumGrains > 0) Then 
          !!! Default behavior is that the grains are the first element block and share the same properties (but not orientation)
-         Call AskReal(ToughnessGrain,    'Grains: toughness',   BatchUnit, IsBatch)
-         Call AskReal(BGrain,            'Grains: Bulk modulus B',         BatchUnit, IsBatch)
-         Call AskReal(CGrain,            'Grains: Shear modulus C',        BatchUnit, IsBatch)
-         Call AskReal(CpGrain,           'Grains: Shear modulus Cp',       BatchUnit, IsBatch)
-         Call AskReal(ThermExpScalGrain, 'Grains: therm. exp.', BatchUnit, IsBatch)
+         Call MEF90_AskReal(ToughnessGrain,    'Grains: toughness',   BatchUnit, IsBatch)
+         Call MEF90_AskReal(BGrain,            'Grains: Bulk modulus B',         BatchUnit, IsBatch)
+         Call MEF90_AskReal(CGrain,            'Grains: Shear modulus C',        BatchUnit, IsBatch)
+         Call MEF90_AskReal(CpGrain,           'Grains: Shear modulus Cp',       BatchUnit, IsBatch)
+         Call MEF90_AskReal(ThermExpScalGrain, 'Grains: therm. exp.', BatchUnit, IsBatch)
       End If
       alphamin = 0.0_Kr
       alphamax = PETSC_PI
@@ -325,13 +325,13 @@ Program PrepVarFrac
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          
          Write(IOBuffer, 300) iBlock, 'Toughness'
-         Call AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'Young Modulus'
-         Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(E, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'Poisson Ratio'
-         Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(nu, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'Therm Exp'
-         Call AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
 
          Select Case(MeshTopology%Num_Dim)
          Case(2)
@@ -352,10 +352,10 @@ Program PrepVarFrac
    Case(4)
       If (NumGrains > 0) Then 
          !!! Default behavior is that the grains are the first element block and share the same properties (but not orientation)
-         Call AskReal(ToughnessGrain,    'Grains: toughness', BatchUnit, IsBatch)
-         Call AskReal(E,                 'Grains: Young''s modulus E', BatchUnit, IsBatch)
-         Call AskReal(nu,                'Grains: Poisson Ration nu', BatchUnit, IsBatch)
-         Call AskReal(ThermExpScalGrain, 'Grains: therm. exp.', BatchUnit, IsBatch)
+         Call MEF90_AskReal(ToughnessGrain,    'Grains: toughness', BatchUnit, IsBatch)
+         Call MEF90_AskReal(E,                 'Grains: Young''s modulus E', BatchUnit, IsBatch)
+         Call MEF90_AskReal(nu,                'Grains: Poisson Ration nu', BatchUnit, IsBatch)
+         Call MEF90_AskReal(ThermExpScalGrain, 'Grains: therm. exp.', BatchUnit, IsBatch)
       End If
       Do iBlock = 1, NumGrains
          Select Case(MeshTopology%Num_Dim)
@@ -380,13 +380,13 @@ Program PrepVarFrac
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
          Write(IOBuffer, 300) iBlock, 'Toughness'
-         Call AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'Young Modulus'
-         Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(E, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'Poisson Ratio'
-         Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(nu, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'Therm Exp'
-         Call AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
 
          Select Case(MeshTopology%Num_Dim)
          Case(2)
@@ -435,17 +435,17 @@ Program PrepVarFrac
       If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(1) /= 0) Then
          !!! Force
          Write(IOBuffer, 310) 'Fx'
-         Call AskReal(FGrain%X, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(FGrain%X, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 310) 'Fy'
-         Call AskReal(FGrain%Y, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(FGrain%Y, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 310) 'Fz'
-         Call AskReal(FGrain%Z, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(FGrain%Z, IOBuffer, BatchUnit, IsBatch)
       End If
       F(1:NumGrains)=F
 
       !!! Temperature
       Write(IOBuffer, 310) 'Theta'
-      Call AskReal(ThetaGrain, IOBuffer, BatchUnit, IsBatch)
+      Call MEF90_AskReal(ThetaGrain, IOBuffer, BatchUnit, IsBatch)
       Theta(1:NumGrains) = ThetaGrain
    End If
    
@@ -455,15 +455,15 @@ Program PrepVarFrac
       !!! Force
       If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
          Write(IOBuffer, 300) i, 'Fx'
-         Call AskReal(F(i)%X, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(F(i)%X, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) i, 'Fy'
-         Call AskReal(F(i)%Y, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(F(i)%Y, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) i, 'Fz'
-         Call AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
       End If
       !!! Temperature
       Write(IOBuffer, 300) i, 'Theta'
-      Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
+      Call MEF90_AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
       !!!
       If (.NOT. IsBatch) Then
          Write(BatchUnit, *)
@@ -553,19 +553,19 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
          Write(IOBuffer, 302) i, 'Ux'
-         Call AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
       End If
       If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
          Write(IOBuffer, 302) i, 'Uy'
-         Call AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
       End If
       If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
          Write(IOBuffer, 302) i, 'Uz'
-         Call AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
       End If
       If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
          Write(IOBuffer, 302) i, 'V'
-         Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
       End If
       If (.NOT. IsBatch) Then
          Write(BatchUnit, *)
@@ -578,8 +578,8 @@ Program PrepVarFrac
    !!! Here is the place to request additional parameters if needed
    !!!
    If ((iCase == 2) .OR. (iCase==3) .OR. (iCase==4)) Then
-      Call AskReal(Eeff,  'E effective (for displacement field)',  BatchUnit, IsBatch)
-      Call AskReal(nueff, 'nu effective (for displacement field)', BatchUnit, IsBatch)
+      Call MEF90_AskReal(Eeff,  'E effective (for displacement field)',  BatchUnit, IsBatch)
+      Call MEF90_AskReal(nueff, 'nu effective (for displacement field)', BatchUnit, IsBatch)
       Kappa = (3.0-nu)/(1.0+nu)
       Mu = E / (1.0_Kr + nu) * .5_Kr
    End If
