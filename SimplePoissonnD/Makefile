@@ -3,9 +3,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
             $(MEF90DIR)/m_MEF90.o          $(MEF90DIR)/m_MEF_Utils.o         \
             $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
-            $(MEF90DIR)/m_MEF_Sieve.o 
-M_VARPREPDIR  = ../PrepVarFracNG/${PETSC_ARCH}
-M_VARPREPOBJS = ${M_VARPREPDIR}/m_PrepVarFracNG.o
+            $(MEF90DIR)/m_MEF_Sieve.o      $(MEF90DIR)/m_MEF_IO.o 
 
 all: SimplePoisson${DIM} TransientHeat${DIM}
 
@@ -13,9 +11,9 @@ include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARPREPDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
+	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
 else
-	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARPREPDIR} ${FC_FLAGS}
+	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS}
 endif
 
 
@@ -32,7 +30,7 @@ SimplePoisson${DIM}: ${PETSC_ARCH} SimplePoisson.o   ${PETSC_ARCH}/${DIM}SimpleP
 TransientHeat${DIM}: ${PETSC_ARCH} TransientHeat.o   ${PETSC_ARCH}/${DIM}TransientHeat.o \
                              m_TransientHeat.o ${PETSC_ARCH}/${DIM}TransientHeat.o \
                              m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
-	${FLINKER} -o ${PETSC_ARCH}/TransientHeat${DIM}  ${PETSC_ARCH}/${DIM}m_Poisson.o  ${PETSC_ARCH}/${DIM}TransientHeat.o  ${PETSC_ARCH}/${DIM}m_TransientHeat.o ${MEF90OBJS} ${M_VARPREPOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	${FLINKER} -o ${PETSC_ARCH}/TransientHeat${DIM}  ${PETSC_ARCH}/${DIM}m_Poisson.o  ${PETSC_ARCH}/${DIM}TransientHeat.o  ${PETSC_ARCH}/${DIM}m_TransientHeat.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
 SimplePoisson.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
 
@@ -47,7 +45,4 @@ clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}
 
-debug::
-	@echo  ${M_VARPREPOBJS}
-	@echo  ${M_VARPREPDIR}
 
