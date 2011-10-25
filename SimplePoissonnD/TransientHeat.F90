@@ -19,12 +19,14 @@ Program  TransientHeat
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscReal                                    :: one 
    PetscInt, Parameter                          :: TestCase=1
+   
+   Call PoissonInit(AppCtx)
 
    Select Case (TestCase)
    Case (1)
-      Call PoissonInit(AppCtx)
+      Call KSPSetUp(AppCtx)
    Case(2)
-        Call TSPoissonInit(AppCtx)
+      Call TSSetUp(AppCtx)
    End Select
 
 

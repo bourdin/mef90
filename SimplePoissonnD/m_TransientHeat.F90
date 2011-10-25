@@ -19,26 +19,22 @@ Module m_TransientHeat3D
    
    
 Contains
+
+
 #undef __FUNCT__
 #define __FUNCT__ "PoissonInit"
    Subroutine PoissonInit(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
-      PetscInt                                     :: iBlk, iDoF      
       PetscBool                                    :: HasPrefix, Flag
-      PetscInt, Dimension(:), Pointer              :: TmpFlag
-      PetscInt                                     :: TmpPoint
-      PetscInt                                     :: iE, iELoc
-      Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
-      PetscLogDouble                               :: TS, TF
-      Type(DM)                                     :: Tmp_Mesh
-      Type(Vec)                                    :: F
-      PetscReal                                    :: Val, tol
-      PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
-      PetscBool                                    :: IsBatch, HasBatchFile
+      PetscInt                                     :: iBlk, iDoF      
       Character(len=MEF90_MXSTRLEN)                :: BatchFileName
       PetscInt                                     :: BatchUnit=99
       PetscBool                                    :: EraseBatch
+      PetscBool                                    :: IsBatch, HasBatchFile
+      Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
+      Type(DM)                                     :: Tmp_Mesh
+
 
       Call MEF90_Initialize()
       AppCtx%AppParam%verbose = 0
@@ -55,9 +51,32 @@ Contains
       End If
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-i', BatchFileName, IsBatch, iErr);CHKERRQ(iErr)
 
+!      EraseBatch=.False.
+!      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-force', EraseBatch, HasPrefix, iErr)    
+!      If (MEF90_MyRank==0) Then
+!         If (IsBatch) Then
+!            Write(IOBuffer, *) "\nProcessing batch file ", Trim(BatchFileName), "\n"
+!            Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+!            Open(Unit=BatchUnit, File=BatchFileName, Status='Old', Action='Read')
+!            Rewind(BatchUnit)
+!         Else
+!            BatchFileName = Trim(prefix)//'.args'
+!            Inquire(File=BatchFileName, EXIST=HasBatchFile)
+!            If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
+!               Write(IOBuffer, *) "Batch file ", trim(BatchFileName), " already exists. Erase it or use -force flag\n"
+!               Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+!               SETERRQ(PETSC_COMM_SELF, PETSC_ERR_FILE_UNEXPECTED, IOBuffer, iErr)
+!            Else
+!               Write(IOBuffer, *) "Running interactively and generating batch file ", trim(BatchFileName), "\n"
+!               Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+!               Open(Unit=BatchUnit, File=BatchFileName, Status='Unknown')
+!               Rewind(BatchUnit)
+!            End If
+!         End If
+!      End If
+
       AppCtx%AppParam%TestCase = 1
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-test',       AppCtx%AppParam%TestCase, Flag, iErr); CHKERRQ(iErr)
-      
       Call InitLog(AppCtx)
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose > 1) Then
@@ -110,6 +129,24 @@ Contains
    
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
 
+   End Subroutine PoissonInit
+
+#undef __FUNCT__
+#define __FUNCT__ "KSPSetUp"
+   Subroutine KSPSetUp(AppCtx)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
+      PetscInt                                     :: iBlk, iDoF      
+      PetscInt, Dimension(:), Pointer              :: TmpFlag
+      PetscInt                                     :: TmpPoint
+      PetscInt                                     :: iE, iELoc
+      Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
+      PetscLogDouble                               :: TS, TF
+      Type(Vec)                                    :: F
+      PetscReal                                    :: Val, tol
+      PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
+
+      
       !!! Allocate the Section for U and F
       Allocate(SizeScal(1))
       SizeScal=1
@@ -155,11 +192,11 @@ Contains
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine PoissonInit
+   End Subroutine KSPSetUP
    
 #undef __FUNCT__
-#define __FUNCT__ "TSPoissonInit"
-   Subroutine TSPoissonInit(AppCtx)
+#define __FUNCT__ "TSSetUp"
+   Subroutine TSSetUP(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
@@ -176,71 +213,7 @@ Contains
       PetscReal                                    :: tol
       PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
 
-      Call MEF90_Initialize()
-      AppCtx%AppParam%verbose = 0
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
       
-      AppCtx%AppParam%Restart = PETSC_FALSE
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-restart', AppCtx%AppParam%restart, Flag, iErr); CHKERRQ(iErr)
-      
-      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',       AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
-      If (.NOT. HasPrefix) Then
-         Call PetscPrintf(PETSC_COMM_WORLD, "No mesh prefix given\n", iErr)
-         Call MEF90_Finalize()
-         STOP
-      End If
-
-      AppCtx%AppParam%TestCase = 1
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-test',       AppCtx%AppParam%TestCase, Flag, iErr); CHKERRQ(iErr)
-      
-      Call InitLog(AppCtx)
-      Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%verbose > 1) Then
-         Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank
-         Call PetscViewerASCIIOpen(PETSC_COMM_SELF, filename, AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr);   
-         Write(IOBuffer, 102) MEF90_MyRank, Trim(filename)
-         Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         Call PetscSynchronizedFlush (PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-   
-         Write(filename, 103) Trim(AppCtx%AppParam%prefix)
-         Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr);   
-         Write(IOBuffer, 104) Trim(filename)
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-   
-101 Format(A, '-', I4.4, '.log')
-102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
-103 Format(A,'.log')
-104 Format('Collective output redirected to file ', A, '\n')
-
-      AppCtx%EXO%Comm = PETSC_COMM_WORLD
-      AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
-      !!! Read and partition the mesh
-      If (MEF90_NumProcs == 1) Then
-         Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
-         Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      Else
-         Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
-         Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      
-         Call PetscLogStagePush(AppCtx%LogInfo%MeshDistribute_Stage, iErr); CHKERRQ(iErr)
-         Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
-         Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      End If
-
-      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
-
-      !!! Sets the type of elements for each block
-      Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_Type = MEF90_P1_Lagrange
-         Call Init_Elem_Blk_Type(AppCtx%MeshTopology%Elem_Blk(iBlk), AppCtx%MeshTopology%num_dim)
-      End Do
-   
-      Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
 
       !!! Allocate the Section for U and F
       Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU',  AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
@@ -302,7 +275,7 @@ Contains
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine TSPoissonInit
+   End Subroutine TSSetUp
 
 
 #undef __FUNCT__
