@@ -27,7 +27,7 @@ Contains
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Do j = 1, dEXO%Num_EBProperties
          Write(IOBuffer, 210) Trim(dEXO%EBProperty(j)%Name)
-         Call AskReal(TmpEBProperty, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(TmpEBProperty, IOBuffer, BatchUnit, IsBatch)
          Do i = 1, NumGrains
             dEXO%EBProperty(j)%Value(i) = TmpEBProperty
          End Do
@@ -40,7 +40,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_EBProperties
             Write(IOBuffer, 200) i, Trim(dEXO%EBProperty(j)%Name)
-            Call AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
          If (.NOT. IsBatch) Then
             Write(BatchUnit, *)
@@ -71,7 +71,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_SSProperties
             Write(IOBuffer, 201) i, Trim(dEXO%SSProperty(j)%Name)
-            Call AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
          If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)
@@ -100,7 +100,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_NSProperties
             Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
-            Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
          If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
             Write(BatchUnit, *)
