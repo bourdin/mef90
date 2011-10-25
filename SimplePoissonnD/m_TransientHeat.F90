@@ -279,13 +279,12 @@ Contains
 
          
       Call AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
-!pk est ce que les SectionRealSet suivant fonctionnent ?????         
          !Setting initiale value
       Call AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
-      Call SectionRealSet(AppCtx%U, ValU, iErr); CHKERRQ(iErr);
+      Call SectionRealSet(AppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
          !Setting force
       Call AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
-      Call SectionRealSet(AppCtx%F, ValF, iErr); CHKERRQ(iErr);
+      Call SectionRealSet(AppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
 
 
 !      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
@@ -300,12 +299,11 @@ Contains
             Call AskReal(U(i), IOBuffer, BatchUnit, IsBatch)
          End If
       End Do
-      !End If
 
 202 Format('    Node Set      ', T24, I3, '\n')
 302 Format('NS', I4.4, ': ', A)
 
-
+! il faut en faire qq chose maintenant que nous avons résupérés cette valeur 
    End Subroutine PoissonInit
 
 #undef __FUNCT__
