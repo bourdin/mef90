@@ -8,6 +8,8 @@ Module m_MEF_IO
    Implicit None
 
  Contains
+#undef __FUNCT__
+#define __FUNCT__ "AskInt"
    Subroutine AskInt(val, msg, ArgUnit, IsBatch)
       PetscInt                                  :: Val
       Character(len=*)                          :: msg 
@@ -32,6 +34,8 @@ Module m_MEF_IO
       End If
    End Subroutine AskInt   
    
+#undef __FUNCT__
+#define __FUNCT__ "AskReal"
    Subroutine AskReal(val, msg, ArgUnit, IsBatch)
       PetscReal                                 :: Val
       Character(len=*)                          :: msg 
@@ -55,7 +59,9 @@ Module m_MEF_IO
          Call MPI_BCast(Val, 1, MPIU_SCALAR, 0, PETSC_COMM_WORLD, iErr)
       End If
    End Subroutine AskReal
-   
+ 
+#undef __FUNCT__
+#define __FUNCT__ "EXONSProperty_AskWithBatch"
    Subroutine EXONSProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
@@ -85,6 +91,8 @@ Module m_MEF_IO
    End Subroutine EXONSProperty_AskWithBatch
 
 
+#undef __FUNCT__
+#define __FUNCT__ "EXOEBProperty_AskWithBatch"
    Subroutine EXOEBProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
@@ -113,7 +121,9 @@ Module m_MEF_IO
 100 Format('    Element Block ', T24, I3, '\n')
 200 Format('EB', I4.4, ': ', A)
    End Subroutine EXOEBProperty_AskWithBatch
-   
+ 
+#undef __FUNCT__
+#define __FUNCT__ "EXOSSProperty_AskWithBatch"
    Subroutine EXOSSProperty_AskWithBatch(dEXO, dMeshTopology, BatchUnit, IsBatch)
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
