@@ -44,8 +44,8 @@ Contains
       PetscInt                            :: NumEB, NumSS, NumNS
 
       Integer                             :: EXO_MyRank
-      PetscReal                           :: rDummy
-      Character                           :: cDummy
+!      PetscReal                           :: rDummy
+!      Character                           :: cDummy
           
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
@@ -91,7 +91,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       PetscBool                                    :: HasPrefix, Flag
-      PetscInt                                     :: iBlk, iDoF, i 
+      PetscInt                                     :: iBlk, i, j, iloc !iDof, istep 
       Character(len=MEF90_MXSTRLEN)                :: BatchFileName
       PetscInt                                     :: BatchUnit=99
       PetscInt                                     :: NumTestCase
@@ -100,13 +100,13 @@ Contains
       PetscBool                                    :: IsBatch, HasBatchFile
       Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
       Type(DM)                                     :: Tmp_Mesh
-      PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
-      PetscReal, Dimension(:,:), Pointer           :: Coords
+      !PetscReal, Dimension(:), Pointer             :: TmpCoords, ValPtr
+      !PetscReal, Dimension(:,:), Pointer           :: Coords
       PetscReal                                    :: ValU, ValF
-      PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
-      PetscInt, Dimension(:), Pointer              :: TmpFlag
-      PetscInt                                     :: TmpPoint
-!      PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
+      PetscInt, Dimension(:), Pointer              :: SizeScal
+      !PetscInt, Dimension(:), Pointer              :: TmpFlag
+      !PetscInt                                     :: TmpPoint
+      PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
       PetscReal, Dimension(:), Pointer             :: U, Uelem
 
 
@@ -205,27 +205,16 @@ Contains
       End Do
    
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
+      
       !!! Allocate the Section for U and F
       Allocate(SizeScal(1))
       SizeScal=1
-
       Call FieldCreateVertex(AppCtx%U,     'U',         AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%RHS,     'RHS',       AppCtx%MeshTopology, SizeScal)
-
-      
-      !!! Allocate and initialize the Section for the flag
-      Call FlagCreateVertex(AppCtx%BCFlag, 'BC', AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%RHS,   'RHS',       AppCtx%MeshTopology, SizeScal)
+      Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeScal)
 
-      !Allocate(TmpFlag(1))
-      !Do iBlk = 1, AppCtx%MeshTopology%num_node_sets  
-      !   Do iDoF = 1, AppCtx%MeshTopology%node_set(iBlk)%Num_Nodes     
-      !      TmpPoint = AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iBlk)%Node_ID(iDoF) - 1
-      !      Call SectionIntUpdate(AppCtx%BCFlag%Sec, TmpPoint, TmpFlag, INSERT_VALUES, iErr); CHKERRQ(iErr)
-      !   End Do
-      !End Do
-      !DeAllocate(TmpFlag)
       
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
@@ -276,17 +265,17 @@ Contains
 
 
 
-         
+!  Set EB Properties : U, F         
       Call MEF90_AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
          !Setting initiale value
+         ! This has no impact for TestCase 1
       Call MEF90_AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
          !Setting force
       Call MEF90_AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
 
-
-!      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
+!Get BC values 
 !lines 535-550 PrepVarFracNG
       Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
       U = 0.0_Kr
@@ -302,7 +291,19 @@ Contains
 202 Format('    Node Set      ', T24, I3, '\n')
 302 Format('NS', I4.4, ': ', A)
 
-! il faut en faire qq chose maintenant que nous avons résupérés cette valeur 
+! Set BC on NS 
+! lines 635-647 PrepVarfracNG
+      Allocate(Uelem(1))
+      Do iloc = 1, AppCtx%MeshTopology%Num_Node_Sets         
+         i = AppCtx%MeshTopology%Node_Set(iloc)%ID
+            Uelem(1) = U(i)
+            Do j = 1, AppCtx%MeshTopology%Node_Set(iloc)%Num_Nodes
+               Call SectionRealUpdate(AppCtx%U%Sec, AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            End Do
+      End Do
+      DeAllocate(Uelem)
+      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
+
    End Subroutine PoissonInit
 
 #undef __FUNCT__
@@ -310,13 +311,13 @@ Contains
    Subroutine KSPSetUp(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
-      PetscInt                                     :: iBlk, iDoF      
-      PetscInt, Dimension(:), Pointer              :: TmpFlag
-      PetscInt                                     :: iE, iELoc
-      Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
-      PetscLogDouble                               :: TS, TF
-      Type(Vec)                                    :: F
-      PetscReal                                    :: Val, tol
+      !PetscInt                                     :: iBlk, iDoF      
+      !PetscInt, Dimension(:), Pointer              :: TmpFlag
+      !PetscInt                                     :: iE, iELoc
+   !   Character(len=MEF90_MXSTRLEN)                :: prefix, filename   
+      !PetscLogDouble                               :: TS, TF
+      !Type(Vec)                                    :: F
+     ! PetscReal                                    :: Val, tol
 
       
 
@@ -351,17 +352,17 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
-      PetscInt                                     :: iBlk, iDoF      
-      PetscBool                                    :: HasPrefix, Flag
-      PetscInt                                     :: TmpPoint
+      !PetscInt                                     :: iDoF      
+ !     PetscBool                                    :: HasPrefix, Flag
+      !PetscInt                                     :: TmpPoint
       
-      PetscInt                                     :: iE, iELoc
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer, filename   
-      PetscLogDouble                               :: TS, TF
-      Type(DM)                                     :: Tmp_Mesh
-      Type(Vec)                                    :: F
-      PetscReal                                    :: tol
-      PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
+      !PetscInt                                     :: iE, iELoc
+      !Character(len=MEF90_MXSTRLEN)                :: filename   
+      !PetscLogDouble                               :: TS, TF
+      !Type(DM)                                     :: Tmp_Mesh
+      !Type(Vec)                                    :: F
+      !PetscReal                                    :: tol
+!      PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
 
       
 
@@ -482,7 +483,7 @@ Contains
       
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      PetscInt                                     :: iDum !, steps, maxsteps
+!      PetscInt                                     :: iDum !, steps, maxsteps
 !      PetscReal                                     ::ftime 
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
