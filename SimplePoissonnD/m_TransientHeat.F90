@@ -16,6 +16,16 @@ Module m_TransientHeat3D
 
    Implicit NONE   
 
+   PetscInt, Parameter, Public                     :: Poisson_Num_EBProperties  = 2
+   PetscInt, Parameter, Public                     :: VarFrac_EBProp_HasBForce  = 1
+   PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type  = 2
+   
+   PetscInt, Parameter, Public                     :: Poisson_Num_SSProperties  = 2
+   PetscInt, Parameter, Public                     :: VarFrac_SSProp_HasSForce  = 1
+   PetscInt, Parameter, Public                     :: VarFrac_SSProp_Elem_Type  = 2
+
+   PetscInt, Parameter, Public                     :: Poisson_Num_NSProperties  = 1
+   PetscInt, Parameter, Public                     :: VarFrac_NSProp_HasPForce  = 1
    
 Type TestCase_Type
    PetscInt                                  :: Index
@@ -158,6 +168,64 @@ Contains
 201 Format('SS', I4.4, ': ', A)
    End Subroutine EXOSSProperty_AskWithBatch
 
+#undef __FUNCT__
+#define __FUNCT__ "PoissonEXOProperty_Init"
+   Subroutine PoissonEXOProperty_Init(dEXO, dMeshTopology)
+      Type(EXO_Type)                      :: dEXO
+      Type(MeshTopology_Type)             :: dMeshTopology
+      PetscInt                            :: i, iErr
+      PetscInt                            :: NumEB, NumSS, NumNS
+
+      Integer                             :: EXO_MyRank
+      PetscReal                           :: rDummy
+      Character                           :: cDummy
+          
+      Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+
+      NumEB = dMeshTopology%Num_Elem_Blks_Global
+      NumSS = dMeshTopology%Num_Side_Sets_Global
+      NumNS = dMeshTopology%Num_Node_Sets_Global
+      
+      If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
+         Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n', iErr); CHKERRQ(iErr)
+         Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracEXOProperty_Init?\n', iErr); CHKERRQ(iErr)
+      End If
+
+      dEXO%Num_EBProperties = Poisson_Num_EBProperties
+      Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
+!      dEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Name = 'Is_Brittle'
+      dEXO%EBProperty(VarFrac_EBProp_HasBForce)%Name = 'Has_BForce'
+      dEXO%EBProperty(VarFrac_EBProp_Elem_Type)%Name = 'Elem_Type'
+      Do i = 1, dEXO%Num_EBProperties
+         Allocate(dEXO%EBProperty(i)%Value(NumEB))
+         dEXO%EBProperty(i)%Value = 0
+      End Do
+      
+      dEXO%Num_SSProperties = Poisson_Num_SSProperties
+      Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
+!      dEXO%SSProperty(VarFrac_SSProp_BCUTypeX)%Name  = 'BCU_Type_X'
+!      dEXO%SSProperty(VarFrac_SSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
+!      dEXO%SSProperty(VarFrac_SSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
+!      dEXO%SSProperty(VarFrac_SSProp_BCVType)%Name   = 'BCV_Type'
+      dEXO%SSProperty(VarFrac_SSProp_HasSForce)%Name = 'Has_SForce'
+      dEXO%SSProperty(VarFrac_SSProp_Elem_Type)%Name = 'Elem_Type'
+      Do i = 1, dEXO%Num_SSProperties
+         Allocate(dEXO%SSProperty(i)%Value(NumSS))
+         dEXO%SSProperty(i)%Value = 0
+      End Do
+      
+      dEXO%Num_NSProperties = Poisson_Num_NSProperties
+      Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
+!      dEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
+!      dEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
+!      dEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Name  = 'BCU_Type_Z'
+!      dEXO%NSProperty(VarFrac_NSProp_BCVType)%Name   = 'BCV_Type'
+      dEXO%NSProperty(VarFrac_NSProp_HasPForce)%Name = 'Has_PForce'
+      Do i = 1, dEXO%Num_NSProperties
+         Allocate(dEXO%NSProperty(i)%Value(NumNS))
+         dEXO%NSProperty(i)%Value = 0
+      End Do
+   End Subroutine PoissonEXOProperty_Init   
 
 #undef __FUNCT__
 #define __FUNCT__ "PoissonInit"
@@ -180,7 +248,7 @@ Contains
       PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
       PetscInt, Dimension(:), Pointer              :: TmpFlag
       PetscInt                                     :: TmpPoint
-      PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
+!      PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
       PetscReal, Dimension(:), Pointer             :: U, Uelem
 
 
@@ -255,9 +323,6 @@ Contains
 104 Format('Collective output redirected to file ', A, '\n')
 
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
-      AppCtx%EXO%num_nsproperties = 0
-      AppCtx%EXO%num_ssproperties = 0
-      AppCtx%EXO%num_ebproperties = 0
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
       !!! Read and partition the mesh
       If (MEF90_NumProcs == 1) Then
@@ -332,6 +397,37 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
       End Do
 
+   !!!
+   !!! EB, SS, NS Properties
+   !!!
+!next 3 lines are in VarFracEXOProperty_Init for the Fracture pb 
+!      AppCtx%MyEXO%Num_NSProperties = 0
+!      AppCtx%MyEXO%Num_SSProperties = 1
+!      AppCtx%MyEXO%Num_EBProperties = 2
+      Call PoissonEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology) 
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) "Done with VarFracEXOProperty_Init\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+   
+      Write(IOBuffer, *) '\nElement Block and Node Set Properties\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
+
+      Call EXOEBProperty_AskWithBatch(AppCtx%MyEXO, AppCtx%MeshTopology, BatchUnit, IsBatch)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) "Done with EXOEBProperty_AskWithBatch\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call EXOSSProperty_AskWithBatch(AppCtx%MyEXO, AppCtx%MeshTopology, BatchUnit, IsBatch)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) "Done with EXOSSProperty_AskWithBatch\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+      Call EXONSProperty_AskWithBatch(AppCtx%MyEXO, AppCtx%MeshTopology, BatchUnit, IsBatch)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) "Done with EXONSProperty_AskWithBatch\n"
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
 
 
 
@@ -413,14 +509,16 @@ Contains
 !            End Do
 !            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh, Coords, iErr); CHKERRQ(iErr)
 !         End Select            
-      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
+
+
+!      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
 !lines 535-550 PrepVarFracNG
       Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
       U = 0.0_Kr
       Do i = 1, AppCtx%MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 202) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         If (AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT)%Value(i) /= 0 ) Then
+         If (AppCtx%MyEXO%NSProperty(VarFrac_NSProp_HasPForce)%Value(i) /= 0 ) Then
             Write(IOBuffer, 302) i, 'Ux'
             Call AskReal(U(i), IOBuffer, BatchUnit, IsBatch)
          End If
