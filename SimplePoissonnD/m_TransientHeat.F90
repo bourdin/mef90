@@ -7,7 +7,6 @@ Module m_TransientHeat3D
 #include "finclude/petscdef.h"
 
    Use m_MEF90
-   Use m_PrepVarFrac
 
 #if defined PB_2D
    Use m_Poisson2D
@@ -278,12 +277,12 @@ Contains
 
 
          
-      Call AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
+      Call MEF90_AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
          !Setting initiale value
-      Call AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
+      Call MEF90_AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
          !Setting force
-      Call AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
+      Call MEF90_AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
 
 
@@ -296,7 +295,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          If (AppCtx%MyEXO%NSProperty(VarFrac_NSProp_HasPForce)%Value(i) /= 0 ) Then
             Write(IOBuffer, 302) i, 'Ux'
-            Call AskReal(U(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(U(i), IOBuffer, BatchUnit, IsBatch)
          End If
       End Do
 
