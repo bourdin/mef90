@@ -197,8 +197,8 @@ Contains
       AppCtx%AppParam%verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
       
-      AppCtx%AppParam%Restart = PETSC_FALSE
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-restart', AppCtx%AppParam%restart, Flag, iErr); CHKERRQ(iErr)
+      !AppCtx%AppParam%Restart = PETSC_FALSE
+      !Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-restart', AppCtx%AppParam%restart, Flag, iErr); CHKERRQ(iErr)
       
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p',       AppCtx%AppParam%prefix, HasPrefix, iErr); CHKERRQ(iErr)
       If (.NOT. HasPrefix) Then
@@ -313,40 +313,40 @@ Contains
 200 Format(A, '-', I4.4, '.gen')
       AppCtx%MyEXO%title = trim(AppCtx%EXO%title)
       AppCtx%MyEXO%Num_QA = AppCtx%EXO%Num_QA
-      If (AppCtx%AppParam%Restart) Then
-         Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      Else
+      !If (AppCtx%AppParam%Restart) Then
+      !   Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+      !   Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U) 
+      !   Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F) 
+      !   Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      !Else
          !!! Prepare and format the output mesh   
-         Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-         Call MeshTopologyWriteGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
-         Call EXOFormat_SimplePoisson(AppCtx)
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+      Call MeshTopologyWriteGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
+      Call EXOFormat_SimplePoisson(AppCtx)
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
-         Write(IOBuffer, *) '\nTest Case:\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-         Do i = 1, NumTestCase
-            Write(IOBuffer, "('   [',I2.2,'] ',A)"), TestCase(i)%Index,   Trim(TestCase(i)%Description)//'\n'
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
-         End Do
+      Write(IOBuffer, *) '\nTest Case:\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
+      Do i = 1, NumTestCase
+         Write(IOBuffer, "('   [',I2.2,'] ',A)"), TestCase(i)%Index,   Trim(TestCase(i)%Description)//'\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
+      End Do
 
 
 
 
          
-         Call AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
+      Call AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
 !pk est ce que les SectionRealSet suivant fonctionnent ?????         
 ! TODO pb we are just reading the first and seconf lines of the files !!!! 
          !Setting initiale value
-         Call AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
-         Call SectionRealSet(AppCtx%U, ValU, iErr); CHKERRQ(iErr);
+      Call AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
+      Call SectionRealSet(AppCtx%U, ValU, iErr); CHKERRQ(iErr);
          !Setting force
-         Call AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
-         Call SectionRealSet(AppCtx%F, ValF, iErr); CHKERRQ(iErr);
-         print *, ValU
-         print *, ValF
+      Call AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
+      Call SectionRealSet(AppCtx%F, ValF, iErr); CHKERRQ(iErr);
+      print *, ValU
+      print *, ValF
 
 !         Select Case (AppCtx%AppParam%TestCase)
 !         Case(1)
@@ -415,17 +415,17 @@ Contains
 !         End Select            
       Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
 !lines 535-550 PrepVarFracNG
-         Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
-         U = 0.0_Kr
-         Do i = 1, AppCtx%MeshTopology%Num_Node_Sets_Global
-            Write(IOBuffer, 202) i
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            If (AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT)%Value(i) /= 0 ) Then
-               Write(IOBuffer, 302) i, 'Ux'
-               Call AskReal(U(i), IOBuffer, BatchUnit, IsBatch)
-            End If
-         End Do
-      End If
+      Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
+      U = 0.0_Kr
+      Do i = 1, AppCtx%MeshTopology%Num_Node_Sets_Global
+         Write(IOBuffer, 202) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         If (AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'Ux'
+            Call AskReal(U(i), IOBuffer, BatchUnit, IsBatch)
+         End If
+      End Do
+      !End If
 
 202 Format('    Node Set      ', T24, I3, '\n')
 302 Format('NS', I4.4, ': ', A)
