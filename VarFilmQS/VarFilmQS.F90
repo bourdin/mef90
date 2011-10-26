@@ -138,22 +138,28 @@ TimeStep: Do
 				Write(IOBuffer, *) 'Computing bulk energy, strains and stresses and saving\n' 
 				Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
 			End If
-! 			Call ComputeEnergies(AppCtx)
+ 			Call ComputeEnergies(AppCtx)
 			
-! 			Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
-! 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-! 			Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
-! 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-! 			Write(IOBuffer, 108) AppCtx%CohesiveEnergy(AppCtx%TimeStep)
-! 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-! 			Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
-! 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-! 			Write(IOBuffer, 102) AppCtx%FractureEnergy(AppCtx%TimeStep)
-! 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-! 			Write(IOBuffer, 107) AppCtx%DelaminationEnergy(AppCtx%TimeStep)
-! 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-! 			Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
-! 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+			Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+			Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+			Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+			Write(IOBuffer, 102) AppCtx%FractureEnergy(AppCtx%TimeStep)
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+			Write(IOBuffer, 107) AppCtx%DelaminationEnergy(AppCtx%TimeStep)
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+			
+			Write(IOBuffer, 108) AppCtx%CohesiveEnergy(AppCtx%TimeStep)
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+			Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 			
 			If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
 				Call ComputeStrainStress(AppCtx)
@@ -203,8 +209,8 @@ End Do TimeStep
 105   Format(A,'-logsummary.txt')
 106   Format('Time Loop')
 
-107   Format('Delamination energy:         ', ES12.5, '\n')    
-108   Format('Cohesive energy:         ', ES12.5, '\n')    
+107   Format('Delamination energy:  ', ES12.5, '\n')    
+108   Format('Cohesive energy:      ', ES12.5, '\n')    
 
    Call VarFracQSFinalize(AppCtx)
 End Program  VarFilmQS
