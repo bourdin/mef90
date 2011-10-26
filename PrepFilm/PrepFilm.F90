@@ -175,15 +175,15 @@ Program PrepVarFrac
 	Write(IOBuffer, *) '\nElement Block and Node Set Properties\n'
 	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
 
-	Call EXOEBProperty_AskWithBatchFilm(MyEXO, MeshTopology, BatchUnit, IsBatch)
+	Call EXOEBProperty_AskWithBatch(MyEXO, MeshTopology, BatchUnit, IsBatch)
 	If (verbose > 0) Then
-		Write(IOBuffer, *) "Done with EXOEBProperty_AskWithBatchFilm\n"
+		Write(IOBuffer, *) "Done with EXOEBProperty_AskWithBatch\n"
 		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 	End If
 	
-	Call EXONSProperty_AskWithBatchFilm(MyEXO, MeshTopology, BatchUnit, IsBatch)
+	Call EXONSProperty_AskWithBatch(MyEXO, MeshTopology, BatchUnit, IsBatch)
 	If (verbose > 0) Then
-		Write(IOBuffer, *) "Done with EXONSProperty_AskWithBatchFilm\n"
+		Write(IOBuffer, *) "Done with EXONSProperty_AskWithBatch\n"
 		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 	End If
 
@@ -232,7 +232,7 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End Do
    
-   Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
+   Call MEF90_AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
 !!!startregion COMPUTE TIMESTEPS AND LOAD, WRITE TO EXO
 
@@ -240,9 +240,9 @@ Program PrepVarFrac
 !!!
 	Write(IOBuffer, *) '\nGlobal Variables\n'
 	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-	Call AskReal(TMin, 'TMin', BatchUnit, IsBatch)
-	Call AskReal(TMax, 'TMax', BatchUnit, IsBatch)
-	Call AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
+	Call MEF90_AskReal(TMin, 'TMin', BatchUnit, IsBatch)
+	Call MEF90_AskReal(TMax, 'TMax', BatchUnit, IsBatch)
+	Call MEF90_AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
 
 	Allocate(GlobVars(VarFrac_Num_GlobVar))
 	GlobVars = 0.0_Kr
@@ -334,7 +334,7 @@ Program PrepVarFrac
 		
 		!!! Temperature
 		Write(IOBuffer, 300) i, 'Theta'
-		Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
+		Call MEF90_AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
 		
 		If (.NOT. IsBatch) Then
 			Write(BatchUnit, *)
@@ -419,19 +419,19 @@ Program PrepVarFrac
 		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 		If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
 			Write(IOBuffer, 302) i, 'Ux'
-			Call AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
+			Call MEF90_AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
 		End If
 		If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
 			Write(IOBuffer, 302) i, 'Uy'
-			Call AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
+			Call MEF90_AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
 		End If
 		If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
 			Write(IOBuffer, 302) i, 'V'
-			Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+			Call MEF90_AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
 		End If
 		If (MyEXO%NSProperty(VarFrac_NSProp_BCWType)%Value(i) /= 0 ) Then
 			Write(IOBuffer, 302) i, 'W'
-			Call AskReal(W(i), IOBuffer, BatchUnit, IsBatch)
+			Call MEF90_AskReal(W(i), IOBuffer, BatchUnit, IsBatch)
 		End If
 		If (.NOT. IsBatch) Then
 			Write(BatchUnit, *)
