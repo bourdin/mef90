@@ -233,7 +233,7 @@ Contains
    !!!
       Call PoissonEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology) 
       If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Done with VarFracEXOProperty_Init\n"
+         Write(IOBuffer, *) "Done with PoissonEXOProperty_Init\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
    
@@ -257,13 +257,23 @@ Contains
       End If
 
 
+      Call MEF90_AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
+!TODO set these parameters in the PrepPoisson from the.args file 
+      Select Case(AppCtx%AppParam%TestCase)
+      Case(2)
+      !AppCtx%maxsteps = 1000
+      !AppCtx%maxtime =10.0
+         Call MEF90_AskInt(AppCtx%maxsteps, 'Max number of steps for TS computation', BatchUnit, IsBatch)
+         Call MEF90_AskReal(AppCtx%maxtime,  'Max time for TS computation', BatchUnit, IsBatch)
+      End Select
 
 !  Set EB Properties : U, F         
-      Call MEF90_AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
          !Setting initiale value
          ! This has no impact for TestCase 1
       Call MEF90_AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
+      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U_0', 1,   AppCtx%U_0, iErr); CHKERRQ(iErr)
+      call SectionRealSet(AppCtx%U_0, ValU, iErr); CHKERRQ(iErr) !This should be replaced by evaluating the initial solution or most probabaly reading from .args file
          !Setting force
       Call MEF90_AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
@@ -335,12 +345,7 @@ Contains
 #define __FUNCT__ "TSSetUp"
    Subroutine TSSetUP(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
-      
       PetscInt                                     :: iErr
-
-      !!! Allocate the Section for U and F
-!      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU',  AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
-      
 
       !!! Initialize the matrix and vector for the linear system
       Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
@@ -350,30 +355,24 @@ Contains
       
       Call TSCreate(PETSC_COMM_WORLD, AppCtx%TS, iErr); CHKERRQ(iErr)
       
+      
+      Select Case(AppCtx%AppParam%TestCase)
+      Case(2)
+         Call TSSetType(AppCtx%TS, TSARKIMEX, ierr); CHKERRQ(iErr)  
       !Call TSSetProblemType(AppCtx%TS, TS_LINEAR, ierr); CHKERRQ(iErr)
       !Call TSSetType(AppCtx%TS, TSBEULER, ierr);  CHKERRQ(iErr)
-      call TSSetType(AppCtx%TS, TSARKIMEX, ierr); CHKERRQ(iErr)  
+      End Select
 
 
-      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U_0', 1,   AppCtx%U_0, iErr); CHKERRQ(iErr)
-      call SectionRealSet(AppCtx%U_0, 0, iErr); CHKERRQ(iErr) !This should be replaced by evaluating the initial solution or most probabaly reading from .args file
       Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0, AppCtx%U_0_Vec, iErr); CHKERRQ(iErr)
-!TODO check that U_0_vec est bien défini 
       Call TSSetSolution(AppCtx%TS, AppCtx%U_0_Vec,  ierr);   CHKERRQ(iErr) 
 
-      Call TSSetInitialTimeStep(AppCtx%TS, 0.0, 1.,  ierr); CHKERRQ(iErr)
-!TODO set these parameters in the PrepPoisson from the.args file 
-      AppCtx%maxsteps = 1000
-      AppCtx%maxtime =10.0
+      Call TSSetInitialTimeStep(AppCtx%TS, 0.0, .01,  ierr); CHKERRQ(iErr)
       Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, AppCtx%maxtime, iErr); CHKERRQ(iErr)
       Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
        
-      
-      !!! Read Force and BC from Data file or reformat it
-!      call PoissonBC(AppCtx) 
-      
       !!! Create the EXO case file
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
 
@@ -385,7 +384,7 @@ Contains
 #define __FUNCT__ "IFunctionPoisson"
    SubRoutine IFunctionPoisson(dummyTS, t, U, Udot, GlobalOut, AppCtx, iErr)
       PetscReal                                    :: t 
-      Type(Vec)                                    :: U, Udot, GlobalOut, dummyvec
+      Type(Vec)                                    :: U, Udot, GlobalOut, dummyVec
       Type(AppCtx_Type)                            :: AppCtx
       Type(TS)                                     :: dummyTS
       PetscInt                                     :: iErr
@@ -394,15 +393,18 @@ Contains
   
       Write(IOBuffer, *) 'Begin IFunctionPoisson \n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-          
+      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0, dummyVec, iErr); CHKERRQ(iErr)
+
        !Call VecView(global_in,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr) 
        !F = AppCtx%M * Udot + AppCtx%K * U
       !Call VecView(U,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
-      Call MatMult(AppCtx%K, U, GlobalOut, iErr);CHKERRQ(iErr)
-      !Call VecView(GlobalOut,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
-    !  Call MatMultAdd(AppCtx%M, Udot, GlobalOut, GlobalOut, iErr);CHKERRQ(iErr)
+      Call MatMult(AppCtx%K, U, dummyVec, iErr);CHKERRQ(iErr)
+!Udot is non at the second iteration; why ?? 
+      Call VecView(Udot,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
+      !Call VecView(dummyVec,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
+      Call MatMultAdd(AppCtx%M, Udot, dummyVec, GlobalOut, iErr);CHKERRQ(iErr)
 !TODO Can the constant and result factors be the same ? 
-      !Call VecView(GlobalOut,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
+      Call VecView(GlobalOut,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
        
    End Subroutine IFunctionPoisson
 
@@ -435,15 +437,15 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
-      Type(VecScatter)                             :: dummyScatter
+!      Type(VecScatter)                             :: dummyScatter
 
       Write(IOBuffer, *) 'Begin RHSPoisson \n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 !AppCtx%RHS Is a section real we want to return a vector!
 !Return AppCtx%RHS
-      Call DMMeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%RHS,  dummyScatter, iErr); CHKERRQ(iErr) 
-      Call SectionRealToVec(AppCtx%RHS, dummyScatter, SCATTER_FORWARD, GlobalOut, iErr); CHKERRQ(iErr)
-      Call VecScatterDestroy(dummyScatter, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%RHS%Sec,  AppCtx%RHS%Scatter, iErr); CHKERRQ(iErr) 
+      Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, GlobalOut, iErr); CHKERRQ(iErr)
+!      Call VecScatterDestroy(dummyScatter, iErr); CHKERRQ(iErr)
 
    End Subroutine RHSPoisson
    
@@ -469,7 +471,7 @@ Contains
 
   !    Write(IOBuffer, 100) KSPNumIter, KSPreason
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!      Call VecDestroy(RHS_Vec, iErr); CHKERRQ(iErr)
+      
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
  
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
@@ -483,7 +485,7 @@ Contains
    Subroutine MatMassAssembly(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk, iErr
-      
+!TOTO Set M to 0 before each iteration before calling assembly      
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Call MatMassAssemblyBlock(iBlk, AppCtx)
@@ -510,32 +512,22 @@ Contains
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
       
       Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
-      Allocate(BCFlag(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
    
       Do_iELoc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem = 0.0_Kr
-         BCFlag = 0
-!TODO ERROR here : Mass matrice !!!!!!!
-         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
-         Write(IOBuffer, *) 'valeur pour le flag BC', BcFlag, '\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
             Do iDoF1 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
-               If (BCFlag(iDoF1) == 0) Then
-                  Do iDoF2 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
-                     MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%BF(iDoF1, iGauss) *  AppCtx%Elem(iE)%BF(iDoF2, iGauss) )
-                     flops = flops + 1
-                  End Do
-               End If
+               Do iDoF2 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+                  MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%BF(iDoF1, iGauss) *  AppCtx%Elem(iE)%BF(iDoF2, iGauss) )
+                  flops = flops + 2 !Check 
+               End Do
             End Do
          End Do
          Call DMMeshAssembleMatrix(AppCtx%M, AppCtx%MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iELoc
    
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-      DeAllocate(BCFlag)
       DeAllocate(MatElem)
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatMassAssemblyBlock

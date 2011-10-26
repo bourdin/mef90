@@ -17,7 +17,9 @@ Program  TransientHeat
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   
+   Type(Vec)                                    :: W1, W2, W3 
+   PetscScalar                                  :: prodMassUnit
+
    Call PoissonInit(AppCtx)
 
    Select Case (AppCtx%AppParam%TestCase)
@@ -71,7 +73,14 @@ Program  TransientHeat
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call MatMassAssembly(AppCtx)
-       
+!Test that Mat matric is ok 
+!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0,  W1, iErr); CHKERRQ(iErr)
+!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0,  W2, iErr); CHKERRQ(iErr)
+!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0,  W3, iErr); CHKERRQ(iErr)
+!      call SectionRealSet(W1, 1., iErr);
+!      call SectionRealSet(W3, 1., iErr);
+!      Call MatMult(AppCtx%M, W1, W2)
+!      call VecDot(W2, W3, prodMassUnit)
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Calling Solve\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
