@@ -17,12 +17,12 @@ Program TestBoundaryElement3D
    PetscInt                                     :: num_dim
    PetscReal, Dimension(:), Pointer             :: U1
    Type(Vect3D), Dimension(:), Pointer          :: U2
-   PetscReal                                    :: average2,average3,flux
+   PetscReal                                    :: average2,flux
    Real, Dimension(:), Pointer                  :: X,Y,Z
    PetscReal, Dimension(:,:), Pointer           :: Coord3, Coord2
    PetscInt                                     :: i,iE,iG,iDoF
    PetscInt                                     :: num_Gauss,Num_DoF
-   Type(BoundaryElement3d_Scal)                 :: bElem
+   Type(BoundaryElement3d)                      :: bElem
    Type(Element2d_Scal)                         :: Elem
    Type(PetscViewer)                            :: viewer
    PetscInt                                     :: IntegOrder = 3
@@ -79,7 +79,6 @@ Program TestBoundaryElement3D
    End Do
    
    average2 = 0.0_Kr
-   average3 = 0.0_Kr
    flux    = 0.0_Kr
    
    iE = 1
@@ -100,8 +99,7 @@ Program TestBoundaryElement3D
       Do iG = 1, Num_Gauss
          area3  = area3 + bElem%Gauss_C(iG)
          Do iDof = 1, Num_DoF
-            average3 = average3 + bElem%Gauss_C(iG) * (bElem%BF(iDoF,iG) * U1(connect(iDoF,iE)))
-            flux     = flux + bElem%Gauss_C(iG) * bElem%BF(iDoF,iG) * (bElem%NormalVector .DotP.  U2(connect(iDoF,iE)))
+            flux     = flux + bElem%Gauss_C(iG) * (bElem%BF(iDoF,iG) .DotP.  U2(connect(iDoF,iE)))
          End Do
       End Do
       Call BoundaryElement_Destroy(bElem)
@@ -122,7 +120,6 @@ Program TestBoundaryElement3D
    Write(*,*) 'Area2 (using 2D body elements) is     ', area2
    Write(*,*) 'Area3 (using 3D boundary elements) is ', area3
    Write(*,*) 'Average2 (using 2D body elements) is     ', average2
-   Write(*,*) 'Average3 (using 3D boundary elements) is ', average3
    Write(*,*) 'Flux is ', flux   
    DeAllocate(X)
    DeAllocate(Y)

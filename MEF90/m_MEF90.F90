@@ -8,5 +8,6 @@ Module m_MEF90
    Use m_MEF_BoundaryElements
    Use m_MEF_EXO  
    Use m_MEF_Sieve
+   Use m_MEF_IO
 End Module m_MEF90
 
