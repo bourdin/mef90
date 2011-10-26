@@ -61,8 +61,9 @@ Module m_Poisson3D
       Type(TS)                                     :: TS
       PetscInt                                     :: maxsteps
       PetscReal                                    :: maxtime
-      Type(SectionReal)                            :: U_0 !initial solution for t=0
-      Type(Vec)                                    :: U_0_Vec
+      Type(Field)                                  :: U_0
+!      Type(SectionReal)                            :: U_0 !initial solution for t=0
+!      Type(Vec)                                    :: U_0_Vec
 
    End Type AppCtx_Type
    
@@ -214,7 +215,8 @@ Contains
          Call RHSAssemblyBlock(iBlk, AppCtx)
       End Do Do_iBlk
 
-      Call SectionRealComplete(AppCtx%RHS, iErr); CHKERRQ(iErr)
+      Call SectionRealComplete(AppCtx%RHS%Sec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
       !!! VERY important! This is the equivalent of a ghost update
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
