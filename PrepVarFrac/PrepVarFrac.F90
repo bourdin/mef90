@@ -243,7 +243,7 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End Do
    
-   Call AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
+   Call MEF90_AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
    Case (1,2,3,4,5,6,7,8,9,10,11,12,13)! MIL, geothermal PoC
@@ -251,39 +251,39 @@ Program PrepVarFrac
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-      Call AskReal(TMin, 'TMin', BatchUnit, IsBatch)
-      Call AskReal(TMax, 'TMax', BatchUnit, IsBatch)
-      Call AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
+      Call MEF90_AskReal(TMin, 'TMin', BatchUnit, IsBatch)
+      Call MEF90_AskReal(TMax, 'TMax', BatchUnit, IsBatch)
+      Call MEF90_AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
       
       If (iCase == 4) Then
-         Call AskReal(Beta, 'Beta', BatchUnit, IsBatch)
+         Call MEF90_AskReal(Beta, 'Beta', BatchUnit, IsBatch)
       End If
       
       If (iCase == 5) Then
-         Call AskReal(FixedPoint, 'FixedPt', BatchUnit, IsBatch)
+         Call MEF90_AskReal(FixedPoint, 'FixedPt', BatchUnit, IsBatch)
       End If
 
       If (iCase == 6) Then
-         Call AskReal(Beta, 'polar angle', BatchUnit, IsBatch)
+         Call MEF90_AskReal(Beta, 'polar angle', BatchUnit, IsBatch)
       End If
       
       !!! Yes, this is retarded, but I can't see how to recover Kappa at a node when
       !!! parsing node sets from full hooke's law...
       If (iCase == 10) Then
-         Call AskReal(E,  'E effective (for displacement field)',  BatchUnit, IsBatch)
-         Call AskReal(nu, 'nu effective (for displacement field)', BatchUnit, IsBatch)
+         Call MEF90_AskReal(E,  'E effective (for displacement field)',  BatchUnit, IsBatch)
+         Call MEF90_AskReal(nu, 'nu effective (for displacement field)', BatchUnit, IsBatch)
          Kappa = (3.0-nu)/(1.0+nu)
          Mu = E / (1.0_Kr + nu) * .5_Kr
       End If
       If (iCase == 11) Then
-         Call AskReal(E,  'E effective (for displacement field)',  BatchUnit, IsBatch)
-         Call AskReal(nu, 'nu effective (for displacement field)', BatchUnit, IsBatch)
-         Call AskReal(Beta, 'Displacement magnitude', Batchunit, IsBatch)
+         Call MEF90_AskReal(E,  'E effective (for displacement field)',  BatchUnit, IsBatch)
+         Call MEF90_AskReal(nu, 'nu effective (for displacement field)', BatchUnit, IsBatch)
+         Call MEF90_AskReal(Beta, 'Displacement magnitude', Batchunit, IsBatch)
          Kappa = (3.0-nu)/(1.0+nu)
          Mu = E / (1.0_Kr + nu) * .5_Kr
       End If
       If (iCase == 13) Then
-         Call AskReal(a,  'Internal cavity radius',  BatchUnit, IsBatch)
+         Call MEF90_AskReal(a,  'Internal cavity radius',  BatchUnit, IsBatch)
       End If
       
       If (.NOT. IsBatch) Then
@@ -337,13 +337,13 @@ Program PrepVarFrac
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          
          Write(IOBuffer, 300) i, 'Toughness'
-         Call AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(Toughness, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) i, 'Young Modulus'
-         Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(E, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) i, 'Poisson Ratio'
-         Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(nu, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) i, 'Therm Exp'
-         Call AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
 
          Select Case(MeshTopology%Num_Dim)
          Case(2)
@@ -366,9 +366,9 @@ Program PrepVarFrac
          End Select 
          If (iCase == 8) Then
             Write(IOBuffer, 300) i, 'Layering material: Young Modulus'
-            Call AskReal(E, IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(E, IOBuffer, BatchUnit, IsBatch)
             Write(IOBuffer, 300) i, 'Layering Material: Poisson Ratio'
-            Call AskReal(nu, IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(nu, IOBuffer, BatchUnit, IsBatch)
             Select Case(MeshTopology%Num_Dim)
             Case(2)
                Lambda = E * nu / (1.0_Kr - nu**2)
@@ -378,16 +378,16 @@ Program PrepVarFrac
                Mu     = E / (1.0_Kr + nu) * .5_Kr      
             End Select 
             Write(IOBuffer, 300) i, 'Number of layers'
-            Call AskInt(NumLayers, IOBuffer, BatchUnit, IsBatch)   
+            Call MEF90_AskInt(NumLayers, IOBuffer, BatchUnit, IsBatch)   
             Do j = 1, NumLayers
                Write(IOBuffer, 300) i, 'kx'
-               Call AskReal(k_3D%X, IOBuffer, BatchUnit, IsBatch)
+               Call MEF90_AskReal(k_3D%X, IOBuffer, BatchUnit, IsBatch)
                Write(IOBuffer, 300) i, 'ky'
-               Call AskReal(k_3D%Y, IOBuffer, BatchUnit, IsBatch)
+               Call MEF90_AskReal(k_3D%Y, IOBuffer, BatchUnit, IsBatch)
                Write(IOBuffer, 300) i, 'kz'
-               Call AskReal(k_3D%Z, IOBuffer, BatchUnit, IsBatch)
+               Call MEF90_AskReal(k_3D%Z, IOBuffer, BatchUnit, IsBatch)
                Write(IOBuffer, 300) i, 'Lamination parameter'
-               Call AskReal(m, IOBuffer, BatchUnit, IsBatch)
+               Call MEF90_AskReal(m, IOBuffer, BatchUnit, IsBatch)
                Select Case(MeshTopology%Num_Dim)
                Case(2)
                   k_2D%X = k_3D%X
@@ -436,29 +436,29 @@ Program PrepVarFrac
          !!! Force
          If (MyEXO%EBProperty(VarFrac_EBProp_HasBForce)%Value(i) /= 0 ) Then
             Write(IOBuffer, 300) i, 'Fx'
-            Call AskReal(F(i)%X, IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(F(i)%X, IOBuffer, BatchUnit, IsBatch)
 
             Write(IOBuffer, 300) i, 'Fy'
-            Call AskReal(F(i)%Y, IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(F(i)%Y, IOBuffer, BatchUnit, IsBatch)
 
             Write(IOBuffer, 300) i, 'Fz'
-            Call AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(F(i)%Z, IOBuffer, BatchUnit, IsBatch)
             If (iCase == 7) Then
                Write(IOBuffer, 300) i, 'Px'
-               Call AskReal(P(i)%X, IOBuffer, BatchUnit, IsBatch)
+               Call MEF90_AskReal(P(i)%X, IOBuffer, BatchUnit, IsBatch)
    
                Write(IOBuffer, 300) i, 'Py'
-               Call AskReal(P(i)%Y, IOBuffer, BatchUnit, IsBatch)
+               Call MEF90_AskReal(P(i)%Y, IOBuffer, BatchUnit, IsBatch)
    
                Write(IOBuffer, 300) i, 'Pz'
-               Call AskReal(P(i)%Z, IOBuffer, BatchUnit, IsBatch)
+               Call MEF90_AskReal(P(i)%Z, IOBuffer, BatchUnit, IsBatch)
             End If
          End If
 
          
          !!! Temperature
          Write(IOBuffer, 300) i, 'Theta'
-         Call AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(Theta(i), IOBuffer, BatchUnit, IsBatch)
          If (.NOT. IsBatch) Then
             Write(BatchUnit, *)
          End If
@@ -595,15 +595,15 @@ Program PrepVarFrac
       If (iCase == 12) Then
          !!! Random initial cracks: initialize random context and generate crack information
          Write(IOBuffer, 400) 'Number of cracks'
-         Call AskInt(NumCracks, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskInt(NumCracks, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 400) 'Max. crack Length'
-         Call AskReal(MaxCrackLength, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(MaxCrackLength, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 400) 'Xmin'
-         Call AskReal(Xmin, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(Xmin, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 400) 'Xmax'
-         Call AskReal(Xmax, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(Xmax, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 400) 'epsilon'
-         Call AskReal(epsilon, IOBuffer, BatchUnit, IsBatch)
+         Call MEF90_AskReal(epsilon, IOBuffer, BatchUnit, IsBatch)
 
          Call PetscRandomCreate(PETSC_COMM_WORLD, RandomCtx, iErr); CHKERRQ(iErr)
          Call PetscRandomSetFromOptions(RandomCtx, iErr); CHKERRQ(iErr)
@@ -649,19 +649,19 @@ Program PrepVarFrac
          !!! Displacement
          If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
             Write(IOBuffer, 302) i, 'Ux'
-            Call AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
             Write(IOBuffer, 302) i, 'Uy'
-            Call AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
             Write(IOBuffer, 302) i, 'Uz'
-            Call AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
             Write(IOBuffer, 302) i, 'V'
-            Call AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
          End If
          If (.NOT. IsBatch) Then
             Write(BatchUnit, *)
@@ -826,7 +826,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_EBProperties
             Write(IOBuffer, 200) i, Trim(dEXO%EBProperty(j)%Name)
-            Call AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskInt(dEXO%EBProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
          If (.NOT. IsBatch) Then
             Write(BatchUnit, *)
@@ -838,7 +838,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_SSProperties
             Write(IOBuffer, 201) i, Trim(dEXO%SSProperty(j)%Name)
-            Call AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskInt(dEXO%SSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
          If (.NOT. IsBatch) Then
             Write(BatchUnit, *)
@@ -850,7 +850,7 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_NSProperties
             Write(IOBuffer, 202) i, Trim(dEXO%NSProperty(j)%Name)
-            Call AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
+            Call MEF90_AskInt(dEXO%NSProperty(j)%Value(i), IOBuffer, BatchUnit, IsBatch)
          End Do
          If (.NOT. IsBatch) Then
             Write(BatchUnit, *)

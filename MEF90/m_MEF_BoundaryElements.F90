@@ -17,15 +17,15 @@ Module m_MEF_BoundaryElements
 
 
    Interface BoundaryElement_Init
-      Module Procedure BoundaryElement2D_Scal_Init,BoundaryElement3D_Scal_Init
+      Module Procedure BoundaryElement2D_Init,BoundaryElement3D_Init
    End Interface BoundaryElement_Init
    
    Interface BoundaryElement_Destroy
-      Module Procedure BoundaryElement2D_Scal_Destroy,BoundaryElement3D_Scal_Destroy
+      Module Procedure BoundaryElement2D_Destroy,BoundaryElement3D_Destroy
    End Interface BoundaryElement_Destroy
    
    Interface BoundaryElement_View
-      Module Procedure BoundaryElement2D_Scal_View,BoundaryElement3D_Scal_View
+      Module Procedure BoundaryElement2D_View,BoundaryElement3D_View
    End Interface BoundaryElement_View
 
 Contains
@@ -73,44 +73,44 @@ Contains
    
    
 !!!
-!!! 2D_Scal
+!!! 2D
 !!!
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement2D_Scal_Init"
-   Subroutine BoundaryElement2D_Scal_Init(dElem, dCoord, QuadratureOrder, Element_Type)
-      Type (BoundaryElement2D_Scal)          :: dElem
+#define __FUNCT__ "BoundaryElement2D_Init"
+   Subroutine BoundaryElement2D_Init(dElem, dCoord, QuadratureOrder, Element_Type)
+      Type (BoundaryElement2D)               :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
       PetscInt, Intent(IN)                   :: QuadratureOrder
       PetscInt, Intent(IN)                   :: Element_Type
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
-            Call BoundaryElement_P_Lagrange_2D_Scal_Init(dElem, dCoord, 1, QuadratureOrder)
+            Call BoundaryElement_P_Lagrange_2D_Init(dElem, dCoord, 1, QuadratureOrder)
 
          Case (MEF90_P2_Lagrange)
-            Call BoundaryElement_P_Lagrange_2D_Scal_Init(dElem, dCoord, 2, QuadratureOrder)
+            Call BoundaryElement_P_Lagrange_2D_Init(dElem, dCoord, 2, QuadratureOrder)
 
          !!!Case (MEF90_Q1_Lagrange)
-         !!!   Call BoundaryElement_Q_Lagrange_2D_Scal_Init(dElem, dCoord, 1, QuadratureOrder)
+         !!!   Call BoundaryElement_Q_Lagrange_2D_Init(dElem, dCoord, 1, QuadratureOrder)
          !!!Case (MEF90_Q2_Lagrange)
-         !!!   Call BoundaryElement_Q_Lagrange_2D_Scal_Init(dElem, dCoord, 2, QuadratureOrder)
+         !!!   Call BoundaryElement_Q_Lagrange_2D_Init(dElem, dCoord, 2, QuadratureOrder)
          Case Default
             Print*, __FUNCT__, 'Element type not implemented yet', Element_Type
       End Select
-   End Subroutine BoundaryElement2D_Scal_Init         
+   End Subroutine BoundaryElement2D_Init         
    
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement_P_Lagrange_3D_Scal_Init"
-   Subroutine BoundaryElement_P_Lagrange_2D_Scal_Init(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
-      Type(BoundaryElement2D_Scal)           :: dElem
+#define __FUNCT__ "BoundaryElement_P_Lagrange_3D_Init"
+   Subroutine BoundaryElement_P_Lagrange_2D_Init(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
+      Type(BoundaryElement2D)                :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder, dQuadratureOrder
-   End Subroutine BoundaryElement_P_Lagrange_2D_Scal_Init                          
+   End Subroutine BoundaryElement_P_Lagrange_2D_Init                          
    
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement2D_Scal_Destroy"
-   Subroutine BoundaryElement2D_Scal_Destroy(dElem)
-      Type (BoundaryElement2D_Scal)          :: dElem
+#define __FUNCT__ "BoundaryElement2D_Destroy"
+   Subroutine BoundaryElement2D_Destroy(dElem)
+      Type (BoundaryElement2D)               :: dElem
       
       If (Associated(dElem%BF)) Then
          DeAllocate(dElem%BF)
@@ -118,12 +118,12 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-   End Subroutine BoundaryElement2D_Scal_Destroy                                
+   End Subroutine BoundaryElement2D_Destroy                                
    
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement2D_Scal_View"
-   Subroutine BoundaryElement2D_Scal_View(dElem,viewer)
-      Type (BoundaryElement2D_Scal)          :: dElem
+#define __FUNCT__ "BoundaryElement2D_View"
+   Subroutine BoundaryElement2D_View(dElem,viewer)
+      Type (BoundaryElement2D)               :: dElem
       Type(PetscViewer)                      :: viewer
       
       PetscInt                               :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
@@ -141,15 +141,15 @@ Contains
          Write(CharBuffer, 104) iDoF
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
 
-         Write(CharBuffer, 200) '        Normal vector (X,Y) \n    '
-         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-         Write(CharBuffer, 202) dElem%NormalVector%X,dElem%NormalVector%Y
-         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         !Write(CharBuffer, 200) '        Normal vector (X,Y) \n    '
+         !Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         !Write(CharBuffer, 202) dElem%NormalVector%X,dElem%NormalVector%Y
+         !Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
 
          Write(CharBuffer, 200) '        BF \n    '
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          Do iG = 1, Nb_Gauss
-            Write(CharBuffer, 201) dElem%BF(iDoF, iG)
+            Write(CharBuffer, 202) dElem%BF(iDoF, iG)%X, dElem%BF(iDoF, iG)%Y
             Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          End Do
          Write(CharBuffer, *) '\n'
@@ -159,45 +159,44 @@ Contains
 103 Format('    Nb_Gauss ', I9, '\n')
 104 Format('    *** DoF  ', I9, '\n')
 200 Format(A)
-201 Format('   ', F5.2)
 202 Format('(',F5.2,',',F5.2,')\n')
-   End Subroutine BoundaryElement2D_Scal_View                                   
+   End Subroutine BoundaryElement2D_View                                   
 
 !!! 
-!!! 3D_Scal
+!!! 3D
 !!!
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement3D_Scal_Init"
-   Subroutine BoundaryElement3D_Scal_Init(dElem, dCoord, QuadratureOrder, Element_Type)
-      Type (BoundaryElement3D_Scal)          :: dElem
+#define __FUNCT__ "BoundaryElement3D_Init"
+   Subroutine BoundaryElement3D_Init(dElem, dCoord, QuadratureOrder, Element_Type)
+      Type (BoundaryElement3D)               :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord
       PetscInt, Intent(IN)                   :: QuadratureOrder
       PetscInt, Intent(IN)                   :: Element_Type
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange,MEF90_P2_Lagrange)
-            Call BoundaryElement_P_Lagrange_3D_Scal_Init(dElem, dCoord,QuadratureOrder,Element_Type)
+            Call BoundaryElement_P_Lagrange_3D_Init(dElem, dCoord,QuadratureOrder,Element_Type)
 
          !!!Case (MEF90_Q1_Lagrange,MEF90_Q2_Lagrange)
-         !!!   Call BoundaryElement_Q_Lagrange_3D_Scal_Init(dElem, dCoord,QuadratureOrder,Element_Type)
+         !!!   Call BoundaryElement_Q_Lagrange_3D_Init(dElem, dCoord,QuadratureOrder,Element_Type)
          Case Default
             Print*, __FUNCT__, 'Element type not implemented yet', Element_Type
       End Select
-   End Subroutine BoundaryElement3D_Scal_Init         
+   End Subroutine BoundaryElement3D_Init         
    
 
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement_P_Lagrange_3D_Scal_Init"
-   Subroutine BoundaryElement_P_Lagrange_3D_Scal_Init(dElem,dCoord,dQuadratureOrder,Element_Type)
-      Type(BoundaryElement3D_Scal)           :: dElem
+#define __FUNCT__ "BoundaryElement_P_Lagrange_3D_Init"
+   Subroutine BoundaryElement_P_Lagrange_3D_Init(dElem,dCoord,dQuadratureOrder,Element_Type)
+      Type(BoundaryElement3D)                :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt, Intent(IN)                   :: dQuadratureOrder
       PetscInt, Intent(IN)                   :: Element_Type
-            
+      
       Type(Element3D_Scal)                   :: tmpElem
       PetscReal, Dimension(:,:),Pointer      :: tmpCoord
-      PetscInt                               :: i,j,iDoF,iG,Nb_Gauss,Num_DoF
-      Type(Vect3D)                           :: Edge1,Edge2
+      PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
+      Type(Vect3D)                           :: Edge1,Edge2,NormalVector
       
       !!!
       !!! Create a bogus tet element by adding a 4th vertex along the normal of the
@@ -212,23 +211,25 @@ Contains
       End Do
       Edge1 = dCoord(:,2) - dCoord(:,1)
       Edge2 = dCoord(:,3) - dCoord(:,1)
-      DElem%NormalVector = CrossP3D(Edge1,Edge2)
-      DElem%NormalVector = DElem%NormalVector / Norm(DElem%NormalVector)
-      tmpCoord(1,4) = dCoord(1,1) + DElem%NormalVector%X 
-      tmpCoord(2,4) = dCoord(2,1) + DElem%NormalVector%Y 
-      tmpCoord(3,4) = dCoord(3,1) + DElem%NormalVector%Z 
+      NormalVector = CrossP3D(Edge1,Edge2)
+      NormalVector = NormalVector / Norm(NormalVector)
+      tmpCoord(1,4) = dCoord(1,1) + NormalVector%X 
+      tmpCoord(2,4) = dCoord(2,1) + NormalVector%Y 
+      tmpCoord(3,4) = dCoord(3,1) + NormalVector%Z 
       
             
       Call ElementInit(tmpElem,tmpCoord,dQuadratureOrder,Element_Type)
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
             Num_DoF  = 3
-            Nb_Gauss = size(tmpElem%BF,2)
-            Allocate(dElem%Gauss_C(Nb_Gauss))
-            Allocate(dElem%BF(Num_DoF,Nb_Gauss))
+            Num_Gauss = size(tmpElem%BF,2)
+            Allocate(dElem%Gauss_C(Num_Gauss))
+            Allocate(dElem%BF(Num_DoF,Num_Gauss))
             dElem%Gauss_C = tmpElem%Gauss_C * 3.0_Kr
-            Do iDoF = 1, num_DoF
-               dElem%BF(iDoF,:)      = tmpElem%BF(iDoF,:) + tmpElem%BF(4,:) / 3.0_Kr
+            Do iDoF = 1, Num_doF
+               Do iG = 1, Num_Gauss
+                  dElem%BF(iDoF,iG) = (tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 3.0_Kr) * NormalVector
+               End Do
             End Do
             !dElem%BF(3,:) = dElem%BF(3,:) + tmpElem%BF(4,:)
 
@@ -243,12 +244,12 @@ Contains
 
       Call ElementDestroy(tmpElem)
       deAllocate(tmpCoord)
-   End Subroutine BoundaryElement_P_Lagrange_3D_Scal_Init
+   End Subroutine BoundaryElement_P_Lagrange_3D_Init
    
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement3D_Scal_Destroy"
-   Subroutine BoundaryElement3D_Scal_Destroy(dElem)
-      Type(BoundaryElement3D_Scal)          :: dElem
+#define __FUNCT__ "BoundaryElement3D_Destroy"
+   Subroutine BoundaryElement3D_Destroy(dElem)
+      Type(BoundaryElement3D)          :: dElem
       
       If (Associated(dElem%BF)) Then
          DeAllocate(dElem%BF)
@@ -256,12 +257,12 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-   End Subroutine BoundaryElement3D_Scal_Destroy                                
+   End Subroutine BoundaryElement3D_Destroy                                
    
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement3D_Scal_View"
-   Subroutine BoundaryElement3D_Scal_View(dElem,viewer)
-      Type (BoundaryElement3D_Scal)          :: dElem
+#define __FUNCT__ "BoundaryElement3D_View"
+   Subroutine BoundaryElement3D_View(dElem,viewer)
+      Type (BoundaryElement3D)               :: dElem
       Type(PetscViewer)                      :: viewer
       
       PetscInt                               :: Nb_Gauss, Nb_DoF, iDoF, iG, iErr
@@ -279,15 +280,15 @@ Contains
          Write(CharBuffer, 104) iDoF
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
 
-         Write(CharBuffer, 200) '        Normal vector (X,Y,Z) \n    '
-         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-         Write(CharBuffer, 202) dElem%NormalVector%X,dElem%NormalVector%Y,dElem%NormalVector%Z
-         Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         !Write(CharBuffer, 200) '        Normal vector (X,Y,Z) \n    '
+         !Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
+         !Write(CharBuffer, 202) dElem%NormalVector%X,dElem%NormalVector%Y,dElem%NormalVector%Z
+         !Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
 
          Write(CharBuffer, 200) '        BF \n    '
          Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          Do iG = 1, Nb_Gauss
-            Write(CharBuffer, 201) dElem%BF(iDoF, iG)
+            Write(CharBuffer, 202) dElem%BF(iDoF, iG)%X,dElem%BF(iDoF, iG)%Y,dElem%BF(iDoF, iG)%Z
             Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
          End Do
          Write(CharBuffer, *) '\n'
@@ -298,8 +299,7 @@ Contains
 103 Format('    Nb_Gauss ', I9, '\n')
 104 Format('    *** DoF  ', I9, '\n')
 200 Format(A)
-201 Format('   ', F5.2)
 202 Format('(',F5.2,',',F5.2,',',F5.2,')\n')
-   End Subroutine BoundaryElement3D_Scal_View                                   
+   End Subroutine BoundaryElement3D_View                                   
 End Module m_MEF_BoundaryElements
 

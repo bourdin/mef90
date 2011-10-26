@@ -24,6 +24,8 @@ Module m_MEF_Sieve
    End Interface MeshInitCoordinates
    
 Contains
+#undef __FUNCT__
+#define __FUNCT__ "MeshTopologyReadEXO"
    Subroutine MeshTopologyReadEXO(dMeshTopology, dEXO)
       !!! Remove the element and coordinate stuff and move in separate functions
       Type (MeshTopology_Type)                     :: dMeshTopology
@@ -53,15 +55,7 @@ Contains
       
       ! Read Global Geometric Parameters
       !!! Extracts sizes from the Mesh oject
-      !Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
-      !write(*,*) '********* AFTER DMMeshExodusGetInfo ********* '
-      !write(*,*) 'dMeshTopology%Num_Dim        ', dMeshTopology%Num_Dim
-      !write(*,*) 'dMeshTopology%Num_Verts      ', dMeshTopology%Num_Verts
-      !write(*,*) 'dMeshTopology%Num_Elems      ', dMeshTopology%Num_Elems
-      !write(*,*) 'dMeshTopology%Num_Elems_Blks ', dMeshTopology%Num_Elem_Blks
-      !write(*,*) 'dMeshTopology%Num_Node_Sets  ', dMeshTopology%Num_Node_Sets
-      
-
+      Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
 
       ! Read Elem block information
       CharBuffer = 'CellBlocks'
@@ -75,9 +69,6 @@ Contains
       Allocate(blkIds(numIds))
       Call DMMeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
-
-!      write(*,*) 'Associated(dMeshTopology%Elem_blk) ', Associated(dMeshTopology%Elem_blk)
-!      write(*,*) 'Size(dMeshTopology%Elem_blk)      ', Size(dMeshTopology%Elem_blk)
 
       If (dMeshTopology%Num_Elem_blks > 0) Then
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
@@ -132,6 +123,8 @@ Contains
       DeAllocate(Tmp_GlobalID)
    End Subroutine MeshTopologyReadEXO
     
+#undef __FUNCT__
+#define __FUNCT__ "MeshInitCoordinatesVect2D"
    Subroutine MeshInitCoordinatesVect2D(dMeshTopology, dCoords)
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Vect2D), Dimension(:), Pointer          :: dCoords
@@ -145,6 +138,8 @@ Contains
       Call DMMeshRestoreCoordinatesF90(dMeshTopology%mesh, array, iErr); CHKERRQ(iErr)
    End Subroutine MeshInitCoordinatesVect2D 
 
+#undef __FUNCT__
+#define __FUNCT__ "MeshInitCoordinatesVect3D"
    Subroutine MeshInitCoordinatesVect3D(dMeshTopology, dCoords)
       Type(MeshTopology_Type)                      :: dMeshTopology
       Type(Vect3D), Dimension(:), Pointer          :: dCoords
@@ -159,126 +154,9 @@ Contains
       Call DMMeshRestoreCoordinatesF90(dMeshTopology%mesh, array, iErr); CHKERRQ(iErr)
    End Subroutine MeshInitCoordinatesVect3D 
 
-!!!$   Subroutine MeshInitElementConnectivity2D_Scal(dMeshTopology, dElem)
-!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
-!!!$      Type(Element2D_Scal), Dimension(:), Pointer  :: dElem
-!!!$      
-!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-!!!$      PetscInt                                     :: iBlk, iE, iEloc
-!!!$      PetscInt                                     :: iErr
-!!!$      
-!!!$      Call DMMeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$      !!! What would happen if the number of dof per  element wasn't constant?
-!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
-!!!$         End Do
-!!!$      End Do
-!!!$      Call DMMeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$    End Subroutine MeshInitElementConnectivity2D_Scal
-!!!$
-!!!$   Subroutine MeshInitElementConnectivity2D(dMeshTopology, dElem)
-!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
-!!!$      Type(Element2D), Dimension(:), Pointer       :: dElem
-!!!$      
-!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-!!!$      PetscInt                                     :: iBlk, iE, iEloc
-!!!$      PetscInt                                     :: iErr
-!!!$      
-!!!$      Call DMMeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$      !!! What would happen if the number of dof per  element wasn't constant?
-!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
-!!!$         End Do
-!!!$      End Do
-!!!$      Call DMMeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$    End Subroutine MeshInitElementConnectivity2D
-!!!$
-!!!$   Subroutine MeshInitElementConnectivity2D_Elast(dMeshTopology, dElem)
-!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
-!!!$      Type(Element2D_Elast), Dimension(:), Pointer :: dElem
-!!!$      
-!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-!!!$      PetscInt                                     :: iBlk, iE, iEloc
-!!!$      PetscInt                                     :: iErr
-!!!$      
-!!!$      Call DMMeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$      !!! What would happen if the number of dof per  element wasn't constant?
-!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
-!!!$         End Do
-!!!$      End Do
-!!!$      Call DMMeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$    End Subroutine MeshInitElementConnectivity2D_Elast
-!!!$
-!!!$   Subroutine MeshInitElementConnectivity3D_Scal(dMeshTopology, dElem)
-!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
-!!!$      Type(Element3D_Scal), Dimension(:), Pointer  :: dElem
-!!!$      
-!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-!!!$      PetscInt                                     :: iBlk, iE, iEloc
-!!!$      PetscInt                                     :: iErr
-!!!$      
-!!!$      Call DMMeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$      !!! What would happen if the number of dof per  element wasn't constant?
-!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
-!!!$         End Do
-!!!$      End Do
-!!!$      Call DMMeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$    End Subroutine MeshInitElementConnectivity3D_Scal
-!!!$
-!!!$   Subroutine MeshInitElementConnectivity3D(dMeshTopology, dElem)
-!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
-!!!$      Type(Element3D), Dimension(:), Pointer       :: dElem
-!!!$      
-!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-!!!$      PetscInt                                     :: iBlk, iE, iEloc
-!!!$      PetscInt                                     :: iErr
-!!!$      
-!!!$      Call DMMeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$      !!! What would happen if the number of dof per  element wasn't constant?
-!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
-!!!$         End Do
-!!!$      End Do
-!!!$      Call DMMeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$    End Subroutine MeshInitElementConnectivity3D
-!!!$
-!!!$   Subroutine MeshInitElementConnectivity3D_Elast(dMeshTopology, dElem)
-!!!$      Type(MeshTopology_Type)                      :: dMeshTopology
-!!!$      Type(Element3D_Elast), Dimension(:), Pointer :: dElem
-!!!$      
-!!!$      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-!!!$      PetscInt                                     :: iBlk, iE, iEloc
-!!!$      PetscInt                                     :: iErr
-!!!$      
-!!!$      Call DMMeshGetElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$      !!! What would happen if the number of dof per  element wasn't constant?
-!!!$      Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-!!!$         Do iEloc = 1, dMeshTopology%Elem_Blk(iBlk)%Num_Elems
-!!!$            iE = dMeshTopology%Elem_Blk(iBlk)%Elem_ID(iEloc)
-!!!$            Allocate(dElem(iE)%ID_DoF(dMeshTopology%Elem_Blk(iBlk)%Num_DoF))
-!!!$            dElem(iE)%ID_DoF = arrayCon(iE,:)
-!!!$         End Do
-!!!$      End Do
-!!!$      Call DMMeshRestoreElementsF90(dMeshTopology%mesh, arrayCon, iErr); CHKERRQ(iErr)
-!!!$    End Subroutine MeshInitElementConnectivity3D_Elast
 
+#undef __FUNCT__
+#define __FUNCT__ "FieldCreateVertex"
    Subroutine FieldCreateVertex(F, Fname, MeshTopology, component_size)
       Type(Field)                                  :: F
       Character(len=*)                             :: Fname
@@ -322,6 +200,8 @@ Contains
       Call SectionRealCreateLocalVector(F%Sec, F%LocalVec, iErr); CHKERRQ(iErr)
    End Subroutine FieldCreateVertex
    
+#undef __FUNCT__
+#define __FUNCT__ "FieldDestroy"
    Subroutine FieldDestroy(F)
       Type(Field)                                  :: F
       PetscInt                                     :: i, iErr
@@ -338,7 +218,12 @@ Contains
       Call VecScatterDestroy(F%Scatter, iErr); CHKERRQ(iErr)
    End Subroutine FieldDestroy
 
+#undef __FUNCT__
+#define __FUNCT__ "FlagCreateVertex"
    Subroutine FlagCreateVertex(F, Fname, MeshTopology, component_size)
+      !!! creates a Flag derived type with sum(component_size) values at each vertex
+      !!! add a way to scatter it into size(component_size) component sections
+      !!! I am not sure this actualy works and does anything meaningful if component_size(i) /= 1...
       Type(Flag)                                   :: F
       Character(len=*)                             :: Fname
       Type(MeshTopology_Type)                      :: MeshTopology
@@ -376,6 +261,8 @@ Contains
       End Do
    End Subroutine FlagCreateVertex
 
+#undef __FUNCT__
+#define __FUNCT__ "FlagDestroy"
    Subroutine FlagDestroy(F)
       Type(Flag)                                   :: F
       PetscInt                                     :: i, iErr
@@ -388,24 +275,31 @@ Contains
       DeAllocate(F%Component_Sec)
    End Subroutine FlagDestroy
 
-   Subroutine SectionIntAddNSProperty(Flag, NSProperty, MeshTopology)
-      Type(SectionInt)                             :: Flag 
+#undef __FUNCT__
+#define __FUNCT__ "SectionIntAddNSProperty"
+   Subroutine SectionIntAddNSProperty(Sec, NSProperty, MeshTopology)
+      !!!
+      !!! initialize a SectionInt by adding at each point of a nodeset the value of the
+      !!! NSProperty associated to the nodeset
+      Type(SectionInt)                             :: Sec 
       Type(EXO_Property_Type)                      :: NSProperty
       Type(MeshTopology_Type)                      :: MeshTopology
       
       PetscInt                                     :: iErr, i, j
-      PetscInt, Dimension(:), Pointer              :: Flag_Ptr
+      PetscInt, Dimension(:), Pointer              :: Sec_Ptr
       
       Do i = 1, MeshTopology%Num_Node_Sets
-         Allocate(Flag_Ptr(1))
-         Flag_Ptr = NSProperty%Value( MeshTopology%Node_Set(i)%ID )
+         Allocate(Sec_Ptr(1))
+         Sec_Ptr = NSProperty%Value( MeshTopology%Node_Set(i)%ID )
          Do j = 1, MeshTopology%Node_Set(i)%Num_Nodes
-            Call SectionIntUpdate(Flag, MeshTopology%Node_Set(i)%Node_ID(j) + MeshTopology%Num_Elems-1, Flag_Ptr, ADD_VALUES, iErr); CHKERRQ(iErr)
+            Call SectionIntUpdate(Sec, MeshTopology%Node_Set(i)%Node_ID(j) + MeshTopology%Num_Elems-1, Sec_Ptr, ADD_VALUES, iErr); CHKERRQ(iErr)
          End Do
-         DeAllocate(Flag_Ptr)
+         DeAllocate(Sec_Ptr)
       End Do
    End Subroutine SectionIntAddNSProperty
    
+#undef __FUNCT__
+#define __FUNCT__ "MatInsertVertexBoundaryValues"
    Subroutine MatInsertVertexBoundaryValues(M, U, BCFlag, MeshTopology)
       Type(Mat)                                    :: M
       Type(Field)                                  :: U
@@ -440,25 +334,12 @@ Contains
          End If
       End Do
       DeAllocate(MatElem)
-!!!$      Allocate(MatElem(1,1))
-!!!$      MatElem = 1.0_Kr
-!!!$      Do j = 1, BCFlag%num_components 
-!!!$         Write(*,*) 'Doing component', j
-!!!$         If (BCFlag%Component_size(j) /= 1 ) Then
-!!!$            SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatInsertVertexBoundaryValues requires scalar components', ierr)
-!!!$         End If
-!!!$         Do i = 1, MeshTopology%Num_Verts
-!!!$            Call SectionIntRestrict(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
-!!!$            If (BCFlag_Ptr(1) /= 0) Then
-!!!$               Call DMMeshAssembleMatrix(M, MeshTopology%mesh, U%Component_Sec(j), MeshTopology%Num_Elems+i-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
-!!!$            End If
-!!!$            Call SectionIntRestore(BCFlag%Component_Sec(j), MeshTopology%Num_Elems+i-1, BCFlag_Ptr, iErr); CHKERRQ(iErr)
-!!!$         End Do
-!!!$      End Do
-!!!$      DeAllocate(MatElem)
    End Subroutine MatInsertVertexBoundaryValues
 
+#undef __FUNCT__
+#define __FUNCT__ "FieldInsertVertexBoundaryValues"
    Subroutine FieldInsertVertexBoundaryValues(F, FBC, BCFlag, MeshTopology)
+      !!! Insert in F the value of FBC at each point where BCFlag is non 0
       Type(Field)                                  :: F, FBC
       Type(Flag)                                   :: BCFlag
       Type(MeshTopology_Type)                      :: MeshTopology
