@@ -74,13 +74,17 @@ Program  TransientHeat
       End If
       Call MatMassAssembly(AppCtx)
 !Test that Mat matric is ok 
-!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0,  W1, iErr); CHKERRQ(iErr)
-!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0,  W2, iErr); CHKERRQ(iErr)
-!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0,  W3, iErr); CHKERRQ(iErr)
-!      call SectionRealSet(W1, 1., iErr);
-!      call SectionRealSet(W3, 1., iErr);
+!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0%Sec,  W1, iErr); CHKERRQ(iErr)
+!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0%Sec,  W2, iErr); CHKERRQ(iErr)
+!      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0%sec,  W3, iErr); CHKERRQ(iErr)
+!      call VecSet(W1, 1., iErr);
+!      call VecSet(W3, 1., iErr);
 !      Call MatMult(AppCtx%M, W1, W2)
+!      print *, "Mass matrice check "
+!      Call VecView(W1,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)  
+!      Call VecView(W3,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)  
 !      call VecDot(W2, W3, prodMassUnit)
+!      print *, "End Mass matrice check "
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Calling Solve\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
