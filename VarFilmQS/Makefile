@@ -15,7 +15,7 @@ all: VarFilmQS
 include ${TAO_DIR}/bmake/tao_common
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=-DWITH_TAO ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form	
+	MEF90_FC_FLAGS=-DWITH_TAO ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form 	
 else
 	MEF90_FC_FLAGS=-DWITH_TAO ${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS}
 endif
@@ -59,9 +59,7 @@ m_VarFilmQS_Types.o: ${PETSC_ARCH}
 
 
 clean::
-	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
-	@rmdir ${PETSC_ARCH}
-
+	@rm -Rf ${PETSC_ARCH}
 debug::
 	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
 	@echo FC is ${FC}
