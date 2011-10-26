@@ -334,6 +334,7 @@ Contains
       !!! Allocate energies, and open matching files
 	Allocate(AppCtx%FractureEnergy(AppCtx%NumTimeSteps))
 	Allocate(AppCtx%DelaminationEnergy(AppCtx%NumTimeSteps))
+	Allocate(AppCtx%CohesiveEnergy(AppCtx%NumTimeSteps))
 	Allocate(AppCtx%ElasticEnergy(AppCtx%NumTimeSteps))
 	Allocate(AppCtx%ExtForcesWork(AppCtx%NumTimeSteps))
 	Allocate(AppCtx%TotalEnergy(AppCtx%NumTimeSteps))
@@ -341,6 +342,7 @@ Contains
       
 	Allocate(AppCtx%FractureEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
 	Allocate(AppCtx%DelaminationEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+	Allocate(AppCtx%CohesiveEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
 	Allocate(AppCtx%ElasticEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
 	Allocate(AppCtx%ExtForcesWorkBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
 	Allocate(AppCtx%TotalEnergyblock  (AppCtx%MeshTopology%Num_Elem_Blks_Global))
@@ -554,19 +556,21 @@ End Subroutine Save_W
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_FractureEnergy)%Offset, AppCtx%TimeStep, AppCtx%FractureEnergy(AppCtx%TimeStep))
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Offset, AppCtx%TimeStep, AppCtx%ElasticEnergy(AppCtx%TimeStep))
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_DelaminationEnergy)%Offset, AppCtx%TimeStep, AppCtx%DelaminationEnergy(AppCtx%TimeStep))
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_CohesiveEnergy)%Offset, AppCtx%TimeStep, AppCtx%CohesiveEnergy(AppCtx%TimeStep))
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Offset, AppCtx%TimeStep, AppCtx%TotalEnergy(AppCtx%TimeStep))
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep))
       
       If (MEF90_MyRank == 0) Then
-         Write(AppCtx%AppParam%Ener_Unit, 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%FractureEnergy(AppCtx%TimeStep), AppCtx%TotalEnergy(AppCtx%TimeStep)
+         Write(AppCtx%AppParam%Ener_Unit, 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%FractureEnergy(AppCtx%TimeStep), AppCtx%DelaminationEnergy(AppCtx%TimeStep),  AppCtx%CohesiveEnergy(AppCtx%TimeStep), AppCtx%TotalEnergy(AppCtx%TimeStep)
          If (AppCtx%VarFracSchemeParam%SaveBlk) Then
             Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-               Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock(iBlk), AppCtx%ExtForcesWorkBlock(iBlk), AppCtx%FractureEnergyBlock(iBlk), AppCtx%TotalEnergyBlock(iBlk)
+               Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock(iBlk), AppCtx%ExtForcesWorkBlock(iBlk), AppCtx%FractureEnergyBlock(iBlk),  AppCtx%DelaminationEnergyBlock(iBlk),  AppCtx%CohesiveEnergyBlock(iBlk), AppCtx%TotalEnergyBlock(iBlk)
             End Do    
       End If
       End If
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100   Format(I6, 5(ES13.5,'  '))  
+100   Format(I6, 7(ES13.5,'  '))  
    End Subroutine Save_Ener
    
    Subroutine Load_Ener(AppCtx, TimeStep)
