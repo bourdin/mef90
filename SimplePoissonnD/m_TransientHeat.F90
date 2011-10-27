@@ -345,16 +345,22 @@ Contains
    End Subroutine KSPSetUP
    
 #undef __FUNCT__
-#define __FUNCT__ "TSSetUp"
-   Subroutine TSSetUP(AppCtx)
+#define __FUNCT__ "Poisson_TSSetUp"
+   Subroutine Poisson_TSSetUP(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
+      
+      Type(SectionReal)                            :: TmpSec
+      Character(len=256)                           :: TmpSecName
       PetscInt                                     :: iErr
 
       !!! Initialize the matrix and vector for the linear system
       Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
       Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
+      Call PetscObjectSetName(AppCtx%K,"K matrix",iErr);CHKERRQ(iErr)
       Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%M, iErr); CHKERRQ(iErr)
+      Call PetscObjectSetName(AppCtx%M,"M matrix",iErr);CHKERRQ(iErr)
       Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%Jac, iErr); CHKERRQ(iErr)
+      Call PetscObjectSetName(AppCtx%Jac,"Jac matrix",iErr);CHKERRQ(iErr)
       
       Call TSCreate(PETSC_COMM_WORLD, AppCtx%TS, iErr); CHKERRQ(iErr)
       
@@ -366,7 +372,14 @@ Contains
       !Call TSSetType(AppCtx%TS, TSBEULER, ierr);  CHKERRQ(iErr)
       End Select
 
-      !call DMMeshSetSectionReal(AppCtx%MeshTopology%mesh, "default", AppCtx%U%sec).
+      Call SectionRealDuplicate(AppCtx%U_0%Sec,TmpSec,iErr);CHKERRQ(iErr)
+      Call PetscObjectSetName(TmpSec,"default",iErr);CHKERRQ(iErr)
+      !!! Can't do that because we don;t have a fortran binding for SectionRealDuplicate
+      !TmpSecName = "default"
+      !Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%Mesh,'default',1,TmpSec,iErr);CHKERRQ(iErr)
+      call DMMeshSetSectionReal(AppCtx%MeshTopology%mesh,trim('default'),TmpSec,iErr);CHKERRQ(iErr)
+      !Destroy section tmpsec?
+      
       call TSSetDM(AppCtx%TS, AppCtx%MeshTopology%mesh, ierr);   CHKERRQ(iErr) 
 
 
@@ -388,7 +401,7 @@ Contains
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine TSSetUp
+   End Subroutine Poisson_TSSetUp
 
 
 #undef __FUNCT__
