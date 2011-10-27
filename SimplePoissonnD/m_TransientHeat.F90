@@ -259,11 +259,8 @@ Contains
 
 
       Call MEF90_AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
-!TODO set these parameters in the PrepPoisson from the.args file 
       Select Case(AppCtx%AppParam%TestCase)
       Case(2)
-      !AppCtx%maxsteps = 1000
-      !AppCtx%maxtime =10.0
          Call MEF90_AskInt(AppCtx%maxsteps, 'Max number of steps for TS computation', BatchUnit, IsBatch)
          Call MEF90_AskReal(AppCtx%maxtime,  'Max time for TS computation', BatchUnit, IsBatch)
       End Select
@@ -274,7 +271,7 @@ Contains
       Call MEF90_AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
       Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U_0', 1,   AppCtx%U_0%Sec, iErr); CHKERRQ(iErr)
-      call SectionRealSet(AppCtx%U_0%Sec, ValU, iErr); CHKERRQ(iErr) !This should be replaced by evaluating the initial solution or most probabaly reading from .args file
+      call SectionRealSet(AppCtx%U_0%Sec, ValU, iErr); CHKERRQ(iErr) 
       Call SectionRealToVec(AppCtx%U_0, AppCtx%U_0%Scatter, SCATTER_FORWARD, AppCtx%U_0%Vec,ierr)
 ! TODO ligne précedente pour U et F ?? 
       !Setting force
@@ -282,9 +279,8 @@ Contains
       Call SectionRealSet(AppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
 
 !Get BC values 
-!lines 535-550 PrepVarFracNG
       Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
-      U = 0.0_Kr
+      U = ValU
       Do i = 1, AppCtx%MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 202) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -297,8 +293,8 @@ Contains
 202 Format('    Node Set      ', T24, I3, '\n')
 302 Format('NS', I4.4, ': ', A)
 
-! Set BC on NS 
-! lines 635-647 PrepVarfracNG
+! Set BC on NS
+!Test ici si CL sont de type dicrichlet !! 
       Allocate(Uelem(1))
       Do iloc = 1, AppCtx%MeshTopology%Num_Node_Sets         
          i = AppCtx%MeshTopology%Node_Set(iloc)%ID
@@ -335,9 +331,6 @@ Contains
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       
-      
-      !!! Read Force and BC from Data file or reformat it
-      !call PoissonBC(AppCtx) 
       !!! Create the EXO case file
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
       
@@ -377,14 +370,12 @@ Contains
       Call PetscObjectSetName(TmpSec,"default",iErr);CHKERRQ(iErr)
       !!! Can't do that because we don;t have a fortran binding for SectionRealDuplicate
       !TmpSecName = "default"
-      !Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%Mesh,'default',1,TmpSec,iErr);CHKERRQ(iErr)
       call DMMeshSetSectionReal(AppCtx%MeshTopology%mesh,trim('default'),TmpSec,iErr);CHKERRQ(iErr)
       !Destroy section tmpsec!!?
       
       call TSSetDM(AppCtx%TS, AppCtx%MeshTopology%mesh, ierr);   CHKERRQ(iErr) 
 
 
-      !Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0%Sec, AppCtx%U_0%Vec, iErr); CHKERRQ(iErr)
       Call TSSetSolution(AppCtx%TS, AppCtx%U_0%Vec,  ierr);   CHKERRQ(iErr) 
       zero = 0.0
       dt = .01
@@ -415,21 +406,16 @@ Contains
       Type(TS)                                     :: dummyTS
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
-         
-  
-      Write(IOBuffer, *) 'Begin IFunctionPoisson \n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%verbose > 0) Then    
+         Write(IOBuffer, *) 'Begin IFunctionPoisson \n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If 
+      
       Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0%Sec, dummyVec, iErr); CHKERRQ(iErr)
 
-       !GlobalOut = AppCtx%M * Udot + AppCtx%K * U
-      !Call VecView(U,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
+!GlobalOut = AppCtx%M * Udot + AppCtx%K * U
       Call MatMult(AppCtx%K, U, GlobalOut, iErr);CHKERRQ(iErr)
-!Udot is non at the second iteration; why ?? 
-      Call VecView(Udot,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
-      !Call VecView(dummyVec,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
       Call MatMultAdd(AppCtx%M, Udot, GlobalOut, GlobalOut, iErr);CHKERRQ(iErr)
-!TODO Can the constant and result factors be the same ? 
-!      Call VecView(GlobalOut,  PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
        
    End Subroutine IFunctionPoisson
 
@@ -445,14 +431,14 @@ Contains
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer  
       MatStructure                           :: mStruc
-!Pk est ce que Ijacobian n'est pas appelé ????????? 
 ! a*AppCtx%M + AppCtx%K
-      Write(IOBuffer, *) 'Begin IJacobianPoisson \n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!Initialisation de la matrice Jac ?
-!!! Att manque un copy ! la on a Y = aX + Y 
-!! Condition aux limites ?? 
-      call MatAXPY(Jac, a, AppCtx%M, AppCtx%K, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Begin IJacobianPoisson \n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End IF
+
+      Call MatCopy(AppCtx%K, Jac, mStruc, iErr); CHKERRQ(iErr)
+      Call MatAXPY(Jac, a, AppCtx%M, mStruc, iErr); CHKERRQ(iErr)
 
    End Subroutine IJacobianPoisson
  
@@ -465,14 +451,11 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
-!      Type(VecScatter)                             :: dummyScatter
-!TODO est ce que Globalout est correctement initialise ? 
-      Write(IOBuffer, *) 'Begin RHSPoisson \n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!AppCtx%RHS Is a section real we want to return a vector!
-!Return AppCtx%RHS
-!      Call DMMeshCreateGlobalScatter(AppCtx%MeshTopology%mesh, AppCtx%RHS%Sec,  AppCtx%RHS%Scatter, iErr); CHKERRQ(iErr) 
-!      Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, GlobalOut, iErr); CHKERRQ(iErr)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Begin RHSPoisson \n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+
       Call VecCopy(AppCtx%RHS%Vec, GlobalOut, iErr); CHKERRQ(iErr)
      
    End Subroutine RHSPoisson
@@ -483,26 +466,35 @@ Contains
    Subroutine SolveTransient(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
-      PetscInt                                     :: iErr
+      PetscInt                                     :: TSTimeSteps, iErr
+      TSConvergedReason                            :: TSreason 
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 
-      ! Using IMEX see section 6.1.2 PetSc documentation 
-!   SIGFLT on TSView with intel compilers  
-      Call TSView(AppCtx%TS,  PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+! Using IMEX see section 6.1.2 PetSc documentation 
+      if (AppCtx%AppParam%verbose > 1) Then                                                                                                                                                
+         Call TSView(AppCtx%TS,  PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+      End If
 
+!      Call TSStep(AppCtx%TS, AppCtx%U%Vec, AppCtx%maxtime, iErr); CHKERRQ(iErr)
+      Call Matview(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr)       
+      Call Matview(AppCtx%M, PETSC_VIEWER_STDOUT_WORLD, iErr)       
+     ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
+     ! Call Vecview(AppCtx%U_0%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
       Call TSSolve(AppCtx%TS, AppCtx%U%Vec, AppCtx%maxtime, iErr); CHKERRQ(iErr)
-       
-
-  !    Write(IOBuffer, 100) KSPNumIter, KSPreason
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+     ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
+   ! Call TSSSPGetNumStages
+    !  Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
+    !  Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
+    !  Write(IOBuffer, 100) TSTimeSteps, TSreason
+    !  Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
  
-!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-!100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n')
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
    End Subroutine SolveTransient
    
  
@@ -512,7 +504,6 @@ Contains
    Subroutine MatMassAssembly(AppCtx)   
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk, iErr
-!TOTO Set M to 0 before each iteration before calling assembly      
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Call MatMassAssemblyBlock(iBlk, AppCtx)
@@ -545,6 +536,7 @@ Contains
          MatElem = 0.0_Kr
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
             Do iDoF1 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+             !     MatElem(iDoF1, iDoF1) = 1 
                Do iDoF2 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
                   MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%BF(iDoF1, iGauss) *  AppCtx%Elem(iE)%BF(iDoF2, iGauss) )
                   flops = flops + 2 !Check 
@@ -552,6 +544,7 @@ Contains
             End Do
          End Do
          Call DMMeshAssembleMatrix(AppCtx%M, AppCtx%MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+        ! Call DMMeshAssembleMatrix(AppCtx%M, AppCtx%MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iELoc
    
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
@@ -572,13 +565,11 @@ Contains
       Call FieldDestroy(AppCtx%F)
       Call FieldDestroy(AppCtx%RHS)
       Call FieldDestroy(AppCtx%U_0)
-!      Call SectionRealDestroy(AppCtx%U_0, iErr); CHKERRQ(iErr)
       Call SectionRealDestroy(AppCtx%GradU, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%M, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%Jac, iErr); CHKERRQ(iErr)
-!      Call VecDestroy(AppCtx%U_0_Vec, iErr); CHKERRQ(iErr)
 
       Call TSDestroy(AppCtx%TS, iErr); CHKERRQ(iErr)
       Call DMDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
