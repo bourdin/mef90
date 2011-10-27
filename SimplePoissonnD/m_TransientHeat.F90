@@ -263,6 +263,7 @@ Contains
       Case(2)
          Call MEF90_AskInt(AppCtx%maxsteps, 'Max number of steps for TS computation', BatchUnit, IsBatch)
          Call MEF90_AskReal(AppCtx%maxtime,  'Max time for TS computation', BatchUnit, IsBatch)
+         Call MEF90_AskInt(AppCtx%NumSteps,  'Number of time steps', BatchUnit, IsBatch)
       End Select
 
 !  Set EB Properties : U, F         
@@ -345,7 +346,6 @@ Contains
       Type(SectionReal)                            :: TmpSec
       Character(len=256)                           :: TmpSecName
       PetscInt                                     :: iErr
-      PetscReal                                    :: dt, zero
 
       !!! Initialize the matrix and vector for the linear system
       Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
@@ -374,19 +374,10 @@ Contains
       !Destroy section tmpsec!!?
       
       call TSSetDM(AppCtx%TS, AppCtx%MeshTopology%mesh, ierr);   CHKERRQ(iErr) 
-
-
-      Call TSSetSolution(AppCtx%TS, AppCtx%U_0%Vec,  ierr);   CHKERRQ(iErr) 
-      zero = 0.0
-      dt = .01
-      Call TSSetInitialTimeStep(AppCtx%TS, zero , dt,  ierr); CHKERRQ(iErr)
-      Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, AppCtx%maxtime, iErr); CHKERRQ(iErr)
-      
       Call TSSetIFunction(AppCtx%TS, PETSC_NULL_OBJECT, IFunctionPoisson, AppCtx, ierr); CHKERRQ(iErr)
       Call TSSetIJacobian(AppCtx%TS, AppCtx%Jac, AppCtx%Jac, IJacobianPoisson, AppCtx, ierr); CHKERRQ(iErr)
       Call TSSetRHSFunction(AppCtx%TS, PETSC_NULL_OBJECT, RHSPoisson, AppCtx, ierr); CHKERRQ(iErr)
       
-      Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
        
@@ -466,8 +457,9 @@ Contains
    Subroutine SolveTransient(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
-      PetscInt                                     :: TSTimeSteps, iErr
+      PetscInt                                     :: TSTimeSteps, iErr, iStep
       TSConvergedReason                            :: TSreason 
+      PetscReal, Dimension(:), Pointer             :: CurTime
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
@@ -479,11 +471,28 @@ Contains
       End If
 
 !      Call TSStep(AppCtx%TS, AppCtx%U%Vec, AppCtx%maxtime, iErr); CHKERRQ(iErr)
-      Call Matview(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr)       
-      Call Matview(AppCtx%M, PETSC_VIEWER_STDOUT_WORLD, iErr)       
+    !  Call Matview(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr)       
+     ! Call Matview(AppCtx%M, PETSC_VIEWER_STDOUT_WORLD, iErr)       
      ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
      ! Call Vecview(AppCtx%U_0%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
-      Call TSSolve(AppCtx%TS, AppCtx%U%Vec, AppCtx%maxtime, iErr); CHKERRQ(iErr)
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U%Sec)
+      Allocate(CurTime(AppCtx%NumSteps-1)) 
+      CurTime = 0.0
+      Do iStep = 1, AppCtx%NumSteps-1
+         !TODO Select type time evolution
+         CurTime(iStep) = iStep*AppCtx%maxtime / AppCtx%NumSteps
+         Write(IOBuffer, 200) iStep, CurTime(iStep)
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
+         Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr) 
+         Call TSSetInitialTimeStep(AppCtx%TS, CurTime(iStep-1) , (CurTime(iStep)-CurTime(iStep-1)/10.),  ierr); CHKERRQ(iErr)
+         Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, CurTime(iStep), iErr); CHKERRQ(iErr)
+         Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr)
+         Call TSSolve(AppCtx%TS, AppCtx%U%Vec, CurTime(iStep), iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+         Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, iStep+1, AppCtx%U%Sec)
+!Call Write_EXO_Result_Vertex(MyEXO, MeshTopology,  MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
+      End Do
+      DeAllocate(CurTime)
      ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
    ! Call TSSSPGetNumStages
     !  Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
@@ -491,10 +500,10 @@ Contains
     !  Write(IOBuffer, 100) TSTimeSteps, TSreason
     !  Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
-      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
  
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 !100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
+200 Format('Solving TS Time step : ', I5,  ",    Current Time  :", ES12.5, '\n')
    End Subroutine SolveTransient
    
  

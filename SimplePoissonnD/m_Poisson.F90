@@ -59,7 +59,7 @@ Module m_Poisson3D
       Type(AppParam_Type)                          :: AppParam
    !For TS
       Type(TS)                                     :: TS
-      PetscInt                                     :: maxsteps
+      PetscInt                                     :: maxsteps, NumSteps
       PetscReal                                    :: maxtime
       Type(Field)                                  :: U_0
 !      Type(SectionReal)                            :: U_0 !initial solution for t=0
