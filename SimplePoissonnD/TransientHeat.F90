@@ -26,7 +26,7 @@ Program  TransientHeat
    Case (1)
       Call KSPSetUp(AppCtx)
    Case(2)
-      Call TSSetUp(AppCtx)
+      Call Poisson_TSSetUp(AppCtx)
    End Select
 
 
@@ -73,6 +73,12 @@ Program  TransientHeat
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call MatMassAssembly(AppCtx)
+
+   !!! JUST TESTINGa
+   Call MatCopy(AppCtx%M,AppCtx%Jac,SAME_NONZERO_PATTERN,iErr);CHKERRQ(iErr)
+   !!!
+
+
 !Test that Mat matric is ok 
 !      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0%Sec,  W1, iErr); CHKERRQ(iErr)
 !      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0%Sec,  W2, iErr); CHKERRQ(iErr)
