@@ -346,12 +346,13 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "Poisson_TSSetUp"
-   Subroutine Poisson_TSSetUP(AppCtx)
+   Subroutine Poisson_TSSetUp(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       
       Type(SectionReal)                            :: TmpSec
       Character(len=256)                           :: TmpSecName
       PetscInt                                     :: iErr
+      PetscReal                                    :: dt, zero
 
       !!! Initialize the matrix and vector for the linear system
       Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
@@ -378,15 +379,16 @@ Contains
       !TmpSecName = "default"
       !Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%Mesh,'default',1,TmpSec,iErr);CHKERRQ(iErr)
       call DMMeshSetSectionReal(AppCtx%MeshTopology%mesh,trim('default'),TmpSec,iErr);CHKERRQ(iErr)
-      !Destroy section tmpsec?
+      !Destroy section tmpsec!!?
       
       call TSSetDM(AppCtx%TS, AppCtx%MeshTopology%mesh, ierr);   CHKERRQ(iErr) 
 
 
       !Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0%Sec, AppCtx%U_0%Vec, iErr); CHKERRQ(iErr)
       Call TSSetSolution(AppCtx%TS, AppCtx%U_0%Vec,  ierr);   CHKERRQ(iErr) 
-
-      Call TSSetInitialTimeStep(AppCtx%TS, 0.0, .01,  ierr); CHKERRQ(iErr)
+      zero = 0.0
+      dt = .01
+      Call TSSetInitialTimeStep(AppCtx%TS, zero , dt,  ierr); CHKERRQ(iErr)
       Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, AppCtx%maxtime, iErr); CHKERRQ(iErr)
       
       Call TSSetIFunction(AppCtx%TS, PETSC_NULL_OBJECT, IFunctionPoisson, AppCtx, ierr); CHKERRQ(iErr)
@@ -434,14 +436,15 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "IJacobianPoisson"
-   SubRoutine IJacobianPoisson(dummyTS, t, U, Udot, a, Jac, PreJac, AppCtx, iErr)
+   SubRoutine IJacobianPoisson(dummyTS, t, U, Udot, a, Jac, PreJac, mStruc, AppCtx, iErr)
       Type(TS)                                     :: dummyTS
       PetscReal                                    :: t, a 
       Type(Vec)                                    :: U, Udot
       Type(Mat)                                    :: Jac, PreJac  
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer  
+      MatStructure                           :: mStruc
 !Pk est ce que Ijacobian n'est pas appelé ????????? 
 ! a*AppCtx%M + AppCtx%K
       Write(IOBuffer, *) 'Begin IJacobianPoisson \n'
@@ -487,10 +490,10 @@ Contains
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 
       ! Using IMEX see section 6.1.2 PetSc documentation 
-!      call TSSetFromOptions(AppCtx%TS,ierr)
-      Call TSView(AppCtx%TS,  PETSC_VIEWER_STDOUT_WORLD)
+!   SIGFLT on TSView with intel compilers  
+      Call TSView(AppCtx%TS,  PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
-      call TSSolve(AppCtx%TS, AppCtx%U%Vec, AppCtx%maxtime, iErr); CHKERRQ(iErr)
+      Call TSSolve(AppCtx%TS, AppCtx%U%Vec, AppCtx%maxtime, iErr); CHKERRQ(iErr)
        
 
   !    Write(IOBuffer, 100) KSPNumIter, KSPreason

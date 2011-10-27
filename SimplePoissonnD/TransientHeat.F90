@@ -75,7 +75,7 @@ Program  TransientHeat
       Call MatMassAssembly(AppCtx)
 
    !!! JUST TESTINGa
-   Call MatCopy(AppCtx%M,AppCtx%Jac,SAME_NONZERO_PATTERN,iErr);CHKERRQ(iErr)
+!   Call MatCopy(AppCtx%M,AppCtx%Jac,SAME_NONZERO_PATTERN,iErr);CHKERRQ(iErr)
    !!!
 
 
