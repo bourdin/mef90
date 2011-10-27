@@ -206,7 +206,6 @@ Contains
       Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%RHS,   'RHS',       AppCtx%MeshTopology, SizeScal)
       Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%U_0,   'U_0',        AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeScal)
 
       
@@ -271,9 +270,6 @@ Contains
          ! This has no impact for TestCase 1
       Call MEF90_AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
-      Call DMMeshGetVertexSectionReal(AppCtx%MeshTopology%mesh, 'U_0', 1,   AppCtx%U_0%Sec, iErr); CHKERRQ(iErr)
-      call SectionRealSet(AppCtx%U_0%Sec, ValU, iErr); CHKERRQ(iErr) 
-      Call SectionRealToVec(AppCtx%U_0, AppCtx%U_0%Scatter, SCATTER_FORWARD, AppCtx%U_0%Vec,ierr)
 ! TODO ligne précedente pour U et F ?? 
       !Setting force
       Call MEF90_AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
@@ -366,7 +362,7 @@ Contains
       !Call TSSetType(AppCtx%TS, TSBEULER, ierr);  CHKERRQ(iErr)
       End Select
 
-      Call SectionRealDuplicate(AppCtx%U_0%Sec,TmpSec,iErr);CHKERRQ(iErr)
+      Call SectionRealDuplicate(AppCtx%U%Sec,TmpSec,iErr);CHKERRQ(iErr)
       Call PetscObjectSetName(TmpSec,"default",iErr);CHKERRQ(iErr)
       !!! Can't do that because we don;t have a fortran binding for SectionRealDuplicate
       !TmpSecName = "default"
@@ -392,7 +388,7 @@ Contains
 #define __FUNCT__ "IFunctionPoisson"
    SubRoutine IFunctionPoisson(dummyTS, t, U, Udot, GlobalOut, AppCtx, iErr)
       PetscReal                                    :: t 
-      Type(Vec)                                    :: U, Udot, GlobalOut, dummyVec
+      Type(Vec)                                    :: U, Udot, GlobalOut
       Type(AppCtx_Type)                            :: AppCtx
       Type(TS)                                     :: dummyTS
       PetscInt                                     :: iErr
@@ -402,8 +398,6 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If 
       
-      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%U_0%Sec, dummyVec, iErr); CHKERRQ(iErr)
-
 !GlobalOut = AppCtx%M * Udot + AppCtx%K * U
       Call MatMult(AppCtx%K, U, GlobalOut, iErr);CHKERRQ(iErr)
       Call MatMultAdd(AppCtx%M, Udot, GlobalOut, GlobalOut, iErr);CHKERRQ(iErr)
@@ -474,7 +468,6 @@ Contains
     !  Call Matview(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr)       
      ! Call Matview(AppCtx%M, PETSC_VIEWER_STDOUT_WORLD, iErr)       
      ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
-     ! Call Vecview(AppCtx%U_0%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
       Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U%Sec)
       Allocate(CurTime(AppCtx%NumSteps-1)) 
       CurTime = 0.0
@@ -495,14 +488,14 @@ Contains
       DeAllocate(CurTime)
      ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
    ! Call TSSSPGetNumStages
-    !  Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
-    !  Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
-    !  Write(IOBuffer, 100) TSTimeSteps, TSreason
-    !  Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
+      Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, 100) TSTimeSteps, TSreason
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
  
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-!100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
+100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
 200 Format('Solving TS Time step : ', I5,  ",    Current Time  :", ES12.5, '\n')
    End Subroutine SolveTransient
    
@@ -573,7 +566,6 @@ Contains
       Call FieldDestroy(AppCtx%U)
       Call FieldDestroy(AppCtx%F)
       Call FieldDestroy(AppCtx%RHS)
-      Call FieldDestroy(AppCtx%U_0)
       Call SectionRealDestroy(AppCtx%GradU, iErr); CHKERRQ(iErr)
       Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
