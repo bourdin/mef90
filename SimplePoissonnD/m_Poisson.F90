@@ -61,9 +61,6 @@ Module m_Poisson3D
       Type(TS)                                     :: TS
       PetscInt                                     :: maxsteps, NumSteps
       PetscReal                                    :: maxtime
-      Type(Field)                                  :: U_0
-!      Type(SectionReal)                            :: U_0 !initial solution for t=0
-!      Type(Vec)                                    :: U_0_Vec
 
    End Type AppCtx_Type
    
