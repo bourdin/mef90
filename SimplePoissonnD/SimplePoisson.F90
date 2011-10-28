@@ -28,7 +28,7 @@ Program  SimplePoisson
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call MatAssembly(AppCtx)
+   Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology)
    If (AppCtx%AppParam%verbose > 3) Then
       Write(IOBuffer, *) 'Matrix\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -39,7 +39,7 @@ Program  SimplePoisson
       Write(IOBuffer, *) 'Assembling the RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call RHSAssembly(AppCtx)
+   Call RHSAssembly(AppCtx, AppCtx%MeshTopology)
    If (AppCtx%AppParam%verbose > 2) Then
       Write(IOBuffer, *) 'RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)

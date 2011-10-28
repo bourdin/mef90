@@ -24,8 +24,8 @@ Program PrepVarFrac
    
    
    Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename
-   Type(MeshTopology_Type)                      :: MeshTopology, GlobalMeshTopology
-   Type(EXO_Type)                               :: EXO, MyEXO
+   Type(MeshTopology_Type),target               :: MeshTopology, GlobalMeshTopology
+   Type(EXO_Type), target                       :: EXO, MyEXO
    Type(DM)                                     :: Tmp_Mesh
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2D
    Type(Element3D_Scal), Dimension(:), Pointer  :: Elem3D
@@ -71,6 +71,7 @@ Program PrepVarFrac
    PetscReal                                    :: R, Ymax
    Type(Heat_AppCtx_Type)                       :: HeatAppCtx
    PetscReal                                    :: ValU, ValF
+   PetscInt, Dimension(:), Pointer              :: SizeScal
 
 
    Call MEF90_Initialize()
@@ -281,7 +282,15 @@ Program PrepVarFrac
    Call MEF90_AskReal(TMin, 'TMin', BatchUnit, IsBatch)
    Call MEF90_AskReal(TMax, 'TMax', BatchUnit, IsBatch)
    Call MEF90_AskInt(NumSteps, 'NumSteps', BatchUnit, IsBatch)
-   
+
+   Select Case(iCase)
+   !!! Write special cases here
+   Case(9) !!! Single well, cst flux
+      HeatAppCtx%AppParam%verbose = verbose
+      Call MEF90_AskInt(HeatAppCtx%AppParam%TestCase, 'Test Case For Solving Heat Equation', BatchUnit, IsBatch)
+
+   End Select
+
    Allocate(GlobVars(VarFrac_Num_GlobVar))
    GlobVars = 0.0_Kr
    Allocate(T(NumSteps))
@@ -463,8 +472,8 @@ Program PrepVarFrac
    Case(9)
       Call MEF90_AskReal(ValU, 'Initial value in Temperature', BatchUnit, IsBatch)
       Call MEF90_AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
-      Call MEF90_AskReal(Theta, 'Time steps', BatchUnit, IsBatch)
-   Case default
+      print *, "Initial value in temperature", ValU
+  Case default
       !!! Default is MIL
       Call MEF90_AskReal(Theta, 'Temperature multiplier', BatchUnit, IsBatch)
    End Select
@@ -529,28 +538,42 @@ Program PrepVarFrac
 
    Select Case(iCase)
    Case(9) !! Computing the thermal field 
-      HeatAppCtx%MyEXO = MyEXO
-      HeatAppCtx%MeshTopology = MeshTopology
+      !HeatAppCtx%MeshTopology => MeshTopology
 
       !HeatAppCtx%Tmin = TMin
-      !HeatAppCtx%TMax = TMax
+      HeatAppCtx%maxtime = TMax
       HeatAppCtx%NumSteps = NumSteps
       HeatAppCtx%AppParam%TestCase = 2
+!      Call HeatInitField(HeatAppCtx, MeshTopology) 
+
+      Call ElementInit(MeshTopology, HeatAppCtx%Elem, 2)
+
+      Allocate(SizeScal(1)) 
+      SizeScal=1
+      Call FieldCreateVertex(HeatAppCtx%U,     'T',         MeshTopology, SizeScal)
+      Call FieldCreateVertex(HeatAppCtx%F,     'F',  MeshTopology, SizeScal)
+      Call FieldCreateVertex(HeatAppCtx%RHS,   'RHS', MeshTopology, SizeScal)
+      Call FlagCreateVertex(HeatAppCtx%BCFlag, 'BC',   MeshTopology, SizeScal)
+      DeAllocate(SizeScal)
+
       
-      Call HeatInitField(HeatAppCtx)  
       Call SectionRealSet(HeatAppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
       Call SectionRealSet(HeatAppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
 
       !TODO Set BC in Temperature
       !If possible call a subroutine to be written
 
-      Write(IOBuffer, *) 'Computing temperature field\n'
+      
+      Write(IOBuffer, *) 'Computing Temperature Field\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)  
-      ! Call Poisson_TSSetUp(HeatAppCtx)
-      ! Call MatAssembly(HeatAppCtx)
-      ! Call RHSAssembly(HeatAppCtx)
-      ! Call MatMassAssembly(HeatAppCtx)
-      ! Call SolveTransient(HeatAppCtx)
+      Call Poisson_TSSetUp(HeatAppCtx, MeshTopology)
+      Call HeatMatAssembly(HeatAppCtx, MeshTopology)
+!      Call MatView(HeatAppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr)
+      Call RHSAssembly(HeatAppCtx, MeshTopology)
+      Call MatMassAssembly(HeatAppCtx, MeshTopology)
+      Call SolveTransient(HeatAppCtx, MyEXO, MeshTopology)
+      Write(IOBuffer, *) 'End Computing Temperature Field\n \n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)  
    End Select
 
    !!!
@@ -572,7 +595,7 @@ Program PrepVarFrac
       Call MEF90_AskReal(nueff, 'nu effective (for displacement field)', BatchUnit, IsBatch)
       Kappa = (3.0-nu)/(1.0+nu)
       Mu = E / (1.0_Kr + nu) * .5_Kr
-   Case Default
+   Case(9)
       Do i = 1, MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 102) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -589,6 +612,36 @@ Program PrepVarFrac
             Call MEF90_AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
          End If
          If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'V'
+            Call MEF90_AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+         End If
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCVType)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'T'
+            Call MEF90_AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
+            print *, V(i)
+         End If
+         If (.NOT. IsBatch) Then
+            Write(BatchUnit, *)
+         End If
+      End Do
+   Case Default
+      Do i = 1, MeshTopology%Num_Node_Sets_Global
+         Write(IOBuffer, 102) i
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'Ux'
+            Call MEF90_AskReal(U(i)%X, IOBuffer, BatchUnit, IsBatch)
+         End If
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'Uy'
+            Call MEF90_AskReal(U(i)%Y, IOBuffer, BatchUnit, IsBatch)
+         End If
+         If (MyEXO%NSProperty(VarFrac_NSProp_BCUTypeZ)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'Uz'
+            Call MEF90_AskReal(U(i)%Z, IOBuffer, BatchUnit, IsBatch)
+         End If
+         If (MyEXO%NSProperty(VarFrac_NSProp_HasPForce)%Value(i) /= 0 ) Then
+!!! The BC in temperature is in VarFrac_NSProp_HasPForce 
             Write(IOBuffer, 302) i, 'V'
             Call MEF90_AskReal(V(i), IOBuffer, BatchUnit, IsBatch)
          End If

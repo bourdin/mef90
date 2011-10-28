@@ -14,19 +14,19 @@ Program  TransientHeat
    Implicit NONE   
 
 
-   Type(Heat_AppCtx_Type)                            :: AppCtx
+   Type(Heat_AppCtx_Type)                       :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    Type(Vec)                                    :: W1, W2, W3 
    PetscScalar                                  :: prodMassUnit
-
+   PetscReal                                    :: Mass 
    Call PoissonInit(AppCtx)
 
    Select Case (AppCtx%AppParam%TestCase)
    Case (1)
       Call KSPSetUp(AppCtx)
    Case(2)
-      Call Poisson_TSSetUp(AppCtx)
+      Call Poisson_TSSetUp(AppCtx, AppCtx%MeshTopology)
    End Select
 
 
@@ -41,7 +41,7 @@ Program  TransientHeat
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call MatAssembly(AppCtx)
+   Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology)
    If (AppCtx%AppParam%verbose > 3) Then
       Write(IOBuffer, *) 'Matrix\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -52,7 +52,7 @@ Program  TransientHeat
       Write(IOBuffer, *) 'Assembling the RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call RHSAssembly(AppCtx)
+   Call RHSAssembly(AppCtx, AppCtx%MeshTopology)
    If (AppCtx%AppParam%verbose > 2) Then
       Write(IOBuffer, *) 'RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -72,13 +72,13 @@ Program  TransientHeat
          Write(IOBuffer, *) 'Assembling the Mass - Variational  Identity   matrix\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call MatMassAssembly(AppCtx)
+      Call MatMassAssembly(AppCtx, AppCtx%MeshTopology)
 
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Calling Solve\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call SolveTransient(AppCtx)
+      Call SolveTransient(AppCtx, AppCtx%MyEXO, AppCtx%MeshTopology)
    End Select 
 
    If (AppCtx%AppParam%verbose > 0) Then
@@ -97,6 +97,10 @@ Program  TransientHeat
       Write(IOBuffer, *) 'Saving results\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
+
+!! Computing water loss
+!   Call ComputeWaterLoss(AppCtx%MeshTopology, AppCtx%Exo, 'U')
+!   Call IntegrateScal(AppCtx%MeshTopology,1,AppCtx%Elem,AppCtx%U%Sec,Mass)
 
    Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%ElasticEnergy)
