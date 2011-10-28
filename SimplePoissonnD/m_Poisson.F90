@@ -59,11 +59,8 @@ Module m_Poisson3D
       Type(AppParam_Type)                          :: AppParam
    !For TS
       Type(TS)                                     :: TS
-      PetscInt                                     :: maxsteps
+      PetscInt                                     :: maxsteps, NumSteps
       PetscReal                                    :: maxtime
-      Type(Field)                                  :: U_0
-!      Type(SectionReal)                            :: U_0 !initial solution for t=0
-!      Type(Vec)                                    :: U_0_Vec
 
    End Type AppCtx_Type
    
@@ -184,6 +181,7 @@ Contains
             Do iDoF1 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
                If (BCFlag(iDoF1) == 0) Then
                   Do iDoF2 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+                    ! MatElem(iDoF1, iDoF1) = 1./2.
                      MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) )
                      flops = flops + 1
                   End Do
@@ -191,6 +189,7 @@ Contains
             End Do
          End Do
          Call DMMeshAssembleMatrix(AppCtx%K, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         !Call DMMeshAssembleMatrix(AppCtx%K, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iELoc
    
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
