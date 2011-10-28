@@ -17,17 +17,17 @@ Module m_TransientHeat3D
    Implicit NONE   
 
    PetscInt, Parameter, Public                     :: Poisson_Num_EBProperties  = 2
-   PetscInt, Parameter, Public                     :: VarFrac_EBProp_HasBForce  = 1
-   PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type  = 2
+   PetscInt, Parameter, Public                     :: Heat_EBProp_HasBForce  = 1
+   PetscInt, Parameter, Public                     :: Heat_EBProp_Elem_Type  = 2
    
    PetscInt, Parameter, Public                     :: Poisson_Num_SSProperties  = 2
-   PetscInt, Parameter, Public                     :: VarFrac_SSProp_HasSForce  = 1
-   PetscInt, Parameter, Public                     :: VarFrac_SSProp_Elem_Type  = 2
+   PetscInt, Parameter, Public                     :: Heat_SSProp_HasSForce  = 1
+   PetscInt, Parameter, Public                     :: Heat_SSProp_Elem_Type  = 2
 
    PetscInt, Parameter, Public                     :: Poisson_Num_NSProperties  = 1
-   PetscInt, Parameter, Public                     :: VarFrac_NSProp_HasPForce  = 1
+   PetscInt, Parameter, Public                     :: Heat_NSProp_HasPForce  = 1
    
-Type TestCase_Type
+Type Heat_TestCase_Type
    PetscInt                                  :: Index
    Character(len=MEF90_MXSTRLEN)             :: Description
 End Type
@@ -57,8 +57,8 @@ Contains
 
       dEXO%Num_EBProperties = Poisson_Num_EBProperties
       Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
-      dEXO%EBProperty(VarFrac_EBProp_HasBForce)%Name = 'Has_BForce'
-      dEXO%EBProperty(VarFrac_EBProp_Elem_Type)%Name = 'Elem_Type'
+      dEXO%EBProperty(Heat_EBProp_HasBForce)%Name = 'Has_BForce'
+      dEXO%EBProperty(Heat_EBProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_EBProperties
          Allocate(dEXO%EBProperty(i)%Value(NumEB))
          dEXO%EBProperty(i)%Value = 0
@@ -66,8 +66,8 @@ Contains
       
       dEXO%Num_SSProperties = Poisson_Num_SSProperties
       Allocate(dEXO%SSProperty(dEXO%Num_SSProperties))
-      dEXO%SSProperty(VarFrac_SSProp_HasSForce)%Name = 'Has_SForce'
-      dEXO%SSProperty(VarFrac_SSProp_Elem_Type)%Name = 'Elem_Type'
+      dEXO%SSProperty(Heat_SSProp_HasSForce)%Name = 'Has_SForce'
+      dEXO%SSProperty(Heat_SSProp_Elem_Type)%Name = 'Elem_Type'
       Do i = 1, dEXO%Num_SSProperties
          Allocate(dEXO%SSProperty(i)%Value(NumSS))
          dEXO%SSProperty(i)%Value = 0
@@ -75,7 +75,7 @@ Contains
       
       dEXO%Num_NSProperties = Poisson_Num_NSProperties
       Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
-      dEXO%NSProperty(VarFrac_NSProp_HasPForce)%Name = 'Has_PForce'
+      dEXO%NSProperty(Heat_NSProp_HasPForce)%Name = 'Has_PForce'
       Do i = 1, dEXO%Num_NSProperties
          Allocate(dEXO%NSProperty(i)%Value(NumNS))
          dEXO%NSProperty(i)%Value = 0
@@ -85,20 +85,19 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "PoissonInit"
    Subroutine PoissonInit(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       PetscBool                                    :: HasPrefix, Flag
       PetscInt                                     :: iBlk, i, j, iloc 
       Character(len=MEF90_MXSTRLEN)                :: BatchFileName
       PetscInt                                     :: BatchUnit=99
       PetscInt                                     :: NumTestCase
-      Type(TestCase_Type), Dimension(:) , Pointer  :: TestCase
+      Type(Heat_TestCase_Type), Dimension(:) , Pointer  :: TestCase
       PetscBool                                    :: EraseBatch
       PetscBool                                    :: IsBatch, HasBatchFile
       Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
       Type(DM)                                     :: Tmp_Mesh
       PetscReal                                    :: ValU, ValF
-      PetscInt, Dimension(:), Pointer              :: SizeScal
       PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
       PetscReal, Dimension(:), Pointer             :: U, Uelem
 
@@ -147,7 +146,7 @@ Contains
             End If
          End If
       End If
-
+!Are the two following lines still used ? shouldn't it be read from the args file ? 
       AppCtx%AppParam%TestCase = 1
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-test',       AppCtx%AppParam%TestCase, Flag, iErr); CHKERRQ(iErr)
       Call InitLog(AppCtx)
@@ -198,15 +197,7 @@ Contains
       End Do
    
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
-      
-      !!! Allocate the Section for U and F
-      Allocate(SizeScal(1))
-      SizeScal=1
-      Call FieldCreateVertex(AppCtx%U,     'U',         AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%RHS,   'RHS',       AppCtx%MeshTopology, SizeScal)
-      Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        AppCtx%MeshTopology, SizeScal)
-      DeAllocate(SizeScal)
+      Call HeatInitField(AppCtx)
 
       
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
@@ -266,28 +257,32 @@ Contains
       End Select
 
 !  Set EB Properties : U, F         
-
+! Warning : These properties do not have to be the same for all EB
+   !Do i = 1, MeshTopology%Num_Elem_Blks_Global
          ! This has no impact for TestCase 1
-      Call MEF90_AskReal(ValU, 'Initial value in U ', BatchUnit, IsBatch)
+      Write(IOBuffer, 300) 1, 'Initial Value in U'
+      Call MEF90_AskReal(ValU, IOBuffer, BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
 ! TODO ligne précedente pour U et F ?? 
       !Setting force
-      Call MEF90_AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
+      Write(IOBuffer, 300) 1, 'RHS F'
+      Call MEF90_AskReal(ValF,IOBuffer, BatchUnit, IsBatch)
       Call SectionRealSet(AppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
-
+   !End Do
 !Get BC values 
       Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
       U = ValU
       Do i = 1, AppCtx%MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 202) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         If (AppCtx%MyEXO%NSProperty(VarFrac_NSProp_HasPForce)%Value(i) /= 0 ) Then
-            Write(IOBuffer, 302) i, 'Ux'
+         If (AppCtx%MyEXO%NSProperty(Heat_NSProp_HasPForce)%Value(i) /= 0 ) Then
+            Write(IOBuffer, 302) i, 'Temperature'
             Call MEF90_AskReal(U(i), IOBuffer, BatchUnit, IsBatch)
          End If
       End Do
 
 202 Format('    Node Set      ', T24, I3, '\n')
+300 Format('EB', I4.4, ': ', A) 
 302 Format('NS', I4.4, ': ', A)
 
 ! Set BC on NS
@@ -305,10 +300,31 @@ Contains
 
    End Subroutine PoissonInit
 
+
+#undef __FUNCT__
+#define __FUNCT__ "HeatInitField"
+   Subroutine HeatInitField(AppCtx)
+      Type(Heat_AppCtx_Type)                            :: AppCtx
+      PetscInt, Dimension(:), Pointer              :: SizeScal
+      
+!HeatInitField
+      !!! Allocate the Section for U and F
+      Allocate(SizeScal(1))
+      SizeScal=1
+      Call FieldCreateVertex(AppCtx%U,     'U',         AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%RHS,   'RHS',       AppCtx%MeshTopology, SizeScal)
+      Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        AppCtx%MeshTopology, SizeScal)
+      DeAllocate(SizeScal)
+
+   End Subroutine HeatInitField
+
+
+
 #undef __FUNCT__
 #define __FUNCT__ "KSPSetUp"
    Subroutine KSPSetUp(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       
 
@@ -337,7 +353,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Poisson_TSSetUp"
    Subroutine Poisson_TSSetUp(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       
       Type(SectionReal)                            :: TmpSec
       Character(len=256)                           :: TmpSecName
@@ -389,7 +405,7 @@ Contains
    SubRoutine IFunctionPoisson(dummyTS, t, U, Udot, GlobalOut, AppCtx, iErr)
       PetscReal                                    :: t 
       Type(Vec)                                    :: U, Udot, GlobalOut
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       Type(TS)                                     :: dummyTS
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
@@ -412,7 +428,7 @@ Contains
       PetscReal                                    :: t, a 
       Type(Vec)                                    :: U, Udot
       Type(Mat)                                    :: Jac, PreJac  
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer  
       MatStructure                           :: mStruc
@@ -433,7 +449,7 @@ Contains
       Type(TS)                                     :: dummyTS
       PetscReal                                    :: t 
       Type(Vec)                                    :: U, GlobalOut
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
       If (AppCtx%AppParam%verbose > 0) Then
@@ -449,7 +465,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "SolveTransient"
    Subroutine SolveTransient(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: TSTimeSteps, iErr, iStep
       TSConvergedReason                            :: TSreason 
@@ -472,6 +488,9 @@ Contains
       Allocate(CurTime(AppCtx%NumSteps-1)) 
       CurTime = 0.0
       Do iStep = 1, AppCtx%NumSteps-1
+         !TODO For Non linear evolution assemble the matric again
+         !Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
+         !Call MatAssembly(AppCtx)
          !TODO Select type time evolution
          CurTime(iStep) = iStep*AppCtx%maxtime / AppCtx%NumSteps
          Write(IOBuffer, 200) iStep, CurTime(iStep)
@@ -480,6 +499,7 @@ Contains
          Call TSSetInitialTimeStep(AppCtx%TS, CurTime(iStep-1) , (CurTime(iStep)-CurTime(iStep-1)/10.),  ierr); CHKERRQ(iErr)
          Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, CurTime(iStep), iErr); CHKERRQ(iErr)
          Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr)
+!         Call TSSetType(AppCtx%TS, rosw, iErr); CHKERRQ(iErr)
          Call TSSolve(AppCtx%TS, AppCtx%U%Vec, CurTime(iStep), iErr); CHKERRQ(iErr)
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
          Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, iStep+1, AppCtx%U%Sec)
@@ -488,14 +508,14 @@ Contains
       DeAllocate(CurTime)
      ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
    ! Call TSSSPGetNumStages
-      Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
-      Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 100) TSTimeSteps, TSreason
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      !Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
+      !Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
+     ! Write(IOBuffer, 100) TSTimeSteps, TSreason
+     ! Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
  
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
+!100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
 200 Format('Solving TS Time step : ', I5,  ",    Current Time  :", ES12.5, '\n')
    End Subroutine SolveTransient
    
@@ -504,7 +524,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MatMassAssembly"
    Subroutine MatMassAssembly(AppCtx)   
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk, iErr
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
@@ -519,7 +539,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MatMassAssemblyBlock"
    Subroutine MatMassAssemblyBlock(iBlk, AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk
       
       PetscInt                                     :: iE, iELoc, iErr
@@ -558,7 +578,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "TSPoissonFinalize"
    Subroutine TSPoissonFinalize(AppCtx)   
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename
