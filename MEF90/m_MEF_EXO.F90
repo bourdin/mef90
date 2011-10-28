@@ -98,7 +98,10 @@ Module m_MEF_EXO
       
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
       If (EXO_MyRank == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         If (dEXO%exoid == 0) Then
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+         End If
+         !dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
          Call EXINQ(dEXO%exoid, EXELBL, NumEB, rDummy, cDummy, iErr)
          Call EXINQ(dEXO%exoid, EXSIDS, NumSS, rDummy, cDummy, iErr)
          Call EXINQ(dEXO%exoid, EXNODS, NumNS, rDummy, cDummy, iErr)
@@ -142,8 +145,8 @@ Module m_MEF_EXO
             DeAllocate(IDs)
          End If
          
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+         !Call EXCLOS(dEXO%exoid, iErr)
+         !dEXO%exoid == 0
       End If
       Call MPI_BCast(ErrorCode, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
  100 Format('[ERROR] in MeshTopology_Check Numbering. Element block ', I3, ' index is ', I3, '\n')   
@@ -200,7 +203,10 @@ Module m_MEF_EXO
 
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
       If (EXO_MyRank == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         If (dEXO%exoid == 0) Then
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+         End If
+         !dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
          Call EXINQ(dEXO%exoid, EXELBL, NumEB, rDummy, cDummy, iErr)
          Call EXINQ(dEXO%exoid, EXSIDS, NumSS, rDummy, cDummy, iErr)
          Call EXINQ(dEXO%exoid, EXNODS, NumNS, rDummy, cDummy, iErr)
@@ -226,8 +232,8 @@ Module m_MEF_EXO
                Call EXPPA(dEXO%exoid, EXNSET, dEXO%NSProperty(i)%Name, dEXO%NSProperty(i)%Value, iErr)
             End Do
          End If
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+         !Call EXCLOS(dEXO%exoid, iErr)
+         !dEXO%exoid = 0
       End If
    End Subroutine EXOProperty_Write
    
@@ -304,7 +310,10 @@ Module m_MEF_EXO
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
       If (EXO_MyRank == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         If (dEXO%exoid == 0) Then
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+         End If
+         !dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
          !!! EB Properties
          Call EXINQ(dEXO%exoid, EXNEBP, NumProp, rDummy, cDummy, iErr)
          Allocate(PropName(NumProp))
@@ -350,8 +359,8 @@ Module m_MEF_EXO
          End Do
          DeAllocate(PropName)
          
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+         !Call EXCLOS(dEXO%exoid, iErr)
+         !dEXO%exoid = 0
       End If
       !!! Broadcast everything now
       Call MPI_BCast(dEXO%Num_EBProperties, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
@@ -436,7 +445,10 @@ Module m_MEF_EXO
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
       If (EXO_MyRank == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         !dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         If (dEXO%exoid == 0) Then
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+         End If
 
          If (dEXO%Num_GlobVariables > 0) Then
             Call EXPVP (dEXO%exoid, 'g', dEXO%Num_GlobVariables, iErr)
@@ -450,8 +462,8 @@ Module m_MEF_EXO
             Call EXPVP (dEXO%exoid, 'n', dEXO%Num_VertVariables, iErr)
             Call EXPVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
          End If
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+         !Call EXCLOS(dEXO%exoid, iErr)
+         !dEXO%exoid = 0
       End If
    End Subroutine EXOVariable_Write 
    
@@ -471,7 +483,10 @@ Module m_MEF_EXO
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
       If (EXO_MyRank == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         If (dEXO%exoid == 0) Then
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+         End If
+         !dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
 
          Call EXGVP (dEXO%exoid, 'g', dEXO%Num_GlobVariables, iErr)
          If (dEXO%Num_GlobVariables > 0) Then
@@ -491,8 +506,8 @@ Module m_MEF_EXO
             Call EXGVAN(dEXO%exoid, 'n', dEXO%Num_VertVariables, dEXO%VertVariable(:)%Name, iErr)
          End If
          
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+         !Call EXCLOS(dEXO%exoid, iErr)
+         !dEXO%exoid = 0
       End If
 
       Call MPI_BCast(dEXO%Num_GlobVariables, 1, MPIU_INTEGER, 0, dEXO%Comm, iErr)
@@ -528,6 +543,9 @@ Module m_MEF_EXO
 #undef __FUNCT__
 #define __FUNCT__ "MeshTopologyWrite"
    Subroutine MeshTopologyWrite(dMeshTopology, dEXO)
+   !!! Not sure if we should expect an already created and open exo file.
+   !!! Leaving unchanged for now
+   !!!
       Type(MeshTopology_Type)                        :: dMeshTopology
       Type(EXO_Type)                                 :: dEXO
       PetscInt                                       :: vers
@@ -750,13 +768,14 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Vars, Num_TS
       PetscReal                                      :: fDum
       Character                                      :: cDum
-      Logical                                        :: EXONeedsOpen = .FALSE.
+      !Logical                                        :: EXONeedsOpen = .FALSE.
       
       dRes = 0.0_Kr
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
          If (dEXO%exoid == 0) Then
-            dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
-            EXONeedsOpen = .TRUE.
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+            !dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+            !EXONeedsOpen = .TRUE.
          End If
          ! Get the number of global variables stored in the database    
          Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
@@ -767,10 +786,10 @@ Module m_MEF_EXO
          Call EXGGV(dEXO%exoid, dTS, Num_Vars, Tmp_Res, iErr)
          MyRes = Tmp_Res(dIdx)
          DeAllocate (Tmp_Res)
-         If (EXONeedsOpen) Then
-            Call EXCLOS(dEXO%exoid, iErr)
-            dEXO%exoid = 0
-         End If
+         !If (EXONeedsOpen) Then
+         !   Call EXCLOS(dEXO%exoid, iErr)
+         !   dEXO%exoid = 0
+         !End If
       End If
             
       !!! Broacast if dEXO%comm == PETSC_COMM_WORLD
@@ -795,11 +814,12 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Rec, iRec
       PetscInt                                       :: iErr
       PetscReal                                      :: Vers
-      Logical                                        :: EXONeedsOpen = .FALSE.
+      !Logical                                        :: EXONeedsOpen = .FALSE.
       
       If (dEXO%exoid == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
-         EXONeedsOpen = .TRUE.
+         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+         !dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+         !EXONeedsOpen = .TRUE.
       End If
       
       If (Mod(Size(dRes), dMeshTopology%Num_Verts) /= 0) Then
@@ -810,10 +830,10 @@ Module m_MEF_EXO
       Do iRec = 1, Num_Rec
          Call EXGNV(dEXO%exoid, dTS, dIdx + iRec-1, dMeshTopology%Num_Verts, dRes(iRec:dMeshTopology%Num_Verts*Num_Rec:Num_Rec), iErr); CHKERRQ(iErr)
       End Do
-      If (EXONeedsOpen) Then
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
-      End If
+      !If (EXONeedsOpen) Then
+      !   Call EXCLOS(dEXO%exoid, iErr)
+      !   dEXO%exoid = 0
+      !End If
    End Subroutine Read_EXO_Result_VertexPtrInterlaced
 
 #undef __FUNCT__
@@ -1065,8 +1085,10 @@ Module m_MEF_EXO
       PetscInt                                       :: iErr
       PetscReal                                      :: Vers
       
-      dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
-      
+      !dEXO%exoid = EXOPEN(dEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, ierr)
+      If (dEXO%exoid == 0) Then
+         SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+      End If
       If (Mod(Size(dRes), dMeshTopology%Num_Elems) /= 0) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
       End If
@@ -1084,8 +1106,8 @@ Module m_MEF_EXO
             DeAllocate(Res_Tmp)
          End If
       End Do Do_iBlk
-      Call EXCLOS(dEXO%exoid, iErr)
-      dEXO%exoid = 0
+      !Call EXCLOS(dEXO%exoid, iErr)
+      !dEXO%exoid = 0
    End Subroutine Read_EXO_Result_CellPtrInterlaced
 
 #undef __FUNCT__
@@ -1139,7 +1161,7 @@ Module m_MEF_EXO
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
       PetscInt                                       :: iErr
       
-      If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
+      If (Size(dRes) /= dMeshTopology%Num_Verts) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellVect2D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
@@ -1163,7 +1185,10 @@ Module m_MEF_EXO
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
       PetscInt                                       :: iErr
       
-      If ( Size(dRes) /= dMeshTopology%Num_Verts) Then
+      If (dEXO%exoid == 0) Then
+         SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+      End If
+      If (Size(dRes) /= dMeshTopology%Num_Verts) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellVect3D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
@@ -1189,7 +1214,10 @@ Module m_MEF_EXO
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
       PetscInt                                       :: iErr
       
-      If ( Size(dRes) /= dMeshTopology%Num_elems) Then
+      If (dEXO%exoid == 0) Then
+         SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+      End If
+      If (Size(dRes) /= dMeshTopology%Num_elems) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_VertexMat2D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
@@ -1217,7 +1245,10 @@ Module m_MEF_EXO
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
       PetscInt                                       :: iErr
       
-      If ( Size(dRes) /= dMeshTopology%Num_elems) Then
+      If (dEXO%exoid == 0) Then
+         SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+      End If
+      If (Size(dRes) /= dMeshTopology%Num_elems) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMatS2D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
@@ -1243,7 +1274,10 @@ Module m_MEF_EXO
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
       PetscInt                                       :: iErr
       
-      If ( Size(dRes) /= dMeshTopology%Num_Elems) Then
+      If (dEXO%exoid == 0) Then
+         SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+      End If
+      If (Size(dRes) /= dMeshTopology%Num_Elems) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMat3D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
@@ -1281,7 +1315,10 @@ Module m_MEF_EXO
       PetscReal, Dimension(:), Pointer               :: Res_Ptr
       PetscInt                                       :: iErr
       
-      If ( Size(dRes) /= dMeshTopology%Num_Elems) Then
+      If (dEXO%exoid == 0) Then
+         SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
+      End If
+      If (Size(dRes) /= dMeshTopology%Num_Elems) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellMatS3D: The argument does not match the number of cells in the mesh', iErr)
       End If
 
@@ -1314,22 +1351,25 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Vars
       PetscReal                                      :: fDum
       Character                                      :: cDum
-      Logical                                        :: EXONeedsOpen = .FALSE.
+      !Logical                                        :: EXONeedsOpen = .FALSE.
       
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
          If (dEXO%exoid == 0) Then
-            EXONeedsOpen = .TRUE.
-            dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+            SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
          End If
+         !If (dEXO%exoid == 0) Then
+         !   EXONeedsOpen = .TRUE.
+         !   dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         !End If
          Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
          If (Num_Vars /= Size(dRes)) Then
             SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_AllResult_Global: The argument does not match the number of global variables in the mesh', iErr)
          End If
          Call EXPGV(dEXO%exoid, dTS, Num_Vars, dRes, iErr)
-         If (EXONeedsOpen) Then
-            Call EXCLOS(dEXO%exoid, iErr)
-            dEXO%exoid = 0
-         End If
+         !If (EXONeedsOpen) Then
+         !   Call EXCLOS(dEXO%exoid, iErr)
+         !   dEXO%exoid = 0
+         !End If
       End If
    End Subroutine Write_EXO_AllResult_Global
 
@@ -1347,13 +1387,16 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Vars
       PetscReal                                      :: fDum
       Character                                      :: cDum
-      PetscBool                                      :: EXONeedsOpen = .FALSE.
+      !PetscBool                                      :: EXONeedsOpen = .FALSE.
       
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
          If (dEXO%exoid == 0) Then
-            EXONeedsOpen = .TRUE.
-            dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+            SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
          End If
+         !If (dEXO%exoid == 0) Then
+         !   EXONeedsOpen = .TRUE.
+         !   dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         !End If
          ! Get the number of global variables stored in the database    
          Call EXGVP(dEXO%exoid, 'G', Num_Vars, iErr)
          Allocate(Tmp_Res(Num_Vars))
@@ -1366,10 +1409,10 @@ Module m_MEF_EXO
          
          Call EXPGV(dEXO%exoid, dTS, Num_Vars, Tmp_Res, iErr)
          DeAllocate (Tmp_Res)
-         If (EXONeedsOpen) Then
-            Call EXCLOS(dEXO%exoid, iErr)
-            dEXO%exoid = 0
-         End If
+         !If (EXONeedsOpen) Then
+         !   Call EXCLOS(dEXO%exoid, iErr)
+         !   dEXO%exoid = 0
+         !End If
       End If
    End Subroutine Write_EXO_Result_Global
 
@@ -1385,12 +1428,15 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Rec, iRec
       PetscInt                                       :: iErr
       PetscReal                                      :: Vers
-      PetscBool                                      :: EXONeedsOpen = .FALSE.
+      !PetscBool                                      :: EXONeedsOpen = .FALSE.
       
       If (dEXO%exoid == 0) Then
-         EXONeedsOpen = .TRUE.
-         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
       End If
+      !If (dEXO%exoid == 0) Then
+      !   EXONeedsOpen = .TRUE.
+      !   dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+      !End If
       
       If (Mod(Size(dRes), dMeshTopology%Num_Verts) /= 0) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Write_EXO_Result_VertexPtrInterlaced: The argument does not match the number of vertices in the mesh', iErr)
@@ -1399,10 +1445,10 @@ Module m_MEF_EXO
       Do iRec = 1, Num_Rec
          Call EXPNV(dEXO%exoid, dTS, dIdx + iRec-1, dMeshTopology%Num_Verts, dRes(iRec:dMeshTopology%Num_Verts*Num_Rec:Num_Rec), iErr); CHKERRQ(iErr)
       End Do
-      If (EXONeedsOpen) Then
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
-      End If
+      !If (EXONeedsOpen) Then
+      !   Call EXCLOS(dEXO%exoid, iErr)
+      !   dEXO%exoid = 0
+      !End If
    End Subroutine Write_EXO_Result_VertexPtrInterlaced
 
 #undef __FUNCT__
@@ -1643,12 +1689,15 @@ Module m_MEF_EXO
       PetscInt                                       :: Num_Rec, iRec, iBlk, iE
       PetscInt                                       :: iErr
       PetscReal                                      :: Vers
-      PetscBool                                      :: EXONeedsOpen = .FALSE.
+      !PetscBool                                      :: EXONeedsOpen = .FALSE.
       
       If (dEXO%exoid == 0) Then
-         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
-         EXONeedsOpen = .TRUE.
+         SETERRQ(dEXO%Comm,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",iErr)
       End If
+      !If (dEXO%exoid == 0) Then
+      !   dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+      !   EXONeedsOpen = .TRUE.
+      !End If
         
       If (Mod(Size(dRes), dMeshTopology%Num_Elems) /= 0) Then
          SETERRQ(dEXO%Comm, PETSC_ERR_ARG_SIZ, 'Read_EXO_Result_CellPtrInterlaced: The argument does not match the number of cells in the mesh', iErr)
@@ -1667,10 +1716,10 @@ Module m_MEF_EXO
             DeAllocate(Res_Tmp)
          End If
       End Do Do_iBlk
-      If (EXONeedsOpen) Then
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
-      End If
+      !If (EXONeedsOpen) Then
+      !   Call EXCLOS(dEXO%exoid, iErr)
+      !   dEXO%exoid = 0
+      !End If
    End Subroutine Write_EXO_Result_CellPtrInterlaced
 
 #undef __FUNCT__
