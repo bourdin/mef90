@@ -62,6 +62,7 @@ Program PrepVarFrac
    PetscBool                                    :: saveElemVar, PlaneStrain
    
    PetscReal                                    :: R, Ymax
+   PetscInt                                     :: exo_version
 
    Call MEF90_Initialize()
 
@@ -141,6 +142,7 @@ Program PrepVarFrac
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
    
+   EXO%exoid = EXOPEN(EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr)
    Call EXO_Check_Numbering(EXO, iErr)
    If (iErr /= 0) Then
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
@@ -175,9 +177,13 @@ Program PrepVarFrac
    End If
 
    MyEXO%comm = PETSC_COMM_SELF
-   MyEXO%exoid = EXO%exoid
+   MyEXO%title = EXO%title
+   !MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 99) trim(prefix), MEF90_MyRank
  99  Format(A, '-', I4.4, '.gen')
+   MyEXO%exoid = EXCRE (MyEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
+   !MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr)
+
    Call DMMeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
    
    !!!
@@ -274,7 +280,6 @@ Program PrepVarFrac
    Allocate(GlobVars(VarFrac_Num_GlobVar))
    GlobVars = 0.0_Kr
    Allocate(T(NumSteps))
-   MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
    Do i = 1, NumSteps-1
       Select Case(iCase)
       Case(4,5,6,7)
@@ -295,8 +300,6 @@ Program PrepVarFrac
    GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
    Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
    Call EXPTIM(MyEXO%exoid, NumSteps, T(NumSteps), iErr)
-   Call EXCLOS(MyEXO%exoid, iErr)
-   MyEXO%exoid = 0
    DeAllocate(GlobVars)
    
    !!!
@@ -657,6 +660,10 @@ Program PrepVarFrac
    DeAllocate(T)
    Call SectionRealDestroy(CoordSec, iErr); CHKERRQ(iErr)
    Call MeshTopologyDestroy(MeshTopology)
+   Call EXCLOS(EXO%exoid, iErr)
+   EXO%exoid = 0
+   Call EXCLOS(MyEXO%exoid, iErr)
+   MyEXO%exoid = 0
    Call MEF90_Finalize()
 
  100 Format('    Element Block ', T24, I3, '\n')
