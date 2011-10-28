@@ -389,6 +389,10 @@ Contains
       Call TSSetIFunction(AppCtx%TS, PETSC_NULL_OBJECT, IFunctionPoisson, AppCtx, ierr); CHKERRQ(iErr)
       Call TSSetIJacobian(AppCtx%TS, AppCtx%Jac, AppCtx%Jac, IJacobianPoisson, AppCtx, ierr); CHKERRQ(iErr)
       Call TSSetRHSFunction(AppCtx%TS, PETSC_NULL_OBJECT, RHSPoisson, AppCtx, ierr); CHKERRQ(iErr)
+! Setting time discretization scheme for TS
+      Call TSSetType(AppCtx%TS, 'rosw', iErr); CHKERRQ(iErr)
+      Call TSRosWSetType(AppCtx%TS, 'ra3pw', iErr); CHKERRQ(iErr)
+      Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr) ! overwritting if cli arguments
       
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
@@ -489,8 +493,6 @@ Contains
       CurTime = 0.0
       Do iStep = 1, AppCtx%NumSteps-1
          !TODO For Non linear evolution assemble the matric again
-         !Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
-         !Call MatAssembly(AppCtx)
          !TODO Select type time evolution
          CurTime(iStep) = iStep*AppCtx%maxtime / AppCtx%NumSteps
          Write(IOBuffer, 200) iStep, CurTime(iStep)
@@ -498,24 +500,33 @@ Contains
          Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr) 
          Call TSSetInitialTimeStep(AppCtx%TS, CurTime(iStep-1) , (CurTime(iStep)-CurTime(iStep-1)/10.),  ierr); CHKERRQ(iErr)
          Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, CurTime(iStep), iErr); CHKERRQ(iErr)
-         Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr)
-!         Call TSSetType(AppCtx%TS, rosw, iErr); CHKERRQ(iErr)
          Call TSSolve(AppCtx%TS, AppCtx%U%Vec, CurTime(iStep), iErr); CHKERRQ(iErr)
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
          Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, iStep+1, AppCtx%U%Sec)
 !Call Write_EXO_Result_Vertex(MyEXO, MeshTopology,  MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
+         Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
+         Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
+         Write(IOBuffer, 100) TSTimeSteps, TSreason
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         If (iStep < AppCtx%NumSteps-1) Then
+            Select Case(AppCtx%AppParam%TestCase)
+            Case(2)
+               If (AppCtx%AppParam%verbose > 0) Then
+                  Write(IOBuffer, *) 'Reassembling the rigidity Matrix \n'
+                  Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+               End If
+               Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
+               Call MatAssembly(AppCtx)
+            End Select
+         End if 
       End Do
       DeAllocate(CurTime)
      ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
    ! Call TSSSPGetNumStages
-      !Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
-      !Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
-     ! Write(IOBuffer, 100) TSTimeSteps, TSreason
-     ! Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       
  
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-!100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
+100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
 200 Format('Solving TS Time step : ', I5,  ",    Current Time  :", ES12.5, '\n')
    End Subroutine SolveTransient
    
