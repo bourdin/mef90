@@ -143,22 +143,24 @@ Contains
  
 #undef __FUNCT__
 #define __FUNCT__ "MatAssembly"
-   Subroutine MatAssembly(AppCtx)   
+   Subroutine HeatMatAssembly(AppCtx, MeshTopology)   
       Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk, iErr
       
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
-      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call MatAssemblyBlock(iBlk, AppCtx)
+      Do_iBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
+         Call MatAssemblyBlock(iBlk, AppCtx, MeshTopology)
       End Do Do_iBlk
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine MatAssembly
+   End Subroutine HeatMatAssembly
       
-   Subroutine MatAssemblyBlock(iBlk, AppCtx)
+   Subroutine MatAssemblyBlock(iBlk, AppCtx, MeshTopology)
       Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk
       
       PetscInt                                     :: iE, iELoc, iErr
@@ -169,18 +171,18 @@ Contains
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
       
-      Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
-      Allocate(BCFlag(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+      Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF, MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+      Allocate(BCFlag(MeshTopology%Elem_Blk(iBlk)%Num_DoF))
    
-      Do_iELoc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+      Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem = 0.0_Kr
          BCFlag = 0
-         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, MeshTopology%mesh, iE-1, MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
-            Do iDoF1 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+            Do iDoF1 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
                If (BCFlag(iDoF1) == 0) Then
-                  Do iDoF2 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+                  Do iDoF2 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
                     ! MatElem(iDoF1, iDoF1) = 1./2.
                      MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) )
                      flops = flops + 1
@@ -188,8 +190,8 @@ Contains
                End If
             End Do
          End Do
-         Call DMMeshAssembleMatrix(AppCtx%K, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
-         !Call DMMeshAssembleMatrix(AppCtx%K, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+         Call DMMeshAssembleMatrix(AppCtx%K, MeshTopology%mesh, AppCtx%U%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+         !Call DMMeshAssembleMatrix(AppCtx%K, MeshTopology%mesh, AppCtx%U%Sec, iE-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iELoc
    
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
@@ -200,9 +202,10 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "RHSAssembly"
-   Subroutine RHSAssembly(AppCtx)
+   Subroutine RHSAssembly(AppCtx, MeshTopology)
       Type(Heat_AppCtx_Type)                            :: AppCtx
-      
+      Type (MeshTopology_Type)                     :: MeshTopology
+
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
 
@@ -211,7 +214,7 @@ Contains
       Call SectionRealZero(AppCtx%RHS%Sec, iErr); CHKERRQ(iErr)
       
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call RHSAssemblyBlock(iBlk, AppCtx)
+         Call RHSAssemblyBlock(iBlk, AppCtx, MeshTopology)
       End Do Do_iBlk
 
       Call SectionRealComplete(AppCtx%RHS%Sec, iErr); CHKERRQ(iErr)
@@ -222,9 +225,10 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "RHSAssemblyBlock"
-   Subroutine RHSAssemblyBlock(iBlk, AppCtx)
+   Subroutine RHSAssemblyBlock(iBlk, AppCtx, MeshTopology)
       PetscInt                                     :: iBlk
-      Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type (MeshTopology_Type)                     :: MeshTopology
 
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlkId
@@ -238,17 +242,17 @@ Contains
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyBlock_Event, iErr); CHKERRQ(iErr)
       flops = 0.0
 
-      Num_DoF = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      Num_DoF = MeshTopology%Elem_Blk(iBlk)%Num_DoF
       Allocate(F_Loc(Num_DoF))
       Allocate(RHS_Loc(Num_DoF))
       Allocate(BCFlag_Loc(Num_DoF))
 
-      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+      iBlkID = MeshTopology%Elem_Blk(iBlk)%ID
+      Do_iEloc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          RHS_Loc = 0.0_Kr
-         Call SectionRealRestrictClosure(AppCtx%F%Sec, AppCtx%MeshTopology%mesh, iE-1, Num_DoF, F_Loc, iErr); CHKERRQ(ierr)
-         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, Num_DoF, BCFlag_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%F%Sec, MeshTopology%mesh, iE-1, Num_DoF, F_Loc, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, MeshTopology%mesh, iE-1, Num_DoF, BCFlag_Loc, iErr); CHKERRQ(ierr)
          Do iGauss = 1, Size(AppCtx%Elem(iE)%Gauss_C)
             F_Elem = 0.0_Kr
             Do iDoF = 1, Num_DoF
@@ -262,7 +266,7 @@ Contains
                End If
             End Do
          End Do
-         Call SectionRealUpdateClosure(AppCtx%RHS%Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+         Call SectionRealUpdateClosure(AppCtx%RHS%Sec, MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
 
       DeAllocate(BCFlag_Loc)

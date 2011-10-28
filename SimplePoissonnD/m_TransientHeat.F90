@@ -101,7 +101,6 @@ Contains
       PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
       PetscReal, Dimension(:), Pointer             :: U, Uelem
 
-
       Call MEF90_Initialize()
       
       NumTestCase = 2
@@ -168,7 +167,7 @@ Contains
 102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
 103 Format(A,'.log')
 104 Format('Collective output redirected to file ', A, '\n')
-
+      
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
       !!! Read and partition the mesh
@@ -297,6 +296,8 @@ Contains
       End Do
       DeAllocate(Uelem)
       Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
+      !!! Create the EXO case file
+      Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
 
    End Subroutine PoissonInit
 
@@ -344,28 +345,25 @@ Contains
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       
-      !!! Create the EXO case file
-      Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
-      
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine KSPSetUP
    
 #undef __FUNCT__
 #define __FUNCT__ "Poisson_TSSetUp"
-   Subroutine Poisson_TSSetUp(AppCtx)
+   Subroutine Poisson_TSSetUp(AppCtx, MeshTopology)
       Type(Heat_AppCtx_Type)                            :: AppCtx
-      
+      Type (MeshTopology_Type)                     :: MeshTopology
+
       Type(SectionReal)                            :: TmpSec
       Character(len=256)                           :: TmpSecName
       PetscInt                                     :: iErr
 
       !!! Initialize the matrix and vector for the linear system
-      Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
-      Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
+      Call DMMeshSetMaxDof(MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
+      Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
       Call PetscObjectSetName(AppCtx%K,"K matrix",iErr);CHKERRQ(iErr)
-      Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%M, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%M, iErr); CHKERRQ(iErr)
       Call PetscObjectSetName(AppCtx%M,"M matrix",iErr);CHKERRQ(iErr)
-      Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%Jac, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%Jac, iErr); CHKERRQ(iErr)
       Call PetscObjectSetName(AppCtx%Jac,"Jac matrix",iErr);CHKERRQ(iErr)
       
       Call TSCreate(PETSC_COMM_WORLD, AppCtx%TS, iErr); CHKERRQ(iErr)
@@ -382,10 +380,10 @@ Contains
       Call PetscObjectSetName(TmpSec,"default",iErr);CHKERRQ(iErr)
       !!! Can't do that because we don;t have a fortran binding for SectionRealDuplicate
       !TmpSecName = "default"
-      call DMMeshSetSectionReal(AppCtx%MeshTopology%mesh,trim('default'),TmpSec,iErr);CHKERRQ(iErr)
+      call DMMeshSetSectionReal(MeshTopology%mesh,trim('default'),TmpSec,iErr);CHKERRQ(iErr)
       !Destroy section tmpsec!!?
       
-      call TSSetDM(AppCtx%TS, AppCtx%MeshTopology%mesh, ierr);   CHKERRQ(iErr) 
+      call TSSetDM(AppCtx%TS, MeshTopology%mesh, ierr);   CHKERRQ(iErr) 
       Call TSSetIFunction(AppCtx%TS, PETSC_NULL_OBJECT, IFunctionPoisson, AppCtx, ierr); CHKERRQ(iErr)
       Call TSSetIJacobian(AppCtx%TS, AppCtx%Jac, AppCtx%Jac, IJacobianPoisson, AppCtx, ierr); CHKERRQ(iErr)
       Call TSSetRHSFunction(AppCtx%TS, PETSC_NULL_OBJECT, RHSPoisson, AppCtx, ierr); CHKERRQ(iErr)
@@ -397,10 +395,6 @@ Contains
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
        
-      !!! Create the EXO case file
-      Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
-
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Poisson_TSSetUp
 
 
@@ -468,9 +462,10 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "SolveTransient"
-   Subroutine SolveTransient(AppCtx)
+   Subroutine SolveTransient(AppCtx, MyEXO, MeshTopology)
       Type(Heat_AppCtx_Type)                            :: AppCtx
-      
+      Type (MeshTopology_Type)                     :: MeshTopology
+      Type(EXO_Type)                               :: MyEXO
       PetscInt                                     :: TSTimeSteps, iErr, iStep
       TSConvergedReason                            :: TSreason 
       PetscReal, Dimension(:), Pointer             :: CurTime
@@ -488,21 +483,30 @@ Contains
     !  Call Matview(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr)       
      ! Call Matview(AppCtx%M, PETSC_VIEWER_STDOUT_WORLD, iErr)       
      ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U%Sec)
+!      Call Write_EXO_Result_Vertex(MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U%Sec)
       Allocate(CurTime(AppCtx%NumSteps-1)) 
       CurTime = 0.0
       Do iStep = 1, AppCtx%NumSteps-1
-         !TODO For Non linear evolution assemble the matric again
-         !TODO Select type time evolution
-         CurTime(iStep) = iStep*AppCtx%maxtime / AppCtx%NumSteps
+         Select Case(AppCtx%AppParam%TestCase)
+         Case(2)
+             !Linear
+            CurTime(iStep) = iStep*AppCtx%maxtime / AppCtx%NumSteps
+         Case(3)
+             !sqrt(t)
+            CurTime(iStep) = iStep*AppCtx%maxtime / AppCtx%NumSteps
+         End Select
          Write(IOBuffer, 200) iStep, CurTime(iStep)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
          Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr) 
          Call TSSetInitialTimeStep(AppCtx%TS, CurTime(iStep-1) , (CurTime(iStep)-CurTime(iStep-1)/10.),  ierr); CHKERRQ(iErr)
          Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, CurTime(iStep), iErr); CHKERRQ(iErr)
+!TSSetExactFinalTime can not be used : 'TSRosW 2p does not have an interpolation formula'
+!         Call TSSetExactFinalTime(AppCtx%TS, PETSC_TRUE,  ierr); CHKERRQ(iErr)
          Call TSSolve(AppCtx%TS, AppCtx%U%Vec, CurTime(iStep), iErr); CHKERRQ(iErr)
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-         Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 1, iStep+1, AppCtx%U%Sec)
+!         Call TSGetTimeStep
+!Write the result of the current time step into the Ewo file
+!         Call Write_EXO_Result_Vertex(MyEXO, AppCtx%MeshTopology, 1, iStep+1, AppCtx%U%Sec)
 !Call Write_EXO_Result_Vertex(MyEXO, MeshTopology,  MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
          Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
          Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
@@ -511,12 +515,14 @@ Contains
          If (iStep < AppCtx%NumSteps-1) Then
             Select Case(AppCtx%AppParam%TestCase)
             Case(2)
+!TODO For Non linear evolution assemble the matric again
+!TODO Recompute Diffusion coefficient 
                If (AppCtx%AppParam%verbose > 0) Then
                   Write(IOBuffer, *) 'Reassembling the rigidity Matrix \n'
                   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
                End If
                Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
-               Call MatAssembly(AppCtx)
+               Call HeatMatAssembly(AppCtx, MeshTopology)
             End Select
          End if 
       End Do
@@ -534,23 +540,25 @@ Contains
      
 #undef __FUNCT__
 #define __FUNCT__ "MatMassAssembly"
-   Subroutine MatMassAssembly(AppCtx)   
+   Subroutine MatMassAssembly(AppCtx, MeshTopology)   
       Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk, iErr
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
-      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call MatMassAssemblyBlock(iBlk, AppCtx)
+      Do_iBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
+         Call MatMassAssemblyBlock(iBlk, AppCtx, MeshTopology)
       End Do Do_iBlk
       Call MatAssemblyBegin(AppCtx%M, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%M, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      !Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatMassAssembly
       
 #undef __FUNCT__
 #define __FUNCT__ "MatMassAssemblyBlock"
-   Subroutine MatMassAssemblyBlock(iBlk, AppCtx)
+   Subroutine MatMassAssemblyBlock(iBlk, AppCtx, MeshTopology)
       Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk
       
       PetscInt                                     :: iE, iELoc, iErr
@@ -562,22 +570,22 @@ Contains
       
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
       
-      Allocate(MatElem(AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+      Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF, MeshTopology%Elem_Blk(iBlk)%Num_DoF))
    
-      Do_iELoc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+      Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem = 0.0_Kr
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
-            Do iDoF1 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+            Do iDoF1 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
              !     MatElem(iDoF1, iDoF1) = 1 
-               Do iDoF2 = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+               Do iDoF2 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
                   MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%BF(iDoF1, iGauss) *  AppCtx%Elem(iE)%BF(iDoF2, iGauss) )
                   flops = flops + 2 !Check 
                End Do
             End Do
          End Do
-         Call DMMeshAssembleMatrix(AppCtx%M, AppCtx%MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
-        ! Call DMMeshAssembleMatrix(AppCtx%M, AppCtx%MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+         Call DMMeshAssembleMatrix(AppCtx%M, MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+        ! Call DMMeshAssembleMatrix(AppCtx%M, MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iELoc
    
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
@@ -617,6 +625,64 @@ Contains
       Call MEF90_Finalize()
 103 Format(A,'.log.txt')
    End Subroutine TSPoissonFinalize
+
+!#undef __FUNCT__
+!#define __FUNCT__ "ComputeWaterLoss"
+!   Subroutine ComputeWaterLoss(MeshTopology, Exo, NameField)
+!      Type(SectionReal)                            :: V_Sec_0, V_Sec_i
+!      Type(MeshTopology_Type)                      :: MeshTopology
+!      Type (EXO_Type)                              :: EXO
+!      PetscInt                                     :: iErr, iStep
+!      Character(len=*)                           :: NameField
+!     ! Call MeshTopologyReadEXO(MeshTopology, EXO)
+!      iStep = 2
+!      Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_0', 1, V_Sec_0, iErr); CHKERRQ(iErr)
+!      Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_0', 1, V_Sec_i, iErr); CHKERRQ(iErr)
+!      Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, 1, V_Sec_0)
+!      Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, iStep+1, V_Sec_i)
+!   !Pb car le fichier est ouvert !?! 
+!   !Comment faire la differnece entre 2 sections ? 
+
+!   !Integrate Sec on the block from MeshTopology identified bys iBlk
+!   !Load initial value
+!   !For each time step load value : difference between actual and initial value
+!   !Then integrate --> using Mass matrix ? 
+!   End Subroutine ComputeWaterLoss
+
+
+!#undef __FUNCT__
+!#define __FUNCT__ "IntegrateScal"
+!   Subroutine IntegrateScal(MeshTopology,iBlk,Elem,V_Sec,IntRes)
+!      Type(SectionReal)                            :: V_Sec
+!      Type(MeshTopology_Type)                      :: MeshTopology
+!      PetscInt                                     :: iBlk
+!      PetscInt                                     :: iErr, NumDoFScal
+!      PetscInt                                     :: iE, iEloc, IGauss, IDoF1
+!      PetscReal                                    :: IntRes
+!      PetscReal, Dimension(:), Pointer             :: V_Loc
+!#if defined PB_2D
+!   Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
+!#elif defined PB_3D 
+!      Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
+!#endif   
+!
+!      NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
+!      Allocate(V_Loc(NumDoFScal))
+!
+!      IntRes = 0
+!      Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+!         iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+!         Call SectionRealRestrictClosure(V_Sec, MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
+!         Do iGauss = 1, size(Elem(iE)%Gauss_C)
+!            Do iDoF1 = 1, NumDoFScal
+!          !     Do iDoF2 = 1, NumDoFScal
+!                  IntRes = IntRes     + V_Loc(iDoF1) *   Elem(iE)%BF(iDoF1, iGauss)
+!           !    End Do 
+!            End Do
+!         End DO
+!         End Do Do_IEloc 
+!   End Subroutine IntegrateScal
+
 
 #if defined PB_2D
 End Module m_TransientHeat2D
