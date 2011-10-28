@@ -576,8 +576,8 @@ Module m_MEF_EXO
 
       Is_IO: If (dEXO%comm == PETSC_COMM_SELF) Then
          ! Open File
-         dEXO%exoid = EXCRE (dEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
-         dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
+         !dEXO%exoid = EXCRE (dEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
+         !dEXO%exoid = EXOPEN(dEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, ierr)
          
          ! Write Mesh Topology Info
          Call EXPINI(dEXO%exoid, dEXO%Title, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, dMeshTopology%Num_Side_Sets, iErr)
@@ -651,8 +651,8 @@ Module m_MEF_EXO
           End Do
           Call DMMeshRestoreElementsF90(dMeshTopology%mesh, ConnectMesh, iErr);CHKERRQ(iErr)
 
-         Call EXCLOS(dEXO%exoid, iErr)
-         dEXO%exoid = 0
+         !Call EXCLOS(dEXO%exoid, iErr)
+         !dEXO%exoid = 0
       Else
          SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, 'Synchronized I/O on PETSC_COMM_WORLD not supported yet', ierr)
       End If Is_IO
