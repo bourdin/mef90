@@ -62,7 +62,7 @@ Program FindMPIProblem
    
    Write(IOBuffer, *) "Initializing MeshTopology object\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    
    Write(IOBuffer, *) "Initializing Element types\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)

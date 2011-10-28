@@ -87,7 +87,7 @@ Program TestFibration
       Write(IOBuffer, *) "Initializing MeshTopology object\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    
    If (verbose > 0) Then
       Write(IOBuffer, *) "Initializing Element types\n"

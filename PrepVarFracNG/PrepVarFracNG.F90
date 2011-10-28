@@ -155,7 +155,7 @@ Program PrepVarFrac
       Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
 
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    !!Call MeshTopologyView(MeshTopology, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
    !!!
    !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_dim              ', MeshTopology%num_dim
@@ -649,7 +649,8 @@ Program PrepVarFrac
    DeAllocate(Velem)
    Call SectionRealDestroy(VSec, iErr); CHKERRQ(iErr)
    DeAllocate(V)
-
+   
+   
    Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)
    Close(BatchUnit)
    DeAllocate(TestCase)
