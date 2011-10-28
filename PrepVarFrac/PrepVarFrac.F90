@@ -162,7 +162,7 @@ Program PrepVarFrac
    !!!Call MeshLoad(MeshViewer,MeshTopology%Mesh,iErr);CHKERRQ(iErr)
    !!!Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
 
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, EXO%comm)
 !   write(*,*) '============ BACK IN PREPVARFRAC ='
 !   write(*,*) 'Associated(MeshTopology%elem_blk) ', Associated(MeshTopology%elem_blk)
 

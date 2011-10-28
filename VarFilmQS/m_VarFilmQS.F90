@@ -115,7 +115,7 @@ Contains
          Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
       End If
    
-      Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
+   Call MeshTopologyGetInfo(AppCtx%MeshTopology, PETSC_COMM_WORLD)
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)

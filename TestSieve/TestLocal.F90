@@ -52,7 +52,7 @@ Program TestLocal
    Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
    Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    Call EXOProperty_Read(EXO)
    Call EXOVariable_Read(EXO)
    

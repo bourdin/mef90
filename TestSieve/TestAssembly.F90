@@ -57,7 +57,7 @@ Program TestAssembly
       Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
    
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    
    Call MeshSetMaxDof(MeshTopology%Mesh, dof, iErr); CHKERRQ(iErr) 
 

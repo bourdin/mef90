@@ -70,7 +70,7 @@ Program TestSieve
 
    Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    Call PetscLogStagePush(MeshTopologyReadEXO_Stage, iErr); CHKERRQ(iErr)
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange

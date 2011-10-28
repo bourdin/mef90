@@ -62,7 +62,7 @@ Program TestSieve3D
    Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Call MeshDestroy(Tmp_Mesh)
    
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)

@@ -127,7 +127,7 @@ Program Partitioner
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call ALEStagePush(stagename(4), iDebug, iErr); CHKERRQ(iErr)
    End If
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    
    If (verbose > 0) Then
       Write(IOBuffer, *) "Initializing Element types\n"

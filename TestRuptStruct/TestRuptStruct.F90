@@ -78,7 +78,7 @@ Program TestRuptStruct
    End If
    Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
 
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    !!! Sets the type of elements for each block
    Do i = 1, MeshTopology%Num_Elem_Blks
       MeshTopology%Elem_Blk(i)%Elem_Type = MEF90_P1_Lagrange
