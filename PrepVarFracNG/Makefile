@@ -6,6 +6,8 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_Sieve.o      $(MEF90DIR)/m_MEF_IO.o 
 M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
 M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
+M_HEATDIR  = ../SimplePoissonnD/${PETSC_ARCH}
+M_HEATOBJS =  ${M_HEATDIR}/${DIM}m_Poisson.o ${M_HEATDIR}/${DIM}m_TransientHeat.o
 
 all: PrepVarFracNG
 
@@ -17,9 +19,9 @@ ifneq (,$(findstring xlf,$(FC)))
 endif
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=-g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
+	MEF90_FC_FLAGS=-DPB_${DIM} -g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} -I${M_HEATDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
 else
-	MEF90_FC_FLAGS=-g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}
+	MEF90_FC_FLAGS=-DPB_${DIM} -g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} -I${M_HEATDIR} ${FC_FLAGS}
 endif
 
 .F90.o:
@@ -29,7 +31,7 @@ ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 
 PrepVarFracNG: ${PETSC_ARCH} PrepVarFracNG.o ${PETSC_ARCH}/PrepVarFracNG.o m_PrepVarFracNG.o ${PETSC_ARCH}/m_PrepVarFracNG.o
-	${FLINKER} -o ${PETSC_ARCH}/PrepVarFracNG ${PETSC_ARCH}/PrepVarFracNG.o ${PETSC_ARCH}/m_PrepVarFracNG.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	${FLINKER} -o ${PETSC_ARCH}/PrepVarFracNG ${PETSC_ARCH}/PrepVarFracNG.o ${PETSC_ARCH}/m_PrepVarFracNG.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${M_HEATOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
 PrepVarFracNG.o: ${PETSC_ARCH} m_PrepVarFracNG.o ${PETSC_ARCH}/m_PrepVarFracNG.o
 
@@ -47,3 +49,5 @@ debug::
 	@echo FCPPFLAGS is ${FCPPFLAGS}
 	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
 	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
+	@echo ${M_HEATDIR}
+	@echo ${M_HEATOBJS}

@@ -34,7 +34,7 @@ Module m_Poisson3D
    End Type AppParam_Type
 
 
-   Type AppCtx_Type
+   Type Heat_AppCtx_Type
       Type (MeshTopology_Type)                     :: MeshTopology
       Type (EXO_Type)                              :: EXO, MyEXO
 #if defined PB_2D
@@ -62,7 +62,7 @@ Module m_Poisson3D
       PetscInt                                     :: maxsteps, NumSteps
       PetscReal                                    :: maxtime
 
-   End Type AppCtx_Type
+   End Type Heat_AppCtx_Type
    
    
 Contains
@@ -71,7 +71,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "ExoFormat_SimplePoisson"
    Subroutine EXOFormat_SimplePoisson(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
    
       AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
@@ -95,7 +95,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "InitLog"
    Subroutine InitLog(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       
       Call PetscLogEventRegister('MatAssembly Block', 0, AppCtx%LogInfo%MatAssemblyBlock_Event, ierr); CHKERRQ(ierr)
@@ -115,7 +115,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Solve"
    Subroutine Solve(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
       KSPConvergedReason                           :: KSPreason
@@ -144,7 +144,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MatAssembly"
    Subroutine MatAssembly(AppCtx)   
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk, iErr
       
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
@@ -158,7 +158,7 @@ Contains
    End Subroutine MatAssembly
       
    Subroutine MatAssemblyBlock(iBlk, AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iBlk
       
       PetscInt                                     :: iE, iELoc, iErr
@@ -201,7 +201,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "RHSAssembly"
    Subroutine RHSAssembly(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
@@ -224,7 +224,7 @@ Contains
 #define __FUNCT__ "RHSAssemblyBlock"
    Subroutine RHSAssemblyBlock(iBlk, AppCtx)
       PetscInt                                     :: iBlk
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlkId
@@ -275,7 +275,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "ComputeEnergy"
    Subroutine ComputeEnergy(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
       PetscInt                                     :: NumDoF, NumGauss
@@ -337,7 +337,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "ComputeGradU"
    Subroutine ComputeGradU(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
 #if defined PB_2D
@@ -393,7 +393,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonFinalize"
    Subroutine SimplePoissonFinalize(AppCtx)   
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename

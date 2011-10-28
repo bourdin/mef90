@@ -7,6 +7,13 @@ Program PrepVarFrac
    Use m_VarFrac_Struct
    Use m_PrepVarFrac
    Use petsc
+#if defined PB_2D
+   Use m_Poisson2D
+   Use m_TransientHeat2D
+#elif defined PB_3D 
+   Use m_Poisson3D
+   Use m_TransientHeat3D
+#endif 
 
    Implicit NONE   
    
@@ -62,10 +69,13 @@ Program PrepVarFrac
    PetscBool                                    :: saveElemVar, PlaneStrain
    
    PetscReal                                    :: R, Ymax
+   Type(Heat_AppCtx_Type)                       :: HeatAppCtx
+   PetscReal                                    :: ValU, ValF
+
 
    Call MEF90_Initialize()
 
-   NumTestCase = 8
+   NumTestCase = 9
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -78,6 +88,7 @@ Program PrepVarFrac
    TestCase(6)%Description = "Cooling along y=0, Robin BC"
    TestCase(7)%Description = "Cooling along y=0 and y=ymax, Dirichlet BC"
    TestCase(8)%Description = "Piecewise linear thermal load translating along y axis"
+   TestCase(9)%Description = "Compute Temperature field with transient heat module"
 
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, HasPrefix, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr); CHKERRQ(iErr)
@@ -449,6 +460,10 @@ Program PrepVarFrac
    Case(8)
       Call MEF90_AskReal(Theta, 'Temperature contrast (Delta Theta)', BatchUnit, IsBatch)
       Call MEF90_AskReal(DL, 'Diffusion length', BatchUnit, IsBatch)
+   Case(9)
+      Call MEF90_AskReal(ValU, 'Initial value in Temperature', BatchUnit, IsBatch)
+      Call MEF90_AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
+      Call MEF90_AskReal(Theta, 'Time steps', BatchUnit, IsBatch)
    Case default
       !!! Default is MIL
       Call MEF90_AskReal(Theta, 'Temperature multiplier', BatchUnit, IsBatch)
@@ -511,6 +526,32 @@ Program PrepVarFrac
    Call SectionRealDestroy(ThetaSec, iErr); CHKERRQ(iErr)
    DeAllocate(Thetaelem)
 
+
+   Select Case(iCase)
+   Case(9) !! Computing the thermal field 
+      HeatAppCtx%MyEXO = MyEXO
+      HeatAppCtx%MeshTopology = MeshTopology
+
+      !HeatAppCtx%Tmin = TMin
+      !HeatAppCtx%TMax = TMax
+      HeatAppCtx%NumSteps = NumSteps
+      HeatAppCtx%AppParam%TestCase = 2
+      
+      Call HeatInitField(HeatAppCtx)  
+      Call SectionRealSet(HeatAppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
+      Call SectionRealSet(HeatAppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
+
+      !TODO Set BC in Temperature
+      !If possible call a subroutine to be written
+
+      Write(IOBuffer, *) 'Computing temperature field\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)  
+      ! Call Poisson_TSSetUp(HeatAppCtx)
+      ! Call MatAssembly(HeatAppCtx)
+      ! Call RHSAssembly(HeatAppCtx)
+      ! Call MatMassAssembly(HeatAppCtx)
+      ! Call SolveTransient(HeatAppCtx)
+   End Select
 
    !!!
    !!! U

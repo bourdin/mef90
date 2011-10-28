@@ -12,7 +12,7 @@ Program  SimplePoisson
    Implicit NONE   
 
 
-   Type(AppCtx_Type)                            :: AppCtx
+   Type(Heat_AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    Call SimplePoissonInit(AppCtx)
@@ -84,7 +84,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonInit"
    Subroutine SimplePoissonInit(AppCtx)
-      Type(AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk, iDoF      
