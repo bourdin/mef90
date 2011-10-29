@@ -26,7 +26,7 @@ Module m_Film_Struct
    Public :: MatProp_Write, MatProp_Read
    
    Public :: EXOProperty_InitBCVFlag
-   Public :: EXOProperty_InitBCUFlag	
+   Public :: EXOProperty_InitBCUFlag   
    Public :: EXOProperty_InitBCWFlag
    
    Public :: VarFracSchemeParam_Type
@@ -47,80 +47,80 @@ Module m_Film_Struct
       Module Procedure GenHL_Laminate2D_LambdaMu
    End Interface
 
-   PetscInt, Parameter, Public                     :: VarFrac_BC_Type_NONE = 0
-   PetscInt, Parameter, Public                     :: VarFrac_BC_Type_DIRI = 1
+   PetscInt, Parameter, Public         :: VarFrac_BC_Type_NONE = 0
+   PetscInt, Parameter, Public         :: VarFrac_BC_Type_DIRI = 1
 
-	PetscInt, Parameter, Public                     :: VarFrac_Init_V_PREV    = 0
-	PetscInt, Parameter, Public                     :: VarFrac_Init_V_RND     = 1
-	PetscInt, Parameter, Public                     :: VarFrac_Init_V_SPH     = 2
-	PetscInt, Parameter, Public                     :: VarFrac_Init_V_CRACKS  = 3
-	PetscInt, Parameter, Public                     :: VarFrac_Init_V_ONE     = 4
-	PetscInt, Parameter, Public                     :: VarFrac_Init_V_OSC     = 5
-	PetscInt, Parameter, Public                     :: VarFrac_Init_V_FILE    = 6
-	
-	PetscInt, Parameter, Public                     :: VarFrac_Init_W_PREV    = 0
-	PetscInt, Parameter, Public                     :: VarFrac_Init_W_RND     = 1
-	PetscInt, Parameter, Public                     :: VarFrac_Init_W_SPH     = 2
-	PetscInt, Parameter, Public                     :: VarFrac_Init_W_CRACKS  = 3
-	PetscInt, Parameter, Public                     :: VarFrac_Init_W_ONE     = 4
-	PetscInt, Parameter, Public                     :: VarFrac_Init_W_OSC     = 5
-	PetscInt, Parameter, Public                     :: VarFrac_Init_W_FILE    = 6
+   PetscInt, Parameter, Public         :: VarFrac_Init_V_PREV    = 0
+   PetscInt, Parameter, Public         :: VarFrac_Init_V_RND     = 1
+   PetscInt, Parameter, Public         :: VarFrac_Init_V_SPH     = 2
+   PetscInt, Parameter, Public         :: VarFrac_Init_V_CRACKS  = 3
+   PetscInt, Parameter, Public         :: VarFrac_Init_V_ONE     = 4
+   PetscInt, Parameter, Public         :: VarFrac_Init_V_OSC     = 5
+   PetscInt, Parameter, Public         :: VarFrac_Init_V_FILE    = 6
+   
+   PetscInt, Parameter, Public         :: VarFrac_Init_W_PREV    = 0
+   PetscInt, Parameter, Public         :: VarFrac_Init_W_RND     = 1
+   PetscInt, Parameter, Public         :: VarFrac_Init_W_SPH     = 2
+   PetscInt, Parameter, Public         :: VarFrac_Init_W_CRACKS  = 3
+   PetscInt, Parameter, Public         :: VarFrac_Init_W_ONE     = 4
+   PetscInt, Parameter, Public         :: VarFrac_Init_W_OSC     = 5
+   PetscInt, Parameter, Public         :: VarFrac_Init_W_FILE    = 6
 
    
-   PetscInt, Parameter, Public                     :: VarFrac_Irrev_NONE = 0
-   PetscInt, Parameter, Public                     :: VarFrac_Irrev_Eq   = 1 ! Equality constrainst with threshold
-   PetscInt, Parameter, Public                     :: VarFrac_Irrev_Ineq = 2 ! Inequality constrains with threshold
-   !PetscInt, Parameter, Public                     :: VarFrac_Irrev_Comp = 3 ! Inequality constraints with threshold
+   PetscInt, Parameter, Public         :: VarFrac_Irrev_NONE = 0
+   PetscInt, Parameter, Public         :: VarFrac_Irrev_Eq   = 1 ! Equality constrainst with threshold
+   PetscInt, Parameter, Public         :: VarFrac_Irrev_Ineq = 2 ! Inequality constrains with threshold
+   !PetscInt, Parameter, Public        :: VarFrac_Irrev_Comp = 3 ! Inequality constraints with threshold
 
-   PetscInt, Parameter, Public                     :: VarFrac_Unilateral_NONE  = 0
-   PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Full  = 1
-   PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Shear = 2
+   PetscInt, Parameter, Public         :: VarFrac_Unilateral_NONE  = 0
+   PetscInt, Parameter, Public         :: VarFrac_Unilateral_Full  = 1
+   PetscInt, Parameter, Public         :: VarFrac_Unilateral_Shear = 2
 
-	PetscInt, Parameter, Public			:: VarFrac_Num_VertVar			= 7
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_Fracture		= 1
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_Delamination		= 2
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_U0X			= 3
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_U0Y			= 4
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementX	= 5   
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_DisplacementY	= 6
-	PetscInt, Parameter, Public			:: VarFrac_VertVar_Temperature		= 7
+   PetscInt, Parameter, Public         :: VarFrac_Num_VertVar        = 7
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_Fracture      = 1
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_Delamination     = 2
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_U0X        = 3
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_U0Y        = 4
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_DisplacementX = 5   
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_DisplacementY = 6
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_Temperature      = 7
    
-	PetscInt, Parameter, Public			:: VarFrac_Num_CellVar		= 6
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StrainXX	= 1
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StrainYY	= 2 
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StrainXY	= 3
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressXX	= 4
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressYY	= 5
-	PetscInt, Parameter, Public			:: VarFrac_CellVar_StressXY	= 6
+   PetscInt, Parameter, Public         :: VarFrac_Num_CellVar     = 6
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StrainXX   = 1
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StrainYY   = 2 
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StrainXY   = 3
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StressXX   = 4
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StressYY   = 5
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StressXY   = 6
 
-	PetscInt, Parameter, Public			:: VarFrac_Num_GlobVar			= 6
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_ElasticEnergy	= 1
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_FractureEnergy	= 2 
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_DelaminationEnergy	= 3 
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_CohesiveEnergy	= 4 
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_TotalEnergy		= 5
-	PetscInt, Parameter, Public			:: VarFrac_GlobVar_Load			= 6
+   PetscInt, Parameter, Public         :: VarFrac_Num_GlobVar        = 6
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_ElasticEnergy = 1
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_FractureEnergy   = 2 
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_DelaminationEnergy  = 3 
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_CohesiveEnergy   = 4 
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_TotalEnergy      = 5
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_Load       = 6
    
-	PetscInt, Parameter, Public                     :: VarFrac_Num_EBProperties	= 3
-	PetscInt, Parameter, Public                     :: VarFrac_EBProp_IsBrittle	= 1
-	PetscInt, Parameter, Public                     :: VarFrac_EBProp_IsDebondable	= 2
-	PetscInt, Parameter, Public                     :: VarFrac_EBProp_Elem_Type	= 3
+   PetscInt, Parameter, Public         :: VarFrac_Num_EBProperties   = 3
+   PetscInt, Parameter, Public         :: VarFrac_EBProp_IsBrittle   = 1
+   PetscInt, Parameter, Public         :: VarFrac_EBProp_IsDebondable   = 2
+   PetscInt, Parameter, Public         :: VarFrac_EBProp_Elem_Type   = 3
    
-	PetscInt, Parameter, Public			:: VarFrac_Num_NSProperties  = 5
-	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCUTypeX   = 1
-	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCUTypeY   = 2
-	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCVType    = 3
-	PetscInt, Parameter, Public			:: VarFrac_NSProp_BCWType    = 4
-	PetscInt, Parameter, Public			:: VarFrac_NSProp_HasPForce  = 5
+   PetscInt, Parameter, Public         :: VarFrac_Num_NSProperties  = 5
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCUTypeX   = 1
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCUTypeY   = 2
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCVType    = 3
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCWType    = 4
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_HasPForce  = 5
    
-	PetscInt, Parameter, Public			:: VarFrac_Num_MatProp2D	= 4
-	
+   PetscInt, Parameter, Public         :: VarFrac_Num_MatProp2D   = 4
+   
    Type MatProp2D_Type
-	PetscReal				::	DelamToughness
-	PetscReal				::	FracToughness
-	Type(Tens4OS2D)				::	Hookes_Law
-	Type(MatS2D)				::	Therm_Exp  
-    	PetscReal				:: 	Ksubst
+   PetscReal               :: DelamToughness
+   PetscReal               :: FracToughness
+   Type(Tens4OS2D)         :: Hookes_Law
+   Type(MatS2D)            :: Therm_Exp  
+      PetscReal            ::    Ksubst
    End Type MatProp2D_Type
    
 
@@ -260,49 +260,49 @@ Module m_Film_Struct
 120   Format(I6, '      ', ES12.5, ES12.5, 10(ES12.5,' '))   
    End Subroutine MatProp2D_Write
 
-	Subroutine MatProp2D_Read(MeshTopology, MatProp, filename)
-		Type(MeshTopology_Type)                      :: MeshTopology
-		Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
-		Character(len=*)                             :: filename
-		
-		PetscInt                                     :: iBlk, iErr
-		
-		PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
-		Type(Tens4OS2D)                              :: Hookes_Law
-		PetscReal                                    :: FracToughness, DelamToughness, Ksubst
-		Type(MatS2D)                                 :: Therm_Exp
-		
-		Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
-		Rewind(F_IN)
-		Read(F_IN, *) NumBlks
-		If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
-		   SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
-		End If
-		!!! Reading the file once first to get the right number of blocks
-			IdxMin =  100000000
-			IdxMax = -100000000
-		Do iBlk = 1, NumBlks
-			Read(F_IN, *) Idx
-			IdxMin = Min(IdxMin, Idx)
-			IdxMax = Max(IdxMax, Idx)
-		End Do
-		Allocate(MatProp(IdxMin:IdxMax))
-		Rewind(F_IN)
-		Read(F_IN, *) Idx
-		Do iBlk = 1, NumBlks
-			Read(F_IN, *) Idx, FracToughness, DelamToughness, Ksubst, Hookes_Law, Therm_exp
+   Subroutine MatProp2D_Read(MeshTopology, MatProp, filename)
+      Type(MeshTopology_Type)                      :: MeshTopology
+      Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp
+      Character(len=*)                             :: filename
+      
+      PetscInt                                     :: iBlk, iErr
+      
+      PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
+      Type(Tens4OS2D)                              :: Hookes_Law
+      PetscReal                                    :: FracToughness, DelamToughness, Ksubst
+      Type(MatS2D)                                 :: Therm_Exp
+      
+      Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
+      Rewind(F_IN)
+      Read(F_IN, *) NumBlks
+      If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
+         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
+      End If
+      !!! Reading the file once first to get the right number of blocks
+         IdxMin =  100000000
+         IdxMax = -100000000
+      Do iBlk = 1, NumBlks
+         Read(F_IN, *) Idx
+         IdxMin = Min(IdxMin, Idx)
+         IdxMax = Max(IdxMax, Idx)
+      End Do
+      Allocate(MatProp(IdxMin:IdxMax))
+      Rewind(F_IN)
+      Read(F_IN, *) Idx
+      Do iBlk = 1, NumBlks
+         Read(F_IN, *) Idx, FracToughness, DelamToughness, Ksubst, Hookes_Law, Therm_exp
 
-			MatProp(Idx)%FracToughness  = FracToughness
-			MatProp(Idx)%DelamToughness  = DelamToughness
-			MatProp(Idx)%Ksubst  = Ksubst
-			MatProp(Idx)%Hookes_Law = Hookes_Law
-			MatProp(Idx)%Therm_Exp  = Therm_Exp
-		End Do
-		Close(F_IN)
-		Return
+         MatProp(Idx)%FracToughness  = FracToughness
+         MatProp(Idx)%DelamToughness  = DelamToughness
+         MatProp(Idx)%Ksubst  = Ksubst
+         MatProp(Idx)%Hookes_Law = Hookes_Law
+         MatProp(Idx)%Therm_Exp  = Therm_Exp
+      End Do
+      Close(F_IN)
+      Return
 !120   Format(I6, '      ', 10(ES12.5,' '))   
 !120   Format(*)
-	End Subroutine MatProp2D_Read
+   End Subroutine MatProp2D_Read
 
    Subroutine VarFracSchemeParam_View(dSchemeParam, viewer)
       Type(VarFracSchemeParam_Type)                :: dSchemeParam
@@ -408,10 +408,10 @@ Module m_Film_Struct
       Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-saveblk',        dSchemeParam%SaveBlk, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-saveblk',        dSchemeParam%SaveBlk, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
       
       Select Case(dSchemeParam%ATNum)
       !!! Braides 2008 p. 48
@@ -428,90 +428,90 @@ Module m_Film_Struct
    End Subroutine VarFracSchemeParam_GetFromOptions
  
 Subroutine VarFracEXOProperty_Init(dEXO, dMeshTopology)
-	Type(EXO_Type)                      :: dEXO
-	Type(MeshTopology_Type)             :: dMeshTopology
-	PetscInt                            :: i, iErr
-	PetscInt                            :: NumEB, NumSS, NumNS
-	
-	Integer                             :: EXO_MyRank
-	PetscReal                           :: rDummy
-	Character                           :: cDummy
-	    
-	Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
-	
-	NumEB = dMeshTopology%Num_Elem_Blks_Global
-	NumSS = dMeshTopology%Num_Side_Sets_Global
-	NumNS = dMeshTopology%Num_Node_Sets_Global
-	
-	If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
-	   Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n', iErr); CHKERRQ(iErr)
-	   Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracEXOProperty_Init?\n', iErr); CHKERRQ(iErr)
-	End If
-	
-	dEXO%Num_EBProperties = VarFrac_Num_EBProperties
-	Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
-	dEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Name = 'Is_Brittle'
-	dEXO%EBProperty(VarFrac_EBProp_IsDebondable)%Name = 'Is_Debondable'
-	dEXO%EBProperty(VarFrac_EBProp_Elem_Type)%Name = 'Elem_Type'
-	Do i = 1, dEXO%Num_EBProperties
-	   Allocate(dEXO%EBProperty(i)%Value(NumEB))
-	   dEXO%EBProperty(i)%Value = 0
-	End Do
-	
-	dEXO%Num_NSProperties = VarFrac_Num_NSProperties
-	Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
-	dEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
-	dEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
-	dEXO%NSProperty(VarFrac_NSProp_BCVType)%Name   = 'BCV_Type'
-	dEXO%NSProperty(VarFrac_NSProp_BCWType)%Name   = 'BCW_Type'
-	dEXO%NSProperty(VarFrac_NSProp_HasPForce)%Name = 'Has_PForce'
-	Do i = 1, dEXO%Num_NSProperties
+   Type(EXO_Type)                      :: dEXO
+   Type(MeshTopology_Type)             :: dMeshTopology
+   PetscInt                            :: i, iErr
+   PetscInt                            :: NumEB, NumSS, NumNS
+   
+   Integer                             :: EXO_MyRank
+   PetscReal                           :: rDummy
+   Character                           :: cDummy
+       
+   Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
+   
+   NumEB = dMeshTopology%Num_Elem_Blks_Global
+   NumSS = dMeshTopology%Num_Side_Sets_Global
+   NumNS = dMeshTopology%Num_Node_Sets_Global
+   
+   If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
+      Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n', iErr); CHKERRQ(iErr)
+      Call PetscPrintf(PETSC_COMM_WORLD, '           Was Write_MeshTopologyGlobal called before VarFracEXOProperty_Init?\n', iErr); CHKERRQ(iErr)
+   End If
+   
+   dEXO%Num_EBProperties = VarFrac_Num_EBProperties
+   Allocate(dEXO%EBProperty(dEXO%Num_EBProperties))
+   dEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Name = 'Is_Brittle'
+   dEXO%EBProperty(VarFrac_EBProp_IsDebondable)%Name = 'Is_Debondable'
+   dEXO%EBProperty(VarFrac_EBProp_Elem_Type)%Name = 'Elem_Type'
+   Do i = 1, dEXO%Num_EBProperties
+      Allocate(dEXO%EBProperty(i)%Value(NumEB))
+      dEXO%EBProperty(i)%Value = 0
+   End Do
+   
+   dEXO%Num_NSProperties = VarFrac_Num_NSProperties
+   Allocate(dEXO%NSProperty(dEXO%Num_NSProperties))
+   dEXO%NSProperty(VarFrac_NSProp_BCUTypeX)%Name  = 'BCU_Type_X'
+   dEXO%NSProperty(VarFrac_NSProp_BCUTypeY)%Name  = 'BCU_Type_Y'
+   dEXO%NSProperty(VarFrac_NSProp_BCVType)%Name   = 'BCV_Type'
+   dEXO%NSProperty(VarFrac_NSProp_BCWType)%Name   = 'BCW_Type'
+   dEXO%NSProperty(VarFrac_NSProp_HasPForce)%Name = 'Has_PForce'
+   Do i = 1, dEXO%Num_NSProperties
  Allocate(dEXO%NSProperty(i)%Value(NumNS))
  dEXO%NSProperty(i)%Value = 0
 End Do
 End Subroutine VarFracEXOProperty_Init   
 
-	Subroutine VarFracEXOVariable_Init(dEXO, dSaveElementVariables)
-		Type(EXO_Type)                      :: dEXO
-		PetscInt                            :: i
-		PetscBool, optional                 :: dSaveElementVariables
-        	
+   Subroutine VarFracEXOVariable_Init(dEXO, dSaveElementVariables)
+      Type(EXO_Type)                      :: dEXO
+      PetscInt                            :: i
+      PetscBool, optional                 :: dSaveElementVariables
+         
 !!! The default is now to save element variables
-		dEXO%Num_GlobVariables = VarFrac_Num_GlobVar
-		Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
-		dEXO%GlobVariable(VarFrac_GlobVar_FractureEnergy)%Name = 'Fracture energy'
-		dEXO%GlobVariable(VarFrac_GlobVar_DelaminationEnergy)%Name = 'Delamination energy'
-		dEXO%GlobVariable(VarFrac_GlobVar_CohesiveEnergy)%Name = 'Cohesive energy'
-		dEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Name = 'Elastic energy'
-		dEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Name   = 'Total energy'
-		dEXO%GlobVariable(VarFrac_GlobVar_Load)%Name          = 'Load'
-		dEXO%GlobVariable(:)%Offset = (/ (i, i=1,dEXO%Num_GlobVariables) /)
-        	
-		If ( Present(dSaveElementVariables) .AND. (.NOT. dSaveElementVariables)) Then
-        	 dEXO%Num_CellVariables = 0
-		Else
-        	 dEXO%Num_CellVariables = VarFrac_Num_CellVar
-        	 Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))
-        	 dEXO%CellVariable(VarFrac_CellVar_StrainXX)%Name = 'Strain XX'
-        	 dEXO%CellVariable(VarFrac_CellVar_StrainYY)%Name = 'Strain YY' 
-        	 dEXO%CellVariable(VarFrac_CellVar_StrainXY)%Name = 'Strain XY'
-        	 dEXO%CellVariable(VarFrac_CellVar_StressXX)%Name = 'Stress XX'
-        	 dEXO%CellVariable(VarFrac_CellVar_StressYY)%Name = 'Stress YY'
-        	 dEXO%CellVariable(VarFrac_CellVar_StressXY)%Name = 'Stress XY'
-        	 dEXO%CellVariable(:)%Offset = (/ (i, i=1,dEXO%Num_CellVariables) /)
-		End If
-        	 
-		dEXO%Num_VertVariables = VarFrac_Num_VertVar
-		Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))
-		dEXO%VertVariable(VarFrac_VertVar_Fracture)%Name	= 'Fracture'
-		dEXO%VertVariable(VarFrac_VertVar_Delamination)%Name	= 'Delamination'
-		dEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Name	= 'Displacement X'   
-		dEXO%VertVariable(VarFrac_VertVar_DisplacementY)%Name	= 'Displacement Y'
-		dEXO%VertVariable(VarFrac_VertVar_U0X)%Name	= 'U0 X'   
-		dEXO%VertVariable(VarFrac_VertVar_U0Y)%Name	= 'U0 Y'
-		dEXO%VertVariable(VarFrac_VertVar_Temperature)%Name	= 'Temperature'
-		dEXO%VertVariable(:)%Offset = (/ (i, i=1,dEXO%Num_VertVariables) /)
-	End Subroutine VarFracEXOVariable_Init
+      dEXO%Num_GlobVariables = VarFrac_Num_GlobVar
+      Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
+      dEXO%GlobVariable(VarFrac_GlobVar_FractureEnergy)%Name = 'Fracture energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_DelaminationEnergy)%Name = 'Delamination energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_CohesiveEnergy)%Name = 'Cohesive energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Name = 'Elastic energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Name   = 'Total energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_Load)%Name          = 'Load'
+      dEXO%GlobVariable(:)%Offset = (/ (i, i=1,dEXO%Num_GlobVariables) /)
+         
+      If ( Present(dSaveElementVariables) .AND. (.NOT. dSaveElementVariables)) Then
+          dEXO%Num_CellVariables = 0
+      Else
+          dEXO%Num_CellVariables = VarFrac_Num_CellVar
+          Allocate(dEXO%CellVariable(dEXO%Num_CellVariables))
+          dEXO%CellVariable(VarFrac_CellVar_StrainXX)%Name = 'Strain XX'
+          dEXO%CellVariable(VarFrac_CellVar_StrainYY)%Name = 'Strain YY' 
+          dEXO%CellVariable(VarFrac_CellVar_StrainXY)%Name = 'Strain XY'
+          dEXO%CellVariable(VarFrac_CellVar_StressXX)%Name = 'Stress XX'
+          dEXO%CellVariable(VarFrac_CellVar_StressYY)%Name = 'Stress YY'
+          dEXO%CellVariable(VarFrac_CellVar_StressXY)%Name = 'Stress XY'
+          dEXO%CellVariable(:)%Offset = (/ (i, i=1,dEXO%Num_CellVariables) /)
+      End If
+          
+      dEXO%Num_VertVariables = VarFrac_Num_VertVar
+      Allocate(dEXO%VertVariable(dEXO%Num_VertVariables))
+      dEXO%VertVariable(VarFrac_VertVar_Fracture)%Name   = 'Fracture'
+      dEXO%VertVariable(VarFrac_VertVar_Delamination)%Name  = 'Delamination'
+      dEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Name = 'Displacement X'   
+      dEXO%VertVariable(VarFrac_VertVar_DisplacementY)%Name = 'Displacement Y'
+      dEXO%VertVariable(VarFrac_VertVar_U0X)%Name  = 'U0 X'   
+      dEXO%VertVariable(VarFrac_VertVar_U0Y)%Name  = 'U0 Y'
+      dEXO%VertVariable(VarFrac_VertVar_Temperature)%Name   = 'Temperature'
+      dEXO%VertVariable(:)%Offset = (/ (i, i=1,dEXO%Num_VertVariables) /)
+   End Subroutine VarFracEXOVariable_Init
   
    Subroutine GenHL_Iso2D_LambdaMu(lambda, mu, A) 
       PetscReal, Intent(IN)               :: lambda, mu
