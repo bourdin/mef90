@@ -131,7 +131,7 @@ Contains
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
       Write(AppCtx%MyEXO%filename, 99) trim(AppCtx%AppParam%prefix), MEF90_MyRank
  99  Format(A, '-', I4.4, '.gen')
-      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
+      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
    
       !!! Initializes the values and names of the properties and variables
       Call VarFracEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology)   
@@ -702,7 +702,7 @@ Contains
    End Subroutine VarFracQSFinalize
    
 #undef __FUNCT__
-#define __FUNCT__ "Backtrtacking"
+#define __FUNCT__ "Backtracking"
    Subroutine Backtracking(AppCtx,StepIn,StepOUT,BTFound)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt,Intent(IN)                          :: StepIN
