@@ -109,8 +109,8 @@ Contains
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
-
-      !!! Reading and distributing sequential mesh
+      AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr) 
+      !! Reading and distributing sequential mesh
       If (MEF90_NumProcs == 1) Then
          Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
       Else
@@ -131,6 +131,7 @@ Contains
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
       Write(AppCtx%MyEXO%filename, 99) trim(AppCtx%AppParam%prefix), MEF90_MyRank
  99  Format(A, '-', I4.4, '.gen')
+      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
    
       !!! Initializes the values and names of the properties and variables
       Call VarFracEXOProperty_Init(AppCtx%MyEXO, AppCtx%MeshTopology)   
@@ -327,10 +328,10 @@ Contains
       End If
 
       !!! Get the number of time steps
-      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
+!      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
       Call EXINQ(AppCtx%MyEXO%exoid, EXTIMS, AppCtx%NumTimeSteps, rDummy, cDummy, iErr)
-      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
-      AppCtx%MyEXO%exoid = 0
+!      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+!      AppCtx%MyEXO%exoid = 0
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -687,6 +688,11 @@ Contains
       Else
          Call KSPDestroy(AppCtx%KSPV, iErr); CHKERRQ(iErr)
       End If
+
+      Call EXCLOS(AppCtx%EXO%exoid, iErr)
+      AppCtx%EXO%exoid = 0
+      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+      AppCtx%MyEXO%exoid = 0
 
 #if defined WITH_TAO
       Call TaoFinalize(iErr)

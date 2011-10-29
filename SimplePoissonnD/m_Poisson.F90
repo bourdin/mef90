@@ -74,7 +74,7 @@ Contains
       Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
    
-      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
+!      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
       Call EXPVP (AppCtx%MyEXO%exoid, 'g', 3, iErr)
       Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 3, (/'Elastic Energy ', 'Ext Forces work', 'Total Energy   '/), iErr)
       Call EXPVP (AppCtx%MyEXO%exoid, 'n', 2, iErr)
@@ -88,8 +88,8 @@ Contains
 #endif
       Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
 
-      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
-      AppCtx%MyEXO%exoid = 0
+!      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+!      AppCtx%MyEXO%exoid = 0
    End Subroutine EXOFormat_SimplePoisson
    
 #undef __FUNCT__
