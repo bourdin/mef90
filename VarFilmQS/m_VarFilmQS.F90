@@ -76,7 +76,7 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       
       Write(filename, 100) Trim(AppCtx%AppParam%prefix)
-      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, flgviewer, iErr); CHKERRQ(iErr);   			! ???
+      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, flgviewer, iErr); CHKERRQ(iErr);          ! ???
       Call VarFracSchemeParam_View(AppCtx%VarFracSchemeParam, flgviewer)
       Call PetscViewerFlush(flgviewer, iErr); CHKERRQ(iErr)
       Call PetscViewerDestroy(flgviewer, iErr); CHKERRQ(iErr)
@@ -102,6 +102,7 @@ Contains
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
+      AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr) 
 
 !!!startregion READING & DISTRIB MESH
       !!! Reading and distributing sequential mesh
@@ -124,6 +125,7 @@ Contains
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
       Write(AppCtx%MyEXO%filename, 99) trim(AppCtx%AppParam%prefix), MEF90_MyRank
+      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr) 
  99  Format(A, '-', I4.4, '.gen')
 
 !!!endregion READING & DISTRIB MESH
@@ -186,55 +188,55 @@ Contains
       SizeVect= 1
       Allocate(SizeScal(1))
       SizeScal=1
-	Call FieldCreateVertex(AppCtx%U,      'U',      AppCtx%MeshTopology, SizeVect)
-	Call FieldCreateVertex(AppCtx%UBC,    'UBC',    AppCtx%MeshTopology, SizeVect)
+   Call FieldCreateVertex(AppCtx%U,      'U',      AppCtx%MeshTopology, SizeVect)
+   Call FieldCreateVertex(AppCtx%UBC,    'UBC',    AppCtx%MeshTopology, SizeVect)
 
-	Call FieldCreateVertex(AppCtx%U0,      'U0',      AppCtx%MeshTopology, SizeVect)
-		
-	Call FieldCreateVertex(AppCtx%V,      'V',      AppCtx%MeshTopology, SizeScal)
-	Call FieldCreateVertex(AppCtx%VBC,    'VBC',    AppCtx%MeshTopology, SizeScal)
-	Call FieldCreateVertex(AppCtx%VIrrev, 'VIrrev', AppCtx%MeshTopology, SizeScal)
-	
-	Call FieldCreateVertex(AppCtx%W,      'W',      AppCtx%MeshTopology, SizeScal)
-	Call FieldCreateVertex(AppCtx%WBC,    'WBC',    AppCtx%MeshTopology, SizeScal)
-	Call FieldCreateVertex(AppCtx%FW,      'FW',      AppCtx%MeshTopology, SizeScal)
-	
-	Call FieldCreateVertex(AppCtx%Theta,  'Theta',  AppCtx%MeshTopology, SizeScal)
-	Call FieldCreateVertex(AppCtx%RHSU, 'RHSU', AppCtx%MeshTopology, SizeVect)
+   Call FieldCreateVertex(AppCtx%U0,      'U0',      AppCtx%MeshTopology, SizeVect)
+      
+   Call FieldCreateVertex(AppCtx%V,      'V',      AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(AppCtx%VBC,    'VBC',    AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(AppCtx%VIrrev, 'VIrrev', AppCtx%MeshTopology, SizeScal)
+   
+   Call FieldCreateVertex(AppCtx%W,      'W',      AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(AppCtx%WBC,    'WBC',    AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(AppCtx%FW,      'FW',      AppCtx%MeshTopology, SizeScal)
+   
+   Call FieldCreateVertex(AppCtx%Theta,  'Theta',  AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(AppCtx%RHSU, 'RHSU', AppCtx%MeshTopology, SizeVect)
 
-	If (AppCtx%VarFracSchemeParam%V_UseTao) Then
-		Call FieldCreateVertex(AppCtx%GradientV,   'GradientV',   AppCtx%MeshTopology, SizeScal)
-		Call FieldCreateVertex(AppCtx%LowerBoundV, 'LowerBoundV', AppCtx%MeshTopology, SizeScal)
-		Call FieldCreateVertex(AppCtx%UpperBoundV, 'UpperBoundV', AppCtx%MeshTopology, SizeScal)
-	Else
-		Call FieldCreateVertex(AppCtx%RHSV, 'RHSV', AppCtx%MeshTopology, SizeScal)
-	End If
-	Call FlagCreateVertex(AppCtx%BCUFlag,   'BCUFlag',   AppCtx%MeshTopology, SizeVect)
-	Call FlagCreateVertex(AppCtx%BCVFlag,   'BCVFlag',   AppCtx%MeshTopology, SizeScal)
-	Call FlagCreateVertex(AppCtx%BCWFlag,   'BCWFlag',   AppCtx%MeshTopology, SizeScal)
-	Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
+   If (AppCtx%VarFracSchemeParam%V_UseTao) Then
+      Call FieldCreateVertex(AppCtx%GradientV,   'GradientV',   AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%LowerBoundV, 'LowerBoundV', AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%UpperBoundV, 'UpperBoundV', AppCtx%MeshTopology, SizeScal)
+   Else
+      Call FieldCreateVertex(AppCtx%RHSV, 'RHSV', AppCtx%MeshTopology, SizeScal)
+   End If
+   Call FlagCreateVertex(AppCtx%BCUFlag,   'BCUFlag',   AppCtx%MeshTopology, SizeVect)
+   Call FlagCreateVertex(AppCtx%BCVFlag,   'BCVFlag',   AppCtx%MeshTopology, SizeScal)
+   Call FlagCreateVertex(AppCtx%BCWFlag,   'BCWFlag',   AppCtx%MeshTopology, SizeScal)
+   Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeVect)
       DeAllocate(SizeScal)
       Call VecDuplicate(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
 
-	If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
-		NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
-		Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
-		Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Stress', NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
-	End If
+   If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
+      NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
+      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Strain', NumComponents, AppCtx%StrainU, iErr); CHKERRQ(iErr)
+      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh, 'Stress', NumComponents, AppCtx%StressU, iErr); CHKERRQ(iErr)
+   End If
 
       !!! Create the Mat, KSP, PC
-	Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
-	Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
-	Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V%Sec, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
+   Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
+   Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
+   Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V%Sec, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
 
 !!!endregion ALLOC FIELDS 
 
 
 !!!startregion Solver context for U      
-	Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
-	Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
-	Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
+   Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
+   Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
+   Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
       Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
       Call KSPSetTolerances(AppCtx%KSPU, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
@@ -304,13 +306,13 @@ Contains
       Call SectionIntAddNSProperty(AppCtx%BCUFlag%Component_Sec(2), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCUTypeY), AppCtx%MeshTopology)
 
 
-	Call SectionIntZero(AppCtx%BCVFlag%Sec, iErr); CHKERRQ(iErr)
-	Call SectionIntAddNSProperty(AppCtx%BCVFlag%Sec, AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCVType), AppCtx%MeshTopology)
+   Call SectionIntZero(AppCtx%BCVFlag%Sec, iErr); CHKERRQ(iErr)
+   Call SectionIntAddNSProperty(AppCtx%BCVFlag%Sec, AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCVType), AppCtx%MeshTopology)
 
-	Call SectionIntZero(AppCtx%BCWFlag%Sec, iErr); CHKERRQ(iErr)
-	Call SectionIntAddNSProperty(AppCtx%BCWFlag%Sec, AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCWType), AppCtx%MeshTopology)
+   Call SectionIntZero(AppCtx%BCWFlag%Sec, iErr); CHKERRQ(iErr)
+   Call SectionIntAddNSProperty(AppCtx%BCWFlag%Sec, AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCWType), AppCtx%MeshTopology)
 
-	Call SectionIntZero(AppCtx%IrrevFlag%Sec, iErr); CHKERRQ(iErr)
+   Call SectionIntZero(AppCtx%IrrevFlag%Sec, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done Initializing BC Sections\n"
@@ -319,10 +321,7 @@ Contains
 !!!endregion BC Flags
 
       !!! Get the number of time steps
-      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
       Call EXINQ(AppCtx%MyEXO%exoid, EXTIMS, AppCtx%NumTimeSteps, rDummy, cDummy, iErr)
-      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
-      AppCtx%MyEXO%exoid = 0
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -332,20 +331,20 @@ Contains
 
 
       !!! Allocate energies, and open matching files
-	Allocate(AppCtx%FractureEnergy(AppCtx%NumTimeSteps))
-	Allocate(AppCtx%DelaminationEnergy(AppCtx%NumTimeSteps))
-	Allocate(AppCtx%CohesiveEnergy(AppCtx%NumTimeSteps))
-	Allocate(AppCtx%ElasticEnergy(AppCtx%NumTimeSteps))
-	Allocate(AppCtx%ExtForcesWork(AppCtx%NumTimeSteps))
-	Allocate(AppCtx%TotalEnergy(AppCtx%NumTimeSteps))
-	Allocate(AppCtx%Load(AppCtx%NumTimeSteps))
+   Allocate(AppCtx%FractureEnergy(AppCtx%NumTimeSteps))
+   Allocate(AppCtx%DelaminationEnergy(AppCtx%NumTimeSteps))
+   Allocate(AppCtx%CohesiveEnergy(AppCtx%NumTimeSteps))
+   Allocate(AppCtx%ElasticEnergy(AppCtx%NumTimeSteps))
+   Allocate(AppCtx%ExtForcesWork(AppCtx%NumTimeSteps))
+   Allocate(AppCtx%TotalEnergy(AppCtx%NumTimeSteps))
+   Allocate(AppCtx%Load(AppCtx%NumTimeSteps))
       
-	Allocate(AppCtx%FractureEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
-	Allocate(AppCtx%DelaminationEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
-	Allocate(AppCtx%CohesiveEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
-	Allocate(AppCtx%ElasticEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
-	Allocate(AppCtx%ExtForcesWorkBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
-	Allocate(AppCtx%TotalEnergyblock  (AppCtx%MeshTopology%Num_Elem_Blks_Global))
+   Allocate(AppCtx%FractureEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+   Allocate(AppCtx%DelaminationEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+   Allocate(AppCtx%CohesiveEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+   Allocate(AppCtx%ElasticEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+   Allocate(AppCtx%ExtForcesWorkBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+   Allocate(AppCtx%TotalEnergyblock  (AppCtx%MeshTopology%Num_Elem_Blks_Global))
       
       if_rank0: If (MEF90_MyRank == 0) Then
          AppCtx%AppParam%Ener_Unit = 71
@@ -464,34 +463,35 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       
-	Call PetscLogEventRegister('MatAssembly Local U', 0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
-	Call PetscLogEventRegister('RHSAssembly Local U', 0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
-	If (AppCtx%VarFracSchemeParam%V_UseTao) Then
-        	Call PetscLogEventRegister('Hessian Local V',  0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
-        	Call PetscLogEventRegister('Obj+Grad Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
-	Else
-		Call PetscLogEventRegister('MatAssembly Local V', 0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
-		Call PetscLogEventRegister('RHSAssembly Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
-	End If
-	Call PetscLogEventRegister('FWAssembly Local W', 0, AppCtx%LogInfo%FWAssemblyLocalW_Event, ierr); CHKERRQ(ierr)
-	Call PetscLogEventRegister('Post Processing',     0, AppCtx%LogInfo%PostProc_Event,          ierr); CHKERRQ(ierr)
+   Call PetscLogEventRegister('MatAssembly Local U',    0, AppCtx%LogInfo%MatAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
+   Call PetscLogEventRegister('RHSAssembly Local U',    0, AppCtx%LogInfo%RHSAssemblyLocalU_Event, ierr); CHKERRQ(ierr)
+   If (AppCtx%VarFracSchemeParam%V_UseTao) Then
+         Call PetscLogEventRegister('Hessian Local V',  0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+         Call PetscLogEventRegister('Obj+Grad Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+   Else
+      Call PetscLogEventRegister('MatAssembly Local V', 0, AppCtx%LogInfo%MatAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+      Call PetscLogEventRegister('RHSAssembly Local V', 0, AppCtx%LogInfo%RHSAssemblyLocalV_Event, ierr); CHKERRQ(ierr)
+   End If
+   Call PetscLogEventRegister('FWAssembly Local W',     0, AppCtx%LogInfo%FWAssemblyLocalW_Event, ierr); CHKERRQ(ierr)
+   Call PetscLogEventRegister('Post Processing',        0, AppCtx%LogInfo%PostProc_Event,         ierr); CHKERRQ(ierr)
 
-	Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
-	Call PetscLogStageRegister("MeshDistribute",   AppCtx%LogInfo%MeshDistribute_Stage,   iErr)
-	Call PetscLogStageRegister("Mat Assembly U",   AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
-	Call PetscLogStageRegister("RHS Assembly U",   AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
-	Call PetscLogStageRegister("U-Step",      AppCtx%LogInfo%UStep_Stage,        iErr)
-	If (AppCtx%VarFracSchemeParam%V_UseTao) Then
-		Call PetscLogStageRegister("Hessian V",  AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
-		Call PetscLogStageRegister("Obj+Grad V", AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
-	Else
-		Call PetscLogStageRegister("Mat Assembly V",   AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
-		Call PetscLogStageRegister("RHS Assembly V",   AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
-	End If
-	Call PetscLogStageRegister("FW Assembly W",   AppCtx%LogInfo%FWAssemblyW_Stage,     iErr)
-	Call PetscLogStageRegister("V-Step",      AppCtx%LogInfo%VStep_Stage,        iErr)
-	Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
-	Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
+   Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
+   Call PetscLogStageRegister("MeshDistribute",   AppCtx%LogInfo%MeshDistribute_Stage,   iErr)
+   Call PetscLogStageRegister("Mat Assembly U",   AppCtx%LogInfo%MatAssemblyU_Stage,     iErr)
+   Call PetscLogStageRegister("RHS Assembly U",   AppCtx%LogInfo%RHSAssemblyU_Stage,     iErr)
+   Call PetscLogStageRegister("U-Step",           AppCtx%LogInfo%UStep_Stage,            iErr)
+   If (AppCtx%VarFracSchemeParam%V_UseTao) Then
+      Call PetscLogStageRegister("Hessian V",     AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
+      Call PetscLogStageRegister("Obj+Grad V",    AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
+   Else
+      Call PetscLogStageRegister("Mat Assembly V",AppCtx%LogInfo%MatAssemblyV_Stage,     iErr)
+      Call PetscLogStageRegister("RHS Assembly V",AppCtx%LogInfo%RHSAssemblyV_Stage,     iErr)
+   End If
+   Call PetscLogStageRegister("FW Assembly W",    AppCtx%LogInfo%FWAssemblyW_Stage,      iErr)
+   Call PetscLogStageRegister("V-Step",           AppCtx%LogInfo%VStep_Stage,            iErr)
+   Call PetscLogStageRegister("W-Step",           AppCtx%LogInfo%WStep_Stage,            iErr)
+   Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
+   Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
    End Subroutine InitLog
    
    Subroutine Save_U(AppCtx)
@@ -513,12 +513,12 @@ Contains
    End Subroutine Save_V
 
 Subroutine Save_W(AppCtx)
-   	Type(AppCtx_Type)                            :: AppCtx
-   	PetscInt                                     :: iErr
-   	
-   	Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-   	Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W) 
-   	Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+      Type(AppCtx_Type)                            :: AppCtx
+      PetscInt                                     :: iErr
+      
+      Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W) 
+      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine Save_W
 
 
@@ -609,12 +609,12 @@ End Subroutine Save_W
       Call FieldDestroy(AppCtx%UBC);    CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%V);      CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%VBC);    CHKERRQ(iErr)
-	Call FieldDestroy(AppCtx%W);      CHKERRQ(iErr)
-	Call FieldDestroy(AppCtx%WBC);    CHKERRQ(iErr)
+   Call FieldDestroy(AppCtx%W);      CHKERRQ(iErr)
+   Call FieldDestroy(AppCtx%WBC);    CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%VIrrev); CHKERRQ(iErr)
 
       Call FieldDestroy(AppCtx%Theta);  CHKERRQ(iErr)
-	Call FieldDestroy(AppCtx%RHSU); CHKERRQ(iErr)
+   Call FieldDestroy(AppCtx%RHSU); CHKERRQ(iErr)
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
          Call FieldDestroy(AppCtx%GradientV);   CHKERRQ(iErr)
          Call FieldDestroy(AppCtx%LowerBoundV); CHKERRQ(iErr)
@@ -664,7 +664,7 @@ End Subroutine Save_W
       End If
       
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-	   Write(filename, 103) Trim(AppCtx%AppParam%prefix)
+      Write(filename, 103) Trim(AppCtx%AppParam%prefix)
       Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
       Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
       Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
@@ -681,6 +681,10 @@ End Subroutine Save_W
          Call KSPDestroy(AppCtx%KSPV, iErr); CHKERRQ(iErr)
       End If
 
+      Call EXCLOS(AppCtx%EXO%exoid, iErr)
+      AppCtx%EXO%exoid = 0
+      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+      AppCtx%MyEXO%exoid = 0
 #if defined WITH_TAO
       Call TaoFinalize(iErr)
 #endif
