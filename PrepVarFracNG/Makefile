@@ -18,11 +18,20 @@ ifneq (,$(findstring xlf,$(FC)))
 	FC_MODULE_OUTPUT_FLAG=-qmoddir=
 endif
 
+ifdef WITH_HEAT
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=-DPB_${DIM} -g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} -I${M_HEATDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
+	MEF90_FC_FLAGS=-DPB_${DIM} -D${WITH_HEAT} -g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} -I${M_HEATDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
 else
-	MEF90_FC_FLAGS=-DPB_${DIM} -g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} -I${M_HEATDIR} ${FC_FLAGS}
+	MEF90_FC_FLAGS=-DPB_${DIM} -D${WITH_HEAT} -g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} -I${M_HEATDIR} ${FC_FLAGS}
 endif
+else
+ifneq (,$(findstring gcc,$(PETSC_ARCH)))
+	MEF90_FC_FLAGS= -g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} -I${M_HEATDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
+else
+	MEF90_FC_FLAGS= -g ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_VARFRACSTRUCTDIR} -I${M_HEATDIR} ${FC_FLAGS}
+endif
+endif
+
 
 .F90.o:
 	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
@@ -30,8 +39,13 @@ endif
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 
+ifdef WITH_HEAT
 PrepVarFracNG: ${PETSC_ARCH} PrepVarFracNG.o ${PETSC_ARCH}/PrepVarFracNG.o m_PrepVarFracNG.o ${PETSC_ARCH}/m_PrepVarFracNG.o
 	${FLINKER} -o ${PETSC_ARCH}/PrepVarFracNG ${PETSC_ARCH}/PrepVarFracNG.o ${PETSC_ARCH}/m_PrepVarFracNG.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${M_HEATOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+else
+PrepVarFracNG: ${PETSC_ARCH} PrepVarFracNG.o ${PETSC_ARCH}/PrepVarFracNG.o m_PrepVarFracNG.o ${PETSC_ARCH}/m_PrepVarFracNG.o
+	${FLINKER} -o ${PETSC_ARCH}/PrepVarFracNG ${PETSC_ARCH}/PrepVarFracNG.o ${PETSC_ARCH}/m_PrepVarFracNG.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+endif
 
 PrepVarFracNG.o: ${PETSC_ARCH} m_PrepVarFracNG.o ${PETSC_ARCH}/m_PrepVarFracNG.o
 
@@ -51,3 +65,4 @@ debug::
 	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
 	@echo ${M_HEATDIR}
 	@echo ${M_HEATOBJS}
+	@echo ${WITH_HEAT}
