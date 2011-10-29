@@ -7,12 +7,15 @@ Program PrepVarFrac
    Use m_VarFrac_Struct
    Use m_PrepVarFrac
    Use petsc
+
+#if defined WITH_HEAT
 #if defined PB_2D
    Use m_Poisson2D
    Use m_TransientHeat2D
 #elif defined PB_3D 
    Use m_Poisson3D
    Use m_TransientHeat3D
+#endif 
 #endif 
 
    Implicit NONE   
@@ -67,14 +70,14 @@ Program PrepVarFrac
    PetscLogDouble                               :: Time
    PetscBool                                    :: Has_Seed, Has_n
    PetscBool                                    :: saveElemVar, PlaneStrain
-   
-   PetscReal                                    :: R, Ymax
-   Type(Heat_AppCtx_Type)                       :: HeatAppCtx
    PetscInt                                     :: exo_version
+   PetscReal                                    :: R, Ymax
+#if defined WITH_HEAT
+   Type(Heat_AppCtx_Type)                       :: HeatAppCtx
    PetscReal                                    :: ValU, ValF
    PetscInt, Dimension(:), Pointer              :: SizeScal
    PetscReal, Dimension(:), Pointer             :: T_BC
-
+#endif
 
    Call MEF90_Initialize()
 
@@ -293,9 +296,10 @@ Program PrepVarFrac
    Select Case(iCase)
    !!! Write special cases here
    Case(9) !!! Single well, cst flux
+#if defined WITH_HEAT
       HeatAppCtx%AppParam%verbose = verbose
       Call MEF90_AskInt(HeatAppCtx%AppParam%TestCase, 'Test Case For Solving Heat Equation', BatchUnit, IsBatch)
-
+#endif
    End Select
 
    Allocate(GlobVars(VarFrac_Num_GlobVar))
@@ -474,6 +478,7 @@ Program PrepVarFrac
       Call MEF90_AskReal(Theta, 'Temperature contrast (Delta Theta)', BatchUnit, IsBatch)
       Call MEF90_AskReal(DL, 'Diffusion length', BatchUnit, IsBatch)
    Case(9)
+#if defined WITH_HEAT
  ! Warning : These properties do not have to be the same for all EB
       Call MEF90_AskReal(ValU, 'Initial value in Temperature', BatchUnit, IsBatch)
       Call MEF90_AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
@@ -488,6 +493,7 @@ Program PrepVarFrac
             print *, T_BC(i)
          End If
       End Do
+#endif
   Case default
       !!! Default is MIL
       Call MEF90_AskReal(Theta, 'Temperature multiplier', BatchUnit, IsBatch)
@@ -553,6 +559,7 @@ Program PrepVarFrac
 
    Select Case(iCase)
    Case(9) !! Computing the thermal field 
+#if defined WITH_HEAT
       !HeatAppCtx%Tmin = TMin
       HeatAppCtx%maxtime = TMax
       HeatAppCtx%NumSteps = NumSteps
@@ -587,7 +594,8 @@ Program PrepVarFrac
       Call SolveTransient(HeatAppCtx, MyEXO, MeshTopology)
       Call MatView(HeatAppCtx%M, PETSC_VIEWER_STDOUT_WORLD, iErr)
       Write(IOBuffer, *) 'End Computing Temperature Field\n \n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)  
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+#endif 
    End Select
 
    !!!
