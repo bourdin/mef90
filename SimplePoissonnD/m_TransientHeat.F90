@@ -99,7 +99,7 @@ Contains
       Type(DM)                                     :: Tmp_Mesh
       PetscReal                                    :: ValU, ValF
       PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
-      PetscReal, Dimension(:), Pointer             :: U, Uelem
+      PetscReal, Dimension(:), Pointer             :: U
 
       Call MEF90_Initialize()
       
@@ -285,23 +285,37 @@ Contains
 202 Format('    Node Set      ', T24, I3, '\n')
 300 Format('EB', I4.4, ': ', A) 
 302 Format('NS', I4.4, ': ', A)
-
+      AppCtx%VertVar_Temperature = 1
 ! Set BC on NS
 !Test ici si CL sont de type dicrichlet !! 
-      Allocate(Uelem(1))
-      Do iloc = 1, AppCtx%MeshTopology%Num_Node_Sets         
-         i = AppCtx%MeshTopology%Node_Set(iloc)%ID
-            Uelem(1) = U(i)
-            Do j = 1, AppCtx%MeshTopology%Node_Set(iloc)%Num_Nodes
-               Call SectionRealUpdate(AppCtx%U%Sec, AppCtx%MeshTopology%Num_Elems + AppCtx%MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            End Do
-      End Do
-      DeAllocate(Uelem)
-      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCT),  AppCtx%MeshTopology)
+      Call HeatSetBC(AppCtx, U, AppCtx%MyExo, AppCtx%MeshTopology, VarFrac_NSProp_BCT)
       !!! Create the EXO case file
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
 
    End Subroutine PoissonInit
+
+
+#undef __FUNCT__
+#define __FUNCT__ "HeatSetBC"
+   Subroutine HeatSetBC(AppCtx, U, MyExo, MeshTopology, NS_Offset)
+      Type(Heat_AppCtx_Type)                             :: AppCtx
+      Type (MeshTopology_Type)                           :: MeshTopology 
+      Type (EXO_Type)                                    :: MyEXO
+      PetscReal, Dimension(:), Pointer                   :: U, Uelem
+      PetscInt                                           :: NS_Offset 
+      PetscInt                                           :: iErr, iLoc, i, j  
+
+      Allocate(Uelem(1))
+      Do iloc = 1, MeshTopology%Num_Node_Sets         
+         i = MeshTopology%Node_Set(iloc)%ID
+            Uelem(1) = U(i)
+            Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+               Call SectionRealUpdate(AppCtx%U%Sec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            End Do
+      End Do
+      DeAllocate(Uelem)
+      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  MyEXO%NSProperty(NS_Offset),  MeshTopology)
+   End Subroutine HeatSetBC
 
 
 #undef __FUNCT__
@@ -319,7 +333,7 @@ Contains
       Call FieldCreateVertex(AppCtx%RHS,   'RHS',       AppCtx%MeshTopology, SizeScal)
       Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeScal)
-
+      
    End Subroutine HeatInitField
 
 
@@ -360,7 +374,7 @@ Contains
       PetscInt                                     :: iErr
 
       !!! Initialize the matrix and vector for the linear system
-      Call DMMeshSetMaxDof(MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
+      Call DMMeshSetMaxDof(MeshTopology%Mesh, MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
       Call PetscObjectSetName(AppCtx%K,"K matrix",iErr);CHKERRQ(iErr)
       Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%M, iErr); CHKERRQ(iErr)
@@ -395,7 +409,7 @@ Contains
       Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr) ! overwritting if cli arguments
       
 
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
        
    End Subroutine Poisson_TSSetUp
 
@@ -473,7 +487,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: CurTime
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
-      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 
 ! Using IMEX see section 6.1.2 PetSc documentation 
@@ -485,7 +499,7 @@ Contains
     !  Call Matview(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr)       
      ! Call Matview(AppCtx%M, PETSC_VIEWER_STDOUT_WORLD, iErr)       
      ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
-!      Call Write_EXO_Result_Vertex(MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%U%Sec)
+      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , 1, AppCtx%U%Sec)
       Allocate(CurTime(AppCtx%NumSteps-1)) 
       CurTime = 0.0
       Do iStep = 1, AppCtx%NumSteps-1
@@ -508,15 +522,14 @@ Contains
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
 !         Call TSGetTimeStep
 !Write the result of the current time step into the Ewo file
-!         Call Write_EXO_Result_Vertex(MyEXO, AppCtx%MeshTopology, 1, iStep+1, AppCtx%U%Sec)
-!Call Write_EXO_Result_Vertex(MyEXO, MeshTopology,  MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , iStep+1, AppCtx%U%Sec)
          Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
          Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
          Write(IOBuffer, 100) TSTimeSteps, TSreason
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          If (iStep < AppCtx%NumSteps-1) Then
             Select Case(AppCtx%AppParam%TestCase)
-            Case(2)
+            Case(3)
 !TODO For Non linear evolution assemble the matric again
 !TODO Recompute Diffusion coefficient 
                If (AppCtx%AppParam%verbose > 0) Then
@@ -533,7 +546,7 @@ Contains
    ! Call TSSSPGetNumStages
       
  
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+ !     Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
 200 Format('Solving TS Time step : ', I5,  ",    Current Time  :", ES12.5, '\n')
    End Subroutine SolveTransient

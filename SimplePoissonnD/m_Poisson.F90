@@ -48,7 +48,7 @@ Module m_Poisson3D
       Type(Field)                                  :: F
       PetscReal                                    :: ExtForcesWork
       PetscReal                                    :: TotalEnergy
-      Type(Flag)                                  :: BCFlag
+      Type(Flag)                                   :: BCFlag
       Type(Mat)                                    :: K
       Type(Mat)                                    :: M ! Mass matrix 
       Type(Mat)                                    :: Jac ! jacobian
@@ -61,7 +61,7 @@ Module m_Poisson3D
       Type(TS)                                     :: TS
       PetscInt                                     :: maxsteps, NumSteps
       PetscReal                                    :: maxtime
-
+      PetscInt                                     :: VertVar_Temperature 
    End Type Heat_AppCtx_Type
    
    
@@ -74,7 +74,6 @@ Contains
       Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
    
-!      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, exo_ver, iErr)
       Call EXPVP (AppCtx%MyEXO%exoid, 'g', 3, iErr)
       Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 3, (/'Elastic Energy ', 'Ext Forces work', 'Total Energy   '/), iErr)
       Call EXPVP (AppCtx%MyEXO%exoid, 'n', 2, iErr)
@@ -87,9 +86,6 @@ Contains
       Call EXPVAN(AppCtx%MyEXO%exoid, 'e', 3, (/'Grad U_X', 'Grad U_Y', 'Grad U_Z'/), iErr)
 #endif
       Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
-
-!      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
-!      AppCtx%MyEXO%exoid = 0
    End Subroutine EXOFormat_SimplePoisson
    
 #undef __FUNCT__
@@ -148,14 +144,14 @@ Contains
       Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk, iErr
       
-      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
          Call MatAssemblyBlock(iBlk, AppCtx, MeshTopology)
       End Do Do_iBlk
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine HeatMatAssembly
       
    Subroutine MatAssemblyBlock(iBlk, AppCtx, MeshTopology)
@@ -169,7 +165,7 @@ Contains
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscLogDouble                               :: flops = 0
       
-      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
+!      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
       
       Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF, MeshTopology%Elem_Blk(iBlk)%Num_DoF))
       Allocate(BCFlag(MeshTopology%Elem_Blk(iBlk)%Num_DoF))
@@ -197,7 +193,7 @@ Contains
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       DeAllocate(BCFlag)
       DeAllocate(MatElem)
-      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
+!      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatAssemblyBlock
 
 #undef __FUNCT__
