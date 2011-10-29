@@ -44,7 +44,7 @@ Program Partitioner
    End If
    
    CHKMEMQ
-   !Call MeshTopologyReadEXO(MeshTopology, EXO)
+   !Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    !!! trying step by step:
    Call MeshExodusGetInfo(MeshTopology%mesh, MeshTopology%Num_Dim, MeshTopology%Num_Verts, MeshTopology%Num_Elems, MeshTopology%Num_Elem_Blks, MeshTopology%Num_Node_Sets, ierr); CHKERRQ(ierr)
    Write(*,*) 'MeshTopology%Num_Dim            ',MeshTopology%Num_Dim
@@ -66,7 +66,7 @@ Program Partitioner
    Call ModMeshTopologyReadEXO(MeshTopology, EXO)
 
    Write(*,*) '============ MEF90 MeshTopologyReadEXO ============'
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    Write(*,*) '============ MEF90 MeshTopologyReadEXO ============'
    
    Call MeshTopologyDestroy(MeshTopology)

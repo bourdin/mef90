@@ -9,8 +9,9 @@ Module m_MEF_Sieve
    IMPLICIT NONE
    Private
    
-   Public :: MeshTopologyReadEXO
-   Public :: MeshInitCoordinates
+   Public :: MeshTopologyGetInfo
+   !Public :: MeshInitCoordinates
+   ! This is totally useless and needs to go away...
    Public :: FieldCreateVertex
    Public :: FlagCreateVertex
    Public :: FieldDestroy
@@ -25,11 +26,11 @@ Module m_MEF_Sieve
    
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MeshTopologyReadEXO"
-   Subroutine MeshTopologyReadEXO(dMeshTopology, dEXO)
+#define __FUNCT__ "MeshTopologyGetInfo"
+   Subroutine MeshTopologyGetInfo(dMeshTopology, Comm)
       !!! Remove the element and coordinate stuff and move in separate functions
       Type (MeshTopology_Type)                     :: dMeshTopology
-      Type (EXO_Type)                              :: dEXO
+      MPI_Comm                                     :: Comm
       PetscInt                                     :: iErr, iBlk, iSet
       Character(len=256)                           :: CharBuffer
       
@@ -68,6 +69,7 @@ Contains
       
       Allocate(blkIds(numIds))
       Call DMMeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
+      Write(100+MEF90_MyRank,*) 'blkIds: ', blkIds
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
 
       If (dMeshTopology%Num_Elem_blks > 0) Then
@@ -88,7 +90,7 @@ Contains
       ! Get the overall number of element blocks
       Allocate(Tmp_ID(dMeshTopology%num_elem_blks))
       Tmp_ID = dMeshTopology%elem_blk(:)%ID
-      Call Uniq(dEXO%Comm, Tmp_ID, Tmp_GlobalID)            
+      Call Uniq(Comm, Tmp_ID, Tmp_GlobalID)            
       dMeshTopology%Num_elem_blks_global = Size(Tmp_GlobalID)
       DeAllocate(Tmp_ID)
       DeAllocate(Tmp_GlobalID)
@@ -117,11 +119,11 @@ Contains
       ! Get the overall number of Node Sets
       Allocate(Tmp_ID(dMeshTopology%num_node_sets))
       Tmp_ID = dMeshTopology%node_set(:)%ID
-      Call Uniq(dEXO%Comm, Tmp_ID, Tmp_GlobalID)            
+      Call Uniq(Comm, Tmp_ID, Tmp_GlobalID)            
       dMeshTopology%Num_node_sets_global = Size(Tmp_GlobalID)
       DeAllocate(Tmp_ID)
       DeAllocate(Tmp_GlobalID)
-   End Subroutine MeshTopologyReadEXO
+   End Subroutine MeshTopologyGetInfo
     
 #undef __FUNCT__
 #define __FUNCT__ "MeshInitCoordinatesVect2D"

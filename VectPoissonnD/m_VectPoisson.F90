@@ -122,7 +122,7 @@ Contains
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       End If
 
-      Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
+      Call MeshTopologyGetInfo(AppCtx%MeshTopology, PETSC_COMM_WORLD)
          
       Call PetscLogStagePush(AppCtx%LogInfo%DataSetup_Stage, iErr); CHKERRQ(iErr)
       !!! Sets the type of elements for each block
