@@ -133,7 +133,8 @@ Program PrepVarFrac
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
-   
+   EXO%exoid = EXOPEN(EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr)
+
    Call EXO_Check_Numbering(EXO, iErr)
    If (iErr /= 0) Then
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
@@ -162,7 +163,7 @@ Program PrepVarFrac
    !!!Call MeshLoad(MeshViewer,MeshTopology%Mesh,iErr);CHKERRQ(iErr)
    !!!Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
 
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, EXO%comm)
 !   write(*,*) '============ BACK IN PREPVARFRAC ='
 !   write(*,*) 'Associated(MeshTopology%elem_blk) ', Associated(MeshTopology%elem_blk)
 
@@ -172,9 +173,9 @@ Program PrepVarFrac
    End If
 
    MyEXO%comm = PETSC_COMM_SELF
-   MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 99) trim(prefix), MEF90_MyRank
  99  Format(A, '-', I4.4, '.gen')
+   MyEXO%exoid = EXCRE (MyEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
    Call DMMeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
    
    Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
@@ -305,20 +306,14 @@ Program PrepVarFrac
          GlobVars(VarFrac_GlobVar_Load) = T(i)
          Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
 
-         MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
          Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
-         Call EXCLOS(MyEXO%exoid, iErr)
-         MyEXO%exoid = 0
       End Do
 
       T(NumSteps) = Tmax
       GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
       Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
 
-      MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
       Call EXPTIM(MyEXO%exoid, NumSteps, T(NumSteps), iErr)
-      Call EXCLOS(MyEXO%exoid, iErr)
-      MyEXO%exoid = 0
 
      !!! Elem Blocks BC and Variables
    
@@ -760,19 +755,19 @@ Program PrepVarFrac
                   Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
                      Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
                      dist = 1.0E+30
-					      Do c = 1, NumCracks
-   				         !!! if Y > lc, 
-   				         !!!   d = ( |x-xc|^2 + |y-yc|^2)^{1/2}
-   				         !!! else
-   				         !!!   d = |x-xc|
-					         If (CoordElem(2) >= CrackLength(c)) Then
-					            dist = min(dist, sqrt( (CoordElem(1)-CrackPosition(c))**2 + (CoordElem(2)-CrackLength(c))**2))
-					         Else
-				               dist = min(dist, abs(CoordElem(1)-CrackPosition(c)))
-					         End If
-					      End Do
+                     Do c = 1, NumCracks
+                        !!! if Y > lc, 
+                        !!!   d = ( |x-xc|^2 + |y-yc|^2)^{1/2}
+                        !!! else
+                        !!!   d = |x-xc|
+                        If (CoordElem(2) >= CrackLength(c)) Then
+                           dist = min(dist, sqrt( (CoordElem(1)-CrackPosition(c))**2 + (CoordElem(2)-CrackLength(c))**2))
+                        Else
+                           dist = min(dist, abs(CoordElem(1)-CrackPosition(c)))
+                        End If
+                     End Do
                      Call SectionRealRestore(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
-					      Velem = 1.- exp(-dist/epsilon)
+                     Velem = 1.- exp(-dist/epsilon)
                   End Do                  
                Else
                   Velem    = V(i)
@@ -797,6 +792,10 @@ Program PrepVarFrac
    End Select
 
    Close(BatchUnit)
+   Call EXCLOS(EXO%exoid, iErr)
+   EXO%exoid = 0
+   Call EXCLOS(MyEXO%exoid, iErr)
+   MyEXO%exoid = 0
    Call MEF90_Finalize()
 
  100 Format('*** Element Block ', T24, I3, '\n')

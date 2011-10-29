@@ -144,7 +144,7 @@ Program PrepVarFrac
       Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
 
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)

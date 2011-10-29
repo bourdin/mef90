@@ -187,7 +187,7 @@ Contains
       End If
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-      Call MeshTopologyReadEXO(AppCtx%MeshTopology, AppCtx%EXO)
+      Call MeshTopologyGetInfo(AppCtx%MeshTopology,PETSC_COMM_WORLD)
 
       !!! Sets the type of elements for each block
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks

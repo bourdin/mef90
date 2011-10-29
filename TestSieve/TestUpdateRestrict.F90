@@ -59,7 +59,7 @@ Program TestSectionInt
       Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
    
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
       MeshTopology%Elem_Blk(iBlk)%Elem_Type = MEF90_P1_Lagrange

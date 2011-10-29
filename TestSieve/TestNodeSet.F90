@@ -38,7 +38,7 @@ Program TestNodeSet
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
 
-   Call MeshTopologyReadEXO(MeshTopology, EXO)
+   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    
    MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
    Do iBlk = 1, MeshTopology%Num_Elem_Blks
