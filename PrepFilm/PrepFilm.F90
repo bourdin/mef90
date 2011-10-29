@@ -128,7 +128,8 @@ Program PrepVarFrac
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
-   
+   EXO%exoid = EXOPEN(EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr)
+
    Call EXO_Check_Numbering(EXO, iErr)
    If (iErr /= 0) Then
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
@@ -136,7 +137,7 @@ Program PrepVarFrac
 
 !!!endregion INIT
 
-!!!startregion READ & DISTIB MESH
+!!!startregion READ & DISTRIB MESH
 
    !!! Reading and distributing sequential mesh
    If (MEF90_NumProcs == 1) Then
@@ -158,8 +159,8 @@ Program PrepVarFrac
 
 
    MyEXO%comm = PETSC_COMM_SELF
-   MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 99) trim(prefix), MEF90_MyRank
+   MyEXO%exoid = EXCRE(MyEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, ierr)
  99  Format(A, '-', I4.4, '.gen')
    Call DMMeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr) ! What do we need CoordSec for? Non uniform loads, future use
 
@@ -254,10 +255,7 @@ Program PrepVarFrac
          GlobVars(VarFrac_GlobVar_Load) = T(i)
          Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
          
-         MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
          Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
-         Call EXCLOS(MyEXO%exoid, iErr)
-         MyEXO%exoid = 0
       End Do
    
 !!! Save timesteps in EXO file
@@ -265,11 +263,8 @@ Program PrepVarFrac
       T(NumSteps) = Tmax
       GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
       Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
-      MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
       Call EXPTIM(MyEXO%exoid, NumSteps, T(NumSteps), iErr)
-      Call EXCLOS(MyEXO%exoid, iErr)
-      MyEXO%exoid = 0
-      End Select
+   End Select
    DeAllocate(GlobVars)
 
 !!!endregion COMPUTE TIMESTEPS AND LOAD, WRITE TO EXO
@@ -555,6 +550,10 @@ Program PrepVarFrac
    DeAllocate(T)
    Call SectionRealDestroy(CoordSec, iErr); CHKERRQ(iErr)
    Call MeshTopologyDestroy(MeshTopology)
+   Call EXCLOS(EXO%exoid, iErr)
+   EXO%exoid = 0
+   Call EXCLOS(MyEXO%exoid, iErr)
+   MyEXO%exoid = 0
    Call MEF90_Finalize()
 
  100 Format('*** Element Block ', T24, I3, '\n')
