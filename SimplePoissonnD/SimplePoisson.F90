@@ -77,7 +77,12 @@ Program  SimplePoisson
    Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F%Sec) 
    Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-   
+  
+    Call EXCLOS(AppCtx%EXO%exoid, iErr)
+    AppCtx%EXO%exoid = 0
+    Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+    AppCtx%MyEXO%exoid =0
+
    Call SimplePoissonFinalize(AppCtx)
 
 Contains 
@@ -141,6 +146,7 @@ Contains
       AppCtx%EXO%num_ssproperties = 0
       AppCtx%EXO%num_ebproperties = 0
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
+      AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr)
       !!! Read and partition the mesh
       If (MEF90_NumProcs == 1) Then
          Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
@@ -212,6 +218,7 @@ Contains
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
       Write(AppCtx%MyEXO%filename, 200) trim(AppCtx%AppParam%prefix), MEF90_MyRank
    200 Format(A, '-', I4.4, '.gen')
+      AppCtx%MyEXO%exoid = EXCRE (AppCtx%MyEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
       AppCtx%MyEXO%title = trim(AppCtx%EXO%title)
       AppCtx%MyEXO%Num_QA = AppCtx%EXO%Num_QA
       If (AppCtx%AppParam%Restart) Then

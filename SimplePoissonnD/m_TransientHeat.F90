@@ -170,6 +170,7 @@ Contains
       
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
+      AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr)
       !!! Read and partition the mesh
       If (MEF90_NumProcs == 1) Then
          Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage, iErr); CHKERRQ(iErr)
@@ -203,6 +204,7 @@ Contains
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
       Write(AppCtx%MyEXO%filename, 200) trim(AppCtx%AppParam%prefix), MEF90_MyRank
 200 Format(A, '-', I4.4, '.gen')
+      AppCtx%MyEXO%exoid = EXCRE (AppCtx%MyEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
       AppCtx%MyEXO%title = trim(AppCtx%EXO%title)
       AppCtx%MyEXO%Num_QA = AppCtx%EXO%Num_QA
 !!! Prepare and format the output mesh   

@@ -110,7 +110,12 @@ Program  TransientHeat
    Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F%Sec) 
    Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-   
+
+   Call EXCLOS(AppCtx%EXO%exoid, iErr)
+   AppCtx%EXO%exoid = 0
+   Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+   AppCtx%MyEXO%exoid = 0
+
    Select Case (AppCtx%AppParam%TestCase)
    Case (1)
       Call SimplePoissonFinalize(AppCtx)
