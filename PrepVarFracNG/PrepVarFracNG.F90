@@ -487,7 +487,7 @@ Program PrepVarFrac
       End Do
       
       Allocate(T_BC(MeshTopology%Num_Node_Sets_Global))
-      T_BC   = 0.0_KR !this is not sufficient ..... 
+      T_BC   = 0.0_Kr   
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          If (MyEXO%NSProperty(VarFrac_NSProp_HasPForce)%Value(i) /= 0 ) Then
 !!! The BC in temperature is in VarFrac_NSProp_HasPForce 
@@ -579,8 +579,6 @@ Program PrepVarFrac
       Call FlagCreateVertex(HeatAppCtx%BCFlag, 'BC',   MeshTopology, SizeScal)
       DeAllocate(SizeScal)
 
-      !Call SectionRealSet(HeatAppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
-      !Call SectionRealSet(HeatAppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
       !Set Initial Temerature Field and forces
       Call HeatSetInitial(HeatAppCtx, MeshTopology, ValT_Init,ValT_F)
       !Set BC in Temperature
