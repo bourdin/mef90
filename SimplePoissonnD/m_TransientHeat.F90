@@ -273,9 +273,7 @@ Contains
 
 !Get BC values 
       Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
-!      U = ValU
-      U = 1.0_Kr !Warning This is incorrect
-!TODO Correct BC : this initialisation should depend on the flag  
+      U = 0.0_Kr 
       Do i = 1, AppCtx%MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 202) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -290,7 +288,6 @@ Contains
 302 Format('NS', I4.4, ': ', A)
       AppCtx%VertVar_Temperature = 1
 ! Set BC on NS
-!Test ici si CL sont de type dicrichlet !! 
       Call HeatSetBC(AppCtx, U, AppCtx%MyExo, AppCtx%MeshTopology, VarFrac_NSProp_BCT)
       !!! Create the EXO case file
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
@@ -338,10 +335,12 @@ Contains
       Allocate(Uelem(1))
       Do iloc = 1, MeshTopology%Num_Node_Sets         
          i = MeshTopology%Node_Set(iloc)%ID
-            Uelem(1) = U(i)
+         If (MyEXO%NSProperty(NS_Offset)%Value( MeshTopology%Node_Set(iloc)%ID)== 1) then 
+            Uelem(1) = U(i) !Dirichlet BC 
             Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
                Call SectionRealUpdate(AppCtx%U%Sec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
+         End If 
       End Do
       DeAllocate(Uelem)
       Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  MyEXO%NSProperty(NS_Offset),  MeshTopology)
