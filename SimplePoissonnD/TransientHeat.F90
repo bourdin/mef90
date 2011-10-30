@@ -28,7 +28,7 @@ Program  TransientHeat
    Select Case (AppCtx%AppParam%TestCase)
    Case (1)
       Call KSPSetUp(AppCtx)
-   Case(2)
+   Case(2,3)
       Call Poisson_TSSetUp(AppCtx, AppCtx%MeshTopology)
    End Select
 
@@ -129,7 +129,7 @@ Program  TransientHeat
    Select Case (AppCtx%AppParam%TestCase)
    Case (1)
       Call SimplePoissonFinalize(AppCtx)
-   Case (2)
+   Case (2, 3)
       Call TSPoissonFinalize(AppCtx)
    End Select 
 End Program  TransientHeat
