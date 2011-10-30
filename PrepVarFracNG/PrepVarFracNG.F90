@@ -74,7 +74,7 @@ Program PrepVarFrac
    PetscReal                                    :: R, Ymax
 #if defined WITH_HEAT
    Type(Heat_AppCtx_Type)                       :: HeatAppCtx
-   PetscReal                                    :: ValU, ValF
+   PetscReal,Dimension(:), Pointer              :: ValT_Init, ValT_F
    PetscInt, Dimension(:), Pointer              :: SizeScal
    PetscReal, Dimension(:), Pointer             :: T_BC
 #endif
@@ -479,12 +479,15 @@ Program PrepVarFrac
       Call MEF90_AskReal(DL, 'Diffusion length', BatchUnit, IsBatch)
    Case(9)
 #if defined WITH_HEAT
- ! Warning : These properties do not have to be the same for all EB
-      Call MEF90_AskReal(ValU, 'Initial value in Temperature', BatchUnit, IsBatch)
-      Call MEF90_AskReal(ValF, 'RHS F', BatchUnit, IsBatch)
-      print *, "Initial value in temperature", ValU
+      Allocate(ValT_Init(MeshTopology%Num_Elem_Blks))
+      Allocate(ValT_F(MeshTopology%Num_Elem_Blks))
+      Do iBlock = 1, MeshTopology%Num_Elem_Blks  
+         Call MEF90_AskReal(ValT_Init(iBlock), 'Initial value in Temperature', BatchUnit, IsBatch)
+         Call MEF90_AskReal(ValT_F(iBlock), 'RHS F', BatchUnit, IsBatch)
+      End Do
+      
       Allocate(T_BC(MeshTopology%Num_Node_Sets_Global))
-      T_BC   = ValU !this is not sufficient ..... 
+      T_BC   = 0.0_KR !this is not sufficient ..... 
       Do i = 1, MeshTopology%Num_Elem_Blks_Global
          If (MyEXO%NSProperty(VarFrac_NSProp_HasPForce)%Value(i) /= 0 ) Then
 !!! The BC in temperature is in VarFrac_NSProp_HasPForce 
@@ -576,13 +579,16 @@ Program PrepVarFrac
       Call FlagCreateVertex(HeatAppCtx%BCFlag, 'BC',   MeshTopology, SizeScal)
       DeAllocate(SizeScal)
 
-      print *, "valeur de U", ValU 
-      Call SectionRealSet(HeatAppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
-      Call SectionRealSet(HeatAppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
-
+      !Call SectionRealSet(HeatAppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
+      !Call SectionRealSet(HeatAppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
+      !Set Initial Temerature Field and forces
+      Call HeatSetInitial(HeatAppCtx, MeshTopology, ValT_Init,ValT_F)
       !Set BC in Temperature
       Call HeatSetBC(HeatAppCtx, T_BC, MyExo, MeshTopology, VarFrac_NSProp_HasPForce)
-      
+      DeAllocate(ValT_Init) 
+      DeAllocate(ValT_F) 
+      DeAllocate(T_BC) 
+
       Write(IOBuffer, *) 'Computing Temperature Field\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)  
       Call Poisson_TSSetUp(HeatAppCtx, MeshTopology)
