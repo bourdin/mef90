@@ -62,6 +62,7 @@ Module m_Poisson3D
       PetscInt                                     :: maxsteps, NumSteps
       PetscReal                                    :: maxtime
       PetscInt                                     :: VertVar_Temperature 
+      PetscReal, Dimension(:), Pointer             :: Diff
    End Type Heat_AppCtx_Type
    
    
@@ -155,7 +156,7 @@ Contains
    End Subroutine HeatMatAssembly
       
    Subroutine MatAssemblyBlock(iBlk, AppCtx, MeshTopology)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                       :: AppCtx
       Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk
       
@@ -164,7 +165,7 @@ Contains
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
       PetscLogDouble                               :: flops = 0
-      
+      PetscReal                                    :: lDiff 
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
       
       Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF, MeshTopology%Elem_Blk(iBlk)%Num_DoF))
@@ -175,12 +176,13 @@ Contains
          MatElem = 0.0_Kr
          BCFlag = 0
          Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, MeshTopology%mesh, iE-1, MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
+         lDiff = AppCtx%Diff(iBlk) 
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
             Do iDoF1 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
                If (BCFlag(iDoF1) == 0) Then
                   Do iDoF2 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
                     ! MatElem(iDoF1, iDoF1) = 1./2.
-                     MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) )
+                     MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + lDiff * AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%Grad_BF(iDoF1, iGauss) .DotP. AppCtx%Elem(iE)%Grad_BF(iDoF2, iGauss) )
                      flops = flops + 1
                   End Do
                End If
@@ -196,10 +198,11 @@ Contains
 !      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatAssemblyBlock
 
+
 #undef __FUNCT__
 #define __FUNCT__ "RHSAssembly"
    Subroutine RHSAssembly(AppCtx, MeshTopology)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                       :: AppCtx
       Type (MeshTopology_Type)                     :: MeshTopology
 
       PetscInt                                     :: iErr

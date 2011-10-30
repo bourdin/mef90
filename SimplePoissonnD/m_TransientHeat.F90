@@ -103,13 +103,14 @@ Contains
 
       Call MEF90_Initialize()
       
-      NumTestCase = 2
+      NumTestCase = 3
       Allocate(TestCase(NumTestCase))
       Do i = 1, NumTestCase
          TestCase(i)%Index = i
       End Do
-      TestCase(1)%Description = "Simple Poisson \Delta u = f"
-      TestCase(2)%Description = "Heat equation u,t - \Delta u = f"
+      TestCase(1)%Description = "Simple Poisson Delta u = f"
+      TestCase(2)%Description = "Heat equation u,t - k*Delta u = f"
+      TestCase(3)%Description = "Heat equation u,t - div(k(u)*nabla u) = f, with k(u) = k*exp(u)"
       
       AppCtx%AppParam%verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
@@ -251,7 +252,7 @@ Contains
 
       Call MEF90_AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
       Select Case(AppCtx%AppParam%TestCase)
-      Case(2)
+      Case(2,3)
          Call MEF90_AskInt(AppCtx%maxsteps, 'Max number of steps for TS computation', BatchUnit, IsBatch)
          Call MEF90_AskReal(AppCtx%maxtime,  'Max time for TS computation', BatchUnit, IsBatch)
          Call MEF90_AskInt(AppCtx%NumSteps,  'Number of time steps', BatchUnit, IsBatch)
@@ -260,11 +261,14 @@ Contains
 !  Set EB Properties : U, F     
       Allocate(ValU(AppCtx%MeshTopology%Num_Elem_Blks)) 
       Allocate(ValF(AppCtx%MeshTopology%Num_Elem_Blks)) 
+      Allocate(AppCtx%Diff(AppCtx%MeshTopology%Num_Elem_Blks)) 
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Write(IOBuffer, 300) 1, 'Initial Value in U'
+         Write(IOBuffer, 300) iBlk, 'Initial Value in U'
          Call MEF90_AskReal(ValU(iBlk), IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) 1, 'RHS F'
+         Write(IOBuffer, 300) iBlk, 'RHS F'
          Call MEF90_AskReal(ValF(iBlk),IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) iBlk, 'diffusivity'
+         Call MEF90_AskReal(AppCtx%Diff(iBlk),IOBuffer, BatchUnit, IsBatch)
       End Do 
       Call HeatSetInitial(AppCtx, AppCtx%MeshTopology, ValU, ValF)
       DeAllocate(ValU)
@@ -511,7 +515,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: lTimes
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
      
-      Write(IOBuffer, *) "Warning : TSSolve does not assure that computation stops as the exact asked time"
+      Write(IOBuffer, *) "Warning : TSSolve does not assure that computation stops as the exact asked time \n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
 !TODO see TSSetExactFinalTime, TSGetTimeStep
 !TSSetExactFinalTime can not be used : 'TSRosW 2p does not have an interpolation formula'
