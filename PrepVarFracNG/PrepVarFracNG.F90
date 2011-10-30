@@ -307,7 +307,7 @@ Program PrepVarFrac
    Allocate(T(NumSteps))
    Do i = 1, NumSteps-1
       Select Case(iCase)
-      Case(4,5,6,7)
+      Case(4,5,6,7,9)
          !! Non uniform time stepping adapted to the time scale of the thermal problem in tau=sqrt(t)
          !! Time in our simulation is the physical time, while Bahr et al. (TAFM 1998) use tau
          !! Pay attention in visualization softwares
@@ -560,11 +560,9 @@ Program PrepVarFrac
    Select Case(iCase)
    Case(9) !! Computing the thermal field 
 #if defined WITH_HEAT
-      !HeatAppCtx%Tmin = TMin
-      HeatAppCtx%maxtime = TMax
+! list of time steps in T see computation lines 300-310 
       HeatAppCtx%NumSteps = NumSteps
       HeatAppCtx%maxsteps = 1000 
-      HeatAppCtx%AppParam%TestCase = 2
       HeatAppCtx%VertVar_Temperature = MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset
 !      Call HeatInitField(HeatAppCtx, MeshTopology) 
 
@@ -591,10 +589,11 @@ Program PrepVarFrac
       Call HeatMatAssembly(HeatAppCtx, MeshTopology)
       Call RHSAssembly(HeatAppCtx, MeshTopology)
       Call MatMassAssembly(HeatAppCtx, MeshTopology)
-      Call SolveTransient(HeatAppCtx, MyEXO, MeshTopology)
-      Call MatView(HeatAppCtx%M, PETSC_VIEWER_STDOUT_WORLD, iErr)
+      Call SolveTransient(HeatAppCtx, MyEXO, MeshTopology, T)
       Write(IOBuffer, *) 'End Computing Temperature Field\n \n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+#else
+      Call SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,'PrepVarFracNG must be compiled  with -DWITH_HEAT in order to use the Heat/Diffusion module', iErr)
 #endif 
    End Select
 
