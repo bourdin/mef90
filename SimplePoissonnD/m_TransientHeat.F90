@@ -89,7 +89,6 @@ Contains
       PetscInt                                     :: iErr
       PetscBool                                    :: HasPrefix, Flag
       PetscInt                                     :: iBlk, i, j, iloc, iEloc 
-      PetscInt                                     ::  iE, Num_DoF 
       Character(len=MEF90_MXSTRLEN)                :: BatchFileName
       PetscInt                                     :: BatchUnit=99
       PetscInt                                     :: NumTestCase
@@ -100,7 +99,6 @@ Contains
       Type(DM)                                     :: Tmp_Mesh
       PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
       PetscReal, Dimension(:), Pointer             :: U
-      PetscReal                                    :: RealValU, RealValF
       PetscReal, Dimension(:), Pointer             :: ValU, ValF
 
       Call MEF90_Initialize()
@@ -260,25 +258,18 @@ Contains
       End Select
 
 !  Set EB Properties : U, F     
-      Do_Elem_IBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-            Num_DoF = AppCtx%MeshTopology%Elem_Blk(iloc)%Num_DoF
-            Allocate(ValU(Num_DoF))
-            Allocate(ValF(Num_DoF))
-            Write(IOBuffer, 300) 1, 'Initial Value in U'
-            Call MEF90_AskReal(RealValU, IOBuffer, BatchUnit, IsBatch)
-            Write(IOBuffer, 300) 1, 'RHS F'
-            Call MEF90_AskReal(RealValF,IOBuffer, BatchUnit, IsBatch)
-            ValU = RealValU
-            ValF = RealValF
-         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call SectionRealUpdateClosure(AppCtx%U%Sec, AppCtx%MeshTopology%Mesh, iE-1, ValU, INSERT_VALUES, ierr);CHKERRQ(iErr)
-! attention les forces c est pour tous les pas de temps !!!! ici que premier  
-            Call SectionRealUpdateClosure(AppCtx%F%Sec, AppCtx%MeshTopology%Mesh, iE-1, ValF, INSERT_VALUES, ierr);CHKERRQ(iErr) 
-         End Do Do_Elem_iE 
-      End Do Do_Elem_Iblk
+      Allocate(ValU(AppCtx%MeshTopology%Num_Elem_Blks)) 
+      Allocate(ValF(AppCtx%MeshTopology%Num_Elem_Blks)) 
+      Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+         Write(IOBuffer, 300) 1, 'Initial Value in U'
+         Call MEF90_AskReal(ValU(iBlk), IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) 1, 'RHS F'
+         Call MEF90_AskReal(ValF(iBlk),IOBuffer, BatchUnit, IsBatch)
+      End Do 
+      Call HeatSetInitial(AppCtx, AppCtx%MeshTopology, ValU, ValF)
       DeAllocate(ValU)
       DeAllocate(ValF)
+
 
 !Get BC values 
       Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
@@ -306,6 +297,33 @@ Contains
 
    End Subroutine PoissonInit
 
+
+#undef __FUNCT__
+#define __FUNCT__ "HeatSetInitial"
+   Subroutine HeatSetInitial(AppCtx, MeshTopology, ValU, ValF)
+      Type(Heat_AppCtx_Type)                             :: AppCtx
+      Type (MeshTopology_Type)                           :: MeshTopology 
+      PetscReal, Dimension(:), Pointer                   :: ValU, ValF
+      PetscReal, Dimension(:), Pointer                   :: Uelem, Felem
+      PetscInt                                           :: iBlk, iEloc, Num_Dof, iE
+      PetscInt                                           :: iErr
+
+      Do_Elem_IBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
+         Num_DoF = MeshTopology%Elem_Blk(iBlk)%Num_DoF
+         Allocate(Uelem(Num_DoF))
+         Allocate(Felem(Num_DoF))
+         Uelem = ValU(iBlk)
+         Felem = ValF(iBlk)
+         Do_Elem_iE: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call SectionRealUpdateClosure(AppCtx%U%Sec, MeshTopology%Mesh, iE-1, Uelem, INSERT_VALUES, ierr);CHKERRQ(iErr)
+! attention les forces c est pour tous les pas de temps !!!! ici que premier  
+            Call SectionRealUpdateClosure(AppCtx%F%Sec, MeshTopology%Mesh, iE-1, Felem, INSERT_VALUES, ierr);CHKERRQ(iErr) 
+         End Do Do_Elem_iE 
+         DeAllocate(Uelem)
+         DeAllocate(Felem)
+      End Do Do_Elem_Iblk
+   End Subroutine HeatSetInitial
 
 #undef __FUNCT__
 #define __FUNCT__ "HeatSetBC"
