@@ -15,11 +15,14 @@ Program  TransientHeat
 
 
    Type(Heat_AppCtx_Type)                       :: AppCtx
-   PetscInt                                     :: iErr
+   PetscInt                                     :: iErr, iStep
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    Type(Vec)                                    :: W1, W2, W3 
    PetscScalar                                  :: prodMassUnit
-   PetscReal                                    :: Mass 
+   PetscReal                                    :: Mass
+   PetscReal, Dimension(:), Pointer             :: CurTime
+
+
    Call PoissonInit(AppCtx)
 
    Select Case (AppCtx%AppParam%TestCase)
@@ -58,8 +61,14 @@ Program  TransientHeat
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End If
-   
-   
+  
+   Allocate(CurTime(AppCtx%NumSteps-1))
+   DO iStep = 1, AppCtx%NumSteps-1
+       !! Non uniform time stepping adapted to the time scale of the  thermal problem in tau=sqrt(t)
+         CurTime(iStep) =  (Real(iStep)/Real(AppCtx%NumSteps))**2*AppCtx%maxtime
+   End Do 
+!TODO Write the time steps into the EXO file
+
    Select Case (AppCtx%AppParam%TestCase)
    Case (1) 
       If (AppCtx%AppParam%verbose > 0) Then
@@ -78,8 +87,9 @@ Program  TransientHeat
          Write(IOBuffer, *) 'Calling Solve\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call SolveTransient(AppCtx, AppCtx%MyEXO, AppCtx%MeshTopology)
+      Call SolveTransient(AppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, CurTime)
    End Select 
+   DeAllocate(CurTime) 
 
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Computing Energies\n'

@@ -88,7 +88,8 @@ Contains
       Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
       PetscBool                                    :: HasPrefix, Flag
-      PetscInt                                     :: iBlk, i, j, iloc 
+      PetscInt                                     :: iBlk, i, j, iloc, iEloc 
+      PetscInt                                     ::  iE, Num_DoF 
       Character(len=MEF90_MXSTRLEN)                :: BatchFileName
       PetscInt                                     :: BatchUnit=99
       PetscInt                                     :: NumTestCase
@@ -97,9 +98,10 @@ Contains
       PetscBool                                    :: IsBatch, HasBatchFile
       Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
       Type(DM)                                     :: Tmp_Mesh
-      PetscReal                                    :: ValU, ValF
       PetscInt, Parameter                          :: VarFrac_NSProp_BCT =1
       PetscReal, Dimension(:), Pointer             :: U
+      PetscReal                                    :: RealValU, RealValF
+      PetscReal, Dimension(:), Pointer             :: ValU, ValF
 
       Call MEF90_Initialize()
       
@@ -257,22 +259,32 @@ Contains
          Call MEF90_AskInt(AppCtx%NumSteps,  'Number of time steps', BatchUnit, IsBatch)
       End Select
 
-!  Set EB Properties : U, F         
-! Warning : These properties do not have to be the same for all EB
-   !Do i = 1, MeshTopology%Num_Elem_Blks_Global
-         ! This has no impact for TestCase 1
-      Write(IOBuffer, 300) 1, 'Initial Value in U'
-      Call MEF90_AskReal(ValU, IOBuffer, BatchUnit, IsBatch)
-      Call SectionRealSet(AppCtx%U%Sec, ValU, iErr); CHKERRQ(iErr);
-! TODO ligne précedente pour U et F ?? 
-      !Setting force
-      Write(IOBuffer, 300) 1, 'RHS F'
-      Call MEF90_AskReal(ValF,IOBuffer, BatchUnit, IsBatch)
-      Call SectionRealSet(AppCtx%F%Sec, ValF, iErr); CHKERRQ(iErr);
-   !End Do
+!  Set EB Properties : U, F     
+      Do_Elem_IBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+            Num_DoF = AppCtx%MeshTopology%Elem_Blk(iloc)%Num_DoF
+            Allocate(ValU(Num_DoF))
+            Allocate(ValF(Num_DoF))
+            Write(IOBuffer, 300) 1, 'Initial Value in U'
+            Call MEF90_AskReal(RealValU, IOBuffer, BatchUnit, IsBatch)
+            Write(IOBuffer, 300) 1, 'RHS F'
+            Call MEF90_AskReal(RealValF,IOBuffer, BatchUnit, IsBatch)
+            ValU = RealValU
+            ValF = RealValF
+         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call SectionRealUpdateClosure(AppCtx%U%Sec, AppCtx%MeshTopology%Mesh, iE-1, ValU, INSERT_VALUES, ierr);CHKERRQ(iErr)
+! attention les forces c est pour tous les pas de temps !!!! ici que premier  
+            Call SectionRealUpdateClosure(AppCtx%F%Sec, AppCtx%MeshTopology%Mesh, iE-1, ValF, INSERT_VALUES, ierr);CHKERRQ(iErr) 
+         End Do Do_Elem_iE 
+      End Do Do_Elem_Iblk
+      DeAllocate(ValU)
+      DeAllocate(ValF)
+
 !Get BC values 
       Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
-      U = ValU
+!      U = ValU
+      U = 1.0_Kr !Warning This is incorrect
+!TODO Correct BC : this initialisation should depend on the flag  
       Do i = 1, AppCtx%MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 202) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -343,7 +355,6 @@ Contains
    Subroutine KSPSetUp(AppCtx)
       Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
-      
 
       !!! Initialize the matrix and vector for the linear system
       Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
@@ -383,19 +394,10 @@ Contains
       Call PetscObjectSetName(AppCtx%Jac,"Jac matrix",iErr);CHKERRQ(iErr)
       
       Call TSCreate(PETSC_COMM_WORLD, AppCtx%TS, iErr); CHKERRQ(iErr)
-      
-      
-      Select Case(AppCtx%AppParam%TestCase)
-      Case(2)
-         Call TSSetType(AppCtx%TS, TSARKIMEX, ierr); CHKERRQ(iErr)  
-      !Call TSSetProblemType(AppCtx%TS, TS_LINEAR, ierr); CHKERRQ(iErr)
-      !Call TSSetType(AppCtx%TS, TSBEULER, ierr);  CHKERRQ(iErr)
-      End Select
 
+!!! Could be simpler with SectionRealDuplicate (when Fortran Binding exists)
       Call SectionRealDuplicate(AppCtx%U%Sec,TmpSec,iErr);CHKERRQ(iErr)
       Call PetscObjectSetName(TmpSec,"default",iErr);CHKERRQ(iErr)
-      !!! Can't do that because we don;t have a fortran binding for SectionRealDuplicate
-      !TmpSecName = "default"
       call DMMeshSetSectionReal(MeshTopology%mesh,trim('default'),TmpSec,iErr);CHKERRQ(iErr)
       !Destroy section tmpsec!!?
       
@@ -403,13 +405,18 @@ Contains
       Call TSSetIFunction(AppCtx%TS, PETSC_NULL_OBJECT, IFunctionPoisson, AppCtx, ierr); CHKERRQ(iErr)
       Call TSSetIJacobian(AppCtx%TS, AppCtx%Jac, AppCtx%Jac, IJacobianPoisson, AppCtx, ierr); CHKERRQ(iErr)
       Call TSSetRHSFunction(AppCtx%TS, PETSC_NULL_OBJECT, RHSPoisson, AppCtx, ierr); CHKERRQ(iErr)
-! Setting time discretization scheme for TS
-      Call TSSetType(AppCtx%TS, 'rosw', iErr); CHKERRQ(iErr)
-      Call TSRosWSetType(AppCtx%TS, 'ra3pw', iErr); CHKERRQ(iErr)
-      Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr) ! overwritting if cli arguments
-      
 
-!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+! Setting time discretization scheme for TS
+      Select Case(AppCtx%AppParam%TestCase)
+      Case default 
+         Call TSSetType(AppCtx%TS, 'rosw', iErr); CHKERRQ(iErr)
+         Call TSRosWSetType(AppCtx%TS, 'ra3pw', iErr); CHKERRQ(iErr)
+         Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr) ! overwritting if cli arguments
+      ! Call TSSetType(AppCtx%TS, TSARKIMEX, ierr); CHKERRQ(iErr)  
+      !Call TSSetProblemType(AppCtx%TS, TS_LINEAR, ierr); CHKERRQ(iErr)
+      !Call TSSetType(AppCtx%TS, TSBEULER, ierr);  CHKERRQ(iErr)
+      End Select
+      
        
    End Subroutine Poisson_TSSetUp
 
@@ -478,16 +485,20 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "SolveTransient"
-   Subroutine SolveTransient(AppCtx, MyEXO, MeshTopology)
+   Subroutine SolveTransient(AppCtx, MyEXO, MeshTopology, lTimes)
       Type(Heat_AppCtx_Type)                            :: AppCtx
       Type (MeshTopology_Type)                     :: MeshTopology
       Type(EXO_Type)                               :: MyEXO
       PetscInt                                     :: TSTimeSteps, iErr, iStep
       TSConvergedReason                            :: TSreason 
-      PetscReal, Dimension(:), Pointer             :: CurTime
+      PetscReal, Dimension(:), Pointer             :: lTimes
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      
-!      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
+     
+      Write(IOBuffer, *) "Warning : TSSolve does not assure that computation stops as the exact asked time"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
+!TODO see TSSetExactFinalTime, TSGetTimeStep
+!TSSetExactFinalTime can not be used : 'TSRosW 2p does not have an interpolation formula'
+
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 
 ! Using IMEX see section 6.1.2 PetSc documentation 
@@ -495,33 +506,15 @@ Contains
          Call TSView(AppCtx%TS,  PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
       End If
 
-!      Call TSStep(AppCtx%TS, AppCtx%U%Vec, AppCtx%maxtime, iErr); CHKERRQ(iErr)
-    !  Call Matview(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr)       
-     ! Call Matview(AppCtx%M, PETSC_VIEWER_STDOUT_WORLD, iErr)       
-     ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , 1, AppCtx%U%Sec)
-      Allocate(CurTime(AppCtx%NumSteps-1)) 
-      CurTime = 0.0
       Do iStep = 1, AppCtx%NumSteps-1
-         Select Case(AppCtx%AppParam%TestCase)
-         Case(2)
-             !Linear
-            CurTime(iStep) = iStep*AppCtx%maxtime / AppCtx%NumSteps
-         Case(3)
-             !sqrt(t)
-            CurTime(iStep) = iStep*AppCtx%maxtime / AppCtx%NumSteps
-         End Select
-         Write(IOBuffer, 200) iStep, CurTime(iStep)
+         Write(IOBuffer, 200) iStep, lTimes(iStep)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
          Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr) 
-         Call TSSetInitialTimeStep(AppCtx%TS, CurTime(iStep-1) , (CurTime(iStep)-CurTime(iStep-1)/10.),  ierr); CHKERRQ(iErr)
-         Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, CurTime(iStep), iErr); CHKERRQ(iErr)
-!TSSetExactFinalTime can not be used : 'TSRosW 2p does not have an interpolation formula'
-!         Call TSSetExactFinalTime(AppCtx%TS, PETSC_TRUE,  ierr); CHKERRQ(iErr)
-         Call TSSolve(AppCtx%TS, AppCtx%U%Vec, CurTime(iStep), iErr); CHKERRQ(iErr)
+         Call TSSetInitialTimeStep(AppCtx%TS, lTimes(iStep-1) , (lTimes(iStep)-lTimes(iStep-1)/10.),  ierr); CHKERRQ(iErr)
+         Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, lTimes(iStep), iErr); CHKERRQ(iErr)
+         Call TSSolve(AppCtx%TS, AppCtx%U%Vec, lTimes(iStep), iErr); CHKERRQ(iErr)
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-!         Call TSGetTimeStep
-!Write the result of the current time step into the Ewo file
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , iStep+1, AppCtx%U%Sec)
          Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
          Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
@@ -541,12 +534,7 @@ Contains
             End Select
          End if 
       End Do
-      DeAllocate(CurTime)
-     ! Call Vecview(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_WORLD, iErr)       
-   ! Call TSSSPGetNumStages
       
- 
- !     Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
 200 Format('Solving TS Time step : ', I5,  ",    Current Time  :", ES12.5, '\n')
    End Subroutine SolveTransient
@@ -559,7 +547,7 @@ Contains
       Type(Heat_AppCtx_Type)                            :: AppCtx
       Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk, iErr
-      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
+      !Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
          Call MatMassAssemblyBlock(iBlk, AppCtx, MeshTopology)
       End Do Do_iBlk
