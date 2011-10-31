@@ -481,9 +481,18 @@ Program PrepVarFrac
 #if defined WITH_HEAT
       Allocate(ValT_Init(MeshTopology%Num_Elem_Blks))
       Allocate(ValT_F(MeshTopology%Num_Elem_Blks))
+      Allocate(HeatAppCtx%Diff(HeatAppCtx%MeshTopology%Num_Elem_Blks)) 
+      Allocate(HeatAppCtx%B_Mensi(HeatAppCtx%MeshTopology%Num_Elem_Blks))  
       Do iBlock = 1, MeshTopology%Num_Elem_Blks  
          Call MEF90_AskReal(ValT_Init(iBlock), 'Initial value in Temperature', BatchUnit, IsBatch)
          Call MEF90_AskReal(ValT_F(iBlock), 'RHS F', BatchUnit, IsBatch)
+         Write(IOBuffer, 300) iBlock, 'diffusivity'
+         Call MEF90_AskReal(HeatAppCtx%Diff(iBlock),IOBuffer, BatchUnit, IsBatch)
+         Select Case(HeatAppCtx%AppParam%TestCase)
+         Case(3)
+             Write(IOBuffer, 300) iBlock, 'B Mensi Parameter'
+            Call MEF90_AskReal(HeatAppCtx%B_Mensi(iBlock),IOBuffer,  BatchUnit, IsBatch)
+         End Select
       End Do
       
       Allocate(T_BC(MeshTopology%Num_Node_Sets_Global))
@@ -596,8 +605,6 @@ Program PrepVarFrac
       Call SolveTransient(HeatAppCtx, MyEXO, MeshTopology, T)
       Write(IOBuffer, *) 'End Computing Temperature Field\n \n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-#else
-      Call SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,'PrepVarFracNG must be compiled  with -DWITH_HEAT in order to use the Heat/Diffusion module', iErr)
 #endif 
    End Select
 

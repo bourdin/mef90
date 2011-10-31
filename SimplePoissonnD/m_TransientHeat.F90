@@ -262,6 +262,7 @@ Contains
       Allocate(ValU(AppCtx%MeshTopology%Num_Elem_Blks)) 
       Allocate(ValF(AppCtx%MeshTopology%Num_Elem_Blks)) 
       Allocate(AppCtx%Diff(AppCtx%MeshTopology%Num_Elem_Blks)) 
+      Allocate(AppCtx%B_Mensi(AppCtx%MeshTopology%Num_Elem_Blks)) 
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          Write(IOBuffer, 300) iBlk, 'Initial Value in U'
          Call MEF90_AskReal(ValU(iBlk), IOBuffer, BatchUnit, IsBatch)
@@ -269,6 +270,11 @@ Contains
          Call MEF90_AskReal(ValF(iBlk),IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlk, 'diffusivity'
          Call MEF90_AskReal(AppCtx%Diff(iBlk),IOBuffer, BatchUnit, IsBatch)
+         Select Case(AppCtx%AppParam%TestCase)
+         Case(3)
+             Write(IOBuffer, 300) iBlk, 'B Mensi Parameter'
+             Call MEF90_AskReal(AppCtx%B_Mensi(iBlk),IOBuffer, BatchUnit, IsBatch)
+         End Select
       End Do 
       Call HeatSetInitial(AppCtx, AppCtx%MeshTopology, ValU, ValF)
       DeAllocate(ValU)
