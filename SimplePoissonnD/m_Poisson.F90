@@ -62,7 +62,7 @@ Module m_Poisson3D
       PetscInt                                     :: maxsteps, NumSteps
       PetscReal                                    :: maxtime
       PetscInt                                     :: VertVar_Temperature 
-      PetscReal, Dimension(:), Pointer             :: Diff
+      PetscReal, Dimension(:), Pointer             :: Diff, B_Mensi
    End Type Heat_AppCtx_Type
    
    
@@ -164,20 +164,40 @@ Contains
       PetscReal, Dimension(:,:), Pointer           :: MatElem
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
+      PetscInt                                     :: NumDoFScal
       PetscLogDouble                               :: flops = 0
-      PetscReal                                    :: lDiff 
+      PetscReal                                    :: lDiff
+      PetscReal, Dimension(:), Pointer             :: T_Loc
+      PetscReal                                    :: T_Elem
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
-      
+     
+      NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
       Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF, MeshTopology%Elem_Blk(iBlk)%Num_DoF))
       Allocate(BCFlag(MeshTopology%Elem_Blk(iBlk)%Num_DoF))
-   
+      Allocate(T_Loc(NumDoFScal))
+
       Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem = 0.0_Kr
          BCFlag = 0
          Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, MeshTopology%mesh, iE-1, MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
-         lDiff = AppCtx%Diff(iBlk) 
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
+            Select Case(AppCtx%AppParam%TestCase)
+            Case(2)
+               lDiff = AppCtx%Diff(iBlk) 
+            Case(3)
+               ! Mensi Law D(C) = A exp (B*C) 
+               ! 1988 Mensi-Acker-Attolou Mater Struct
+               ! C : water content,  A and B material parameters
+               Call SectionRealRestrictClosure(AppCtx%U%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
+               T_Elem = 0.0_Kr
+               Do iDoF1 = 1, NumDoFScal
+                  T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
+               End DO
+               lDiff = AppCtx%Diff(iBlk)*exp(AppCtx%B_Mensi(iBlk)*T_Elem) 
+            Case Default
+               ldiff =1 
+            End Select
             Do iDoF1 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
                If (BCFlag(iDoF1) == 0) Then
                   Do iDoF2 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
