@@ -29,17 +29,21 @@ SimplePoisson${DIM}: ${PETSC_ARCH} SimplePoisson.o   ${PETSC_ARCH}/${DIM}SimpleP
 
 TransientHeat${DIM}: ${PETSC_ARCH} TransientHeat.o   ${PETSC_ARCH}/${DIM}TransientHeat.o \
                              m_TransientHeat.o ${PETSC_ARCH}/${DIM}TransientHeat.o \
-                             m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
-	${FLINKER} -o ${PETSC_ARCH}/TransientHeat${DIM}  ${PETSC_ARCH}/${DIM}m_Poisson.o  ${PETSC_ARCH}/${DIM}TransientHeat.o  ${PETSC_ARCH}/${DIM}m_TransientHeat.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+                             m_MEF_Integrate.o ${PETSC_ARCH}/${DIM}m_MEF_Integrate.o
+	${FLINKER} -o ${PETSC_ARCH}/TransientHeat${DIM}  ${PETSC_ARCH}/${DIM}m_Poisson.o  ${PETSC_ARCH}/${DIM}TransientHeat.o  ${PETSC_ARCH}/${DIM}m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_MEF_Integrate.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
 SimplePoisson.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
 
 m_Poisson.o: ${PETSC_ARCH}
 
+m_MEF_Integrate.o: ${PETSC_ARCH} 
+
 TransientHeat.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o \
                              m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_TransientHeat.o
 
-m_TransientHeat.o: ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
+m_TransientHeat.o: ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o \
+                             m_MEF_Integrate.o ${PETSC_ARCH}/${DIM}m_MEF_Integrate.o
+
 
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
