@@ -656,62 +656,93 @@ Contains
 103 Format(A,'.log.txt')
    End Subroutine TSPoissonFinalize
 
-!#undef __FUNCT__
-!#define __FUNCT__ "ComputeWaterLoss"
-!   Subroutine ComputeWaterLoss(MeshTopology, Exo, NameField)
-!      Type(SectionReal)                            :: V_Sec_0, V_Sec_i
-!      Type(MeshTopology_Type)                      :: MeshTopology
-!      Type (EXO_Type)                              :: EXO
-!      PetscInt                                     :: iErr, iStep
-!      Character(len=*)                           :: NameField
-!     ! Call MeshTopologyReadEXO(MeshTopology, EXO)
-!      iStep = 2
-!      Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_0', 1, V_Sec_0, iErr); CHKERRQ(iErr)
-!      Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_0', 1, V_Sec_i, iErr); CHKERRQ(iErr)
-!      Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, 1, V_Sec_0)
-!      Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, iStep+1, V_Sec_i)
-!   !Pb car le fichier est ouvert !?! 
-!   !Comment faire la differnece entre 2 sections ? 
+#undef __FUNCT__
+#define __FUNCT__ "ComputeWaterMass"
+   Subroutine ComputeWaterMass(MeshTopology, Exo, NameField, Elem, NumTimeSteps)
+      Type(SectionReal)                            :: V_Sec_0, V_Sec_i
+      Type(MeshTopology_Type)                      :: MeshTopology
+      Type (EXO_Type)                              :: EXO
+#if defined PB_2D
+      Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
+#elif defined PB_3D 
+      Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
+#endif   
+      PetscInt                                     :: iErr, iStep, iBlk 
+      PetscInt                                     :: NumTimeSteps
+      PetscInt                                     :: MassFileUnit
+      PetscScalar                                  :: neg
+      PetscReal, Dimension(:), Pointer             :: WaterMass
+      Character(len=*)                             :: NameField
+! Writing is really a mess, because we do not know how many blocks exist !! 
+!Add a density material parameter      
+      Allocate(WaterMass(NumTimeSteps))
+      Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_0', 1, V_Sec_0, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_i', 1, V_Sec_i, iErr); CHKERRQ(iErr)
+      Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, 1, V_Sec_0)
+      neg = -1.
+      MassFileUnit = 80
+      WaterMass = 0.0_Kr
+      Open(File = "water.mass", Unit = MassFileUnit, Status = 'Unknown')
+      Rewind(MassFileUnit)
+      Write(MassFileUnit, 400, advance='no') 0
+      Do iBlk=1, MeshTopology%Num_Elem_blks
+         Call IntegrateScalL1(MeshTopology,iBlk,Elem,V_Sec_0,WaterMass(1))
+         Write(MassFileUnit, 401, advance='no')  WaterMass(1)**2
+      End do 
+      Write(MassFileUnit, *)
+      Do istep = 1, NumTimeSteps-1
+         Write(MassFileUnit, 400, advance='no') istep
+         Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, 1, V_Sec_0)
+         Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, iStep+1, V_Sec_i)
+         Call SectionRealAXPY(V_Sec_0, MeshTopology%mesh, neg, V_Sec_i, iErr); CHKERRQ(iErr)
+         Do iblk= 1, MeshTopology%Num_Elem_Blks
+            Call IntegrateScalL1(MeshTopology,iBlk,Elem,V_Sec_i,WaterMass(iStep+1))
+            Write(MassFileUnit, 401, advance='no')  WaterMass(istep+1)**2
+         End DO
+         Write(MassFileUnit, *)
+      End DO 
+400 Format(I6) 
+401 Format(ES13.5, '   ') 
+      Close(MassFileUnit)
+      DeAllocate(WaterMass)
+   End Subroutine ComputeWaterMass
 
-!   !Integrate Sec on the block from MeshTopology identified bys iBlk
-!   !Load initial value
-!   !For each time step load value : difference between actual and initial value
-!   !Then integrate --> using Mass matrix ? 
-!   End Subroutine ComputeWaterLoss
+#undef __FUNCT__
+#define __FUNCT__ "IntegrateScalL1"
+   Subroutine IntegrateScalL1(MeshTopology,iBlk,Elem,V_Sec,IntL1)
+      Type(SectionReal)                            :: V_Sec
+      Type(MeshTopology_Type)                      :: MeshTopology
+      PetscInt                                     :: iBlk
+      PetscInt                                     :: iErr, NumDoFScal
+      PetscInt                                     :: iE, iEloc, IGauss, IDoF1
+      PetscReal                                    :: IntRes, IntL1
+      PetscReal, Dimension(:), Pointer             :: V_Loc
+#if defined PB_2D
+      Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
+#elif defined PB_3D 
+      Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
+#endif   
 
+      NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      Allocate(V_Loc(NumDoFScal))
+      IntL1 = 0
+      Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         Call SectionRealRestrictClosure(V_Sec, MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
+         Do iGauss = 1, size(Elem(iE)%Gauss_C)
+         IntRes = 0
+            Do iDoF1 = 1, NumDoFScal
+          !     Do iDoF2 = 1, NumDoFScal
+                  IntRes = IntRes     + V_Loc(iDoF1) *   Elem(iE)%BF(iDoF1, iGauss)
+           !    End Do 
+            End Do
+            IntL1 = IntL1 + Elem(iE)%Gauss_C(iGauss)*Intres 
+         End DO
+      End Do Do_IEloc 
+      IntL1 = sqrt(IntL1)
+   DeAllocate(V_Loc)
 
-!#undef __FUNCT__
-!#define __FUNCT__ "IntegrateScal"
-!   Subroutine IntegrateScal(MeshTopology,iBlk,Elem,V_Sec,IntRes)
-!      Type(SectionReal)                            :: V_Sec
-!      Type(MeshTopology_Type)                      :: MeshTopology
-!      PetscInt                                     :: iBlk
-!      PetscInt                                     :: iErr, NumDoFScal
-!      PetscInt                                     :: iE, iEloc, IGauss, IDoF1
-!      PetscReal                                    :: IntRes
-!      PetscReal, Dimension(:), Pointer             :: V_Loc
-!#if defined PB_2D
-!   Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
-!#elif defined PB_3D 
-!      Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
-!#endif   
-!
-!      NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
-!      Allocate(V_Loc(NumDoFScal))
-!
-!      IntRes = 0
-!      Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
-!         iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-!         Call SectionRealRestrictClosure(V_Sec, MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
-!         Do iGauss = 1, size(Elem(iE)%Gauss_C)
-!            Do iDoF1 = 1, NumDoFScal
-!          !     Do iDoF2 = 1, NumDoFScal
-!                  IntRes = IntRes     + V_Loc(iDoF1) *   Elem(iE)%BF(iDoF1, iGauss)
-!           !    End Do 
-!            End Do
-!         End DO
-!         End Do Do_IEloc 
-!   End Subroutine IntegrateScal
+   End Subroutine IntegrateScalL1
 
 
 #if defined PB_2D
