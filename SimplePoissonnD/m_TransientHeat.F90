@@ -7,6 +7,7 @@ Module m_TransientHeat3D
 #include "finclude/petscdef.h"
 
    Use m_MEF90
+   Use m_MEF_Integrate
 
 #if defined PB_2D
    Use m_Poisson2D
@@ -706,44 +707,6 @@ Contains
       Close(MassFileUnit)
       DeAllocate(WaterMass)
    End Subroutine ComputeWaterMass
-
-#undef __FUNCT__
-#define __FUNCT__ "IntegrateScalL1"
-   Subroutine IntegrateScalL1(MeshTopology,iBlk,Elem,V_Sec,IntL1)
-      Type(SectionReal)                            :: V_Sec
-      Type(MeshTopology_Type)                      :: MeshTopology
-      PetscInt                                     :: iBlk
-      PetscInt                                     :: iErr, NumDoFScal
-      PetscInt                                     :: iE, iEloc, IGauss, IDoF1
-      PetscReal                                    :: IntRes, IntL1
-      PetscReal, Dimension(:), Pointer             :: V_Loc
-#if defined PB_2D
-      Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
-#elif defined PB_3D 
-      Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
-#endif   
-
-      NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
-      Allocate(V_Loc(NumDoFScal))
-      IntL1 = 0
-      Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         Call SectionRealRestrictClosure(V_Sec, MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
-         Do iGauss = 1, size(Elem(iE)%Gauss_C)
-         IntRes = 0
-            Do iDoF1 = 1, NumDoFScal
-          !     Do iDoF2 = 1, NumDoFScal
-                  IntRes = IntRes     + V_Loc(iDoF1) *   Elem(iE)%BF(iDoF1, iGauss)
-           !    End Do 
-            End Do
-            IntL1 = IntL1 + Elem(iE)%Gauss_C(iGauss)*Intres 
-         End DO
-      End Do Do_IEloc 
-      IntL1 = sqrt(IntL1)
-   DeAllocate(V_Loc)
-
-   End Subroutine IntegrateScalL1
-
 
 #if defined PB_2D
 End Module m_TransientHeat2D
