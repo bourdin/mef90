@@ -109,8 +109,7 @@ Program  TransientHeat
    End If
 
 !! Computing water loss
-!   Call ComputeWaterLoss(AppCtx%MeshTopology, AppCtx%Exo, 'U')
-!   Call IntegrateScal(AppCtx%MeshTopology,1,AppCtx%Elem,AppCtx%U%Sec,Mass)
+   Call ComputeWaterMass(AppCtx%MeshTopology, AppCtx%MyExo, 'U', AppCtx%Elem, AppCtx%NumSteps)
 
    Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%ElasticEnergy)
