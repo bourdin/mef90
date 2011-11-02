@@ -152,6 +152,7 @@ Subroutine CohesiveEnergy_Assembly(CohesiveEnergy, CohesiveEnergyBlock, AppCtx)
    Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
       Call CohesiveEnergy_AssemblyBlk(MyCohesiveEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%U0%Sec, AppCtx%W%Sec, AppCtx)
+!     Call CohesiveEnergy_AssemblyBlk(MyCohesiveEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%U0%Sec, AppCtx)
       MyCohesiveEnergy = MyCohesiveEnergy + MyCohesiveEnergyBlock(iBlkID)
    End Do
 
@@ -214,7 +215,7 @@ Subroutine ElasticEnergy_AssemblyBlk_Brittle(ElasticEnergyBlock, iBlk, U_Sec, Th
             V_Elem     = V_Elem     + AppCtx%ElemScal(iE)%BF(iDoF2, iGauss) * V_Loc(iDoF2)
             flops = flops + 2.0
          End Do
-         EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
+         EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem            
          ElasticEnergyBlock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * 0.5_Kr
          flops = flops + 6.0 
       End Do Do_iGauss
@@ -322,6 +323,7 @@ Subroutine DelaminationEnergy_AssemblyBlk(DelaminationEnergyBlock, iBlk, W_Sec, 
 End Subroutine DelaminationEnergy_AssemblyBlk
 
 Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, W_Sec, AppCtx)
+! Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, W_Sec, AppCtx)
    PetscReal, Intent(OUT)                       :: CohesiveEnergyBlock
    PetscInt                                     :: iBlk
    Type(SectionReal)                            :: U_Sec, U0_Sec, W_Sec
