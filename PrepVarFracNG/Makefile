@@ -7,7 +7,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
 M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 M_HEATDIR  = ../SimplePoissonnD/${PETSC_ARCH}
-M_HEATOBJS =  ${M_HEATDIR}/${DIM}m_Poisson.o ${M_HEATDIR}/${DIM}m_TransientHeat.o
+M_HEATOBJS =  ${M_HEATDIR}/${DIM}m_Poisson.o ${M_HEATDIR}/${DIM}m_TransientHeat.o ${M_HEATDIR}/${DIM}m_MEF_Integrate.o
 
 all: PrepVarFracNG
 

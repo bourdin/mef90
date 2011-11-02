@@ -228,7 +228,7 @@ Contains
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
 
-      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
 
       Call SectionRealZero(AppCtx%RHS%Sec, iErr); CHKERRQ(iErr)
       
@@ -239,7 +239,7 @@ Contains
       Call SectionRealComplete(AppCtx%RHS%Sec, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
       !!! VERY important! This is the equivalent of a ghost update
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
 
 #undef __FUNCT__
