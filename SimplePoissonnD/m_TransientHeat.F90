@@ -260,11 +260,11 @@ Contains
       End Select
 
 !  Set EB Properties : U, F     
-      Allocate(ValU(AppCtx%MeshTopology%Num_Elem_Blks)) 
-      Allocate(ValF(AppCtx%MeshTopology%Num_Elem_Blks)) 
-      Allocate(AppCtx%Diff(AppCtx%MeshTopology%Num_Elem_Blks)) 
-      Allocate(AppCtx%B_Mensi(AppCtx%MeshTopology%Num_Elem_Blks)) 
-      Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+      Allocate(ValU(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
+      Allocate(ValF(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
+      Allocate(AppCtx%Diff(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
+      Allocate(AppCtx%B_Mensi(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
+      Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 300) iBlk, 'Initial Value in U'
          Call MEF90_AskReal(ValU(iBlk), IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlk, 'RHS F'
@@ -283,7 +283,7 @@ Contains
 
 
 !Get BC values 
-      Allocate(U(AppCtx%MeshTopology%Num_Node_Sets)) 
+      Allocate(U(AppCtx%MeshTopology%Num_Node_Sets_Global)) 
       U = 0.0_Kr 
       Do i = 1, AppCtx%MeshTopology%Num_Node_Sets_Global
          Write(IOBuffer, 202) i
@@ -314,14 +314,15 @@ Contains
       PetscReal, Dimension(:), Pointer                   :: ValU, ValF
       PetscReal, Dimension(:), Pointer                   :: Uelem, Felem
       PetscInt                                           :: iBlk, iEloc, Num_Dof, iE
-      PetscInt                                           :: iErr
+      PetscInt                                           :: iErr, i
 
       Do_Elem_IBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
+         i = MeshTopology%Elem_Blk(iBlk)%ID
          Num_DoF = MeshTopology%Elem_Blk(iBlk)%Num_DoF
          Allocate(Uelem(Num_DoF))
          Allocate(Felem(Num_DoF))
-         Uelem = ValU(iBlk)
-         Felem = ValF(iBlk)
+         Uelem = ValU(i)
+         Felem = ValF(i)
          Do_Elem_iE: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call SectionRealUpdateClosure(AppCtx%U%Sec, MeshTopology%Mesh, iE-1, Uelem, INSERT_VALUES, ierr);CHKERRQ(iErr)
