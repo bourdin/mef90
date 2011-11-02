@@ -64,7 +64,7 @@ Program Partitioner
 
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
-
+   EXO%exoid = EXOPEN(EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws,  PETSC_NULL_INTEGER, ierr)
 
    If (MEF90_NumProcs == 1) Then
       If (verbose > 0) Then
@@ -145,13 +145,14 @@ Program Partitioner
    End If
    
    MyEXO%comm = PETSC_COMM_SELF
-   MyEXO%exoid = EXO%exoid
+!   MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 200) trim(prefix), MEF90_MyRank
 200 Format(A, '-', I4.4, '.gen')
  
    MyEXO%title = trim(EXO%title)
    MyEXO%Num_QA = EXO%Num_QA
-   
+   MyEXO%exoid = EXCRE(MyEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
+
    If (verbose > 0) Then
       Write(IOBuffer, *) "Writing EXO files\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -184,6 +185,10 @@ Program Partitioner
       Call PetscViewerDestroy(LogViewer, iErr); CHKERRQ(iErr)
    End If
    
-300 Format(A)   
+  Call EXCLOS(EXO%exoid, iErr)
+  EXO%exoid = 0
+  Call EXCLOS(MyEXO%exoid, iErr)
+  MyEXO%exoid = 0
+
    Call MEF90_Finalize()
 End Program Partitioner
