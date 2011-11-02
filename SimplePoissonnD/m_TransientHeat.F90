@@ -674,9 +674,8 @@ Contains
       PetscScalar                                  :: neg
       PetscReal, Dimension(:), Pointer             :: WaterMass
       Character(len=*)                             :: NameField
-! Writing is really a mess, because we do not know how many blocks exist !! 
 !Add a density material parameter      
-      Allocate(WaterMass(NumTimeSteps))
+      Allocate(WaterMass(MeshTopology%Num_Elem_Blks_Global))
       Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_0', 1, V_Sec_0, iErr); CHKERRQ(iErr)
       Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_i', 1, V_Sec_i, iErr); CHKERRQ(iErr)
       Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, 1, V_Sec_0)
@@ -686,20 +685,16 @@ Contains
       Open(File = "water.mass", Unit = MassFileUnit, Status = 'Unknown')
       Rewind(MassFileUnit)
       Write(MassFileUnit, 400, advance='no') 0
-      Do iBlk=1, MeshTopology%Num_Elem_blks
-         Call IntegrateScalL1(MeshTopology,iBlk,Elem,V_Sec_0,WaterMass(1))
-         Write(MassFileUnit, 401, advance='no')  WaterMass(1)**2
-      End do 
+      Call IntegrateScalLp(MeshTopology,Elem,V_Sec_0,WaterMass,1)
+      Write(MassFileUnit, 401, advance='no')  WaterMass(1)
       Write(MassFileUnit, *)
       Do istep = 1, NumTimeSteps-1
          Write(MassFileUnit, 400, advance='no') istep
          Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, 1, V_Sec_0)
          Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, iStep+1, V_Sec_i)
          Call SectionRealAXPY(V_Sec_0, MeshTopology%mesh, neg, V_Sec_i, iErr); CHKERRQ(iErr)
-         Do iblk= 1, MeshTopology%Num_Elem_Blks
-            Call IntegrateScalL1(MeshTopology,iBlk,Elem,V_Sec_i,WaterMass(iStep+1))
-            Write(MassFileUnit, 401, advance='no')  WaterMass(istep+1)**2
-         End DO
+         Call IntegrateScalLp(MeshTopology,Elem,V_Sec_i,WaterMass,1)
+         Write(MassFileUnit, 401, advance='no')  WaterMass(1)
          Write(MassFileUnit, *)
       End DO 
 400 Format(I6) 
