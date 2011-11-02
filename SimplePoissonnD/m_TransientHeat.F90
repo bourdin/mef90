@@ -133,7 +133,7 @@ Contains
             Open(Unit=BatchUnit, File=BatchFileName, Status='Old', Action='Read')
             Rewind(BatchUnit)
          Else
-            BatchFileName = Trim(prefix)//'.args'
+            BatchFileName = Trim(AppCtx%AppParam%prefix)//'.args'
             Inquire(File=BatchFileName, EXIST=HasBatchFile)
             If (HasBatchFile .AND. (.NOT. EraseBatch)) Then
                Write(IOBuffer, *) "Batch file ", trim(BatchFileName), " already exists. Erase it or use -force flag\n"
