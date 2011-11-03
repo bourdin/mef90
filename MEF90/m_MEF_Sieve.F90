@@ -69,7 +69,6 @@ Contains
       
       Allocate(blkIds(numIds))
       Call DMMeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
-      Write(100+MEF90_MyRank,*) 'blkIds: ', blkIds
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_Elem_blks))
 
       If (dMeshTopology%Num_Elem_blks > 0) Then

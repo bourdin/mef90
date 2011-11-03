@@ -160,7 +160,7 @@ Contains
       Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk
       
-      PetscInt                                     :: iE, iELoc, iErr
+      PetscInt                                     :: iE, iELoc, iErr, i
       PetscReal, Dimension(:,:), Pointer           :: MatElem
       PetscInt, Dimension(:), Pointer              :: BCFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
@@ -177,6 +177,7 @@ Contains
       Allocate(T_Loc(NumDoFScal))
 
       Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         i = MeshTopology%Elem_Blk(iBlk)%ID
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem = 0.0_Kr
          BCFlag = 0
@@ -184,7 +185,7 @@ Contains
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
             Select Case(AppCtx%AppParam%TestCase)
             Case(2)
-               lDiff = AppCtx%Diff(iBlk) 
+               lDiff = AppCtx%Diff(i) 
             Case(3)
                ! Mensi Law D(C) = A exp (B*C) 
                ! 1988 Mensi-Acker-Attolou Mater Struct
@@ -194,7 +195,7 @@ Contains
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
-               lDiff = AppCtx%Diff(iBlk)*exp(AppCtx%B_Mensi(iBlk)*T_Elem) 
+               lDiff = AppCtx%Diff(i)*exp(AppCtx%B_Mensi(i)*T_Elem) 
             Case Default
                ldiff =1 
             End Select

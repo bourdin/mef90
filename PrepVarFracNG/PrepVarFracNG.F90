@@ -479,11 +479,11 @@ Program PrepVarFrac
       Call MEF90_AskReal(DL, 'Diffusion length', BatchUnit, IsBatch)
    Case(9)
 #if defined WITH_HEAT
-      Allocate(ValT_Init(MeshTopology%Num_Elem_Blks))
-      Allocate(ValT_F(MeshTopology%Num_Elem_Blks))
-      Allocate(HeatAppCtx%Diff(HeatAppCtx%MeshTopology%Num_Elem_Blks)) 
-      Allocate(HeatAppCtx%B_Mensi(HeatAppCtx%MeshTopology%Num_Elem_Blks))  
-      Do iBlock = 1, MeshTopology%Num_Elem_Blks  
+      Allocate(ValT_Init(MeshTopology%Num_Elem_Blks_Global))
+      Allocate(ValT_F(MeshTopology%Num_Elem_Blks_Global))
+      Allocate(HeatAppCtx%Diff(HeatAppCtx%MeshTopology%Num_Elem_Blks_Global)) 
+      Allocate(HeatAppCtx%B_Mensi(HeatAppCtx%MeshTopology%Num_Elem_Blks_Global))  
+      Do iBlock = 1, MeshTopology%Num_Elem_Blks_Global 
          Call MEF90_AskReal(ValT_Init(iBlock), 'Initial value in Temperature', BatchUnit, IsBatch)
          Call MEF90_AskReal(ValT_F(iBlock), 'RHS F', BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'diffusivity'
@@ -605,6 +605,8 @@ Program PrepVarFrac
       Call SolveTransient(HeatAppCtx, MyEXO, MeshTopology, T)
       Write(IOBuffer, *) 'End Computing Temperature Field\n \n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+#else
+      SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'PrepVarFracNG has not been compiled with transient Heat support\n', iErr)
 #endif 
    End Select
 
