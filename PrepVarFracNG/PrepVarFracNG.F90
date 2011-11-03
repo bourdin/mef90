@@ -27,8 +27,8 @@ Program PrepVarFrac
    
    
    Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename
-   Type(MeshTopology_Type),target               :: MeshTopology, GlobalMeshTopology
-   Type(EXO_Type), target                       :: EXO, MyEXO
+   Type(MeshTopology_Type)                      :: MeshTopology
+   Type(EXO_Type)                               :: EXO, MyEXO
    Type(DM)                                     :: Tmp_Mesh
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2D
    Type(Element3D_Scal), Dimension(:), Pointer  :: Elem3D
@@ -484,9 +484,11 @@ Program PrepVarFrac
       Allocate(HeatAppCtx%Diff(HeatAppCtx%MeshTopology%Num_Elem_Blks_Global)) 
       Allocate(HeatAppCtx%B_Mensi(HeatAppCtx%MeshTopology%Num_Elem_Blks_Global))  
       Do iBlock = 1, MeshTopology%Num_Elem_Blks_Global 
-         Call MEF90_AskReal(ValT_Init(iBlock), 'Initial value in Temperature', BatchUnit, IsBatch)
-         Call MEF90_AskReal(ValT_F(iBlock), 'RHS F', BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlock, 'diffusivity'
+         Write(IOBuffer, 300) iBlock, 'T0 Initial Temperature'
+         Call MEF90_AskReal(ValT_Init(iBlock), IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) iBlock, 'RHS Temp'
+         Call MEF90_AskReal(ValT_F(iBlock), IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) iBlock, 'Diffusivity'
          Call MEF90_AskReal(HeatAppCtx%Diff(iBlock),IOBuffer, BatchUnit, IsBatch)
          Select Case(HeatAppCtx%AppParam%TestCase)
          Case(3)
@@ -497,12 +499,11 @@ Program PrepVarFrac
       
       Allocate(T_BC(MeshTopology%Num_Node_Sets_Global))
       T_BC   = 0.0_Kr   
-      Do i = 1, MeshTopology%Num_Elem_Blks_Global
+      Do i = 1, MeshTopology%Num_Node_Sets_Global
          If (MyEXO%NSProperty(VarFrac_NSProp_HasPForce)%Value(i) /= 0 ) Then
 !!! The BC in temperature is in VarFrac_NSProp_HasPForce 
             Write(IOBuffer, 302) i, 'T_BC'
             Call MEF90_AskReal(T_BC(i), IOBuffer, BatchUnit, IsBatch)
-            print *, T_BC(i)
          End If
       End Do
 #endif
