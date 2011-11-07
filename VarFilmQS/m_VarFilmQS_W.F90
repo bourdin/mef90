@@ -91,7 +91,7 @@ End Subroutine Update_IrrevW
 !!!
 
 
-Subroutine FW_Assembly(FW_Vec, AppCtx)
+Subroutine FW_Assembly(AppCtx)
    !!! Global dispatch routine for F of the W-problem
       Type(AppCtx_Type)                            :: AppCtx
 
@@ -104,20 +104,19 @@ Subroutine FW_Assembly(FW_Vec, AppCtx)
        Call SectionRealZero(AppCtx%FW%Sec, iErr); CHKERRQ(iErr)
 
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call FW_AssemblyBlk(AppCtx%FW%Sec, iBlk, AppCtx)
+         Call FW_AssemblyBlk(iBlk, AppCtx)
       End Do Do_iBlk
 
    Call SectionRealComplete(AppCtx%FW%Sec, iErr); CHKERRQ(iErr)
 
    If (AppCtx%AppParam%verbose > 2) Then
-      Call VecView(FW_Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+      Call VecView(AppCtx%FW%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
    End If
 
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine FW_Assembly
    
-Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
-   Type(SectionReal)          :: F_Sec
+Subroutine FW_AssemblyBlk(iBlk, AppCtx)
    PetscInt             :: iBlk
    Type(AppCtx_Type)          :: AppCtx
 
@@ -149,7 +148,7 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
       
       Call SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_loc, iErr); CHKERRQ(ierr)
       Call SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_loc, iErr); CHKERRQ(ierr)
-      Call SectionRealRestrictClosure(F_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, F_loc, iErr); CHKERRQ(ierr)
+      Call SectionRealRestrictClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, F_loc, iErr); CHKERRQ(ierr)
    
       U_eff_elem = 0.0_Kr  
       
@@ -164,7 +163,7 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
             F_loc(iDoF) = F_loc(iDoF) +  (AppCtx%MatProp(iBlk_glob)%DelamToughness - AppCtx%MatProp(iBlk_glob)%Ksubst * 0.5_Kr * (U_eff_elem .DotP. U_eff_elem) )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
          End Do
       End Do Do_iGauss
-      Call SectionRealUpdateClosure(F_Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+      Call SectionRealUpdateClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
    End Do Do_iEloc
 
    DeAllocate(U_loc)
@@ -234,7 +233,7 @@ Subroutine Step_W(AppCtx)
    
    Call VecSet(AppCtx%FW%Vec, 0.0_Kr, iErr); CHKERRQ(iErr)
    
-   Call FW_Assembly(AppCtx%FW%Vec, AppCtx)
+   Call FW_Assembly(AppCtx)
    
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Solving for the W-subproblem\n' 
