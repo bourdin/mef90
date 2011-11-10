@@ -37,8 +37,18 @@ Subroutine Init_TS_W(AppCtx)
       Case(VarFrac_INIT_W_PREV)
          Call FieldInsertVertexBoundaryValues(AppCtx%W, AppCtx%WBC, AppCtx%BCWFlag, AppCtx%MeshTopology)
       Case(VarFrac_INIT_W_FILE)
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W)
+	If ( AppCtx%TimeStep==1 ) Then
+		Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W)
+	Else
+		Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep-1, AppCtx%W)
+	end if
+	
+         
          Call SectionRealToVec(AppCtx%W%Sec, AppCtx%W%Scatter, SCATTER_REVERSE, AppCtx%W%Vec, ierr); CHKERRQ(ierr)
+      Case(VarFrac_INIT_W_ONE)
+         Call SectionRealSet(AppCtx%W%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)      
+         Call SectionRealToVec(AppCtx%W%Sec, AppCtx%W%Scatter, SCATTER_FORWARD, AppCtx%W%Vec, ierr); CHKERRQ(ierr)
+         Call VecSet(AppCtx%W%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)      
          
       Case Default   
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
@@ -98,7 +108,7 @@ Subroutine FW_Assembly(AppCtx)
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
       Type(Vec)                                    :: FW_Vec
-      
+   
        Call PetscLogStagePush(AppCtx%LogInfo%FWAssemblyW_Stage, iErr); CHKERRQ(iErr)
 
        Call SectionRealZero(AppCtx%FW%Sec, iErr); CHKERRQ(iErr)
@@ -176,23 +186,29 @@ End Subroutine FW_AssemblyBlk
 Subroutine W_Solve(AppCtx)
    Type(AppCtx_Type)          :: AppCtx
    
-   PetscInt             :: i
+   PetscInt             :: i, delamnodes
    PetscReal, Dimension(:), Pointer    :: Fi_ptr
    PetscInt             :: iErr
    PetscReal, Dimension(:), Pointer    :: zero
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
    
    Allocate(zero(1))
    
    zero=0.0_Kr
-   
+   delamnodes=0
+
    Do i=1, AppCtx%MeshTopology%Num_Verts
       Call SectionRealRestrict(AppCtx%FW%Sec, AppCtx%MeshTopology%Num_Elems + i-1, Fi_ptr, iErr); CHKERRQ(iErr);
       If (Fi_ptr(1) .LE. 0.0_Kr) Then
          Call SectionRealUpdate(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, zero, INSERT_VALUES, iErr); CHKERRQ(iErr)
+	delamnodes=delamnodes+1
       End If
       Call SectionRealRestore(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems+i-1, Fi_ptr, iErr); CHKERRQ(iErr)
    End Do
-   
+   If (AppCtx%AppParam%verbose > 0) Then
+      Write(IOBuffer, *) "Number of debonded nodes (W=0)", delamnodes, "\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If   
    Deallocate(zero)
 End Subroutine W_Solve
 
