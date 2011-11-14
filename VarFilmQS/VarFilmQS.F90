@@ -49,7 +49,11 @@ TimeStep: Do
       Write(IOBuffer, *) 'Done with Update_Irrev \n' 
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   
+
+! 
+! 	Write(IOBuffer, *) 'W Section prior to Update Irrev W \n' 
+! 	Call SectionRealView(AppCtx%V%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+
    !! Update WBCFlag accounting for irreversibility
    Call Update_IrrevW(AppCtx)
    If (AppCtx%AppParam%verbose > 0) Then
