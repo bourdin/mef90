@@ -369,11 +369,11 @@ Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, 
          End Do
          
          Do iDoF = 1, NumDoFScal
-            Delamination_Elem = Delamination_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * (1.0_Kr - W_Loc(iDoF))
+            Delamination_Elem = Delamination_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * (W_Loc(iDoF))
             flops = flops + 1.0
          End Do
          
-         CohesiveEnergyBlock = CohesiveEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * Delamination_Elem * 0.5_Kr 
+         CohesiveEnergyBlock = CohesiveEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%MatProp(iBlkId)%Ksubst * (U_eff_elem .DotP. U_eff_elem) * Delamination_Elem * 0.5_Kr 
 
         End Do Do_iGauss
    End Do Do_iEloc
