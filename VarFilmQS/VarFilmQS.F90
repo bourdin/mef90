@@ -19,7 +19,7 @@ Character(len=MEF90_MXSTRLEN), Dimension(5)  :: stagename
 PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
 PetscBool                                    :: restart
 
-Call VarFracQSInit(AppCtx)
+Call VarFilmQSInit(AppCtx)
 
 If (AppCtx%AppParam%verbose > 1) Then
    Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)

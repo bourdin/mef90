@@ -14,7 +14,7 @@ Module m_VarFilmQS
    
 Contains
 
-   Subroutine VarFracQSInit(AppCtx)
+   Subroutine VarFilmQSInit(AppCtx)
 !!!startregion VARIABLES
       Type(AppCtx_Type)                            :: AppCtx
 
@@ -418,7 +418,7 @@ Contains
 !!!endregion ENERGIES COMPUTATION
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine VarFracQSInit
+   End Subroutine VarFilmQSInit
    
    Subroutine InitFileNames(dAppCtx) 
       Type(AppCtx_Type)                            :: dAppCtx
