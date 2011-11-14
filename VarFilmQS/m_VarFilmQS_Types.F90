@@ -69,7 +69,7 @@ Module m_VarFilmQS_Types
    Type(Field)                                  :: FW
    Type(Vec)                                    :: V_Old
    Type(Vec)                                    :: W_Old
-   Type(Flag)                                   :: BCUFlag, BCVFlag, BCWFlag, IrrevFlag
+   Type(Flag)                                   :: BCUFlag, BCVFlag, BCWFlag, IrrevFlag, WIrrevFlag
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       PetscInt                                     :: NumTimeSteps

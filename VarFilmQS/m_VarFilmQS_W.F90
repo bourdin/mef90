@@ -36,6 +36,7 @@ Subroutine Init_TS_W(AppCtx)
    Select Case(AppCtx%VarFracSchemeParam%InitW)
       Case(VarFrac_INIT_W_PREV) ! -initw 0 (default)
          Call FieldInsertVertexBoundaryValues(AppCtx%W, AppCtx%WBC, AppCtx%BCWFlag, AppCtx%MeshTopology)
+         Call FieldInsertVertexBoundaryValues(AppCtx%W, AppCtx%WIrrev, AppCtx%WIrrevFlag, AppCtx%MeshTopology)
       Case(VarFrac_INIT_W_FILE) ! -initw 6
 	If ( AppCtx%TimeStep==1 ) Then
 		Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W)
@@ -63,35 +64,32 @@ Character(len=MEF90_MXSTRLEN)                :: IOBuffer
 PetscInt                                     :: MyIrrevEQ_Counter 
 PetscInt                                     :: IrrevEQ_Counter
 PetscReal, Dimension(:), Pointer             :: WIrrev_Ptr
-PetscInt, Dimension(:), Pointer              :: IrrevFlag_Ptr
+PetscInt, Dimension(:), Pointer              :: WIrrevFlag_Ptr
 
 MyIrrevEq_Counter = 0
 IrrevEq_Counter   = 0
 
 Select Case(AppCtx%VarFracSchemeParam%IrrevType)
 Case Default
-	If (AppCtx%AppParam%verbose > 0) Then
+	If (AppCtx%AppParam%verbose > 1) Then
 		Write(IOBuffer, *) "Irreversibility for W\n"
 		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-		Write(IOBuffer, *) "************************************ \n W Section\n ************************************\n"
-		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-		Call SectionRealView(AppCtx%W%Sec, PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
 	End If
 	
-	Allocate(IrrevFlag_Ptr(1))
-	IrrevFlag_Ptr = VarFrac_BC_Type_DIRI
+	Allocate(WIrrevFlag_Ptr(1))
+	WIrrevFlag_Ptr = VarFrac_BC_Type_DIRI
 	
 	Do i = 1, AppCtx%MeshTopology%Num_Verts
 		Call SectionRealRestrict(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, iErr); CHKERRQ(ierr)      
 		If (WIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-			If (AppCtx%AppParam%verbose > 0) Then
-				Write(IOBuffer, *) "WIrrev_Ptr(1)", WIrrev_Ptr(1), "\n"
-				Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-			End If
-		   WIrrev_Ptr(1) = 0.0_Kr
-		   Call SectionIntUpdate(AppCtx%BCWFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-		   Call SectionRealUpdate(AppCtx%WBC%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-		   MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
+! 			If (AppCtx%AppParam%verbose > 1) Then
+! 				Write(IOBuffer, *) "WIrrev_Ptr(1)", WIrrev_Ptr(1), "\n"
+! 				Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+! 			End If
+			WIrrev_Ptr(1) = 0.0_Kr
+			Call SectionIntUpdate(AppCtx%WIrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+			Call SectionRealUpdate(AppCtx%WIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+			MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
 		End If
 		Call SectionRealRestore(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, iErr); 
 	End Do
@@ -101,7 +99,7 @@ Case Default
 		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 	End If
 
-   DeAllocate(IrrevFlag_Ptr)
+   DeAllocate(WIrrevFlag_Ptr)
 
 End Select
 End Subroutine Update_IrrevW

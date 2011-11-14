@@ -191,7 +191,7 @@ Contains
    Call FieldCreateVertex(AppCtx%U,      'U',      AppCtx%MeshTopology, SizeVect)
    Call FieldCreateVertex(AppCtx%UBC,    'UBC',    AppCtx%MeshTopology, SizeVect)
 
-   Call FieldCreateVertex(AppCtx%U0,      'U0',      AppCtx%MeshTopology, SizeVect)
+   Call FieldCreateVertex(AppCtx%U0,      'U0',    AppCtx%MeshTopology, SizeVect)
       
    Call FieldCreateVertex(AppCtx%V,      'V',      AppCtx%MeshTopology, SizeScal)
    Call FieldCreateVertex(AppCtx%VBC,    'VBC',    AppCtx%MeshTopology, SizeScal)
@@ -199,10 +199,11 @@ Contains
    
    Call FieldCreateVertex(AppCtx%W,      'W',      AppCtx%MeshTopology, SizeScal)
    Call FieldCreateVertex(AppCtx%WBC,    'WBC',    AppCtx%MeshTopology, SizeScal)
-   Call FieldCreateVertex(AppCtx%FW,      'FW',      AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(AppCtx%FW,     'FW',     AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(AppCtx%WIrrev, 'WIrrev', AppCtx%MeshTopology, SizeScal)
    
    Call FieldCreateVertex(AppCtx%Theta,  'Theta',  AppCtx%MeshTopology, SizeScal)
-   Call FieldCreateVertex(AppCtx%RHSU, 'RHSU', AppCtx%MeshTopology, SizeVect)
+   Call FieldCreateVertex(AppCtx%RHSU,   'RHSU',   AppCtx%MeshTopology, SizeVect)
 
    If (AppCtx%VarFracSchemeParam%V_UseTao) Then
       Call FieldCreateVertex(AppCtx%GradientV,   'GradientV',   AppCtx%MeshTopology, SizeScal)
@@ -214,7 +215,10 @@ Contains
    Call FlagCreateVertex(AppCtx%BCUFlag,   'BCUFlag',   AppCtx%MeshTopology, SizeVect)
    Call FlagCreateVertex(AppCtx%BCVFlag,   'BCVFlag',   AppCtx%MeshTopology, SizeScal)
    Call FlagCreateVertex(AppCtx%BCWFlag,   'BCWFlag',   AppCtx%MeshTopology, SizeScal)
-   Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
+
+	Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
+	Call FlagCreateVertex(AppCtx%WIrrevFlag, 'WIrrevFlag', AppCtx%MeshTopology, SizeScal)
+
       DeAllocate(SizeVect)
       DeAllocate(SizeScal)
       Call VecDuplicate(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
@@ -402,16 +406,20 @@ Contains
       End If
       
       !!! Set V=1 if we are not restarting, and rekoad last time step if not
+      Call SectionRealSet(AppCtx%WIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
       Call SectionRealSet(AppCtx%VIrrev%Sec, 0.0_Kr, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%Restart .AND. (AppCtx%TimeSTep > 1) ) Then
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%V)
-         Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep-1, AppCtx%U)
-         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-      Else
-         Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
-         Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)
-      End If
+
+	If (AppCtx%AppParam%Restart .AND. (AppCtx%TimeSTep > 1) ) Then
+		Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, AppCtx%TimeStep-1, AppCtx%V)
+		Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, AppCtx%V%Vec, ierr); CHKERRQ(ierr)
+		Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_DisplacementX)%Offset, AppCtx%TimeStep-1, AppCtx%U)
+		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+	Else
+		Call SectionRealSet(AppCtx%V%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
+		Call SectionRealSet(AppCtx%W%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)
+		Call VecSet(AppCtx%V%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)
+		Call VecSet(AppCtx%W%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)
+	End If
       
       !!! We are not backTracking
       AppCtx%IsBT = PETSC_FALSE
