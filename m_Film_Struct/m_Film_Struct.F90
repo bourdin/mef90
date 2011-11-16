@@ -93,13 +93,14 @@ Module m_Film_Struct
    PetscInt, Parameter, Public         :: VarFrac_CellVar_StressYY           = 5
    PetscInt, Parameter, Public         :: VarFrac_CellVar_StressXY           = 6
                                           
-   PetscInt, Parameter, Public         :: VarFrac_Num_GlobVar                = 6
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_ElasticEnergy      = 1
+   PetscInt, Parameter, Public         :: VarFrac_Num_GlobVar                = 7
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_FilmEnergy      = 1
    PetscInt, Parameter, Public         :: VarFrac_GlobVar_FractureEnergy     = 2 
    PetscInt, Parameter, Public         :: VarFrac_GlobVar_DelaminationEnergy = 3 
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_CohesiveEnergy     = 4 
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_TotalEnergy        = 5
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_Load               = 6
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_BondingLayerEnergy = 4 
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_ElasticEnergy      = 5
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_TotalEnergy        = 6
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_Load               = 7
                                           
    PetscInt, Parameter, Public         :: VarFrac_Num_EBProperties           = 3
    PetscInt, Parameter, Public         :: VarFrac_EBProp_IsBrittle           = 1
@@ -491,7 +492,8 @@ End Subroutine VarFracEXOProperty_Init
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
       dEXO%GlobVariable(VarFrac_GlobVar_FractureEnergy)%Name = 'Fracture energy'
       dEXO%GlobVariable(VarFrac_GlobVar_DelaminationEnergy)%Name = 'Delamination energy'
-      dEXO%GlobVariable(VarFrac_GlobVar_CohesiveEnergy)%Name = 'Cohesive energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_BondingLayerEnergy)%Name = 'Bonding Layer energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_FilmEnergy)%Name = 'Film energy'
       dEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Name = 'Elastic energy'
       dEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Name   = 'Total energy'
       dEXO%GlobVariable(VarFrac_GlobVar_Load)%Name          = 'Load'

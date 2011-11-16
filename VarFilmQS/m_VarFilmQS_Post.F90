@@ -8,41 +8,41 @@ Module m_VarFilmQS_Post
    Implicit NONE   
    
 Contains
-Subroutine ElasticEnergy_Assembly(ElasticEnergy, ElasticEnergyBlock, AppCtx)     
-   PetscReal, Intent(OUT)                       :: ElasticEnergy
-   PetscReal, Dimension(:), Pointer             :: ElasticEnergyBlock
+Subroutine FilmEnergy_Assembly(FilmEnergy, FilmEnergyBlock, AppCtx)     
+   PetscReal, Intent(OUT)                       :: FilmEnergy
+   PetscReal, Dimension(:), Pointer             :: FilmEnergyBlock
    Type(AppCtx_Type)                            :: AppCtx
    
    PetscInt                                     :: iBlk, iBlkId, iErr
-   PetscReal                                    :: MyElasticEnergy
-   PetscReal, Dimension(:), Pointer             :: MyElasticEnergyBlock
+   PetscReal                                    :: MyFilmEnergy
+   PetscReal, Dimension(:), Pointer             :: MyFilmEnergyBlock
   
 
    Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
    Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
    
-   MyElasticEnergy = 0.0_Kr
-   Allocate(MyELasticEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
-   MyElasticEnergyBlock = 0.0_Kr
+   MyFilmEnergy = 0.0_Kr
+   Allocate(MyFilmEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+   MyFilmEnergyBlock = 0.0_Kr
    Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
       If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
          Select Case (AppCtx%VarFracSchemeParam%Unilateral)
          Case (VarFrac_Unilateral_NONE)
-            Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+            Call FilmEnergy_AssemblyBlk_Brittle(MyFilmEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
          End Select
       Else
-         Call ElasticEnergy_AssemblyBlk_NonBrittle(MyElasticEnergyBlock(iBlkId), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx)
+         Call FilmEnergy_AssemblyBlk_NonBrittle(MyFilmEnergyBlock(iBlkId), iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx)
       End If
-      MyElasticEnergy = MyElasticEnergy + MyElasticEnergyBlock(iBlkId)
+      MyFilmEnergy = MyFilmEnergy + MyFilmEnergyBlock(iBlkId)
    End Do
 
-   Call MPI_AllReduce(MyElasticEnergy, ElasticEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-   Call MPI_AllReduce(MyElasticEnergyBlock, ElasticEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-   DeAllocate(MyElasticEnergyBlock)
+   Call MPI_AllReduce(MyFilmEnergy, FilmEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+   Call MPI_AllReduce(MyFilmEnergyBlock, FilmEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+   DeAllocate(MyFilmEnergyBlock)
    Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-End Subroutine ElasticEnergy_Assembly
+End Subroutine FilmEnergy_Assembly
 
 Subroutine ExtForcesWork_Assembly(ExtForcesWork, ExtForcesWorkBlock, AppCtx)     
    PetscReal, Intent(OUT)                       :: ExtForcesWork
@@ -107,68 +107,68 @@ Subroutine FractureEnergy_Assembly(FractureEnergy, FractureEnergyBlock, AppCtx)
 End Subroutine FractureEnergy_Assembly
 
 Subroutine DelaminationEnergy_Assembly(DelaminationEnergy, DelaminationEnergyBlock, AppCtx)     
-   PetscReal, Intent(OUT)                       :: DelaminationEnergy
-   PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock
-   Type(AppCtx_Type)                            :: AppCtx
-   
-   PetscInt                                     :: iBlk, iBlkId, iErr
-   PetscReal                                    :: MyDelaminationEnergy
-   PetscReal, Dimension(:), Pointer             :: MyDelaminationEnergyBlock
-   
-   
-   Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
-   Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-   
-   MyDelaminationEnergy = 0.0_Kr
-   Allocate(MyDelaminationEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
-   Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      Call DelaminationEnergy_AssemblyBlk(MyDelaminationEnergyBlock(iBlkID), iBlk, AppCtx%W%Sec, AppCtx)
-      MyDelaminationEnergy = MyDelaminationEnergy + MyDelaminationEnergyBlock(iBlkID)
-   End Do
-   
-   Call MPI_AllReduce(MyDelaminationEnergy, DelaminationEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-   Call MPI_AllReduce(MyDelaminationEnergyBlock, DelaminationEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-   DeAllocate(MyDelaminationEnergyBlock)
-   Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-   Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+	PetscReal, Intent(OUT)                       :: DelaminationEnergy
+	PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock
+	Type(AppCtx_Type)                            :: AppCtx
+	
+	PetscInt                                     :: iBlk, iBlkId, iErr
+	PetscReal                                    :: MyDelaminationEnergy
+	PetscReal, Dimension(:), Pointer             :: MyDelaminationEnergyBlock
+	
+	
+	Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+	Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+	
+	MyDelaminationEnergy = 0.0_Kr
+	Allocate(MyDelaminationEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+	Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+		iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+		Call DelaminationEnergy_AssemblyBlk(MyDelaminationEnergyBlock(iBlkID), iBlk, AppCtx%W%Sec, AppCtx)
+		MyDelaminationEnergy = MyDelaminationEnergy + MyDelaminationEnergyBlock(iBlkID)
+	End Do
+	
+	Call MPI_AllReduce(MyDelaminationEnergy, DelaminationEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+	Call MPI_AllReduce(MyDelaminationEnergyBlock, DelaminationEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+	DeAllocate(MyDelaminationEnergyBlock)
+	Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+	Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine DelaminationEnergy_Assembly
 
-Subroutine CohesiveEnergy_Assembly(CohesiveEnergy, CohesiveEnergyBlock, AppCtx)     
-   PetscReal, Intent(OUT)                       :: CohesiveEnergy
-   PetscReal, Dimension(:), Pointer             :: CohesiveEnergyBlock
+Subroutine BondingLayerEnergy_Assembly(BondingLayerEnergy, BondingLayerEnergyBlock, AppCtx)     
+   PetscReal, Intent(OUT)                       :: BondingLayerEnergy
+   PetscReal, Dimension(:), Pointer             :: BondingLayerEnergyBlock
    Type(AppCtx_Type)                            :: AppCtx
    
    PetscInt                                     :: iBlk, iBlkId, iErr
-   PetscReal                                    :: MyCohesiveEnergy
-   PetscReal, Dimension(:), Pointer             :: MyCohesiveEnergyBlock
+   PetscReal                                    :: MyBondingLayerEnergy
+   PetscReal, Dimension(:), Pointer             :: MyBondingLayerEnergyBlock
    
    
    Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
    Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
    
-   MyCohesiveEnergy = 0.0_Kr
-   Allocate(MyCohesiveEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+   MyBondingLayerEnergy = 0.0_Kr
+   Allocate(MyBondingLayerEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
    Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-      Call CohesiveEnergy_AssemblyBlk(MyCohesiveEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%U0%Sec, AppCtx%W%Sec, AppCtx)
-      MyCohesiveEnergy = MyCohesiveEnergy + MyCohesiveEnergyBlock(iBlkID)
+      Call BondingLayerEnergy_AssemblyBlk(MyBondingLayerEnergyBlock(iBlkID), iBlk, AppCtx%U%Sec, AppCtx%U0%Sec, AppCtx%W%Sec, AppCtx)
+      MyBondingLayerEnergy = MyBondingLayerEnergy + MyBondingLayerEnergyBlock(iBlkID)
    End Do
 
-   CohesiveEnergy = 0.0_Kr
+   BondingLayerEnergy = 0.0_Kr
    
-   Call MPI_AllReduce(MyCohesiveEnergy, CohesiveEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-   Call MPI_AllReduce(MyCohesiveEnergyBlock, CohesiveEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-   DeAllocate(MyCohesiveEnergyBlock)
+   Call MPI_AllReduce(MyBondingLayerEnergy, BondingLayerEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+   Call MPI_AllReduce(MyBondingLayerEnergyBlock, BondingLayerEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+   DeAllocate(MyBondingLayerEnergyBlock)
    Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-End Subroutine CohesiveEnergy_Assembly
+End Subroutine BondingLayerEnergy_Assembly
 
 
 !!!
 !!! Block Assembly Routines
 !!!
-Subroutine ElasticEnergy_AssemblyBlk_Brittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
+Subroutine FilmEnergy_AssemblyBlk_Brittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
    PetscReal, Intent(OUT)                       :: ElasticEnergyBlock
    PetscInt                                     :: iBlk
    Type(SectionReal)                            :: U_Sec, Theta_Sec, V_Sec
@@ -224,9 +224,9 @@ Subroutine ElasticEnergy_AssemblyBlk_Brittle(ElasticEnergyBlock, iBlk, U_Sec, Th
    DeAllocate(Theta_Loc)
    DeAllocate(V_Loc)
    Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-End Subroutine ElasticEnergy_AssemblyBlk_Brittle
+End Subroutine FilmEnergy_AssemblyBlk_Brittle
 
-Subroutine ElasticEnergy_AssemblyBlk_NonBrittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, AppCtx)
+Subroutine FilmEnergy_AssemblyBlk_NonBrittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, AppCtx)
       PetscReal, Intent(OUT)                       :: ElasticEnergyBlock
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: U_Sec, Theta_Sec
@@ -276,7 +276,7 @@ Subroutine ElasticEnergy_AssemblyBlk_NonBrittle(ElasticEnergyBlock, iBlk, U_Sec,
       DeAllocate(U_Loc)
       DeAllocate(Theta_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-   End Subroutine ElasticEnergy_AssemblyBlk_NonBrittle
+   End Subroutine FilmEnergy_AssemblyBlk_NonBrittle
 
 Subroutine DelaminationEnergy_AssemblyBlk(DelaminationEnergyBlock, iBlk, W_Sec, AppCtx)
    PetscReal, Intent(OUT)                       :: DelaminationEnergyBlock
@@ -321,8 +321,8 @@ Subroutine DelaminationEnergy_AssemblyBlk(DelaminationEnergyBlock, iBlk, W_Sec, 
    Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
 End Subroutine DelaminationEnergy_AssemblyBlk
 
-Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, W_Sec, AppCtx)
-   PetscReal, Intent(OUT)                       :: CohesiveEnergyBlock
+Subroutine BondingLayerEnergy_AssemblyBlk(BondingLayerEnergyBlock, iBlk, U_Sec, U0_Sec, W_Sec, AppCtx)
+   PetscReal, Intent(OUT)                       :: BondingLayerEnergyBlock
    PetscInt                                     :: iBlk
    Type(SectionReal)                            :: U_Sec, U0_Sec, W_Sec
    Type(AppCtx_Type)                            :: AppCtx
@@ -338,7 +338,7 @@ Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, 
    Type(Vect2D)               :: U_eff_elem
    
    flops = 0.0
-   CohesiveEnergyBlock = 0.0_Kr
+   BondingLayerEnergyBlock = 0.0_Kr
    
    NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
    NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF 
@@ -348,7 +348,7 @@ Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, 
    Allocate(U0_Loc(NumDoFVect))
    
    iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-   CohesiveEnergyBlock = 0.0_Kr
+   BondingLayerEnergyBlock = 0.0_Kr
    
    Do_iEloc: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
       iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -373,7 +373,7 @@ Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, 
             flops = flops + 1.0
          End Do
          
-         CohesiveEnergyBlock = CohesiveEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%MatProp(iBlkId)%Ksubst * (U_eff_elem .DotP. U_eff_elem) * Delamination_Elem * 0.5_Kr 
+         BondingLayerEnergyBlock = BondingLayerEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%MatProp(iBlkId)%Ksubst * (U_eff_elem .DotP. U_eff_elem) * Delamination_Elem * 0.5_Kr 
 
         End Do Do_iGauss
    End Do Do_iEloc
@@ -383,9 +383,9 @@ Subroutine CohesiveEnergy_AssemblyBlk(CohesiveEnergyBlock, iBlk, U_Sec, U0_Sec, 
    DeAllocate(W_Loc)
 
    Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-End Subroutine CohesiveEnergy_AssemblyBlk
+End Subroutine BondingLayerEnergy_AssemblyBlk
 
-   Subroutine ExtForcesWork_AssemblyBlk(ExtForcesWorkBlock, iBlk, U_Sec, F_Sec, AppCtx)
+Subroutine ExtForcesWork_AssemblyBlk(ExtForcesWorkBlock, iBlk, U_Sec, F_Sec, AppCtx)
       PetscReal, Intent(OUT)                       :: ExtForcesWorkBlock
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: U_Sec, F_Sec
@@ -429,9 +429,9 @@ End Subroutine CohesiveEnergy_AssemblyBlk
       DeAllocate(U_Loc)
       DeAllocate(F_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-   End Subroutine ExtForcesWork_AssemblyBlk
+End Subroutine ExtForcesWork_AssemblyBlk
 
-   Subroutine FractureEnergy_AssemblyBlk_AT2(FractureEnergyBlock, iBlk, V_Sec, AppCtx)
+Subroutine FractureEnergy_AssemblyBlk_AT2(FractureEnergyBlock, iBlk, V_Sec, AppCtx)
    PetscReal, Intent(OUT)                       :: FractureEnergyBlock 
 !  PetscReal, Intent(OUT)                       :: DelaminationEnergyBlock 
       PetscInt                                     :: iBlk
@@ -476,9 +476,9 @@ End Subroutine CohesiveEnergy_AssemblyBlk
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-   End Subroutine FractureEnergy_AssemblyBlk_AT2
+End Subroutine FractureEnergy_AssemblyBlk_AT2
 
-   Subroutine FractureEnergy_AssemblyBlk_AT1(FractureEnergyBlock, iBlk, V_Sec, AppCtx)
+Subroutine FractureEnergy_AssemblyBlk_AT1(FractureEnergyBlock, iBlk, V_Sec, AppCtx)
       PetscReal, Intent(OUT)                       :: FractureEnergyBlock
 !     PetscReal, Intent(OUT)                       :: DelaminationEnergyBlock
       PetscInt                                     :: iBlk
@@ -524,12 +524,12 @@ End Subroutine CohesiveEnergy_AssemblyBlk
 
       DeAllocate(V_Loc)
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
-   End Subroutine FractureEnergy_AssemblyBlk_AT1
+End Subroutine FractureEnergy_AssemblyBlk_AT1
 
 !----------------------------------------------------------------------------------------!      
 ! ComputeStrainStress (CM)  
 !----------------------------------------------------------------------------------------!      
-   Subroutine ComputeStrainStress(AppCtx)
+Subroutine ComputeStrainStress(AppCtx)
      Type(AppCtx_Type)                             :: AppCtx
       
       PetscInt                                     :: iErr
@@ -597,6 +597,6 @@ End Subroutine CohesiveEnergy_AssemblyBlk
       Call PetscLogFlops(flops, iErr); CHKERRQ(iErr)
       Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine ComputeStrainStress
+End Subroutine ComputeStrainStress
 
 End Module m_VarFilmQS_Post
