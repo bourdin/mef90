@@ -55,7 +55,7 @@ Program  TransientHeat
       Write(IOBuffer, *) 'Assembling the RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call RHSAssembly(AppCtx, AppCtx%MeshTopology)
+   Call RHSAssembly(AppCtx, AppCtx%MeshTopology, AppCtx%MyExo)
    If (AppCtx%AppParam%verbose > 2) Then
       Write(IOBuffer, *) 'RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
