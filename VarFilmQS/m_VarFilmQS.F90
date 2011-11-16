@@ -583,7 +583,7 @@ End Subroutine Save_W
          Write(AppCtx%AppParam%Ener_Unit, 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergy(AppCtx%TimeStep), AppCtx%ExtForcesWork(AppCtx%TimeStep), AppCtx%FractureEnergy(AppCtx%TimeStep), AppCtx%DelaminationEnergy(AppCtx%TimeStep),  AppCtx%FilmEnergy(AppCtx%TimeStep), AppCtx%BondingLayerEnergy(AppCtx%TimeStep), AppCtx%TotalEnergy(AppCtx%TimeStep)
          If (AppCtx%VarFracSchemeParam%SaveBlk) Then
             Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
-               Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ElasticEnergyBlock(iBlk), AppCtx%ExtForcesWorkBlock(iBlk), AppCtx%FractureEnergyBlock(iBlk),  AppCtx%DelaminationEnergyBlock(iBlk),  AppCtx%FilmEnergyBlock(iBlk), AppCtx%BondingLayerEnergyBlock(iBlk),  AppCtx%TotalEnergyBlock(iBlk)
+               Write(AppCtx%AppParam%EnerBlock_Unit(iBlk), 100) AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), AppCtx%ExtForcesWorkBlock(iBlk),  AppCtx%ElasticEnergyBlock(iBlk), AppCtx%FilmEnergyBlock(iBlk), AppCtx%BondingLayerEnergyBlock(iBlk), AppCtx%FractureEnergyBlock(iBlk),  AppCtx%DelaminationEnergyBlock(iBlk),   AppCtx%TotalEnergyBlock(iBlk)
             End Do    
       End If
       End If
