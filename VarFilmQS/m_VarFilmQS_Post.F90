@@ -168,8 +168,8 @@ End Subroutine BondingLayerEnergy_Assembly
 !!!
 !!! Block Assembly Routines
 !!!
-Subroutine FilmEnergy_AssemblyBlk_Brittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
-   PetscReal, Intent(OUT)                       :: ElasticEnergyBlock
+Subroutine FilmEnergy_AssemblyBlk_Brittle(FilmEnergyBlock, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
+   PetscReal, Intent(OUT)                       :: FilmEnergyBlock
    PetscInt                                     :: iBlk
    Type(SectionReal)                            :: U_Sec, Theta_Sec, V_Sec
    Type(AppCtx_Type)                            :: AppCtx
@@ -186,7 +186,7 @@ Subroutine FilmEnergy_AssemblyBlk_Brittle(ElasticEnergyBlock, iBlk, U_Sec, Theta
    PetscLogDouble                               :: flops       
 
    flops = 0.0
-   ElasticEnergyBlock = 0.0_Kr
+   FilmEnergyBlock = 0.0_Kr
 
    NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
    NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
@@ -215,7 +215,7 @@ Subroutine FilmEnergy_AssemblyBlk_Brittle(ElasticEnergyBlock, iBlk, U_Sec, Theta
             flops = flops + 2.0
          End Do
          EffectiveStrain_Elem = Strain_Elem - AppCtx%MatProp(iBlkId)%Therm_Exp * Theta_Elem
-         ElasticEnergyBlock = ElasticEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * 0.5_Kr
+         FilmEnergyBlock = FilmEnergyblock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon) * ((AppCtx%MatProp(iBlkId)%Hookes_Law * EffectiveStrain_Elem) .DotP. EffectiveStrain_Elem ) * 0.5_Kr
          flops = flops + 6.0 
       End Do Do_iGauss
    End Do Do_iEloc
