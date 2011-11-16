@@ -222,6 +222,7 @@ Contains
       DeAllocate(SizeVect)
       DeAllocate(SizeScal)
       Call VecDuplicate(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
+      Call VecDuplicate(AppCtx%U%Vec, AppCtx%U_Old, iErr); CHKERRQ(iErr)
 
    If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
       NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
@@ -631,6 +632,7 @@ End Subroutine Save_W
          Call FieldDestroy(AppCtx%RHSV); CHKERRQ(iErr)
       End If
       Call VecDestroy(AppCtx%V_Old, iErr); CHKERRQ(iErr)
+	Call VecDestroy(AppCtx%U_Old, iErr); CHKERRQ(iErr)
 
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
@@ -700,6 +702,47 @@ End Subroutine Save_W
 103 Format(A,'-logsummary.txt')
    End Subroutine VarFracQSFinalize
 
-   
+   Subroutine Step_UW(AppCtx)
+	Type(AppCtx_Type)                            :: AppCtx
+
+	PetscInt                                     :: iErr, UWiter
+	PetscReal                                    :: ErrU
+	Character(len=MEF90_MXSTRLEN)                :: IOBuffer   
+
+	UWiter=1
+	
+	Call Step_U(AppCtx)
+	Call Step_W(AppCtx)
+
+	Call VecCopy(AppCtx%U%Vec, AppCtx%U_Old, iErr); CHKERRQ(iErr)
+	
+! 	Call VecSet(AppCtx%U_Old, 0.0_Kr, iErr); CHKERRQ(iErr)
+	
+	Do While (ErrU > AppCtx%VarFracSchemeParam%AltMinTol .OR. UWiter == 1)
+
+		If (AppCtx%AppParam%verbose > 0) Then
+			Write(IOBuffer, *) '      UWiter: ', UWiter, '\n' 
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		End If
+
+		Call Step_U(AppCtx)
+		Call Step_W(AppCtx)
+
+		Call VecAxPy(AppCtx%U_Old, -1.0_Kr, AppCtx%U%Vec, iErr)
+		Call VecNorm(AppCtx%U_Old, NORM_INFINITY, ErrU, iErr)
+
+		Write(IOBuffer, 800) ErrU
+		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		Call VecCopy(AppCtx%U%Vec, AppCtx%U_Old, iErr); CHKERRQ(iErr)
+
+		Call Save_U(AppCtx)
+		Call Save_W(AppCtx)
+
+		UWiter = UWiter + 1
+	End Do
+
+	800 Format('     Max change U: ', T24, ES12.5, '\n')
+
+End Subroutine Step_UW
 End Module m_VarFilmQS
 
