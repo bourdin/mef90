@@ -348,13 +348,15 @@ Contains
       Do iloc = 1, MeshTopology%Num_Node_Sets         
          i = MeshTopology%Node_Set(iloc)%ID
          If (MyEXO%NSProperty(NS_Offset)%Value( MeshTopology%Node_Set(iloc)%ID)== 1) then 
-            Uelem(1) = U(i) !Dirichlet BC 
+            Uelem(1) =  U(i) !Dirichlet BC 
             Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
                Call SectionRealUpdate(AppCtx%U%Sec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
          End If 
       End Do
       DeAllocate(Uelem)
+!TODO write for all timesteps
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology,  1, 1, AppCtx%U%Sec)
       Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  MyEXO%NSProperty(NS_Offset),  MeshTopology)
    End Subroutine HeatSetBC
 
@@ -373,6 +375,7 @@ Contains
       Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%RHS,   'RHS',       AppCtx%MeshTopology, SizeScal)
       Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%UBC,    'UBC',      AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeScal)
       
    End Subroutine HeatInitField
@@ -538,8 +541,13 @@ Contains
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , 1, AppCtx%U%Sec)
       Do iStep = 1, AppCtx%NumSteps-1
          Write(IOBuffer, 200) iStep, lTimes(iStep)
+         Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
-         Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr) 
+         Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr)
+         Call MatView(AppCtx%M,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+         Call MatView(AppCtx%K,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+         Call VecView(AppCtx%U%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+
          Call TSSetInitialTimeStep(AppCtx%TS, lTimes(iStep-1) , (lTimes(iStep)-lTimes(iStep-1)/10.),  ierr); CHKERRQ(iErr)
          Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, lTimes(iStep), iErr); CHKERRQ(iErr)
          Call TSSolve(AppCtx%TS, AppCtx%U%Vec, lTimes(iStep), iErr); CHKERRQ(iErr)
@@ -603,17 +611,22 @@ Contains
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
       
       Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF, MeshTopology%Elem_Blk(iBlk)%Num_DoF))
-   
+      Allocate(BCFlag(MeshTopology%Elem_Blk(iBlk)%Num_DoF))
+
       Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem = 0.0_Kr
+         BCFlag = 0 
+         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, MeshTopology%mesh, iE-1, MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
             Do iDoF1 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
-             !     MatElem(iDoF1, iDoF1) = 1 
+             !     MatElem(iDoF1, iDoF1) = 1
+          !  If (BCFlag(iDoF1) == 0) Then
                Do iDoF2 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
                   MatElem(iDoF2, iDoF1) = MatElem(iDoF2, iDoF1) + AppCtx%Elem(iE)%Gauss_C(iGauss) * ( AppCtx%Elem(iE)%BF(iDoF1, iGauss) *  AppCtx%Elem(iE)%BF(iDoF2, iGauss) )
                   flops = flops + 2 !Check 
                End Do
+         !  End If
             End Do
          End Do
          Call DMMeshAssembleMatrix(AppCtx%M, MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
