@@ -114,6 +114,9 @@ Module m_Film_Struct
    PetscInt, Parameter, Public         :: VarFrac_NSProp_HasPForce           = 5
                                           
    PetscInt, Parameter, Public         :: VarFrac_Num_MatProp2D   = 4
+
+	PetscInt, Parameter, Public         :: VarFrac_UW_Coupled            = 1
+	PetscInt, Parameter, Public         :: VarFrac_UW_Uncoupled          = 0
    
    Type MatProp2D_Type
    PetscReal               :: DelamToughness
@@ -157,6 +160,8 @@ Module m_Film_Struct
       PetscBool                                    :: SaveStrain
       
       PetscBool                                    :: V_UseTao
+      PetscInt                                     :: CoupledUW
+
    End Type VarFracSchemeParam_Type
    
  Contains
@@ -354,6 +359,8 @@ Module m_Film_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-v_tao ', L1, A)")               dSchemeParam%V_UseTao, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-coupleduw ', L1, A)")               dSchemeParam%coupleduw, '\n'
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine VarFracSchemeParam_View
 
    Subroutine VarFracSchemeParam_GetFromOptions(dSchemeParam)
@@ -385,6 +392,8 @@ Module m_Film_Struct
       dSchemeParam%SaveStrain       = PETSC_FALSE
       dSchemeParam%V_UseTao         = PETSC_TRUE
 
+	dSchemeParam%CoupledUW      = VarFrac_UW_Coupled
+
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-irrev',          dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       If (dSchemeParam%IrrevType == VarFrac_Irrev_Eq) Then
          dSchemeParam%IrrevTol = 1.0D-2
@@ -412,6 +421,7 @@ Module m_Film_Struct
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,  '-coupleduw',      dSchemeParam%CoupledUW, flag, iErr); CHKERRQ(iErr) 
       
       Select Case(dSchemeParam%ATNum)
       !!! Braides 2008 p. 48
