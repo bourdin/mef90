@@ -45,6 +45,7 @@ Module m_Poisson3D
       Type(SectionReal)                            :: GradU
       PetscReal                                    :: ElasticEnergy
       Type(Field)                                  :: U
+      Type(Field)                                  :: UBC
       Type(Field)                                  :: F
       PetscReal                                    :: ExtForcesWork
       PetscReal                                    :: TotalEnergy
@@ -145,6 +146,10 @@ Contains
       Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk, iErr
       
+      Call MatInsertVertexBoundaryValues(AppCtx%K, AppCtx%U, AppCtx%BCFlag, AppCtx%MeshTopology)
+      Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+
 !      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
          Call MatAssemblyBlock(iBlk, AppCtx, MeshTopology)
@@ -222,13 +227,14 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "RHSAssembly"
-   Subroutine RHSAssembly(AppCtx, MeshTopology)
+   Subroutine RHSAssembly(AppCtx, MeshTopology, MyExo)
       Type(Heat_AppCtx_Type)                       :: AppCtx
       Type (MeshTopology_Type)                     :: MeshTopology
+      Type (EXO_Type)                              :: MyEXO
 
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
-
+      PetscScalar                                  :: alpha
 !      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
 
       Call SectionRealZero(AppCtx%RHS%Sec, iErr); CHKERRQ(iErr)
@@ -238,7 +244,18 @@ Contains
       End Do Do_iBlk
 
       Call SectionRealComplete(AppCtx%RHS%Sec, iErr); CHKERRQ(iErr)
+
+      !!! Set Dirichlet Boundary Values
+!Suppose that loading is contant (replace second to last by AppCtx%Timestep otherwise)
+      Call Read_EXO_Result_Vertex(MyEXO, MeshTopology, 1, 1, AppCtx%UBC)
+    !  alpha = -1. 
+    !  Call VecScale(AppCtx%UBC%Vec, alpha, iErr);  CHKERRQ(iErr)
+    !  Call SectionRealToVec(AppCtx%UBC%Sec, AppCtx%UBC%Scatter, SCATTER_REVERSE, AppCtx%UBC%Vec, iErr); CHKERRQ(iErr)
+      Call FieldInsertVertexBoundaryValues(AppCtx%RHS, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
+
       Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
+      Call FieldInsertVertexBoundaryValues(AppCtx%RHS, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
+      Call VecView(AppCtx%RHS%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
       !!! VERY important! This is the equivalent of a ghost update
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
