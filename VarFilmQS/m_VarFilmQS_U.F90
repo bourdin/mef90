@@ -6,6 +6,7 @@ Module m_VarFilmQS_U
    Use m_VarFilmQS_Post
    Use m_MEF90
    Use m_Film_Struct
+   Use m_VarFilmQS_W
 
    Implicit NONE
    Private   
@@ -461,6 +462,7 @@ Subroutine Step_U(AppCtx)
 100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
    End Subroutine Step_U   
+
 
 
 End Module m_VarFilmQS_U

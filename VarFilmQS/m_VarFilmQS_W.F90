@@ -34,11 +34,20 @@ Subroutine Init_TS_W(AppCtx)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If    
    Select Case(AppCtx%VarFracSchemeParam%InitW)
-      Case(VarFrac_INIT_W_PREV)
+      Case(VarFrac_INIT_W_PREV) ! -initw 0 (default)
          Call FieldInsertVertexBoundaryValues(AppCtx%W, AppCtx%WBC, AppCtx%BCWFlag, AppCtx%MeshTopology)
-      Case(VarFrac_INIT_W_FILE)
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W)
-         Call SectionRealToVec(AppCtx%W%Sec, AppCtx%W%Scatter, SCATTER_REVERSE, AppCtx%W%Vec, ierr); CHKERRQ(ierr)
+         Call FieldInsertVertexBoundaryValues(AppCtx%W, AppCtx%WIrrev, AppCtx%WIrrevFlag, AppCtx%MeshTopology)
+      Case(VarFrac_INIT_W_FILE) ! -initw 6
+	If ( AppCtx%TimeStep==1 ) Then
+		Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W)
+	Else
+		Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep-1, AppCtx%W)
+	end if
+	Call SectionRealToVec(AppCtx%W%Sec, AppCtx%W%Scatter, SCATTER_REVERSE, AppCtx%W%Vec, ierr); CHKERRQ(ierr)
+      Case(VarFrac_INIT_W_ONE) ! -initw 4
+         Call SectionRealSet(AppCtx%W%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)      
+         Call SectionRealToVec(AppCtx%W%Sec, AppCtx%W%Scatter, SCATTER_FORWARD, AppCtx%W%Vec, ierr); CHKERRQ(ierr)
+         Call VecSet(AppCtx%W%Vec, 1.0_Kr, iErr); CHKERRQ(iErr)      
          
       Case Default   
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Not Implemented yet\n', iErr)
@@ -47,43 +56,52 @@ Subroutine Init_TS_W(AppCtx)
 End Subroutine Init_TS_W
    
 Subroutine Update_IrrevW(AppCtx)
-   !!! Updates the WBCFlag field to account for irreversibilty 
-   Type(AppCtx_Type)                            :: AppCtx
-   
-   PetscInt                                     :: i, iErr
-   Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
-   PetscInt                                     :: MyIrrevEQ_Counter 
-   PetscInt                                     :: IrrevEQ_Counter
-   PetscReal, Dimension(:), Pointer             :: WIrrev_Ptr
-   PetscInt, Dimension(:), Pointer              :: IrrevFlag_Ptr
-   
-   MyIrrevEq_Counter = 0
-   IrrevEq_Counter   = 0
-   
-   Select Case(AppCtx%VarFracSchemeParam%IrrevType)
-   Case Default
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) "Irreversibility for W\n"
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      
-      Allocate(IrrevFlag_Ptr(1))
-      IrrevFlag_Ptr = VarFrac_BC_Type_DIRI
-      
-      Do i = 1, AppCtx%MeshTopology%Num_Verts
-         Call SectionRealRestrict(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, iErr); CHKERRQ(ierr)      
-         If (WIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
-            WIrrev_Ptr(1) = 0.0_Kr
-            Call SectionIntUpdate(AppCtx%BCWFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, IrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            Call SectionRealUpdate(AppCtx%WBC%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
-            MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
-         End If
-         Call SectionRealRestore(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, iErr); 
-      End Do
+!!! Updates the WBCFlag field to account for irreversibilty 
+Type(AppCtx_Type)                            :: AppCtx
 
-      DeAllocate(IrrevFlag_Ptr)
+PetscInt                                     :: i, iErr
+Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
+PetscInt                                     :: MyIrrevEQ_Counter 
+PetscInt                                     :: IrrevEQ_Counter
+PetscReal, Dimension(:), Pointer             :: WIrrev_Ptr
+PetscInt, Dimension(:), Pointer              :: WIrrevFlag_Ptr
 
-   End Select
+MyIrrevEq_Counter = 0
+IrrevEq_Counter   = 0
+
+Select Case(AppCtx%VarFracSchemeParam%IrrevType)
+Case Default
+	If (AppCtx%AppParam%verbose > 1) Then
+		Write(IOBuffer, *) "Irreversibility for W\n"
+		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+	End If
+	
+	Allocate(WIrrevFlag_Ptr(1))
+	WIrrevFlag_Ptr = VarFrac_BC_Type_DIRI
+	
+	Do i = 1, AppCtx%MeshTopology%Num_Verts
+		Call SectionRealRestrict(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, iErr); CHKERRQ(ierr)      
+		If (WIrrev_Ptr(1) < AppCtx%VarFracSchemeParam%IrrevTol) Then
+! 			If (AppCtx%AppParam%verbose > 1) Then
+! 				Write(IOBuffer, *) "WIrrev_Ptr(1)", WIrrev_Ptr(1), "\n"
+! 				Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+! 			End If
+			WIrrev_Ptr(1) = 0.0_Kr
+			Call SectionIntUpdate(AppCtx%WIrrevFlag%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrevFlag_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+			Call SectionRealUpdate(AppCtx%WIrrev%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, INSERT_VALUES, iErr); CHKERRQ(iErr)
+			MyIrrevEQ_Counter = MyIrrevEQ_Counter + 1
+		End If
+		Call SectionRealRestore(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, WIrrev_Ptr, iErr); 
+	End Do
+	Call MPI_AllReduce(MyIrrevEQ_Counter, IrrevEQ_Counter, 1, MPIU_INTEGER, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+	If (AppCtx%AppParam%verbose > 0) Then
+		Write(IOBuffer, *) "Dirichlet nodes Wirrev", MyIrrevEQ_Counter, "\n"
+		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+	End If
+
+   DeAllocate(WIrrevFlag_Ptr)
+
+End Select
 End Subroutine Update_IrrevW
 
 !!!
@@ -91,33 +109,32 @@ End Subroutine Update_IrrevW
 !!!
 
 
-Subroutine FW_Assembly(FW_Vec, AppCtx)
+Subroutine FW_Assembly(AppCtx)
    !!! Global dispatch routine for F of the W-problem
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
       Type(Vec)                                    :: FW_Vec
-      
+   
        Call PetscLogStagePush(AppCtx%LogInfo%FWAssemblyW_Stage, iErr); CHKERRQ(iErr)
 
        Call SectionRealZero(AppCtx%FW%Sec, iErr); CHKERRQ(iErr)
 
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call FW_AssemblyBlk(AppCtx%FW%Sec, iBlk, AppCtx)
+         Call FW_AssemblyBlk(iBlk, AppCtx)
       End Do Do_iBlk
 
    Call SectionRealComplete(AppCtx%FW%Sec, iErr); CHKERRQ(iErr)
 
    If (AppCtx%AppParam%verbose > 2) Then
-      Call VecView(FW_Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+      Call VecView(AppCtx%FW%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
    End If
 
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine FW_Assembly
    
-Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
-   Type(SectionReal)          :: F_Sec
+Subroutine FW_AssemblyBlk(iBlk, AppCtx)
    PetscInt             :: iBlk
    Type(AppCtx_Type)          :: AppCtx
 
@@ -149,7 +166,7 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
       
       Call SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_loc, iErr); CHKERRQ(ierr)
       Call SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_loc, iErr); CHKERRQ(ierr)
-      Call SectionRealRestrictClosure(F_Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, F_loc, iErr); CHKERRQ(ierr)
+      Call SectionRealRestrictClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, F_loc, iErr); CHKERRQ(ierr)
    
       U_eff_elem = 0.0_Kr  
       
@@ -164,7 +181,7 @@ Subroutine FW_AssemblyBlk(F_Sec, iBlk, AppCtx)
             F_loc(iDoF) = F_loc(iDoF) +  (AppCtx%MatProp(iBlk_glob)%DelamToughness - AppCtx%MatProp(iBlk_glob)%Ksubst * 0.5_Kr * (U_eff_elem .DotP. U_eff_elem) )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
          End Do
       End Do Do_iGauss
-      Call SectionRealUpdateClosure(F_Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+      Call SectionRealUpdateClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
    End Do Do_iEloc
 
    DeAllocate(U_loc)
@@ -177,23 +194,29 @@ End Subroutine FW_AssemblyBlk
 Subroutine W_Solve(AppCtx)
    Type(AppCtx_Type)          :: AppCtx
    
-   PetscInt             :: i
+   PetscInt             :: i, delamnodes
    PetscReal, Dimension(:), Pointer    :: Fi_ptr
    PetscInt             :: iErr
    PetscReal, Dimension(:), Pointer    :: zero
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer      
    
    Allocate(zero(1))
    
    zero=0.0_Kr
-   
+   delamnodes=0
+
    Do i=1, AppCtx%MeshTopology%Num_Verts
       Call SectionRealRestrict(AppCtx%FW%Sec, AppCtx%MeshTopology%Num_Elems + i-1, Fi_ptr, iErr); CHKERRQ(iErr);
       If (Fi_ptr(1) .LE. 0.0_Kr) Then
          Call SectionRealUpdate(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems + i-1, zero, INSERT_VALUES, iErr); CHKERRQ(iErr)
+	delamnodes=delamnodes+1
       End If
       Call SectionRealRestore(AppCtx%W%Sec, AppCtx%MeshTopology%Num_Elems+i-1, Fi_ptr, iErr); CHKERRQ(iErr)
    End Do
-   
+   If (AppCtx%AppParam%verbose > 0) Then
+      Write(IOBuffer, *) "Number of debonded nodes (W=0)", delamnodes, "\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If   
    Deallocate(zero)
 End Subroutine W_Solve
 
@@ -234,7 +257,7 @@ Subroutine Step_W(AppCtx)
    
    Call VecSet(AppCtx%FW%Vec, 0.0_Kr, iErr); CHKERRQ(iErr)
    
-   Call FW_Assembly(AppCtx%FW%Vec, AppCtx)
+   Call FW_Assembly(AppCtx)
    
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Solving for the W-subproblem\n' 

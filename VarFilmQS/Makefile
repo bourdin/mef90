@@ -49,7 +49,8 @@ m_VarFilmQS.o: ${PETSC_ARCH} m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types
                                       m_VarFilmQS_W.o ${PETSC_ARCH}/m_VarFilmQS_W.o \
                                       m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
 m_VarFilmQS_U.o:  ${PETSC_ARCH} m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
-                                m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
+                                m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o \
+                                m_VarFilmQS_W.o ${PETSC_ARCH}/m_VarFilmQS_W.o 
 m_VarFilmQS_V.o:  ${PETSC_ARCH} m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
                                 m_VarFilmQS_Post.o ${PETSC_ARCH}/m_VarFilmQS_Post.o
 m_VarFilmQS_W.o:  ${PETSC_ARCH} m_VarFilmQS_Types.o ${PETSC_ARCH}/m_VarFilmQS_Types.o \
