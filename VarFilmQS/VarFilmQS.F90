@@ -146,8 +146,14 @@ TimeStep: Do
          Write(IOBuffer, 107) AppCtx%DelaminationEnergy(AppCtx%TimeStep)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          
-         Write(IOBuffer, 108) AppCtx%CohesiveEnergy(AppCtx%TimeStep)
+         Write(IOBuffer, 108) AppCtx%BondingLayerEnergy(AppCtx%TimeStep)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+	Write(IOBuffer, 109) AppCtx%FilmEnergy(AppCtx%TimeStep)
+	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+	
+	Write(IOBuffer, 110) AppCtx%ElasticEnergy(AppCtx%TimeStep)
+	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
          Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -179,16 +185,18 @@ TimeStep: Do
   !  Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
 End Do TimeStep
 
-100   Format('Elastic energy:       ', ES12.5, '\n')    
-101   Format('External Forces Work: ', ES12.5, '\n')    
-102   Format('Surface energy:       ', ES12.5, '\n')    
-103   Format('Total energy:         ', ES12.5, '\n')    
-104   Format('Load:                 ', ES12.5, '\n')    
+100   Format('Elastic energy:           ', ES12.5, '\n')    
+101   Format('External Forces Work:     ', ES12.5, '\n')    
+102   Format('Surface energy:           ', ES12.5, '\n')    
+103   Format('Total energy:             ', ES12.5, '\n')    
+104   Format('Load:                     ', ES12.5, '\n')    
+107   Format('Delamination energy:      ', ES12.5, '\n')    
+108   Format('Bonding Layer energy:     ', ES12.5, '\n')    
+109   Format('Film energy:              ', ES12.5, '\n')    
+110   Format('Elastic energy:           ', ES12.5, '\n')    
 
 105   Format(A,'-logsummary.txt')
 
-107   Format('Delamination energy:  ', ES12.5, '\n')    
-108   Format('Cohesive energy:      ', ES12.5, '\n')    
 
    Call VarFracQSFinalize(AppCtx)
 End Program  VarFilmQS

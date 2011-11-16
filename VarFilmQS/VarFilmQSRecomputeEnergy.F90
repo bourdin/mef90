@@ -50,8 +50,8 @@ Program  VarFracQSRecomputeEnergy
       Call Save_Ener(AppCtx)
    End Do TimeStep
 
-100   Format('Elastic energy:       ', ES12.5, '\n')    
-101   Format('External Forces Work: ', ES12.5, '\n')    
+100   Format('Elastic energy:             ', ES12.5, '\n')    
+101   Format('External Forces Work:       ', ES12.5, '\n')    
 102   Format('Fracture energy:       ', ES12.5, '\n')    
 103   Format('Total energy:         ', ES12.5, '\n')    
 104   Format('Load:                 ', ES12.5, '\n')    
