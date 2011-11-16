@@ -5,6 +5,7 @@ Program  VarFilmQS
 Use m_VarFilmQS
 Use m_MEF90
 Use m_Film_Struct
+Use m_VarFilmQS_W
 
 Implicit NONE   
 
@@ -19,7 +20,7 @@ Character(len=MEF90_MXSTRLEN), Dimension(5)  :: stagename
 PetscLogDouble                               :: CurrentMemoryUsage, MaximumMemoryUsage
 PetscBool                                    :: restart
 
-Call VarFracQSInit(AppCtx)
+Call VarFilmQSInit(AppCtx)
 
 If (AppCtx%AppParam%verbose > 1) Then
    Call EXOView(AppCtx%EXO, AppCtx%AppParam%LogViewer)
@@ -49,7 +50,11 @@ TimeStep: Do
       Write(IOBuffer, *) 'Done with Update_Irrev \n' 
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   
+
+! 
+! 	Write(IOBuffer, *) 'W Section prior to Update Irrev W \n' 
+! 	Call SectionRealView(AppCtx%V%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+
    !! Update WBCFlag accounting for irreversibility
    Call Update_IrrevW(AppCtx)
    If (AppCtx%AppParam%verbose > 0) Then
@@ -83,11 +88,22 @@ TimeStep: Do
       End If
       Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") AppCtx%TimeStep, AltMinIter,'\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      
+
+	Select Case(AppCtx%VarFracSchemeParam%CoupledUW)
+		Case(VarFrac_UW_Coupled)
+		If (AppCtx%AppParam%verbose > 0) Then
+			Write(IOBuffer, *) 'Alternate UW \n' 
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		End If
+			Call Step_UW(AppCtx)
+		Case(VarFrac_UW_Uncoupled)
+			Call Step_U(AppCtx)
+			Call Step_W(AppCtx)
+	End Select
       !------------------------------------------------------------------- 
       ! Problem for U
       !-------------------------------------------------------------------
-      Call Step_U(AppCtx)
+!       Call Step_U(AppCtx)
       !------------------------------------------------------------------- 
       ! Problem for V
       !-------------------------------------------------------------------
@@ -95,7 +111,7 @@ TimeStep: Do
       !------------------------------------------------------------------- 
       ! Problem for W
       !-------------------------------------------------------------------
-      Call Step_W(AppCtx)
+!       Call Step_W(AppCtx)
       
       !------------------------------------------------------------------- 
       ! Check the exit condition: tolerance on the error in V 
@@ -130,8 +146,14 @@ TimeStep: Do
          Write(IOBuffer, 107) AppCtx%DelaminationEnergy(AppCtx%TimeStep)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          
-         Write(IOBuffer, 108) AppCtx%CohesiveEnergy(AppCtx%TimeStep)
+         Write(IOBuffer, 108) AppCtx%BondingLayerEnergy(AppCtx%TimeStep)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+	Write(IOBuffer, 109) AppCtx%FilmEnergy(AppCtx%TimeStep)
+	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+	
+	Write(IOBuffer, 110) AppCtx%ElasticEnergy(AppCtx%TimeStep)
+	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
          Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -163,16 +185,18 @@ TimeStep: Do
   !  Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
 End Do TimeStep
 
-100   Format('Elastic energy:       ', ES12.5, '\n')    
-101   Format('External Forces Work: ', ES12.5, '\n')    
-102   Format('Surface energy:       ', ES12.5, '\n')    
-103   Format('Total energy:         ', ES12.5, '\n')    
-104   Format('Load:                 ', ES12.5, '\n')    
+100   Format('Elastic energy:           ', ES12.5, '\n')    
+101   Format('External Forces Work:     ', ES12.5, '\n')    
+102   Format('Surface energy:           ', ES12.5, '\n')    
+103   Format('Total energy:             ', ES12.5, '\n')    
+104   Format('Load:                     ', ES12.5, '\n')    
+107   Format('Delamination energy:      ', ES12.5, '\n')    
+108   Format('Bonding Layer energy:     ', ES12.5, '\n')    
+109   Format('Film energy:              ', ES12.5, '\n')    
+110   Format('Elastic energy:           ', ES12.5, '\n')    
 
 105   Format(A,'-logsummary.txt')
 
-107   Format('Delamination energy:  ', ES12.5, '\n')    
-108   Format('Cohesive energy:      ', ES12.5, '\n')    
 
    Call VarFracQSFinalize(AppCtx)
 End Program  VarFilmQS

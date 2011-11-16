@@ -1,4 +1,4 @@
-Program PrepVarFrac
+Program PrepFilm
 
 #include "finclude/petscdef.h"
 
@@ -561,4 +561,4 @@ Program PrepVarFrac
  300 Format('EB', I4.4, ': ', A)
  302 Format('NS', I4.4, ': ', A)
 
-End Program PrepVarFrac
+End Program PrepFilm

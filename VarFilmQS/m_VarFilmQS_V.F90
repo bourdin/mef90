@@ -423,7 +423,7 @@ Contains
       
       PetscInt                                     :: iBlk, iBlkId
       Type(SectionReal)                            :: GradientV_Sec
-      PetscReal                                    :: MyElasticEnergyBlock, MySurfaceEnergyBlock
+      PetscReal                                    :: MyFilmEnergyBlock, MySurfaceEnergyBlock, MyBondingLayerEnergyBlock
       PetscReal                                    :: MyObjFunc
       
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyV_Stage, iErr); CHKERRQ(iErr)
@@ -433,13 +433,15 @@ Contains
       MyObjFunc = 0.0_Kr
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-         MyElasticEnergyBlock = 0.0_Kr
+         MyFilmEnergyBlock = 0.0_Kr
+         MyBondingLayerEnergyBlock = 0.0_Kr
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             Select Case (AppCtx%VarFracSchemeParam%Unilateral)
             Case (VarFrac_Unilateral_NONE)
-               Call ElasticEnergy_AssemblyBlk_Brittle(MyElasticEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+               Call FilmEnergy_AssemblyBlk_Brittle(MyFilmEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+               Call BondingLayerEnergy_AssemblyBlk(MyBondingLayerEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             End Select
-            MyObjFunc = MyObjFunc + MyElasticEnergyBlock
+            MyObjFunc = MyObjFunc + MyFilmEnergyBlock + MyBondingLayerEnergyBlock
          End If
 
          MySurfaceEnergyBlock = 0.0_Kr

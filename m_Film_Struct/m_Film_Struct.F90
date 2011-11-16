@@ -76,44 +76,48 @@ Module m_Film_Struct
    PetscInt, Parameter, Public         :: VarFrac_Unilateral_Full  = 1
    PetscInt, Parameter, Public         :: VarFrac_Unilateral_Shear = 2
 
-   PetscInt, Parameter, Public         :: VarFrac_Num_VertVar        = 7
-   PetscInt, Parameter, Public         :: VarFrac_VertVar_Fracture      = 1
-   PetscInt, Parameter, Public         :: VarFrac_VertVar_Delamination     = 2
-   PetscInt, Parameter, Public         :: VarFrac_VertVar_U0X        = 3
-   PetscInt, Parameter, Public         :: VarFrac_VertVar_U0Y        = 4
-   PetscInt, Parameter, Public         :: VarFrac_VertVar_DisplacementX = 5   
-   PetscInt, Parameter, Public         :: VarFrac_VertVar_DisplacementY = 6
-   PetscInt, Parameter, Public         :: VarFrac_VertVar_Temperature      = 7
-   
-   PetscInt, Parameter, Public         :: VarFrac_Num_CellVar     = 6
-   PetscInt, Parameter, Public         :: VarFrac_CellVar_StrainXX   = 1
-   PetscInt, Parameter, Public         :: VarFrac_CellVar_StrainYY   = 2 
-   PetscInt, Parameter, Public         :: VarFrac_CellVar_StrainXY   = 3
-   PetscInt, Parameter, Public         :: VarFrac_CellVar_StressXX   = 4
-   PetscInt, Parameter, Public         :: VarFrac_CellVar_StressYY   = 5
-   PetscInt, Parameter, Public         :: VarFrac_CellVar_StressXY   = 6
-
-   PetscInt, Parameter, Public         :: VarFrac_Num_GlobVar        = 6
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_ElasticEnergy = 1
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_FractureEnergy   = 2 
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_DelaminationEnergy  = 3 
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_CohesiveEnergy   = 4 
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_TotalEnergy      = 5
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_Load       = 6
-   
-   PetscInt, Parameter, Public         :: VarFrac_Num_EBProperties   = 3
-   PetscInt, Parameter, Public         :: VarFrac_EBProp_IsBrittle   = 1
-   PetscInt, Parameter, Public         :: VarFrac_EBProp_IsDebondable   = 2
-   PetscInt, Parameter, Public         :: VarFrac_EBProp_Elem_Type   = 3
-   
-   PetscInt, Parameter, Public         :: VarFrac_Num_NSProperties  = 5
-   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCUTypeX   = 1
-   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCUTypeY   = 2
-   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCVType    = 3
-   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCWType    = 4
-   PetscInt, Parameter, Public         :: VarFrac_NSProp_HasPForce  = 5
-   
+   PetscInt, Parameter, Public         :: VarFrac_Num_VertVar                = 7
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_Fracture           = 1
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_Delamination       = 2
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_U0X                = 3
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_U0Y                = 4
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_DisplacementX      = 5   
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_DisplacementY      = 6
+   PetscInt, Parameter, Public         :: VarFrac_VertVar_Temperature        = 7
+                                          
+   PetscInt, Parameter, Public         :: VarFrac_Num_CellVar                = 6
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StrainXX           = 1
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StrainYY           = 2 
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StrainXY           = 3
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StressXX           = 4
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StressYY           = 5
+   PetscInt, Parameter, Public         :: VarFrac_CellVar_StressXY           = 6
+                                          
+   PetscInt, Parameter, Public         :: VarFrac_Num_GlobVar                = 7
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_FilmEnergy      = 1
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_FractureEnergy     = 2 
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_DelaminationEnergy = 3 
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_BondingLayerEnergy = 4 
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_ElasticEnergy      = 5
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_TotalEnergy        = 6
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_Load               = 7
+                                          
+   PetscInt, Parameter, Public         :: VarFrac_Num_EBProperties           = 3
+   PetscInt, Parameter, Public         :: VarFrac_EBProp_IsBrittle           = 1
+   PetscInt, Parameter, Public         :: VarFrac_EBProp_IsDebondable        = 2
+   PetscInt, Parameter, Public         :: VarFrac_EBProp_Elem_Type           = 3
+                                          
+   PetscInt, Parameter, Public         :: VarFrac_Num_NSProperties           = 5
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCUTypeX            = 1
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCUTypeY            = 2
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCVType             = 3
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_BCWType             = 4
+   PetscInt, Parameter, Public         :: VarFrac_NSProp_HasPForce           = 5
+                                          
    PetscInt, Parameter, Public         :: VarFrac_Num_MatProp2D   = 4
+
+	PetscInt, Parameter, Public         :: VarFrac_UW_Coupled            = 1
+	PetscInt, Parameter, Public         :: VarFrac_UW_Uncoupled          = 0
    
    Type MatProp2D_Type
    PetscReal               :: DelamToughness
@@ -157,6 +161,8 @@ Module m_Film_Struct
       PetscBool                                    :: SaveStrain
       
       PetscBool                                    :: V_UseTao
+      PetscInt                                     :: CoupledUW
+
    End Type VarFracSchemeParam_Type
    
  Contains
@@ -354,6 +360,8 @@ Module m_Film_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-v_tao ', L1, A)")               dSchemeParam%V_UseTao, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-coupleduw ', L1, A)")               dSchemeParam%coupleduw, '\n'
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine VarFracSchemeParam_View
 
    Subroutine VarFracSchemeParam_GetFromOptions(dSchemeParam)
@@ -385,6 +393,8 @@ Module m_Film_Struct
       dSchemeParam%SaveStrain       = PETSC_FALSE
       dSchemeParam%V_UseTao         = PETSC_TRUE
 
+	dSchemeParam%CoupledUW      = VarFrac_UW_Coupled
+
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-irrev',          dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       If (dSchemeParam%IrrevType == VarFrac_Irrev_Eq) Then
          dSchemeParam%IrrevTol = 1.0D-2
@@ -412,6 +422,7 @@ Module m_Film_Struct
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,  '-coupleduw',      dSchemeParam%CoupledUW, flag, iErr); CHKERRQ(iErr) 
       
       Select Case(dSchemeParam%ATNum)
       !!! Braides 2008 p. 48
@@ -481,7 +492,8 @@ End Subroutine VarFracEXOProperty_Init
       Allocate(dEXO%GlobVariable(dEXO%Num_GlobVariables))
       dEXO%GlobVariable(VarFrac_GlobVar_FractureEnergy)%Name = 'Fracture energy'
       dEXO%GlobVariable(VarFrac_GlobVar_DelaminationEnergy)%Name = 'Delamination energy'
-      dEXO%GlobVariable(VarFrac_GlobVar_CohesiveEnergy)%Name = 'Cohesive energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_BondingLayerEnergy)%Name = 'Bonding Layer energy'
+      dEXO%GlobVariable(VarFrac_GlobVar_FilmEnergy)%Name = 'Film energy'
       dEXO%GlobVariable(VarFrac_GlobVar_ElasticEnergy)%Name = 'Elastic energy'
       dEXO%GlobVariable(VarFrac_GlobVar_TotalEnergy)%Name   = 'Total energy'
       dEXO%GlobVariable(VarFrac_GlobVar_Load)%Name          = 'Load'
