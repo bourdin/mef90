@@ -5,6 +5,7 @@ Program  VarFilmQS
 Use m_VarFilmQS
 Use m_MEF90
 Use m_Film_Struct
+Use m_VarFilmQS_W
 
 Implicit NONE   
 
@@ -87,11 +88,22 @@ TimeStep: Do
       End If
       Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") AppCtx%TimeStep, AltMinIter,'\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      
+
+	Select Case(AppCtx%VarFracSchemeParam%CoupledUW)
+		Case(VarFrac_UW_Coupled)
+		If (AppCtx%AppParam%verbose > 0) Then
+			Write(IOBuffer, *) 'Alternate UW \n' 
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		End If
+			Call Step_UW(AppCtx)
+		Case(VarFrac_UW_Uncoupled)
+			Call Step_U(AppCtx)
+			Call Step_W(AppCtx)
+	End Select
       !------------------------------------------------------------------- 
       ! Problem for U
       !-------------------------------------------------------------------
-      Call Step_U(AppCtx)
+!       Call Step_U(AppCtx)
       !------------------------------------------------------------------- 
       ! Problem for V
       !-------------------------------------------------------------------
@@ -99,7 +111,7 @@ TimeStep: Do
       !------------------------------------------------------------------- 
       ! Problem for W
       !-------------------------------------------------------------------
-      Call Step_W(AppCtx)
+!       Call Step_W(AppCtx)
       
       !------------------------------------------------------------------- 
       ! Check the exit condition: tolerance on the error in V 
