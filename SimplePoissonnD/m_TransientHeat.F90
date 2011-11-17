@@ -356,7 +356,7 @@ Contains
       End Do
       DeAllocate(Uelem)
 !TODO write for all timesteps
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology,  1, 1, AppCtx%U%Sec)
+      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, MeshTopology,  AppCtx%VertVar_Temperature, 1, AppCtx%U%Sec)
       Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  MyEXO%NSProperty(NS_Offset),  MeshTopology)
    End Subroutine HeatSetBC
 
@@ -544,9 +544,6 @@ Contains
          Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
          Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr)
-         Call MatView(AppCtx%M,  PETSC_VIEWER_STDOUT_WORLD, iErr)
-         Call MatView(AppCtx%K,  PETSC_VIEWER_STDOUT_WORLD, iErr)
-         Call VecView(AppCtx%U%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
 
          Call TSSetInitialTimeStep(AppCtx%TS, lTimes(iStep-1) , (lTimes(iStep)-lTimes(iStep-1)/10.),  ierr); CHKERRQ(iErr)
          Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, lTimes(iStep), iErr); CHKERRQ(iErr)
