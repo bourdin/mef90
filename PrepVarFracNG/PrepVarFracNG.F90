@@ -578,7 +578,6 @@ Program PrepVarFrac
       HeatAppCtx%maxsteps = 1000 
       HeatAppCtx%VertVar_Temperature = MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset
 !      Call HeatInitField(HeatAppCtx, MeshTopology) 
-
       Call ElementInit(MeshTopology, HeatAppCtx%Elem, 2)
 
       Allocate(SizeScal(1)) 
@@ -587,6 +586,7 @@ Program PrepVarFrac
       Call FieldCreateVertex(HeatAppCtx%F,     'F',  MeshTopology, SizeScal)
       Call FieldCreateVertex(HeatAppCtx%RHS,   'RHS', MeshTopology, SizeScal)
       Call FlagCreateVertex(HeatAppCtx%BCFlag, 'BC',   MeshTopology, SizeScal)
+      Call FieldCreateVertex(HeatAppCtx%UBC,    'UBC',      MeshTopology, SizeScal)
       DeAllocate(SizeScal)
 
       !Set Initial Temerature Field and forces
@@ -601,7 +601,7 @@ Program PrepVarFrac
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)  
       Call Poisson_TSSetUp(HeatAppCtx, MeshTopology)
       Call HeatMatAssembly(HeatAppCtx, MeshTopology)
-      Call RHSAssembly(HeatAppCtx, MeshTopology)
+      Call RHSAssembly(HeatAppCtx, MeshTopology, MyExo)
       Call MatMassAssembly(HeatAppCtx, MeshTopology)
       Call SolveTransient(HeatAppCtx, MyEXO, MeshTopology, T)
       Write(IOBuffer, *) 'End Computing Temperature Field\n \n'
