@@ -281,7 +281,7 @@ Contains
 
       iBlkID = MeshTopology%Elem_Blk(iBlk)%ID
       Do_iEloc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          RHS_Loc = 0.0_Kr
          Call SectionRealRestrictClosure(AppCtx%F%Sec, MeshTopology%mesh, iE-1, Num_DoF, F_Loc, iErr); CHKERRQ(ierr)
          Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, MeshTopology%mesh, iE-1, Num_DoF, BCFlag_Loc, iErr); CHKERRQ(ierr)
