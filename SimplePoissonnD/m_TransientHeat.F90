@@ -356,7 +356,7 @@ Contains
       End Do
       DeAllocate(Uelem)
 !TODO write for all timesteps
-      Call Write_EXO_Result_Vertex(AppCtx%MyEXO, MeshTopology,  AppCtx%VertVar_Temperature, 1, AppCtx%U%Sec)
+      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology,  AppCtx%VertVar_Temperature, 1, AppCtx%U%Sec)
       Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  MyEXO%NSProperty(NS_Offset),  MeshTopology)
    End Subroutine HeatSetBC
 
