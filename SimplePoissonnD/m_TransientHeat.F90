@@ -545,6 +545,9 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
          Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr)
 
+!         Call VecView(AppCtx%U%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+!         Call VecView(AppCtx%UBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+
          Call TSSetInitialTimeStep(AppCtx%TS, lTimes(iStep-1) , (lTimes(iStep)-lTimes(iStep-1)/10.),  ierr); CHKERRQ(iErr)
          Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, lTimes(iStep), iErr); CHKERRQ(iErr)
          Call TSSolve(AppCtx%TS, AppCtx%U%Vec, lTimes(iStep), iErr); CHKERRQ(iErr)
