@@ -238,7 +238,7 @@ Contains
 
       Call SectionRealZero(AppCtx%RHS%Sec, iErr); CHKERRQ(iErr)
       
-      Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+      Do_iBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
          Call RHSAssemblyBlock(iBlk, AppCtx, MeshTopology)
       End Do Do_iBlk
 
@@ -246,7 +246,7 @@ Contains
 
       !!! Set Dirichlet Boundary Values
 !Suppose that loading is contant (replace second to last by AppCtx%Timestep otherwise)
-      Call Read_EXO_Result_Vertex(MyEXO, MeshTopology, 1, 1, AppCtx%UBC)
+      Call Read_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature, 1, AppCtx%UBC)
       Call FieldInsertVertexBoundaryValues(AppCtx%RHS, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
 
       Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
