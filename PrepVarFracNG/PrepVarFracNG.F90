@@ -481,8 +481,8 @@ Program PrepVarFrac
 #if defined WITH_HEAT
       Allocate(ValT_Init(MeshTopology%Num_Elem_Blks_Global))
       Allocate(ValT_F(MeshTopology%Num_Elem_Blks_Global))
-      Allocate(HeatAppCtx%Diff(HeatAppCtx%MeshTopology%Num_Elem_Blks_Global)) 
-      Allocate(HeatAppCtx%B_Mensi(HeatAppCtx%MeshTopology%Num_Elem_Blks_Global))  
+      Allocate(HeatAppCtx%Diff(MeshTopology%Num_Elem_Blks_Global)) 
+      Allocate(HeatAppCtx%B_Mensi(MeshTopology%Num_Elem_Blks_Global))  
       Do iBlock = 1, MeshTopology%Num_Elem_Blks_Global 
          Write(IOBuffer, 300) iBlock, 'T0 Initial Temperature'
          Call MEF90_AskReal(ValT_Init(iBlock), IOBuffer, BatchUnit, IsBatch)
@@ -606,6 +606,8 @@ Program PrepVarFrac
       Call SolveTransient(HeatAppCtx, MyEXO, MeshTopology, T)
       Write(IOBuffer, *) 'End Computing Temperature Field\n \n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      !Compute water loss for each block
+       Call ComputeWaterMass(MeshTopology, MyExo, HeatAppCtx%VertVar_Temperature, HeatAppCtx%Elem, HeatAppCtx%NumSteps)
 #else
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'PrepVarFracNG has not been compiled with transient Heat support\n', iErr)
 #endif 
