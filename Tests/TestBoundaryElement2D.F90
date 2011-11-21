@@ -15,20 +15,19 @@ Program TestBoundaryElement3D
    PetscInt                                     :: num_vert,num_vert_set
    PetscInt                                     :: num_side,num_side_set
    PetscInt                                     :: num_dim
-   Type(Vect3D), Dimension(:), Pointer          :: U2
-   PetscReal                                    :: average2,flux
+   Type(Vect2D), Dimension(:), Pointer          :: U2
+   PetscReal                                    :: area,flux
    Real, Dimension(:), Pointer                  :: X,Y,Z
-   Real, Dimension(3)                           :: V1,V2,N
+   Type(Vect2D)                                 :: N
    
-   PetscReal, Dimension(:,:), Pointer           :: Coord3
+   PetscReal, Dimension(:,:), Pointer           :: Coord2
    PetscInt                                     :: i,j,iE,iG,iDoF
    PetscInt                                     :: num_Gauss,Num_DoF
-   Type(BoundaryElement3d)                      :: bElem
+   Type(BoundaryElement2d)                      :: bElem
    Type(Element2d_Scal)                         :: Elem
    Type(PetscViewer)                            :: viewer
    PetscInt                                     :: IntegOrder = 3
-   PetscReal                                    :: area
-   
+
    Integer                                      :: cpu_ws,io_ws,mod_sz,exoid
    Real                                         :: vers
    Character(len=MXLNLN)                        :: titl
@@ -52,9 +51,9 @@ Program TestBoundaryElement3D
    Allocate(Y(num_vert))
    Allocate(Z(num_vert))
 
-   Allocate(Coord3(3,3)) ! 3 coordinates, 3 vertices
-   Allocate(tmpconnect(3*num_elem))
-   Allocate(connect(3,num_elem))
+   Allocate(Coord2(2,2)) ! 3 coordinates, 3 vertices
+   Allocate(tmpconnect(2*num_elem))
+   Allocate(connect(2,num_elem))
 
    Call exgcor (exoid,X,Y,Z,ierr)
    !Write(*,*) 'X: ',X
@@ -62,7 +61,7 @@ Program TestBoundaryElement3D
    !Write(*,*) 'Z: ',Z
 
    Call exgelc (exoid,1,tmpconnect,ierr)
-   connect = reshape(tmpconnect,(/3,num_elem/))
+   connect = reshape(tmpconnect,(/2,num_elem/))
    !Write(*,*) 'Connect: '
    !Do i = 1, num_Elem
    !   Write(*,*) i, connect(:,i)
@@ -70,17 +69,10 @@ Program TestBoundaryElement3D
    
    !!! Check that the elements orientation is consistent
    Do iE = 1, num_elem
-      V1(1) = X(connect(2,iE)) - X(connect(1,iE))
-      V2(1) = X(connect(3,iE)) - X(connect(1,iE))
-      V1(2) = Y(connect(2,iE)) - Y(connect(1,iE))
-      V2(2) = Y(connect(3,iE)) - Y(connect(1,iE))
-      V1(3) = Z(connect(2,iE)) - Z(connect(1,iE))
-      V2(3) = Z(connect(3,iE)) - Z(connect(1,iE))
-      N(1) = V1(2) * V2(3) - V1(3) * V2(2)
-      N(2) = V1(3) * V2(1) - V1(1) * V2(3)
-      N(3) = V1(1) * V2(2) - V1(2) * V2(1)
-      Write(*,*) 'Normal vector is: ', N
-      If (N(3) < 0.) Then
+      N%X = Y(connect(2,iE)) - Y(connect(1,iE))
+      N%Y = X(connect(1,iE)) - X(connect(2,iE))
+      N = N / Norm(N)
+      If (N%X * X(connect(1,iE)) + N%Y * Y(connect(1,iE)) < 0.) Then
          Write(*,*) 'Flipping orientation of element ',iE
          i = connect(1,iE)
          connect(1,iE) = connect(2,iE)
@@ -91,27 +83,24 @@ Program TestBoundaryElement3D
 
    Allocate(U2(num_vert))
    Do i = 1, num_vert
-      U2(i)%X = 0.0_Kr!X(i)
-      U2(i)%Y = 0.0_Kr!Y(i)
-      U2(i)%Z = 1.0_Kr!Z(i)
+      U2(i)%X = X(i)
+      U2(i)%Y = Y(i)
    End Do
    
    area = 0.0_Kr
    flux = 0.0_Kr
    
    iE = 1
-   Coord3(1,:) = X(connect(:,iE))
-   Coord3(2,:) = Y(connect(:,iE))
-   Coord3(3,:) = Z(connect(:,iE))
-   Call BoundaryElement_Init(bElem,Coord3,IntegOrder,MEF90_P1_Lagrange)
+   Coord2(1,:) = X(connect(:,iE))
+   Coord2(2,:) = Y(connect(:,iE))
+   Call BoundaryElement_Init(bElem,Coord2,IntegOrder,MEF90_P1_Lagrange)
    Call BoundaryElement_View(bElem,PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
    Call BoundaryElement_Destroy(bElem)
    
    Do iE = 1, num_Elem
-      Coord3(1,:) = X(connect(:,iE))
-      Coord3(2,:) = Y(connect(:,iE))
-      Coord3(3,:) = Z(connect(:,iE))
-      Call BoundaryElement_Init(bElem,Coord3,IntegOrder,MEF90_P1_Lagrange)
+      Coord2(1,:) = X(connect(:,iE))
+      Coord2(2,:) = Y(connect(:,iE))
+      Call BoundaryElement_Init(bElem,Coord2,IntegOrder,MEF90_P1_Lagrange)
       Num_DoF   = size(bElem%BF,1)
       Num_Gauss = size(bElem%BF,2)
       Do iG = 1, Num_Gauss
@@ -125,11 +114,10 @@ Program TestBoundaryElement3D
    End Do
    Write(*,*) 'Area is ', area
    Write(*,*) 'Flux is ', flux   
-   
    DeAllocate(X)
    DeAllocate(Y)
    DeAllocate(Z)
-   DeAllocate(Coord3)
+   DeAllocate(Coord2)
    DeAllocate(tmpconnect)
    DeAllocate(connect)
    DeAllocate(U2)
