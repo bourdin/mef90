@@ -19,8 +19,10 @@ Program TestBoundaryElement3D
    Type(Vect3D), Dimension(:), Pointer          :: U2
    PetscReal                                    :: average2,flux
    Real, Dimension(:), Pointer                  :: X,Y,Z
+   Real, Dimension(3)                           :: V1,V2,N
+   
    PetscReal, Dimension(:,:), Pointer           :: Coord3, Coord2
-   PetscInt                                     :: i,iE,iG,iDoF
+   PetscInt                                     :: i,j,iE,iG,iDoF
    PetscInt                                     :: num_Gauss,Num_DoF
    Type(BoundaryElement3d)                      :: bElem
    Type(Element2d_Scal)                         :: Elem
@@ -68,6 +70,27 @@ Program TestBoundaryElement3D
    !   Write(*,*) i, connect(:,i)
    !End Do
    
+   !!! Check that the elements orientation is consistent
+   Do iE = 1, num_elem
+      V1(1) = X(connect(2,iE)) - X(connect(1,iE))
+      V2(1) = X(connect(3,iE)) - X(connect(1,iE))
+      V1(2) = Y(connect(2,iE)) - Y(connect(1,iE))
+      V2(2) = Y(connect(3,iE)) - Y(connect(1,iE))
+      V1(3) = Z(connect(2,iE)) - Z(connect(1,iE))
+      V2(3) = Z(connect(3,iE)) - Z(connect(1,iE))
+      N(1) = V1(2) * V2(3) - V1(3) * V2(2)
+      N(2) = V1(3) * V2(1) - V1(1) * V2(3)
+      N(3) = V1(1) * V2(2) - V1(2) * V2(1)
+      Write(*,*) 'Normal vector is: ', N
+      If (N(3) < 0.) Then
+         Write(*,*) 'Flipping orientation of element ',iE
+         i = connect(1,iE)
+         connect(1,iE) = connect(2,iE)
+         connect(2,iE) = i
+      End If
+   End Do
+
+
    Allocate(U1(num_vert))
    Allocate(U2(num_vert))
    Do i = 1, num_vert

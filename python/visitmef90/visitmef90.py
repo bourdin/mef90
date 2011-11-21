@@ -11,7 +11,6 @@
 import os; import sys; import glob;    import math;
 import pymef90;  from visit import * 
 
-
 def FigureFracture(prefix,ImageOptions=None,step=None):
     ##  
     ## Step 1: Open the database
