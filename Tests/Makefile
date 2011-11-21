@@ -5,7 +5,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o        \
             $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o           \
             $(MEF90DIR)/m_MEF_Sieve.o      $(MEF90DIR)/m_MEF_BoundaryElements.o
 
-all: TestBoundaryElement3D
+all: TestBoundaryElement3D TestBoundaryElement3D
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
@@ -24,3 +24,6 @@ ${PETSC_ARCH}:
 
 TestBoundaryElement3D:      ${PETSC_ARCH} TestBoundaryElement3D.o ${PETSC_ARCH}/TestBoundaryElement3D.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestBoundaryElement3D ${PETSC_ARCH}/TestBoundaryElement3D.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
+TestBoundaryElement2D:      ${PETSC_ARCH} TestBoundaryElement2D.o ${PETSC_ARCH}/TestBoundaryElement2D.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestBoundaryElement2D ${PETSC_ARCH}/TestBoundaryElement2D.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}

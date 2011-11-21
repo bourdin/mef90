@@ -85,10 +85,10 @@ Contains
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
-            Call BoundaryElement_P_Lagrange_2D_Init(dElem, dCoord, 1, QuadratureOrder)
+            Call BoundaryElement_P_Lagrange_2D_Init(dElem,dCoord,1,QuadratureOrder,Element_Type)
 
          Case (MEF90_P2_Lagrange)
-            Call BoundaryElement_P_Lagrange_2D_Init(dElem, dCoord, 2, QuadratureOrder)
+            Call BoundaryElement_P_Lagrange_2D_Init(dElem,dCoord,2,QuadratureOrder,Element_Type)
 
          !!!Case (MEF90_Q1_Lagrange)
          !!!   Call BoundaryElement_Q_Lagrange_2D_Init(dElem, dCoord, 1, QuadratureOrder)
@@ -100,11 +100,54 @@ Contains
    End Subroutine BoundaryElement2D_Init         
    
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement_P_Lagrange_3D_Init"
-   Subroutine BoundaryElement_P_Lagrange_2D_Init(dElem, dCoord, dPolynomialOrder, dQuadratureOrder)
+#define __FUNCT__ "BoundaryElement_P_Lagrange_2D_Init"
+   Subroutine BoundaryElement_P_Lagrange_2D_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,Element_Type)
       Type(BoundaryElement2D)                :: dElem
       PetscReal, Dimension(:,:), Pointer     :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder, dQuadratureOrder
+      PetscInt, Intent(IN)                   :: Element_Type
+      
+      Type(Element2D_Scal)                   :: tmpElem
+      PetscReal, Dimension(:,:),Pointer      :: tmpCoord
+      PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
+      Type(Vect2D)                           :: NormalVector
+      
+      !!! Create a bogus tri element with unit height by adding a 3rd vertex
+      Allocate(tmpCoord(2,3))
+      Do i = 1, 2
+         Do j = 1, 2
+            tmpCoord(i,j) = dCoord(i,j)
+         End Do
+      End Do
+      NormalVector%X = tmpCoord(2,2) - tmpCoord(2,1)
+      NormalVector%Y = tmpCoord(1,1) - tmpCoord(1,2)
+      NormalVector = NormalVector / Norm(NormalVector)
+      tmpCoord(1,3) = dCoord(1,1) - NormalVector%X 
+      tmpCoord(2,3) = dCoord(2,1) - NormalVector%Y
+      
+      Call ElementInit(tmpElem,tmpCoord,dQuadratureOrder,Element_Type)
+      Select Case (Element_Type)
+         Case (MEF90_P1_Lagrange)
+            Num_DoF  = 2
+            Num_Gauss = size(tmpElem%BF,2)
+            Allocate(dElem%Gauss_C(Num_Gauss))
+            Allocate(dElem%BF(Num_DoF,Num_Gauss))
+            dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
+            Do iDoF = 1, Num_doF
+               Do iG = 1, Num_Gauss
+                  dElem%BF(iDoF,iG) = (tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 2.0_Kr) * NormalVector
+               End Do
+            End Do
+
+         !Case (MEF90_P2_Lagrange)
+         Case Default
+            Print*, __FUNCT__, 'Element type not implemented yet', Element_Type
+      End Select
+
+
+      Call ElementDestroy(tmpElem)
+      deAllocate(tmpCoord)
+      
    End Subroutine BoundaryElement_P_Lagrange_2D_Init                          
    
 #undef __FUNCT__
