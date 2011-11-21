@@ -1,21 +1,14 @@
 Program TestAssembly
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
    Use m_MEF90
    Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscmesh
 
    Implicit NONE   
 
    Type(MeshTopology_Type)                      :: MeshTopology
-   Type(Mesh)                                   :: Tmp_Mesh
+   Type(DM)                                     :: Tmp_Mesh
    Type(EXO_Type)                               :: EXO, MyEXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    
@@ -50,22 +43,22 @@ Program TestAssembly
 
 
    If (MEF90_NumProcs == 1) Then
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Else
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
    
    Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    
-   Call MeshSetMaxDof(MeshTopology%Mesh, dof, iErr); CHKERRQ(iErr) 
+   Call DMMeshSetMaxDof(MeshTopology%Mesh, dof, iErr); CHKERRQ(iErr) 
 
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'U', dof, U_Sec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'U', dof, U_Sec, iErr); CHKERRQ(iErr)
 
-   Call MeshCreateGlobalScatter(MeshTopology%mesh, U_Sec, scatter, iErr); CHKERRQ(iErr)
+   Call DMMeshCreateGlobalScatter(MeshTopology%mesh, U_Sec, scatter, iErr); CHKERRQ(iErr)
 
-   Call MeshCreateMatrix(MeshTopology%mesh, U_Sec, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
+   Call DMMeshCreateMatrix(MeshTopology%mesh, U_Sec, MATMPIAIJ, K, iErr); CHKERRQ(iErr)
 
    Allocate(val(3*dof))
    Allocate(Kelem(3*dof,3*dof))
@@ -83,12 +76,13 @@ Program TestAssembly
    Call PetscPrintf(PETSC_COMM_WORLD, "Matrix K: \n", iErr); CHKERRQ(iErr)
    Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    
-   Allocate(iRows(1))
-   iRows = 2
-   Call MatZeroRowsLocal(K, 1, iRows, 1, one, iErr); CHKERRQ(iErr)
-   DeAllocate(iRows)
-   Call PetscPrintf(PETSC_COMM_WORLD, "Matrix K: \n", iErr); CHKERRQ(iErr)
-   Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   !MatSetZeroRowsLocal does not work....
+   !Allocate(iRows(1))
+   !iRows = 2
+   !Call MatZeroRowsLocal(K, 1, iRows, 1, one, iErr); CHKERRQ(iErr)
+   !DeAllocate(iRows)
+   !Call PetscPrintf(PETSC_COMM_WORLD, "Matrix K: \n", iErr); CHKERRQ(iErr)
+   !Call MatView(K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
    Call PetscPrintf(PETSC_COMM_WORLD, "\n\nSection U_Sec: \n", iErr); CHKERRQ(iErr)
    Call SectionRealView(U_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
