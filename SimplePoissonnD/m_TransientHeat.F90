@@ -673,7 +673,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ComputeWaterMass"
-   Subroutine ComputeWaterMass(MeshTopology, Exo, NameField, Elem, NumTimeSteps)
+   Subroutine ComputeWaterMass(MeshTopology, Exo, Id_Vertex, Elem, NumTimeSteps)
       Type(SectionReal)                            :: V_Sec_0, V_Sec_i
       Type(MeshTopology_Type)                      :: MeshTopology
       Type (EXO_Type)                              :: EXO
@@ -687,12 +687,12 @@ Contains
       PetscInt                                     :: MassFileUnit
       PetscScalar                                  :: neg
       PetscReal, Dimension(:), Pointer             :: WaterMass
-      Character(len=*)                             :: NameField
+      PetscInt                                     :: Id_Vertex
 !Add a density material parameter      
       Allocate(WaterMass(MeshTopology%Num_Elem_Blks_Global))
       Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_0', 1, V_Sec_0, iErr); CHKERRQ(iErr)
       Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'V_Sec_i', 1, V_Sec_i, iErr); CHKERRQ(iErr)
-      Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, 1, V_Sec_0)
+      Call Read_EXO_Result_Vertex(EXO, MeshTopology, Id_Vertex, 1, V_Sec_0)
       neg = -1.
       MassFileUnit = 80
       WaterMass = 0.0_Kr
@@ -704,8 +704,8 @@ Contains
       Write(MassFileUnit, *)
       Do istep = 1, NumTimeSteps-1
          Write(MassFileUnit, 400, advance='no') istep
-         Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, 1, V_Sec_0)
-         Call Read_EXO_Result_Vertex(EXO, MeshTopology, 1, iStep+1, V_Sec_i)
+         Call Read_EXO_Result_Vertex(EXO, MeshTopology, Id_Vertex, 1, V_Sec_0)
+         Call Read_EXO_Result_Vertex(EXO, MeshTopology, Id_Vertex, iStep+1, V_Sec_i)
          Call SectionRealAXPY(V_Sec_0, MeshTopology%mesh, neg, V_Sec_i, iErr); CHKERRQ(iErr)
          Call IntegrateScalLp(MeshTopology,Elem,V_Sec_i,WaterMass,1)
          Write(MassFileUnit, 401, advance='no')  WaterMass(1)
