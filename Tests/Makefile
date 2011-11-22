@@ -5,7 +5,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o        \
             $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o           \
             $(MEF90DIR)/m_MEF_Sieve.o      $(MEF90DIR)/m_MEF_BoundaryElements.o
 
-all: TestBoundaryElement3D TestBoundaryElement3D
+all: TestBoundaryElement3D TestBoundaryElement2D
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
