@@ -1,13 +1,10 @@
 PROJ      = VarFracQS
-M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
-M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 
 all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
 
 include ../Makefile.inc  
 include ${TAO_DIR}/bmake/tao_common
 ifneq (,$(findstring xlf,$(FC)))
-	FC_MODULE_OUTPUT_FLAG=-qmoddir=
 	FC_D_FLAG=-WF,-D
 else
   	FC_D_FLAG=-D

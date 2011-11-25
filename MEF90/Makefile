@@ -1,51 +1,54 @@
-all: m_MEF90.o ${PETSC_ARCH}
+PROJ = MEF90 
+
+all: m_MEF90.o 
 
 include ../Makefile.inc 
 
 .F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${MEF90DIR}/$@ $<
 
-${PETSC_ARCH}:
-	@mkdir ${PETSC_ARCH}
+dir:
+	mkdir -p ${OBJDIR}
+	mkdir -p ${MEF90DIR}
 
-m_MEF_Parameters.o: ${PETSC_ARCH}   
+m_MEF_Parameters.o: dir   
 
-m_MEF_LinAlg.o:     m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o   \
-		    m_MEF_Utils.o      ${PETSC_ARCH}/m_MEF_Utils.o
+m_MEF_LinAlg.o:     m_MEF_Parameters.o ${MEF90DIR}/m_MEF_Parameters.o   \
+		    m_MEF_Utils.o      ${MEF90DIR}/m_MEF_Utils.o
 
-m_MEF_Utils.o:      m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o 
+m_MEF_Utils.o:      m_MEF_Parameters.o ${MEF90DIR}/m_MEF_Parameters.o 
 
-m_MEF_IO.o:         m_MEF_Types.o      ${PETSC_ARCH}/m_MEF_Types.o        \
-                    m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o 
+m_MEF_IO.o:         m_MEF_Types.o      ${MEF90DIR}/m_MEF_Types.o        \
+                    m_MEF_Parameters.o ${MEF90DIR}/m_MEF_Parameters.o 
 
-m_MEF_Types.o:      m_MEF_LinAlg.o     ${PETSC_ARCH}/m_MEF_LinAlg.o
+m_MEF_Types.o:      m_MEF_LinAlg.o     ${MEF90DIR}/m_MEF_LinAlg.o
 
-m_MEF_MPI.o:        m_MEF_Types.o      ${PETSC_ARCH}/m_MEF_Types.o        \
-                    m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o 
+m_MEF_MPI.o:        m_MEF_Types.o      ${MEF90DIR}/m_MEF_Types.o        \
+                    m_MEF_Parameters.o ${MEF90DIR}/m_MEF_Parameters.o 
 
-m_MEF_Elements.o:   m_MEF_Types.o      ${PETSC_ARCH}/m_MEF_Types.o        \
-                    m_MEF_Parameters.o ${PETSC_ARCH}/m_MEF_Parameters.o
+m_MEF_Elements.o:   m_MEF_Types.o      ${MEF90DIR}/m_MEF_Types.o        \
+                    m_MEF_Parameters.o ${MEF90DIR}/m_MEF_Parameters.o
 
-m_MEF_BoundaryElements.o:   m_MEF_Elements.o      ${PETSC_ARCH}/m_MEF_Elements.o
+m_MEF_BoundaryElements.o:   m_MEF_Elements.o      ${MEF90DIR}/m_MEF_Elements.o
 
-m_MEF_Sieve.o:      m_MEF_Types.o      ${PETSC_ARCH}/m_MEF_Types.o
+m_MEF_Sieve.o:      m_MEF_Types.o      ${MEF90DIR}/m_MEF_Types.o
 
-m_MEF_Ensight.o:    m_MEF_Types.o      ${PETSC_ARCH}/m_MEF_Types.o
+m_MEF_Ensight.o:    m_MEF_Types.o      ${MEF90DIR}/m_MEF_Types.o
 
-m_MEF_EXO.o:        m_MEF_Types.o      ${PETSC_ARCH}/m_MEF_Types.o        \
-                    m_MEF_MPI.o        ${PETSC_ARCH}/m_MEF_MPI.o          \
-                    m_MEF_Elements.o   ${PETSC_ARCH}/m_MEF_Elements.o
+m_MEF_EXO.o:        m_MEF_Types.o      ${MEF90DIR}/m_MEF_Types.o        \
+                    m_MEF_MPI.o        ${MEF90DIR}/m_MEF_MPI.o          \
+                    m_MEF_Elements.o   ${MEF90DIR}/m_MEF_Elements.o
 
-m_MEF90.o:          m_MEF_Types.o              ${PETSC_ARCH}/m_MEF_Types.o            \
-                    m_MEF_LinAlg.o             ${PETSC_ARCH}/m_MEF_LinAlg.o           \
-                    m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o       \
-                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o            \
-                    m_MEF_MPI.o                ${PETSC_ARCH}/m_MEF_MPI.o              \
-                    m_MEF_Elements.o           ${PETSC_ARCH}/m_MEF_Elements.o         \
-                    m_MEF_BoundaryElements.o   ${PETSC_ARCH}/m_MEF_BoundaryElements.o \
-                    m_MEF_EXO.o                ${PETSC_ARCH}/m_MEF_EXO.o              \
-                    m_MEF_Sieve.o              ${PETSC_ARCH}/m_MEF_Sieve.o            \
-                    m_MEF_IO.o                 ${PETSC_ARCH}/m_MEF_IO.o
+m_MEF90.o:          m_MEF_Types.o              ${MEF90DIR}/m_MEF_Types.o            \
+                    m_MEF_LinAlg.o             ${MEF90DIR}/m_MEF_LinAlg.o           \
+                    m_MEF_Parameters.o         ${MEF90DIR}/m_MEF_Parameters.o       \
+                    m_MEF_Utils.o              ${MEF90DIR}/m_MEF_Utils.o            \
+                    m_MEF_MPI.o                ${MEF90DIR}/m_MEF_MPI.o              \
+                    m_MEF_Elements.o           ${MEF90DIR}/m_MEF_Elements.o         \
+                    m_MEF_BoundaryElements.o   ${MEF90DIR}/m_MEF_BoundaryElements.o \
+                    m_MEF_EXO.o                ${MEF90DIR}/m_MEF_EXO.o              \
+                    m_MEF_Sieve.o              ${MEF90DIR}/m_MEF_Sieve.o            \
+                    m_MEF_IO.o                 ${MEF90DIR}/m_MEF_IO.o
 
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod

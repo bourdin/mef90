@@ -1,16 +1,16 @@
 PROJ      = m_VarFrac_Struct
 
-all: ${PROJ}.o
+all: ${PROJ}.o 
 
 include ../Makefile.inc  
 
 .F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${M_VARFRACSTRUCTDIR}/$@ $<
 
-${PETSC_ARCH}:
-	@mkdir ${PETSC_ARCH}
+dir:
+	@mkdir -p ${M_VARFRACSTRUCTDIR} 
 
-$(PROJ).o: ${PETSC_ARCH} 
+$(PROJ).o: dir 
 
 clean::
 	@rm -rf ${PETSC_ARCH}/
@@ -24,4 +24,5 @@ debug::
 	@echo FCPPFLAGS is ${FCPPFLAGS}
 	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
 	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
-
+	@echo ${M_VARFRACSTRUCTDIR}
+	@echo ${OBJDIR}
