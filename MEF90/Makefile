@@ -1,17 +1,6 @@
 all: m_MEF90.o ${PETSC_ARCH}
 
-include ${PETSC_DIR}/conf/variables
-include ${PETSC_DIR}/conf/rules
-
-ifneq (,$(findstring xlf,$(FC)))
-	FC_MODULE_OUTPUT_FLAG=-qmoddir=
-endif
-
-ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} ${FC_FLAGS} -ffixed-line-length-none  -ffree-line-length-none -ffree-form -I../MEF90/${PETSC_ARCH}
-else
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} ${FC_FLAGS} -I../MEF90/${PETSC_ARCH}
-endif
+include ../Makefile.inc 
 
 .F90.o:
 	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<

@@ -1,17 +1,10 @@
 PROJ      = VarFracQS
-MEF90DIR  = ../MEF90/${PETSC_ARCH}
-MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
-            $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
-            $(MEF90DIR)/m_MEF90.o          $(MEF90DIR)/m_MEF_Utils.o         \
-            $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
-            $(MEF90DIR)/m_MEF_Sieve.o 
 M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
 M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 
 all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
 
-#include ${PETSC_DIR}/conf/rules
-#include ${PETSC_DIR}/conf/variables
+include ../Makefile.inc  
 include ${TAO_DIR}/bmake/tao_common
 ifneq (,$(findstring xlf,$(FC)))
 	FC_MODULE_OUTPUT_FLAG=-qmoddir=
