@@ -5,6 +5,7 @@ all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
 
 include ../Makefile.inc  
 include ${TAO_DIR}/bmake/tao_common
+
 ifneq (,$(findstring xlf,$(FC)))
 	FC_D_FLAG=-WF,-D
 else
