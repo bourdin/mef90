@@ -4,6 +4,7 @@ OBJDIR_PROJ = ${OBJDIR}/${PROJ}
 all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
 
 include ../Makefile.inc  
+include ../Makefile.mk 
 include ${TAO_DIR}/bmake/tao_common
 
 ifneq (,$(findstring xlf,$(FC)))
@@ -21,9 +22,6 @@ endif
 
 .F90.o:
 	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${OBJDIR_PROJ}/${DIM}$@ $<
-dir:
-	@mkdir -p ${OBJDIR_PROJ}
-	@mkdir -p ${BINDIR}
 
 VarFracQS${DIM}: dir VarFracQS.o   ${OBJDIR_PROJ}/${DIM}VarFracQS.o \
                                       m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o \
@@ -64,15 +62,3 @@ m_VarFracQS_V.o:  dir m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types
 m_VarFracQS_Post.o:  dir m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o
 m_VarFracQS_Types.o: dir
 
-clean::
-	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
-	@rmdir ${PETSC_ARCH}
-
-debug::
-	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
-	@echo FC is ${FC}
-	@echo FC_FLAGS is ${FC_FLAGS}
-	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
-	@echo FCPPFLAGS is ${FCPPFLAGS}
-	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
-	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}

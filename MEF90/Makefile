@@ -1,15 +1,13 @@
 PROJ = MEF90 
+OBJDIR_PROJ = ${MEF90DIR}
 
 all: m_MEF90.o 
 
 include ../Makefile.inc 
+include ../Makefile.mk
 
 .F90.o:
 	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${MEF90DIR}/$@ $<
-
-dir:
-	mkdir -p ${OBJDIR}
-	mkdir -p ${MEF90DIR}
 
 m_MEF_Parameters.o: dir   
 
@@ -50,16 +48,4 @@ m_MEF90.o:          m_MEF_Types.o              ${MEF90DIR}/m_MEF_Types.o        
                     m_MEF_Sieve.o              ${MEF90DIR}/m_MEF_Sieve.o            \
                     m_MEF_IO.o                 ${MEF90DIR}/m_MEF_IO.o
 
-clean::
-	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
-	@rmdir ${PETSC_ARCH}
-
-debug::
-	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
-	@echo FC is ${FC}
-	@echo FC_FLAGS is ${FC_FLAGS}
-	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
-	@echo FCPPFLAGS is ${FCPPFLAGS}
-	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
-	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
 
