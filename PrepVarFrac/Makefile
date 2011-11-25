@@ -1,5 +1,5 @@
-M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
-M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
+PROJ = PrepVarFrac
+OBJDIR_PROJ = ${OBJDIR}/${PROJ}
 
 all: PrepVarFrac PrepVarFracPolyCrystal
 
@@ -7,21 +7,22 @@ include ../Makefile.inc
 
 
 .F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} -I${M_VARFRACSTRUCTDIR} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} -I${M_VARFRACSTRUCTDIR} ${FCPPFLAGS} -o ${OBJDIR_PROJ}/$@ $<
 
-${PETSC_ARCH}:
-	@mkdir ${PETSC_ARCH}
+dir:
+	@mkdir -p ${OBJDIR_PROJ}
+	@mkdir -p ${BINDIR}
 
-PrepVarFrac: ${PETSC_ARCH} PrepVarFrac.o ${PETSC_ARCH}/PrepVarFrac.o m_PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o
-	${FLINKER} -o ${PETSC_ARCH}/PrepVarFrac ${PETSC_ARCH}/PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+PrepVarFrac: dir PrepVarFrac.o ${OBJDIR_PROJ}/PrepVarFrac.o m_PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o
+	${FLINKER} -o ${BINDIR}/PrepVarFrac ${OBJDIR_PROJ}/PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
-PrepVarFracPolyCrystal: ${PETSC_ARCH} PrepVarFracPolyCrystal.o ${PETSC_ARCH}/PrepVarFracPolyCrystal.o m_PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o
-	${FLINKER} -o ${PETSC_ARCH}/PrepVarFracPolyCrystal ${PETSC_ARCH}/PrepVarFracPolyCrystal.o ${PETSC_ARCH}/m_PrepVarFrac.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+PrepVarFracPolyCrystal: dir PrepVarFracPolyCrystal.o ${OBJDIR_PROJ}/PrepVarFracPolyCrystal.o m_PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o
+	${FLINKER} -o ${BINDIR}/PrepVarFracPolyCrystal ${OBJDIR_PROJ}/PrepVarFracPolyCrystal.o ${OBJDIR_PROJ}/m_PrepVarFrac.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
-PrepVarFrac.o: ${PETSC_ARCH} m_PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o
-PrepVarFracPolyCrystal.o: ${PETSC_ARCH} m_PrepVarFrac.o ${PETSC_ARCH}/m_PrepVarFrac.o
+PrepVarFrac.o: dir m_PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o
+PrepVarFracPolyCrystal.o: dir m_PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o
 
-m_PrepVarFrac.o: ${PETSC_ARCH}
+m_PrepVarFrac.o: dir  
 
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
