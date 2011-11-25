@@ -51,7 +51,8 @@ TestSectionInt:   ${PETSC_ARCH} TestSectionInt.o ${PETSC_ARCH}/TestSectionInt.o
 
 TestMeshDistribute:   ${PETSC_ARCH} TestMeshDistribute.o ${PETSC_ARCH}/TestMeshDistribute.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestMeshDistribute ${PETSC_ARCH}/TestMeshDistribute.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-
+TestMeshTopologyGetInfo:   ${PETSC_ARCH} TestMeshTopologyGetInfo.o ${PETSC_ARCH}/TestMeshTopologyGetInfo.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestMeshTopologyGetInfo ${PETSC_ARCH}/TestMeshTopologyGetInfo.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 TestCoordinates:   ${PETSC_ARCH} TestCoordinates.o ${PETSC_ARCH}/TestCoordinates.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestCoordinates ${PETSC_ARCH}/TestCoordinates.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
