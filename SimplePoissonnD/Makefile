@@ -1,48 +1,43 @@
-MEF90DIR  = ../MEF90/${PETSC_ARCH}
-MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
-            $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
-            $(MEF90DIR)/m_MEF90.o          $(MEF90DIR)/m_MEF_Utils.o         \
-            $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
-            $(MEF90DIR)/m_MEF_Sieve.o      $(MEF90DIR)/m_MEF_IO.o 
+PROJ = Heat
+OBJDIR_PROJ = ${OBJDIR}/${PROJ}
 
 all: SimplePoisson${DIM} TransientHeat${DIM}
 
-include ${PETSC_DIR}/conf/rules
-include ${PETSC_DIR}/conf/variables
+include ../Makefile.inc
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
+	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${OBJDIR_PROJ} -I./${OBJDIR_PROJ} -I${MEF90DIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
 else
-	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} 
+	MEF90_FC_FLAGS=-DPB_${DIM} ${FC_MODULE_OUTPUT_FLAG}${OBJDIR_PROJ} -I./${OBJDIR_PROJ} -I${MEF90DIR} ${FC_FLAGS} 
 endif
 
 
 .F90.o: 
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/${DIM}$@ $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${OBJDIR_PROJ}/${DIM}$@ $<
 
-${PETSC_ARCH}:
-	@mkdir ${PETSC_ARCH}
+dir:
+	@mkdir -p ${OBJDIR_PROJ}
+	@mkdir -p ${BINDIR}
 	
-SimplePoisson${DIM}: ${PETSC_ARCH} SimplePoisson.o   ${PETSC_ARCH}/${DIM}SimplePoisson.o \
-                             m_Poisson.o ${PETSC_ARCH/${DIM}m_Poisson.o 
-	${FLINKER} -o ${PETSC_ARCH}/SimplePoisson${DIM} ${PETSC_ARCH}/${DIM}SimplePoisson.o  ${PETSC_ARCH}/${DIM}m_Poisson.o  ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+SimplePoisson${DIM}: dir SimplePoisson.o  ${OBJDIR_PROJ}/${DIM}SimplePoisson.o m_Poisson.o ${OBJDIR_PROJ}/${DIM}m_Poisson.o 
+	${FLINKER} -o ${BINDIR}/SimplePoisson${DIM} ${OBJDIR_PROJ}/${DIM}SimplePoisson.o  ${OBJDIR_PROJ}/${DIM}m_Poisson.o  ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
-TransientHeat${DIM}: ${PETSC_ARCH} TransientHeat.o   ${PETSC_ARCH}/${DIM}TransientHeat.o \
-                             m_TransientHeat.o ${PETSC_ARCH}/${DIM}TransientHeat.o \
-                             m_MEF_Integrate.o ${PETSC_ARCH}/${DIM}m_MEF_Integrate.o
-	${FLINKER} -o ${PETSC_ARCH}/TransientHeat${DIM}  ${PETSC_ARCH}/${DIM}m_Poisson.o  ${PETSC_ARCH}/${DIM}TransientHeat.o  ${PETSC_ARCH}/${DIM}m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_MEF_Integrate.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+TransientHeat${DIM}: dir TransientHeat.o   ${OBJDIR_PROJ}/${DIM}TransientHeat.o \
+                             m_TransientHeat.o ${OBJDIR_PROJ}/${DIM}TransientHeat.o \
+                             m_MEF_Integrate.o ${OBJDIR_PROJ}/${DIM}m_MEF_Integrate.o
+	${FLINKER} -o ${BINDIR}/TransientHeat${DIM}  ${OBJDIR_PROJ}/${DIM}m_Poisson.o  ${OBJDIR_PROJ}/${DIM}TransientHeat.o  ${OBJDIR_PROJ}/${DIM}m_TransientHeat.o ${OBJDIR_PROJ}/${DIM}m_MEF_Integrate.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
-SimplePoisson.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
+SimplePoisson.o: dir m_Poisson.o ${OBJDIR_PROJ}/${DIM}m_Poisson.o
 
-m_Poisson.o: ${PETSC_ARCH}
+m_Poisson.o: dir
 
-m_MEF_Integrate.o: ${PETSC_ARCH} 
+m_MEF_Integrate.o: dir 
 
-TransientHeat.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o \
-                             m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_TransientHeat.o
+TransientHeat.o:   dir m_Poisson.o ${OBJDIR_PROJ}/${DIM}m_Poisson.o \
+                             m_TransientHeat.o ${OBJDIR_PROJ}/${DIM}m_TransientHeat.o
 
-m_TransientHeat.o: ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o \
-                             m_MEF_Integrate.o ${PETSC_ARCH}/${DIM}m_MEF_Integrate.o
+m_TransientHeat.o: dir m_Poisson.o ${OBJDIR_PROJ}/${DIM}m_Poisson.o \
+                             m_MEF_Integrate.o ${OBJDIR_PROJ}/${DIM}m_MEF_Integrate.o
 
 
 clean::

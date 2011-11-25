@@ -20,7 +20,7 @@ ifneq (,$(findstring xlf,$(FC)))
 endif
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${OBJDIR} ${FC_FLAGS}  -ffixed-line-length-none  -ffree-line-length-none -ffree-form -I${MEF90DIR}
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${OBJDIR}/${PROJ} ${FC_FLAGS}  -ffixed-line-length-none  -ffree-line-length-none -ffree-form -I${MEF90DIR}
 else
 	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${OBJDIR}/${PROJ} ${FC_FLAGS} -I${MEF90DIR}
 endif
