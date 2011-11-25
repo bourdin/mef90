@@ -7,6 +7,8 @@ M_FILMSTRUCTOBJS = ${M_FILMSTRUCTDIR}/m_Film_Struct.o
 all: VarFilmQS
 
 include ../Makefile.inc 
+include ../Makefile.mk
+
 include ${TAO_DIR}/bmake/tao_common
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
@@ -54,14 +56,3 @@ m_VarFilmQS_W.o:  dir m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o \
 m_VarFilmQS_Post.o:  dir m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o
 m_VarFilmQS_Types.o: dir
 
-
-clean::
-	@rm -Rf ${PETSC_ARCH}
-debug::
-	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
-	@echo FC is ${FC}
-	@echo FC_FLAGS is ${FC_FLAGS}
-	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
-	@echo FCPPFLAGS is ${FCPPFLAGS}
-	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
-	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}

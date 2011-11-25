@@ -7,6 +7,7 @@ M_HEATOBJS =  ${M_HEATDIR}/${DIM}m_Poisson.o ${M_HEATDIR}/${DIM}m_TransientHeat.
 all: PrepVarFracNG
 
 include ../Makefile.inc  
+include ../Makefile.mk  
 
 ifneq (,$(findstring xlf,$(FC)))
 	FC_MODULE_OUTPUT_FLAG=-qmoddir=
@@ -30,11 +31,6 @@ endif
 .F90.o:
 	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${OBJDIR_PROJ}/$@ $<
 
-dir:
-	@mkdir -p ${BINDIR}
-	@mkdir -p ${OBJDIR_PROJ}
-
-
 ifdef WITH_HEAT
 PrepVarFracNG: dir PrepVarFracNG.o ${OBJDIR_PROJ}/PrepVarFracNG.o m_PrepVarFracNG.o ${OBJDIR_PROJ}/m_PrepVarFracNG.o
 	${FLINKER} -o ${BINDIR}/PrepVarFracNG ${OBJDIR_PROJ}/PrepVarFracNG.o ${OBJDIR_PROJ}/m_PrepVarFracNG.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${M_HEATOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
@@ -46,10 +42,6 @@ endif
 PrepVarFracNG.o: dir m_PrepVarFracNG.o ${OBJDIR_PROJ}/m_PrepVarFracNG.o
 
 m_PrepVarFracNG.o: dir
-
-clean::
-	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
-	@rm -Rf ${PETSC_ARCH}/
 
 debug::
 	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
