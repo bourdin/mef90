@@ -3,8 +3,10 @@
 OBJS = ${SRCS:.F90=.o}
 SOBJS = ${OBJS:.o=.so}
 
-#OBJDIR = obj/${PETSC_ARCH}
+#OBJDIR = ${MEF90_DIR}/obj/${PETSC_ARCH}/
 OBJDIR = .
+#DIROBJS = ${addprefix ${OBJDIR}, ${OBJS}}
+#DIRSOBJS = ${addprefix ${OBJDIR}, ${SOBJS}}
 
 MEF90_FLAGS += ${FC_MODULE_OUTPUT_FLAG} ${OBJDIR}
 MEF90_INCS += ${PETSC_FC_INCLUDES}  
@@ -40,6 +42,16 @@ ${BIN}: ${OBJS}
 clean:
 	-cd ${OBJDIR} && rm -f *.o *.mod *.so 
 	-rm -rf ${OBJDIR}
+
+debug::
+	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
+	@echo FC is ${FC}
+	@echo FC_FLAGS is ${FC_FLAGS}
+	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
+	@echo FCPPFLAGS is ${FCPPFLAGS}
+	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
+	@echo MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
+
 
 .PHONY: all
 .SUFFIXES: .o .so .F90 
