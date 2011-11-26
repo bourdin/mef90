@@ -1,11 +1,23 @@
-PROJ      = VarFracQS
-OBJDIR_PROJ = ${OBJDIR}/${PROJ}
+BIN = VarFracQS
+#Order is important
+SRCS = \
+	   m_VarFracQS_Types.F90  \
+	   m_VarFracQS_Post.F90  \
+	   m_VarFracQS_V.F90 \
+	   m_VarFracQS_U.F90  \
+	   m_VarFracQS.F90  \
+	   VarFracQS.F90  \
+	   VarFracQSRecomputeEnergy.F90
 
-all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
+#include ${TAO_DIR}/bmake/tao_common
+#
 
-include ../Makefile.inc  
-include ../Makefile.mk 
-include ${TAO_DIR}/bmake/tao_common
+MEF90_INCS += -I../MEF90 -I../m_VarFrac_Struct 
+#FFLAGS is used in FLINKER def in petsc/rules
+#+= si pas defini avant ne rajoute rien
+FFLAGS = ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+FFLAGS += -L../MEF90 -lMEF90 
+FFLAGS+= -L../m_VarFrac_Struct -lVar_Struct 
 
 ifneq (,$(findstring xlf,$(FC)))
 	FC_D_FLAG=-WF,-D
@@ -14,51 +26,10 @@ else
 endif
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=${FC_D_FLAG}PB_${DIM} ${FC_D_FLAG}WITH_TAO ${FC_MODULE_OUTPUT_FLAG}${OBJDIR_PROJ} -I./${OBJDIR_PROJ} -I${MEF90DIR} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
-
+	MEF90_FC_FLAGS += ${FC_D_FLAG}PB_${DIM} ${FC_D_FLAG}WITH_TAO 
 else
-	MEF90_FC_FLAGS=-DPB_${DIM} -DWITH_TAO ${FC_MODULE_OUTPUT_FLAG}${OBJDIR_PROJ} -I./${OBJDIR_PROJ} -I${MEF90DIR} -I${M_VARFRACSTRUCTDIR} ${FC_FLAGS}
+	MEF90_FC_FLAGS += -DPB_${DIM} -DWITH_TAO 
 endif
 
-.F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${OBJDIR_PROJ}/${DIM}$@ $<
 
-VarFracQS${DIM}: dir VarFracQS.o   ${OBJDIR_PROJ}/${DIM}VarFracQS.o \
-                                      m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o \
-                                      m_VarFracQS_U.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_U.o \
-                                      m_VarFracQS_V.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_V.o \
-                                      m_VarFracQS.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS.o \
-                                      m_VarFracQS_Post.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Post.o
-	${FLINKER} -o ${BINDIR}/VarFracQS${DIM} ${OBJDIR_PROJ}/${DIM}VarFracQS.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_U.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_V.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS.o  ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Post.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-
-VarFracQS.o:  dir m_VarFracQS.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS.o \
-                                      m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o \
-                                      m_VarFracQS_U.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_U.o \
-                                      m_VarFracQS_V.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_V.o \
-                                      m_VarFracQS_Post.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Post.o
-
-VarFracQSRecomputeEnergy${DIM}: dir VarFracQSRecomputeEnergy.o   ${OBJDIR_PROJ}/${DIM}VarFracQSRecomputeEnergy.o \
-                                          m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o \
-                                          m_VarFracQS_U.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_U.o \
-                                          m_VarFracQS_V.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_V.o \
-                                          m_VarFracQS.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS.o \
-                                          m_VarFracQS_Post.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Post.o
-	${FLINKER} -o ${BINDIR}/VarFracQSRecomputeEnergy${DIM} ${OBJDIR_PROJ}/${DIM}VarFracQSRecomputeEnergy.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_U.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_V.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS.o  ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Post.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-
-VarFracQSRecomputeEnergy.o:   dir m_VarFracQS.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS.o \
-                                              m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o \
-                                              m_VarFracQS_U.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_U.o \
-                                              m_VarFracQS_V.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_V.o \
-                                              m_VarFracQS_Post.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Post.o
-
-m_VarFracQS.o: dir m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o \
-                                      m_VarFracQS_U.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_U.o \
-                                      m_VarFracQS_V.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_V.o \
-                                      m_VarFracQS_Post.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Post.o
-m_VarFracQS_U.o:  dir m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o \
-                                m_VarFracQS_Post.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Post.o
-m_VarFracQS_V.o:  dir m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o \
-                                m_VarFracQS_Post.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Post.o
-m_VarFracQS_Post.o:  dir m_VarFracQS_Types.o ${OBJDIR_PROJ}/${DIM}m_VarFracQS_Types.o
-m_VarFracQS_Types.o: dir
-
+include ../Makefile.inc  
