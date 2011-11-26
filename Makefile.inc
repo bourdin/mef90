@@ -23,7 +23,7 @@ lib${LIB}.so: ${SOBJS}
 
 #-static library ? 
 ${BIN}: ${OBJS}
-	${FLINKER}  -o $@ $?  
+	${FLINKER}  -o $@ $? ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
 .F90.o:
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o $@ $<
