@@ -1,15 +1,9 @@
-PROJ      = m_VarFrac_Struct
+LIB = Var_Struct
+SRCS =	m_VarFrac_Struct.F90
 
-all: ${PROJ}.o 
+MEF90_INCS += -I../MEF90 
+#pas d edition de lien dans la librairie 
+#FFLAGS += ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -L../MEF90 -lMEF90 
 
-include ../Makefile.inc  
-include ../Makefile.mk 
-
-.F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${M_VARFRACSTRUCTDIR}/$@ $<
-
-dir:
-	@mkdir -p ${M_VARFRACSTRUCTDIR} 
-
-$(PROJ).o: dir 
+include ../Makefile.inc
 

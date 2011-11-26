@@ -1,23 +1,14 @@
-PROJ = PrepVarFrac
-OBJDIR_PROJ = ${OBJDIR}/${PROJ}
+BIN = PrepVarFrac
+#Order is important
+SRCS = m_PrepVarFrac.F90 PrepVarFrac.F90 
 
-all: PrepVarFrac PrepVarFracPolyCrystal
+MEF90_INCS += -I../MEF90 -I../m_VarFrac_Struct 
+#FFLAGS is used in FLINKER def in petsc/rules
+#+= si pas defini avant ne rajoute rien
+FFLAGS = ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+FFLAGS += -L../MEF90 -lMEF90 
+FFLAGS+= -L../m_VarFrac_Struct -lVar_Struct 
 
-include ../Makefile.inc  
-include ../Makefile.mk  
+#librairies : conventions minsuule et pas d underscore 
 
-
-.F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} -I${M_VARFRACSTRUCTDIR} ${FCPPFLAGS} -o ${OBJDIR_PROJ}/$@ $<
-
-PrepVarFrac: dir PrepVarFrac.o ${OBJDIR_PROJ}/PrepVarFrac.o m_PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o
-	${FLINKER} -o ${BINDIR}/PrepVarFrac ${OBJDIR_PROJ}/PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-
-PrepVarFracPolyCrystal: dir PrepVarFracPolyCrystal.o ${OBJDIR_PROJ}/PrepVarFracPolyCrystal.o m_PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o
-	${FLINKER} -o ${BINDIR}/PrepVarFracPolyCrystal ${OBJDIR_PROJ}/PrepVarFracPolyCrystal.o ${OBJDIR_PROJ}/m_PrepVarFrac.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-
-PrepVarFrac.o: dir m_PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o
-PrepVarFracPolyCrystal.o: dir m_PrepVarFrac.o ${OBJDIR_PROJ}/m_PrepVarFrac.o
-
-m_PrepVarFrac.o: dir  
-
+include ../Makefile.inc
