@@ -1,4 +1,4 @@
-LIBS = MEF90 m_VarFrac_Struct
+LIBS = MEF90 VarStruct
 PROJECTS = PrepVarFrac 
 DIMPROJECTS = VarFracQS
 SUBDIRS = ${LIBS} ${PROJECTS}
