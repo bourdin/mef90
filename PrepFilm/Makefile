@@ -1,36 +1,27 @@
-MEF90DIR  = ../MEF90/${PETSC_ARCH}
-MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
-            $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
-            $(MEF90DIR)/m_MEF90.o          $(MEF90DIR)/m_MEF_Utils.o         \
-            $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
-            $(MEF90DIR)/m_MEF_Sieve.o      $(MEF90DIR)/m_MEF_IO.o 
-M_FILMSTRUCTDIR  = ../m_Film_Struct/${PETSC_ARCH}
+PROJ = PrepFilm
+OBJDIR_PROJ = ${OBJDIR}/${PROJ}
+
+M_FILMSTRUCTDIR  = ${OBJDIR}/m_Film_Struct
 M_FILMSTRUCTOBJS = ${M_FILMSTRUCTDIR}/m_Film_Struct.o
 
 all: PrepFilm
 
-include ${PETSC_DIR}/conf/rules
-include ${PETSC_DIR}/conf/variables
+include ../Makefile.inc
+include ../Makefile.mk
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS}  -ffree-form -ffree-line-length-none -ffixed-line-length-none
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${OBJDIR_PROJ} -I./${OBJDIR_PROJ} -I${MEF90DIR} -I${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS}  -ffree-form -ffree-line-length-none -ffixed-line-length-none
 else
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS}
+	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${OBJDIR_PROJ} -I./${OBJDIR_PROJ} -I/${MEF90DIR} -I${M_FILMSTRUCTDIR} ${FC_FLAGS}
 endif
 
 .F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${OBJDIR_PROJ}/$@ $<
 
-${PETSC_ARCH}:
-	@mkdir ${PETSC_ARCH}
+PrepFilm: dir PrepFilm.o ${OBJDIR_PROJ}/PrepFilm.o m_PrepFilm.o ${OBJDIR_PROJ}/m_PrepFilm.o
+	${FLINKER} -o ${BINDIR}/PrepFilm ${OBJDIR_PROJ}/PrepFilm.o ${OBJDIR_PROJ}/m_PrepFilm.o ${MEF90OBJS} ${M_FILMSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
-PrepFilm: ${PETSC_ARCH} PrepFilm.o ${PETSC_ARCH}/PrepFilm.o m_PrepFilm.o ${PETSC_ARCH}/m_PrepFilm.o
-	${FLINKER} -o ${PETSC_ARCH}/PrepFilm ${PETSC_ARCH}/PrepFilm.o ${PETSC_ARCH}/m_PrepFilm.o ${MEF90OBJS} ${M_FILMSTRUCTOBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+PrepFilm.o: dir m_PrepFilm.o ${OBJDIR_PROJ}/m_PrepFilm.o
 
-PrepFilm.o: ${PETSC_ARCH} m_PrepFilm.o ${PETSC_ARCH}/m_PrepFilm.o
+m_PrepFilm.o: dir
 
-m_PrepFilm.o: ${PETSC_ARCH}
-
-clean::
-	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
-	@rm -Rf ${PETSC_ARCH}/
