@@ -1,58 +1,34 @@
-PROJ      = VarFilmQS
-OBJDIR_PROJ = ${OBJDIR}/${PROJ}
+BIN = VarFilmQS 
+#Order is important
+SRCS = m_VarFilmQS_Types.F90  \
+	   m_VarFilmQS_Post.F90  \
+	   m_VarFilmQS_V.F90 \
+	   m_VarFilmQS_W.F90  \
+	   m_VarFilmQS_U.F90  \
+	   m_VarFilmQS.F90  \
+	   VarFilmQS.F90  
 
-M_FILMSTRUCTDIR  = ${OBJDIR}/m_Film_Struct
-M_FILMSTRUCTOBJS = ${M_FILMSTRUCTDIR}/m_Film_Struct.o
 
-all: VarFilmQS
+MEF90_INCS += -I${OBJDIR} ${TAO_INCLUDE} 
+#FFLAGS is used in FLINKER def in petsc/rules
+#+= si pas defini avant ne rajoute rien
+FFLAGS = ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+FFLAGS += -L${LIBDIR} -lMEF90 
+FFLAGS += -lVar_Struct 
+FFLAGS += ${TAO_LIB} ${TAO_FORTRAN_LIB} 
 
-include ../Makefile.inc 
-include ../Makefile.mk
-
-include ${TAO_DIR}/bmake/tao_common
+#ifneq (,$(findstring xlf,$(FC)))
+#	FC_D_FLAG=-WF,-D
+#else
+#  	FC_D_FLAG=-D
+#endif
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=-DWITH_TAO ${FC_MODULE_OUTPUT_FLAG}${OBJDIR_PROJ} -I${OBJDIR_PROJ} -I${MEF90DIR} -I${M_FILMSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form 	
+	MEF90_FLAGS += ${FC_D_FLAG}PB_${DIM} ${FC_D_FLAG}WITH_TAO 
 else
-	MEF90_FC_FLAGS=-DWITH_TAO ${FC_MODULE_OUTPUT_FLAG} ${OBJDIR_PROJ} -I${OBJDIR_PROJ} -I${MEF90DIR} -I${M_FILMSTRUCTDIR} ${FC_FLAGS}
+	MEF90_FLAGS += -DPB_${DIM} -DWITH_TAO 
 endif
 
-.F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${OBJDIR_PROJ}/$@ $<
-
-dir:
-	@mkdir -p ${BINDIR}
-	@mkdir -p ${OBJDIR_PROJ}
-
-VarFilmQS: dir VarFilmQS.o   ${OBJDIR_PROJ}/VarFilmQS.o \
-                                      m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o \
-                                      m_VarFilmQS_U.o ${OBJDIR_PROJ}/m_VarFilmQS_U.o \
-                                      m_VarFilmQS_V.o ${OBJDIR_PROJ}/m_VarFilmQS_V.o \
-                                      m_VarFilmQS_W.o ${OBJDIR_PROJ}/m_VarFilmQS_W.o \
-                                      m_VarFilmQS.o ${OBJDIR_PROJ}/m_VarFilmQS.o \
-                                      m_VarFilmQS_Post.o ${OBJDIR_PROJ}/m_VarFilmQS_Post.o
-				${FLINKER} -o ${BINDIR}/VarFilmQS ${OBJDIR_PROJ}/VarFilmQS.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_U.o ${OBJDIR_PROJ}/m_VarFilmQS_V.o ${OBJDIR_PROJ}/m_VarFilmQS_W.o ${OBJDIR_PROJ}/m_VarFilmQS.o  ${OBJDIR_PROJ}/m_VarFilmQS_Post.o ${MEF90OBJS} ${M_FILMSTRUCTOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-
-VarFilmQS.o:  dir m_VarFilmQS.o ${OBJDIR_PROJ}/m_VarFilmQS.o \
-                                      m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o \
-                                      m_VarFilmQS_U.o ${OBJDIR_PROJ}/m_VarFilmQS_U.o \
-                                      m_VarFilmQS_V.o ${OBJDIR_PROJ}/m_VarFilmQS_V.o \
-                                      m_VarFilmQS_W.o ${OBJDIR_PROJ}/m_VarFilmQS_W.o \
-                                      m_VarFilmQS_Post.o ${OBJDIR_PROJ}/m_VarFilmQS_Post.o
-
-
-m_VarFilmQS.o: dir m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o \
-                                      m_VarFilmQS_U.o ${OBJDIR_PROJ}/m_VarFilmQS_U.o \
-                                      m_VarFilmQS_V.o ${OBJDIR_PROJ}/m_VarFilmQS_V.o \
-                                      m_VarFilmQS_W.o ${OBJDIR_PROJ}/m_VarFilmQS_W.o \
-                                      m_VarFilmQS_Post.o ${OBJDIR_PROJ}/m_VarFilmQS_Post.o
-m_VarFilmQS_U.o:  dir m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o \
-                                m_VarFilmQS_Post.o ${OBJDIR_PROJ}/m_VarFilmQS_Post.o \
-                                m_VarFilmQS_W.o ${OBJDIR_PROJ}/m_VarFilmQS_W.o 
-m_VarFilmQS_V.o:  dir m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o \
-                                m_VarFilmQS_Post.o ${OBJDIR_PROJ}/m_VarFilmQS_Post.o
-m_VarFilmQS_W.o:  dir m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o \
-                                m_VarFilmQS_Post.o ${OBJDIR_PROJ}/m_VarFilmQS_Post.o
-m_VarFilmQS_Post.o:  dir m_VarFilmQS_Types.o ${OBJDIR_PROJ}/m_VarFilmQS_Types.o
-m_VarFilmQS_Types.o: dir
-
+#order of includes is important
+include ../Makefile.inc  
+include ${TAO_DIR}/bmake/tao_common_variables

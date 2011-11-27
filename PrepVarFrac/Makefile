@@ -9,6 +9,4 @@ FFLAGS = ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 FFLAGS += -L${LIBDIR} -lMEF90 
 FFLAGS+= -lVar_Struct 
 
-#librairies : conventions minsuule et pas d underscore 
-
 include ../Makefile.inc
