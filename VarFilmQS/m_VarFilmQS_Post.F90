@@ -107,31 +107,31 @@ Subroutine FractureEnergy_Assembly(FractureEnergy, FractureEnergyBlock, AppCtx)
 End Subroutine FractureEnergy_Assembly
 
 Subroutine DelaminationEnergy_Assembly(DelaminationEnergy, DelaminationEnergyBlock, AppCtx)     
-	PetscReal, Intent(OUT)                       :: DelaminationEnergy
-	PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock
-	Type(AppCtx_Type)                            :: AppCtx
-	
-	PetscInt                                     :: iBlk, iBlkId, iErr
-	PetscReal                                    :: MyDelaminationEnergy
-	PetscReal, Dimension(:), Pointer             :: MyDelaminationEnergyBlock
-	
-	
-	Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
-	Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-	
-	MyDelaminationEnergy = 0.0_Kr
-	Allocate(MyDelaminationEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
-	Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-		iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-		Call DelaminationEnergy_AssemblyBlk(MyDelaminationEnergyBlock(iBlkID), iBlk, AppCtx%W%Sec, AppCtx)
-		MyDelaminationEnergy = MyDelaminationEnergy + MyDelaminationEnergyBlock(iBlkID)
-	End Do
-	
-	Call MPI_AllReduce(MyDelaminationEnergy, DelaminationEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-	Call MPI_AllReduce(MyDelaminationEnergyBlock, DelaminationEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-	DeAllocate(MyDelaminationEnergyBlock)
-	Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-	Call PetscLogStagePop(iErr); CHKERRQ(iErr)
+   PetscReal, Intent(OUT)                       :: DelaminationEnergy
+   PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock
+   Type(AppCtx_Type)                            :: AppCtx
+
+   PetscInt                                     :: iBlk, iBlkId, iErr
+   PetscReal                                    :: MyDelaminationEnergy
+   PetscReal, Dimension(:), Pointer             :: MyDelaminationEnergyBlock
+
+
+   Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
+   Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+
+   MyDelaminationEnergy = 0.0_Kr
+   Allocate(MyDelaminationEnergyBlock(AppCtx%MeshTopology%Num_Elem_Blks_Global))
+   Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      Call DelaminationEnergy_AssemblyBlk(MyDelaminationEnergyBlock(iBlkID), iBlk, AppCtx%W%Sec, AppCtx)
+   MyDelaminationEnergy = MyDelaminationEnergy + MyDelaminationEnergyBlock(iBlkID)
+   End Do
+
+   Call MPI_AllReduce(MyDelaminationEnergy, DelaminationEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+   Call MPI_AllReduce(MyDelaminationEnergyBlock, DelaminationEnergyBlock, AppCtx%MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
+   DeAllocate(MyDelaminationEnergyBlock)
+   Call PetscLogEventEnd(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
+   Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine DelaminationEnergy_Assembly
 
 Subroutine BondingLayerEnergy_Assembly(BondingLayerEnergy, BondingLayerEnergyBlock, AppCtx)     

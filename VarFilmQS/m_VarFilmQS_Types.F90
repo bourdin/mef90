@@ -66,11 +66,11 @@ Module m_VarFilmQS_Types
       Type(Field)                                  :: Theta
       Type(Field)                                  :: RHSU, GradientU, LowerBoundU, UpperBoundU
       Type(Field)                                  :: RHSV, GradientV, LowerBoundV, UpperBoundV
-	Type(Field)                                  :: FW
-	Type(Vec)                                    :: V_Old
-	Type(Vec)                                    :: U_Old
-	Type(Vec)                                    :: W_Old
-	Type(Flag)                                   :: BCUFlag, BCVFlag, BCWFlag, IrrevFlag, WIrrevFlag
+      Type(Field)                                  :: FW
+      Type(Vec)                                    :: V_Old
+      Type(Vec)                                    :: U_Old
+      Type(Vec)                                    :: W_Old
+      Type(Flag)                                   :: BCUFlag, BCVFlag, BCWFlag, IrrevFlag, WIrrevFlag
       Type(SectionReal)                            :: StressU
       Type(SectionReal)                            :: StrainU
       PetscInt                                     :: NumTimeSteps
