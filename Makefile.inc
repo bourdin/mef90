@@ -1,7 +1,9 @@
-#vim :set ft=makefile
+## -*- Mode: Makefile; -*-
+## vim: set ft=automake :
 
 OBJS = ${SRCS:.F90=.o}
 SOBJS = ${OBJS:.o=.so}
+#DIMOBJS = ${addprefix ${DIM}, ${OBJS}}
 
 #OBJDIR = ${MEF90_DIR}/obj/${PETSC_ARCH}/
 OBJDIR = .
@@ -25,15 +27,16 @@ ${LIB}: lib${LIB}.a lib${LIB}.so
 lib${LIB}.a: ${OBJS} 
 	${AR} ${AR_FLAGS} ${OBJDIR}/$@ $?
 
+#TODO option -shared take automatic varaible from Petsc
 lib${LIB}.so: ${SOBJS}
 	${FLINKER} -shared -o ${OBJDIR}/$@ $?  
 
 #-static library ? 
-${BIN}: ${OBJS}
-	${FLINKER}  -o $@ $? ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+${BIN}: ${OBJS} 
+	${FLINKER}  -o $@ ${addprefix ${DIM}, $?} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
 .F90.o:
-	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/$@ $<
+	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/${DIM}$@ $<
 
 .F90.so:
 	${FC} ${FFLAGS} ${MEF90_FLAGS} ${MEF90_INCS} -DPIC -c -o ${OBJDIR}/$@ $<

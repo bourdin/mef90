@@ -9,6 +9,7 @@ SRCS = \
 	   VarFracQS.F90  #\
 #	   VarFracQSRecomputeEnergy.F90
 
+
 #MEF90_INCS += -I../MEF90 -I../m_VarFrac_Struct -I/opt/HPC/tao-lite -I/opt/HPC/tao-lite/include 
 MEF90_INCS += -I../MEF90 -I../m_VarFrac_Struct ${TAO_INCLUDE} 
 #FFLAGS is used in FLINKER def in petsc/rules
