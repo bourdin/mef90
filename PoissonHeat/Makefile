@@ -7,6 +7,8 @@ SRCS = \
 	   SimplePoisson.F90   \
 #	   TransientHeat.F90  
 
+#Compilation takes DIM option 
+
 MEF90_INCS += -I${OBJDIR} 
 
 include ../Makefile.inc  

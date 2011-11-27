@@ -8,17 +8,27 @@ OBJDIR = ${MEF90_DIR}/obj/${PETSC_ARCH}/
 LIBDIR = ${OBJDIR}
 BINDIR = ${MEF90_DIR}/bin/${PETSC_ARCH}/
 
-#Setring flags and include statements 
+##################################################################
+#                        Variables 
+#Setting flags and include statements 
+#################################################################
+
 MEF90_FLAGS += ${FC_MODULE_OUTPUT_FLAG} ${OBJDIR}
 MEF90_INCS += ${PETSC_FC_INCLUDES}  
 
-
 #FFLAGS is used in FLINKER def in petsc/rules
+#No link edition in libs 
 ifdef BIN
 	FFLAGS = ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 	FFLAGS += -L${LIBDIR} -lMEF90 
 	FFLAGS += -lVar_Struct 
 endif
+
+#This should be improved !!!!! 
+ifdef WITH_HEAT
+	FFLAGS += ${OBJDIR}/${DIM}m_Poisson.o ${OBJDIR}/${DIM}m_TransientHeat.o ${OBJDIR}/${DIM}m_MEF_Integrate.o 
+endif
+
 
 #This is to accept long lines 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
@@ -50,7 +60,9 @@ ifdef TAO
 	endif
 endif 
 
-############################################################ 
+################################################################## 
+#                         Rules
+##################################################################
 all: ${BINDIR} ${OBJDIR} ${BIN} ${LIB}
 
 ${OBJDIR}:
@@ -64,13 +76,12 @@ ${LIB}: lib${LIB}.a lib${LIB}.so
 lib${LIB}.a: ${OBJS} 
 	${AR} ${AR_FLAGS} ${OBJDIR}/$@ ${addprefix ${OBJDIR}, $?}
 
-#TODO option -shared take automatic varaible from Petsc
+#TODO option -shared take automatic variable from Petsc
 #same for -DPic ? 
 lib${LIB}.so: ${SOBJS}
 	${FLINKER} -shared -o ${OBJDIR}/$@ ${addprefix ${OBJDIR}, $?}  
 
-#-static library ? 
-#${PETSC_FORTRAN_LIB} ${PETSC_LIB} are included in FLINKER
+#${PETSC_FORTRAN_LIB} ${PETSC_LIB} must be at the end
 #FLINKER = ${FC_LINKER} ${FC_LINKER_FLAGS} ${FFLAGS} 
 ${BIN}: ${OBJS} 
 	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM} ${addprefix ${OBJDIR},${addprefix ${DIM}, $?}} ${FFLAGS} 
@@ -102,6 +113,9 @@ debug::
 .PHONY: all
 .SUFFIXES: .o .so .F90 
 
+########################################################################
+#                           Includes 
+########################################################################
 
 include ${PETSC_DIR}/conf/variables
 
