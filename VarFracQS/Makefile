@@ -1,4 +1,4 @@
-BIN = VarFracQS VarFracQSRecomputeEnergy 
+BIN = VarFracQS 
 #Order is important
 SRCS = \
 	   m_VarFracQS_Types.F90  \
@@ -6,7 +6,7 @@ SRCS = \
 	   m_VarFracQS_V.F90 \
 	   m_VarFracQS_U.F90  \
 	   m_VarFracQS.F90  \
-	   VarFracQS.F90  \
+	   VarFracQS.F90  #\
 #	   VarFracQSRecomputeEnergy.F90
 
 
