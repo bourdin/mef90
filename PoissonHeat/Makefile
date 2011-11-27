@@ -1,11 +1,9 @@
-BIN = SimplePoisson 
+BIN = SimplePoisson TransientHeat 
 #Order is important
 SRCS = \
 	   m_Poisson.F90  \
 	   m_MEF_Integrate.F90  \
 	   m_TransientHeat.F90 \
-	   SimplePoisson.F90   \
-#	   TransientHeat.F90  
 
 #Compilation takes DIM option 
 

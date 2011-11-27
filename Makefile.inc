@@ -84,7 +84,8 @@ lib${LIB}.so: ${SOBJS}
 #${PETSC_FORTRAN_LIB} ${PETSC_LIB} must be at the end
 #FLINKER = ${FC_LINKER} ${FC_LINKER_FLAGS} ${FFLAGS} 
 ${BIN}: ${OBJS} 
-	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM} ${addprefix ${OBJDIR},${addprefix ${DIM}, $?}} ${FFLAGS} 
+	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/${DIM}$@.o $@.F90
+	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM} ${addprefix ${OBJDIR},${addprefix ${DIM}, $?}} ${addprefix ${OBJDIR},${addprefix ${DIM}, $@.o}} ${FFLAGS} 
 
 .F90.o:
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/${DIM}$@ $<
