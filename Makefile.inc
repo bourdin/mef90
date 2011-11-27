@@ -3,17 +3,26 @@
 
 OBJS = ${SRCS:.F90=.o}
 SOBJS = ${OBJS:.o=.so}
-#DIMOBJS = ${addprefix ${DIM}, ${OBJS}}
 
 OBJDIR = ${MEF90_DIR}/obj/${PETSC_ARCH}/
 LIBDIR = ${OBJDIR}
 BINDIR = ${MEF90_DIR}/bin/${PETSC_ARCH}/
-#OBJDIR = .
-#DIROBJS = ${addprefix ${OBJDIR}, ${OBJS}}
-#DIRSOBJS = ${addprefix ${OBJDIR}, ${SOBJS}}
 
+#Setring flags and include statements 
 MEF90_FLAGS += ${FC_MODULE_OUTPUT_FLAG} ${OBJDIR}
 MEF90_INCS += ${PETSC_FC_INCLUDES}  
+
+
+#FFLAGS is used in FLINKER def in petsc/rules
+ifdef BIN
+	FFLAGS = ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	FFLAGS += -L${LIBDIR} -lMEF90 
+	FFLAGS += -lVar_Struct 
+endif
+
+ifdef TAO
+	FFLAGS += ${TAO_LIB} ${TAO_FORTRAN_LIB} 
+endif 
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
 	MEF90_FLAGS +=  -ffixed-line-length-none  -ffree-line-length-none -ffree-form 
@@ -72,3 +81,7 @@ debug::
 
 
 include ${PETSC_DIR}/conf/variables
+
+ifdef TAO
+	include ${TAO_DIR}/bmake/tao_common_variables
+endif 
