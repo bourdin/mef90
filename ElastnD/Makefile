@@ -1,6 +1,7 @@
 BIN =ELast 
 #Order is important
-SRCS = m_Elast.F90 
+SRCS = m_Elast.F90\
+	   Elast.F90
 
 MEF90_INCS += -I${OBJDIR} ${TAO_INCLUDE} 
 #FFLAGS is used in FLINKER def in petsc/rules

@@ -38,8 +38,10 @@ lib${LIB}.so: ${SOBJS}
 	${FLINKER} -shared -o ${OBJDIR}/$@ ${addprefix ${OBJDIR}, $?}  
 
 #-static library ? 
+#${PETSC_FORTRAN_LIB} ${PETSC_LIB} are included in FLINKER
+#FLINKER = ${FC_LINKER} ${FC_LINKER_FLAGS} ${FFLAGS} 
 ${BIN}: ${OBJS} 
-	${FLINKER} -o ${BINDIR}/$@${DIM} ${addprefix ${OBJDIR},${addprefix ${DIM}, $?}} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM} ${addprefix ${OBJDIR},${addprefix ${DIM}, $?}} ${FFLAGS} 
 
 .F90.o:
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/${DIM}$@ $<
