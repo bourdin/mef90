@@ -20,14 +20,37 @@ ifdef BIN
 	FFLAGS += -lVar_Struct 
 endif
 
-ifdef TAO
-	FFLAGS += ${TAO_LIB} ${TAO_FORTRAN_LIB} 
-endif 
-
+#This is to accept long lines 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
 	MEF90_FLAGS +=  -ffixed-line-length-none  -ffree-line-length-none -ffree-form 
 endif
 
+ifneq (,$(findstring xlf,$(FC)))
+	FC_D_FLAG=-WF,-D
+else
+  	FC_D_FLAG=-D
+endif
+
+#Dimension Flags 2D / 3D 
+ifdef DIM 
+	ifneq (,$(findstring gcc,$(PETSC_ARCH)))
+		MEF90_FLAGS += ${FC_D_FLAG}PB_${DIM} 
+	else
+		MEF90_FLAGS += -DPB_${DIM}  
+	endif
+endif
+
+#TAO Fllags 
+ifdef TAO
+	FFLAGS += ${TAO_LIB} ${TAO_FORTRAN_LIB} 
+	ifneq (,$(findstring gcc,$(PETSC_ARCH)))
+		MEF90_FLAGS +=  ${FC_D_FLAG}WITH_TAO 
+	else
+		MEF90_FLAGS += -DWITH_TAO 
+	endif
+endif 
+
+############################################################ 
 all: ${BINDIR} ${OBJDIR} ${BIN} ${LIB}
 
 ${OBJDIR}:
