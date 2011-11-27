@@ -1,6 +1,6 @@
 BIN = PrepFilm
 #Order is important
-SRCS = m_PrepFilm.F90 PrepFilm.F90 
+SRCS = m_PrepFilm.F90 
 
 MEF90_INCS += -I${OBJDIR}
 
