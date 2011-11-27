@@ -1,4 +1,4 @@
-BIN = VarFracQS${DIM} 
+BIN = VarFracQS 
 #Order is important
 SRCS = \
 	   m_VarFracQS_Types.F90  \
@@ -11,12 +11,12 @@ SRCS = \
 
 
 #MEF90_INCS += -I../MEF90 -I../m_VarFrac_Struct -I/opt/HPC/tao-lite -I/opt/HPC/tao-lite/include 
-MEF90_INCS += -I../MEF90 -I../m_VarFrac_Struct ${TAO_INCLUDE} 
+MEF90_INCS += -I${OBJDIR} ${TAO_INCLUDE} 
 #FFLAGS is used in FLINKER def in petsc/rules
 #+= si pas defini avant ne rajoute rien
 FFLAGS = ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
-FFLAGS += -L../MEF90 -lMEF90 
-FFLAGS += -L../m_VarFrac_Struct -lVar_Struct 
+FFLAGS += -L${LIBDIR} -lMEF90 
+FFLAGS += -lVar_Struct 
 FFLAGS += ${TAO_LIB} ${TAO_FORTRAN_LIB} 
 #FFLAGS += -L/opt/HPC/tao-lite/lib/${PETSC_ARCH} -ltaofortran -ltaopetsc -ltao
 

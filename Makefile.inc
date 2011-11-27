@@ -5,8 +5,10 @@ OBJS = ${SRCS:.F90=.o}
 SOBJS = ${OBJS:.o=.so}
 #DIMOBJS = ${addprefix ${DIM}, ${OBJS}}
 
-#OBJDIR = ${MEF90_DIR}/obj/${PETSC_ARCH}/
-OBJDIR = .
+OBJDIR = ${MEF90_DIR}/obj/${PETSC_ARCH}/
+LIBDIR = ${OBJDIR}
+BINDIR = ${MEF90_DIR}/bin/${PETSC_ARCH}/
+#OBJDIR = .
 #DIROBJS = ${addprefix ${OBJDIR}, ${OBJS}}
 #DIRSOBJS = ${addprefix ${OBJDIR}, ${SOBJS}}
 
@@ -17,23 +19,27 @@ ifneq (,$(findstring gcc,$(PETSC_ARCH)))
 	MEF90_FLAGS +=  -ffixed-line-length-none  -ffree-line-length-none -ffree-form 
 endif
 
-all: ${OBJDIR} ${BIN} ${LIB}
+all: ${BINDIR} ${OBJDIR} ${BIN} ${LIB}
 
 ${OBJDIR}:
+	mkdir -p $@
+
+${BINDIR}:
 	mkdir -p $@
 
 ${LIB}: lib${LIB}.a lib${LIB}.so
 
 lib${LIB}.a: ${OBJS} 
-	${AR} ${AR_FLAGS} ${OBJDIR}/$@ $?
+	${AR} ${AR_FLAGS} ${OBJDIR}/$@ ${addprefix ${OBJDIR}, $?}
 
 #TODO option -shared take automatic varaible from Petsc
+#same for -DPic ? 
 lib${LIB}.so: ${SOBJS}
-	${FLINKER} -shared -o ${OBJDIR}/$@ $?  
+	${FLINKER} -shared -o ${OBJDIR}/$@ ${addprefix ${OBJDIR}, $?}  
 
 #-static library ? 
 ${BIN}: ${OBJS} 
-	${FLINKER}  -o $@ ${addprefix ${DIM}, $?} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	${FLINKER} -o ${BINDIR}/$@${DIM} ${addprefix ${OBJDIR},${addprefix ${DIM}, $?}} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
 .F90.o:
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/${DIM}$@ $<
@@ -43,11 +49,14 @@ ${BIN}: ${OBJS}
 
 
 clean:
-	-cd ${OBJDIR} && rm -f *.o *.mod *.so 
+	-cd ${OBJDIR} && rm -f *.o *.mod  
+	-cd ${LIBDIR} && rm -f *.a *.so  
 	-rm -rf ${OBJDIR}
+	-rm -rf ${LIBDIR}
+	-rm -rf ${BINDIR}
 
 debug::
-	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
+	@echo MEF90_FC_FLAGS is ${MEF90_FLAGS}
 	@echo FC is ${FC}
 	@echo FC_FLAGS is ${FC_FLAGS}
 	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
