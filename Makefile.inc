@@ -1,13 +1,13 @@
 ## -*- Mode: Makefile; -*-
 ## vim: set ft=automake :
 
-OBJS = ${SRCS:.F90=.o}
-SOBJS = ${OBJS:.o=.so}
-
 OBJDIR = ${MEF90_DIR}/obj/${PETSC_ARCH}/
 LIBDIR = ${OBJDIR}
 BINDIR = ${MEF90_DIR}/bin/${PETSC_ARCH}/
 
+OBJS =  ${addprefix ${OBJDIR},${addprefix ${DIM},${SRCS:.F90=.o}}}
+SOBJS = ${OBJS:.o=.so}
+TARGET = $(addprefix ${BINDIR},${BIN})
 ##################################################################
 #                        Variables 
 #Setting flags and include statements 
@@ -73,25 +73,25 @@ ${BINDIR}:
 
 ${LIB}: lib${LIB}.a lib${LIB}.so
 
-lib${LIB}.a: ${OBJS} 
-	${AR} ${AR_FLAGS} ${OBJDIR}/$@ ${addprefix ${OBJDIR}, $?}
+lib${LIB}.a: ${OBJS}
+	${AR} ${AR_FLAGS} ${OBJDIR}/$@  $?
 
 #TODO option -shared take automatic variable from Petsc
 #same for -DPic ? 
 lib${LIB}.so: ${SOBJS}
-	${FLINKER} -shared -o ${OBJDIR}/$@ ${addprefix ${OBJDIR}, $?}  
+	${FLINKER} -shared -o ${OBJDIR}/$@  $?  
 
 #${PETSC_FORTRAN_LIB} ${PETSC_LIB} must be at the end
 #FLINKER = ${FC_LINKER} ${FC_LINKER_FLAGS} ${FFLAGS} 
 ${BIN}: ${OBJS} 
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/${DIM}$@.o $@.F90
-	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM} ${addprefix ${OBJDIR},${addprefix ${DIM}, $?}} ${addprefix ${OBJDIR},${addprefix ${DIM}, $@.o}} ${FFLAGS} 
+	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM}  $? ${addprefix ${OBJDIR},${addprefix ${DIM}, $@.o}} ${FFLAGS} 
 
-.F90.o:
-	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/${DIM}$@ $<
+${OBJDIR}${DIM}%.o : %.F90
+	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o $@ $<
 
-.F90.so:
-	${FC} ${FFLAGS} ${MEF90_FLAGS} ${MEF90_INCS} -DPIC -c -o ${OBJDIR}/$@ $<
+${OBJDIR}${DIM}%.so : %.F90
+	${FC} ${FFLAGS} ${MEF90_FLAGS} ${MEF90_INCS} -DPIC -c -o $@ $<
 
 
 clean:

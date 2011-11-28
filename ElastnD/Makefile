@@ -1,4 +1,4 @@
-BIN =ELast 
+BIN = Elast 
 #Order is important
 SRCS = m_Elast.F90\
 	   Elast.F90
