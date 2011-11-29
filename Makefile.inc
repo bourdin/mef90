@@ -6,7 +6,6 @@ LIBDIR = ${OBJDIR}
 BINDIR = ${MEF90_DIR}/bin/${PETSC_ARCH}/
 
 OBJS =  ${addprefix ${OBJDIR},${addprefix ${DIM},${SRCS:.F90=.o}}}
-SOBJS = ${OBJS:.o=.so}
 TARGET = $(addprefix ${BINDIR},${BIN})
 ##################################################################
 #                        Variables 
@@ -71,15 +70,10 @@ ${OBJDIR}:
 ${BINDIR}:
 	mkdir -p $@
 
-${LIB}: lib${LIB}.a lib${LIB}.so
+${LIB}: lib${LIB}.a 
 
 lib${LIB}.a: ${OBJS}
 	${AR} ${AR_FLAGS} ${OBJDIR}/$@  $?
-
-#TODO option -shared take automatic variable from Petsc
-#same for -DPic ? 
-lib${LIB}.so: ${SOBJS}
-	${FLINKER} -shared -o ${OBJDIR}/$@  $?  
 
 #${PETSC_FORTRAN_LIB} ${PETSC_LIB} must be at the end
 #FLINKER = ${FC_LINKER} ${FC_LINKER_FLAGS} ${FFLAGS} 
@@ -90,13 +84,10 @@ ${BIN}: ${OBJS}
 ${OBJDIR}${DIM}%.o : %.F90
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o $@ $<
 
-${OBJDIR}${DIM}%.so : %.F90
-	${FC} ${FFLAGS} ${MEF90_FLAGS} ${MEF90_INCS} -DPIC -c -o $@ $<
-
 
 clean:
 	-cd ${OBJDIR} && rm -f *.o *.mod  
-	-cd ${LIBDIR} && rm -f *.a *.so  
+	-cd ${LIBDIR} && rm -f *.a   
 	-rm -rf ${OBJDIR}
 	-rm -rf ${LIBDIR}
 	-rm -rf ${BINDIR}
