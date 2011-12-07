@@ -69,7 +69,7 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Full  = 1
    PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Shear = 2
 
-   PetscInt, Parameter, Public                     :: VarFrac_Num_VertVar           = 8
+   PetscInt, Parameter, Public                     :: VarFrac_Num_VertVar           = 9
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_Fracture      = 1
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_DisplacementX = 2   
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_DisplacementY = 3
@@ -78,6 +78,7 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_ForceY        = 6
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_ForceZ        = 7   
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_Temperature   = 8
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_ForceTemp     = 9
    
    PetscInt, Parameter, Public                     :: VarFrac_Num_CellVar      = 12
    PetscInt, Parameter, Public                     :: VarFrac_CellVar_StrainXX = 1
@@ -130,12 +131,14 @@ Module m_VarFrac_Struct
       PetscReal                                    :: Toughness
       Type(Tens4OS2D)                              :: Hookes_Law
       Type(MatS2D)                                 :: Therm_Exp      
+      PetscReal                                    :: Diffusivity
    End Type MatProp2D_Type
    
    Type MatProp3D_Type
       PetscReal                                    :: Toughness
       Type(Tens4OS3D)                              :: Hookes_Law
       Type(MatS3D)                                 :: Therm_Exp      
+      PetscReal                                    :: Diffusivity
    End Type MatProp3D_Type
    
    Type VarFracSchemeParam_Type
@@ -271,11 +274,11 @@ Module m_VarFrac_Struct
       Rewind(F_OUT)
       Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
-         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
+         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp, MatProp(iBlk)%Diffusivity
       End Do
       Close(F_OUT)
       
-120   Format(I6, '      ', 10(ES12.5,' '))   
+120   Format(I6, '      ', 11(ES12.5,' '))   
    End Subroutine MatProp2D_Write
  
    Subroutine MatProp3D_Write(MeshTopology, MatProp, filename)
@@ -290,11 +293,11 @@ Module m_VarFrac_Struct
       Rewind(F_OUT)
       Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
-         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
+         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp, MatProp(iBlk)%Diffusivity
       End Do
       Close(F_OUT)
       
-120   Format(I6, '      ', 28(ES12.5,' '))
+120   Format(I6, '      ', 29(ES12.5,' '))
    End Subroutine MatProp3D_Write
  
  
@@ -307,7 +310,7 @@ Module m_VarFrac_Struct
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
       Type(Tens4OS2D)                              :: Hookes_Law
-      PetscReal                                    :: Toughness
+      PetscReal                                    :: Toughness, Diffusivity
       Type(MatS2D)                                 :: Therm_Exp
    
       Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
@@ -328,11 +331,11 @@ Module m_VarFrac_Struct
       Rewind(F_IN)
       Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
-
+         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp, Diffusivity
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp
+         MatProp(Idx)%Diffusivity  = Diffusivity
       End Do
       Close(F_IN)
       Return
@@ -349,7 +352,7 @@ Module m_VarFrac_Struct
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
       Type(Tens4OS3D)                              :: Hookes_Law
-      PetscReal                                    :: Toughness
+      PetscReal                                    :: Toughness, Diffusivity
       Type(MatS3D)                                 :: Therm_Exp
    
       Open(File = filename, Unit = F_IN, Status = 'Old', Action = 'Read')
@@ -370,10 +373,11 @@ Module m_VarFrac_Struct
       Rewind(F_IN)
       Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
+         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp, Diffusivity
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp
+         MatProp(Idx)%Diffusivity  = Diffusivity
       End Do
       Close(F_IN)
    End Subroutine MatProp3D_Read

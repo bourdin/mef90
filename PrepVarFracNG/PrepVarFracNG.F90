@@ -56,6 +56,7 @@ Program PrepVarFrac
    Type(Tens4OS2D)                              :: TmpHL_2D
    Type(Tens4OS3D)                              :: TmpHL_3D   
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
+   PetscReal                                    :: Diffusivity 
    PetscReal                                    :: Eeff,nueff,Kappa,Mu
    PetscReal                                    :: CTheta,CTheta2,STheta,STheta2
    PetscReal, Dimension(:), Pointer             :: GlobVars
@@ -355,6 +356,14 @@ Program PrepVarFrac
          Write(IOBuffer, 300) i, 'Therm Exp'
          Call MEF90_AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
 
+         Select Case(iCase)
+         Case(9)
+            Write(IOBuffer, 300) i, 'Diffusivity'
+            Call MEF90_AskReal(Diffusivity, IOBuffer, BatchUnit, IsBatch)
+          Case Default 
+            Diffusivity = 0.0_Kr 
+         End Select
+
          Select Case(MeshTopology%Num_Dim)
          Case(2)
             MatProp2D(i)%Toughness = Toughness
@@ -366,6 +375,7 @@ Program PrepVarFrac
             MatProp2D(i)%Therm_Exp    = 0.0_Kr
             MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
             MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
+            MatProp2D(i)%Diffusivity  = Diffusivity
          Case(3)
             MatProp3D(i)%Toughness = Toughness
             Call GenHL_Iso3D_Enu(E, nu, MatProp3D(i)%Hookes_Law)
@@ -373,6 +383,7 @@ Program PrepVarFrac
             MatProp3D(i)%Therm_Exp%XX = Therm_ExpScal
             MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
             MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
+            MatProp3D(i)%Diffusivity  = Diffusivity
          End Select 
       End Do
    End Select
@@ -488,8 +499,8 @@ Program PrepVarFrac
          Call MEF90_AskReal(ValT_Init(iBlock), IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'RHS Temp'
          Call MEF90_AskReal(ValT_F(iBlock), IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlock, 'Diffusivity'
-         Call MEF90_AskReal(HeatAppCtx%Diff(iBlock),IOBuffer, BatchUnit, IsBatch)
+!         Write(IOBuffer, 300) iBlock, 'Diffusivity'
+!         Call MEF90_AskReal(HeatAppCtx%Diff(iBlock),IOBuffer, BatchUnit, IsBatch)
          Select Case(HeatAppCtx%AppParam%TestCase)
          Case(3)
              Write(IOBuffer, 300) iBlock, 'B Mensi Parameter'
