@@ -12,6 +12,10 @@ Interface IntegrateScalLp
 !TODO add IntegrateScalLp_3D, IntegrateVectLp_2D, IntegrateVectLp_3D
 End Interface IntegrateScalLp
 
+Interface IntegrateScalSemiH1
+   Module Procedure IntegrateScalSemiH1_2D
+End Interface IntegrateScalSemiH1
+
 Contains 
    
 #undef __FUNCT__
@@ -23,7 +27,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: IntLp
       PetscInt                                     :: p
       
-      PetscInt                                     :: iBlk
+      PetscInt                                     :: iBlk, IBlkID
       PetscInt                                     :: iErr, NumDoFScal
       PetscInt                                     :: iE, iEloc, IGauss, IDoF1
       PetscReal                                    :: IntRes
@@ -32,18 +36,19 @@ Contains
 
       Allocate(MyIntLp(MeshTopology%Num_Elem_Blks_Global))
       Do iBlk = 1, MeshTopology%Num_Elem_Blks
+         iBlkID = MeshTopology%Elem_Blk(iBlk)%ID
          NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
          Allocate(V_Loc(NumDoFScal))
-         MyIntLp(iBlk) = 0
+         MyIntLp(iBlkID) = 0
          Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call SectionRealRestrictClosure(V_Sec, MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
             Do iGauss = 1, size(Elem(iE)%Gauss_C)
-            IntRes = 0
+               IntRes = 0
                Do iDoF1 = 1, NumDoFScal
                      IntRes = IntRes   + V_Loc(iDoF1) * Elem(iE)%BF(iDoF1, iGauss)
                End Do
-               MyIntLp(iBlk) = MyIntLp(iBlk) + Elem(iE)%Gauss_C(iGauss)*(Intres**p)
+               MyIntLp(iBlkID) = MyIntLp(iBlkID) + Elem(iE)%Gauss_C(iGauss)*(Intres**p)
             End DO
          End Do Do_IEloc 
          DeAllocate(V_Loc)
@@ -64,7 +69,7 @@ Contains
       PetscReal, Dimension(:), Pointer             :: IntLp
       PetscInt                                     :: p
       
-      PetscInt                                     :: iBlk
+      PetscInt                                     :: iBlk, IBlkID
       PetscInt                                     :: iErr, NumDoFScal
       PetscInt                                     :: iE, iEloc, IGauss, IDoF1
       PetscReal                                    :: IntRes
@@ -73,9 +78,10 @@ Contains
 
       Allocate(MyIntLp(MeshTopology%Num_Elem_Blks_Global))
       Do iBlk = 1, MeshTopology%Num_Elem_Blks
+         iBlkID = MeshTopology%Elem_Blk(iBlk)%ID
          NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
          Allocate(V_Loc(NumDoFScal))
-         MyIntLp(iBlk) = 0
+         MyIntLp(iBlkID) = 0
          Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
             Call SectionRealRestrictClosure(V_Sec, MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
@@ -84,7 +90,7 @@ Contains
                Do iDoF1 = 1, NumDoFScal
                      IntRes = IntRes   + V_Loc(iDoF1) * Elem(iE)%BF(iDoF1, iGauss)
                End Do
-               MyIntLp(iBlk) = MyIntLp(iBlk) + Elem(iE)%Gauss_C(iGauss)*(Intres**p)
+               MyIntLp(iBlkID) = MyIntLp(iBlkID) + Elem(iE)%Gauss_C(iGauss)*(Intres**p)
             End DO
          End Do Do_IEloc 
          DeAllocate(V_Loc)
@@ -97,40 +103,43 @@ Contains
    End Subroutine IntegrateScalLp_3D
 
 #undef __FUNCT__
-#define __FUNCT__ "IntegrateScalSemiH1"
-   Subroutine IntegrateScalSemiH1(MeshTopology,iBlk,Elem,V_Sec,IntSemiH1)
-      Type(SectionReal)                            :: V_Sec
+#define __FUNCT__ "IntegrateScalSemiH1_2D"
+   Subroutine IntegrateScalSemiH1_2D(MeshTopology,Elem,V_Sec,IntSemiH1)
       Type(MeshTopology_Type)                      :: MeshTopology
-      PetscInt                                     :: iBlk
+      Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
+      Type(SectionReal)                            :: V_Sec
+      PetscReal, Dimension(:), Pointer             :: IntSemiH1
+      
+      PetscInt                                     :: iBlk, iBlkID
       PetscInt                                     :: iErr, NumDoFScal
       PetscInt                                     :: iE, iEloc, IGauss, IDoF1
-      PetscReal                                    :: IntSemiH1
+      PetscReal, Dimension(:), Pointer             :: MyIntSemiH1
       PetscReal, Dimension(:), Pointer             :: V_Loc
-#if defined PB_2D
-      Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
-       Type(Vect2D)                                 :: GradV_Elem
-#elif defined PB_3D 
-      Type(Element3D_Scal), Dimension(:), Pointer  :: Elem
-      Type(Vect3D)                                 :: GradV_Elem
-#endif   
+      Type(Vect2D)                                 :: GradV_Elem
 
-      NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
-      Allocate(V_Loc(NumDoFScal))
-      GradV_Elem = 0.0_Kr
-      IntSemiH1 = 0.0_Kr
-      Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
-         iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-         Call SectionRealRestrictClosure(V_Sec, MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
-         Do iGauss = 1, size(Elem(iE)%Gauss_C)
-            Do iDoF1 = 1, NumDoFScal
-                  GradV_Elem = GradV_Elem  + (V_Loc(iDoF1) * Elem(iE)%Grad_BF(iDoF1, iGauss))
-            End Do
-         IntSemiH1 = IntSemiH1 + (GradV_Elem .DotP. GradV_Elem)
-         End DO
-      End Do Do_IEloc 
-      IntSemiH1 = sqrt(IntSemiH1)
-   DeAllocate(V_Loc)
+!      Allocate(MyIntSemiH1(MeshTopology%Num_Elem_Blks_Global))
+!      MyIntSemiH1 = 0.0_Kr
+!      Do iBlk = 1, MeshTopology%Num_Elem_Blks
+!         iBlkID = MeshTopology%Elem_Blk(iBlk)%ID
+!         NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
+!         Allocate(V_Loc(NumDoFScal))
+!         GradV_Elem = 0.0_Kr
+!         Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+!            iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+!            Call SectionRealRestrictClosure(V_Sec, MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
+!            Do iGauss = 1, size(Elem(iE)%Gauss_C)
+!               Do iDoF1 = 1, NumDoFScal
+!                  GradV_Elem = GradV_Elem  + (V_Loc(iDoF1) * Elem(iE)%Grad_BF(iDoF1, iGauss))
+!               End Do
+!            MyIntSemiH1(IBlkID) = MyIntSemiH1(IblkID) + (GradV_Elem .DotP. GradV_Elem)
+!            End DO
+!         End Do Do_IEloc 
+!         IntSemiH1 = sqrt(IntSemiH1)
+!      End Do
+!      DeAllocate(V_Loc)
+!      Call MPI_AllReduce(MyIntSemiH1, IntSemiH1, MeshTopology%Num_Elem_Blks_Global, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
 
-   End Subroutine IntegrateScalSemiH1
+   End Subroutine IntegrateScalSemiH1_2D
+
 
 End Module m_MEF_Integrate

@@ -700,16 +700,14 @@ Contains
       Rewind(MassFileUnit)
       Write(MassFileUnit, 400, advance='no') 0
       Call IntegrateScalLp(MeshTopology,Elem,V_Sec_0,WaterMass,1)
-      Write(MassFileUnit, 401, advance='no')  WaterMass(1)
-      Write(MassFileUnit, *)
+      Write(MassFileUnit, *)  WaterMass
       Do istep = 1, NumTimeSteps-1
          Write(MassFileUnit, 400, advance='no') istep
          Call Read_EXO_Result_Vertex(EXO, MeshTopology, Id_Vertex, 1, V_Sec_0)
          Call Read_EXO_Result_Vertex(EXO, MeshTopology, Id_Vertex, iStep+1, V_Sec_i)
          Call SectionRealAXPY(V_Sec_0, MeshTopology%mesh, neg, V_Sec_i, iErr); CHKERRQ(iErr)
          Call IntegrateScalLp(MeshTopology,Elem,V_Sec_i,WaterMass,1)
-         Write(MassFileUnit, 401, advance='no')  WaterMass(1)
-         Write(MassFileUnit, *)
+         Write(MassFileUnit, *)  WaterMass
       End DO 
 400 Format(I6) 
 401 Format(ES13.5, '   ') 
