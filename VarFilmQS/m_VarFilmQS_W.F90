@@ -167,22 +167,23 @@ Subroutine FW_AssemblyBlk(iBlk, AppCtx)
       Call SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_loc, iErr); CHKERRQ(ierr)
       Call SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_loc, iErr); CHKERRQ(ierr)
       Call SectionRealRestrictClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, F_loc, iErr); CHKERRQ(ierr)
-   
-      U_eff_elem = 0.0_Kr  
-      
-      ! Compute U_elem vector
-      Do iDof=1, NumDoFVect
-         Do iGauss=1, Size(AppCtx%ElemVect(iE)%Gauss_C)
-            U_eff_elem=U_eff_elem+AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * (U_loc(iDoF)-U0_loc(iDoF))
-         End Do
-      End Do
+    
       Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
-         Do iDoF = 1, NumDoFScal
-            F_loc(iDoF) = F_loc(iDoF) +  (AppCtx%MatProp(iBlk_glob)%DelamToughness - AppCtx%MatProp(iBlk_glob)%Ksubst * 0.5_Kr * (U_eff_elem .DotP. U_eff_elem) )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
-         End Do
-      End Do Do_iGauss
-      Call SectionRealUpdateClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+   
+		U_eff_elem = 0.0_Kr  
+		
+		! Compute U_elem vector
+		Do iDof=1, NumDoFVect
+			U_eff_elem=U_eff_elem+AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * (U_loc(iDoF)-U0_loc(iDoF))
+		End Do
+		Do iDoF = 1, NumDoFScal
+			F_loc(iDoF) = F_loc(iDoF) +  (2_Kr * AppCtx%MatProp(iBlk_glob)%DelamToughness / AppCtx%MatProp(iBlk_glob)%Ksubst - (U_eff_elem .DotP. U_eff_elem) )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
+		End Do
+	End Do Do_iGauss
+      
+	Call SectionRealUpdateClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
    End Do Do_iEloc
+
 
    DeAllocate(U_loc)
    DeAllocate(U0_loc)
