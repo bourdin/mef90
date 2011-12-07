@@ -56,7 +56,7 @@ Program PrepVarFrac
    Type(Tens4OS2D)                              :: TmpHL_2D
    Type(Tens4OS3D)                              :: TmpHL_3D   
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
-   PetscReal                                    :: Diffusivity 
+   PetscReal                                    :: Diffusivity, Diffusivity2 
    PetscReal                                    :: Eeff,nueff,Kappa,Mu
    PetscReal                                    :: CTheta,CTheta2,STheta,STheta2
    PetscReal, Dimension(:), Pointer             :: GlobVars
@@ -360,8 +360,11 @@ Program PrepVarFrac
          Case(9)
             Write(IOBuffer, 300) i, 'Diffusivity'
             Call MEF90_AskReal(Diffusivity, IOBuffer, BatchUnit, IsBatch)
+            Write(IOBuffer, 300) i, 'Diffusivity2'
+            Call MEF90_AskReal(Diffusivity2, IOBuffer, BatchUnit, IsBatch)
           Case Default 
-            Diffusivity = 0.0_Kr 
+            Diffusivity  = 0.0_Kr 
+            Diffusivity2 = 0.0_Kr 
          End Select
 
          Select Case(MeshTopology%Num_Dim)
@@ -376,6 +379,7 @@ Program PrepVarFrac
             MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
             MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
             MatProp2D(i)%Diffusivity  = Diffusivity
+            MatProp2D(i)%Diffusivity2 = Diffusivity2
          Case(3)
             MatProp3D(i)%Toughness = Toughness
             Call GenHL_Iso3D_Enu(E, nu, MatProp3D(i)%Hookes_Law)
@@ -384,6 +388,7 @@ Program PrepVarFrac
             MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
             MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
             MatProp3D(i)%Diffusivity  = Diffusivity
+            MatProp3D(i)%Diffusivity2 = Diffusivity2
          End Select 
       End Do
    End Select
@@ -492,7 +497,7 @@ Program PrepVarFrac
 #if defined WITH_HEAT
       Allocate(ValT_Init(MeshTopology%Num_Elem_Blks_Global))
       Allocate(ValT_F(MeshTopology%Num_Elem_Blks_Global))
-      Allocate(HeatAppCtx%Diff(MeshTopology%Num_Elem_Blks_Global)) 
+!      Allocate(HeatAppCtx%Diff(MeshTopology%Num_Elem_Blks_Global)) 
       Allocate(HeatAppCtx%B_Mensi(MeshTopology%Num_Elem_Blks_Global))  
       Do iBlock = 1, MeshTopology%Num_Elem_Blks_Global 
          Write(IOBuffer, 300) iBlock, 'T0 Initial Temperature'
@@ -501,11 +506,11 @@ Program PrepVarFrac
          Call MEF90_AskReal(ValT_F(iBlock), IOBuffer, BatchUnit, IsBatch)
 !         Write(IOBuffer, 300) iBlock, 'Diffusivity'
 !         Call MEF90_AskReal(HeatAppCtx%Diff(iBlock),IOBuffer, BatchUnit, IsBatch)
-         Select Case(HeatAppCtx%AppParam%TestCase)
-         Case(3)
-             Write(IOBuffer, 300) iBlock, 'B Mensi Parameter'
-            Call MEF90_AskReal(HeatAppCtx%B_Mensi(iBlock),IOBuffer,  BatchUnit, IsBatch)
-         End Select
+!         Select Case(HeatAppCtx%AppParam%TestCase)
+!         Case(3)
+!             Write(IOBuffer, 300) iBlock, 'B Mensi Parameter'
+!            Call MEF90_AskReal(HeatAppCtx%B_Mensi(iBlock),IOBuffer,  BatchUnit, IsBatch)
+!         End Select
       End Do
       
       Allocate(T_BC(MeshTopology%Num_Node_Sets_Global))
