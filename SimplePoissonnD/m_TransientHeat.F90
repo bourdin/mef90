@@ -516,6 +516,52 @@ Contains
    
    
 #undef __FUNCT__
+#define __FUNCT__ "SolveTransientStep"
+   Subroutine SolveTransientStep(AppCtx, MyEXO, MeshTopology, TimeStepIni, TimeStepFinal, iStep)
+      Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type (MeshTopology_Type)                     :: MeshTopology
+      Type(EXO_Type)                               :: MyEXO
+      PetscInt                                     :: TSTimeSteps, iErr, iStep
+      TSConvergedReason                            :: TSreason 
+      PetscReal                                    :: TimeStepIni, TimeStepFinal
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+     
+      Write(IOBuffer, *) "Warning : TSSolve does not assure that computation stops as the exact asked time \n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
+!TODO see TSSetExactFinalTime, TSGetTimeStep
+!TSSetExactFinalTime can not be used : 'TSRosW 2p does not have an interpolation formula'
+
+      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
+
+! Using IMEX see section 6.1.2 PetSc documentation 
+      if (AppCtx%AppParam%verbose > 1) Then                                                                                                                                                
+         Call TSView(AppCtx%TS,  PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+      End If
+
+      Write(IOBuffer, 400) iStep, TimeStepIni, TimeStepFinal 
+      Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
+      Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr)
+
+      Call VecView(AppCtx%U%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+      Call VecView(AppCtx%UBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+
+      Call TSSetInitialTimeStep(AppCtx%TS, TimeStepIni, (TimeStepFinal - TimeStepIni/10.),  ierr); CHKERRQ(iErr)
+      Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, TimeStepFinal, iErr); CHKERRQ(iErr)
+      Call TSSolve(AppCtx%TS, AppCtx%U%Vec, TimeStepFinal, iErr); CHKERRQ(iErr)
+
+      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , iStep+1, AppCtx%U%Sec)
+      Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
+      Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, 100) TSTimeSteps, TSreason
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      
+100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
+400 Format('Solving TS Time step : ', I5, '    Ini Time : ', ES12.5,  ",    Final Time  :", ES12.5, '\n')
+   End Subroutine SolveTransientStep
+
+#undef __FUNCT__
 #define __FUNCT__ "SolveTransient"
    Subroutine SolveTransient(AppCtx, MyEXO, MeshTopology, lTimes)
       Type(Heat_AppCtx_Type)                            :: AppCtx

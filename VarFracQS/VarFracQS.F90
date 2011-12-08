@@ -54,16 +54,17 @@ Program  VarFracQS
   
    Allocate(SizeScal(1)) 
    SizeScal=1
-   Call FieldCreateVertex(HeatAppCtx%U,     'U',   AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(HeatAppCtx%U,     'T',   AppCtx%MeshTopology, SizeScal)
    Call FieldCreateVertex(HeatAppCtx%F,     'F',  AppCtx%MeshTopology,  SizeScal)
    Call FieldCreateVertex(HeatAppCtx%RHS,   'RHS', AppCtx%MeshTopology, SizeScal)
    Call FlagCreateVertex(HeatAppCtx%BCFlag, 'BC',   AppCtx%MeshTopology, SizeScal)
-   Call FieldCreateVertex(HeatAppCtx%UBC,    'UBC',      AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(HeatAppCtx%UBC,    'TBC',      AppCtx%MeshTopology, SizeScal)
    DeAllocate(SizeScal)
 
    !Read Initial Temerature Field 
    Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology,  AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, 1, HeatAppCtx%U)
    Call SectionRealToVec(HeatAppCtx%U%Sec, HeatAppCtx%U%Scatter,  SCATTER_REVERSE, HeatAppCtx%U%Vec, ierr); CHKERRQ(ierr)
+   
    !      Call HeatSetInitial(HeatAppCtx, MeshTopology, ValT_Init,ValT_F)
       !Set BC in Temperature
 !      Call HeatSetBC(HeatAppCtx, T_BC, MyExo, MeshTopology,VarFrac_NSProp_HasPForce)
@@ -74,6 +75,7 @@ Program  VarFracQS
    Call HeatMatAssembly(HeatAppCtx, AppCtx%MeshTopology)
    Call RHSAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%MyExo)
    Call MatMassAssembly(HeatAppCtx, AppCtx%MeshTopology)
+
 
    iDebug = 0
    Write(stagename(1), "(A)") "Outer loop"
@@ -98,8 +100,13 @@ Program  VarFracQS
       End If
 
       !!Compute Heat Field 
-      Call SolveTransient(HeatAppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%Load)
+      If (AppCtx%TimeStep < 2) Then
+!         Call SolveTransientStep(HeatAppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, 0.0_Kr , AppCtx%Load(AppCtx%TimeStep), AppCtx%TimeStep)
+      else 
+         Call SolveTransientStep(HeatAppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%Load(AppCtx%TimeStep-1), AppCtx%Load(AppCtx%TimeStep), AppCtx%TimeStep)
+      End If 
 !AppCtx%Load is the list of time steps. Quasi-Static ..... 
+!Trasnfert HeatAppCtx%U to AppCtx%Theta
 
       !!! Update U at fixed nodes
       Call Init_TS_U(AppCtx)
