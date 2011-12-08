@@ -3,8 +3,13 @@ syntax: glob
 *.mod
 *.o
 *.pyc
+*.orig
 TestSieve/fort.*
 TestSieve/*gen
 TestSieve/*log
 .DS_Store
 .tmproj
+obj/*
+lib/*
+bin/Linux*
+bin/Darwin*

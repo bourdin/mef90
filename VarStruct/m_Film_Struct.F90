@@ -94,7 +94,7 @@ Module m_Film_Struct
    PetscInt, Parameter, Public         :: VarFrac_CellVar_StressXY           = 6
                                           
    PetscInt, Parameter, Public         :: VarFrac_Num_GlobVar                = 7
-   PetscInt, Parameter, Public         :: VarFrac_GlobVar_FilmEnergy      = 1
+   PetscInt, Parameter, Public         :: VarFrac_GlobVar_FilmEnergy         = 1
    PetscInt, Parameter, Public         :: VarFrac_GlobVar_FractureEnergy     = 2 
    PetscInt, Parameter, Public         :: VarFrac_GlobVar_DelaminationEnergy = 3 
    PetscInt, Parameter, Public         :: VarFrac_GlobVar_BondingLayerEnergy = 4 
@@ -114,10 +114,10 @@ Module m_Film_Struct
    PetscInt, Parameter, Public         :: VarFrac_NSProp_BCWType             = 4
    PetscInt, Parameter, Public         :: VarFrac_NSProp_HasPForce           = 5
                                           
-   PetscInt, Parameter, Public         :: VarFrac_Num_MatProp2D   = 4
+   PetscInt, Parameter, Public         :: VarFrac_Num_MatProp2D              = 4
 
-	PetscInt, Parameter, Public         :: VarFrac_UW_Coupled            = 1
-	PetscInt, Parameter, Public         :: VarFrac_UW_Uncoupled          = 0
+   PetscInt, Parameter, Public         :: VarFrac_UW_Coupled                 = 1
+   PetscInt, Parameter, Public         :: VarFrac_UW_Uncoupled               = 0
    
    Type MatProp2D_Type
    PetscReal               :: DelamToughness
@@ -393,7 +393,7 @@ Module m_Film_Struct
       dSchemeParam%SaveStrain       = PETSC_FALSE
       dSchemeParam%V_UseTao         = PETSC_TRUE
 
-	dSchemeParam%CoupledUW      = VarFrac_UW_Coupled
+      dSchemeParam%CoupledUW      = VarFrac_UW_Coupled
 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-irrev',          dSchemeParam%IrrevType, flag, iErr); CHKERRQ(iErr) 
       If (dSchemeParam%IrrevType == VarFrac_Irrev_Eq) Then
