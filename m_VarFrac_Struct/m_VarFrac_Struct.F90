@@ -616,6 +616,7 @@ Module m_VarFrac_Struct
       dEXO%VertVariable(VarFrac_VertVar_ForceY)%Name        = 'Force Y'
       dEXO%VertVariable(VarFrac_VertVar_ForceZ)%Name        = 'Force Z'   
       dEXO%VertVariable(VarFrac_VertVar_Temperature)%Name   = 'Temperature'
+      dEXO%VertVariable(VarFrac_VertVar_ForceTemp)%Name     = 'Thermal Source'
       dEXO%VertVariable(:)%Offset = (/ (i, i=1,dEXO%Num_VertVariables) /)
    End Subroutine VarFracEXOVariable_Init
   
