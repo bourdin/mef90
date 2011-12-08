@@ -298,6 +298,7 @@ Program PrepVarFrac
    Select Case(iCase)
    !!! Write special cases here
    Case(9) !!! Single well, cst flux
+!TODO add the list of options ..... 
 #if defined WITH_HEAT
       HeatAppCtx%AppParam%verbose = verbose
       Call MEF90_AskInt(HeatAppCtx%AppParam%TestCase, 'Test Case For Solving Heat Equation', BatchUnit, IsBatch)
@@ -499,7 +500,7 @@ Program PrepVarFrac
       Allocate(ValT_Init(MeshTopology%Num_Elem_Blks_Global))
       Allocate(ValT_F(MeshTopology%Num_Elem_Blks_Global))
 !      Allocate(HeatAppCtx%Diff(MeshTopology%Num_Elem_Blks_Global)) 
-      Allocate(HeatAppCtx%B_Mensi(MeshTopology%Num_Elem_Blks_Global))  
+!      Allocate(HeatAppCtx%B_Mensi(MeshTopology%Num_Elem_Blks_Global))  
       Do iBlock = 1, MeshTopology%Num_Elem_Blks_Global 
          Write(IOBuffer, 300) iBlock, 'T0 Initial Temperature'
          Call MEF90_AskReal(ValT_Init(iBlock), IOBuffer, BatchUnit, IsBatch)
@@ -602,16 +603,31 @@ Program PrepVarFrac
             Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, iE-1, Thetaelem, INSERT_VALUES, ierr);CHKERRQ(iErr)
             Call SectionRealUpdateClosure(ThetaFSec, MeshTopology%Mesh, iE-1, Felem, INSERT_VALUES, ierr);CHKERRQ(iErr) 
          End Do Do_Elem_iE 
-         DeAllocate(Thetaelem)
          DeAllocate(Felem)
       End Do Do_Elem_Iblk
+!TODO write for all timesteps
+      !Do not forget to set for all time steps ....    
+   ! Set BC in temperature 
+      Do iloc = 1, MeshTopology%Num_Node_Sets         
+         i = MeshTopology%Node_Set(iloc)%ID
+         If (MyEXO%NSProperty(VarFrac_NSProp_HasPForce)%Value( MeshTopology%Node_Set(iloc)%ID)== 1) then 
+            Thetaelem =  T_BC(i) !Dirichlet BC 
+            Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+               Call SectionRealUpdate(ThetaSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            End Do
+         End If 
+      End Do
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, 1, ThetaSec) 
       Do iStep = 1, NumSteps
    !!  Save RHS in temperature for each time step (Only constant for now) 
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_ForceTemp)%Offset, iStep, ThetaFSec) 
       End Do 
+   DeAllocate(Thetaelem)
    Call SectionRealDestroy(ThetaSec, iErr); CHKERRQ(iErr)
-       
+!!!!! Following line ..... 
+!      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  MyEXO%NSProperty(NS_Offset),  MeshTopology)
+
+
 !#if defined WITH_HEAT
 ! list of time steps in T see computation lines 300-310 
 !      HeatAppCtx%NumSteps = NumSteps
