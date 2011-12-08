@@ -4,8 +4,12 @@ Program  VarFracQS
 
 #if defined PB_2D
    Use m_VarFracQS2D
+   Use m_Poisson2D
+  Use m_TransientHeat2D
 #elif defined PB_3D
    Use m_VarFracQS3D
+   Use m_Poisson3D
+   Use m_TransientHeat3D
 #endif   
    Use m_MEF90
    Use m_VarFrac_Struct
@@ -27,6 +31,9 @@ Program  VarFracQS
    PetscInt                                     :: StepOUT
    !PetscBool                                    :: AppCtx%IsBT
 
+   PetscInt, Dimension(:), Pointer              :: SizeScal
+   Type(Heat_AppCtx_Type)                       :: HeatAppCtx
+
    Call VarFracQSInit(AppCtx)
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Done with VarFracQSInit'
@@ -37,7 +44,37 @@ Program  VarFracQS
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer) 
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer) 
    End If   
-   
+
+   !Init For HEAT
+   !HeatAppCtx%NumSteps = NumSteps
+   HeatAppCtx%NumSteps = 100
+   HeatAppCtx%maxsteps = 1000 
+   HeatAppCtx%VertVar_Temperature = AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset
+   Call ElementInit(AppCtx%MeshTopology, HeatAppCtx%Elem, 2)
+  
+   Allocate(SizeScal(1)) 
+   SizeScal=1
+   Call FieldCreateVertex(HeatAppCtx%U,     'U',   AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(HeatAppCtx%F,     'F',  AppCtx%MeshTopology,  SizeScal)
+   Call FieldCreateVertex(HeatAppCtx%RHS,   'RHS', AppCtx%MeshTopology, SizeScal)
+   Call FlagCreateVertex(HeatAppCtx%BCFlag, 'BC',   AppCtx%MeshTopology, SizeScal)
+   Call FieldCreateVertex(HeatAppCtx%UBC,    'UBC',      AppCtx%MeshTopology, SizeScal)
+   DeAllocate(SizeScal)
+
+   !Read Initial Temerature Field 
+   Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology,  AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, 1, HeatAppCtx%U)
+   Call SectionRealToVec(HeatAppCtx%U%Sec, HeatAppCtx%U%Scatter,  SCATTER_REVERSE, HeatAppCtx%U%Vec, ierr); CHKERRQ(ierr)
+   !      Call HeatSetInitial(HeatAppCtx, MeshTopology, ValT_Init,ValT_F)
+      !Set BC in Temperature
+!      Call HeatSetBC(HeatAppCtx, T_BC, MyExo, MeshTopology,VarFrac_NSProp_HasPForce)
+   Call SectionIntZero(HeatAppCtx%BCFlag%Sec, iErr); CHKERRQ(iErr)
+   Call SectionIntAddNSProperty(HeatAppCtx%BCFlag%Sec,   AppCtx%MyEXO%NSProperty(VarFrac_NSProp_HasPForce), AppCtx%MeshTopology)
+
+   Call Poisson_TSSetUp(HeatAppCtx, AppCtx%MeshTopology)
+   Call HeatMatAssembly(HeatAppCtx, AppCtx%MeshTopology)
+   Call RHSAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%MyExo)
+   Call MatMassAssembly(HeatAppCtx, AppCtx%MeshTopology)
+
    iDebug = 0
    Write(stagename(1), "(A)") "Outer loop"
    Write(stagename(2), "(A)") "AltMin loop"
@@ -51,11 +88,18 @@ Program  VarFracQS
 ! 99    Format('\n=== Solving time step ', I4, '\n\n')
 
       !!! Init the fields:
-      Call Init_TS_Loads(AppCtx)      
+      Call Init_TS_Loads(AppCtx) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceTemp)%Offset, AppCtx%TimeStep, HeatAppCtx%F)
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset,  AppCtx%TimeStep, HeatAppCtx%UBC) 
+
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Done with Init_TS_Loads \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
+
+      !!Compute Heat Field 
+      Call SolveTransient(HeatAppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%Load)
+!AppCtx%Load is the list of time steps. Quasi-Static ..... 
 
       !!! Update U at fixed nodes
       Call Init_TS_U(AppCtx)
