@@ -8,15 +8,15 @@ Program PrepVarFrac
    Use m_PrepVarFrac
    Use petsc
 
-#if defined WITH_HEAT
-#if defined PB_2D
-   Use m_Poisson2D
-   Use m_TransientHeat2D
-#elif defined PB_3D 
-   Use m_Poisson3D
-   Use m_TransientHeat3D
-#endif 
-#endif 
+!#if defined WITH_HEAT
+!#if defined PB_2D
+!   Use m_Poisson2D
+!   Use m_TransientHeat2D
+!#elif defined PB_3D 
+!   Use m_Poisson3D
+!   Use m_TransientHeat3D
+!#endif 
+!#endif 
 
    Implicit NONE   
    
@@ -74,12 +74,13 @@ Program PrepVarFrac
    PetscInt                                     :: exo_version
    PetscReal                                    :: R, Ymax
    PetscInt                                     :: iBlk, iEloc, iE
-#if defined WITH_HEAT
-   Type(Heat_AppCtx_Type)                       :: HeatAppCtx
+   PetscInt                                     :: HeatTestCase
+!#if defined WITH_HEAT
+!   Type(Heat_AppCtx_Type)                       :: HeatAppCtx
    PetscReal,Dimension(:), Pointer              :: ValT_Init, ValT_F
-   PetscInt, Dimension(:), Pointer              :: SizeScal
+!   PetscInt, Dimension(:), Pointer              :: SizeScal
    PetscReal, Dimension(:), Pointer             :: T_BC
-#endif
+!#endif
 
    Call MEF90_Initialize()
 
@@ -299,10 +300,10 @@ Program PrepVarFrac
    !!! Write special cases here
    Case(9) !!! Single well, cst flux
 !TODO add the list of options ..... 
-#if defined WITH_HEAT
-      HeatAppCtx%AppParam%verbose = verbose
-      Call MEF90_AskInt(HeatAppCtx%AppParam%TestCase, 'Test Case For Solving Heat Equation', BatchUnit, IsBatch)
-#endif
+!#if defined WITH_HEAT
+!      HeatAppCtx%AppParam%verbose = verbose
+      Call MEF90_AskInt(HeatTestCase, 'Test Case For Solving Heat Equation', BatchUnit, IsBatch)
+!#endif
    End Select
 
    Allocate(GlobVars(VarFrac_Num_GlobVar))
@@ -496,7 +497,7 @@ Program PrepVarFrac
       Call MEF90_AskReal(Theta, 'Temperature contrast (Delta Theta)', BatchUnit, IsBatch)
       Call MEF90_AskReal(DL, 'Diffusion length', BatchUnit, IsBatch)
    Case(9)
-#if defined WITH_HEAT
+!#if defined WITH_HEAT
       Allocate(ValT_Init(MeshTopology%Num_Elem_Blks_Global))
       Allocate(ValT_F(MeshTopology%Num_Elem_Blks_Global))
 !      Allocate(HeatAppCtx%Diff(MeshTopology%Num_Elem_Blks_Global)) 
@@ -524,7 +525,7 @@ Program PrepVarFrac
             Call MEF90_AskReal(T_BC(i), IOBuffer, BatchUnit, IsBatch)
          End If
       End Do
-#endif
+!#endif
   Case default
       !!! Default is MIL
       Call MEF90_AskReal(Theta, 'Temperature multiplier', BatchUnit, IsBatch)
