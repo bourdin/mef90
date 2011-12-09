@@ -52,6 +52,9 @@ endif
 #TAO Fllags 
 ifdef TAO
 	FFLAGS += ${TAO_LIB} ${TAO_FORTRAN_LIB} 
+#2011/12/09 why do I have to add next line to compile varFrac with Heat module ? 	
+#Order of flags is important ???? 
+	FFLAGS += -L${LIBDIR} -lMEF90 
 	ifneq (,$(findstring gcc,$(PETSC_ARCH)))
 		MEF90_FLAGS +=  ${FC_D_FLAG}WITH_TAO 
 	else
