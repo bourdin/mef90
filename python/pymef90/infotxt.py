@@ -34,6 +34,10 @@ def Dictreadtxt(filename):
             v = float(v)
         except ValueError:
             pass
+        try:
+            v = int(v)
+        except ValueError:
+            pass
         D[k] = v
     return D
     
