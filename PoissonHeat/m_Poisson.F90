@@ -189,10 +189,10 @@ Contains
          BCFlag = 0
          Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, MeshTopology%mesh, iE-1, MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
-            Select Case(AppCtx%AppParam%TestCase)
-            Case(2)
+         Select Case(AppCtx%MatProp(i)%Type_Law)
+            Case(1)
                lDiff = AppCtx%MatProp(i)%Diffusivity 
-            Case(3)
+            Case(2)
                ! Mensi Law D(C) = A exp (B*C) 
                ! 1988 Mensi-Acker-Attolou Mater Struct
                ! C : water content,  A and B material parameters
@@ -202,7 +202,13 @@ Contains
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
                lDiff = AppCtx%MatProp(i)%Diffusivity*exp(AppCtx%MatProp(i)%Diffusivity2*T_Elem) 
-            Case Default
+           Case(3)
+      ! Diffusion Depends on the damaging variable
+      ! The problem is that we do not have access to that field here    !!!!!!
+      ! - The function should take a section as argument. This section could then  be any field 
+      ! - merge both AppCtx
+      ! - copy to HeatAppCtx the damaging and displacement field 
+           Case Default
                ldiff =1 
             End Select
             Do iDoF1 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF

@@ -109,9 +109,9 @@ Contains
       Do i = 1, NumTestCase
          TestCase(i)%Index = i
       End Do
-      TestCase(1)%Description = "Simple Poisson Delta u = f"
-      TestCase(2)%Description = "Heat equation u,t - k*Delta u = f"
-      TestCase(3)%Description = "Heat equation u,t - div(k(u)*nabla u) = f, with k(u) = k*exp(u)"
+      TestCase(1)%Description = "Heat equation u,t - k*Delta u = f"
+      TestCase(2)%Description = "Heat equation u,t - div(k(u)*nabla u) = f, with k(u) = k*exp(u)"
+      TestCase(3)%Description = "Diffusion coefficient function of the damaging field"
       
       AppCtx%AppParam%verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
@@ -593,17 +593,13 @@ Contains
          Write(IOBuffer, 100) TSTimeSteps, TSreason
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          If (iStep < AppCtx%NumSteps-1) Then
-!            Select Case(AppCtx%AppParam%TestCase)
-!            Case(3)
-!TODO For Non linear evolution assemble the matric again
 !TODO Recompute Diffusion coefficient 
-               If (AppCtx%AppParam%verbose > 0) Then
-                  Write(IOBuffer, *) 'Reassembling the rigidity Matrix \n'
-                  Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-               End If
-               Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
-               Call HeatMatAssembly(AppCtx, MeshTopology)
-!            End Select
+            If (AppCtx%AppParam%verbose > 0) Then
+               Write(IOBuffer, *) 'Reassembling the rigidity Matrix \n'
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
+            Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
+            Call HeatMatAssembly(AppCtx, MeshTopology)
          End if 
       End Do
       
