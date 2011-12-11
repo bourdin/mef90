@@ -25,12 +25,12 @@ Program  TransientHeat
 
    Call PoissonInit(AppCtx)
 
-   Select Case (AppCtx%AppParam%TestCase)
-   Case (1)
-      Call KSPSetUp(AppCtx)
-   Case(2,3)
+!   Select Case (AppCtx%AppParam%TestCase)
+!   Case (1)
+!      Call KSPSetUp(AppCtx)
+!   Case(2,3)
       Call Poisson_TSSetUp(AppCtx, AppCtx%MeshTopology)
-   End Select
+!   End Select
 
 
    If (AppCtx%AppParam%verbose > 4) Then
@@ -69,14 +69,14 @@ Program  TransientHeat
    End Do 
 !TODO Write the time steps into the EXO file
 
-   Select Case (AppCtx%AppParam%TestCase)
-   Case (1) 
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Calling Solve\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call Solve(AppCtx)
-   Case(2)
+!   Select Case (AppCtx%AppParam%TestCase)
+!   Case (1) 
+!      If (AppCtx%AppParam%verbose > 0) Then
+!         Write(IOBuffer, *) 'Calling Solve\n'
+!         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!      End If
+!      Call Solve(AppCtx)
+!   Case(2)
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) 'Assembling the Mass - Variational  Identity   matrix\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -88,7 +88,7 @@ Program  TransientHeat
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       Call SolveTransient(AppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, CurTime)
-   End Select 
+!   End Select 
    DeAllocate(CurTime) 
 
    If (AppCtx%AppParam%verbose > 0) Then
@@ -125,10 +125,10 @@ Program  TransientHeat
    Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
    AppCtx%MyEXO%exoid = 0
 
-   Select Case (AppCtx%AppParam%TestCase)
-   Case (1)
-      Call SimplePoissonFinalize(AppCtx)
-   Case (2, 3)
+!   Select Case (AppCtx%AppParam%TestCase)
+!   Case (1)
+!      Call SimplePoissonFinalize(AppCtx)
+!   Case (2, 3)
       Call TSPoissonFinalize(AppCtx)
-   End Select 
+!   End Select 
 End Program  TransientHeat

@@ -64,7 +64,6 @@ Module m_Poisson3D
       PetscInt                                     :: maxsteps, NumSteps
       PetscReal                                    :: maxtime
       PetscInt                                     :: VertVar_Temperature 
-      PetscReal, Dimension(:), Pointer             :: Diff, B_Mensi
       Type(MatHeat_Type), Dimension(:), Pointer     :: MatProp 
    End Type Heat_AppCtx_Type
    
@@ -192,7 +191,7 @@ Contains
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
             Select Case(AppCtx%AppParam%TestCase)
             Case(2)
-               lDiff = AppCtx%Diff(i) 
+               lDiff = AppCtx%MatProp(i)%Diffusivity 
             Case(3)
                ! Mensi Law D(C) = A exp (B*C) 
                ! 1988 Mensi-Acker-Attolou Mater Struct
@@ -202,7 +201,7 @@ Contains
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
-               lDiff = AppCtx%Diff(i)*exp(AppCtx%B_Mensi(i)*T_Elem) 
+               lDiff = AppCtx%MatProp(i)%Diffusivity*exp(AppCtx%MatProp(i)%Diffusivity2*T_Elem) 
             Case Default
                ldiff =1 
             End Select

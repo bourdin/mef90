@@ -147,9 +147,7 @@ Contains
             End If
          End If
       End If
-!Are the two following lines still used ? shouldn't it be read from the args file ? 
-      AppCtx%AppParam%TestCase = 1
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-test',       AppCtx%AppParam%TestCase, Flag, iErr); CHKERRQ(iErr)
+      
       Call InitLog(AppCtx)
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose > 1) Then
@@ -215,7 +213,7 @@ Contains
       Call EXOFormat_SimplePoisson(AppCtx)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
-      Write(IOBuffer, *) '\nTest Case:\n'
+      Write(IOBuffer, *) '\nDiffusion Law :\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
       Do i = 1, NumTestCase
          Write(IOBuffer, "('   [',I2.2,'] ',A)"), TestCase(i)%Index,   Trim(TestCase(i)%Description)//'\n'
@@ -251,31 +249,25 @@ Contains
       End If
 
 
-      Call MEF90_AskInt(AppCtx%AppParam%TestCase, 'Test Case', BatchUnit, IsBatch)
-      Select Case(AppCtx%AppParam%TestCase)
-      Case(2,3)
-         Call MEF90_AskInt(AppCtx%maxsteps, 'Max number of steps for TS computation', BatchUnit, IsBatch)
-         Call MEF90_AskReal(AppCtx%maxtime,  'Max time for TS computation', BatchUnit, IsBatch)
-         Call MEF90_AskInt(AppCtx%NumSteps,  'Number of time steps', BatchUnit, IsBatch)
-      End Select
+      Call MEF90_AskInt(AppCtx%maxsteps, 'Max number of steps for TS computation', BatchUnit, IsBatch)
+      Call MEF90_AskReal(AppCtx%maxtime,  'Max time for TS computation', BatchUnit, IsBatch)
+      Call MEF90_AskInt(AppCtx%NumSteps,  'Number of time steps', BatchUnit, IsBatch)
 
 !  Set EB Properties : U, F     
       Allocate(ValU(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
       Allocate(ValF(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
-      Allocate(AppCtx%Diff(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
-      Allocate(AppCtx%B_Mensi(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
+      Allocate(AppCtx%MatProp(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
       Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 300) iBlk, 'Initial Value in U'
          Call MEF90_AskReal(ValU(iBlk), IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlk, 'RHS F'
          Call MEF90_AskReal(ValF(iBlk),IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlk, 'diffusivity'
-         Call MEF90_AskReal(AppCtx%Diff(iBlk),IOBuffer, BatchUnit, IsBatch)
-         Select Case(AppCtx%AppParam%TestCase)
-         Case(3)
-             Write(IOBuffer, 300) iBlk, 'B Mensi Parameter'
-             Call MEF90_AskReal(AppCtx%B_Mensi(iBlk),IOBuffer, BatchUnit, IsBatch)
-         End Select
+         Write(IOBuffer, 300) iBlk, 'Diffusion Law'
+         Call MEF90_AskInt(AppCtx%MatProp(iBlk)%Type_Law,IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) iBlk, 'diffusivity parameter'
+         Call MEF90_AskReal(AppCtx%MatProp(iBlk)%Diffusivity,IOBuffer, BatchUnit, IsBatch)
+         Write(IOBuffer, 300) iBlk, 'Diffusivity Parameter 2'
+         Call MEF90_AskReal(AppCtx%MatProp(iBlk)%Diffusivity2,IOBuffer, BatchUnit, IsBatch)
       End Do 
       Call HeatSetInitial(AppCtx, AppCtx%MeshTopology, ValU, ValF)
       DeAllocate(ValU)
@@ -439,15 +431,12 @@ Contains
       Call TSSetRHSFunction(AppCtx%TS, PETSC_NULL_OBJECT, RHSPoisson, AppCtx, ierr); CHKERRQ(iErr)
 
 ! Setting time discretization scheme for TS
-      Select Case(AppCtx%AppParam%TestCase)
-      Case default 
-         Call TSSetType(AppCtx%TS, 'rosw', iErr); CHKERRQ(iErr)
-         Call TSRosWSetType(AppCtx%TS, 'ra3pw', iErr); CHKERRQ(iErr)
-         Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr) ! overwritting if cli arguments
+      Call TSSetType(AppCtx%TS, 'rosw', iErr); CHKERRQ(iErr)
+      Call TSRosWSetType(AppCtx%TS, 'ra3pw', iErr); CHKERRQ(iErr)
+      Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr) ! overwritting if cli arguments
       ! Call TSSetType(AppCtx%TS, TSARKIMEX, ierr); CHKERRQ(iErr)  
       !Call TSSetProblemType(AppCtx%TS, TS_LINEAR, ierr); CHKERRQ(iErr)
       !Call TSSetType(AppCtx%TS, TSBEULER, ierr);  CHKERRQ(iErr)
-      End Select
       
        
    End Subroutine Poisson_TSSetUp
@@ -604,8 +593,8 @@ Contains
          Write(IOBuffer, 100) TSTimeSteps, TSreason
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          If (iStep < AppCtx%NumSteps-1) Then
-            Select Case(AppCtx%AppParam%TestCase)
-            Case(3)
+!            Select Case(AppCtx%AppParam%TestCase)
+!            Case(3)
 !TODO For Non linear evolution assemble the matric again
 !TODO Recompute Diffusion coefficient 
                If (AppCtx%AppParam%verbose > 0) Then
@@ -614,7 +603,7 @@ Contains
                End If
                Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
                Call HeatMatAssembly(AppCtx, MeshTopology)
-            End Select
+!            End Select
          End if 
       End Do
       
