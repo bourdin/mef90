@@ -7,6 +7,7 @@ Module m_Poisson3D
 #include "finclude/petscdef.h"
 
    Use m_MEF90
+   Use m_Heat_Struct 
    
    Implicit NONE   
 
@@ -64,6 +65,7 @@ Module m_Poisson3D
       PetscReal                                    :: maxtime
       PetscInt                                     :: VertVar_Temperature 
       PetscReal, Dimension(:), Pointer             :: Diff, B_Mensi
+      Type(MatHeat_Type), Dimension(:), Pointer     :: MatProp 
    End Type Heat_AppCtx_Type
    
    

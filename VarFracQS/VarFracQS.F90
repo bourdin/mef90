@@ -13,6 +13,7 @@ Program  VarFracQS
 #endif   
    Use m_MEF90
    Use m_VarFrac_Struct
+   Use m_Heat_Struct
    
    Implicit NONE   
 
@@ -31,6 +32,7 @@ Program  VarFracQS
    PetscInt                                     :: StepOUT
    !PetscBool                                    :: AppCtx%IsBT
 
+   Character(len=MEF90_MXSTRLEN)                :: TCST_FileName
    PetscInt, Dimension(:), Pointer              :: SizeScal
    Type(Heat_AppCtx_Type)                       :: HeatAppCtx
 
@@ -44,6 +46,16 @@ Program  VarFracQS
       Call EXOView(AppCtx%MyEXO, AppCtx%AppParam%MyLogViewer) 
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer) 
    End If   
+
+   !Read Heat material parameters from *.TSCT file 
+   !!! Read Mat Properties from the CST file
+   TCST_FileName = trim(AppCtx%AppParam%prefix)//'.TCST'
+   Call MatHeat_Read(AppCtx%MeshTopology, HeatAppCtx%MatProp, TCST_FileName)
+   If (AppCtx%AppParam%verbose > 0) Then
+      Write(IOBuffer, *) "Done with MatHeat_Read\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+
 
    !Init For HEAT
    !HeatAppCtx%NumSteps = NumSteps

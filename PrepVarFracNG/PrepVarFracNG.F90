@@ -5,6 +5,7 @@ Program PrepVarFrac
 
    Use m_MEF90
    Use m_VarFrac_Struct
+   Use m_Heat_Struct
    Use m_PrepVarFrac
    Use petsc
 
@@ -41,6 +42,7 @@ Program PrepVarFrac
    PetscInt                                     :: Num_DoF
 
    PetscReal                                    :: RealBuffer
+   Type(MatHeat_Type), Dimension(:), Pointer    :: MatHeatProp
    Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp2D
    Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp3D
    Type(Tens4OS2D)                              :: TmpHL_2D
@@ -50,7 +52,7 @@ Program PrepVarFrac
    PetscReal                                    :: Eeff,nueff,Kappa,Mu
    PetscReal                                    :: CTheta,CTheta2,STheta,STheta2
    PetscReal, Dimension(:), Pointer             :: GlobVars
-   PetscInt                                     :: vers
+   PetscInt                                     :: vers, Type_Law
    PetscBool                                    :: IsBatch, HasBatchFile
    PetscInt                                     :: BatchUnit=99
    Character(len=MEF90_MXSTRLEN)                :: BatchFileName
@@ -324,6 +326,7 @@ Program PrepVarFrac
    Case(3)
       Allocate(MatProp3D(MeshTopology%Num_Elem_Blks_Global))
    End Select
+   Allocate(MatHeatProp(MeshTopology%Num_Elem_Blks_Global))
    
    Write(IOBuffer, *) '\nMaterial Properties\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
@@ -345,6 +348,8 @@ Program PrepVarFrac
 
          Select Case(iCase)
          Case(9)
+            Write(IOBuffer, 300) i, 'Behavior Law for Heat Diffusion'
+            Call MEF90_AskInt(Type_Law, IOBuffer, BatchUnit, IsBatch)
             Write(IOBuffer, 300) i, 'Diffusivity'
             Call MEF90_AskReal(Diffusivity, IOBuffer, BatchUnit, IsBatch)
             Write(IOBuffer, 300) i, 'Diffusivity2'
@@ -365,8 +370,6 @@ Program PrepVarFrac
             MatProp2D(i)%Therm_Exp    = 0.0_Kr
             MatProp2D(i)%Therm_Exp%XX = Therm_ExpScal
             MatProp2D(i)%Therm_Exp%YY = Therm_ExpScal
-            MatProp2D(i)%Diffusivity  = Diffusivity
-            MatProp2D(i)%Diffusivity2 = Diffusivity2
          Case(3)
             MatProp3D(i)%Toughness = Toughness
             Call GenHL_Iso3D_Enu(E, nu, MatProp3D(i)%Hookes_Law)
@@ -374,9 +377,10 @@ Program PrepVarFrac
             MatProp3D(i)%Therm_Exp%XX = Therm_ExpScal
             MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
             MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
-            MatProp3D(i)%Diffusivity  = Diffusivity
-            MatProp3D(i)%Diffusivity2 = Diffusivity2
          End Select 
+            MatHeatProp(i)%Type_Law     = Type_Law
+            MatHeatProp(i)%Diffusivity  = Diffusivity
+            MatHeatProp(i)%Diffusivity2 = Diffusivity2
       End Do
    End Select
    
@@ -390,6 +394,9 @@ Program PrepVarFrac
          Call MatProp_Write(MeshTopology, MatProp3D, Trim(prefix)//'.CST')
          DeAllocate(MatProp3D)
       End Select
+      
+      Call MatHeat_Write(MeshTopology, MatHeatProp, Trim(prefix)//'.TCST')
+      DeAllocate(MatHeatProp)
    End If
    
    !!!

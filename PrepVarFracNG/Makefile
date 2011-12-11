@@ -1,6 +1,6 @@
 BIN = PrepVarFracNG
 #Order is important
-SRCS = m_PrepVarFracNG.F90 PrepVarFracNG.F90 
+SRCS = m_PrepVarFracNG.F90 
 
 MEF90_INCS += -I${OBJDIR}
 

@@ -131,16 +131,12 @@ Module m_VarFrac_Struct
       PetscReal                                    :: Toughness
       Type(Tens4OS2D)                              :: Hookes_Law
       Type(MatS2D)                                 :: Therm_Exp      
-      PetscReal                                    :: Diffusivity
-      PetscReal                                    :: Diffusivity2
    End Type MatProp2D_Type
    
    Type MatProp3D_Type
       PetscReal                                    :: Toughness
       Type(Tens4OS3D)                              :: Hookes_Law
       Type(MatS3D)                                 :: Therm_Exp      
-      PetscReal                                    :: Diffusivity
-      PetscReal                                    :: Diffusivity2
    End Type MatProp3D_Type
    
    Type VarFracSchemeParam_Type
@@ -276,11 +272,11 @@ Module m_VarFrac_Struct
       Rewind(F_OUT)
       Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
-         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp, MatProp(iBlk)%Diffusivity, MatProp(iBlk)%Diffusivity2
+         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
       End Do
       Close(F_OUT)
       
-120   Format(I6, '      ', 12(ES12.5,' '))   
+120   Format(I6, '      ', 10(ES12.5,' '))   
    End Subroutine MatProp2D_Write
  
    Subroutine MatProp3D_Write(MeshTopology, MatProp, filename)
@@ -295,11 +291,11 @@ Module m_VarFrac_Struct
       Rewind(F_OUT)
       Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
-         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp, MatProp(iBlk)%Diffusivity, MatProp(iBlk)%Diffusivity2
+         Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
       End Do
       Close(F_OUT)
       
-120   Format(I6, '      ', 30(ES12.5,' '))
+120   Format(I6, '      ', 28(ES12.5,' '))
    End Subroutine MatProp3D_Write
  
  
@@ -312,7 +308,7 @@ Module m_VarFrac_Struct
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
       Type(Tens4OS2D)                              :: Hookes_Law
-      PetscReal                                    :: Toughness, Diffusivity, Diffusivity2
+      PetscReal                                    :: Toughness
       Type(MatS2D)                                 :: Therm_Exp
    
       Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
@@ -333,17 +329,13 @@ Module m_VarFrac_Struct
       Rewind(F_IN)
       Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp, Diffusivity, Diffusivity2
+         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp
-         MatProp(Idx)%Diffusivity = Diffusivity
-         MatProp(Idx)%Diffusivity2 = Diffusivity2
       End Do
       Close(F_IN)
       Return
-!120   Format(I6, '      ', 10(ES12.5,' '))   
-!120   Format(*)
    End Subroutine MatProp2D_Read
    
    Subroutine MatProp3D_Read(MeshTopology, MatProp, filename)
@@ -355,7 +347,7 @@ Module m_VarFrac_Struct
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax, Idx
       Type(Tens4OS3D)                              :: Hookes_Law
-      PetscReal                                    :: Toughness, Diffusivity, Diffusivity2
+      PetscReal                                    :: Toughness
       Type(MatS3D)                                 :: Therm_Exp
    
       Open(File = filename, Unit = F_IN, Status = 'Old', Action = 'Read')
@@ -376,12 +368,10 @@ Module m_VarFrac_Struct
       Rewind(F_IN)
       Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
-         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp, Diffusivity, Diffusivity2
+         Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp
-         MatProp(Idx)%Diffusivity = Diffusivity
-         MatProp(Idx)%Diffusivity2 = Diffusivity2
       End Do
       Close(F_IN)
    End Subroutine MatProp3D_Read
