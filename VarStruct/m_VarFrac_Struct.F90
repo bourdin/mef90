@@ -170,6 +170,7 @@ Module m_VarFrac_Struct
       PetscBool                                    :: SaveBlk
       PetscBool                                    :: SaveStress
       PetscBool                                    :: SaveStrain
+      PetscBool                                    :: DamageStress
       
       PetscBool                                    :: U_UseTao
       PetscBool                                    :: V_UseTao
@@ -420,6 +421,8 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-savestress ', L1, A)")          dSchemeParam%SaveStress, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-damagestress ', L1, A)")          dSchemeParam%DamageStress, '\n'
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-saveblk    ', L1, A)")          dSchemeParam%SaveBlk, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-savestrain ', L1, A)")          dSchemeParam%SaveStrain, '\n'
@@ -457,6 +460,7 @@ Module m_VarFrac_Struct
       dSchemeParam%SaveBlk          = PETSC_FALSE
       dSchemeParam%SaveStress       = PETSC_FALSE
       dSchemeParam%SaveStrain       = PETSC_FALSE
+      dSchemeParam%DamageStress       = PETSC_FALSE
       dSchemeParam%U_UseTao         = PETSC_FALSE
       dSchemeParam%V_UseTao         = PETSC_TRUE
 
@@ -486,6 +490,7 @@ Module m_VarFrac_Struct
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-saveblk',        dSchemeParam%SaveBlk, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-damagestress',   dSchemeParam%DamageStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-u_tao',          dSchemeParam%U_UseTao, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
       
