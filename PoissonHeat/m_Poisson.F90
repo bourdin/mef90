@@ -142,10 +142,11 @@ Contains
  
 #undef __FUNCT__
 #define __FUNCT__ "MatAssembly"
-   Subroutine HeatMatAssembly(AppCtx, MeshTopology)   
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-      Type (MeshTopology_Type)                     :: MeshTopology
-      PetscInt                                     :: iBlk, iErr
+   Subroutine HeatMatAssembly(AppCtx, MeshTopology, ExtraField)   
+      Type(Heat_AppCtx_Type)                             :: AppCtx
+      Type (MeshTopology_Type)                           :: MeshTopology
+      PetscInt                                           :: iBlk, iErr
+      Type(Field)                                        :: ExtraField
       
       Call MatInsertVertexBoundaryValues(AppCtx%K, AppCtx%U, AppCtx%BCFlag, MeshTopology)
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
@@ -153,7 +154,7 @@ Contains
 
 !      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
-         Call MatAssemblyBlock(iBlk, AppCtx, MeshTopology)
+         Call HeatMatAssemblyBlock(iBlk, AppCtx, MeshTopology, ExtraField)
       End Do Do_iBlk
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
@@ -161,10 +162,11 @@ Contains
 !      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine HeatMatAssembly
       
-   Subroutine MatAssemblyBlock(iBlk, AppCtx, MeshTopology)
+   Subroutine HeatMatAssemblyBlock(iBlk, AppCtx, MeshTopology, ExtraField)
       Type(Heat_AppCtx_Type)                       :: AppCtx
       Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk
+      Type(Field)                                  :: ExtraField
       
       PetscInt                                     :: iE, iELoc, iErr, i
       PetscReal, Dimension(:,:), Pointer           :: MatElem
@@ -191,8 +193,10 @@ Contains
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
          Select Case(AppCtx%MatProp(i)%Type_Law)
             Case(1)
+            ! Constant Diffusion
                lDiff = AppCtx%MatProp(i)%Diffusivity 
             Case(2)
+            !Increasing diffusion 
                ! Mensi Law D(C) = A exp (B*C) 
                ! 1988 Mensi-Acker-Attolou Mater Struct
                ! C : water content,  A and B material parameters
@@ -202,13 +206,39 @@ Contains
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
                lDiff = AppCtx%MatProp(i)%Diffusivity*exp(AppCtx%MatProp(i)%Diffusivity2*T_Elem) 
-           Case(3)
+            Case(3)
+      !Diffusion is decreasing with the variable
+               Call SectionRealRestrictClosure(AppCtx%U%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
+               T_Elem = 0.0_Kr
+               Do iDoF1 = 1, NumDoFScal
+                  T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
+               End DO
+               lDiff =  AppCtx%MatProp(i)%Diffusivity*(Diffusivity2-T_Elem)**Diffusivity3 
+            Case(4)
+      !Diffusion is non monotonic with the variable
+               Call SectionRealRestrictClosure(AppCtx%U%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
+               T_Elem = 0.0_Kr
+               Do iDoF1 = 1, NumDoFScal
+                  T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
+               End DO
+      !TODO implement 2007_CCR_baroghel-bouny_I and II         
+      !         lDiff = AppCtx%MatProp(i)%Diffusivity*(Diffusivity2-T_Elem)**Diffusivity3 
+            Case(5)
       ! Diffusion Depends on the damaging variable
       ! The problem is that we do not have access to that field here    !!!!!!
-      ! - The function should take a section as argument. This section could then  be any field 
+      ! - The function should take a section as argument. This section could then  be any field -- > Try this 
       ! - merge both AppCtx
       ! - copy to HeatAppCtx the damaging and displacement field 
-           Case Default
+               Call SectionRealRestrictClosure(ExtraField%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
+               T_Elem = 0.001_Kr
+               Do iDoF1 = 1, NumDoFScal
+                  T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
+               End DO
+               lDiff = AppCtx%MatProp(i)%Diffusivity/T_Elem 
+      ! TODO : Test that ExtraField is defined to evoid Segment Fault error
+            Case(6)
+      ! Diffusion depends on crack opening
+            Case Default
                ldiff =1 
             End Select
             Do iDoF1 = 1, MeshTopology%Elem_Blk(iBlk)%Num_DoF
@@ -229,7 +259,7 @@ Contains
       DeAllocate(BCFlag)
       DeAllocate(MatElem)
 !      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
-   End Subroutine MatAssemblyBlock
+   End Subroutine HeatMatAssemblyBlock
 
 
 #undef __FUNCT__

@@ -21,6 +21,7 @@ Program  TransientHeat
    PetscScalar                                  :: prodMassUnit
    PetscReal                                    :: Mass
    PetscReal, Dimension(:), Pointer             :: CurTime
+   Type(Field)                                  :: ExtraField
 
 
    Call PoissonInit(AppCtx)
@@ -39,7 +40,7 @@ Program  TransientHeat
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology)
+   Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology, ExtraField)
    If (AppCtx%AppParam%verbose > 3) Then
       Write(IOBuffer, *) 'Matrix\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)

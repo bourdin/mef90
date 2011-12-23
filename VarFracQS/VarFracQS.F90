@@ -84,7 +84,7 @@ Program  VarFracQS
    Call SectionIntAddNSProperty(HeatAppCtx%BCFlag%Sec,   AppCtx%MyEXO%NSProperty(VarFrac_NSProp_HasPForce), AppCtx%MeshTopology)
 
    Call Poisson_TSSetUp(HeatAppCtx, AppCtx%MeshTopology)
-   Call HeatMatAssembly(HeatAppCtx, AppCtx%MeshTopology)
+   Call HeatMatAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%V)
    Call RHSAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%MyExo)
    Call MatMassAssembly(HeatAppCtx, AppCtx%MeshTopology)
 
@@ -110,6 +110,8 @@ Program  VarFracQS
          Write(IOBuffer, *) 'Done with Init_TS_Loads \n' 
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
+
+! Compute the crack opening here
 
       !!Compute Heat Field 
       If (AppCtx%TimeStep < 2) Then
