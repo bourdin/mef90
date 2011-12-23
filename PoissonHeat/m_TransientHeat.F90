@@ -592,15 +592,15 @@ Contains
          Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
          Write(IOBuffer, 100) TSTimeSteps, TSreason
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-         If (iStep < AppCtx%NumSteps-1) Then
+!         If (iStep < AppCtx%NumSteps-1) Then
 !TODO Recompute Diffusion coefficient 
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer, *) 'Reassembling the rigidity Matrix \n'
-               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            End If
-            Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
-            Call HeatMatAssembly(AppCtx, MeshTopology)
-         End if 
+!            If (AppCtx%AppParam%verbose > 0) Then
+!               Write(IOBuffer, *) 'Reassembling the rigidity Matrix \n'
+!               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+!            End If
+!            Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
+!            Call HeatMatAssembly(AppCtx, MeshTopology)
+!         End if 
       End Do
       
 100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')

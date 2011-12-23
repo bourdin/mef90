@@ -123,7 +123,7 @@ Module m_MEF_LinAlg
    Interface Operator (/)
       Module Procedure Vect2DQuot, Vect3DQuot, Mat2DQuot, Mat3DQuot, MatS2DQuot, MatS3DQuot, Tens4OS2DQuot, Tens4OS3DQuot
    End Interface
-
+   
    Interface Operator (.DotP.)
       Module Procedure DotP2D, DotP3D, ContP2D, ContP3D, ContP2DS, ContP3DS
    End Interface

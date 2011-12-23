@@ -213,7 +213,7 @@ Contains
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
-               lDiff =  AppCtx%MatProp(i)%Diffusivity*(Diffusivity2-T_Elem)**Diffusivity3 
+               lDiff =  AppCtx%MatProp(i)%Diffusivity*(AppCtx%MatProp(i)%Diffusivity2-T_Elem)**AppCtx%MatProp(i)%Diffusivity3 
             Case(4)
       !Diffusion is non monotonic with the variable
                Call SectionRealRestrictClosure(AppCtx%U%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)

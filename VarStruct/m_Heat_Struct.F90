@@ -9,6 +9,7 @@ Module m_Heat_Struct
       PetscInt                                     :: Type_Law
       PetscReal                                    :: Diffusivity
       PetscReal                                    :: Diffusivity2
+      PetscReal                                    :: Diffusivity3
    End Type MatHeat_Type
 
  Contains
