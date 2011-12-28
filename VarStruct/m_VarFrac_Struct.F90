@@ -460,7 +460,7 @@ Module m_VarFrac_Struct
       dSchemeParam%SaveBlk          = PETSC_FALSE
       dSchemeParam%SaveStress       = PETSC_FALSE
       dSchemeParam%SaveStrain       = PETSC_FALSE
-      dSchemeParam%DamageStress       = PETSC_FALSE
+      dSchemeParam%DamageStress     = PETSC_FALSE
       dSchemeParam%U_UseTao         = PETSC_FALSE
       dSchemeParam%V_UseTao         = PETSC_TRUE
 

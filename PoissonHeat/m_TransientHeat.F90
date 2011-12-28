@@ -8,6 +8,7 @@ Module m_TransientHeat3D
 
    Use m_MEF90
    Use m_MEF_Integrate
+   use m_Heat_Struct
 
 #if defined PB_2D
    Use m_Poisson2D
@@ -147,7 +148,12 @@ Contains
             End If
          End If
       End If
-      
+
+   Call HeatSchemeParam_GetFromOptions(AppCtx%HeatSchemeParam)
+   If (AppCtx%AppParam%verbose > 0) Then
+      Call HeatSchemeParam_View(AppCtx%HeatSchemeParam, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
+   End If
+
       Call InitLog(AppCtx)
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose > 1) Then
@@ -249,7 +255,6 @@ Contains
       End If
 
 
-      Call MEF90_AskInt(AppCtx%maxsteps, 'Max number of steps for TS computation', BatchUnit, IsBatch)
       Call MEF90_AskReal(AppCtx%maxtime,  'Max time for TS computation', BatchUnit, IsBatch)
       Call MEF90_AskInt(AppCtx%NumSteps,  'Number of time steps', BatchUnit, IsBatch)
 
@@ -536,7 +541,7 @@ Contains
       Call VecView(AppCtx%UBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
 
       Call TSSetInitialTimeStep(AppCtx%TS, TimeStepIni, (TimeStepFinal - TimeStepIni/10.),  ierr); CHKERRQ(iErr)
-      Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, TimeStepFinal, iErr); CHKERRQ(iErr)
+      Call TSSetDuration(AppCtx%TS, AppCtx%HeatSchemeParam%HeatMaxiter, TimeStepFinal, iErr); CHKERRQ(iErr)
       Call TSSolve(AppCtx%TS, AppCtx%U%Vec, TimeStepFinal, iErr); CHKERRQ(iErr)
 
       Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
@@ -584,7 +589,7 @@ Contains
 !         Call VecView(AppCtx%UBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
 
          Call TSSetInitialTimeStep(AppCtx%TS, lTimes(iStep-1) , (lTimes(iStep)-lTimes(iStep-1)/10.),  ierr); CHKERRQ(iErr)
-         Call TSSetDuration(AppCtx%TS, AppCtx%maxsteps, lTimes(iStep), iErr); CHKERRQ(iErr)
+         Call TSSetDuration(AppCtx%TS, AppCtx%HeatSchemeParam%HeatMaxiter, lTimes(iStep), iErr); CHKERRQ(iErr)
          Call TSSolve(AppCtx%TS, AppCtx%U%Vec, lTimes(iStep), iErr); CHKERRQ(iErr)
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , iStep+1, AppCtx%U%Sec)

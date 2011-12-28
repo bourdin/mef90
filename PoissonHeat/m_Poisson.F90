@@ -61,10 +61,11 @@ Module m_Poisson3D
       Type(AppParam_Type)                          :: AppParam
    !For TS
       Type(TS)                                     :: TS
-      PetscInt                                     :: maxsteps, NumSteps
+      PetscInt                                     :: NumSteps
       PetscReal                                    :: maxtime
       PetscInt                                     :: VertVar_Temperature 
-      Type(MatHeat_Type), Dimension(:), Pointer     :: MatProp 
+      Type(MatHeat_Type), Dimension(:), Pointer    :: MatProp
+      Type(HeatSchemeParam_Type)                   :: HeatSchemeParam 
    End Type Heat_AppCtx_Type
    
    

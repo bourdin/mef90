@@ -66,8 +66,12 @@ Program  VarFracQS
 
    !Init For HEAT
    !HeatAppCtx%NumSteps = NumSteps
-   HeatAppCtx%NumSteps = 100
-   HeatAppCtx%maxsteps = 1000 
+   
+   Call HeatSchemeParam_GetFromOptions(HeatAppCtx%HeatSchemeParam)
+   If (AppCtx%AppParam%verbose > 0) Then
+      Call HeatSchemeParam_View(HeatAppCtx%HeatSchemeParam, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
+   End If
+   
    HeatAppCtx%VertVar_Temperature = AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset
    Call ElementInit(AppCtx%MeshTopology, HeatAppCtx%Elem, 2)
   

@@ -12,13 +12,11 @@ help:
 
 all: ${DIMPROJECTS}
 
-Frac : MEF90 VarStruct PrepVarFrac VarFracQS 
-
-FracNG :  MEF90 VarStruct PrepVarFracNG VarFracQS 
+Frac : MEF90 VarStruct PrepVarFrac PrepVarFracNG VarFracQS 
 
 Film : MEF90 VarStruct PrepFilm VarFilmQS
 
-Heat : MEF90 VarStruct PrepVarFracNG PoissonHeat VarFracQS 
+Heat : MEF90 VarStruct PrepVarFracNG PoissonHeat VarFracQSHeat 
 
 ${SUBDIRS}:
 	cd $@ ; exec ${MAKE}
