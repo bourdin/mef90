@@ -95,7 +95,6 @@ Program  VarFracQS
    Call SectionIntAddNSProperty(HeatAppCtx%BCFlag%Sec,   AppCtx%MyEXO%NSProperty(VarFrac_NSProp_HasPForce), AppCtx%MeshTopology)
 
    Call Poisson_TSSetUp(HeatAppCtx, AppCtx%MeshTopology)
-   Call HeatMatAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%V)
    Call RHSAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%MyExo)
    Call MatMassAssembly(HeatAppCtx, AppCtx%MeshTopology)
 #endif   
@@ -130,6 +129,8 @@ Program  VarFracQS
       If (AppCtx%TimeStep < 2) Then
 !         Call SolveTransientStep(HeatAppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, 0.0_Kr , AppCtx%Load(AppCtx%TimeStep), AppCtx%TimeStep)
       else 
+         Call MatZeroEntries(HeatAppCtx%K, iErr); CHKERRQ(iErr)
+         Call HeatMatAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%V)
          Call SolveTransientStep(HeatAppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%Load(AppCtx%TimeStep-1), AppCtx%Load(AppCtx%TimeStep), AppCtx%TimeStep)
       End If 
 !AppCtx%Load is the list of time steps. Quasi-Static ..... 

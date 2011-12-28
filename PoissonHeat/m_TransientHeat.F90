@@ -105,14 +105,14 @@ Contains
 
       Call MEF90_Initialize()
       
-      NumTestCase = 3
-      Allocate(TestCase(NumTestCase))
-      Do i = 1, NumTestCase
-         TestCase(i)%Index = i
-      End Do
-      TestCase(1)%Description = "Heat equation u,t - k*Delta u = f"
-      TestCase(2)%Description = "Heat equation u,t - div(k(u)*nabla u) = f, with k(u) = k*exp(u)"
-      TestCase(3)%Description = "Diffusion coefficient function of the damaging field"
+!      NumTestCase = 3
+!      Allocate(TestCase(NumTestCase))
+!      Do i = 1, NumTestCase
+!         TestCase(i)%Index = i
+!      End Do
+!      TestCase(1)%Description = "Heat equation u,t - k*Delta u = f"
+!      TestCase(2)%Description = "Heat equation u,t - div(k(u)*nabla u) = f, with k(u) = k*exp(u)"
+!      TestCase(3)%Description = "Diffusion coefficient function of the damaging field"
       
       AppCtx%AppParam%verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
@@ -149,10 +149,10 @@ Contains
          End If
       End If
 
-   Call HeatSchemeParam_GetFromOptions(AppCtx%HeatSchemeParam)
-   If (AppCtx%AppParam%verbose > 0) Then
-      Call HeatSchemeParam_View(AppCtx%HeatSchemeParam, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
-   End If
+      Call HeatSchemeParam_GetFromOptions(AppCtx%HeatSchemeParam)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Call HeatSchemeParam_View(AppCtx%HeatSchemeParam, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
+      End If
 
       Call InitLog(AppCtx)
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
@@ -219,12 +219,12 @@ Contains
       Call EXOFormat_SimplePoisson(AppCtx)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
-      Write(IOBuffer, *) '\nDiffusion Law :\n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-      Do i = 1, NumTestCase
-         Write(IOBuffer, "('   [',I2.2,'] ',A)"), TestCase(i)%Index,   Trim(TestCase(i)%Description)//'\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
-      End Do
+!      Write(IOBuffer, *) '\nDiffusion Law :\n'
+!      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
+!      Do i = 1, NumTestCase
+!         Write(IOBuffer, "('   [',I2.2,'] ',A)"), TestCase(i)%Index,   Trim(TestCase(i)%Description)//'\n'
+!         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
+!      End Do
 
    !!!
    !!! EB, SS, NS Properties
@@ -555,64 +555,6 @@ Contains
 400 Format('Solving TS Time step : ', I5, '    Ini Time : ', ES12.5,  ",    Final Time  :", ES12.5, '\n')
    End Subroutine SolveTransientStep
 
-#undef __FUNCT__
-#define __FUNCT__ "SolveTransient"
-   Subroutine SolveTransient(AppCtx, MyEXO, MeshTopology, lTimes)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-      Type (MeshTopology_Type)                     :: MeshTopology
-      Type(EXO_Type)                               :: MyEXO
-      PetscInt                                     :: TSTimeSteps, iErr, iStep
-      TSConvergedReason                            :: TSreason 
-      PetscReal, Dimension(:), Pointer             :: lTimes
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-     
-      Write(IOBuffer, *) "Warning : TSSolve does not assure that computation stops as the exact asked time \n"
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
-!TODO see TSSetExactFinalTime, TSGetTimeStep
-!TSSetExactFinalTime can not be used : 'TSRosW 2p does not have an interpolation formula'
-
-      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-
-! Using IMEX see section 6.1.2 PetSc documentation 
-      if (AppCtx%AppParam%verbose > 1) Then                                                                                                                                                
-         Call TSView(AppCtx%TS,  PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-      End If
-
-      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , 1, AppCtx%U%Sec)
-      Do iStep = 1, AppCtx%NumSteps-1
-         Write(IOBuffer, 200) iStep, lTimes(iStep)
-         Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
-         Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr)
-
-!         Call VecView(AppCtx%U%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
-!         Call VecView(AppCtx%UBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
-
-         Call TSSetInitialTimeStep(AppCtx%TS, lTimes(iStep-1) , (lTimes(iStep)-lTimes(iStep-1)/10.),  ierr); CHKERRQ(iErr)
-         Call TSSetDuration(AppCtx%TS, AppCtx%HeatSchemeParam%HeatMaxiter, lTimes(iStep), iErr); CHKERRQ(iErr)
-         Call TSSolve(AppCtx%TS, AppCtx%U%Vec, lTimes(iStep), iErr); CHKERRQ(iErr)
-         Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , iStep+1, AppCtx%U%Sec)
-         Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
-         Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
-         Write(IOBuffer, 100) TSTimeSteps, TSreason
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!         If (iStep < AppCtx%NumSteps-1) Then
-!TODO Recompute Diffusion coefficient 
-!            If (AppCtx%AppParam%verbose > 0) Then
-!               Write(IOBuffer, *) 'Reassembling the rigidity Matrix \n'
-!               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-!            End If
-!            Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
-!            Call HeatMatAssembly(AppCtx, MeshTopology)
-!         End if 
-      End Do
-      
-100 Format('TS', I5, ' TimeSteps. TSConvergedReason is ', I2, '\n')
-200 Format('Solving TS Time step : ', I5,  ",    Current Time  :", ES12.5, '\n')
-   End Subroutine SolveTransient
-   
- 
      
 #undef __FUNCT__
 #define __FUNCT__ "MatMassAssembly"
@@ -746,7 +688,7 @@ Contains
          Write(MassFileUnit, *)  WaterMass
       End DO 
 400 Format(I6) 
-401 Format(ES13.5, '   ') 
+!401 Format(ES13.5, '   ') 
       Close(MassFileUnit)
       DeAllocate(WaterMass)
    End Subroutine ComputeWaterMass

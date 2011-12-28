@@ -40,13 +40,6 @@ Program  TransientHeat
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology, ExtraField)
-   If (AppCtx%AppParam%verbose > 3) Then
-      Write(IOBuffer, *) 'Matrix\n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   End If
-
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -58,12 +51,6 @@ Program  TransientHeat
       Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End If
   
-   Allocate(CurTime(AppCtx%NumSteps-1))
-   DO iStep = 1, AppCtx%NumSteps-1
-       !! Non uniform time stepping adapted to the time scale of the  thermal problem in tau=sqrt(t)
-         CurTime(iStep) =  (Real(iStep)/Real(AppCtx%NumSteps))**2*AppCtx%maxtime
-   End Do 
-!TODO Write the time steps into the EXO file
 
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Assembling the Mass - Variational  Identity   matrix\n'
@@ -75,7 +62,23 @@ Program  TransientHeat
       Write(IOBuffer, *) 'Calling Solve\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call SolveTransient(AppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, CurTime)
+   
+   Allocate(CurTime(AppCtx%NumSteps))
+   CurTime(1) = 0
+   DO iStep = 1, AppCtx%NumSteps-1
+       !! Non uniform time stepping adapted to the time scale of the  thermal problem in tau=sqrt(t)
+      CurTime(iStep+1) =  (Real(iStep)/Real(AppCtx%NumSteps))**2*AppCtx%maxtime
+      Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
+      Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology, ExtraField)
+      If (AppCtx%AppParam%verbose > 3) Then
+         Write(IOBuffer, *) 'Matrix\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+      End If
+      Call SolveTransientStep(AppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, CurTime(iStep), CurTime(iStep+1), iStep)
+   End Do 
+!TODO Write the time steps into the EXO file
+   
    DeAllocate(CurTime) 
 
    If (AppCtx%AppParam%verbose > 0) Then
