@@ -29,10 +29,6 @@ Module m_TransientHeat3D
    PetscInt, Parameter, Public                     :: Poisson_Num_NSProperties  = 1
    PetscInt, Parameter, Public                     :: Heat_NSProp_HasPForce  = 1
    
-Type Heat_TestCase_Type
-   PetscInt                                  :: Index
-   Character(len=MEF90_MXSTRLEN)             :: Description
-End Type
 
 Contains
 
@@ -94,7 +90,6 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: BatchFileName
       PetscInt                                     :: BatchUnit=99
       PetscInt                                     :: NumTestCase
-      Type(Heat_TestCase_Type), Dimension(:) , Pointer  :: TestCase
       PetscBool                                    :: EraseBatch
       PetscBool                                    :: IsBatch, HasBatchFile
       Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename   
@@ -104,15 +99,6 @@ Contains
       PetscReal, Dimension(:), Pointer             :: ValU, ValF
 
       Call MEF90_Initialize()
-      
-!      NumTestCase = 3
-!      Allocate(TestCase(NumTestCase))
-!      Do i = 1, NumTestCase
-!         TestCase(i)%Index = i
-!      End Do
-!      TestCase(1)%Description = "Heat equation u,t - k*Delta u = f"
-!      TestCase(2)%Description = "Heat equation u,t - div(k(u)*nabla u) = f, with k(u) = k*exp(u)"
-!      TestCase(3)%Description = "Diffusion coefficient function of the damaging field"
       
       AppCtx%AppParam%verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%verbose, Flag, iErr); CHKERRQ(iErr)
@@ -219,12 +205,6 @@ Contains
       Call EXOFormat_SimplePoisson(AppCtx)
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 
-!      Write(IOBuffer, *) '\nDiffusion Law :\n'
-!      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
-!      Do i = 1, NumTestCase
-!         Write(IOBuffer, "('   [',I2.2,'] ',A)"), TestCase(i)%Index,   Trim(TestCase(i)%Description)//'\n'
-!         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
-!      End Do
 
    !!!
    !!! EB, SS, NS Properties
@@ -258,6 +238,7 @@ Contains
       Call MEF90_AskReal(AppCtx%maxtime,  'Max time for TS computation', BatchUnit, IsBatch)
       Call MEF90_AskInt(AppCtx%NumSteps,  'Number of time steps', BatchUnit, IsBatch)
 
+      Call View_Available_Diffusion_Laws 
 !  Set EB Properties : U, F     
       Allocate(ValU(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 
       Allocate(ValF(AppCtx%MeshTopology%Num_Elem_Blks_Global)) 

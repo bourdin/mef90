@@ -330,6 +330,12 @@ Program PrepVarFrac
    
    Write(IOBuffer, *) '\nMaterial Properties\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
+   
+   Select Case(iCase)
+   Case(9)
+      Call View_Available_Diffusion_Laws 
+   End Select
+
    Select Case(iCase)
    !!! Write special cases here
    Case Default

@@ -18,6 +18,11 @@ Module m_Heat_Struct
       Character(len=MEF90_MXSTRLEN)                :: TSTypeOpt1
    End Type HeatSchemeParam_Type
 
+   Type Heat_TestCase_Type
+      PetscInt                                  :: Index
+      Character(len=MEF90_MXSTRLEN)             :: Description
+   End Type
+
  Contains
    Subroutine HeatSchemeParam_View(dSchemeParam, viewer)
       Type(HeatSchemeParam_Type)                :: dSchemeParam
@@ -103,5 +108,33 @@ Module m_Heat_Struct
 !120   Format(I6, '      ', 10(ES12.5,' '))   
 !120   Format(*)
    End Subroutine MatHeat_Read
+
+#undef __FUNCT__
+#define __FUNCT__ "View_Available_Diffusion_Laws"
+   Subroutine View_Available_Diffusion_Laws
+      Type(Heat_TestCase_Type), Dimension(:) , Pointer                 :: DiffusionLaw
+      Character(len=MEF90_MXSTRLEN)                               ::  IOBuffer
+      PetscInt                                                    :: NumLaws   
+      PetscInt                                                    :: i, iErr 
+
+      NumLaws = 5
+      Allocate(DiffusionLaw(NumLaws))
+      Do i = 1, NumLaws 
+             DiffusionLaw(i)%Index = i
+      End Do
+      DiffusionLaw(1)%Description = "Constant diffusion parameter D(T, v) = k"
+      DiffusionLaw(2)%Description = "Increasing diffusion paramter, Mensi's law D(T, v) = k exp(B*T)"
+      DiffusionLaw(3)%Description = "Decreasing diffusion parameter D(T, v) = k(A-T)**B"
+      DiffusionLaw(4)%Description = "Diffusion depending on damage field D(T, v) = k/v"
+      DiffusionLaw(5)%Description = "Diffusion depending on crack opening [NOT IMPLEMENTED]"
+
+      Write(IOBuffer, *) '\nDiffusion laws:\n'
+      Do i = 1, NumLaws
+         Write(IOBuffer, "('   [',I2.2,'] ',A)"), DiffusionLaw(i)%Index, Trim(DiffusionLaw(i)%Description)//'\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
+      End Do
+   DeAllocate(DiffusionLaw)
+
+   End Subroutine View_Available_Diffusion_Laws
 
 End Module m_Heat_Struct
