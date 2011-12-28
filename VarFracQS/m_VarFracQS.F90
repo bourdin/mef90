@@ -48,6 +48,7 @@ Contains
       PetscReal                                    :: TAO_Default_crtol
       Type(PetscViewer)                            :: flgviewer
       PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
+      PetscInt                                     :: bs
       
       Call MEF90_Initialize()
 #if defined WITH_TAO
@@ -224,6 +225,7 @@ Contains
       !!! Create the Mat, KSP, PC
       Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
+      Call MatSetBlockSize(AppCtx%KU,AppCtx%MeshTopology%Num_Dim,iErr); CHKERRQ(ierr)
       Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V%Sec, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
       
       !! Solver context for U      
