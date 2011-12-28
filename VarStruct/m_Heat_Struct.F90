@@ -24,6 +24,8 @@ Module m_Heat_Struct
    End Type
 
  Contains
+#undef __FUNCT__
+#define __FUNCT__ "HeatSchemeParam_View"
    Subroutine HeatSchemeParam_View(dSchemeParam, viewer)
       Type(HeatSchemeParam_Type)                :: dSchemeParam
       Type(PetscViewer)                            :: viewer
@@ -35,6 +37,8 @@ Module m_Heat_Struct
 
    End Subroutine HeatSchemeParam_View
       
+#undef __FUNCT__
+#define __FUNCT__ "HeatSchemeParam_GetFromOptions"
    Subroutine HeatSchemeParam_GetFromOptions(dSchemeParam)
       Type(HeatSchemeParam_Type)                   :: dSchemeParam
       PetscInt                                     :: iErr
@@ -50,6 +54,8 @@ Module m_Heat_Struct
 
    End Subroutine HeatSchemeParam_GetFromOptions
    
+#undef __FUNCT__
+#define __FUNCT__ "MatHeat_Write"
    Subroutine MatHeat_Write(MeshTopology, MatProp, filename)
       Type(MeshTopology_Type)                      :: MeshTopology
       Type(MatHeat_Type), Dimension(:), Pointer    :: MatProp
@@ -69,6 +75,8 @@ Module m_Heat_Struct
    End Subroutine MatHeat_Write
    
    
+#undef __FUNCT__
+#define __FUNCT__ "MatHeat_Read"
    Subroutine MatHeat_Read(MeshTopology, MatProp, filename)
       Type(MeshTopology_Type)                      :: MeshTopology
       Type(MatHeat_Type), Dimension(:), Pointer    :: MatProp
@@ -105,8 +113,6 @@ Module m_Heat_Struct
       End Do
       Close(F_IN)
       Return
-!120   Format(I6, '      ', 10(ES12.5,' '))   
-!120   Format(*)
    End Subroutine MatHeat_Read
 
 #undef __FUNCT__

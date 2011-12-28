@@ -22,6 +22,8 @@ Module m_VarFracQS_T3D
 
 Contains
 
+#undef __FUNCT__
+#define __FUNCT__ "VarFracHeat_Init"
    Subroutine VarFracHeat_Init(AppCtx, HeatAppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       Type(Heat_AppCtx_Type)                       :: HeatAppCtx
@@ -43,8 +45,6 @@ Contains
 
 
    !Init For HEAT
-   !HeatAppCtx%NumSteps = NumSteps
-   
       Call HeatSchemeParam_GetFromOptions(HeatAppCtx%HeatSchemeParam)
       If (AppCtx%AppParam%verbose > 0) Then
          Call HeatSchemeParam_View(HeatAppCtx%HeatSchemeParam, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
@@ -78,6 +78,8 @@ Contains
 
    End Subroutine VarFracHeat_Init
 
+#undef __FUNCT__
+#define __FUNCT__ "VarFracHeat_Step_Compute"
    Subroutine VarFracHeat_Step_Compute(AppCtx, HeatAppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       Type(Heat_AppCtx_Type)                       :: HeatAppCtx
