@@ -1,4 +1,4 @@
-LIB = MEF90
+LIB = mef90
 #order is important 
 SRCS =	\
 	m_MEF_Parameters.F90      \

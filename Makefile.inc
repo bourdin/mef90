@@ -19,8 +19,8 @@ MEF90_INCS += ${PETSC_FC_INCLUDES}
 #No link edition in libs 
 ifdef BIN
 	FFLAGS = ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
-	FFLAGS += -L${LIBDIR} -lMEF90 
-	FFLAGS += -lVar_Struct 
+	FFLAGS += -L${LIBDIR} -lmef90 
+	FFLAGS += -lvarstruct 
 endif
 
 #This should be improved !!!!! 
@@ -55,7 +55,7 @@ ifdef TAO
 	FFLAGS += ${TAO_LIB} ${TAO_FORTRAN_LIB} 
 #2011/12/09 why do I have to add next line to compile varFrac with Heat module ? 	
 #Order of flags is important ???? 
-	FFLAGS += -L${LIBDIR} -lMEF90 
+	FFLAGS += -L${LIBDIR} -lmef90 
 endif 
 
 ################################################################## 
