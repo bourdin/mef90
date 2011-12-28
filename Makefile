@@ -1,14 +1,14 @@
 LIBS = MEF90 VarStruct
 PROJECTS = PrepVarFrac PrepVarFracNG PrepFilm VarFilmQS 
-DIMPROJECTS = VarFracQS
+DIMPROJECTS = PoissonHeat VarFracQS
 SUBDIRS = ${LIBS} ${PROJECTS}
 
-.PHONY: all ${SUBDIRS}
+.PHONY: all ${SUBDIRS} ${DIMPROJECTS}
 
 help: 
 	@echo Makefile system for MEF90 
 	@echo usage make proj 
-	@echo proj in Frac, FracNG, Film
+	@echo proj in clean, Frac, FracNG, Film, Heat 
 
 all: ${DIMPROJECTS}
 
@@ -18,6 +18,8 @@ FracNG :  MEF90 VarStruct PrepVarFracNG VarFracQS
 
 Film : MEF90 VarStruct PrepFilm VarFilmQS
 
+Heat : MEF90 VarStruct PrepVarFracNG PoissonHeat VarFracQS 
+
 ${SUBDIRS}:
 	cd $@ ; exec ${MAKE}
 
@@ -25,9 +27,16 @@ ${DIMPROJECTS}:
 	cd $@ ; exec ${MAKE} DIM=2D
 	cd $@ ; exec ${MAKE} DIM=3D
 
+VarFracQSHeat:
+	cd VarFracQS ; exec ${MAKE} DIM=2D OPTS=Heat
+	cd VarFracQS ; exec ${MAKE} DIM=3D OPTS=Heat
+
+
 clean:
-	@for dir in ${SUBDIRS} ; do \
-		${MAKE} -C $$dir clean ;\
-	done
+	-rm -rf ${MEF90_DIR}/obj/${PETSC_ARCH}
+	-rm -rf ${MEF90_DIR}/bin/${PETSC_ARCH}
+#	@for dir in ${SUBDIRS} ; do \
+#		${MAKE} -C $$dir clean ;\
+#	done
 
 
