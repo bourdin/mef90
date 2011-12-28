@@ -436,13 +436,9 @@ Contains
       Call TSSetRHSFunction(AppCtx%TS, PETSC_NULL_OBJECT, RHSPoisson, AppCtx, ierr); CHKERRQ(iErr)
 
 ! Setting time discretization scheme for TS
-      Call TSSetType(AppCtx%TS, 'rosw', iErr); CHKERRQ(iErr)
-      Call TSRosWSetType(AppCtx%TS, 'ra3pw', iErr); CHKERRQ(iErr)
+      Call TSSetType(AppCtx%TS, AppCtx%HeatSchemeParam%HeatTsType, iErr); CHKERRQ(iErr)
+      Call TSRosWSetType(AppCtx%TS, AppCtx%HeatSchemeParam%TsTypeOpt1, iErr); CHKERRQ(iErr)
       Call TSSetFromOptions(AppCtx%TS,  iErr); CHKERRQ(iErr) ! overwritting if cli arguments
-      ! Call TSSetType(AppCtx%TS, TSARKIMEX, ierr); CHKERRQ(iErr)  
-      !Call TSSetProblemType(AppCtx%TS, TS_LINEAR, ierr); CHKERRQ(iErr)
-      !Call TSSetType(AppCtx%TS, TSBEULER, ierr);  CHKERRQ(iErr)
-      
        
    End Subroutine Poisson_TSSetUp
 
