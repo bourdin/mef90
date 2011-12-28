@@ -4,12 +4,16 @@ Program  VarFracQS
 
 #if defined PB_2D
    Use m_VarFracQS2D
+#if defined PB_Heat
    Use m_Poisson2D
    Use m_TransientHeat2D
+#endif   
 #elif defined PB_3D
    Use m_VarFracQS3D
+#if defined PB_Heat
    Use m_Poisson3D
    Use m_TransientHeat3D
+#endif   
 #endif   
    Use m_MEF90
    Use m_VarFrac_Struct
@@ -34,7 +38,9 @@ Program  VarFracQS
 
    Character(len=MEF90_MXSTRLEN)                :: TCST_FileName
    PetscInt, Dimension(:), Pointer              :: SizeScal
+#if defined PB_Heat
    Type(Heat_AppCtx_Type)                       :: HeatAppCtx
+#endif   
 
    Call VarFracQSInit(AppCtx)
    If (AppCtx%AppParam%verbose > 0) Then
@@ -47,6 +53,7 @@ Program  VarFracQS
       Call MeshTopologyView(AppCtx%MeshTopology, AppCtx%AppParam%MyLogViewer) 
    End If   
 
+#if defined PB_Heat
    !Read Heat material parameters from *.TSCT file 
    !!! Read Mat Properties from the CST file
    TCST_FileName = trim(AppCtx%AppParam%prefix)//'.TCST'
@@ -87,6 +94,7 @@ Program  VarFracQS
    Call HeatMatAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%V)
    Call RHSAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%MyExo)
    Call MatMassAssembly(HeatAppCtx, AppCtx%MeshTopology)
+#endif   
 
 
    iDebug = 0
@@ -103,6 +111,7 @@ Program  VarFracQS
 
       !!! Init the fields:
       Call Init_TS_Loads(AppCtx) 
+#if defined PB_Heat
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceTemp)%Offset, AppCtx%TimeStep, HeatAppCtx%F)
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset,  AppCtx%TimeStep, HeatAppCtx%UBC) 
 
@@ -121,6 +130,7 @@ Program  VarFracQS
       End If 
 !AppCtx%Load is the list of time steps. Quasi-Static ..... 
 !Trasnfert HeatAppCtx%U to AppCtx%Theta
+#endif   
 
       !!! Update U at fixed nodes
       Call Init_TS_U(AppCtx)

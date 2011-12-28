@@ -24,7 +24,8 @@ ifdef BIN
 endif
 
 #This should be improved !!!!! 
-ifdef WITH_HEAT
+#ifdef WITH_HEAT
+ifeq (${OPTS}, Heat)
 	FFLAGS += ${OBJDIR}/${DIM}m_Poisson.o ${OBJDIR}/${DIM}m_TransientHeat.o ${OBJDIR}/${DIM}m_MEF_Integrate.o 
 endif
 
@@ -55,11 +56,6 @@ ifdef TAO
 #2011/12/09 why do I have to add next line to compile varFrac with Heat module ? 	
 #Order of flags is important ???? 
 	FFLAGS += -L${LIBDIR} -lMEF90 
-	ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-		MEF90_FLAGS +=  ${FC_D_FLAG}WITH_TAO 
-	else
-		MEF90_FLAGS += -DWITH_TAO 
-	endif
 endif 
 
 ################################################################## 
@@ -82,7 +78,7 @@ lib${LIB}.a: ${OBJS}
 #FLINKER = ${FC_LINKER} ${FC_LINKER_FLAGS} ${FFLAGS} 
 ${BIN}: ${OBJS} 
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/${DIM}$@.o $@.F90
-	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM}  $? ${addprefix ${OBJDIR},${addprefix ${DIM}, $@.o}} ${FFLAGS} 
+	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM}${WITH_HEAT}  $? ${addprefix ${OBJDIR},${addprefix ${DIM}, $@.o}} ${FFLAGS} 
 
 ${OBJDIR}${DIM}%.o : %.F90
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o $@ $<

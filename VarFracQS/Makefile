@@ -8,17 +8,35 @@ SRCS = \
 	   m_VarFracQS.F90  \
 
 #Compilation takes DIM option 
-#For using heat module computation should be launched with WITH_HEAT
-ifdef WITH_HEAT
+############### Test if Options are defined properly 
+#ugly hack 
+ifndef DIM
+True:
+	@echo The DIM option is mandatory for VarFracQS compilation 
+	@echo ------------------ Stop Compilation ---------------- 
+endif
+
+#For using heat module computation should be launched with OPTS=Heat
+ifdef OPTS
+ifneq (${OPTS}, Heat)
+True:
+	@echo The OPTS variable if defined can only take the value Heat 
+	@echo ------------------ Stop Compilation ---------------- 
+endif
+endif 
+
+
+ifeq (${OPTS}, Heat)
 	ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-		MEF90_FLAGS +=  ${FC_D_FLAG}WITH_HEAT 
+		MEF90_FLAGS +=  ${FC_D_FLAG}HEAT 
 	else
-		MEF90_FLAGS += -DWITH_HEAT 
+		MEF90_FLAGS += -DHEAT 
 	endif
 endif 
 
-WITH_HEAT = True
 TAO = True 
 MEF90_INCS += -I${OBJDIR} ${TAO_INCLUDE} 
+
+
 
 include ../Makefile.inc  
