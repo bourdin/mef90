@@ -40,10 +40,7 @@ Program  Elast
    Do i = 1, AppCtx%NumTimeSteps
       AppCtx%TimeStep = i
       
-      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
       Call EXGTIM(AppCtx%MyEXO%exoid, AppCtx%TimeStep, AppCtx%Time, iErr)
-      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
-      AppCtx%MyEXO%exoid = 0
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load)
 
       Call Solve(AppCtx)

@@ -122,19 +122,21 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
    
-101 Format(A, '-', I4.4, '.log')
-102 Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
-103 Format(A,'.log')
-104 Format('Collective output redirected to file ', A, '\n')
+101   Format(A, '-', I4.4, '.log')
+102   Format('Output from processor ', I4.4, ' redirected to file ', A, '\n')
+103   Format(A,'.log')
+104   Format('Collective output redirected to file ', A, '\n')
       Write(filename, "(A,'.ener')") Trim(AppCtx%AppParam%prefix)
       Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, AppCtx%AppParam%EnergyViewer, iErr); CHKERRQ(iErr);   
       Write(IOBuffer, 105) Trim(filename)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-105 Format('Energies saved in file ', A, '\n')
+105   Format('Energies saved in file ', A, '\n')
 
       Call Write_EXO_Case(AppCtx%AppParam%prefix, '%0.4d', MEF90_NumProcs)
+
       AppCtx%EXO%Comm = PETSC_COMM_WORLD
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
+      AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr) 
 
       !!! Reading and distributing sequential mesh
       If (MEF90_NumProcs == 1) Then
@@ -156,7 +158,8 @@ Contains
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
       AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
       Write(AppCtx%MyEXO%filename, 99) trim(AppCtx%AppParam%prefix), MEF90_MyRank
- 99  Format(A, '-', I4.4, '.gen')
+ 99   Format(A, '-', I4.4, '.gen')
+      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
    
       !!! Initializes the values and names of the properties and variables
       If ( (AppCtx%VarFracSchemeParam%SaveStrain) .OR. (AppCtx%VarFracSchemeParam%SaveStress) ) Then
@@ -165,6 +168,7 @@ Contains
          saveElemVar = .False.
       End If
       Call VarFracEXOVariable_Init(AppCtx%MyEXO,saveElemVar)
+      
       Call EXOProperty_Read(AppCtx%MyEXO)   
       If (AppCtx%AppParam%verbose > 1) Then
          Write(IOBuffer, *) "Done with VarFracEXOVariable_Init and VarFracEXOProperty_Read\n"
@@ -287,10 +291,7 @@ Contains
       End If
 
       !!! Get the number of time steps
-      AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, vers, iErr)
       Call EXINQ(AppCtx%MyEXO%exoid, EXTIMS, AppCtx%NumTimeSteps, rDummy, cDummy, iErr)
-      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
-      AppCtx%MyEXO%exoid = 0
 
       AppCtx%TimeStep = 1
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
@@ -424,10 +425,10 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
       
-100 Format('     KSP for U converged in ', I5, ' iterations \n')
-101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')      
-102 Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I2, '\n')
-103 Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
+100   Format('     KSP for U converged in ', I5, ' iterations \n')
+101   Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')      
+102   Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I2, '\n')
+103   Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
    End Subroutine Solve
    
 !----------------------------------------------------------------------------------------!      
@@ -1139,12 +1140,17 @@ Contains
       Call PetscViewerDestroy(AppCtx%AppParam%EnergyViewer, iErr); CHKERRQ(iErr)
 
       Write(filename, 103) Trim(AppCtx%AppParam%prefix)
-103 Format(A,'-logsummary.txt')
+103   Format(A,'-logsummary.txt')
       Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
       Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
       Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
       Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
 
+
+      Call EXCLOS(AppCtx%EXO%exoid, iErr)
+      AppCtx%EXO%exoid = 0
+      Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
+      AppCtx%MyEXO%exoid = 0
 
       Call TaoFinalize(iErr); CHKERRQ(iErr)
       Call MEF90_Finalize()
