@@ -234,6 +234,7 @@ Contains
       !!! Create the Scatter, Vec, Mat, KSP, PC
       Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, AppCtx%MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
       Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
+      Call MatSetBlockSize(AppCtx%KU,AppCtx%MeshTopology%Num_Dim,iErr); CHKERRQ(ierr)
       
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
          Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoU, iErr); CHKERRQ(iErr)

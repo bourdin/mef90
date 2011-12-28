@@ -715,8 +715,14 @@ Contains
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       
-      DeltaE = (AppCtx%TotalEnergy(AppCtx%TimeStep) - AppCtx%TotalEnergy(AppCtx%TimeStep-1))! /                                     &
-               !ABS(AppCtx%TotalEnergy(AppCtx%TimeStep))
+      If (AppCtx%TotalEnergy(AppCtx%TimeStep) == 0.0_Kr) Then
+         DeltaE = 1.0E+30
+      Else
+         DeltaE = (AppCtx%TotalEnergy(AppCtx%TimeStep) - AppCtx%TotalEnergy(AppCtx%TimeStep-1)) /                                  &
+                  ABS(AppCtx%TotalEnergy(AppCtx%TimeStep))
+      End If
+      Write(IOBuffer,*) 'DeltaE: ',DeltaE,'\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
                
       Select Case(AppCtx%VarFracSchemeParam%BTType)
          Case(VarFrac_BTType_MIL)
