@@ -7,25 +7,16 @@ Module m_Heat_Struct
 
    PetscInt, Parameter, Public                     :: Heat_Num_Laws                 = 6
    PetscInt, Parameter, Public                     :: Heat_Constant_ID              = 1
-   PetscInt, Parameter, Public                     :: Heat_Constant_Num_Param       = 1
    PetscInt, Parameter, Public                     :: Heat_Increasing_ID            = 2
-   PetscInt, Parameter, Public                     :: Heat_Increasing_Num_Param     = 2
    PetscInt, Parameter, Public                     :: Heat_Decreasing_ID            = 3
-   PetscInt, Parameter, Public                     :: Heat_Decreasing_Num_Param     = 3
    PetscInt, Parameter, Public                     :: Heat_Non_Monotonic_ID         = 4
-   PetscInt, Parameter, Public                     :: Heat_Non_Monotonic_Num_Param  = 5
    PetscInt, Parameter, Public                     :: Heat_Damage_ID                = 5
-   PetscInt, Parameter, Public                     :: Heat_Damage_Num_Param         = 5
    PetscInt, Parameter, Public                     :: Heat_Crack_Open_ID            = 6
-   PetscInt, Parameter, Public                     :: Heat_Crack_Open_Num_Param     = 5
-   
-   
+   PetscInt, Dimension(Heat_Num_Laws), Parameter, Public  :: Heat_Num_Param  =  (/1, 2, 3, 5, 2, 1/)
+
    Type MatHeat_Type
       PetscInt                                     :: Type_Law
-      PetscReal                                    :: Diffusivity
-      PetscReal                                    :: Diffusivity2
-      PetscReal                                    :: Diffusivity3
-      PetscReal                                    :: Diffusivity4
+      PetscReal, Dimension(:), Pointer             :: Diffusivity
    End Type MatHeat_Type
    
    Type HeatSchemeParam_Type
@@ -77,17 +68,21 @@ Module m_Heat_Struct
       Type(MatHeat_Type), Dimension(:), Pointer    :: MatProp
       Character(len=*)                             :: filename
       PetscMPIInt                                  :: rank
-      PetscInt                                     :: iBlk
+      PetscInt                                     :: iBlk, i 
       
       Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
       Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
       Do iBlk = 1, Size(MatProp)
-      Write(F_OUT,120) iBlk, MatProp(iBlk)%Type_Law, MatProp(iBlk)%Diffusivity, MatProp(iBlk)%Diffusivity2
+         Write(F_OUT, 120, advance='no') iBlk, MatProp(iBlk)%Type_Law
+         Do i = 1, Heat_Num_Param(MatProp(iBlk)%Type_Law) 
+            Write(F_OUT,121, advance='no') MatProp(iBlk)%Diffusivity(i)
+         End Do
       End Do
       Close(F_OUT)
       
-120   Format(I6, '      ', I6, 2(ES12.5,' '))   
+120   Format(I6, '      ', I6, 2(ES12.5,' '))  
+121   Format((ES12.5,' '))
    End Subroutine MatHeat_Write
    
    
@@ -101,8 +96,8 @@ Module m_Heat_Struct
       PetscInt                                     :: iBlk, iErr
       
       PetscInt                                     :: NumBlks, IdxMin, IdxMax
-      PetscInt                                     :: Idx, Type_Law 
-      PetscReal                                    :: Diffusivity, Diffusivity2
+      PetscInt                                     :: Idx, Type_Law, i, col 
+      !PetscReal, Dimension(;), Pointer             :: Diffusivity
    
       Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
       Rewind(F_IN)
@@ -122,11 +117,16 @@ Module m_Heat_Struct
       Rewind(F_IN)
       Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
-      Read(F_IN, *) Idx, Type_Law,  Diffusivity, Diffusivity2
+         Read(F_IN, *) Idx, Type_Law
          MatProp(Idx)%Type_Law  = Type_Law
-         MatProp(Idx)%Diffusivity = Diffusivity
-         MatProp(Idx)%Diffusivity2 = Diffusivity2
+         Allocate(MatProp(Idx)%Diffusivity(Heat_Num_Param(MatProp(Idx)%Type_Law)))
       End Do
+      Rewind(F_IN) 
+      Read(F_IN, *) NumBlks
+      Do iBlk = 1, NumBlks
+         Read(F_IN, *) Idx, Type_Law, (MatProp(IBlk)%Diffusivity(col),col=1,Heat_Num_Param(MatProp(IBlk)%Type_Law))
+         print *, Idx, Type_Law, MatProp(IBlk)%Diffusivity
+      End DO 
       Close(F_IN)
       Return
    End Subroutine MatHeat_Read

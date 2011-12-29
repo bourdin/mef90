@@ -48,7 +48,7 @@ Program PrepVarFrac
    Type(Tens4OS2D)                              :: TmpHL_2D
    Type(Tens4OS3D)                              :: TmpHL_3D   
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
-   PetscReal                                    :: Diffusivity, Diffusivity2 
+   PetscReal, Dimension(:), pointer             :: Diffusivity
    PetscReal                                    :: Eeff,nueff,Kappa,Mu
    PetscReal                                    :: CTheta,CTheta2,STheta,STheta2
    PetscReal, Dimension(:), Pointer             :: GlobVars
@@ -65,7 +65,7 @@ Program PrepVarFrac
    PetscBool                                    :: saveElemVar, PlaneStrain
    PetscInt                                     :: exo_version
    PetscReal                                    :: R, Ymax
-   PetscInt                                     :: iBlk, iEloc, iE
+   PetscInt                                     :: iBlk, iEloc, iE, iDiff
    PetscInt                                     :: HeatTestCase
    PetscReal,Dimension(:), Pointer              :: ValT_Init, ValT_F
    PetscReal, Dimension(:), Pointer             :: T_BC
@@ -286,10 +286,6 @@ Program PrepVarFrac
 
    Select Case(iCase)
    !!! Write special cases here
-   Case(9) !!! Single well, cst flux
-!TODO add the list of options ..... 
-!      HeatAppCtx%AppParam%verbose = verbose
-      Call MEF90_AskInt(HeatTestCase, 'Test Case For Solving Heat Equation', BatchUnit, IsBatch)
    End Select
 
    Allocate(GlobVars(VarFrac_Num_GlobVar))
@@ -356,13 +352,12 @@ Program PrepVarFrac
          Case(9)
             Write(IOBuffer, 300) i, 'Behavior Law for Heat Diffusion'
             Call MEF90_AskInt(Type_Law, IOBuffer, BatchUnit, IsBatch)
-            Write(IOBuffer, 300) i, 'Diffusivity'
-            Call MEF90_AskReal(Diffusivity, IOBuffer, BatchUnit, IsBatch)
-            Write(IOBuffer, 300) i, 'Diffusivity2'
-            Call MEF90_AskReal(Diffusivity2, IOBuffer, BatchUnit, IsBatch)
+            Allocate(Diffusivity(Heat_Num_Param(Type_Law)))
+            Do iDiff = 1, Heat_Num_Param(Type_Law) 
+               Write(IOBuffer, 301) i, 'Diffusivity', iDiff 
+               Call MEF90_AskReal(Diffusivity(iDiff), IOBuffer, BatchUnit, IsBatch)
+            End Do 
           Case Default 
-            Diffusivity  = 0.0_Kr 
-            Diffusivity2 = 0.0_Kr 
          End Select
 
          Select Case(MeshTopology%Num_Dim)
@@ -385,8 +380,9 @@ Program PrepVarFrac
             MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
          End Select 
             MatHeatProp(i)%Type_Law     = Type_Law
+            Allocate(MatHeatProp(i)%Diffusivity(Heat_Num_Param(Type_Law)))
             MatHeatProp(i)%Diffusivity  = Diffusivity
-            MatHeatProp(i)%Diffusivity2 = Diffusivity2
+            DeAllocate(Diffusivity)
       End Do
    End Select
    
@@ -769,6 +765,7 @@ Program PrepVarFrac
  100 Format('    Element Block ', T24, I3, '\n')
  102 Format('    Node Set      ', T24, I3, '\n')
  300 Format('EB', I4.4, ': ', A)
+ 301 Format('EB', I4.4, ': ', A, I3)
  302 Format('NS', I4.4, ': ', A)
 
 End Program PrepVarFrac

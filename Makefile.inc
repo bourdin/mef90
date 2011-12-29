@@ -85,7 +85,7 @@ lib${LIB}.a: ${OBJS}
 #FLINKER = ${FC_LINKER} ${FC_LINKER_FLAGS} ${FFLAGS} 
 ${BIN}: ${OBJS} 
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o ${OBJDIR}/${DIM}$@.o $@.F90
-	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM}${WITH_HEAT}  $? ${addprefix ${OBJDIR},${addprefix ${DIM}, $@.o}} ${FFLAGS} 
+	${FC_LINKER} ${FC_LINKER_FLAGS} -o ${BINDIR}/$@${DIM}${OPTS}  $? ${addprefix ${OBJDIR},${addprefix ${DIM}, $@.o}} ${FFLAGS} 
 
 ${OBJDIR}${DIM}%.o : %.F90
 	${FC} ${MEF90_FLAGS} ${MEF90_INCS} -c -o $@ $<

@@ -83,8 +83,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "PoissonInit"
    Subroutine PoissonInit(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-      PetscInt                                     :: iErr
+      Type(Heat_AppCtx_Type)                       :: AppCtx
+      PetscInt                                     :: iErr, iDiff
       PetscBool                                    :: HasPrefix, Flag
       PetscInt                                     :: iBlk, i, j, iloc, iEloc 
       Character(len=MEF90_MXSTRLEN)                :: BatchFileName
@@ -250,10 +250,11 @@ Contains
          Call MEF90_AskReal(ValF(iBlk),IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlk, 'Diffusion Law'
          Call MEF90_AskInt(AppCtx%MatProp(iBlk)%Type_Law,IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlk, 'diffusivity parameter'
-         Call MEF90_AskReal(AppCtx%MatProp(iBlk)%Diffusivity,IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlk, 'Diffusivity Parameter 2'
-         Call MEF90_AskReal(AppCtx%MatProp(iBlk)%Diffusivity2,IOBuffer, BatchUnit, IsBatch)
+         Allocate(AppCtx%MatProp(iBlk)%Diffusivity(Heat_Num_Param(AppCtx%MatProp(iBlk)%Type_Law)))
+         Do iDiff = 1, Heat_Num_Param(AppCtx%MatProp(iBlk)%Type_Law) 
+            Write(IOBuffer, 301) i, 'Diffusivity', iDiff 
+            Call MEF90_AskReal(AppCtx%MatProp(iBlk)%Diffusivity(iDiff), IOBuffer, BatchUnit, IsBatch)
+         End Do 
       End Do 
       Call HeatSetInitial(AppCtx, AppCtx%MeshTopology, ValU, ValF)
       DeAllocate(ValU)
@@ -274,6 +275,7 @@ Contains
 
 202 Format('    Node Set      ', T24, I3, '\n')
 300 Format('EB', I4.4, ': ', A) 
+301 Format('EB', I4.4, ': ', A, I3)
 302 Format('NS', I4.4, ': ', A)
       AppCtx%VertVar_Temperature = 1
 ! Set BC on NS
