@@ -193,10 +193,10 @@ Contains
          Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, MeshTopology%mesh, iE-1, MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
          Select Case(AppCtx%MatProp(i)%Type_Law)
-            Case(1)
+            Case(Heat_Constant_ID)
             ! Constant Diffusion
                lDiff = AppCtx%MatProp(i)%Diffusivity 
-            Case(2)
+            Case(Heat_Increasing_ID )
             !Increasing diffusion 
                ! Mensi Law D(C) = A exp (B*C) 
                ! 1988 Mensi-Acker-Attolou Mater Struct
@@ -207,7 +207,7 @@ Contains
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
                lDiff = AppCtx%MatProp(i)%Diffusivity*exp(AppCtx%MatProp(i)%Diffusivity2*T_Elem) 
-            Case(3)
+            Case(Heat_Decreasing_ID)
       !Diffusion is decreasing with the variable
                Call SectionRealRestrictClosure(AppCtx%U%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
                T_Elem = 0.0_Kr
@@ -215,7 +215,7 @@ Contains
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
                lDiff =  AppCtx%MatProp(i)%Diffusivity*(AppCtx%MatProp(i)%Diffusivity2-T_Elem)**AppCtx%MatProp(i)%Diffusivity3 
-            Case(4)
+            Case(Heat_Non_Monotonic_ID)
       !Diffusion is non monotonic with the variable
                Call SectionRealRestrictClosure(AppCtx%U%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
                T_Elem = 0.0_Kr
@@ -223,8 +223,8 @@ Contains
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
       !TODO implement 2007_CCR_baroghel-bouny_I and II         
-      !         lDiff = AppCtx%MatProp(i)%Diffusivity*(Diffusivity2-T_Elem)**Diffusivity3 
-            Case(5)
+               lDiff = AppCtx%MatProp(i)%Diffusivity*(AppCtx%MatProp(i)%Diffusivity2-T_Elem)**AppCtx%MatProp(i)%Diffusivity3+exp(AppCtx%MatProp(i)%Diffusivity4*T_Elem) 
+           Case(Heat_Damage_ID)
       ! Diffusion Depends on the damaging variable
       ! The problem is that we do not have access to that field here    !!!!!!
       ! - The function should take a section as argument. This section could then  be any field -- > Try this 
@@ -237,7 +237,7 @@ Contains
                End DO
                lDiff = AppCtx%MatProp(i)%Diffusivity/T_Elem 
       ! TODO : Test that ExtraField is defined to evoid Segment Fault error
-            Case(6)
+            Case(Heat_Crack_Open_ID)
       ! Diffusion depends on crack opening
             Case Default
                ldiff =1 

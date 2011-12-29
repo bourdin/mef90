@@ -33,9 +33,7 @@ Contains
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       PetscInt                                     :: iErr
 
-      
       !Read Heat material parameters from *.TSCT file 
-      !!! Read Mat Properties from the CST file
       TCST_FileName = trim(AppCtx%AppParam%prefix)//'.TCST'
       Call MatHeat_Read(AppCtx%MeshTopology, HeatAppCtx%MatProp, TCST_FileName)
       If (AppCtx%AppParam%verbose > 0) Then
@@ -43,8 +41,6 @@ Contains
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
 
-
-   !Init For HEAT
       Call HeatSchemeParam_GetFromOptions(HeatAppCtx%HeatSchemeParam)
       If (AppCtx%AppParam%verbose > 0) Then
          Call HeatSchemeParam_View(HeatAppCtx%HeatSchemeParam, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
@@ -66,9 +62,7 @@ Contains
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology,  AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, 1, HeatAppCtx%U)
       Call SectionRealToVec(HeatAppCtx%U%Sec, HeatAppCtx%U%Scatter,  SCATTER_REVERSE, HeatAppCtx%U%Vec, ierr); CHKERRQ(ierr)
    
-   !      Call HeatSetInitial(HeatAppCtx, MeshTopology, ValT_Init,ValT_F)
       !Set BC in Temperature
-!      Call HeatSetBC(HeatAppCtx, T_BC, MyExo, MeshTopology,VarFrac_NSProp_HasPForce)
       Call SectionIntZero(HeatAppCtx%BCFlag%Sec, iErr); CHKERRQ(iErr)
       Call SectionIntAddNSProperty(HeatAppCtx%BCFlag%Sec,   AppCtx%MyEXO%NSProperty(VarFrac_NSProp_HasPForce), AppCtx%MeshTopology)
 

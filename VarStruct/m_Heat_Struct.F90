@@ -5,11 +5,27 @@ Module m_Heat_Struct
 
    Implicit NONE
 
+   PetscInt, Parameter, Public                     :: Heat_Num_Laws                 = 6
+   PetscInt, Parameter, Public                     :: Heat_Constant_ID              = 1
+   PetscInt, Parameter, Public                     :: Heat_Constant_Num_Param       = 1
+   PetscInt, Parameter, Public                     :: Heat_Increasing_ID            = 2
+   PetscInt, Parameter, Public                     :: Heat_Increasing_Num_Param     = 2
+   PetscInt, Parameter, Public                     :: Heat_Decreasing_ID            = 3
+   PetscInt, Parameter, Public                     :: Heat_Decreasing_Num_Param     = 3
+   PetscInt, Parameter, Public                     :: Heat_Non_Monotonic_ID         = 4
+   PetscInt, Parameter, Public                     :: Heat_Non_Monotonic_Num_Param  = 5
+   PetscInt, Parameter, Public                     :: Heat_Damage_ID                = 5
+   PetscInt, Parameter, Public                     :: Heat_Damage_Num_Param         = 5
+   PetscInt, Parameter, Public                     :: Heat_Crack_Open_ID            = 6
+   PetscInt, Parameter, Public                     :: Heat_Crack_Open_Num_Param     = 5
+   
+   
    Type MatHeat_Type
       PetscInt                                     :: Type_Law
       PetscReal                                    :: Diffusivity
       PetscReal                                    :: Diffusivity2
       PetscReal                                    :: Diffusivity3
+      PetscReal                                    :: Diffusivity4
    End Type MatHeat_Type
    
    Type HeatSchemeParam_Type
@@ -120,22 +136,21 @@ Module m_Heat_Struct
    Subroutine View_Available_Diffusion_Laws
       Type(Heat_TestCase_Type), Dimension(:) , Pointer                 :: DiffusionLaw
       Character(len=MEF90_MXSTRLEN)                               ::  IOBuffer
-      PetscInt                                                    :: NumLaws   
       PetscInt                                                    :: i, iErr 
 
-      NumLaws = 5
-      Allocate(DiffusionLaw(NumLaws))
-      Do i = 1, NumLaws 
+      Allocate(DiffusionLaw(Heat_Num_Laws))
+      Do i = 1, Heat_Num_Laws
              DiffusionLaw(i)%Index = i
       End Do
-      DiffusionLaw(1)%Description = "Constant diffusion parameter D(T, v) = k"
-      DiffusionLaw(2)%Description = "Increasing diffusion paramter, Mensi's law D(T, v) = k exp(B*T)"
-      DiffusionLaw(3)%Description = "Decreasing diffusion parameter D(T, v) = k(A-T)**B"
-      DiffusionLaw(4)%Description = "Diffusion depending on damage field D(T, v) = k/v"
-      DiffusionLaw(5)%Description = "Diffusion depending on crack opening [NOT IMPLEMENTED]"
+      DiffusionLaw(Heat_Constant_ID)%Description      = "Constant diffusion parameter D(T, v) = k"
+      DiffusionLaw(Heat_Increasing_ID)%Description    = "Increasing diffusion paramter, Mensi's law D(T, v) = k exp(B*T)"
+      DiffusionLaw(Heat_Decreasing_ID)%Description    = "Decreasing diffusion parameter D(T, v) = k(A-T)**B"
+      DiffusionLaw(Heat_Non_Monotonic_ID)%Description = "Non motonic diffusion D(T, v) = k(A-T)**B+exp(C*T)"
+      DiffusionLaw(Heat_Damage_ID)%Description        = "Diffusion depending on damage field D(T, v) = k/v"
+      DiffusionLaw(Heat_Crack_Open_ID)%Description    = "Diffusion depending on crack opening [NOT IMPLEMENTED]"
 
       Write(IOBuffer, *) '\nDiffusion laws:\n'
-      Do i = 1, NumLaws
+      Do i = 1, Heat_Num_Laws
          Write(IOBuffer, "('   [',I2.2,'] ',A)"), DiffusionLaw(i)%Index, Trim(DiffusionLaw(i)%Description)//'\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
       End Do
