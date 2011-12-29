@@ -142,14 +142,15 @@ Module m_Heat_Struct
       Do i = 1, Heat_Num_Laws
              DiffusionLaw(i)%Index = i
       End Do
-      DiffusionLaw(Heat_Constant_ID)%Description      = "Constant diffusion parameter D(T, v) = k"
-      DiffusionLaw(Heat_Increasing_ID)%Description    = "Increasing diffusion paramter, Mensi's law D(T, v) = k exp(B*T)"
-      DiffusionLaw(Heat_Decreasing_ID)%Description    = "Decreasing diffusion parameter D(T, v) = k(A-T)**B"
-      DiffusionLaw(Heat_Non_Monotonic_ID)%Description = "Non motonic diffusion D(T, v) = k(A-T)**B+exp(C*T)"
-      DiffusionLaw(Heat_Damage_ID)%Description        = "Diffusion depending on damage field D(T, v) = k/v"
+      DiffusionLaw(Heat_Constant_ID)%Description      = "Constant diffusion parameter D(T, v) = P1"
+      DiffusionLaw(Heat_Increasing_ID)%Description    = "Increasing diffusion paramter, Mensi's law D(T, v) = P1 exp(P2*T)"
+      DiffusionLaw(Heat_Decreasing_ID)%Description    = "Decreasing diffusion parameter D(T, v) = P1*(P2-T)**P3"
+      DiffusionLaw(Heat_Non_Monotonic_ID)%Description = "Non motonic diffusion D(T, v) = P1(P2-T)**P3+P4*exp(P5*T)"
+      DiffusionLaw(Heat_Damage_ID)%Description        = "Diffusion depending on damage field D(T, v) = min(P1/v, P2)"
       DiffusionLaw(Heat_Crack_Open_ID)%Description    = "Diffusion depending on crack opening [NOT IMPLEMENTED]"
 
       Write(IOBuffer, *) '\nDiffusion laws:\n'
+      Write(IOBuffer, *) '\nP1, P2, ..., Pn  Diffusion Parameters\n'
       Do i = 1, Heat_Num_Laws
          Write(IOBuffer, "('   [',I2.2,'] ',A)"), DiffusionLaw(i)%Index, Trim(DiffusionLaw(i)%Description)//'\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)

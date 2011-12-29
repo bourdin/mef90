@@ -597,6 +597,25 @@ Contains
 
  
 #undef __FUNCT__
+#define __FUNCT__ "Heat_Field_Mat_Finalize"
+   Subroutine Heat_Field_Mat_Finalize(AppCtx)
+      Type(Heat_AppCtx_Type)                       :: AppCtx
+      PetscInt                                     :: iErr
+
+      Call FieldDestroy(AppCtx%U)
+      Call FieldDestroy(AppCtx%F)
+      Call FieldDestroy(AppCtx%RHS)
+      Call FieldDestroy(AppCtx%UBC)
+      Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)
+      Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
+      Call MatDestroy(AppCtx%M, iErr); CHKERRQ(iErr)
+      Call MatDestroy(AppCtx%Jac, iErr); CHKERRQ(iErr)
+
+      Call TSDestroy(AppCtx%TS, iErr); CHKERRQ(iErr)
+
+   End Subroutine Heat_Field_Mat_Finalize 
+
+#undef __FUNCT__
 #define __FUNCT__ "TSPoissonFinalize"
    Subroutine TSPoissonFinalize(AppCtx)   
       Type(Heat_AppCtx_Type)                            :: AppCtx
@@ -604,16 +623,9 @@ Contains
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename
 
-      Call FieldDestroy(AppCtx%U)
-      Call FieldDestroy(AppCtx%F)
-      Call FieldDestroy(AppCtx%RHS)
+      Call Heat_Field_Mat_Finalize(AppCtx)
       Call SectionRealDestroy(AppCtx%GradU, iErr); CHKERRQ(iErr)
-      Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)
-      Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
-      Call MatDestroy(AppCtx%M, iErr); CHKERRQ(iErr)
-      Call MatDestroy(AppCtx%Jac, iErr); CHKERRQ(iErr)
 
-      Call TSDestroy(AppCtx%TS, iErr); CHKERRQ(iErr)
       Call DMDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
       
       If (AppCtx%AppParam%verbose > 1) Then

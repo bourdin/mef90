@@ -264,7 +264,11 @@ Program  VarFracQS
          EXIT
       End If
    End Do TimeStep
-   
+
+#if defined HEAT
+   Call ComputeWaterMass(AppCtx%MeshTopology, AppCtx%MyExo, VarFrac_VertVar_Temperature, AppCtx%ElemScal, AppCtx%NumTimeSteps)
+   Call Heat_Field_Mat_Finalize(HeatAppCtx)
+#endif   
 
 100   Format('Elastic energy:       ', ES12.5, '\n')    
 101   Format('External Forces Work: ', ES12.5, '\n')    

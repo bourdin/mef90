@@ -96,7 +96,6 @@ Contains
 !AppCtx%Load is the list of time steps. Quasi-Static ..... 
    End Subroutine VarFracHeat_Step_Compute
 
-   
 #if defined PB_2D
 End Module m_VarFracQS_T2D
 #elif defined PB_3D

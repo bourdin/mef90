@@ -223,7 +223,7 @@ Contains
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
       !TODO implement 2007_CCR_baroghel-bouny_I and II         
-               lDiff = AppCtx%MatProp(i)%Diffusivity(1)*(AppCtx%MatProp(i)%Diffusivity(2)-T_Elem)**AppCtx%MatProp(i)%Diffusivity(3)+exp(AppCtx%MatProp(i)%Diffusivity(4)*T_Elem) 
+               lDiff = AppCtx%MatProp(i)%Diffusivity(1)*(AppCtx%MatProp(i)%Diffusivity(2)-T_Elem)**AppCtx%MatProp(i)%Diffusivity(3)+AppCtx%MatProp(i)%Diffusivity(4)*exp(AppCtx%MatProp(i)%Diffusivity(5)*T_Elem) 
            Case(Heat_Damage_ID)
       ! Diffusion Depends on the damaging variable
       ! The problem is that we do not have access to that field here    !!!!!!
@@ -235,7 +235,7 @@ Contains
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
-               lDiff = AppCtx%MatProp(i)%Diffusivity(1)/T_Elem 
+               lDiff = min(AppCtx%MatProp(i)%Diffusivity(1)/(T_Elem+0.001), AppCtx%MatProp(i)%Diffusivity(2))
       ! TODO : Test that ExtraField is defined to evoid Segment Fault error
             Case(Heat_Crack_Open_ID)
       ! Diffusion depends on crack opening
