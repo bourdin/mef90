@@ -21,16 +21,12 @@ Program  TransientHeat
    PetscScalar                                  :: prodMassUnit
    PetscReal                                    :: Mass
    PetscReal, Dimension(:), Pointer             :: CurTime
+   Type(Field)                                  :: ExtraField
 
 
    Call PoissonInit(AppCtx)
 
-   Select Case (AppCtx%AppParam%TestCase)
-   Case (1)
-      Call KSPSetUp(AppCtx)
-   Case(2,3)
-      Call Poisson_TSSetUp(AppCtx, AppCtx%MeshTopology)
-   End Select
+   Call Poisson_TSSetUp(AppCtx, AppCtx%MeshTopology)
 
 
    If (AppCtx%AppParam%verbose > 4) Then
@@ -44,13 +40,6 @@ Program  TransientHeat
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology)
-   If (AppCtx%AppParam%verbose > 3) Then
-      Write(IOBuffer, *) 'Matrix\n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-   End If
-
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Assembling the RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -62,33 +51,34 @@ Program  TransientHeat
       Call SectionRealView(AppCtx%RHS, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
    End If
   
-   Allocate(CurTime(AppCtx%NumSteps-1))
+
+   If (AppCtx%AppParam%verbose > 0) Then
+      Write(IOBuffer, *) 'Assembling the Mass - Variational  Identity   matrix\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   Call MatMassAssembly(AppCtx, AppCtx%MeshTopology)
+
+   If (AppCtx%AppParam%verbose > 0) Then
+      Write(IOBuffer, *) 'Calling Solve\n'
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   End If
+   
+   Allocate(CurTime(AppCtx%NumSteps))
+   CurTime(1) = 0
    DO iStep = 1, AppCtx%NumSteps-1
        !! Non uniform time stepping adapted to the time scale of the  thermal problem in tau=sqrt(t)
-         CurTime(iStep) =  (Real(iStep)/Real(AppCtx%NumSteps))**2*AppCtx%maxtime
+      CurTime(iStep+1) =  (Real(iStep)/Real(AppCtx%NumSteps))**2*AppCtx%maxtime
+      Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
+      Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology, ExtraField)
+      If (AppCtx%AppParam%verbose > 3) Then
+         Write(IOBuffer, *) 'Matrix\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+      End If
+      Call SolveTransientStep(AppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, CurTime(iStep), CurTime(iStep+1), iStep)
    End Do 
 !TODO Write the time steps into the EXO file
-
-   Select Case (AppCtx%AppParam%TestCase)
-   Case (1) 
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Calling Solve\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call Solve(AppCtx)
-   Case(2)
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Assembling the Mass - Variational  Identity   matrix\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call MatMassAssembly(AppCtx, AppCtx%MeshTopology)
-
-      If (AppCtx%AppParam%verbose > 0) Then
-         Write(IOBuffer, *) 'Calling Solve\n'
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call SolveTransient(AppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, CurTime)
-   End Select 
+   
    DeAllocate(CurTime) 
 
    If (AppCtx%AppParam%verbose > 0) Then
@@ -125,10 +115,5 @@ Program  TransientHeat
    Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
    AppCtx%MyEXO%exoid = 0
 
-   Select Case (AppCtx%AppParam%TestCase)
-   Case (1)
-      Call SimplePoissonFinalize(AppCtx)
-   Case (2, 3)
-      Call TSPoissonFinalize(AppCtx)
-   End Select 
+   Call TSPoissonFinalize(AppCtx)
 End Program  TransientHeat

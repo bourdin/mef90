@@ -5,18 +5,9 @@ Program PrepVarFrac
 
    Use m_MEF90
    Use m_VarFrac_Struct
+   Use m_Heat_Struct
    Use m_PrepVarFrac
    Use petsc
-
-#if defined WITH_HEAT
-#if defined PB_2D
-   Use m_Poisson2D
-   Use m_TransientHeat2D
-#elif defined PB_3D 
-   Use m_Poisson3D
-   Use m_TransientHeat3D
-#endif 
-#endif 
 
    Implicit NONE   
    
@@ -40,7 +31,7 @@ Program PrepVarFrac
    PetscInt                                     :: NumTestCase
    Type(TestCase_Type), Dimension(:) , Pointer  :: TestCase
    PetscInt, Parameter                          :: QuadOrder=2
-   Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec, CoordSec
+   Type(SectionReal)                            :: USec, FSec, VSec, ThetaSec, ThetaFSec, CoordSec
    Type(Vect3D), Dimension(:), Pointer          :: U, F
    PetscReal, Dimension(:), Pointer             :: V
    PetscReal                                    :: Theta, Beta, Tau, DL
@@ -51,15 +42,17 @@ Program PrepVarFrac
    PetscInt                                     :: Num_DoF
 
    PetscReal                                    :: RealBuffer
+   Type(MatHeat_Type), Dimension(:), Pointer    :: MatHeatProp
    Type(MatProp2D_Type), Dimension(:), Pointer  :: MatProp2D
    Type(MatProp3D_Type), Dimension(:), Pointer  :: MatProp3D
    Type(Tens4OS2D)                              :: TmpHL_2D
    Type(Tens4OS3D)                              :: TmpHL_3D   
    PetscReal                                    :: E, nu, Toughness, Therm_ExpScal
+   PetscReal, Dimension(:), pointer             :: Diffusivity
    PetscReal                                    :: Eeff,nueff,Kappa,Mu
    PetscReal                                    :: CTheta,CTheta2,STheta,STheta2
    PetscReal, Dimension(:), Pointer             :: GlobVars
-   PetscInt                                     :: vers
+   PetscInt                                     :: vers, Type_Law
    PetscBool                                    :: IsBatch, HasBatchFile
    PetscInt                                     :: BatchUnit=99
    Character(len=MEF90_MXSTRLEN)                :: BatchFileName
@@ -72,12 +65,10 @@ Program PrepVarFrac
    PetscBool                                    :: saveElemVar, PlaneStrain
    PetscInt                                     :: exo_version
    PetscReal                                    :: R, Ymax
-#if defined WITH_HEAT
-   Type(Heat_AppCtx_Type)                       :: HeatAppCtx
+   PetscInt                                     :: iBlk, iEloc, iE, iDiff
+   PetscInt                                     :: HeatTestCase
    PetscReal,Dimension(:), Pointer              :: ValT_Init, ValT_F
-   PetscInt, Dimension(:), Pointer              :: SizeScal
    PetscReal, Dimension(:), Pointer             :: T_BC
-#endif
 
    Call MEF90_Initialize()
 
@@ -295,11 +286,6 @@ Program PrepVarFrac
 
    Select Case(iCase)
    !!! Write special cases here
-   Case(9) !!! Single well, cst flux
-#if defined WITH_HEAT
-      HeatAppCtx%AppParam%verbose = verbose
-      Call MEF90_AskInt(HeatAppCtx%AppParam%TestCase, 'Test Case For Solving Heat Equation', BatchUnit, IsBatch)
-#endif
    End Select
 
    Allocate(GlobVars(VarFrac_Num_GlobVar))
@@ -336,9 +322,16 @@ Program PrepVarFrac
    Case(3)
       Allocate(MatProp3D(MeshTopology%Num_Elem_Blks_Global))
    End Select
+   Allocate(MatHeatProp(MeshTopology%Num_Elem_Blks_Global))
    
    Write(IOBuffer, *) '\nMaterial Properties\n'
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)      
+   
+   Select Case(iCase)
+   Case(9)
+      Call View_Available_Diffusion_Laws 
+   End Select
+
    Select Case(iCase)
    !!! Write special cases here
    Case Default
@@ -354,6 +347,18 @@ Program PrepVarFrac
          Call MEF90_AskReal(nu, IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) i, 'Therm Exp'
          Call MEF90_AskReal(Therm_ExpScal, IOBuffer, BatchUnit, IsBatch)
+
+         Select Case(iCase)
+         Case(9)
+            Write(IOBuffer, 300) i, 'Behavior Law for Heat Diffusion'
+            Call MEF90_AskInt(Type_Law, IOBuffer, BatchUnit, IsBatch)
+            Allocate(Diffusivity(Heat_Num_Param(Type_Law)))
+            Do iDiff = 1, Heat_Num_Param(Type_Law) 
+               Write(IOBuffer, 301) i, 'Diffusivity', iDiff 
+               Call MEF90_AskReal(Diffusivity(iDiff), IOBuffer, BatchUnit, IsBatch)
+            End Do 
+          Case Default 
+         End Select
 
          Select Case(MeshTopology%Num_Dim)
          Case(2)
@@ -374,6 +379,10 @@ Program PrepVarFrac
             MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
             MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
          End Select 
+            MatHeatProp(i)%Type_Law     = Type_Law
+            Allocate(MatHeatProp(i)%Diffusivity(Heat_Num_Param(Type_Law)))
+            MatHeatProp(i)%Diffusivity  = Diffusivity
+            DeAllocate(Diffusivity)
       End Do
    End Select
    
@@ -387,6 +396,9 @@ Program PrepVarFrac
          Call MatProp_Write(MeshTopology, MatProp3D, Trim(prefix)//'.CST')
          DeAllocate(MatProp3D)
       End Select
+      
+      Call MatHeat_Write(MeshTopology, MatHeatProp, Trim(prefix)//'.TCST')
+      DeAllocate(MatHeatProp)
    End If
    
    !!!
@@ -478,23 +490,13 @@ Program PrepVarFrac
       Call MEF90_AskReal(Theta, 'Temperature contrast (Delta Theta)', BatchUnit, IsBatch)
       Call MEF90_AskReal(DL, 'Diffusion length', BatchUnit, IsBatch)
    Case(9)
-#if defined WITH_HEAT
       Allocate(ValT_Init(MeshTopology%Num_Elem_Blks_Global))
       Allocate(ValT_F(MeshTopology%Num_Elem_Blks_Global))
-      Allocate(HeatAppCtx%Diff(MeshTopology%Num_Elem_Blks_Global)) 
-      Allocate(HeatAppCtx%B_Mensi(MeshTopology%Num_Elem_Blks_Global))  
       Do iBlock = 1, MeshTopology%Num_Elem_Blks_Global 
          Write(IOBuffer, 300) iBlock, 'T0 Initial Temperature'
          Call MEF90_AskReal(ValT_Init(iBlock), IOBuffer, BatchUnit, IsBatch)
          Write(IOBuffer, 300) iBlock, 'RHS Temp'
          Call MEF90_AskReal(ValT_F(iBlock), IOBuffer, BatchUnit, IsBatch)
-         Write(IOBuffer, 300) iBlock, 'Diffusivity'
-         Call MEF90_AskReal(HeatAppCtx%Diff(iBlock),IOBuffer, BatchUnit, IsBatch)
-         Select Case(HeatAppCtx%AppParam%TestCase)
-         Case(3)
-             Write(IOBuffer, 300) iBlock, 'B Mensi Parameter'
-            Call MEF90_AskReal(HeatAppCtx%B_Mensi(iBlock),IOBuffer,  BatchUnit, IsBatch)
-         End Select
       End Do
       
       Allocate(T_BC(MeshTopology%Num_Node_Sets_Global))
@@ -506,7 +508,6 @@ Program PrepVarFrac
             Call MEF90_AskReal(T_BC(i), IOBuffer, BatchUnit, IsBatch)
          End If
       End Do
-#endif
   Case default
       !!! Default is MIL
       Call MEF90_AskReal(Theta, 'Temperature multiplier', BatchUnit, IsBatch)
@@ -517,6 +518,7 @@ Program PrepVarFrac
    !!!
    Allocate(Thetaelem(1))
    Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'Theta', 1, ThetaSec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'ThetaF', 1, ThetaFSec, iErr); CHKERRQ(iErr)
    Do_Step_Theta: Do iStep = 1, NumSteps
       Call SectionRealSet(ThetaSec, 0.0_Kr, iErr); CHKERRQ(iErr)
       Select Case(iCase)
@@ -566,51 +568,47 @@ Program PrepVarFrac
       End Select      
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, iStep, ThetaSec) 
    End Do Do_Step_Theta
-   Call SectionRealDestroy(ThetaSec, iErr); CHKERRQ(iErr)
    DeAllocate(Thetaelem)
 
 
    Select Case(iCase)
-   Case(9) !! Computing the thermal field 
-#if defined WITH_HEAT
-! list of time steps in T see computation lines 300-310 
-      HeatAppCtx%NumSteps = NumSteps
-      HeatAppCtx%maxsteps = 1000 
-      HeatAppCtx%VertVar_Temperature = MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset
-!      Call HeatInitField(HeatAppCtx, MeshTopology) 
-      Call ElementInit(MeshTopology, HeatAppCtx%Elem, 2)
-
-      Allocate(SizeScal(1)) 
-      SizeScal=1
-      Call FieldCreateVertex(HeatAppCtx%U,     'U',   MeshTopology, SizeScal)
-      Call FieldCreateVertex(HeatAppCtx%F,     'F',  MeshTopology, SizeScal)
-      Call FieldCreateVertex(HeatAppCtx%RHS,   'RHS', MeshTopology, SizeScal)
-      Call FlagCreateVertex(HeatAppCtx%BCFlag, 'BC',   MeshTopology, SizeScal)
-      Call FieldCreateVertex(HeatAppCtx%UBC,    'UBC',      MeshTopology, SizeScal)
-      DeAllocate(SizeScal)
-
-      !Set Initial Temerature Field and forces
-      Call HeatSetInitial(HeatAppCtx, MeshTopology, ValT_Init,ValT_F)
-      !Set BC in Temperature
-      Call HeatSetBC(HeatAppCtx, T_BC, MyExo, MeshTopology, VarFrac_NSProp_HasPForce)
-      DeAllocate(ValT_Init) 
-      DeAllocate(ValT_F) 
-      DeAllocate(T_BC) 
-
-      Write(IOBuffer, *) 'Computing Temperature Field\n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)  
-      Call Poisson_TSSetUp(HeatAppCtx, MeshTopology)
-      Call HeatMatAssembly(HeatAppCtx, MeshTopology)
-      Call RHSAssembly(HeatAppCtx, MeshTopology, MyExo)
-      Call MatMassAssembly(HeatAppCtx, MeshTopology)
-      Call SolveTransient(HeatAppCtx, MyEXO, MeshTopology, T)
-      Write(IOBuffer, *) 'End Computing Temperature Field\n \n'
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      !Compute water loss for each block
-       Call ComputeWaterMass(MeshTopology, MyExo, HeatAppCtx%VertVar_Temperature, HeatAppCtx%Elem, HeatAppCtx%NumSteps)
-#else
-      SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'PrepVarFracNG has not been compiled with transient Heat support\n', iErr)
-#endif 
+   Case(9) !! Save initial Temperature 
+      Do_Elem_IBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
+!We have to loop because can be mutlitple EB
+         i = MeshTopology%Elem_Blk(iBlk)%ID
+         Num_DoF = MeshTopology%Elem_Blk(iBlk)%Num_DoF
+         Allocate(Thetaelem(Num_DoF))
+         Allocate(Felem(Num_DoF))
+         Thetaelem = ValT_Init(i)
+         Felem = ValT_F(i)
+         Do_Elem_iE: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
+            iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+            Call SectionRealUpdateClosure(ThetaSec, MeshTopology%Mesh, iE-1, Thetaelem, INSERT_VALUES, ierr);CHKERRQ(iErr)
+            Call SectionRealUpdateClosure(ThetaFSec, MeshTopology%Mesh, iE-1, Felem, INSERT_VALUES, ierr);CHKERRQ(iErr) 
+         End Do Do_Elem_iE 
+         DeAllocate(Felem)
+      End Do Do_Elem_Iblk
+!TODO write for all timesteps
+      !Do not forget to set for all time steps ....    
+   ! Set BC in temperature 
+      Do iloc = 1, MeshTopology%Num_Node_Sets         
+         i = MeshTopology%Node_Set(iloc)%ID
+         If (MyEXO%NSProperty(VarFrac_NSProp_HasPForce)%Value( MeshTopology%Node_Set(iloc)%ID)== 1) then 
+            Thetaelem =  T_BC(i) !Dirichlet BC 
+            Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+               Call SectionRealUpdate(ThetaSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Thetaelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+            End Do
+         End If 
+      End Do
+      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, 1, ThetaSec) 
+      Do iStep = 1, NumSteps
+   !!  Save RHS in temperature for each time step (Only constant for now) 
+         Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_ForceTemp)%Offset, iStep, ThetaFSec) 
+      End Do 
+   DeAllocate(Thetaelem)
+   Call SectionRealDestroy(ThetaSec, iErr); CHKERRQ(iErr)
+!!!!! Following line ..... 
+!      Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  MyEXO%NSProperty(NS_Offset),  MeshTopology)
    End Select
 
    !!!
@@ -767,6 +765,7 @@ Program PrepVarFrac
  100 Format('    Element Block ', T24, I3, '\n')
  102 Format('    Node Set      ', T24, I3, '\n')
  300 Format('EB', I4.4, ': ', A)
+ 301 Format('EB', I4.4, ': ', A, I3)
  302 Format('NS', I4.4, ': ', A)
 
 End Program PrepVarFrac

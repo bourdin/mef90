@@ -12,9 +12,10 @@ Program  SimplePoisson
    Implicit NONE   
 
 
-   Type(Heat_AppCtx_Type)                            :: AppCtx
-   PetscInt                                     :: iErr
-   Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+   Type(Heat_AppCtx_Type)                             :: AppCtx
+   PetscInt                                           :: iErr
+   Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+   Type(Field)                                        :: ExtraField
    Call SimplePoissonInit(AppCtx)
    
    If (AppCtx%AppParam%verbose > 4) Then
@@ -28,7 +29,7 @@ Program  SimplePoisson
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology)
+   Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology, ExtraField)
    If (AppCtx%AppParam%verbose > 3) Then
       Write(IOBuffer, *) 'Matrix\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
