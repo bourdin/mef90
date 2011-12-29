@@ -5,7 +5,6 @@ SRCS = \
 	   m_VarFracQS_Post.F90  \
 	   m_VarFracQS_V.F90 \
 	   m_VarFracQS_U.F90  \
-	   m_VarFracQS_T.F90  \
 	   m_VarFracQS.F90  \
 
 #Compilation takes DIM option 
@@ -23,6 +22,8 @@ ifneq (${OPTS}, Heat)
 True:
 	@echo The OPTS variable if defined can only take the value Heat 
 	@echo ------------------ Stop Compilation ---------------- 
+else 
+SRCS += m_VarFracQS_T.F90  
 endif
 endif 
 
