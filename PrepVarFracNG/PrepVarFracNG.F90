@@ -357,6 +357,10 @@ Program PrepVarFrac
                Write(IOBuffer, 301) i, 'Diffusivity', iDiff 
                Call MEF90_AskReal(Diffusivity(iDiff), IOBuffer, BatchUnit, IsBatch)
             End Do 
+            MatHeatProp(i)%Type_Law     = Type_Law
+            Allocate(MatHeatProp(i)%Diffusivity(Heat_Num_Param(Type_Law)))
+            MatHeatProp(i)%Diffusivity  = Diffusivity
+            DeAllocate(Diffusivity)
           Case Default 
          End Select
 
@@ -379,10 +383,6 @@ Program PrepVarFrac
             MatProp3D(i)%Therm_Exp%YY = Therm_ExpScal
             MatProp3D(i)%Therm_Exp%ZZ = Therm_ExpScal
          End Select 
-            MatHeatProp(i)%Type_Law     = Type_Law
-            Allocate(MatHeatProp(i)%Diffusivity(Heat_Num_Param(Type_Law)))
-            MatHeatProp(i)%Diffusivity  = Diffusivity
-            DeAllocate(Diffusivity)
       End Do
    End Select
    
@@ -397,8 +397,11 @@ Program PrepVarFrac
          DeAllocate(MatProp3D)
       End Select
       
+      Select Case(iCase)
+      Case(9)
       Call MatHeat_Write(MeshTopology, MatHeatProp, Trim(prefix)//'.TCST')
       DeAllocate(MatHeatProp)
+      End Select
    End If
    
    !!!
