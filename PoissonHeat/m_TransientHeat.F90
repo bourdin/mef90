@@ -76,13 +76,6 @@ Contains
       Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 3, (/'Elastic Energy ', 'Ext Forces work', 'Total Energy   '/), iErr)
       Call EXPVP (AppCtx%MyEXO%exoid, 'n', 2, iErr)
       Call EXPVAN(AppCtx%MyEXO%exoid, 'n', 2, (/'U', 'F'/), iErr)
-#if defined PB_2D
-      Call EXPVP (AppCtx%MyEXO%exoid, 'e', 2, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'e', 2, (/'Grad U_X', 'Grad U_Y'/), iErr)
-#elif defined PB_3D
-      Call EXPVP (AppCtx%MyEXO%exoid, 'e', 3, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'e', 3, (/'Grad U_X', 'Grad U_Y', 'Grad U_Z'/), iErr)
-#endif
       Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
    End Subroutine EXOFormat_SimplePoisson
 
@@ -217,14 +210,10 @@ Contains
       !!! Read and partition the mesh
       If (MEF90_NumProcs == 1) Then
          Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       Else
          Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      
          Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
          Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-         Call PetscLogStagePop(iErr); CHKERRQ(iErr)
       End If
 
       Call MeshTopologyGetInfo(AppCtx%MeshTopology,PETSC_COMM_WORLD)
@@ -249,8 +238,6 @@ Contains
 !!! Prepare and format the output mesh   
       Call MeshTopologyWriteGlobal(AppCtx%MeshTopology, AppCtx%MyEXO, PETSC_COMM_WORLD)
       Call EXOFormat_SimplePoisson(AppCtx)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-
 
    !!!
    !!! EB, SS, NS Properties
@@ -406,32 +393,6 @@ Contains
       
    End Subroutine HeatInitField
 
-
-
-#undef __FUNCT__
-#define __FUNCT__ "KSPSetUp"
-   Subroutine KSPSetUp(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-      PetscInt                                     :: iErr
-
-      !!! Initialize the matrix and vector for the linear system
-      Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh, 1, iErr); CHKERRQ(iErr) 
-      Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
-     
-
-      Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSP, iErr); CHKERRQ(iErr)
-      Call KSPSetOperators(AppCtx%KSP, AppCtx%K, AppCtx%K, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
-      Call KSPSetInitialGuessNonzero(AppCtx%KSP, PETSC_TRUE, iErr); CHKERRQ(iErr)
-      Call KSPGetPC(AppCtx%KSP, AppCtx%PC, iErr); CHKERRQ(iErr)
-      Call PCSetType(AppCtx%PC, PCBJACOBI, iErr); CHKERRQ(iErr)
-      Call KSPSetType(AppCtx%KSP, KSPCG, iErr); CHKERRQ(iErr)
-      Call KSPAppendOptionsPrefix(AppCtx%KSP, "U_", iErr); CHKERRQ(iErr)
-      Call KSPSetFromOptions(AppCtx%KSP, iErr); CHKERRQ(iErr)
-      
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-      
-   End Subroutine KSPSetUP
-   
 #undef __FUNCT__
 #define __FUNCT__ "Poisson_TSSetUp"
    Subroutine Poisson_TSSetUp(AppCtx, MeshTopology)
@@ -791,7 +752,6 @@ Contains
       Call MatAssemblyBegin(AppCtx%M, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%M, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
-      !Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatMassAssembly
       
 #undef __FUNCT__
