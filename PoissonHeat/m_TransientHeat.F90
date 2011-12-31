@@ -344,14 +344,14 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "HeatInitField"
    Subroutine HeatInitField(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-      PetscInt, Dimension(:), Pointer              :: SizeScal
+      Type(Heat_AppCtx_Type)                             :: AppCtx
+      PetscInt, Dimension(:), Pointer                    :: SizeScal
       
 !HeatInitField
       !!! Allocate the Section for U and F
       Allocate(SizeScal(1))
       SizeScal=1
-      Call FieldCreateVertex(AppCtx%U,     'U',         AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%U,     'Temperature',         AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%RHS,   'RHS',       AppCtx%MeshTopology, SizeScal)
       Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        AppCtx%MeshTopology, SizeScal)
@@ -516,8 +516,10 @@ Contains
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
       Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr)
 
-      Call VecView(AppCtx%U%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
-      Call VecView(AppCtx%UBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+      If (AppCtx%AppParam%verbose > 3) Then
+         Call VecView(AppCtx%U%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+         Call VecView(AppCtx%UBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+      End If
 
       Call TSSetInitialTimeStep(AppCtx%TS, TimeStepIni, (TimeStepFinal - TimeStepIni/10.),  ierr); CHKERRQ(iErr)
       Call TSSetDuration(AppCtx%TS, AppCtx%HeatSchemeParam%HeatMaxiter, TimeStepFinal, iErr); CHKERRQ(iErr)
