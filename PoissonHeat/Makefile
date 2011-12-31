@@ -1,4 +1,4 @@
-BIN = SimplePoisson TransientHeat 
+BIN = TransientHeat 
 #Order is important
 SRCS = \
 	   m_Poisson.F90  \

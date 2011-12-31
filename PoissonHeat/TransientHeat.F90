@@ -91,7 +91,7 @@ Program  TransientHeat
 100 Format('Elastic energy: ', ES12.5, ' Forces Work: ', ES12.5, ' Total: ', ES12.5, '\n')    
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-   Call ComputeGradU(AppCtx)
+!   Call ComputeGradU(AppCtx)
 
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Saving results\n'

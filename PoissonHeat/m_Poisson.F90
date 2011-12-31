@@ -112,34 +112,6 @@ Contains
       Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
    End Subroutine InitLog
    
-#undef __FUNCT__
-#define __FUNCT__ "Solve"
-   Subroutine Solve(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-      
-      PetscInt                                     :: iErr
-      KSPConvergedReason                           :: KSPreason
-      PetscInt                                     :: KSPNumIter
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      
-      Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-
-      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh, AppCtx%RHS, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
-
-      Call KSPSolve(AppCtx%KSP, AppCtx%RHS%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-         
-      Call KSPGetIterationNumber(AppCtx%KSP, KSPNumIter, iErr); CHKERRQ(iErr)
-      Call KSPGetConvergedReason(AppCtx%KSP, KSPreason, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 100) KSPNumIter, KSPreason
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
- 
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('KSP converged in ', I5, ' iterations. KSPConvergedReason is ', I2, '\n')
-   End Subroutine Solve
-   
  
 #undef __FUNCT__
 #define __FUNCT__ "HeatMatAssembly"
@@ -408,98 +380,6 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
  
-#undef __FUNCT__
-#define __FUNCT__ "ComputeGradU"
-   Subroutine ComputeGradU(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-      
-      PetscInt                                     :: iErr
-#if defined PB_2D
-      Type(Vect2D)                                 :: Grad
-#elif defined PB_3D
-      Type(Vect3D)                                 :: Grad
-#endif
-      PetscReal                                    :: Vol
-      PetscInt                                     :: NumDoF, NumGauss
-      PetscReal, Dimension(:), Pointer             :: U
-      PetscInt                                     :: iBlk, iELoc, iE
-      PetscInt                                     :: iDoF, iGauss
-      PetscReal, Dimension(:), Pointer             :: Grad_Ptr
-      PetscLogDouble                               :: flops = 0
-
-      Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
-      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh,   'GradU', AppCtx%MeshTopology%Num_Dim, AppCtx%GradU, iErr); CHKERRQ(iErr)
-
-      Allocate(Grad_Ptr(AppCtx%MeshTopology%Num_Dim))
-      Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-            iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
-            NumGauss = Size(AppCtx%Elem(iE)%BF,2)
-            Allocate(U(NumDoF))
-            Call SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
-            Grad = 0.0_Kr
-            Vol  = 0.0_Kr
-            Do iGauss = 1, NumGauss
-               Do iDoF = 1, NumDoF
-                  Grad = Grad + (AppCtx%Elem(iE)%Gauss_C(iGauss) * U(iDoF) ) * AppCtx%Elem(iE)%Grad_BF(iDoF, iGauss) 
-                  Vol = Vol + AppCtx%Elem(iE)%Gauss_C(iGauss) * AppCtx%Elem(iE)%BF(iDoF, iGauss)
-                  flops = flops + 3
-               End Do
-            End Do
-            Grad = Grad / Vol
-#if defined PB_2D
-            Grad_Ptr = (/ Grad%X, Grad%Y /)
-#elif defined PB_3D
-            Grad_Ptr = (/ Grad%X, Grad%Y, Grad%Z /)
-#endif
-            Call SectionRealUpdateClosure(AppCtx%GradU, AppCtx%MeshTopology%Mesh, iE-1, Grad_Ptr, INSERT_VALUES, iErr)
-            DeAllocate(U)
-         End Do Do_Elem_iE
-      End Do Do_Elem_iBlk
-      DeAllocate(Grad_Ptr)
-      Call PetscLogFlops(flops, iErr)
-      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine ComputeGradU
- 
-#undef __FUNCT__
-#define __FUNCT__ "SimplePoissonFinalize"
-   Subroutine SimplePoissonFinalize(AppCtx)   
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-
-      PetscInt                                     :: iErr
-      Character(len=MEF90_MXSTRLEN)                :: filename
-      Type(PetscViewer)                            :: LogViewer
-
-      Call SectionRealDestroy(AppCtx%GradU, iErr); CHKERRQ(iErr)
-      Call FieldDestroy(AppCtx%U)
-      !Call FieldDestroy(AppCtx%GradU)
-      Call FieldDestroy(AppCtx%F)
-      Call FieldDestroy(AppCtx%RHS)
-
-      Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)
-      Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
-      Call KSPDestroy(AppCtx%KSP, iErr); CHKERRQ(iErr)
-      Call DMDestroy(AppCtx%MeshTopology%Mesh, iErr); CHKERRQ(ierr)
-      
-      If (AppCtx%AppParam%verbose > 1) Then
-         Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
-         Call PetscViewerFlush(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-         Call PetscViewerDestroy(AppCtx%AppParam%MyLogViewer, iErr); CHKERRQ(iErr)
-         Call PetscViewerDestroy(AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-      End If
-      Write(filename, 103) Trim(AppCtx%AppParam%prefix)
-103 Format(A,'-logsummary.txt')
-      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename, LogViewer, ierr);CHKERRQ(ierr)
-      Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
-      Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
-      Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
-!       Call PetscLogPrintSummary(PETSC_COMM_WORLD, filename, iErr); CHKERRQ(iErr)
-      Call MEF90_Finalize()
-   End Subroutine SimplePoissonFinalize
-
 #if defined PB_2D
 End Module m_Poisson2D
 #elif defined PB_3D
