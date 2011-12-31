@@ -6,11 +6,9 @@ Module m_VarFracQS_T3D
 #include "finclude/petscdef.h"
 
 #if defined PB_2D
-   Use m_Poisson2D
    Use m_TransientHeat2D
    Use m_VarFracQS_Types2D
 #elif defined PB_3D
-   Use m_Poisson3D
    Use m_TransientHeat3D
    Use m_VarFracQS_Types3D 
 #endif   
@@ -49,18 +47,11 @@ Contains
       HeatAppCtx%VertVar_Temperature = AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset
       Call ElementInit(AppCtx%MeshTopology, HeatAppCtx%Elem, 2)
   
-      Allocate(SizeScal(1)) 
-      SizeScal=1
-      Call FieldCreateVertex(HeatAppCtx%U,     'T',   AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(HeatAppCtx%F,     'F',  AppCtx%MeshTopology,  SizeScal)
-      Call FieldCreateVertex(HeatAppCtx%RHS,   'RHS', AppCtx%MeshTopology, SizeScal)
-      Call FlagCreateVertex(HeatAppCtx%BCFlag, 'BC',   AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(HeatAppCtx%UBC,    'TBC',      AppCtx%MeshTopology, SizeScal)
-      DeAllocate(SizeScal)
+      Call  HeatFieldCreate(HeatAppCtx, AppCtx%MeshTopology)
 
    !Read Initial Temerature Field 
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology,  AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, 1, HeatAppCtx%U)
-      Call SectionRealToVec(HeatAppCtx%U%Sec, HeatAppCtx%U%Scatter,  SCATTER_REVERSE, HeatAppCtx%U%Vec, ierr); CHKERRQ(ierr)
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology,  AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, 1, HeatAppCtx%T)
+      Call SectionRealToVec(HeatAppCtx%T%Sec, HeatAppCtx%T%Scatter,  SCATTER_REVERSE, HeatAppCtx%T%Vec, ierr); CHKERRQ(ierr)
    
       !Set BC in Temperature
       Call SectionIntZero(HeatAppCtx%BCFlag%Sec, iErr); CHKERRQ(iErr)
@@ -81,7 +72,7 @@ Contains
       PetscInt                                     :: iErr
       
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_ForceTemp)%Offset, AppCtx%TimeStep, HeatAppCtx%F)
-      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset,  AppCtx%TimeStep, HeatAppCtx%UBC) 
+      Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset,  AppCtx%TimeStep, HeatAppCtx%TBC) 
 
 ! Compute the crack opening here
 
