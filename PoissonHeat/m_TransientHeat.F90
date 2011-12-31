@@ -42,8 +42,8 @@ Module m_TransientHeat3D
 #endif
       Type(SectionReal)                            :: GradU
       PetscReal                                    :: ElasticEnergy
-      Type(Field)                                  :: U
-      Type(Field)                                  :: UBC
+      Type(Field)                                  :: T
+      Type(Field)                                  :: TBC
       Type(Field)                                  :: F
       PetscReal                                    :: ExtForcesWork
       PetscReal                                    :: TotalEnergy
@@ -75,7 +75,7 @@ Contains
       Call EXPVP (AppCtx%MyEXO%exoid, 'g', 3, iErr)
       Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 3, (/'Elastic Energy ', 'Ext Forces work', 'Total Energy   '/), iErr)
       Call EXPVP (AppCtx%MyEXO%exoid, 'n', 2, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'n', 2, (/'U', 'F'/), iErr)
+      Call EXPVAN(AppCtx%MyEXO%exoid, 'n', 2, (/'T', 'F'/), iErr)
       Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
    End Subroutine EXOFormat_SimplePoisson
 
@@ -338,7 +338,7 @@ Contains
          Felem = ValF(i)
          Do_Elem_iE: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-            Call SectionRealUpdateClosure(AppCtx%U%Sec, MeshTopology%Mesh, iE-1, Uelem, INSERT_VALUES, ierr);CHKERRQ(iErr)
+            Call SectionRealUpdateClosure(AppCtx%T%Sec, MeshTopology%Mesh, iE-1, Uelem, INSERT_VALUES, ierr);CHKERRQ(iErr)
 ! attention les forces c est pour tous les pas de temps !!!! ici que premier  
             Call SectionRealUpdateClosure(AppCtx%F%Sec, MeshTopology%Mesh, iE-1, Felem, INSERT_VALUES, ierr);CHKERRQ(iErr) 
          End Do Do_Elem_iE 
@@ -363,13 +363,13 @@ Contains
          If (MyEXO%NSProperty(NS_Offset)%Value( MeshTopology%Node_Set(iloc)%ID)== 1) then 
             Uelem(1) =  U(i) !Dirichlet BC 
             Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
-               Call SectionRealUpdate(AppCtx%U%Sec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+               Call SectionRealUpdate(AppCtx%T%Sec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
             End Do
          End If 
       End Do
       DeAllocate(Uelem)
 !TODO write for all timesteps
-      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology,  AppCtx%VertVar_Temperature, 1, AppCtx%U%Sec)
+      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology,  AppCtx%VertVar_Temperature, 1, AppCtx%T%Sec)
       Call SectionIntAddNSProperty(AppCtx%BCFlag%Sec,  MyEXO%NSProperty(NS_Offset),  MeshTopology)
    End Subroutine HeatSetBC
 
@@ -380,15 +380,14 @@ Contains
       Type(Heat_AppCtx_Type)                             :: AppCtx
       PetscInt, Dimension(:), Pointer                    :: SizeScal
       
-!HeatInitField
       !!! Allocate the Section for U and F
       Allocate(SizeScal(1))
       SizeScal=1
-      Call FieldCreateVertex(AppCtx%U,     'Temperature',         AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%T,     'Temperature',         AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%RHS,   'RHS',       AppCtx%MeshTopology, SizeScal)
       Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%UBC,    'UBC',      AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%TBC,    'TBC',      AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeScal)
       
    End Subroutine HeatInitField
@@ -405,17 +404,17 @@ Contains
 
       !!! Initialize the matrix and vector for the linear system
       Call DMMeshSetMaxDof(MeshTopology%Mesh, MeshTopology%Num_Dim, iErr); CHKERRQ(iErr) 
-      Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%T%sec, MATMPIAIJ, AppCtx%K, iErr); CHKERRQ(iErr)
       Call PetscObjectSetName(AppCtx%K,"K matrix",iErr);CHKERRQ(iErr)
-      Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%M, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%T%sec, MATMPIAIJ, AppCtx%M, iErr); CHKERRQ(iErr)
       Call PetscObjectSetName(AppCtx%M,"M matrix",iErr);CHKERRQ(iErr)
-      Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%U%sec, MATMPIAIJ, AppCtx%Jac, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateMatrix(MeshTopology%mesh, AppCtx%T%sec, MATMPIAIJ, AppCtx%Jac, iErr); CHKERRQ(iErr)
       Call PetscObjectSetName(AppCtx%Jac,"Jac matrix",iErr);CHKERRQ(iErr)
       
       Call TSCreate(PETSC_COMM_WORLD, AppCtx%TS, iErr); CHKERRQ(iErr)
 
 !!! Could be simpler with SectionRealDuplicate (when Fortran Binding exists)
-      Call SectionRealDuplicate(AppCtx%U%Sec,TmpSec,iErr);CHKERRQ(iErr)
+      Call SectionRealDuplicate(AppCtx%T%Sec,TmpSec,iErr);CHKERRQ(iErr)
       Call PetscObjectSetName(TmpSec,"default",iErr);CHKERRQ(iErr)
       call DMMeshSetSectionReal(MeshTopology%mesh,trim('default'),TmpSec,iErr);CHKERRQ(iErr)
       !Destroy section tmpsec!!?
@@ -503,7 +502,7 @@ Contains
       PetscInt                                           :: iBlk, iErr
       Type(Field)                                        :: ExtraField
       
-      Call MatInsertVertexBoundaryValues(AppCtx%K, AppCtx%U, AppCtx%BCFlag, MeshTopology)
+      Call MatInsertVertexBoundaryValues(AppCtx%K, AppCtx%T, AppCtx%BCFlag, MeshTopology)
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
@@ -552,7 +551,7 @@ Contains
                ! Mensi Law D(C) = A exp (B*C) 
                ! 1988 Mensi-Acker-Attolou Mater Struct
                ! C : water content,  A and B material parameters
-               Call SectionRealRestrictClosure(AppCtx%U%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
+               Call SectionRealRestrictClosure(AppCtx%T%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
                T_Elem = 0.0_Kr
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
@@ -560,7 +559,7 @@ Contains
                lDiff = AppCtx%MatProp(i)%Diffusivity(1)*exp(AppCtx%MatProp(i)%Diffusivity(2)*T_Elem) 
             Case(Heat_Decreasing_ID)
       !Diffusion is decreasing with the variable
-               Call SectionRealRestrictClosure(AppCtx%U%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
+               Call SectionRealRestrictClosure(AppCtx%T%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
                T_Elem = 0.0_Kr
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
@@ -568,7 +567,7 @@ Contains
                lDiff =  AppCtx%MatProp(i)%Diffusivity(1)*(AppCtx%MatProp(i)%Diffusivity(2)-T_Elem)**AppCtx%MatProp(i)%Diffusivity(3) 
             Case(Heat_Non_Monotonic_ID)
       !Diffusion is non monotonic with the variable
-               Call SectionRealRestrictClosure(AppCtx%U%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
+               Call SectionRealRestrictClosure(AppCtx%T%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
                T_Elem = 0.0_Kr
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
@@ -603,8 +602,7 @@ Contains
                End If
             End Do
          End Do
-         Call DMMeshAssembleMatrix(AppCtx%K, MeshTopology%mesh, AppCtx%U%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
-         !Call DMMeshAssembleMatrix(AppCtx%K, MeshTopology%mesh, AppCtx%U%Sec, iE-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+         Call DMMeshAssembleMatrix(AppCtx%K, MeshTopology%mesh, AppCtx%T%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iELoc
    
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
@@ -633,11 +631,11 @@ Contains
 
       !!! Set Dirichlet Boundary Values
 !Suppose that loading is contant (replace second to last by AppCtx%Timestep otherwise)
-      Call Read_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature, 1, AppCtx%UBC)
-      Call FieldInsertVertexBoundaryValues(AppCtx%RHS, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
+      Call Read_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature, 1, AppCtx%TBC)
+      Call FieldInsertVertexBoundaryValues(AppCtx%RHS, AppCtx%TBC, AppCtx%BCFlag, MeshTopology)
 
       Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
-      Call FieldInsertVertexBoundaryValues(AppCtx%RHS, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
+      Call FieldInsertVertexBoundaryValues(AppCtx%RHS, AppCtx%TBC, AppCtx%BCFlag, MeshTopology)
       !!! VERY important! This is the equivalent of a ghost update
    End Subroutine RHSAssembly
 
@@ -706,7 +704,7 @@ Contains
 !TODO see TSSetExactFinalTime, TSGetTimeStep
 !TSSetExactFinalTime can not be used : 'TSRosW 2p does not have an interpolation formula'
 
-      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%T%Sec, AppCtx%T%Scatter, SCATTER_FORWARD, AppCtx%T%Vec, iErr); CHKERRQ(iErr)
 
 ! Using IMEX see section 6.1.2 PetSc documentation 
       if (AppCtx%AppParam%verbose > 1) Then                                                                                                                                                
@@ -714,21 +712,21 @@ Contains
       End If
 
       Write(IOBuffer, 400) iStep, TimeStepIni, TimeStepFinal 
-      Call FieldInsertVertexBoundaryValues(AppCtx%U, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
+      Call FieldInsertVertexBoundaryValues(AppCtx%T, AppCtx%TBC, AppCtx%BCFlag, MeshTopology)
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
-      Call TSSetSolution(AppCtx%TS, AppCtx%U%Vec,  ierr);   CHKERRQ(iErr)
+      Call TSSetSolution(AppCtx%TS, AppCtx%T%Vec,  ierr);   CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 3) Then
-         Call VecView(AppCtx%U%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
-         Call VecView(AppCtx%UBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+         Call VecView(AppCtx%T%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
+         Call VecView(AppCtx%TBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
       End If
 
       Call TSSetInitialTimeStep(AppCtx%TS, TimeStepIni, (TimeStepFinal - TimeStepIni/10.),  ierr); CHKERRQ(iErr)
       Call TSSetDuration(AppCtx%TS, AppCtx%HeatSchemeParam%HeatMaxiter, TimeStepFinal, iErr); CHKERRQ(iErr)
-      Call TSSolve(AppCtx%TS, AppCtx%U%Vec, TimeStepFinal, iErr); CHKERRQ(iErr)
+      Call TSSolve(AppCtx%TS, AppCtx%T%Vec, TimeStepFinal, iErr); CHKERRQ(iErr)
 
-      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , iStep+1, AppCtx%U%Sec)
+      Call SectionRealToVec(AppCtx%T%Sec, AppCtx%T%Scatter, SCATTER_REVERSE, AppCtx%T%Vec, ierr); CHKERRQ(ierr)
+      Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , iStep+1, AppCtx%T%Sec)
       Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
       Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
       Write(IOBuffer, 100) TSTimeSteps, TSreason
@@ -787,8 +785,7 @@ Contains
          !  End If
             End Do
          End Do
-         Call DMMeshAssembleMatrix(AppCtx%M, MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
-        ! Call DMMeshAssembleMatrix(AppCtx%M, MeshTopology%mesh, AppCtx%U%sec, iE-1, MatElem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+         Call DMMeshAssembleMatrix(AppCtx%M, MeshTopology%mesh, AppCtx%T%sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iELoc
    
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
@@ -802,10 +799,10 @@ Contains
       Type(Heat_AppCtx_Type)                       :: AppCtx
       PetscInt                                     :: iErr
 
-      Call FieldDestroy(AppCtx%U)
+      Call FieldDestroy(AppCtx%T)
       Call FieldDestroy(AppCtx%F)
       Call FieldDestroy(AppCtx%RHS)
-      Call FieldDestroy(AppCtx%UBC)
+      Call FieldDestroy(AppCtx%TBC)
       Call SectionIntDestroy(AppCtx%BCFlag, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%K, iErr); CHKERRQ(iErr)
       Call MatDestroy(AppCtx%M, iErr); CHKERRQ(iErr)
@@ -870,7 +867,7 @@ Contains
             Allocate(F(NumDoF))
             Call SectionRealRestrictClosure(AppCtx%F%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoF, F, iErr); CHKERRQ(ierr)
             Allocate(U(NumDoF))
-            Call SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%T%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoF, U, iErr); CHKERRQ(ierr)
             Do iGauss = 1, NumGauss
                Strain_Elem = 0.0_Kr
                Stress_Elem = 0.0_Kr
