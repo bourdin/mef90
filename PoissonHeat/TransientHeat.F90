@@ -4,10 +4,8 @@ Program  TransientHeat
 
    Use m_MEF90
 #if defined PB_2D
-   Use m_Poisson2D
    Use m_TransientHeat2D
 #elif defined PB_3D 
-   Use m_Poisson3D
    Use m_TransientHeat3D
 #endif
 
