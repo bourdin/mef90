@@ -140,7 +140,7 @@ Contains
          Call HeatSchemeParam_View(AppCtx%HeatSchemeParam, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
       End If
 
-      Call InitLog(AppCtx)
+      !Call InitLog(AppCtx)
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       If (AppCtx%AppParam%verbose > 1) Then
          Write(filename, 101) Trim(AppCtx%AppParam%prefix), MEF90_MyRank

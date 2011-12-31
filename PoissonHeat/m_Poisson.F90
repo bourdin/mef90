@@ -11,21 +11,6 @@ Module m_Poisson3D
    
    Implicit NONE   
 
-   Type LogInfo_Type
-      PetscLogStage                                :: IO_Stage
-      PetscLogStage                                :: Setup_Stage 
-      PetscLogStage                                :: MeshCreateExodus_Stage
-      PetscLogStage                                :: MeshDistribute_Stage
-      PetscLogStage                                :: MatAssembly_Stage    
-      PetscLogStage                                :: RHSAssembly_Stage
-      PetscLogStage                                :: KSPSolve_Stage
-      PetscLogStage                                :: PostProc_Stage
-      
-      PetscLogEvent                                :: MatAssemblyBlock_Event
-      PetscLogEvent                                :: RHSAssemblyBlock_Event
-      PetscLogEvent                                :: PostProc_Event
-   End Type LogInfo_Type
-
    Type AppParam_Type
       PetscBool                                    :: Restart
       PetscInt                                     :: Verbose
@@ -57,7 +42,6 @@ Module m_Poisson3D
       Type(Field)                                  :: RHS
       Type(KSP)                                    :: KSP
       Type(PC)                                     :: PC
-      Type(LogInfo_Type)                           :: LogInfo
       Type(AppParam_Type)                          :: AppParam
    !For TS
       Type(TS)                                     :: TS
@@ -92,26 +76,6 @@ Contains
       Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
    End Subroutine EXOFormat_SimplePoisson
    
-#undef __FUNCT__
-#define __FUNCT__ "InitLog"
-   Subroutine InitLog(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-      PetscInt                                     :: iErr
-      
-      Call PetscLogEventRegister('MatAssembly Block', 0, AppCtx%LogInfo%MatAssemblyBlock_Event, ierr); CHKERRQ(ierr)
-      Call PetscLogEventRegister('RHSAssembly Block', 0, AppCtx%LogInfo%RHSAssemblyBlock_Event, ierr); CHKERRQ(ierr)
-      Call PetscLogEventRegister('Post Processing',   0, AppCtx%LogInfo%PostProc_Event,         ierr); CHKERRQ(ierr)
-
-      Call PetscLogStageRegister("MeshCreateExodus", AppCtx%LogInfo%MeshCreateExodus_Stage, iErr)
-      Call PetscLogStageRegister("MeshDistribute",   AppCtx%LogInfo%MeshDistribute_Stage,   iErr)
-      Call PetscLogStageRegister("IO Stage",         AppCtx%LogInfo%IO_Stage,               iErr)
-      Call PetscLogStageRegister("Setup",            AppCtx%LogInfo%Setup_Stage,            iErr)
-      Call PetscLogStageRegister("Mat Assembly",     AppCtx%LogInfo%MatAssembly_Stage,      iErr)
-      Call PetscLogStageRegister("RHS Assembly",     AppCtx%LogInfo%RHSAssembly_Stage,      iErr)
-      Call PetscLogStageRegister("KSP Solve",        AppCtx%LogInfo%KSPSolve_Stage,         iErr)
-      Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
-   End Subroutine InitLog
-   
  
 #undef __FUNCT__
 #define __FUNCT__ "HeatMatAssembly"
@@ -125,14 +89,12 @@ Contains
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
-!      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage, iErr); CHKERRQ(iErr)
       Do_iBlk: Do iBlk = 1, MeshTopology%Num_Elem_Blks
          Call HeatMatAssemblyBlock(iBlk, AppCtx, MeshTopology, ExtraField)
       End Do Do_iBlk
       Call MatAssemblyBegin(AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
-!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine HeatMatAssembly
       
    Subroutine HeatMatAssemblyBlock(iBlk, AppCtx, MeshTopology, ExtraField)
@@ -150,7 +112,6 @@ Contains
       PetscReal                                    :: lDiff
       PetscReal, Dimension(:), Pointer             :: T_Loc
       PetscReal                                    :: T_Elem
-!      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
      
       NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
       Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF, MeshTopology%Elem_Blk(iBlk)%Num_DoF))
@@ -231,7 +192,6 @@ Contains
       Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
       DeAllocate(BCFlag)
       DeAllocate(MatElem)
-!      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyBlock_Event, iErr); CHKERRQ(iErr)
    End Subroutine HeatMatAssemblyBlock
 
 
@@ -244,7 +204,6 @@ Contains
 
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
-!      Call PetscLogStagePush(AppCtx%LogInfo%RHSAssembly_Stage, iErr); CHKERRQ(iErr)
 
       Call SectionRealZero(AppCtx%RHS%Sec, iErr); CHKERRQ(iErr)
       
@@ -262,7 +221,6 @@ Contains
       Call SectionRealToVec(AppCtx%RHS%Sec, AppCtx%RHS%Scatter, SCATTER_FORWARD, AppCtx%RHS%Vec, iErr); CHKERRQ(iErr)
       Call FieldInsertVertexBoundaryValues(AppCtx%RHS, AppCtx%UBC, AppCtx%BCFlag, MeshTopology)
       !!! VERY important! This is the equivalent of a ghost update
-!      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSAssembly
 
 #undef __FUNCT__
@@ -281,7 +239,6 @@ Contains
       PetscReal                                    :: F_Elem
       PetscLogDouble                               :: flops 
       
-      Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyBlock_Event, iErr); CHKERRQ(iErr)
       flops = 0.0
 
       Num_DoF = MeshTopology%Elem_Blk(iBlk)%Num_DoF
@@ -314,8 +271,6 @@ Contains
       DeAllocate(BCFlag_Loc)
       DeAllocate(RHS_Loc)
       DeAllocate(F_Loc)
-      Call PetscLogFlops(flops , iErr);CHKERRQ(iErr)
-      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyBlock_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSAssemblyBlock
 
 #undef __FUNCT__
@@ -337,9 +292,6 @@ Contains
       PetscReal                                    :: MyElasticEnergy, MyExtForcesWork
       PetscLogDouble                               :: flops
 
-      Call PetscLogStagePush(AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
-      Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      
       MyElasticEnergy = 0.0_Kr
       MyExtForcesWork = 0.0_Kr
       flops = 0.0_Kr
@@ -375,9 +327,6 @@ Contains
       Call MPI_AllReduce(MyElasticEnergy, AppCtx%ElasticEnergy, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Call MPI_AllReduce(MyExtForcesWork, AppCtx%ExtForcesWork, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       AppCtx%TotalEnergy = AppCtx%ElasticEnergy + AppCtx%ExtForcesWork
-      Call PetscLogFlops(flops, iErr)
-      Call PetscLogEventEnd  (AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
-      Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine ComputeEnergy
  
 #if defined PB_2D
