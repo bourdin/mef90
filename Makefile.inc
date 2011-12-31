@@ -26,7 +26,7 @@ endif
 #This should be improved !!!!! 
 #ifdef WITH_HEAT
 ifeq (${OPTS}, Heat)
-	FFLAGS += ${OBJDIR}/${DIM}m_Poisson.o ${OBJDIR}/${DIM}m_TransientHeat.o ${OBJDIR}/${DIM}m_MEF_Integrate.o 
+	FFLAGS += ${OBJDIR}/${DIM}m_TransientHeat.o ${OBJDIR}/${DIM}m_MEF_Integrate.o 
 endif
 
 

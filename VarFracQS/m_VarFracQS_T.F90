@@ -6,11 +6,9 @@ Module m_VarFracQS_T3D
 #include "finclude/petscdef.h"
 
 #if defined PB_2D
-   Use m_Poisson2D
    Use m_TransientHeat2D
    Use m_VarFracQS_Types2D
 #elif defined PB_3D
-   Use m_Poisson3D
    Use m_TransientHeat3D
    Use m_VarFracQS_Types3D 
 #endif   
