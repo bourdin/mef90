@@ -225,7 +225,7 @@ Contains
       End Do
    
       Call ElementInit(AppCtx%MeshTopology, AppCtx%Elem, 2)
-      Call HeatInitField(AppCtx)
+      Call HeatFieldCreate(AppCtx, AppCtx%MeshTopology)
 
       
       AppCtx%MyEXO%comm = PETSC_COMM_SELF
@@ -375,22 +375,24 @@ Contains
 
 
 #undef __FUNCT__
-#define __FUNCT__ "HeatInitField"
-   Subroutine HeatInitField(AppCtx)
+#define __FUNCT__ "HeatFieldCreate"
+   Subroutine HeatFieldCreate(AppCtx, MeshTopology)
       Type(Heat_AppCtx_Type)                             :: AppCtx
+      Type (MeshTopology_Type)                     :: MeshTopology
+      
       PetscInt, Dimension(:), Pointer                    :: SizeScal
       
       !!! Allocate the Section for U and F
       Allocate(SizeScal(1))
       SizeScal=1
-      Call FieldCreateVertex(AppCtx%T,     'Temperature',         AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%F,     'F',         AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%RHS,   'RHS',       AppCtx%MeshTopology, SizeScal)
-      Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(AppCtx%TBC,    'TBC',      AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%T,     'T',         MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%F,     'F',         MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%RHS,   'RHS',       MeshTopology, SizeScal)
+      Call FlagCreateVertex(AppCtx%BCFlag, 'BC',        MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%TBC,    'TBC',      MeshTopology, SizeScal)
       DeAllocate(SizeScal)
       
-   End Subroutine HeatInitField
+   End Subroutine HeatFieldCreate
 
 #undef __FUNCT__
 #define __FUNCT__ "Poisson_TSSetUp"
@@ -527,8 +529,8 @@ Contains
       PetscInt                                     :: NumDoFScal
       PetscLogDouble                               :: flops = 0
       PetscReal                                    :: lDiff
-      PetscReal, Dimension(:), Pointer             :: T_Loc
-      PetscReal                                    :: T_Elem
+      PetscReal, Dimension(:), Pointer             :: T_Loc, Extra_Loc
+      PetscReal                                    :: T_Elem, Extra_Elem
      
       NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
       Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF, MeshTopology%Elem_Blk(iBlk)%Num_DoF))
@@ -540,7 +542,8 @@ Contains
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem = 0.0_Kr
          BCFlag = 0
-         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec, MeshTopology%mesh, iE-1, MeshTopology%Elem_Blk(iBlk)%Num_DoF, BCFlag, iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec,  MeshTopology%mesh, iE-1, NumDoFScal, BCFlag,    iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%T%Sec,      MeshTopology%mesh, iE-1, NumDoFScal, T_Loc,     iErr); CHKERRQ(ierr)
          Do iGauss = 1, size(AppCtx%Elem(iE)%Gauss_C)
          Select Case(AppCtx%MatProp(i)%Type_Law)
             Case(Heat_Constant_ID)
@@ -551,7 +554,6 @@ Contains
                ! Mensi Law D(C) = A exp (B*C) 
                ! 1988 Mensi-Acker-Attolou Mater Struct
                ! C : water content,  A and B material parameters
-               Call SectionRealRestrictClosure(AppCtx%T%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
                T_Elem = 0.0_Kr
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
@@ -559,7 +561,6 @@ Contains
                lDiff = AppCtx%MatProp(i)%Diffusivity(1)*exp(AppCtx%MatProp(i)%Diffusivity(2)*T_Elem) 
             Case(Heat_Decreasing_ID)
       !Diffusion is decreasing with the variable
-               Call SectionRealRestrictClosure(AppCtx%T%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
                T_Elem = 0.0_Kr
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
@@ -567,25 +568,19 @@ Contains
                lDiff =  AppCtx%MatProp(i)%Diffusivity(1)*(AppCtx%MatProp(i)%Diffusivity(2)-T_Elem)**AppCtx%MatProp(i)%Diffusivity(3) 
             Case(Heat_Non_Monotonic_ID)
       !Diffusion is non monotonic with the variable
-               Call SectionRealRestrictClosure(AppCtx%T%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
                T_Elem = 0.0_Kr
                Do iDoF1 = 1, NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
                End DO
-      !TODO implement 2007_CCR_baroghel-bouny_I and II         
+      !2007 Cement Concrete Research_baroghel-bouny_I and II         
                lDiff = AppCtx%MatProp(i)%Diffusivity(1)*(AppCtx%MatProp(i)%Diffusivity(2)-T_Elem)**AppCtx%MatProp(i)%Diffusivity(3)+AppCtx%MatProp(i)%Diffusivity(4)*exp(AppCtx%MatProp(i)%Diffusivity(5)*T_Elem) 
            Case(Heat_Damage_ID)
       ! Diffusion Depends on the damaging variable
-      ! The problem is that we do not have access to that field here    !!!!!!
-      ! - The function should take a section as argument. This section could then  be any field -- > Try this 
-      ! - merge both AppCtx
-      ! - copy to HeatAppCtx the damaging and displacement field 
-               Call SectionRealRestrictClosure(ExtraField%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, T_Loc, iErr); CHKERRQ(ierr)
-               T_Elem = 0.001_Kr
+               Extra_Elem = 0.001_Kr
                Do iDoF1 = 1, NumDoFScal
-                  T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * T_Loc(iDoF1)
+                  Extra_Elem = Extra_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * Extra_Loc(iDoF1)
                End DO
-               lDiff = min(AppCtx%MatProp(i)%Diffusivity(1)/(T_Elem+0.001), AppCtx%MatProp(i)%Diffusivity(2))
+               lDiff = min(AppCtx%MatProp(i)%Diffusivity(1)/(Extra_Elem+0.001), AppCtx%MatProp(i)%Diffusivity(2))
       ! TODO : Test that ExtraField is defined to evoid Segment Fault error
             Case(Heat_Crack_Open_ID)
       ! Diffusion depends on crack opening

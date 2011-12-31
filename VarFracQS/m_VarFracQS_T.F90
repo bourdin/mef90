@@ -47,14 +47,7 @@ Contains
       HeatAppCtx%VertVar_Temperature = AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset
       Call ElementInit(AppCtx%MeshTopology, HeatAppCtx%Elem, 2)
   
-      Allocate(SizeScal(1)) 
-      SizeScal=1
-      Call FieldCreateVertex(HeatAppCtx%T,     'T',   AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(HeatAppCtx%F,     'F',  AppCtx%MeshTopology,  SizeScal)
-      Call FieldCreateVertex(HeatAppCtx%RHS,   'RHS', AppCtx%MeshTopology, SizeScal)
-      Call FlagCreateVertex(HeatAppCtx%BCFlag, 'BC',   AppCtx%MeshTopology, SizeScal)
-      Call FieldCreateVertex(HeatAppCtx%TBC,    'TBC',      AppCtx%MeshTopology, SizeScal)
-      DeAllocate(SizeScal)
+      Call  HeatFieldCreate(HeatAppCtx, AppCtx%MeshTopology)
 
    !Read Initial Temerature Field 
       Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology,  AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Temperature)%Offset, 1, HeatAppCtx%T)
