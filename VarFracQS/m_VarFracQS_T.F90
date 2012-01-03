@@ -80,7 +80,7 @@ Contains
       Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep))
       Call MatZeroEntries(HeatAppCtx%K, iErr); CHKERRQ(iErr)
       Call HeatMatAssembly(HeatAppCtx, AppCtx%MeshTopology, AppCtx%V)
-      Call SolveTransientStep(HeatAppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%Load(AppCtx%TimeStep-1), AppCtx%Load(AppCtx%TimeStep), AppCtx%TimeStep-1)
+      Call SolveTransientStep(HeatAppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%Load(AppCtx%TimeStep-1), AppCtx%Load(AppCtx%TimeStep), AppCtx%TimeStep)
       Call Write_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(VarFrac_GlobVar_Load)%Offset, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep))
       Call EXPTIM(AppCtx%MyEXO%exoid, AppCtx%TimeStep, AppCtx%Load(AppCtx%TimeStep), iErr)
 !AppCtx%Load is the list of time steps. Quasi-Static ..... 

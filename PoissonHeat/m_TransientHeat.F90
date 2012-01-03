@@ -78,7 +78,7 @@ Contains
       PetscInt                                     :: iErr
    
       Call EXPVP (AppCtx%MyEXO%exoid, 'g', 4, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 4, (/'Elastic Energy ', 'Ext Forces work', 'Total Energy   ', 'Time'/), iErr)
+      Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 4, (/'Elastic Energy ', 'Ext Forces work', 'Total Energy   ', 'Time           '/), iErr)
       Call EXPVP (AppCtx%MyEXO%exoid, 'n', 2, iErr)
       Call EXPVAN(AppCtx%MyEXO%exoid, 'n', 2, (/'T', 'F'/), iErr)
       Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
@@ -566,6 +566,7 @@ Contains
       Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF, MeshTopology%Elem_Blk(iBlk)%Num_DoF))
       Allocate(BCFlag(MeshTopology%Elem_Blk(iBlk)%Num_DoF))
       Allocate(T_Loc(NumDoFScal))
+      Allocate(Extra_Loc(NumDoFScal))
 
       Do_iELoc: Do iELoc = 1, MeshTopology%Elem_Blk(iBlk)%Num_Elems
          i = MeshTopology%Elem_Blk(iBlk)%ID
@@ -606,6 +607,7 @@ Contains
                lDiff = AppCtx%MatProp(i)%Diffusivity(1)*(AppCtx%MatProp(i)%Diffusivity(2)-T_Elem)**AppCtx%MatProp(i)%Diffusivity(3)+AppCtx%MatProp(i)%Diffusivity(4)*exp(AppCtx%MatProp(i)%Diffusivity(5)*T_Elem) 
            Case(Heat_Damage_ID)
       ! Diffusion Depends on the damaging variable
+               Call SectionRealRestrictClosure(ExtraField%Sec, MeshTopology%mesh,  iE-1, NumDoFScal, Extra_Loc, iErr); CHKERRQ(ierr)
                Extra_Elem = 0.001_Kr
                Do iDoF1 = 1, NumDoFScal
                   Extra_Elem = Extra_Elem + AppCtx%Elem(iE)%BF(iDoF1, iGauss) * Extra_Loc(iDoF1)
