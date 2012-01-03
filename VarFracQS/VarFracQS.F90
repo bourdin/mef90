@@ -74,8 +74,9 @@ Program  VarFracQS
       End If
 
 #if defined HEAT
-      Call VarFracHeat_Step_Compute(AppCtx, HeatAppCtx)
-!Trasnfert HeatAppCtx%U to AppCtx%Theta
+      If ( AppCtx%TimeStep > 1 ) Then
+         Call VarFracHeat_Step_Compute(AppCtx, HeatAppCtx)
+      End If
 #endif   
 
       !!! Update U at fixed nodes

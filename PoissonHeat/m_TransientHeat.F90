@@ -12,16 +12,22 @@ Module m_TransientHeat3D
 
    Implicit NONE   
 
-   PetscInt, Parameter, Public                     :: Poisson_Num_EBProperties  = 2
-   PetscInt, Parameter, Public                     :: Heat_EBProp_HasBForce  = 1
-   PetscInt, Parameter, Public                     :: Heat_EBProp_Elem_Type  = 2
+   PetscInt, Parameter, Public                     :: Poisson_Num_EBProperties   = 2
+   PetscInt, Parameter, Public                     :: Heat_EBProp_HasBForce      = 1
+   PetscInt, Parameter, Public                     :: Heat_EBProp_Elem_Type      = 2
    
-   PetscInt, Parameter, Public                     :: Poisson_Num_SSProperties  = 2
-   PetscInt, Parameter, Public                     :: Heat_SSProp_HasSForce  = 1
-   PetscInt, Parameter, Public                     :: Heat_SSProp_Elem_Type  = 2
+   PetscInt, Parameter, Public                     :: Poisson_Num_SSProperties   = 2
+   PetscInt, Parameter, Public                     :: Heat_SSProp_HasSForce      = 1
+   PetscInt, Parameter, Public                     :: Heat_SSProp_Elem_Type      = 2
 
-   PetscInt, Parameter, Public                     :: Poisson_Num_NSProperties  = 1
-   PetscInt, Parameter, Public                     :: Heat_NSProp_HasPForce  = 1
+   PetscInt, Parameter, Public                     :: Poisson_Num_NSProperties   = 1
+   PetscInt, Parameter, Public                     :: Heat_NSProp_HasPForce      = 1
+   
+   PetscInt, Parameter, Public                     :: Heat_Num_GlobVar           = 4
+   PetscInt, Parameter, Public                     :: Heat_GlobVar_ElasticEnergy = 1
+   PetscInt, Parameter, Public                     :: Heat_GlobVar_ExtForcesWork = 2
+   PetscInt, Parameter, Public                     :: Heat_GlobVar_TotalEnergy   = 3
+   PetscInt, Parameter, Public                     :: Heat_GlobVar_Load          = 4
    
    Type AppParam_Type
       PetscBool                                    :: Restart
@@ -58,7 +64,6 @@ Module m_TransientHeat3D
    !For TS
       Type(TS)                                     :: TS
       PetscInt                                     :: NumSteps
-      PetscReal                                    :: maxtime
       PetscInt                                     :: VertVar_Temperature 
       Type(MatHeat_Type), Dimension(:), Pointer    :: MatProp
       Type(HeatSchemeParam_Type)                   :: HeatSchemeParam 
@@ -72,8 +77,8 @@ Contains
       Type(Heat_AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
    
-      Call EXPVP (AppCtx%MyEXO%exoid, 'g', 3, iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 3, (/'Elastic Energy ', 'Ext Forces work', 'Total Energy   '/), iErr)
+      Call EXPVP (AppCtx%MyEXO%exoid, 'g', 4, iErr)
+      Call EXPVAN(AppCtx%MyEXO%exoid, 'g', 4, (/'Elastic Energy ', 'Ext Forces work', 'Total Energy   ', 'Time'/), iErr)
       Call EXPVP (AppCtx%MyEXO%exoid, 'n', 2, iErr)
       Call EXPVAN(AppCtx%MyEXO%exoid, 'n', 2, (/'T', 'F'/), iErr)
       Call EXPTIM(AppCtx%MyEXO%exoid, 1, 1.0_Kr, iErr)
@@ -144,6 +149,11 @@ Contains
       PetscReal, Dimension(:), Pointer             :: U
       PetscReal, Dimension(:), Pointer             :: ValU, ValF
 
+      PetscReal                                    :: Tmin
+      PetscReal                                    :: Tmax
+      PetscReal, Dimension(:), Pointer             :: Time
+      PetscReal, Dimension(:), Pointer             :: GlobVars
+      
       Call MEF90_Initialize()
       
       AppCtx%AppParam%verbose = 0
@@ -268,8 +278,28 @@ Contains
       End If
 
 
-      Call MEF90_AskReal(AppCtx%maxtime,  'Max time for TS computation', BatchUnit, IsBatch)
+      Call MEF90_AskReal(Tmin,  'Min time for TS computation',    BatchUnit, IsBatch)
+      Call MEF90_AskReal(Tmax,  'Max time for TS computation',    BatchUnit, IsBatch)
       Call MEF90_AskInt(AppCtx%NumSteps,  'Number of time steps', BatchUnit, IsBatch)
+
+      Allocate(GlobVars(Heat_Num_GlobVar))
+      GlobVars = 0.0_Kr
+      Allocate(Time(AppCtx%NumSteps))
+      Do i = 1, AppCtx%NumSteps-1
+         !! Non uniform time stepping adapted to the time scale of the thermal problem in tau=sqrt(t)
+         !! Pay attention in visualization softwares
+         Time(i) = Tmin + (Real(i-1) * (sqrt(Tmax-TMin))/Real(AppCtx%NumSteps-1))**2
+
+         GlobVars(Heat_GlobVar_Load) = Time(i)
+         Call Write_EXO_AllResult_Global(AppCtx%MyEXO, i, GlobVars)
+         Call EXPTIM(AppCtx%MyEXO%exoid, i, Time(i), iErr)
+      End Do
+   
+      Time(AppCtx%NumSteps) = Tmax
+      GlobVars(Heat_GlobVar_Load) = Time(AppCtx%NumSteps)
+      Call Write_EXO_AllResult_Global(AppCtx%MyEXO, AppCtx%NumSteps, GlobVars)
+      Call EXPTIM(AppCtx%MyEXO%exoid, AppCtx%NumSteps, Time(AppCtx%NumSteps), iErr)
+      DeAllocate(GlobVars)
 
       Call View_Available_Diffusion_Laws 
 !  Set EB Properties : U, F     
@@ -698,7 +728,7 @@ Contains
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
 !TODO see TSSetExactFinalTime, TSGetTimeStep
 !TSSetExactFinalTime can not be used : 'TSRosW 2p does not have an interpolation formula'
-
+!      Call TSSetExactFinalTime(AppCtx%TS, PETSC_TRUE, iErr); CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%T%Sec, AppCtx%T%Scatter, SCATTER_FORWARD, AppCtx%T%Vec, iErr); CHKERRQ(iErr)
 
 ! Using IMEX see section 6.1.2 PetSc documentation 
@@ -716,7 +746,7 @@ Contains
          Call VecView(AppCtx%TBC%Vec,  PETSC_VIEWER_STDOUT_WORLD, iErr)
       End If
 
-      Call TSSetInitialTimeStep(AppCtx%TS, TimeStepIni, (TimeStepFinal - TimeStepIni/10.),  ierr); CHKERRQ(iErr)
+      Call TSSetInitialTimeStep(AppCtx%TS, TimeStepIni, (TimeStepFinal - TimeStepIni)/100.,  ierr); CHKERRQ(iErr)
       Call TSSetDuration(AppCtx%TS, AppCtx%HeatSchemeParam%HeatMaxiter, TimeStepFinal, iErr); CHKERRQ(iErr)
       Call TSSolve(AppCtx%TS, AppCtx%T%Vec, TimeStepFinal, iErr); CHKERRQ(iErr)
 
@@ -724,6 +754,8 @@ Contains
       Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, AppCtx%VertVar_Temperature , iStep+1, AppCtx%T%Sec)
       Call TSGetTimeStepNumber(AppCtx%TS, TSTimeSteps, iErr); CHKERRQ(iErr) 
       Call TSGetConvergedReason(AppCtx%TS, TSreason, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, 400) iStep, TimeStepIni, TimeStepFinal 
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, 100) TSTimeSteps, TSreason
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       

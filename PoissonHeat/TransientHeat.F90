@@ -62,10 +62,9 @@ Program  TransientHeat
    End If
    
    Allocate(CurTime(AppCtx%NumSteps))
-   CurTime(1) = 0
-   DO iStep = 1, AppCtx%NumSteps-1
+   !CurTime(1) = 0
+   TimeStep :DO iStep = 1, AppCtx%NumSteps-1
        !! Non uniform time stepping adapted to the time scale of the  thermal problem in tau=sqrt(t)
-      CurTime(iStep+1) =  (Real(iStep)/Real(AppCtx%NumSteps))**2*AppCtx%maxtime
       Call MatZeroEntries(AppCtx%K, iErr); CHKERRQ(iErr)
       Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology, ExtraField)
       If (AppCtx%AppParam%verbose > 3) Then
@@ -73,10 +72,16 @@ Program  TransientHeat
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Call MatView(AppCtx%K, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
       End If
+!Next 2 lines how it should be : 
+!      Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Heat_GlobVar_Load)%Offset, iStep, CurTime(iStep))
+!      Call Read_EXO_Result_Global(AppCtx%MyEXO, AppCtx%MyEXO%GlobVariable(Heat_GlobVar_Load)%Offset, iStep+1, CurTime(iStep+1))
+      Call Read_EXO_Result_Global(AppCtx%MyEXO, Heat_GlobVar_Load, iStep, CurTime(iStep))
+      Call Read_EXO_Result_Global(AppCtx%MyEXO, Heat_GlobVar_Load, iStep+1, CurTime(iStep+1))
       Call SolveTransientStep(AppCtx, AppCtx%MyEXO, AppCtx%MeshTopology, CurTime(iStep), CurTime(iStep+1), iStep)
-   End Do 
-!TODO Write the time steps into the EXO file
-   
+      Call Write_EXO_Result_Global(AppCtx%MyEXO, Heat_GlobVar_Load, iStep+1, CurTime(iStep+1))
+      Call EXPTIM(AppCtx%MyEXO%exoid, iStep+1, CurTime(iStep+1), iErr)
+!Save the end of the time step in case it has been changed 
+   End Do TimeStep
    DeAllocate(CurTime) 
 
    If (AppCtx%AppParam%verbose > 0) Then
@@ -97,9 +102,9 @@ Program  TransientHeat
 !! Computing water loss
    Call ComputeWaterMass(AppCtx%MeshTopology, AppCtx%MyExo, 1, AppCtx%Elem, AppCtx%NumSteps)
 
-   Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%ElasticEnergy)
-   Call Write_EXO_Result_Global(AppCtx%MyExo, 2, 1, AppCtx%ExtForcesWork)
-   Call Write_EXO_Result_Global(AppCtx%MyExo, 3, 1, AppCtx%TotalEnergy)
+   Call Write_EXO_Result_Global(AppCtx%MyExo, Heat_GlobVar_ElasticEnergy,  1, AppCtx%ElasticEnergy)
+   Call Write_EXO_Result_Global(AppCtx%MyExo, Heat_GlobVar_ExtForcesWork,  1, AppCtx%ExtForcesWork)
+   Call Write_EXO_Result_Global(AppCtx%MyExo, Heat_GlobVar_TotalEnergy,    1, AppCtx%TotalEnergy)
    Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F%Sec) 
 
    Call EXCLOS(AppCtx%EXO%exoid, iErr)
