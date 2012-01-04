@@ -248,7 +248,7 @@ Program PrepVarFrac
    Call MEF90_AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4,5,6,7,8,9,10,11,12,13)! MIL, geothermal PoC
+   Case (1,2,3,4,5,6,7,8,9,10,11,12,13,15)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
