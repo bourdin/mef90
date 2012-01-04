@@ -31,8 +31,9 @@ VarFracQSHeat:
 
 
 clean:
-	-rm -rf ${MEF90_DIR}/obj/${PETSC_ARCH}
-	-rm -rf ${MEF90_DIR}/bin/${PETSC_ARCH}
+	-rm -rf ${MEF90_DIR}/${PETSC_ARCH}/obj
+	-rm -rf ${MEF90_DIR}/${PETSC_ARCH}/bin
+	-rm -rf ${MEF90_DIR}/${PETSC_ARCH}/lib
 #	@for dir in ${SUBDIRS} ; do \
 #		${MAKE} -C $$dir clean ;\
 #	done

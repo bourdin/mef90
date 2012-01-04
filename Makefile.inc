@@ -1,9 +1,9 @@
 ## -*- Mode: Makefile; -*-
 ## vim: set ft=automake :
 
-OBJDIR = ${MEF90_DIR}/obj/${PETSC_ARCH}/
-LIBDIR = ${OBJDIR}
-BINDIR = ${MEF90_DIR}/bin/${PETSC_ARCH}/
+OBJDIR = ${MEF90_DIR}/${PETSC_ARCH}/obj/
+LIBDIR = ${MEF90_DIR}/${PETSC_ARCH}/lib/
+BINDIR = ${MEF90_DIR}/${PETSC_ARCH}/bin/
 
 OBJS =  ${addprefix ${OBJDIR},${addprefix ${DIM},${SRCS:.F90=.o}}}
 TARGET = $(addprefix ${BINDIR},${BIN})
@@ -71,7 +71,7 @@ endif
 ################################################################## 
 #                         Rules
 ##################################################################
-all: ${BINDIR} ${OBJDIR} ${BIN} ${LIB}
+all: ${BINDIR} ${OBJDIR} ${LIBDIR} ${BIN} ${LIB}
 
 ${OBJDIR}:
 	mkdir -p $@
@@ -79,10 +79,13 @@ ${OBJDIR}:
 ${BINDIR}:
 	mkdir -p $@
 
+${LIBDIR}:
+	mkdir -p $@
+
 ${LIB}: lib${LIB}.a 
 
 lib${LIB}.a: ${OBJS}
-	${AR} ${AR_FLAGS} ${OBJDIR}/$@  $?
+	${AR} ${AR_FLAGS} ${LIBDIR}/$@  $?
 
 #${PETSC_FORTRAN_LIB} ${PETSC_LIB} must be at the end
 #FLINKER = ${FC_LINKER} ${FC_LINKER_FLAGS} ${FFLAGS} 
