@@ -37,10 +37,12 @@ Contains
       PetscReal, Dimension(:,:), Pointer           :: array
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
       PetscInt                                     :: embedDim
-      PetscInt                                     :: iE, iElem, numIds, blkId, setId
+      PetscInt                                     :: iE, iElem, numIds, blkId, setId, i
       PetscInt, Dimension(:), Pointer              :: setIds
       PetscInt, Dimension(:), Pointer              :: blkIds
       PetscInt, Dimension(:), Pointer              :: Tmp_ID, Tmp_GlobalID
+      Type(IS)                                     :: set
+      PetscInt, Dimension(:), Pointer              :: set_ptr
 
 
       !!! Zero out all informations
@@ -76,12 +78,17 @@ Contains
             blkId = blkIds(iBlk)
             dMeshTopology%Elem_blk(iBlk)%ID = blkId
             Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr); CHKERRQ(iErr)
+            Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, set, ierr); CHKERRQ(iErr)
             !!! Get the size of the layer (stratum) 'CellBlock' of Mesh
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
-            Call DMMeshGetStratum(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%Elem_blk(iBlk)%Elem_ID, ierr); CHKERRQ(iErr)
+            Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
             !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
-            dMeshTopology%Elem_blk(iBlk)%Elem_ID = dMeshTopology%Elem_blk(iBlk)%Elem_ID + 1
+            Do i = 1, dMeshTopology%elem_blk(iBlk)%Num_Elems
+               dMeshTopology%Elem_blk(iBlk)%Elem_ID(i) = set_ptr(i) + 1
+            End Do
             !!! Converts to Fortran style indexing
+            Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
+            Call ISDestroy(set,iErr);CHKERRQ(iErr)
          End Do
       End If
       Deallocate(blkIds)
@@ -108,9 +115,14 @@ Contains
             setId = setIds(iSet)
             dMeshTopology%Node_Set(iSet)%ID = setId
             Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, setId, dMeshTopology%Node_Set(iSet)%Num_Nodes, ierr); CHKERRQ(iErr)
+            Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, setId, set, ierr); CHKERRQ(iErr)
             Allocate(dMeshTopology%Node_Set(iSet)%Node_ID(dMeshTopology%Node_Set(iSet)%Num_Nodes))
-            Call DMMeshGetStratum(dMeshTopology%mesh, CharBuffer, setId, dMeshTopology%Node_Set(iSet)%Node_ID, ierr); CHKERRQ(iErr)
-            dMeshTopology%Node_Set(iSet)%Node_ID = dMeshTopology%Node_Set(iSet)%Node_ID - dMeshTopology%Num_Elems + 1
+            Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
+            Do i = 1, dMeshTopology%Node_Set(iSet)%Num_Nodes
+               dMeshTopology%Node_Set(iSet)%Node_ID(i) = set_ptr(i) + 1
+            End Do
+            Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
+            Call ISDestroy(set,iErr);CHKERRQ(iErr)
          End Do
       End If
       Deallocate(setIds)
