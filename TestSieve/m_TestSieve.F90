@@ -2,11 +2,11 @@ Module m_TestSieve
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
 #include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
+#include "finclude/petscdmmeshdef.h"
 
    Use m_MEF90
    Use petsc
-   Use petscmesh
+   Use petscdmmesh
    
    Implicit NONE
 

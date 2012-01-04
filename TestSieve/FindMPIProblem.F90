@@ -5,13 +5,13 @@ Program FindMPIProblem
 #include "finclude/petscvecdef.h"
 #include "finclude/petscmatdef.h"
 #include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
+#include "finclude/petscdmmeshdef.h"
 
    Use m_MEF90
    Use petsc
    Use petscvec
    Use petscmat
-   Use petscmesh
+   Use petscdmmesh
 
    Implicit NONE   
 

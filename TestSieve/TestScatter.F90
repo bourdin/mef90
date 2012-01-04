@@ -3,13 +3,13 @@ Program TestScatter
 #include "finclude/petscdef.h"
 #include "finclude/petscvecdef.h"
 #include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
+#include "finclude/petscdmmeshdef.h"
 #include "finclude/petscmatdef.h"
 
    Use m_MEF90
    Use petsc
    Use petscvec
-   Use petscmesh
+   Use petscdmmesh
    Use petscmat
 
    Implicit NONE   
