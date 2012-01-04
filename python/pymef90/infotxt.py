@@ -31,14 +31,17 @@ def Dictreadtxt(filename):
         k, v = l.split(' ', 1) if l.count(' ') > 0 else (l, '')
         v = v.strip()
         try:
-            v = float(v)
-        except ValueError:
-            pass
-        try:
-            v = int(v)
+            v = float(v)            
+            if int(v) == v:
+                v = int(v)
         except ValueError:
             pass
         D[k] = v
+    # special case: make sure that prefix is read as a string or all hell will break loose...
+    try:
+        D['prefix']+'oulala'
+    except TypeError:
+        D['prefix'] = repr(D['prefix'])
     return D
     
 
