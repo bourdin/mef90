@@ -8,7 +8,7 @@ SUBDIRS = ${LIBS} ${PROJECTS}
 help: 
 	@echo Makefile system for MEF90 
 	@echo usage make proj 
-	@echo proj in clean, Frac, FracNG, Film, Heat 
+	@echo proj in clean, Frac, Film, Heat 
 
 all: ${DIMPROJECTS}
 

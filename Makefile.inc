@@ -20,7 +20,10 @@ MEF90_INCS += ${PETSC_FC_INCLUDES}
 ifdef BIN
 	FFLAGS = ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 	FFLAGS += -L${LIBDIR} -lmef90 
-	FFLAGS += -lvarstruct 
+	FFLAGS += -lvarstruct
+ifneq (,$(findstring Darwin,$(PETSC_ARCH)))
+	FFLAGS += ${OBJDIR}/m_MEF_Parameters.o 
+endif 
 endif
 
 #This should be improved !!!!! 

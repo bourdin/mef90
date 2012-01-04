@@ -1,7 +1,6 @@
 LIB = mef90
 #order is important 
-SRCS =	\
-	m_MEF_Parameters.F90      \
+SRCS =  m_MEF_Parameters.F90      \
 	m_MEF_Utils.F90           \
 	m_MEF_LinAlg.F90          \
 	m_MEF_Types.F90	          \
