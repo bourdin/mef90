@@ -174,18 +174,6 @@ Program PrepVarFrac
    End If
 
    Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
-   !!Call MeshTopologyView(MeshTopology, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
-   !!!
-   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_dim              ', MeshTopology%num_dim
-   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_verts            ', MeshTopology%num_verts
-   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_elems            ', MeshTopology%num_elems
-   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_elem_blks_global ', MeshTopology%num_elem_blks_global
-   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_elem_blks        ', MeshTopology%num_elem_blks
-   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_node_sets_global ', MeshTopology%num_node_sets_global
-   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_node_sets        ', MeshTopology%num_node_sets
-   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_side_sets_global ', MeshTopology%num_side_sets_global
-   !!!Write(100+MEF90_MyRank,*) 'MeshTopology%num_side_sets        ', MeshTopology%num_side_sets
-
 
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
@@ -194,11 +182,9 @@ Program PrepVarFrac
 
    MyEXO%comm = PETSC_COMM_SELF
    MyEXO%title = EXO%title
-   !MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 99) trim(prefix), MEF90_MyRank
  99  Format(A, '-', I4.4, '.gen')
    MyEXO%exoid = EXCRE (MyEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
-   !MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr)
 
    Call DMMeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
    
