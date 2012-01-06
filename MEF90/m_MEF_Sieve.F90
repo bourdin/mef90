@@ -84,7 +84,7 @@ Contains
             Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
             !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
             Do i = 1, dMeshTopology%elem_blk(iBlk)%Num_Elems
-               dMeshTopology%Elem_blk(iBlk)%Elem_ID(i) = set_ptr(i) + 1
+               dMeshTopology%Elem_blk(iBlk)%Elem_ID(i) = set_ptr(i) + 1 
             End Do
             !!! Converts to Fortran style indexing
             Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
@@ -119,7 +119,8 @@ Contains
             Allocate(dMeshTopology%Node_Set(iSet)%Node_ID(dMeshTopology%Node_Set(iSet)%Num_Nodes))
             Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
             Do i = 1, dMeshTopology%Node_Set(iSet)%Num_Nodes
-               dMeshTopology%Node_Set(iSet)%Node_ID(i) = set_ptr(i) + 1
+               dMeshTopology%Node_Set(iSet)%Node_ID(i) = set_ptr(i) + 1 - dMeshTopology%num_elems
+               !!! The IS refers sieve points, whereas we want vertices...
             End Do
             Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
             Call ISDestroy(set,iErr);CHKERRQ(iErr)
