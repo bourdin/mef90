@@ -59,7 +59,7 @@ Contains
       ! Read Global Geometric Parameters
       !!! Extracts sizes from the Mesh oject
       Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
-
+      
       ! Read Elem block information
       CharBuffer = 'CellBlocks'
       Call DMMeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)  
@@ -72,8 +72,11 @@ Contains
       Allocate(blkIds(numIds))
       Call DMMeshGetLabelIds(dMeshTopology%mesh, CharBuffer, blkIds, ierr); CHKERRQ(ierr)
       Allocate(dMeshTopology%Elem_blk(numIds))
+      Write(*,*) 'blkIds', blkIds
 
       If (dMeshTopology%Num_Elem_blks > 0) Then
+         Write(MEF90_MyRank+100,*) 'dMeshTopology%Num_Elem_Blks', dMeshTopology%Num_Elem_Blks
+         Write(MEF90_MyRank+100,*) 'blkIds', blkIds
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
 	    dMeshTopology%elem_blk(iBlk)%elem_type = -1
 	    dMeshTopology%elem_blk(iBlk)%dof_location = -1
@@ -81,9 +84,11 @@ Contains
             dMeshTopology%Elem_blk(iBlk)%ID = blkId
             Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr); CHKERRQ(iErr)
             Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, set, ierr); CHKERRQ(iErr)
+            !Call ISView(set,PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
             !!! Get the size of the layer (stratum) 'CellBlock' of Mesh
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
             Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
+            Write(MEF90_MyRank + 100,*) MEF90_MyRank, 'set, set_ptr', set, set_ptr
             !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
             Do i = 1, dMeshTopology%elem_blk(iBlk)%Num_Elems
                dMeshTopology%Elem_blk(iBlk)%Elem_ID(i) = set_ptr(i) + 1 
@@ -91,6 +96,7 @@ Contains
             !!! Converts to Fortran style indexing
             Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
             Call ISDestroy(set,iErr);CHKERRQ(iErr)
+            Write(*,*) MEF90_MyRank, 'done with blk', blkId
          End Do
       End If
       Deallocate(blkIds)
@@ -98,11 +104,15 @@ Contains
       ! Get the overall number of element blocks
       Allocate(Tmp_ID(dMeshTopology%num_elem_blks))
       Tmp_ID = dMeshTopology%elem_blk(:)%ID
+      Write(*,*) MEF90_MyRank, 'Tmp_ID', Tmp_ID
       Call Uniq(Comm, Tmp_ID, Tmp_GlobalID)            
       dMeshTopology%Num_elem_blks_global = Size(Tmp_GlobalID)
+      Write(*,*) MEF90_MyRank, 'Tmp_ID', Tmp_ID
+      Write(*,*) MEF90_MyRank, 'Tmp_GlobalID', Tmp_GlobalID 
+      Write(*,*) MEF90_MyRank, 'dMeshTopology%Num_node_sets', dMeshTopology%Num_node_sets
       DeAllocate(Tmp_ID)
       DeAllocate(Tmp_GlobalID)
-      
+
       ! Read Node set information
       CharBuffer = 'VertexSets'
       Call DMMeshGetLabelSize(dMeshTopology%mesh, CharBuffer, numIds, ierr); CHKERRQ(ierr)
@@ -133,7 +143,7 @@ Contains
       ! Get the overall number of Node Sets
       Allocate(Tmp_ID(dMeshTopology%num_node_sets))
       Tmp_ID = dMeshTopology%node_set(:)%ID
-      Call Uniq(Comm, Tmp_ID, Tmp_GlobalID)            
+      !!!!!Call Uniq(Comm, Tmp_ID, Tmp_GlobalID)            
       dMeshTopology%Num_node_sets_global = Size(Tmp_GlobalID)
       DeAllocate(Tmp_ID)
       DeAllocate(Tmp_GlobalID)
