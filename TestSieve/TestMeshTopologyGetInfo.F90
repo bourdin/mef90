@@ -49,14 +49,14 @@ Program TestMeshTopologyGetInfo
       Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
    
-   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
-   Call MeshTopologyView(MeshTopology, PetscViewer(PETSC_VIEWER_STDOUT_WORLD))
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
    Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
+   Write(*,*) MEF90_MyRank, 'Done with MeshTopologyGetInfo'
+   Call MeshTopologyView(MeshTopology, PetscViewer(PETSC_VIEWER_STDOUT_SELF))
    Write(IOBuffer, *) "MeshTopology./.num_elem_blk, ", MeshTopology%num_elem_blks, "\n"
    Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) "MeshTopology./.num_elem_blk_global, ", MeshTopology%num_elem_blks_global, "\n"
