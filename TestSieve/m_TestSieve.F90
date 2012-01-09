@@ -1,8 +1,5 @@
 Module m_TestSieve
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
    Use m_MEF90
    Use petsc

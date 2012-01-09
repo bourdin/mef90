@@ -31,7 +31,7 @@ Program  Elast
          Write(IOBuffer, *) 'Assembling the matrix\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If   
-      Call MatAssembly(AppCtx)
+      Call MatAssembly(AppCtx%KU,AppCtx)
       If (AppCtx%AppParam%verbose > 1) Then
          Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
       End If
