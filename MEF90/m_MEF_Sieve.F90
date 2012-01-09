@@ -90,7 +90,6 @@ Contains
          dMeshTopology%elem_blk(iBlk)%dof_location = -1
          dMeshTopology%Elem_blk(iBlk)%ID = blkId
          Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr); CHKERRQ(iErr)
-         Write(*,*) MEF90_MyRank, 'block / ID / num elems', iBlk, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems
          Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, set, ierr); CHKERRQ(iErr)
          If (dMeshTopology%elem_blk(iBlk)%Num_Elems > 0) Then
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
@@ -104,19 +103,10 @@ Contains
             !!! Converts to Fortran style indexing
             Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
             Call ISDestroy(set,iErr);CHKERRQ(iErr)
-            Write(MEF90_MyRank+100,*) MEF90_MyRank, 'block ', blkId, dMeshTopology%Elem_blk(iBlk)%Elem_ID
          End If
       End Do
       Call ISRestoreIndicesF90(labels,labels_ptr,iErr);CHKERRQ(iErr)
       
-      !If (MEF90_MyRank == 0) Then
-      !   Write(*,*) 'Pause'
-      !   Read(*,*) labels_ptr
-      !End If
-      !Call MPI_Barrier(PETSC_COMM_WORLD, iErr)
-      !return
-
-      Call PetscPrintf(PETSC_COMM_WORLD, "Done with element blocks\n",ierr)
       ! Read Node set information
       CharBuffer = 'VertexSets'
       !!! Get the number of labels of type 'CellBlocks' in the mesh
@@ -138,7 +128,6 @@ Contains
       Call ISRestoreIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
       Call ISDestroy(mylabels,ierr);CHKERRQ(ierr)
       Call ISDestroy(tmplabels,ierr);CHKERRQ(ierr)
-      Call ISView(labels, PETSC_VIEWER_STDOUT_WORLD,ierr)
 
       !!! The IS labels has the same value on each CPU, so its _local_ size
       !!! is the number of values, while its _size_ is #values * Communicator size...
@@ -150,7 +139,6 @@ Contains
          blkId = labels_ptr(iBlk)
          dMeshTopology%node_set(iBlk)%ID = blkId
          Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%node_set(iBlk)%Num_Nodes, ierr); CHKERRQ(iErr)
-         Write(*,*) MEF90_MyRank, 'nodeset / ID / num elems', iBlk, blkId, dMeshTopology%node_set(iBlk)%Num_Nodes
          Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, set, ierr); CHKERRQ(iErr)
          If (dMeshTopology%node_set(iBlk)%num_nodes > 0) Then
             Allocate(dMeshTopology%node_set(iBlk)%Node_ID(dMeshTopology%node_set(iBlk)%num_nodes))
@@ -163,16 +151,9 @@ Contains
             !!! Converts to Fortran style indexing
             Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
             Call ISDestroy(set,iErr);CHKERRQ(iErr)
-            Write(MEF90_MyRank+100,*) MEF90_MyRank, 'nodeset ', blkId, dMeshTopology%node_set(iBlk)%node_ID
          End If
       End Do
       Call ISRestoreIndicesF90(labels,labels_ptr,iErr);CHKERRQ(iErr)
-      !If (MEF90_MyRank == 0) Then
-      !   Write(*,*) 'Pause'
-      !   Read(*,*) ierr
-      !End If
-      !Call MPI_Barrier(PETSC_COMM_WORLD, iErr)
-      !return
    End Subroutine MeshTopologyGetInfo
     
 #undef __FUNCT__
