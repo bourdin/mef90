@@ -60,6 +60,7 @@ Module m_Elast3D
       Type(Mat)                                    :: KU
       Type(KSP)                                    :: KSPU
       Type(PC)                                     :: PCU
+      Type(SNES)                                   :: SNESU
 !!! TAO stuff      
       TAO_SOLVER                                   :: taoU
       TAO_APPLICATION                              :: taoappU
@@ -240,45 +241,21 @@ Contains
       Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
       Call MatSetBlockSize(AppCtx%KU,AppCtx%MeshTopology%Num_Dim,iErr); CHKERRQ(ierr)
       
-      If (AppCtx%VarFracSchemeParam%U_UseTao) Then
-         Call TaoCreate(PETSC_COMM_WORLD, 'tao_tron', AppCtx%taoU, iErr); CHKERRQ(iErr)
-         Call TaoApplicationCreate(PETSC_COMM_WORLD, AppCtx%taoappU, iErr); CHKERRQ(iErr)
-         Call TaoAppendOptionsPrefix(AppCtx%taoU, "U_", iErr); CHKERRQ(iErr) 
-         
-         Call TaoAppSetObjectiveAndGradientRoutine(AppCtx%taoappU, FormFunctionAndGradient, AppCtx, iErr); CHKERRQ(iErr)
-         Call TaoAppSetHessianRoutine(AppCtx%taoappU, FormHessian, AppCtx, iErr); CHKERRQ(iErr)
-         Call TaoAppSetVariableBoundsRoutine(AppCtx%taoappU, FormBoundsTao, AppCtx, iErr); CHKERRQ(iErr)
+      
+      Call SNESCreate(PETSC_COMM_WORLD, AppCtx%SNESU, iErr); CHKERRQ(iErr)
+      Call SNESAppendOptionsPrefix(AppCtx%SNESU, "U_", iErr); CHKERRQ(iErr) 
+      Call SNESSetFunction(AppCtx%SNESU, AppCtx%U%Vec, FormGradient, AppCtx, iErr); CHKERRQ(iErr)
+      Call SNESSetJacobian(AppCtx%SNESU, AppCtx%KU, AppCtx%KU, FormHessian, AppCtx, iErr); CHKERRQ(iErr)
+      Call SNESSetFromOptions(AppCtx%SNESU, iErr); CHKERRQ(iErr)
+      Call SNESGetKSP(AppCtx%SNESU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
 
-         Call TaoAppSetHessianMat(AppCtx%taoappU, AppCtx%KU, AppCtx%KU, iErr); CHKERRQ(iErr)
-
-         Call TaoAppSetDefaultSolutionVec(AppCtx%taoappU, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-
-         Call TaoSetOptions(AppCtx%taoappU, AppCtx%taoU, iErr); CHKERRQ(iErr)
-         Call TaoAppSetFromOptions(AppCtx%taoappU, iErr); CHKERRQ(iErr)
-         Call TaoAppGetKSP(AppCtx%taoappU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
-
-         Call KSPSetType(AppCtx%KSPU, KSPSTCG, iErr); CHKERRQ(iErr)
-         Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
-         Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
-      Else
-         Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
-         Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
-         Call KSPSetInitialGuessNonzero(AppCtx%KSPU, PETSC_TRUE, iErr); CHKERRQ(iErr)
-
-         Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
-         Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
-         Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
-      End If
+      Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
+      !Call KSPAppendOptionsPrefix(AppCtx%KSPU, "U_", iErr); CHKERRQ(iErr)
+      Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
-#ifdef PETSC_HAVE_HYPRE
-      !Call PCSetType(AppCtx%PCU, PCHYPRE, iErr); CHKERRQ(iErr)
-      !Call PCHYPRESetType(AppCtx%PCU, "boomeramg", iErr); CHKERRQ(iErr)
-#else
       Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
-#endif      
       Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
-
-
+      
       !!! Initialize the BC Flag
       Call SectionIntZero(AppCtx%BCUFlag%Sec, iErr); CHKERRQ(iErr)
       Call SectionIntAddNSProperty(AppCtx%BCUFlag%Component_Sec(1), AppCtx%MyEXO%NSProperty(VarFrac_NSProp_BCUTypeX), AppCtx%MeshTopology)
@@ -434,7 +411,8 @@ Contains
 !----------------------------------------------------------------------------------------!      
 !             Global assembly routines
 !----------------------------------------------------------------------------------------!      
-   Subroutine MatAssembly(AppCtx)
+   Subroutine MatAssembly(K,AppCtx)
+      Type(Mat)                                    :: K
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk, i, j, iErr
@@ -442,26 +420,26 @@ Contains
       
       Call PetscLogStagePush(AppCtx%LogInfo%MatAssemblyU_Stage, iErr); CHKERRQ(iErr)
 
-      Call MatZeroEntries(AppCtx%KU, iErr); CHKERRQ(iErr)
+      Call MatZeroEntries(K, iErr); CHKERRQ(iErr)
 
       !!! MatInsertVertexBoundaryValues overwrites the entire block corresponding to all
       !!! dof of a point where a boundary condition is applied
       !!! it is to be called BEFORE assembling the matrix
-      Call MatInsertVertexBoundaryValues(AppCtx%KU, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
-      Call MatAssemblyBegin(AppCtx%KU, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
-      Call MatAssemblyEnd  (AppCtx%KU, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatInsertVertexBoundaryValues(K, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
+      Call MatAssemblyBegin(K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (K, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
 
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call HessianAssemblyBlock(iBlk, AppCtx%KU, .TRUE.,  AppCtx)
+         Call HessianAssemblyBlock(iBlk, K, .TRUE.,  AppCtx)
       End Do Do_Elem_iBlk
-      Call MatAssemblyBegin(AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-      Call MatAssemblyEnd  (AppCtx%KU, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyBegin(K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+      Call MatAssemblyEnd  (K, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine MatAssembly
    
-   Subroutine FormHessian(tao, X, H, Hpre, flg, AppCtx, iErr)
-      TAO_SOLVER         :: tao
+   Subroutine FormHessian(SNESU, X, H, Hpre, flg, AppCtx, iErr)
+      Type(SNES)         :: SNESU
       Type(Vec)          :: X
       Type(Mat)          :: H, Hpre
       PetscInt           :: iErr
@@ -496,40 +474,41 @@ Contains
    End Subroutine FormHessian
    
    
-   Subroutine FormFunctionAndGradient(tao, X, func, Gradient, AppCtx, iErr)
-      TAO_SOLVER                                   :: tao
+   Subroutine FormGradient(SNESU, X, Gradient, AppCtx, iErr)
+      Type(SNES)                                   :: SNESU
       Type(Vec)                                    :: X, Gradient
       PetscInt                                     :: iErr
-      PetscReal                                    :: func
       Type(AppCtx_Type)                            :: AppCtx
       
       PetscInt                                     :: iBlk     
       PetscReal                                    :: myfunc, ElasticEnergyBlock, ExtForcesWorkBlock 
-      
+      Type(Vec)                                    :: TmpVec
       
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyU_Stage, iErr); CHKERRQ(iErr)
 
-      func = 0.0_Kr
-            
-      Call SectionRealZero(AppCtx%GradientU%Sec, iErr); CHKERRQ(iErr)
-      Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, X, iErr); CHKERRQ(ierr)
-
-      myfunc = 0.0_Kr
+      !!! Do not use RHSU, but create a new dummy field
+      Call VecCopy(X,AppCtx%RHSU%Vec, iErr); CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%RHSU%Sec, AppCtx%RHSU%Scatter, SCATTER_REVERSE, AppCtx%RHSU%Vec, iErr); CHKERRQ(iErr)
+      
       Do_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
-         Call ComputeEnergiesBlock(iBlk, AppCtx%U%Sec, ElasticEnergyBlock, ExtForcesWorkBlock, AppCtx)
-         myfunc = myfunc + ElasticEnergyBlock - ExtForcesWorkBlock
-         Call FormGradientBlock(iBlk, AppCtx%U%Sec, AppCtx%GradientU%Sec, AppCtx)
+         Call FormGradientBlock(iBlk, AppCtx%RHSU%Sec, AppCtx%GradientU%Sec, AppCtx)
       End Do Do_iBlk
-      Call MPI_AllReduce(myfunc, func, 1, MPIU_SCALAR, MPI_SUM, PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
       Call SectionRealComplete(AppCtx%GradientU%Sec, iErr); CHKERRQ(iErr)
       !!! Scatter values from the Sections back to the Vec
+
+      !Call VecDuplicate(X,TmpVec,iErr);CHKERRQ(iErr)
+      Call VecCopy(X,AppCtx%LowerBoundU%Vec,iErr);CHKERRQ(iErr)
+      Call VecAXPY(AppCtx%LowerBoundU%Vec,-1.0_Kr,AppCtx%UBC%Vec);CHKERRQ(iErr)
+      Call SectionRealToVec(AppCtx%LowerBoundU%Vec, AppCtx%LowerBoundU%Scatter, SCATTER_REVERSE, AppCtx%LowerBoundU%Sec, iErr); CHKERRQ(iErr)
+      
+      Call FieldInsertVertexBoundaryValues(AppCtx%RHSU, AppCtx%LowerBoundU, AppCtx%BCUFlag, AppCtx%MeshTopology)
       Call SectionRealToVec(AppCtx%GradientU%Sec, AppCtx%GradientU%Scatter, SCATTER_FORWARD, Gradient, iErr); CHKERRQ(iErr)
 
       If (AppCtx%AppParam%verbose > 1) Then
          Call VecView(Gradient, AppCtx%AppParam%LogViewer, iErr)
       End If
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-   End Subroutine FormFunctionAndGradient
+   End Subroutine FormGradient
    
    Subroutine ComputeEnergies(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx

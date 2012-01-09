@@ -10,9 +10,10 @@ Program TestMeshTopologyGetInfo
 
 !!!startregion VARIABLES
 
-   Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, filename
+   Character(len=MEF90_MXSTRLEN)                :: prefix, IOBuffer, myfilename
    Type(MeshTopology_Type)                      :: MeshTopology
    Type(EXO_Type)                               :: EXO
+   Type(PetscViewer)                            :: myviewer
    PetscInt                                     :: verbose = 0
    PetscInt                                     :: iErr
    PetscBool                                    :: HasPrefix
@@ -54,22 +55,30 @@ Program TestMeshTopologyGetInfo
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
+   write(myfilename,100) MEF90_MyRank
+   Write(IOBuffer,101) trim(myfilename)
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer,ierr);CHKERRQ(ierr)
+   Call PetscSynchronizedFlush(PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+   Call PetscViewerASCIIOpen(PETSC_COMM_SELF, myfilename, myviewer, iErr); CHKERRQ(iErr); 
    Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
-   Write(*,*) MEF90_MyRank, 'Done with MeshTopologyGetInfo'
-   Call MeshTopologyView(MeshTopology, PetscViewer(PETSC_VIEWER_STDOUT_SELF))
+
+   Call MeshTopologyView(MeshTopology, myviewer)
    Write(IOBuffer, *) "MeshTopology./.num_elem_blk, ", MeshTopology%num_elem_blks, "\n"
-   Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+   Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) "MeshTopology./.num_elem_blk_global, ", MeshTopology%num_elem_blks_global, "\n"
-   Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+   Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) "MeshTopology./.num_node_sets, ", MeshTopology%num_node_sets, "\n"
-   Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+   Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) "MeshTopology./.num_node_sets_global, ", MeshTopology%num_node_sets_global, "\n"
-   Call PetscPrintf(PETSC_COMM_SELF, IOBuffer, iErr); CHKERRQ(iErr)
+   Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
 
    Call MeshTopologyDestroy(MeshTopology)
+   
+   Call PetscViewerDestroy(myviewer,ierr);CHKERRQ(ierr)
    Call EXCLOS(EXO%exoid, iErr)
    EXO%exoid = 0
 
    Call MEF90_Finalize()
-
+100 Format("TestMeshTopologyGetInfo-",I0.4,".txt")
+101 Format("output in file ",A,"\n")
 End Program TestMeshTopologyGetInfo
