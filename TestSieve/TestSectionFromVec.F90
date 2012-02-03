@@ -1,16 +1,9 @@
 Program TestSectionFromVec
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
-#include "finclude/petscmatdef.h"
 
    Use m_MEF90
    Use petsc
-   Use petscvec
-   Use petscmesh
-   Use petscmat
 
    Implicit NONE   
 
@@ -19,9 +12,9 @@ Program TestSectionFromVec
    Type (Element2D_Scal), Dimension(:), Pointer :: Elem2DA
    Type (Vect3D), Dimension(:), Pointer         :: Coords
    
-   Type(Mesh)                                   :: Tmp_Mesh
-   PetscBool                                   :: HasPrefix
-   PetscBool                                   :: verbose
+   Type(DM)                                     :: Tmp_Mesh
+   PetscBool                                    :: HasPrefix
+   PetscBool                                    :: verbose
    PetscErrorCode                               :: iErr
    PetscInt                                     :: i
    Character(len=256)                           :: CharBuffer
@@ -52,17 +45,17 @@ Program TestSectionFromVec
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-   Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-   Call MeshDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
+   Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+   Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Call DMDestroy(Tmp_mesh, iErr); CHKERRQ(iErr)
    Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
 
    Call PetscMemorySetGetMaximumUsage(iErr); CHKERRQ(iErr)
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'scal', 1, SScal, ierr); CHKERRQ(iErr)
-   Call MeshCreateGlobalScatter(MeshTopology%mesh, SScal, ScatterScal, iErr); CHKERRQ(iErr)
-   Call MeshCreateVector(MeshTopology%mesh, SScal, VScal, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'scal', 1, SScal, ierr); CHKERRQ(iErr)
+   Call DMMeshCreateGlobalScatter(MeshTopology%mesh, SScal, ScatterScal, iErr); CHKERRQ(iErr)
+   Call DMMeshCreateGlobalVector(MeshTopology%mesh, SScal, VScal, iErr); CHKERRQ(iErr)
 
-   Call MeshSetMaxDof(MeshTopology%Mesh, dof+1, iErr); CHKERRQ(iErr) 
+   Call DMMeshSetMaxDof(MeshTopology%Mesh, dof+1, iErr); CHKERRQ(iErr) 
 
 
    Do i = 1, N
@@ -75,8 +68,8 @@ Program TestSectionFromVec
       Call SectionRealDestroy(SScal, iErr); CHKERRQ(iErr)
       Call VecDestroy(VScal, iErr); CHKERRQ(iErr)
    
-      Call MeshGetVertexSectionReal(MeshTopology%mesh, 'scal', 1, SScal, ierr); CHKERRQ(iErr)
-      Call MeshCreateVector(MeshTopology%mesh, SScal, VScal, iErr); CHKERRQ(iErr)
+      Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'scal', 1, SScal, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateGlobalVector(MeshTopology%mesh, SScal, VScal, iErr); CHKERRQ(iErr)
       
       
       Call SectionRealSet(SScal, one, iErr); CHKERRQ(iErr)
@@ -88,6 +81,6 @@ Program TestSectionFromVec
    
    Call SectionRealDestroy(SScal, iErr); CHKERRQ(iErr)
    Call VecDestroy(VScal, iErr); CHKERRQ(iErr)
-   Call MeshDestroy(MeshTopology%Mesh, iErr); CHKERRQ(iErr)
+   Call DMDestroy(MeshTopology%Mesh, iErr); CHKERRQ(iErr)
    Call MEF90_Finalize()
 End Program TestSectionFromVec
