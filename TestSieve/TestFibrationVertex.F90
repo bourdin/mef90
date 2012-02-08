@@ -2,32 +2,25 @@ Program TestFibration
 
 
 #include "finclude/petscdef.h"
-#include "finclude/petscvecdef.h"
-#include "finclude/petscmatdef.h"
-#include "finclude/petscviewerdef.h"
-#include "finclude/petscmeshdef.h"
 
    Use m_MEF90
    Use petsc
-   Use petscvec
-   Use petscmat
-   Use petscmesh
 
    Implicit NONE   
 
-   Type (MeshTopology_Type)                     :: MeshTopology
-   Type (EXO_Type)                              :: EXO, MyEXO
+   Type(MeshTopology_Type)                      :: MeshTopology
+   Type(EXO_Type)                               :: EXO, MyEXO
    Type(Element2D_Elast), Dimension(:), Pointer :: ElemVect
    Type(Element2D_Scal), Dimension(:), Pointer  :: ElemScal
    Type(Field)                                  :: Field1, Field2
    
-   PetscBool                                   :: HasPrefix, flg
+   PetscBool                                    :: HasPrefix, flg
    PetscInt                                     :: verbose
    PetscErrorCode                               :: iErr, i, j, iBlk
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: LogViewer, MyLogViewer
-   Type(Mesh)                                   :: Tmp_Mesh
+   Type(DM)                                     :: Tmp_Mesh
    PetscInt                                     :: num_components, num_dof
    PetscInt, Dimension(:), Pointer              :: component_length 
    Type(SectionReal)                            :: Comp1, Comp2
@@ -68,19 +61,19 @@ Program TestFibration
          Write(IOBuffer, *) "Reading the mesh\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
    Else
       If (verbose > 0) Then
          Write(IOBuffer, *) "Calling MeshCreateExodus\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
       If (verbose > 0) Then
          Write(IOBuffer, *) "Calling MeshDistribute\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
    
    If (verbose > 0) Then
@@ -121,7 +114,7 @@ Program TestFibration
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call MeshGetVertexSectionReal(MeshTopology%mesh, 'Field1.Sec', num_dof, Field1%Sec, iErr); CHKERRQ(iErr)
+   Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'Field1.Sec', num_dof, Field1%Sec, iErr); CHKERRQ(iErr)
    Do i = 1, num_components
       Call SectionRealAddSpace(Field1%Sec, iErr); CHKERRQ(iErr)
    End Do 
