@@ -223,7 +223,6 @@ Contains
          Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, set, ierr); CHKERRQ(iErr)
          If (dMeshTopology%elem_blk(iBlk)%Num_Elems > 0) Then
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
-         
             Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
             !Write(MEF90_MyRank + 100,*) MEF90_MyRank, 'set, set_ptr', set, set_ptr
             !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
