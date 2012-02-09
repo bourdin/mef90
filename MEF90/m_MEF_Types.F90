@@ -104,6 +104,8 @@ Module m_MEF_Types
       !!!                  Cell, unused, edges, vertices in2D
       PetscInt                                       :: Num_DoF !! = sum(DoF_Location)
       PetscInt                                       :: Num_Elems
+      Type(IS)                                       :: Cell_IS
+      !!! Cell_IS will eventually replace Elem_ID
       PetscInt, Dimension(:), Pointer                :: Elem_ID
       PetscInt                                       :: Num_Face      
       PetscInt                                       :: Num_Edge
@@ -118,6 +120,7 @@ Module m_MEF_Types
       !!!                 Edges, vertices in2D
       PetscInt                                       :: Num_DoF !! = sum(DoF_Location)
       PetscInt                                       :: Num_Elems
+      Type(IS)                                       :: Face_IS
       PetscInt, Dimension(:), Pointer                :: Elem_ID
       PetscInt                                       :: Num_Edge
       PetscInt                                       :: Num_Vert
@@ -126,6 +129,7 @@ Module m_MEF_Types
    Type Node_Set_Type
       PetscInt                                       :: ID
       PetscInt                                       :: Num_Nodes
+      Type(IS)                                       :: Vertex_IS
       PetscInt, Dimension(:), Pointer                :: Node_ID
    End Type Node_Set_Type
  
@@ -137,15 +141,15 @@ Module m_MEF_Types
       PetscInt                                       :: num_faces
       PetscInt                                       :: num_elems
       ! Element Blocks datas
-      PetscInt                                       :: num_elem_blks_global
+      !PetscInt                                       :: num_elem_blks_global
       PetscInt                                       :: num_elem_blks
       Type(Elem_Blk_Type), Dimension(:), Pointer     :: elem_blk
       ! Node sets datas
-      PetscInt                                       :: num_node_sets_global
+      !PetscInt                                       :: num_node_sets_global
       PetscInt                                       :: num_node_sets 
       Type(Node_Set_Type), Dimension(:), Pointer     :: node_set
       ! Side Sets DATAS
-      PetscInt                                       :: num_side_sets_global
+      !PetscInt                                       :: num_side_sets_global
       PetscInt                                       :: num_side_sets
       Type(DM)                                       :: mesh
       Type(DM)                                       :: meshFS
@@ -337,8 +341,6 @@ Contains
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 200)
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-      Write(CharBuffer, 601) dMeshTopology%num_elem_blks_global
-      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 201) dMeshTopology%num_elem_blks
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Do i = 1, dMeshTopology%Num_Elem_blks
@@ -362,8 +364,6 @@ Contains
       Write(CharBuffer, 600) '\n'
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 300)
-      Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
-      Write(CharBuffer, 701) dMeshTopology%num_node_sets_global
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)
       Write(CharBuffer, 301) dMeshTopology%num_node_sets
       Call PetscViewerASCIIPrintf(viewer, CharBuffer, iErr); CHKERRQ(iErr)

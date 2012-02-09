@@ -249,7 +249,8 @@ Module m_MEF_EXO
       PetscInt                                       :: EXO_MyRank
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
 
-      Do i = 1, dMeshTopology%Num_Elem_Blks_Global
+      Do i = 1, dMeshTopology%Num_Elem_Blks 
+      ! MeshTopology%Num_Elem_Blks is now MeshTopology%Num_Elem_Blks_Global
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_EBProperties
@@ -262,7 +263,7 @@ Module m_MEF_EXO
          End Do
       End Do
       
-      Do i = 1, dMeshTopology%Num_Side_Sets_Global
+      Do i = 1, dMeshTopology%Num_Side_Sets
          Write(IOBuffer, 101) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_SSProperties
@@ -275,7 +276,7 @@ Module m_MEF_EXO
          End Do
       End Do
 
-      Do i = 1, dMeshTopology%Num_Node_Sets_Global
+      Do i = 1, dMeshTopology%Num_Node_Sets
          Write(IOBuffer, 102) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_NSProperties
