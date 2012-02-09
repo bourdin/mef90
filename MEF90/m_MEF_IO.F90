@@ -75,7 +75,7 @@ Module m_MEF_IO
       PetscInt                                       :: EXO_MyRank
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
 
-      Do i = 1, dMeshTopology%Num_Node_Sets_Global
+      Do i = 1, dMeshTopology%Num_Node_Sets
          Write(IOBuffer, 102) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_NSProperties
@@ -107,7 +107,7 @@ Module m_MEF_IO
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
       PetscReal                                      :: TmpEBProperty
 
-      Do i = 1, dMeshTopology%Num_Elem_Blks_Global
+      Do i = 1, dMeshTopology%Num_Elem_Blks
          Write(IOBuffer, 100) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_EBProperties
@@ -137,7 +137,7 @@ Module m_MEF_IO
       PetscInt                                       :: EXO_MyRank
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
 
-      Do i = 1, dMeshTopology%Num_Side_Sets_Global
+      Do i = 1, dMeshTopology%Num_Side_Sets
          Write(IOBuffer, 101) i
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Do j = 1, dEXO%Num_SSProperties

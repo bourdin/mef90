@@ -17,7 +17,6 @@ Program TestMeshTopologyGetInfo
    PetscInt                                     :: verbose = 0
    PetscInt                                     :: iErr
    PetscBool                                    :: HasPrefix
-   Type(DM)                                     :: Tmp_Mesh
    PetscInt                                     :: iBlock
 
 
@@ -35,20 +34,8 @@ Program TestMeshTopologyGetInfo
    
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
-   EXO%exoid = EXOPEN(EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr)
-   
-!  Call EXO_Check_Numbering(EXO, iErr)
-!  If (iErr /= 0) Then
-!     SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
-!  End If
 
-   If (MEF90_NumProcs == 1) Then
-      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-   Else    
-      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-   End If
+   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, MeshTopology%meshFS,ierr); CHKERRQ(iErr)
    
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
@@ -63,20 +50,16 @@ Program TestMeshTopologyGetInfo
    Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
 
    Call MeshTopologyView(MeshTopology, myviewer)
-   Write(IOBuffer, *) "MeshTopology./.num_elem_blk, ", MeshTopology%num_elem_blks, "\n"
+   Write(IOBuffer, *) "MeshTopology./.num_elem_blk,s ", MeshTopology%num_elem_blks, "\n"
    Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
-   Write(IOBuffer, *) "MeshTopology./.num_elem_blk_global, ", MeshTopology%num_elem_blks_global, "\n"
+   Write(IOBuffer, *) "MeshTopology./.num_side_sets, ", MeshTopology%num_side_sets, "\n"
    Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
    Write(IOBuffer, *) "MeshTopology./.num_node_sets, ", MeshTopology%num_node_sets, "\n"
-   Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
-   Write(IOBuffer, *) "MeshTopology./.num_node_sets_global, ", MeshTopology%num_node_sets_global, "\n"
    Call PetscViewerASCIIPrintf(myviewer, IOBuffer, iErr); CHKERRQ(iErr)
 
    Call MeshTopologyDestroy(MeshTopology)
    
    Call PetscViewerDestroy(myviewer,ierr);CHKERRQ(ierr)
-   Call EXCLOS(EXO%exoid, iErr)
-   EXO%exoid = 0
 
    Call MEF90_Finalize()
 100 Format("TestMeshTopologyGetInfo-",I0.4,".txt")

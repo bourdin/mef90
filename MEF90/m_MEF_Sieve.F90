@@ -10,9 +10,8 @@ Module m_MEF_Sieve
    Private
    
    Public :: MeshTopologyGetInfo
-   Public :: MeshTopologyGetInfo2
-   !Public :: MeshInitCoordinates
-   ! This is totally useless and needs to go away...
+   !Public :: MeshTopologyGetInfo2
+
    Public :: FieldCreateVertex
    Public :: FlagCreateVertex
    Public :: FieldDestroy
@@ -21,15 +20,13 @@ Module m_MEF_Sieve
    Public :: MatInsertVertexBoundaryValues
    Public :: FieldInsertVertexBoundaryValues   
    
-   Interface MeshInitCoordinates
-      Module Procedure MeshInitCoordinatesVect2D, MeshInitCoordinatesVect3D
-   End Interface MeshInitCoordinates
-   
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MeshTopologyGetInfo"
+!!! Same as before except that each cpu has the same number of blocks and sets
+!!! with potentially 0 size. 
+!!! 
    Subroutine MeshTopologyGetInfo(dMeshTopology, Comm)
-      !!! Remove the element and coordinate stuff and move in separate functions
       Type (MeshTopology_Type)                     :: dMeshTopology
       MPI_Comm                                     :: Comm
       PetscInt                                     :: iErr, iBlk, iSet
@@ -39,125 +36,7 @@ Contains
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
       PetscInt                                     :: embedDim
       PetscInt                                     :: iE, iElem, blkId, setId, i
-      Type(IS)                                     :: mylabels,tmplabels,set
-      PetscInt, Dimension(:), Pointer              :: mylabels_ptr,tmplabels_ptr,set_ptr
-      PetscInt                                     :: numval
-
-
-      !!! Zero out all informations
-      dMeshTopology%num_dim = 0
-      dMeshTopology%num_verts = 0
-      dMeshTopology%num_elems = 0
-      dMeshTopology%num_elem_blks = 0
-      dMeshTopology%num_elem_blks_global = 0
-      dMeshTopology%num_side_sets = 0
-      dMeshTopology%num_side_sets_global = 0
-      dMeshTopology%num_node_sets = 0
-      dMeshTopology%num_node_sets_global = 0
-      
-      ! Read Global Geometric Parameters
-      !!! Extracts sizes from the Mesh oject
-      !!Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, &
-      !!                        dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,dMeshTopology%Num_Elems,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%meshFS,"height",0,dMeshTopology%Num_Faces,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,dMeshTopology%Num_Verts,ierr);CHKERRQ(ierr)
-
-      Write(*,*) "dMeshTopology%Num_Elems ", dMeshTopology%Num_Elems
-      Write(*,*) "dMeshTopology%Num_Faces ", dMeshTopology%Num_Faces
-      Write(*,*) "dMeshTopology%Num_Verts ", dMeshTopology%Num_Verts
-      ! Read Elem block information
-      CharBuffer = 'Cell Sets'
-      !!! Get the number of labels of type 'CellBlocks' in the mesh
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh, CharBuffer, mylabels, iErr);CHKERRQ(iErr)
-      Call ISGetLocalSize(mylabels,dMeshTopology%Num_Elem_blks,iErr);CHKERRQ(iErr)
-
-      !!! Build an index sets on PETSC_COMM_WORLD collecting all labels without duplicates
-      !!! In order to compute dMeshTopology%Num_elem_blks_global
-      Call ISAllGather(mylabels,tmplabels,ierr);CHKERRQ(ierr)
-      Call ISGetSize(tmplabels,numval,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
-      Call PetscSortRemoveDupsInt(numval,tmplabels_ptr,ierr);CHKERRQ(ierr)
-      dMeshTopology%Num_elem_blks_global = numval
-      Call ISRestoreIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
-      Call ISDestroy(tmplabels,ierr);CHKERRQ(ierr)
-
-      Call ISGetIndicesF90(mylabels,mylabels_ptr,ierr);CHKERRQ(ierr)
-      Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_elem_blks))
-      Do iBlk = 1, dMeshTopology%Num_elem_blks
-         blkId = mylabels_ptr(iBlk)
-         dMeshTopology%elem_blk(iBlk)%elem_type = -1
-         dMeshTopology%elem_blk(iBlk)%dof_location = -1
-         dMeshTopology%Elem_blk(iBlk)%ID = blkId
-         Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr); CHKERRQ(iErr)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, set, ierr); CHKERRQ(iErr)
-         !Write(*,*) 'rank, ID, size', MEF90_MyRank, BlkID, dMeshTopology%elem_blk(iBlk)%Num_Elems
-         Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
-       
-         Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
-         !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
-         Do i = 1, dMeshTopology%elem_blk(iBlk)%Num_Elems
-            dMeshTopology%Elem_blk(iBlk)%Elem_ID(i) = set_ptr(i) + 1 
-         End Do   
-         !!! Converts to Fortran style indexing
-         Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
-         Call ISDestroy(set,iErr);CHKERRQ(iErr)
-      End Do
-      Call ISRestoreIndicesF90(mylabels,mylabels_ptr,iErr);CHKERRQ(iErr)
-      
-      ! Read Node set information
-      CharBuffer = 'Vertex Sets'
-      !!! Get the number of labels of type 'CellBlocks' in the mesh
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh, CharBuffer, mylabels, iErr);CHKERRQ(iErr)
-      Call ISGetLocalSize(mylabels,dMeshTopology%Num_node_sets,iErr);CHKERRQ(iErr)
-
-      Call ISAllGather(mylabels,tmplabels,ierr);CHKERRQ(ierr)
-      Call ISGetSize(tmplabels,numval,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
-      Call PetscSortRemoveDupsInt(numval,tmplabels_ptr,ierr);CHKERRQ(ierr)
-      dMeshTopology%Num_node_sets_global = numval
-      Call ISRestoreIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
-      Call ISDestroy(tmplabels,ierr);CHKERRQ(ierr)
-
-      If (dMeshTopology%num_node_sets > 0) Then
-         !!! This is only because ISGetIndicesF90 / ISRestoreIndicesF90 seems to fail on IS of length 0
-         Call ISGetIndicesF90(mylabels,mylabels_ptr,ierr);CHKERRQ(ierr)
-         Allocate(dMeshTopology%node_set(dMeshTopology%Num_node_sets))
-         Do iBlk = 1, dMeshTopology%Num_node_sets
-            blkId = mylabels_ptr(iBlk)
-            dMeshTopology%node_set(iBlk)%ID = blkId
-            Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%node_set(iBlk)%Num_Nodes, ierr); CHKERRQ(iErr)
-            Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, set, ierr); CHKERRQ(iErr)
-            Allocate(dMeshTopology%node_set(iBlk)%Node_ID(dMeshTopology%node_set(iBlk)%num_nodes))
-         
-            Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
-            Do i = 1, dMeshTopology%node_set(iBlk)%num_nodes
-               dMeshTopology%node_set(iBlk)%node_ID(i) = set_ptr(i) + 1 - dMeshTopology%num_elems
-            End Do   
-            !!! Converts to Fortran style indexing
-            Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
-            Call ISDestroy(set,iErr);CHKERRQ(iErr)
-         End Do
-         Call ISRestoreIndicesF90(mylabels,mylabels_ptr,iErr);CHKERRQ(iErr)
-      End If
-   End Subroutine MeshTopologyGetInfo
-    
-#undef __FUNCT__
-#define __FUNCT__ "MeshTopologyGetInfo2"
-!!! Same as before except that each cpu has the same number of blocks and sets
-!!! with potentially 0 size. 
-!!! 
-   Subroutine MeshTopologyGetInfo2(dMeshTopology, Comm)
-      Type (MeshTopology_Type)                     :: dMeshTopology
-      MPI_Comm                                     :: Comm
-      PetscInt                                     :: iErr, iBlk, iSet
-      Character(len=256)                           :: CharBuffer
-      
-      PetscReal, Dimension(:,:), Pointer           :: array
-      PetscInt, Dimension(:,:), Pointer            :: arrayCon
-      PetscInt                                     :: embedDim
-      PetscInt                                     :: iE, iElem, numIds, blkId, setId, i
-      Type(IS)                                     :: mylabels,labels,tmplabels,set
+      Type(IS)                                     :: mylabels,labels,tmplabels
       PetscInt, Dimension(:), Pointer              :: mylabels_ptr,labels_ptr,tmplabels_ptr,set_ptr
       PetscInt                                     :: numval
 
@@ -167,32 +46,22 @@ Contains
       dMeshTopology%num_verts = 0
       dMeshTopology%num_elems = 0
       dMeshTopology%num_elem_blks = 0
-      dMeshTopology%num_elem_blks_global = 0
       dMeshTopology%num_side_sets = 0
-      dMeshTopology%num_side_sets_global = 0
       dMeshTopology%num_node_sets = 0
-      dMeshTopology%num_node_sets_global = 0
       
       ! Read Global Geometric Parameters
       !!! Extracts sizes from the Mesh oject
-      Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
+      Call DMMeshGetDimension(dMeshTopology%mesh,dMeshTopology%num_dim,ierr);CHKERRQ(ierr)
+      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,dMeshTopology%Num_Elems,ierr);CHKERRQ(ierr)
+      !Call DMMeshGetStratumSize(dMeshTopology%meshFS,"height",0,dMeshTopology%Num_Faces,ierr);CHKERRQ(ierr)
+      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,dMeshTopology%Num_Verts,ierr);CHKERRQ(ierr)
       
       ! Read Elem block information
       CharBuffer = 'Cell Sets'
       !!! Get the number of labels of type 'CellBlocks' in the mesh
       !!! Compare to the number initialized in MeshTopology
       Call DMMeshGetLabelIdIS(dMeshTopology%mesh, CharBuffer, mylabels, iErr);CHKERRQ(iErr)
-      Do i = 0, MEF90_NumProcs-1
-         If (MEF90_MyRank == i) Then
-            Write(*,*) 'IS mylabels'
-            Call ISView(mylabels,PETSC_VIEWER_STDOUT_WORLD,ierr)
-            Call MPI_Barrier(Comm,ierr)
-         End If
-      End Do
-      Call ISGetLocalSize(mylabels,numIds,iErr);CHKERRQ(iErr)
-      If (numIds .ne. dMeshTopology%Num_Elem_blks) Then
-         SETERRQ(Comm, PETSC_ERR_ARG_SIZ, 'Invalid number of element blocks ids', ierr)
-      End If
+      Call ISGetLocalSize(mylabels,dMeshTopology%Num_Elem_blks,iErr);CHKERRQ(iErr)
 
       !!! Build an index sets on PETSC_COMM_WORLD collecting all labels without duplicates
       Call ISAllGather(mylabels,tmplabels,ierr);CHKERRQ(ierr)
@@ -206,43 +75,42 @@ Contains
 
       !!! The IS labels has the same value on each CPU, so its _local_ size
       !!! is the number of values, while its _size_ is #values * Communicator size...
-      Call ISGetLocalSize(labels,dMeshTopology%Num_elem_blks_global,ierr);CHKERRQ(ierr)
+      Call ISGetLocalSize(labels,dMeshTopology%Num_elem_blks,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(labels,labels_ptr,ierr);CHKERRQ(ierr)
 
-      Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_elem_blks_global))
-      Do iBlk = 1, dMeshTopology%Num_elem_blks_global
+      Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_elem_blks))
+      Do iBlk = 1, dMeshTopology%Num_elem_blks
          blkId = labels_ptr(iBlk)
          dMeshTopology%elem_blk(iBlk)%elem_type = -1
          dMeshTopology%elem_blk(iBlk)%dof_location = -1
          dMeshTopology%Elem_blk(iBlk)%ID = blkId
          Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr); CHKERRQ(iErr)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, set, ierr); CHKERRQ(iErr)
+         Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Cell_IS, ierr); CHKERRQ(iErr)
+         !!!
+         !!! Remove when  getting rid of Elem_ID in Elem_Blk_Type
+         !!! vvvvvv
          If (dMeshTopology%elem_blk(iBlk)%Num_Elems > 0) Then
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
-            Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
+            Call ISGetIndicesF90(dMeshTopology%elem_blk(iBlk)%Cell_IS,set_ptr,iErr);CHKERRQ(iErr)
             !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
             Do i = 1, dMeshTopology%elem_blk(iBlk)%Num_Elems
                dMeshTopology%Elem_blk(iBlk)%Elem_ID(i) = set_ptr(i) + 1 
             End Do   
             !!! Converts to Fortran style indexing
-            Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
-            Call ISDestroy(set,iErr);CHKERRQ(iErr)
+            Call ISRestoreIndicesF90(dMeshTopology%elem_blk(iBlk)%Cell_IS,set_ptr,iErr);CHKERRQ(iErr)
          End If
+         !!! ^^^^^^
+         !!! Remove when  getting rid of Elem_ID in Elem_Blk_Type
+         !!! 
       End Do
       Call ISRestoreIndicesF90(labels,labels_ptr,iErr);CHKERRQ(iErr)
-      dMeshTopology%Num_elem_blks = dMeshTopology%Num_elem_blks_global
       
       ! Read Node set information
       CharBuffer = 'Vertex Sets'
       !!! Get the number of labels of type 'CellBlocks' in the mesh
       !!! Compare to the number initialized in MeshTopology
       Call DMMeshGetLabelIdIS(dMeshTopology%mesh, CharBuffer, mylabels, iErr);CHKERRQ(iErr)
-      Call ISGetLocalSize(mylabels,numIds,iErr);CHKERRQ(iErr)
-      If (numIds .ne. dMeshTopology%Num_node_sets) Then
-         SETERRQ(Comm, PETSC_ERR_ARG_SIZ, 'Invalid number of node set ids', ierr)
-      End If
-      !!! This test will have to go when Num_node_sets becomes Num_node_sets_local and
-      !!! Num_node_sets_global becomes Num_node_sets
+      Call ISGetLocalSize(mylabels,dMeshTopology%Num_node_sets,iErr);CHKERRQ(iErr)
 
       !!! Build an index sets on PETSC_COMM_WORLD collecting all labels without duplicates
       Call ISAllGather(mylabels,tmplabels,ierr);CHKERRQ(ierr)
@@ -256,62 +124,34 @@ Contains
 
       !!! The IS labels has the same value on each CPU, so its _local_ size
       !!! is the number of values, while its _size_ is #values * Communicator size...
-      Call ISGetLocalSize(labels,dMeshTopology%Num_node_sets_global,ierr);CHKERRQ(ierr)
+      Call ISGetLocalSize(labels,dMeshTopology%Num_node_sets,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(labels,labels_ptr,ierr);CHKERRQ(ierr)
 
-      Allocate(dMeshTopology%node_set(dMeshTopology%Num_node_sets_global))
-      Do iBlk = 1, dMeshTopology%Num_node_sets_global
+      Allocate(dMeshTopology%node_set(dMeshTopology%Num_node_sets))
+      Do iBlk = 1, dMeshTopology%Num_node_sets
          blkId = labels_ptr(iBlk)
          dMeshTopology%node_set(iBlk)%ID = blkId
          Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%node_set(iBlk)%Num_Nodes, ierr); CHKERRQ(iErr)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, set, ierr); CHKERRQ(iErr)
+         Call DMMeshGetStratumIS(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%node_set(iBlk)%Vertex_IS, ierr); CHKERRQ(iErr)
+         !!!
+         !!! Remove everything when geting rid of node_IS in Node_Set_Type
+         !!! vvvvvv
          If (dMeshTopology%node_set(iBlk)%num_nodes > 0) Then
             Allocate(dMeshTopology%node_set(iBlk)%Node_ID(dMeshTopology%node_set(iBlk)%num_nodes))
          
-            Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
+            Call ISGetIndicesF90(dMeshTopology%node_set(iBlk)%Vertex_IS,set_ptr,iErr);CHKERRQ(iErr)
             Do i = 1, dMeshTopology%node_set(iBlk)%num_nodes
                dMeshTopology%node_set(iBlk)%node_ID(i) = set_ptr(i) + 1 - dMeshTopology%num_elems
             End Do   
             !!! Converts to Fortran style indexing
-            Call ISRestoreIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
-            Call ISDestroy(set,iErr);CHKERRQ(iErr)
+            Call ISRestoreIndicesF90(dMeshTopology%node_set(iBlk)%Vertex_IS,set_ptr,iErr);CHKERRQ(iErr)
          End If
+         !!! ^^^^^^
+         !!! Remove everything when geting rid of node_IS in Node_Set_Type
+         !!! 
       End Do
       Call ISRestoreIndicesF90(labels,labels_ptr,iErr);CHKERRQ(iErr)
-      dMeshTopology%Num_node_sets = dMeshTopology%Num_node_sets_global
-   End Subroutine MeshTopologyGetInfo2
-
-
-#undef __FUNCT__
-#define __FUNCT__ "MeshInitCoordinatesVect2D"
-   Subroutine MeshInitCoordinatesVect2D(dMeshTopology, dCoords)
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(Vect2D), Dimension(:), Pointer          :: dCoords
-      
-      PetscReal, Dimension(:,:), Pointer           :: array
-      PetscInt                                     :: iErr
-
-      Call DMMeshGetCoordinatesF90(dMeshTopology%mesh, array, iErr); CHKERRQ(iErr)
-      dCoords%X = array(:,1)
-      dCoords%Y = array(:,2)
-      Call DMMeshRestoreCoordinatesF90(dMeshTopology%mesh, array, iErr); CHKERRQ(iErr)
-   End Subroutine MeshInitCoordinatesVect2D 
-
-#undef __FUNCT__
-#define __FUNCT__ "MeshInitCoordinatesVect3D"
-   Subroutine MeshInitCoordinatesVect3D(dMeshTopology, dCoords)
-      Type(MeshTopology_Type)                      :: dMeshTopology
-      Type(Vect3D), Dimension(:), Pointer          :: dCoords
-
-      PetscReal, Dimension(:,:), Pointer           :: array
-      PetscInt                                     :: iErr
-
-      Call DMMeshGetCoordinatesF90(dMeshTopology%mesh, array, iErr); CHKERRQ(iErr)
-      dCoords%X = array(:,1)
-      dCoords%Y = array(:,2)
-      dCoords%Z = array(:,3)
-      Call DMMeshRestoreCoordinatesF90(dMeshTopology%mesh, array, iErr); CHKERRQ(iErr)
-   End Subroutine MeshInitCoordinatesVect3D 
+   End Subroutine MeshTopologyGetInfo
 
 
 #undef __FUNCT__
