@@ -151,6 +151,7 @@ Module m_MEF_Types
       ! Side Sets DATAS
       !PetscInt                                       :: num_side_sets_global
       PetscInt                                       :: num_side_sets
+      Type(Side_Set_Type), Dimension(:), Pointer     :: Face_Set
       Type(DM)                                       :: mesh
       Type(DM)                                       :: meshFS
    End Type MeshTopology_Type
@@ -295,12 +296,23 @@ Contains
    Subroutine MeshTopologyDestroy(dMeshTopology)
       Type(MeshTopology_Type)         :: dMeshTopology
       PetscInt                        :: iSet, iBlk
+      PetscErrorCode                  :: iErr
       
       If (Size(dMeshTopology%Node_set) > 0) Then
          Do iSet = 1, Size(dMeshTopology%Node_set)
             If (dMeshTopology%Node_set(iSet)%num_nodes>0) Then
                Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
             End If
+            Call ISDestroy(dMeshTopology%Node_set(iSet)%Vertex_IS,ierr);CHKERRQ(ierr)
+         End Do
+         Deallocate (dMeshTopology%Node_Set)
+      End If
+      If (Size(dMeshTopology%Face_set) > 0) Then
+         Do iSet = 1, Size(dMeshTopology%Face_set)
+            If (dMeshTopology%Face_set(iSet)%num_Elems>0) Then
+               Deallocate(dMeshTopology%Face_Set(iSet)%Elem_ID)
+            End If
+            Call ISDestroy(dMeshTopology%Face_set(iSet)%Face_IS,ierr);CHKERRQ(ierr)
          End Do
          Deallocate (dMeshTopology%Node_Set)
       End If
@@ -309,6 +321,7 @@ Contains
             If (dMeshTopology%Elem_Blk(iBlk)%Num_Elems > 0) Then
                Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
             End If
+            Call ISDestroy(dMeshTopology%Elem_blk(iBlk)%Cell_IS,ierr);CHKERRQ(ierr)
          End Do
          Deallocate(dMeshTopology%Elem_blk)
       End If

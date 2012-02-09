@@ -47,8 +47,6 @@ Program TestAssembly
    EXO%filename = Trim(prefix)//'.gen'
 
    Call DMMeshCreateExodusNG(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, MeshTopology%meshFS,ierr); CHKERRQ(iErr)
-
-
    Call DMView(MeshTopology%mesh,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
    Call DMView(MeshTopology%meshFS,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
    
