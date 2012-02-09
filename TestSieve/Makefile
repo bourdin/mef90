@@ -99,6 +99,10 @@ TestCorruption:   ${PETSC_ARCH} TestCorruption.o m_TestCorruption.o ${PETSC_ARCH
 	-${FLINKER} -o ${PETSC_ARCH}/TestCorruption ${PETSC_ARCH}/TestCorruption.o ${PETSC_ARCH}/m_TestCorruption.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 m_TestCorruption.o: ${PETSC_ARCH}
 
+TestDistribute: TestDistribute.o  chkopts
+	-${CLINKER} -o TestDistribute TestDistribute.o ${PETSC_LIB}
+
+
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}

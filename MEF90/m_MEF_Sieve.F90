@@ -57,7 +57,8 @@ Contains
       
       ! Read Global Geometric Parameters
       !!! Extracts sizes from the Mesh oject
-      Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
+      Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, &
+                              dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
       
       ! Read Elem block information
       CharBuffer = 'CellBlocks'
@@ -92,7 +93,6 @@ Contains
          Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
        
          Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
-         Write(MEF90_MyRank + 100,*) MEF90_MyRank, 'set, set_ptr', set, set_ptr
          !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
          Do i = 1, dMeshTopology%elem_blk(iBlk)%Num_Elems
             dMeshTopology%Elem_blk(iBlk)%Elem_ID(i) = set_ptr(i) + 1 
@@ -224,7 +224,6 @@ Contains
          If (dMeshTopology%elem_blk(iBlk)%Num_Elems > 0) Then
             Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
             Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
-            !Write(MEF90_MyRank + 100,*) MEF90_MyRank, 'set, set_ptr', set, set_ptr
             !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
             Do i = 1, dMeshTopology%elem_blk(iBlk)%Num_Elems
                dMeshTopology%Elem_blk(iBlk)%Elem_ID(i) = set_ptr(i) + 1 
@@ -274,7 +273,6 @@ Contains
             Allocate(dMeshTopology%node_set(iBlk)%Node_ID(dMeshTopology%node_set(iBlk)%num_nodes))
          
             Call ISGetIndicesF90(set,set_ptr,iErr);CHKERRQ(iErr)
-            !Write(MEF90_MyRank + 100,*) MEF90_MyRank, 'set, set_ptr', set, set_ptr
             Do i = 1, dMeshTopology%node_set(iBlk)%num_nodes
                dMeshTopology%node_set(iBlk)%node_ID(i) = set_ptr(i) + 1 - dMeshTopology%num_elems
             End Do   
