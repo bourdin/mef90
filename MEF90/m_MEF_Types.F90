@@ -134,6 +134,7 @@ Module m_MEF_Types
       ! Global datas
       PetscInt                                       :: num_dim
       PetscInt                                       :: num_verts
+      PetscInt                                       :: num_faces
       PetscInt                                       :: num_elems
       ! Element Blocks datas
       PetscInt                                       :: num_elem_blks_global
@@ -147,6 +148,7 @@ Module m_MEF_Types
       PetscInt                                       :: num_side_sets_global
       PetscInt                                       :: num_side_sets
       Type(DM)                                       :: mesh
+      Type(DM)                                       :: meshFS
    End Type MeshTopology_Type
    
    Type EXO_Type

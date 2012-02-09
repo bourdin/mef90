@@ -8,12 +8,12 @@ Program TestAssembly
    Implicit NONE   
 
    Type(MeshTopology_Type)                      :: MeshTopology
-   Type(DM)                                     :: Tmp_Mesh
+   Type(DM)                                     :: dmFS
    Type(EXO_Type)                               :: EXO, MyEXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    
-   PetscBool                                   :: HasPrefix
-   PetscBool                                   :: verbose
+   PetscBool                                    :: HasPrefix
+   PetscBool                                    :: verbose
    PetscErrorCode                               :: iErr
    Character(len=256)                           :: filename
    Character(len=256)                           :: prefix
@@ -42,15 +42,19 @@ Program TestAssembly
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   If (MEF90_NumProcs == 1) Then
-      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-   Else
-      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-   End If
+!   If (MEF90_NumProcs == 1) Then
+!      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+!   Else
+!      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+!      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+!      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+!   End If
+   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, MeshTopology%meshFS,ierr); CHKERRQ(iErr)
+   Call DMView(MeshTopology%mesh,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+   Call DMView(MeshTopology%meshFS,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
    
    Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
+
    
    Call DMMeshSetMaxDof(MeshTopology%Mesh, dof, iErr); CHKERRQ(iErr) 
 

@@ -38,7 +38,7 @@ Contains
       PetscReal, Dimension(:,:), Pointer           :: array
       PetscInt, Dimension(:,:), Pointer            :: arrayCon
       PetscInt                                     :: embedDim
-      PetscInt                                     :: iE, iElem, numIds, blkId, setId, i
+      PetscInt                                     :: iE, iElem, blkId, setId, i
       Type(IS)                                     :: mylabels,tmplabels,set
       PetscInt, Dimension(:), Pointer              :: mylabels_ptr,tmplabels_ptr,set_ptr
       PetscInt                                     :: numval
@@ -57,18 +57,20 @@ Contains
       
       ! Read Global Geometric Parameters
       !!! Extracts sizes from the Mesh oject
-      Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, &
-                              dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
-      
+      !!Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, &
+      !!                        dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
+      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,dMeshTopology%Num_Elems,ierr);CHKERRQ(ierr)
+      Call DMMeshGetStratumSize(dMeshTopology%meshFS,"height",0,dMeshTopology%Num_Faces,ierr);CHKERRQ(ierr)
+      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,dMeshTopology%Num_Verts,ierr);CHKERRQ(ierr)
+
+      Write(*,*) "dMeshTopology%Num_Elems ", dMeshTopology%Num_Elems
+      Write(*,*) "dMeshTopology%Num_Faces ", dMeshTopology%Num_Faces
+      Write(*,*) "dMeshTopology%Num_Verts ", dMeshTopology%Num_Verts
       ! Read Elem block information
-      CharBuffer = 'CellBlocks'
+      CharBuffer = 'Cell Sets'
       !!! Get the number of labels of type 'CellBlocks' in the mesh
-      !!! Compare to the number initialized in MeshTopology
       Call DMMeshGetLabelIdIS(dMeshTopology%mesh, CharBuffer, mylabels, iErr);CHKERRQ(iErr)
-      Call ISGetLocalSize(mylabels,numIds,iErr);CHKERRQ(iErr)
-      If (numIds .ne. dMeshTopology%Num_Elem_blks) Then
-         SETERRQ(Comm, PETSC_ERR_ARG_SIZ, 'Invalid number of element blocks ids', ierr)
-      End If
+      Call ISGetLocalSize(mylabels,dMeshTopology%Num_Elem_blks,iErr);CHKERRQ(iErr)
 
       !!! Build an index sets on PETSC_COMM_WORLD collecting all labels without duplicates
       !!! In order to compute dMeshTopology%Num_elem_blks_global
@@ -104,16 +106,10 @@ Contains
       Call ISRestoreIndicesF90(mylabels,mylabels_ptr,iErr);CHKERRQ(iErr)
       
       ! Read Node set information
-      CharBuffer = 'VertexSets'
+      CharBuffer = 'Vertex Sets'
       !!! Get the number of labels of type 'CellBlocks' in the mesh
-      !!! Compare to the number initialized in MeshTopology
       Call DMMeshGetLabelIdIS(dMeshTopology%mesh, CharBuffer, mylabels, iErr);CHKERRQ(iErr)
-      Call ISGetLocalSize(mylabels,numIds,iErr);CHKERRQ(iErr)
-      If (numIds .ne. dMeshTopology%Num_node_sets) Then
-         SETERRQ(Comm, PETSC_ERR_ARG_SIZ, 'Invalid number of node set ids', ierr)
-      End If
-      !!! This test will have to go when Num_node_sets becomes Num_node_sets_local and
-      !!! Num_node_sets_global becomes Num_node_sets
+      Call ISGetLocalSize(mylabels,dMeshTopology%Num_node_sets,iErr);CHKERRQ(iErr)
 
       Call ISAllGather(mylabels,tmplabels,ierr);CHKERRQ(ierr)
       Call ISGetSize(tmplabels,numval,ierr);CHKERRQ(ierr)
@@ -182,7 +178,7 @@ Contains
       Call DMMeshExodusGetInfo(dMeshTopology%mesh, dMeshTopology%Num_Dim, dMeshTopology%Num_Verts, dMeshTopology%Num_Elems, dMeshTopology%Num_Elem_Blks, dMeshTopology%Num_Node_Sets, iErr); CHKERRQ(iErr)
       
       ! Read Elem block information
-      CharBuffer = 'CellBlocks'
+      CharBuffer = 'Cell Sets'
       !!! Get the number of labels of type 'CellBlocks' in the mesh
       !!! Compare to the number initialized in MeshTopology
       Call DMMeshGetLabelIdIS(dMeshTopology%mesh, CharBuffer, mylabels, iErr);CHKERRQ(iErr)
@@ -237,7 +233,7 @@ Contains
       dMeshTopology%Num_elem_blks = dMeshTopology%Num_elem_blks_global
       
       ! Read Node set information
-      CharBuffer = 'VertexSets'
+      CharBuffer = 'Vertex Sets'
       !!! Get the number of labels of type 'CellBlocks' in the mesh
       !!! Compare to the number initialized in MeshTopology
       Call DMMeshGetLabelIdIS(dMeshTopology%mesh, CharBuffer, mylabels, iErr);CHKERRQ(iErr)
