@@ -17,7 +17,6 @@ Program TestCoordinates
    PetscErrorCode                               :: iErr
    PetscInt                                     :: NumVert
    Character(len=256)                           :: prefix
-   Type(DM)                                     :: Tmp_Mesh
    Type(SectionReal)                            :: coordSection
    
    Call MEF90_Initialize()
@@ -32,13 +31,7 @@ Program TestCoordinates
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   If (MEF90_NumProcs == 1) Then
-      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-   Else
-      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-   End If
+   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, MeshTopology%meshFS,ierr); CHKERRQ(iErr)
    Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
    Write(*,*) 'OK MeshTopologyGetInfo'
 

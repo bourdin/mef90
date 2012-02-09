@@ -20,7 +20,6 @@ Program TestFibration
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: LogViewer, MyLogViewer
-   Type(DM)                                     :: Tmp_Mesh
    PetscInt                                     :: num_components, num_dof
    PetscInt, Dimension(:), Pointer              :: component_length 
    Type(SectionReal)                            :: Comp1, Comp2
@@ -56,25 +55,7 @@ Program TestFibration
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   If (MEF90_NumProcs == 1) Then
-      If (verbose > 0) Then
-         Write(IOBuffer, *) "Reading the mesh\n"
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-   Else
-      If (verbose > 0) Then
-         Write(IOBuffer, *) "Calling MeshCreateExodus\n"
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
-      If (verbose > 0) Then
-         Write(IOBuffer, *) "Calling MeshDistribute\n"
-         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      End If
-      Call DMMeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
-      Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
-   End If
+   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, MeshTopology%meshFS,ierr); CHKERRQ(iErr)
    
    If (verbose > 0) Then
       Write(IOBuffer, *) "Initializing MeshTopology object\n"
