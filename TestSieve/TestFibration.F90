@@ -62,7 +62,7 @@ Program TestFibration
    num_components=2
    Allocate (component_length(2))
    component_length(1) = 1
-   component_length(2) = 1
+   component_length(2) = 2
    num_dof = sum(component_length)
 
    Write(IOBuffer, *) "Field1.Sec\n"

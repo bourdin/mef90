@@ -99,7 +99,7 @@ Program TestFibration
    Do i = 1, num_components
       Call SectionRealAddSpace(Field1%Sec, iErr); CHKERRQ(iErr)
    End Do 
-!!! For some reason, it looks like one doesn't need to call SectionRealAllocate of the Section was created with MeshGetVertexSectionReal
+!!! For some reason, it looks like one doesn't need to call SectionRealAllocate if the Section was created with MeshGetVertexSectionReal
    Call SectionRealAllocate(Field1%Sec, iErr); CHKERRQ(iErr)
 
    Do i = 1, MeshTopology%num_verts
@@ -128,6 +128,13 @@ Program TestFibration
    Write(IOBuffer, *) "Field1.Component_Sec(2)\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionRealView(Field1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+   
+   Call PetscPrintf(PETSC_COMM_WORLD, "Now trying to scatter into a Vec",iErr);CHKERRQ(iErr)
+   Call DMMeshCreateGlobalScatter(MeshTopology%mesh,Field1%Sec,Field1%Scatter,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateVector(MeshTopology%mesh,Field1%Sec,Field1%Vec,ierr);CHKERRQ(ierr)
+   Call SectionRealToVec(Field1%Sec,Field1%Scatter,SCATTER_FORWARD,Field1%Vec,iErr);CHKERRQ(iErr);
+   Call VecView(Field1%Vec,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(iErr)
+
    
 300 Format(A)   
    Call MEF90_Finalize()
