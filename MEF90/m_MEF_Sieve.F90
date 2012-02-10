@@ -195,7 +195,7 @@ Contains
       !!! Create the Scatter and global and local Vec
 !      F%Has_Vec  = .TRUE.
       Call DMMeshCreateGlobalScatter(MeshTopology%mesh, F%Sec, F%Scatter, iErr); CHKERRQ(iErr)
-      !Call DMMeshCreateVector(MeshTopology%mesh, F%Sec, F%Vec, iErr); CHKERRQ(iErr)
+      Call DMMeshCreateVector(MeshTopology%mesh, F%Sec, F%Vec, iErr); CHKERRQ(iErr)
       Call SectionRealCreateLocalVector(F%Sec, F%LocalVec, iErr); CHKERRQ(iErr)
    End Subroutine FieldCreateVertex
    
