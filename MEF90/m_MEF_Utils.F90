@@ -7,7 +7,30 @@ Module m_MEF_Utils
    Implicit None
 
  Contains
-    Subroutine Uniq(dComm, dMyVals, dVals)
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_ISAllGatherMerge"
+   !!! Merge all values of an IS, deleting duplicates
+   Subroutine MEF90_ISAllGatherMerge(Comm,labels)
+      MPI_Comm                         :: Comm
+      Type(IS)                         :: labels
+      
+      Type(IS)                         :: tmplabels
+      PetscInt, Dimension(:), Pointer  :: tmplabels_ptr
+      PetscInt                         :: numval
+      PetscErrorCode                   :: ierr
+      
+      Call ISAllGather(labels,tmplabels,ierr);CHKERRQ(ierr)
+      Call ISGetSize(tmplabels,numval,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
+      Call PetscSortRemoveDupsInt(numval,tmplabels_ptr,ierr);CHKERRQ(ierr)
+      call ISDestroy(labels,ierr);CHKERRQ(ierr)
+      Call ISCreateGeneral(Comm,numval,tmplabels_ptr,PETSC_COPY_VALUES,labels,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
+      Call ISDestroy(tmplabels,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90_ISAllGatherMerge
+   
+   
+   Subroutine Uniq(dComm, dMyVals, dVals)
       MPI_Comm                         :: dComm
       PetscInt, Dimension(:), Pointer  :: dMyVals, dVals
       
