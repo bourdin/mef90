@@ -2,24 +2,25 @@ Program TestLabel
 
 #include "finclude/petscdef.h"
 
+   Use m_mef90
    Use petsc
 
    Implicit NONE   
 
-   Type(Mesh)                                   :: Seq_Mesh,Dist_Mesh
+   Type(DM)                                     :: dmBody,dmFS
    
    PetscBool                                    :: HasPrefix,flg
-   PetscErrorCode                               :: iErr
-   Character(len=256)                           :: prefix,filename, buffer, IOBuffer
+   PetscErrorCode                               :: ierr
+   Character(len=256)                           :: prefix,filename,buffer,IOBuffer
    Type(PetscViewer)                            :: MeshViewer
-   Integer                                      :: numproc, rank
-   PetscInt                                     :: numids
-   PetscInt, Dimension(:), Pointer              :: ids
+   Integer                                      :: numproc,rank
+   PetscInt                                     :: num_set
+   PetscInt,Dimension(:),Pointer                :: set_ids
+   Type(IS)                                     :: set_IS
    
-   
-   Call PetscInitialize(PETSC_NULL_CHARACTER,iErr); CHKERRQ(iErr)
-   Call MPI_Comm_size(PETSC_COMM_WORLD,numproc,iErr); CHKERRQ(iErr)
-   Call MPI_Comm_rank(PETSC_COMM_WORLD,rank,iErr); CHKERRQ(iErr)
+   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
+   Call MPI_Comm_size(PETSC_COMM_WORLD,numproc,ierr);CHKERRQ(ierr)
+   Call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr);CHKERRQ(ierr)
    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-p',prefix,HasPrefix,ierr);CHKERRQ(ierr);
    If (.NOT. HasPrefix) Then
@@ -30,46 +31,49 @@ Program TestLabel
 
    !!! Read Mesh
    filename = Trim(prefix)//'.gen'
-   Call MeshCreateExodus(PETSC_COMM_WORLD,filename,Seq_Mesh,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,filename,dmBody,PETSC_NULL,ierr);CHKERRQ(ierr)
 
-   buffer = 'CellBlocks'
-   Call MeshGetLabelSize(Seq_Mesh, buffer, numIds, ierr); CHKERRQ(ierr)  
-   Allocate(ids(numids))
-   Call MeshGetLabelIds(Seq_Mesh, buffer, ids, ierr); CHKERRQ(ierr)
-
-   Write(IOBuffer,*) 'Label CellBlocks size:', numids, '\n'
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(ierr)
-   Write(IOBuffer,*) 'ids: ',ids, '\n'
-   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(ierr)
-   DeAllocate(ids)
+   Call DMMeshGetLabelIdIS(dmBody,'Cell Sets',set_IS,ierr);CHKERRQ(ierr)
+   Call DMMeshGetLabelSize(dmBody,'Cell Sets',num_set,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) rank,': Label Cell Sets size:',num_set,'\n'
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 
 
+   Call PetscPrintf(PETSC_COMM_WORLD,'Raw from the DM\n',ierr);CHKERRQ(ierr)
 
-   !!! Distribute mesh if numproc > 1
-   If (numproc > 1) Then
-      Call MeshDistribute(Seq_Mesh,PETSC_NULL_CHARACTER,Dist_Mesh,ierr);CHKERRQ(ierr)
-      Call MeshDestroy(Seq_Mesh,ierr); CHKERRQ(ierr)
+   Call ISGetLocalSize(set_IS,num_set,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) rank,': label_IS local size:',num_set,'\n'
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 
-      Call MeshGetLabelSize(Dist_Mesh, buffer, numIds, ierr); CHKERRQ(ierr)  
-      Allocate(ids(numids))
-      Call MeshGetLabelIds(Dist_Mesh, buffer, ids, ierr); CHKERRQ(ierr)
+   Call ISGetSize(set_IS,num_set,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) rank,': label_IS size:      ',num_set,'\n'
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 
-      Write(IOBuffer,*) rank, ' Label CellBlocks size:', numids, '\n'
-      Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(ierr)
-      Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      Write(IOBuffer,*) rank, ' ids: ',ids, '\n'
-      Call PetscSynchronizedPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(ierr)
-      Call PetscSynchronizedFlush(PETSC_COMM_WORLD, iErr); CHKERRQ(iErr)
-      DeAllocate(ids)
+   Call ISGetIndicesF90(set_IS,set_ids,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) rank,': labels              ',set_ids,'\n'
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(set_IS,set_ids,ierr);CHKERRQ(ierr)
+   Call PetscSynchronizedFlush(PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+   
+   Call PetscPrintf(PETSC_COMM_WORLD,'Synchronized version\n',ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,set_IS)
+   Call ISGetLocalSize(set_IS,num_set,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) rank,': label_IS local size:',num_set,'\n'
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+
+   Call ISGetSize(set_IS,num_set,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) rank,': label_IS size:      ',num_set,'\n'
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+
+   Call ISGetIndicesF90(set_IS,set_ids,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) rank,': labels              ',set_ids,'\n'
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(set_IS,set_ids,ierr);CHKERRQ(ierr)
+   Call PetscSynchronizedFlush(PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
 
 
-   End If
-
-   If (numproc > 1) Then
-      Call MeshDestroy(Dist_Mesh,ierr);CHKERRQ(ierr);
-   Else
-      Call MeshDestroy(Seq_Mesh,ierr);CHKERRQ(ierr);
-   End If
+   !Call DMDestroy(dmBody,ierr);CHKERRQ(ierr);
+!   Call DMDestroy(dmFS,ierr);CHKERRQ(ierr);
 
    Call PetscFinalize()
 End Program TestLabel
