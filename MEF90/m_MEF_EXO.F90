@@ -661,8 +661,13 @@ Module m_MEF_EXO
    
 #undef __FUNCT__
 #define __FUNCT__ "MeshTopologyWriteGlobal"   
+!!!
+!!! This has to go. 
+!!! Now, all we have to do is to reconstruct the globale IS by merging the local ones, when 
+!!! dGlobalCom != dEXO%Comm
+!!!
    Subroutine MeshTopologyWriteGlobal(dMeshTopology, dEXO, dGlobalComm)
-      !!! Reconstruct the topology informatins for of all meshes in dGlobalComm then write it
+      !!! Reconstruct the topology informations for of all meshes in dGlobalComm then write it
       Type(MeshTopology_Type)                        :: dMeshTopology
       Type(EXO_Type)                                 :: dEXO
       MPI_Comm                                       :: dGlobalComm
@@ -716,6 +721,8 @@ Module m_MEF_EXO
                GlobalMeshTopology%elem_blk(i)%num_elems = dMeshTopology%elem_blk(iBlk)%num_elems
                Allocate(GlobalMeshTopology%elem_blk(i)%elem_id(GlobalMeshTopology%elem_blk(i)%num_elems))
                GlobalMeshTopology%elem_blk(i)%elem_id = dMeshTopology%elem_blk(iBlk)%elem_id
+               Call ISDuplicate(dMeshTopology%elem_blk(iBlk)%Cell_IS,GlobalMeshTopology%elem_blk(i)%Cell_IS,ierr);CHKERRQ(ierr)
+               Call ISCopy(dMeshTopology%elem_blk(iBlk)%Cell_IS,GlobalMeshTopology%elem_blk(i)%Cell_IS,ierr);CHKERRQ(ierr)
                GlobalMeshTopology%elem_blk(i)%DoF_Location = dMeshTopology%elem_blk(iBlk)%DoF_Location
                GlobalMeshTopology%elem_blk(i)%num_DoF = dMeshTopology%elem_blk(iBlk)%num_DoF
             End If
@@ -737,11 +744,14 @@ Module m_MEF_EXO
                GlobalMeshTopology%node_set(i)%num_nodes = dMeshTopology%node_set(iSet)%num_nodes
                Allocate(GlobalMeshTopology%node_set(i)%node_ID(GlobalMeshTopology%node_set(i)%num_nodes))
                GlobalMeshTopology%node_set(i)%node_ID = dMeshTopology%node_set(iSet)%node_ID
+               Call ISDuplicate(dMeshTopology%node_set(iSet)%Vertex_IS,GlobalMeshTopology%node_set(i)%Vertex_IS,ierr);CHKERRQ(ierr)
+               Call ISCopy(dMeshTopology%node_set(iSet)%Vertex_IS,GlobalMeshTopology%node_set(i)%Vertex_IS,ierr);CHKERRQ(ierr)
             End If
          End Do
       End Do
    
-      GlobalMeshTopology%mesh = dMeshTopology%mesh
+      GlobalMeshTopology%mesh   = dMeshTopology%mesh
+      GlobalMeshTopology%meshFS = dMeshTopology%meshFS
       
       Call MeshTopologyWrite(GlobalMeshTopology, dEXO)
       Call MeshTopologyDestroy(GlobalMeshTopology)
