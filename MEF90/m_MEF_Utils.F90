@@ -1,12 +1,10 @@
 Module m_MEF_Utils
 #include "finclude/petscdef.h"
-
    Use m_MEF_Parameters
    Use petsc
-
    Implicit None
 
- Contains
+Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_ISAllGatherMerge"
    !!! Merge all values of an IS, deleting duplicates
