@@ -302,8 +302,8 @@ Contains
          Do iSet = 1, Size(dMeshTopology%Node_set)
             If (dMeshTopology%Node_set(iSet)%num_nodes>0) Then
                Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
+               Call ISDestroy(dMeshTopology%Node_set(iSet)%Vertex_IS,ierr);CHKERRQ(ierr)
             End If
-            Call ISDestroy(dMeshTopology%Node_set(iSet)%Vertex_IS,ierr);CHKERRQ(ierr)
          End Do
          Deallocate (dMeshTopology%Node_Set)
       End If
@@ -311,8 +311,8 @@ Contains
          Do iSet = 1, Size(dMeshTopology%Face_set)
             If (dMeshTopology%Face_set(iSet)%num_Elems>0) Then
                Deallocate(dMeshTopology%Face_Set(iSet)%Elem_ID)
+               Call ISDestroy(dMeshTopology%Face_set(iSet)%Face_IS,ierr);CHKERRQ(ierr)
             End If
-            Call ISDestroy(dMeshTopology%Face_set(iSet)%Face_IS,ierr);CHKERRQ(ierr)
          End Do
          Deallocate (dMeshTopology%Node_Set)
       End If
@@ -320,8 +320,8 @@ Contains
          Do iBlk = 1, Size(dMeshTopology%Elem_Blk)
             If (dMeshTopology%Elem_Blk(iBlk)%Num_Elems > 0) Then
                Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
+               Call ISDestroy(dMeshTopology%Elem_blk(iBlk)%Cell_IS,ierr);CHKERRQ(ierr)
             End If
-            Call ISDestroy(dMeshTopology%Elem_blk(iBlk)%Cell_IS,ierr);CHKERRQ(ierr)
          End Do
          Deallocate(dMeshTopology%Elem_blk)
       End If

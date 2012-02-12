@@ -18,7 +18,8 @@ Program TestLabel
    PetscInt,Dimension(:),Pointer                :: set_ids
    Type(IS)                                     :: set_IS
    
-   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
+   Call MEF90_Initialize()
+   !Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
    Call MPI_Comm_size(PETSC_COMM_WORLD,numproc,ierr);CHKERRQ(ierr)
    Call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr);CHKERRQ(ierr)
    
@@ -75,5 +76,5 @@ Program TestLabel
    !Call DMDestroy(dmBody,ierr);CHKERRQ(ierr);
 !   Call DMDestroy(dmFS,ierr);CHKERRQ(ierr);
 
-   Call PetscFinalize()
+   Call MEF90_Finalize()
 End Program TestLabel
