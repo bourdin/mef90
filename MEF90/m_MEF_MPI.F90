@@ -1,55 +1,54 @@
 Module m_MEF_MPI
 #include "finclude/petscdef.h"
-
    Use m_MEF_Parameters
    Use m_MEF_Types
    Use petsc
    Implicit None
-   Private
 
+   Private
    Public :: MEF90_Initialize
    Public :: MEF90_Finalize
 
-   Integer, Public                      :: Vect2D_MPIType
-   Integer, Public                      :: Vect3D_MPIType
+   Integer,Public                      :: Vect2D_MPIType
+   Integer,Public                      :: Vect3D_MPIType
    
-   Integer, Public                      :: Mat2D_MPIType
-   Integer, Public                      :: Mat3D_MPIType
-   Integer, Public                      :: MatS2D_MPIType
-   Integer, Public                      :: MatS3D_MPIType
+   Integer,Public                      :: Mat2D_MPIType
+   Integer,Public                      :: Mat3D_MPIType
+   Integer,Public                      :: MatS2D_MPIType
+   Integer,Public                      :: MatS3D_MPIType
    
-   Integer, Public                      :: Tens4OS2D_MPIType
-   Integer, Public                      :: Tens4OS3D_MPIType
+   Integer,Public                      :: Tens4OS2D_MPIType
+   Integer,Public                      :: Tens4OS3D_MPIType
    
- Contains
+Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_Initialize"
    Subroutine MEF90_Initialize()
-       PetscInt                          :: iErr
+       PetscInt                        :: ierr
        
-      Call PetscInitialize(PETSC_NULL_CHARACTER, iErr); CHKERRQ(iErr)
+      Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
       Call MPIType_Initialize()
       
-      Call MPI_COMM_RANK(MPI_COMM_WORLD, MEF90_MyRank, iErr)
-      Call MPI_COMM_SIZE(MPI_COMM_WORLD, MEF90_NumProcs, iErr)
+      Call MPI_COMM_RANK(MPI_COMM_WORLD,MEF90_MyRank,ierr)
+      Call MPI_COMM_SIZE(MPI_COMM_WORLD,MEF90_NumProcs,ierr)
    End Subroutine MEF90_Initialize
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_Finalize"
    Subroutine MEF90_Finalize()
-      PetscInt                          :: iErr
+      PetscInt                         :: ierr
       
       Call MPIType_Finalize()
-      Call PetscFinalize(iErr)
+      Call PetscFinalize(ierr)
    End Subroutine MEF90_Finalize
 
 #undef __FUNCT__
 #define __FUNCT__ "MPIType_Initialize"
    Subroutine MPIType_Initialize()
-      PetscInt, Dimension(:), Pointer   :: BlkCounts, Offsets, DataTypes
-      PetscInt                          :: NumBlk, iErr
+      PetscInt,Dimension(:),Pointer    :: BlkCounts,Offsets,DataTypes
+      PetscInt                         :: NumBlk,ierr
       
-      !!! Vect2D, Vect3D, Mat2D, MatS2D, Mat3D, MatS3D, Tens4OS2D, Tens4OSD3D
+      !!! Vect2D,Vect3D,Mat2D,MatS2D,Mat3D,MatS3D,Tens4OS2D,Tens4OSD3D
       NumBlk=1
       Allocate(BlkCounts(0:NumBlk-1))
       Allocate(Offsets(0:NumBlk-1))
@@ -60,52 +59,52 @@ Module m_MEF_MPI
       DataTypes(0) = MPIU_SCALAR
       
       BlkCounts(0) = 2
-      Call MPI_TYPE_STRUCT(1, BlkCounts, Offsets, DataTypes, Vect2D_MPIType, iErr)
-      Call MPI_TYPE_COMMIT(Vect2D_MPIType, iErr)
+      Call MPI_TYPE_STRUCT(1,BlkCounts,Offsets,DataTypes,Vect2D_MPIType,ierr)
+      Call MPI_TYPE_COMMIT(Vect2D_MPIType,ierr)
       
       BlkCounts(0) = 3
-      Call MPI_TYPE_STRUCT(1, BlkCounts, Offsets, DataTypes, Vect3D_MPIType, iErr)
-      Call MPI_TYPE_COMMIT(Vect3D_MPIType, iErr)
+      Call MPI_TYPE_STRUCT(1,BlkCounts,Offsets,DataTypes,Vect3D_MPIType,ierr)
+      Call MPI_TYPE_COMMIT(Vect3D_MPIType,ierr)
       
       
       BlkCounts(0) = 4
-      Call MPI_TYPE_STRUCT(1, BlkCounts, Offsets, DataTypes, Mat2D_MPIType, iErr)
-      Call MPI_TYPE_COMMIT(Mat2D_MPIType, iErr)
+      Call MPI_TYPE_STRUCT(1,BlkCounts,Offsets,DataTypes,Mat2D_MPIType,ierr)
+      Call MPI_TYPE_COMMIT(Mat2D_MPIType,ierr)
       
       BlkCounts(0) = 3
-      Call MPI_TYPE_STRUCT(1, BlkCounts, Offsets, DataTypes, MatS2D_MPIType, iErr)
-      Call MPI_TYPE_COMMIT(MatS2D_MPIType, iErr)
+      Call MPI_TYPE_STRUCT(1,BlkCounts,Offsets,DataTypes,MatS2D_MPIType,ierr)
+      Call MPI_TYPE_COMMIT(MatS2D_MPIType,ierr)
       
       BlkCounts(0) = 9
-      Call MPI_TYPE_STRUCT(1, BlkCounts, Offsets, DataTypes, Mat3D_MPIType, iErr)
-      Call MPI_TYPE_COMMIT(Mat3D_MPIType, iErr)
+      Call MPI_TYPE_STRUCT(1,BlkCounts,Offsets,DataTypes,Mat3D_MPIType,ierr)
+      Call MPI_TYPE_COMMIT(Mat3D_MPIType,ierr)
       
       BlkCounts(0) = 6
-      Call MPI_TYPE_STRUCT(1, BlkCounts, Offsets, DataTypes, MatS3D_MPIType, iErr)
-      Call MPI_TYPE_COMMIT(MatS3D_MPIType, iErr)
+      Call MPI_TYPE_STRUCT(1,BlkCounts,Offsets,DataTypes,MatS3D_MPIType,ierr)
+      Call MPI_TYPE_COMMIT(MatS3D_MPIType,ierr)
       
       BlkCounts(0) = 6
-      Call MPI_TYPE_STRUCT(1, BlkCounts, Offsets, DataTypes, Tens4OS2D_MPIType, iErr)
-      Call MPI_TYPE_COMMIT(Tens4OS2D_MPIType, iErr)
+      Call MPI_TYPE_STRUCT(1,BlkCounts,Offsets,DataTypes,Tens4OS2D_MPIType,ierr)
+      Call MPI_TYPE_COMMIT(Tens4OS2D_MPIType,ierr)
       
       BlkCounts(0) = 21
-      Call MPI_TYPE_STRUCT(1, BlkCounts, Offsets, DataTypes, Tens4OS3D_MPIType, iErr)
-      Call MPI_TYPE_COMMIT(Tens4OS3D_MPIType, iErr)
-      DeAllocate(BlkCounts, Offsets, DataTypes)
+      Call MPI_TYPE_STRUCT(1,BlkCounts,Offsets,DataTypes,Tens4OS3D_MPIType,ierr)
+      Call MPI_TYPE_COMMIT(Tens4OS3D_MPIType,ierr)
+      DeAllocate(BlkCounts,Offsets,DataTypes)
    End Subroutine MPIType_Initialize
    
 #undef __FUNCT__
 #define __FUNCT__ "MPIType_Finalize"
    Subroutine MPIType_Finalize()
-      PetscInt                          :: iErr
+      PetscInt                         :: ierr
       
-      Call MPI_TYPE_FREE(Vect2D_MPIType, iErr)
-      Call MPI_TYPE_FREE(Vect3D_MPIType, iErr)
-      Call MPI_TYPE_FREE(Mat2D_MPIType, iErr)
-      Call MPI_TYPE_FREE(MatS2D_MPIType, iErr)
-      Call MPI_TYPE_FREE(Mat3D_MPIType, iErr)
-      Call MPI_TYPE_FREE(MatS3D_MPIType, iErr)
-      Call MPI_TYPE_FREE(Tens4OS2D_MPIType, iErr)
-      Call MPI_TYPE_FREE(Tens4OS3D_MPIType, iErr)
+      Call MPI_TYPE_FREE(Vect2D_MPIType,ierr)
+      Call MPI_TYPE_FREE(Vect3D_MPIType,ierr)
+      Call MPI_TYPE_FREE(Mat2D_MPIType,ierr)
+      Call MPI_TYPE_FREE(MatS2D_MPIType,ierr)
+      Call MPI_TYPE_FREE(Mat3D_MPIType,ierr)
+      Call MPI_TYPE_FREE(MatS3D_MPIType,ierr)
+      Call MPI_TYPE_FREE(Tens4OS2D_MPIType,ierr)
+      Call MPI_TYPE_FREE(Tens4OS3D_MPIType,ierr)
    End Subroutine MPIType_Finalize
 End Module m_MEF_MPI
