@@ -184,7 +184,7 @@ End Do TimeStep
 
 100   Format('Elastic energy:           ', ES12.5, '\n')    
 101   Format('External Forces Work:     ', ES12.5, '\n')    
-102   Format('Surface energy:           ', ES12.5, '\n')    
+102   Format('Fracture energy:           ', ES12.5, '\n')    
 103   Format('Total energy:             ', ES12.5, '\n')    
 104   Format('Load:                     ', ES12.5, '\n')    
 107   Format('Delamination energy:      ', ES12.5, '\n')    

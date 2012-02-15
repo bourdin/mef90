@@ -374,7 +374,7 @@ Module m_Film_Struct
       dSchemeParam%BTTol            = 1.0D-2
       dSchemeParam%BTInt            = 10
       dSchemeParam%BTScope          = 10000
-      dSchemeParam%Unilateral       = 0
+      dSchemeParam%Unilateral       = VarFrac_Unilateral_NONE
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
       dSchemeParam%InitW            = VarFrac_Init_W_PREV
       dSchemeParam%Irrevtype        = VarFrac_Irrev_Eq
