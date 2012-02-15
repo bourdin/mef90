@@ -446,7 +446,7 @@ Module m_VarFrac_Struct
       dSchemeParam%BTTol            = 1.0D-2
       dSchemeParam%BTInt            = dSchemeParam%AltMinMaxIter
       dSchemeParam%BTScope          = 10000
-      dSchemeParam%Unilateral       = 0
+      dSchemeParam%Unilateral       = VarFrac_Unilateral_NONE
       dSchemeParam%InitV            = VarFrac_Init_V_PREV
       dSchemeParam%Irrevtype        = VarFrac_Irrev_Eq
       dSchemeParam%nbCracks         = 0

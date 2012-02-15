@@ -42,7 +42,7 @@ Subroutine Init_TS_W(AppCtx)
 		Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep, AppCtx%W)
 	Else
 		Call Read_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, AppCtx%MyEXO%VertVariable(VarFrac_VertVar_Delamination)%Offset, AppCtx%TimeStep-1, AppCtx%W)
-	end if
+	End If
 	Call SectionRealToVec(AppCtx%W%Sec, AppCtx%W%Scatter, SCATTER_REVERSE, AppCtx%W%Vec, ierr); CHKERRQ(ierr)
       Case(VarFrac_INIT_W_ONE) ! -initw 4
          Call SectionRealSet(AppCtx%W%Sec, 1.0_Kr, iErr); CHKERRQ(iErr)      
@@ -154,36 +154,35 @@ Subroutine FW_AssemblyBlk(iBlk, AppCtx)
    NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
 
    iBlk_glob=AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
-   If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsDebondable)%Value(iBlk_glob) == 0) Then
-      Call SectionRealZero(AppCtx%WBC%Sec, iErr); CHKERRQ(iErr)         ! When the block is non debondable, (min wrt W is trivial)
-   End If
-   Allocate(F_loc(NumDoFScal))
-   Allocate(U_loc(NumDoFVect))
-   Allocate(U0_loc(NumDoFVect))
-   
-   Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
-      iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
-      
-      Call SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_loc, iErr); CHKERRQ(ierr)
-      Call SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_loc, iErr); CHKERRQ(ierr)
-      Call SectionRealRestrictClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, F_loc, iErr); CHKERRQ(ierr)
-    
-      Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
-   
-		U_eff_elem = 0.0_Kr  
+	If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsDebondable)%Value(iBlk_glob) == 0) Then
+		Call SectionRealZero(AppCtx%WBC%Sec, iErr); CHKERRQ(iErr)         ! When the block is non debondable, (min wrt W is trivial)
+	Else 
+		Allocate(F_loc(NumDoFScal))
+		Allocate(U_loc(NumDoFVect))
+		Allocate(U0_loc(NumDoFVect))
 		
-		! Compute U_elem vector
-		Do iDof=1, NumDoFVect
-			U_eff_elem=U_eff_elem+AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * (U_loc(iDoF)-U0_loc(iDoF))
-		End Do
-		Do iDoF = 1, NumDoFScal
-			F_loc(iDoF) = F_loc(iDoF) +  (2_Kr * AppCtx%MatProp(iBlk_glob)%DelamToughness / AppCtx%MatProp(iBlk_glob)%Ksubst - (U_eff_elem .DotP. U_eff_elem) )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
-		End Do
-	End Do Do_iGauss
-      
-	Call SectionRealUpdateClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
-   End Do Do_iEloc
-
+		Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+			iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+			
+			Call SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_loc, iErr); CHKERRQ(ierr)
+			Call SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_loc, iErr); CHKERRQ(ierr)
+			Call SectionRealRestrictClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, F_loc, iErr); CHKERRQ(ierr)
+			
+			Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
+				U_eff_elem = 0.0_Kr  
+				
+				! Compute U_elem vector
+				Do iDof=1, NumDoFVect
+					U_eff_elem=U_eff_elem+AppCtx%ElemVect(iE)%BF(iDoF, iGauss) * (U_loc(iDoF)-U0_loc(iDoF))
+				End Do
+				Do iDoF = 1, NumDoFScal
+					F_loc(iDoF) = F_loc(iDoF) +  (2_Kr * AppCtx%MatProp(iBlk_glob)%DelamToughness / AppCtx%MatProp(iBlk_glob)%Ksubst - (U_eff_elem .DotP. U_eff_elem) )* AppCtx%ElemScal(iE)%Gauss_C(iGauss) *  AppCtx%ElemScal(iE)%BF(iDoF, iGauss) 
+				End Do
+			End Do Do_iGauss
+			
+			Call SectionRealUpdateClosure(AppCtx%FW%Sec, AppCtx%MeshTopology%Mesh, iE-1, F_loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+		End Do Do_iEloc
+	End If
 
    DeAllocate(U_loc)
    DeAllocate(U0_loc)
