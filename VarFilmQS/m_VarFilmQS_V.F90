@@ -423,11 +423,11 @@ Contains
       
       PetscInt                                     :: iBlk, iBlkId
       Type(SectionReal)                            :: GradientV_Sec
-      PetscReal                                    :: MyFilmEnergyBlock, MySurfaceEnergyBlock, MyBondingLayerEnergyBlock
+      PetscReal                                    :: MyFilmEnergyBlock, MySurfaceEnergyBlock, MyBondingLayerEnergyBlock, MyDebondingEnergyBlock
       PetscReal                                    :: MyObjFunc
       
       Call PetscLogStagePush(AppCtx%LogInfo%RHSAssemblyV_Stage, iErr); CHKERRQ(iErr)
-      !!! Objective function is ElasticEnergy + SurfaceEnergy
+      !!! Objective function is FilmEnergy + BondingLayerEnergy + SurfaceEnergy
       Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_REVERSE, V_Vec, iErr); CHKERRQ(ierr)
 
       MyObjFunc = 0.0_Kr
@@ -437,21 +437,21 @@ Contains
          MyBondingLayerEnergyBlock = 0.0_Kr
          If (AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0) Then
             Select Case (AppCtx%VarFracSchemeParam%Unilateral)
-            Case (VarFrac_Unilateral_NONE)
-               Call FilmEnergy_AssemblyBlk_Brittle(MyFilmEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
-               Call BondingLayerEnergy_AssemblyBlk(MyBondingLayerEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+            	Case (VarFrac_Unilateral_NONE)
+            	   Call FilmEnergy_AssemblyBlk_Brittle(MyFilmEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
+            	   Call BondingLayerEnergy_AssemblyBlk(MyBondingLayerEnergyBlock, iBlk, AppCtx%U%Sec, AppCtx%Theta%Sec, AppCtx%V%Sec, AppCtx)
             End Select
-            MyObjFunc = MyObjFunc + MyFilmEnergyBlock + MyBondingLayerEnergyBlock
+            MyObjFunc = MyObjFunc + MyFilmEnergyBlock ! + MyBondingLayerEnergyBlock
          End If
 
          MySurfaceEnergyBlock = 0.0_Kr
          Select Case (AppCtx%VarFracSchemeParam%ATNum)
-         Case(1)
-            Call FractureEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
-         Case(2)
-            Call FractureEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
-         Case Default
-            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
+         	Case(1)
+         	   Call FractureEnergy_AssemblyBlk_AT1(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
+         	Case(2)
+         	   Call FractureEnergy_AssemblyBlk_AT2(MySurfaceEnergyBlock, iBlk, AppCtx%V%Sec, AppCtx)
+         	Case Default
+         	   SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
          End Select
          MyObjFunc = MyObjFunc + MySurfaceEnergyBlock
       End Do Do_iBlk

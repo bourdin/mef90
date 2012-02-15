@@ -312,7 +312,6 @@ Subroutine DelaminationEnergy_AssemblyBlk(DelaminationEnergyBlock, iBlk, W_Sec, 
             Delamination_Elem = Delamination_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * (1.0_Kr - W_Loc(iDoF))
             flops = flops + 1.0
          End Do
-         
          DelaminationEnergyBlock = DelaminationEnergyBlock + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%MatProp(iBlkId)%DelamToughness * Delamination_Elem 
       End Do Do_iGauss
    End Do Do_iEloc
