@@ -75,10 +75,160 @@ Subroutine HessianU_Assembly(H, AppCtx)
 End Subroutine Hessian
 
 
-Subroutine HessianU_AssemblyBlk_Brittle(H, AppCtx)
+Subroutine HessianU_AssemblyBlk_Brittle(H, iBlkID, AppCtx, DoBC)
+	Type(Mat)                                    :: H
+	PetscInt                                     :: iBlkID
+	Type(AppCtx_Type)                            :: AppCtx
+	PetscBool                                    :: DoBC
+	
+	PetscInt                                     :: iE, iEloc
+	PetscReal, Dimension(:), Pointer             :: U_loc
+	PetscReal, Dimension(:), Pointer             :: U0_loc
+	PetscReal, Dimension(:), Pointer             :: V_loc
+	PetscReal, Dimension(:, :), Pointer          :: H_loc
+	PetscReal                                    :: U_elem
+	PetscReal                                    :: U0_elem
+	PetscReal                                    :: V_elem
+	
+	PetscInt                                     :: NumDoFScal, NumDoFVect
+	PetscInt, Dimension(:), Pointer              :: BCFlag_Loc
+	PetscInt                                     :: iDoF1, iDoF2, iGauss
+
+	!init
+	NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+	NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+	iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+	
+	Allocate(U_loc(NumDoFVect))
+	Allocate(U0_loc(NumDoFVect))
+	Allocate(V_loc(NumDoFScal))
+	Allocate(BCFlag_Loc(NumDoFVect))
+	Allocate(H_loc(NumDoFVect, NumDoFVect))
+	
+	! loop over el in blk
+	Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+		iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+		H_Loc  = 0.0_Kr
+		! get u field, compute u_loc
+		
+		SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc, iErr)
+		SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_Loc, iErr)
+		SectionRealRestrictClosure(AppCtx%V%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr)
+		! get BC field for U if needed
+		If (DoBC) Then
+			Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCUFlag_Loc, iErr); CHKERRQ(ierr)
+		End If
+		Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
+			U_Elem = 0.0_Kr        
+			U0_Elem = 0.0_Kr        
+			V_Elem = 0.0_Kr        
+		
+			Do iDof1=1, NumDoFScal
+				V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * V_Loc(iDoF1)
+			End Do
+			
+			CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
+			
+			Do iDof1=1, NumDoFVect
+				U_Elem = U_Elem + AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) * U_Loc(iDoF1)
+				U0_Elem = U0_Elem + AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) * U0_Loc(iDoF1)
+				
+				! assemble local H matrix
+				
+				Do iDof2=1, NumDoFVect
+					H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * CoefV * ((AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
+					If ((U_Elem-U0_Elem) *  (U_Elem-U0_Elem) .LE. 2_Kr * AppCtx%MatProp(iBlk_glob)%DelamToughness / AppCtx%MatProp(iBlk_glob)%Ksubst) Then
+						H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + 0.5_Kr * AppCtx%MatProp(iBlk_glob)%Ksubst
+					End If
+				End Do
+			End Do 
+	         
+		End Do Do_iGauss
+		! assemble global
+		
+		Call DMMeshAssembleMatrix(AppCtx%H, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, H_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+
+	End Do Do_Elem_iE
+	
+	! clean
+	DeAllocate(H_Loc)
+	DeAllocate(BCFlag_Loc)
+	DeAllocate(V_loc)
+	DeAllocate(U0_loc)
+	DeAllocate(U_loc)
+   
+	
 End Subroutine HessianU_AssemblyBlk_Brittle
 
-Subroutine HessianU_AssemblyBlk_NonBrittle(H, AppCtx)
+Subroutine HessianU_AssemblyBlk_NonBrittle(H, iBlkID, AppCtx, DoBC)
+	Type(Mat)                                    :: H
+	PetscInt                                     :: iBlkID
+	Type(AppCtx_Type)                            :: AppCtx
+	PetscBool                                    :: DoBC
+	
+	PetscInt                                     :: iE, iEloc
+	PetscReal, Dimension(:), Pointer             :: U_loc
+	PetscReal, Dimension(:), Pointer             :: U0_loc
+	PetscReal, Dimension(:, :), Pointer          :: H_loc
+	PetscReal                                    :: U_elem
+	PetscReal                                    :: U0_elem
+	
+	PetscInt                                     :: NumDoFVect
+	PetscInt, Dimension(:), Pointer              :: BCFlag_Loc
+	PetscInt                                     :: iDoF1, iDoF2, iGauss
+
+	!init
+	NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+	iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+	
+	Allocate(U_loc(NumDoFVect))
+	Allocate(U0_loc(NumDoFVect))
+	Allocate(BCFlag_Loc(NumDoFVect))
+	Allocate(H_loc(NumDoFVect, NumDoFVect))
+	
+	! loop over el in blk
+	Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+		iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+		H_Loc  = 0.0_Kr
+		! get u field, compute u_loc
+		
+		SectionRealRestrictClosure(AppCtx%U%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U_Loc, iErr)
+		SectionRealRestrictClosure(AppCtx%U0%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U0_Loc, iErr)
+		! get BC field for U if needed
+		If (DoBC) Then
+			Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCUFlag_Loc, iErr); CHKERRQ(ierr)
+		End If
+		Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
+			U_Elem = 0.0_Kr        
+			U0_Elem = 0.0_Kr        
+			
+			Do iDof1=1, NumDoFVect
+				U_Elem = U_Elem + AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) * U_Loc(iDoF1)
+				U0_Elem = U0_Elem + AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) * U0_Loc(iDoF1)
+				
+				! assemble local H matrix
+				
+				Do iDof2=1, NumDoFVect
+					H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
+					If ((U_Elem-U0_Elem) *  (U_Elem-U0_Elem) .LE. 2_Kr * AppCtx%MatProp(iBlk_glob)%DelamToughness / AppCtx%MatProp(iBlk_glob)%Ksubst) Then
+						H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + 0.5_Kr * AppCtx%MatProp(iBlk_glob)%Ksubst
+					End If
+				End Do
+			End Do 
+	         
+		End Do Do_iGauss
+		! assemble global
+		
+		Call DMMeshAssembleMatrix(AppCtx%H, AppCtx%MeshTopology%mesh, AppCtx%U%Sec, iE-1, H_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+
+	End Do Do_Elem_iE
+	
+	! clean
+	DeAllocate(H_Loc)
+	DeAllocate(BCFlag_Loc)
+	DeAllocate(U0_loc)
+	DeAllocate(U_loc)
+
 End Subroutine HessianU_AssemblyBlk_NonBrittle
 
 Subroutine MatU_Assembly(K, AppCtx)
