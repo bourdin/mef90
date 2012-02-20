@@ -17,6 +17,8 @@ Module m_VarFilmQS_NL_U
    Public :: Step_NL_U
    
 Contains
+#undef __FUNC__ 
+#define __FUNC__ "Init_TS_U"
 Subroutine Init_TS_U(AppCtx)
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
@@ -41,7 +43,8 @@ End Subroutine Init_TS_U
 !!!
 !!! Global Assembly Functions
 !!! 
-
+#undef __FUNC__ 
+#define __FUNC__ "HessianU_Assembly"
 Subroutine HessianU_Assembly(H, AppCtx)
 	Type(Mat)                                    :: H
 	Type(AppCtx_Type)                            :: AppCtx
@@ -78,13 +81,15 @@ Subroutine HessianU_Assembly(H, AppCtx)
    
 End Subroutine HessianU_Assembly
 
-
+#undef __FUNC__ 
+#define __FUNC__ "GradientU_Assembly"
 Subroutine GradientU_Assembly(GradientU, AppCtx)
  
    !!! 
    !!! Block Assembly Routines
    !!!
-
+#undef __FUNC__ 
+#define __FUNC__ "HessianU_AssemblyBlk_Brittle"
 Subroutine HessianU_AssemblyBlk_Brittle(H, iBlkID, AppCtx, DoBC)
 	Type(Mat)                                    :: H
 	PetscInt                                     :: iBlkID
@@ -169,7 +174,8 @@ Subroutine HessianU_AssemblyBlk_Brittle(H, iBlkID, AppCtx, DoBC)
    
 	
 End Subroutine HessianU_AssemblyBlk_Brittle
-
+#undef __FUNC__ 
+#define __FUNC__ "HessianU_AssemblyBlk_NonBrittle"
 Subroutine HessianU_AssemblyBlk_NonBrittle(H, iBlkID, AppCtx, DoBC)
 	Type(Mat)                                    :: H
 	PetscInt                                     :: iBlkID
@@ -241,7 +247,8 @@ Subroutine HessianU_AssemblyBlk_NonBrittle(H, iBlkID, AppCtx, DoBC)
 	DeAllocate(U_loc)
 
 End Subroutine HessianU_AssemblyBlk_NonBrittle
-
+#undef __FUNC__ 
+#define __FUNC__ "GradientU_AssemblyBlk_Brittle"
 Subroutine GradientU_AssemblyBlk_Brittle(GradientU, iBlk, AppCtx)
 	Type(Vec)                                    :: GradientU
 	PetscInt                                     :: iBlkID
@@ -320,7 +327,8 @@ Subroutine GradientU_AssemblyBlk_Brittle(GradientU, iBlk, AppCtx)
 	End Do Do_Elem_iE
 	
 End Subroutine GradientU_AssemblyBlk_Brittle
-
+#undef __FUNC__ 
+#define __FUNC__ "GradientU_AssemblyBlk_NonBrittle"
 Subroutine GradientU_AssemblyBlk_NonBrittle(GradientU, iBlk, AppCtx)
 	Type(Vec)                                    :: GradientU
 	PetscInt                                     :: iBlkID
@@ -394,7 +402,8 @@ Subroutine GradientU_AssemblyBlk_NonBrittle(GradientU, iBlk, AppCtx)
 	End Do Do_Elem_iE
 	
 End Subroutine GradientU_AssemblyBlk_NonBrittle
-
+#undef __FUNC__ 
+#define __FUNC__ "Step_U"
 Subroutine Step_U(AppCtx)
    Type(AppCtx_Type)                            :: AppCtx
    

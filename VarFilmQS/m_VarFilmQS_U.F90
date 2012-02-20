@@ -17,6 +17,8 @@ Module m_VarFilmQS_U
    Public :: Step_U
    
 Contains
+#undef __FUNC__ 
+#define __FUNC__ "Init_TS_U"
 Subroutine Init_TS_U(AppCtx)
    Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
@@ -41,6 +43,8 @@ End Subroutine Init_TS_U
 !!!
 !!! Global Assembly Functions
 !!! 
+#undef __FUNC__ 
+#define __FUNC__ "MatU_Assembly"
 Subroutine MatU_Assembly(K, AppCtx)
    Type(Mat)                                    :: K
    Type(AppCtx_Type)                            :: AppCtx
@@ -73,7 +77,8 @@ Subroutine MatU_Assembly(K, AppCtx)
    
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine MatU_Assembly
-
+#undef __FUNC__ 
+#define __FUNC__ "RHSU_Assembly"
    Subroutine RHSU_Assembly(RHS_Vec, AppCtx)
       Type(Vec)                                    :: RHS_Vec
       Type(AppCtx_Type)                            :: AppCtx
@@ -109,6 +114,8 @@ End Subroutine MatU_Assembly
    !!! 
    !!! Block Assembly Routines
    !!!
+#undef __FUNC__ 
+#define __FUNC__ "MatU_AssemblyBlk_Brittle"
 Subroutine MatU_AssemblyBlk_Brittle(K, iBlk, V_Sec, DoBC, AppCtx)
    Type(Mat)                                    :: K
    PetscInt                                     :: iBlk
@@ -186,6 +193,8 @@ Subroutine MatU_AssemblyBlk_Brittle(K, iBlk, V_Sec, DoBC, AppCtx)
    Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 End Subroutine MatU_AssemblyBlk_Brittle
 
+#undef __FUNC__ 
+#define __FUNC__ "MatU_AssemblyBlk_NonBrittle"
 Subroutine MatU_AssemblyBlk_NonBrittle(K, iBlk, DoBC, AppCtx)
    Type(Mat)                                    :: K
    PetscInt                                     :: iBlk
@@ -250,7 +259,8 @@ Subroutine MatU_AssemblyBlk_NonBrittle(K, iBlk, DoBC, AppCtx)
    Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 End Subroutine MatU_AssemblyBlk_NonBrittle
    
-
+#undef __FUNC__ 
+#define __FUNC__ "RHS_AssemblyBlock_ElastBrittle"
 Subroutine RHS_AssemblyBlock_ElastBrittle(RHS_Sec, iBlk, AppCtx)
    PetscInt                                     :: iBlk
    Type(SectionReal)                            :: RHS_Sec
@@ -335,7 +345,8 @@ Subroutine RHS_AssemblyBlock_ElastBrittle(RHS_Sec, iBlk, AppCtx)
       
    Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 End Subroutine RHS_AssemblyBlock_ElastBrittle
-
+#undef __FUNC__ 
+#define __FUNC__ "RHS_AssemblyBlock_ElastNonBrittle"
 Subroutine RHS_AssemblyBlock_ElastNonBrittle(RHS_Sec, iBlk, AppCtx)
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: RHS_Sec
@@ -409,7 +420,8 @@ Subroutine RHS_AssemblyBlock_ElastNonBrittle(RHS_Sec, iBlk, AppCtx)
    Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 End Subroutine RHS_AssemblyBlock_ElastNonBrittle
    
-
+#undef __FUNC__ 
+#define __FUNC__ "Step_U"
 Subroutine Step_U(AppCtx)
    Type(AppCtx_Type)                            :: AppCtx
    
