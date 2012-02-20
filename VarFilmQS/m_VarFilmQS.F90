@@ -14,6 +14,8 @@ Module m_VarFilmQS
    
 Contains
 
+#undef __FUNC__ 
+#define __FUNC__ "VarFilmQSInit"
    Subroutine VarFilmQSInit(AppCtx)
 !!!startregion VARIABLES
       Type(AppCtx_Type)                            :: AppCtx
@@ -239,7 +241,12 @@ Contains
 !!!endregion ALLOC FIELDS 
 
 
-!!!startregion Solver context for U      
+!!!startregion Solver context for U
+If (AppCtx%VarFracSchemeParam%U_UseSNES) Then
+! SNES Solver Ctx
+Else
+
+
    Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
    Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
    Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
@@ -252,6 +259,7 @@ Contains
       Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
       Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
 !      Call KSPView(AppCtx%KSPU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+End If
 !!!endregion Solver context for U      
          
 !!!startregion Solver context for V      
@@ -432,6 +440,8 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine VarFilmQSInit
    
+#undef __FUNC__ 
+#define __FUNC__ "InitFileNames"
    Subroutine InitFileNames(dAppCtx) 
       Type(AppCtx_Type)                            :: dAppCtx
       PetscInt                                     :: iErr
@@ -470,7 +480,8 @@ Contains
       
    End Subroutine InitFileNames
 
-
+#undef __FUNC__ 
+#define __FUNC__ "InitLog"
    Subroutine InitLog(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
@@ -506,6 +517,8 @@ Contains
    Call PetscLogStageRegister("Post Proc",        AppCtx%LogInfo%PostProc_Stage,         iErr)
    End Subroutine InitLog
    
+#undef __FUNC__ 
+#define __FUNC__ "Save_U"
    Subroutine Save_U(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
@@ -515,6 +528,8 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_U
    
+#undef __FUNC__ 
+#define __FUNC__ "Save_V"
    Subroutine Save_V(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
@@ -524,6 +539,8 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_V
 
+#undef __FUNC__ 
+#define __FUNC__ "Save_W"
 Subroutine Save_W(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
@@ -534,7 +551,8 @@ Subroutine Save_W(AppCtx)
 End Subroutine Save_W
 
 
-
+#undef __FUNC__ 
+#define __FUNC__ "Save_StrainStress"
    Subroutine Save_StrainStress(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
@@ -549,6 +567,8 @@ End Subroutine Save_W
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Save_StrainStress
 
+#undef __FUNC__ 
+#define __FUNC__ "ComputeEnergies"
    Subroutine ComputeEnergies(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
 
@@ -566,6 +586,8 @@ End Subroutine Save_W
 
    End Subroutine ComputeEnergies
 
+#undef __FUNC__ 
+#define __FUNC__ "Save_Ener"
    Subroutine Save_Ener(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr, iBlk
@@ -591,6 +613,8 @@ End Subroutine Save_W
 100   Format(I6, 8(ES13.5,'  '))  
    End Subroutine Save_Ener
    
+#undef __FUNC__ 
+#define __FUNC__ "Load_Ener"
    Subroutine Load_Ener(AppCtx, TimeStep)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: TimeStep, iErr
@@ -600,7 +624,8 @@ End Subroutine Save_W
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Load_Ener
    
-   
+#undef __FUNC__ 
+#define __FUNC__ "Init_TS_Loads"
    Subroutine Init_TS_Loads(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr
@@ -616,6 +641,8 @@ End Subroutine Save_W
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine Init_TS_Loads   
    
+#undef __FUNC__ 
+#define __FUNC__ "VarFracQSFinalize"
    Subroutine VarFracQSFinalize(AppCtx)
       Type(AppCtx_Type)                            :: AppCtx
       PetscInt                                     :: iErr, iBlk
@@ -716,6 +743,8 @@ End Subroutine Save_W
 103 Format(A,'-logsummary.txt')
    End Subroutine VarFracQSFinalize
 
+#undef __FUNC__ 
+#define __FUNC__ "Step_UW"
    Subroutine Step_UW(AppCtx)
 	Type(AppCtx_Type)                            :: AppCtx
 
@@ -762,5 +791,6 @@ End Subroutine Save_W
 	800 Format('     Max change W: ', T24, ES12.5, '\n')
 
 End Subroutine Step_UW
+
 End Module m_VarFilmQS
 

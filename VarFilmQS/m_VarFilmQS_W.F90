@@ -19,6 +19,8 @@ Public :: W_Solve
 
 Contains
 
+#undef __FUNC__ 
+#define __FUNC__ "Init_TS_W"
 Subroutine Init_TS_W(AppCtx)
    !!! Set the initial value of W at the beginning of each alternate minimizatins iterations
    Type(AppCtx_Type)                            :: AppCtx
@@ -55,6 +57,8 @@ Subroutine Init_TS_W(AppCtx)
      
 End Subroutine Init_TS_W
    
+#undef __FUNC__ 
+#define __FUNC__ "Update_IrrevW"
 Subroutine Update_IrrevW(AppCtx)
 !!! Updates the WBCFlag field to account for irreversibilty 
 Type(AppCtx_Type)                            :: AppCtx
@@ -108,7 +112,8 @@ End Subroutine Update_IrrevW
 !!! Global assembly functions
 !!!
 
-
+#undef __FUNC__ 
+#define __FUNC__ "FW_Assembly"
 Subroutine FW_Assembly(AppCtx)
    !!! Global dispatch routine for F of the W-problem
       Type(AppCtx_Type)                            :: AppCtx
@@ -134,6 +139,8 @@ Subroutine FW_Assembly(AppCtx)
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine FW_Assembly
    
+#undef __FUNC__ 
+#define __FUNC__ "FW_AssemblyBlk"
 Subroutine FW_AssemblyBlk(iBlk, AppCtx)
    PetscInt             :: iBlk
    Type(AppCtx_Type)          :: AppCtx
@@ -191,6 +198,8 @@ Subroutine FW_AssemblyBlk(iBlk, AppCtx)
 
 End Subroutine FW_AssemblyBlk
 
+#undef __FUNC__ 
+#define __FUNC__ "W_Solve"
 Subroutine W_Solve(AppCtx)
    Type(AppCtx_Type)          :: AppCtx
    

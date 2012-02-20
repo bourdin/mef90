@@ -8,6 +8,8 @@ Module m_VarFilmQS_Post
    Implicit NONE   
    
 Contains
+#undef __FUNC__ 
+#define __FUNC__ "FilmEnergy_Assembly"
 Subroutine FilmEnergy_Assembly(FilmEnergy, FilmEnergyBlock, AppCtx)     
    PetscReal, Intent(OUT)                       :: FilmEnergy
    PetscReal, Dimension(:), Pointer             :: FilmEnergyBlock
@@ -44,6 +46,8 @@ Subroutine FilmEnergy_Assembly(FilmEnergy, FilmEnergyBlock, AppCtx)
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine FilmEnergy_Assembly
 
+#undef __FUNC__ 
+#define __FUNC__ "ExtForcesWork_Assembly"
 Subroutine ExtForcesWork_Assembly(ExtForcesWork, ExtForcesWorkBlock, AppCtx)     
    PetscReal, Intent(OUT)                       :: ExtForcesWork
    PetscReal, Dimension(:), Pointer             :: ExtForcesWorkBlock
@@ -71,6 +75,8 @@ Subroutine ExtForcesWork_Assembly(ExtForcesWork, ExtForcesWorkBlock, AppCtx)
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine ExtForcesWork_Assembly
 
+#undef __FUNC__ 
+#define __FUNC__ "FractureEnergy_Assembly"
 Subroutine FractureEnergy_Assembly(FractureEnergy, FractureEnergyBlock, AppCtx)     
    PetscReal, Intent(OUT)                       :: FractureEnergy
    PetscReal, Dimension(:), Pointer             :: FractureEnergyBlock
@@ -106,6 +112,8 @@ Subroutine FractureEnergy_Assembly(FractureEnergy, FractureEnergyBlock, AppCtx)
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine FractureEnergy_Assembly
 
+#undef __FUNC__ 
+#define __FUNC__ "DelaminationEnergy_Assembly"
 Subroutine DelaminationEnergy_Assembly(DelaminationEnergy, DelaminationEnergyBlock, AppCtx)     
 	PetscReal, Intent(OUT)                       :: DelaminationEnergy
 	PetscReal, Dimension(:), Pointer             :: DelaminationEnergyBlock
@@ -134,6 +142,8 @@ Subroutine DelaminationEnergy_Assembly(DelaminationEnergy, DelaminationEnergyBlo
 	Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 End Subroutine DelaminationEnergy_Assembly
 
+#undef __FUNC__ 
+#define __FUNC__ "BondingLayerEnergy_Assembly"
 Subroutine BondingLayerEnergy_Assembly(BondingLayerEnergy, BondingLayerEnergyBlock, AppCtx)     
    PetscReal, Intent(OUT)                       :: BondingLayerEnergy
    PetscReal, Dimension(:), Pointer             :: BondingLayerEnergyBlock
@@ -168,6 +178,8 @@ End Subroutine BondingLayerEnergy_Assembly
 !!!
 !!! Block Assembly Routines
 !!!
+#undef __FUNC__ 
+#define __FUNC__ "FilmEnergy_AssemblyBlk_Brittle"
 Subroutine FilmEnergy_AssemblyBlk_Brittle(FilmEnergyBlock, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
    PetscReal, Intent(OUT)                       :: FilmEnergyBlock
    PetscInt                                     :: iBlk
@@ -226,6 +238,8 @@ Subroutine FilmEnergy_AssemblyBlk_Brittle(FilmEnergyBlock, iBlk, U_Sec, Theta_Se
    Call PetscLogFlops(flops, iErr);CHKERRQ(iErr)
 End Subroutine FilmEnergy_AssemblyBlk_Brittle
 
+#undef __FUNC__ 
+#define __FUNC__ "FilmEnergy_AssemblyBlk_NonBrittle"
 Subroutine FilmEnergy_AssemblyBlk_NonBrittle(ElasticEnergyBlock, iBlk, U_Sec, Theta_Sec, AppCtx)
       PetscReal, Intent(OUT)                       :: ElasticEnergyBlock
       PetscInt                                     :: iBlk

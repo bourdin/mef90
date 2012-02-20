@@ -25,6 +25,8 @@ Module m_VarFilmQS_V
 Contains
 
 #if defined WITH_TAO
+#undef __FUNC__ 
+#define __FUNC__ "InitTaoBoundsV"
    Subroutine InitTaoBoundsV(TaoApp, LowerBoundV_Vec, UpperBoundV_Vec, AppCtx, iErr)
       !!! Called by TAO: initializes bounds vectors from VIrrev Section
       TAO_APPLICATION                              :: taoapp
@@ -77,7 +79,8 @@ Contains
 
    End Subroutine InitTaoBoundsV
 #endif
-
+#undef __FUNC__ 
+#define __FUNC__ "Init_TS_V"
    Subroutine Init_TS_V(AppCtx)
       !!! Set the initial value of V at the beginning of each alternate minimizatins iterations
       Type(AppCtx_Type)                            :: AppCtx
@@ -173,6 +176,8 @@ Contains
       End Select
    End Subroutine Init_TS_V
    
+#undef __FUNC__ 
+#define __FUNC__ "Update_Irrev"
    Subroutine Update_Irrev(AppCtx)
       !!! Updates the VIrrev vector used in InitTaoBoundsV
       Type(AppCtx_Type)                            :: AppCtx
@@ -314,6 +319,8 @@ Contains
 !!! Global assembly functions
 !!!
    
+#undef __FUNC__ 
+#define __FUNC__ "MatV_Assembly"
    Subroutine MatV_Assembly(K, AppCtx)
    !!! Global dispatch routine for the FE matrix of the V-problem when using KSP
       Type(Mat)                                    :: K
@@ -359,6 +366,8 @@ Contains
    End Subroutine MatV_Assembly
 
 #if defined WITH_TAO
+#undef __FUNC__ 
+#define __FUNC__ "HessianV_Assembly"
    Subroutine HessianV_Assembly(tao, X, H, Hpre, flg, AppCtx, iErr)
    !!! Global dispatch routine for Hessian of the V-problem when using TAO
       TAO_SOLVER         :: tao
@@ -413,6 +422,8 @@ Contains
 #endif
 
 #if defined WITH_TAO
+#undef __FUNC__ 
+#define __FUNC__ "FormFunctionAndGradientV"
    Subroutine FormFunctionAndGradientV(tao, V_Vec, ObjFunc, GradientV_Vec, AppCtx, iErr)
    !!! Global dispatch routine for Gradient and objectiove function of the V-problem when using TAO
       TAO_SOLVER                                   :: tao
@@ -484,7 +495,8 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine FormFunctionAndGradientV
 #endif
-
+#undef __FUNC__ 
+#define __FUNC__ "RHSV_Assembly"
    Subroutine RHSV_Assembly(RHSV_Vec, AppCtx)
    !!! Global dispatch routine for RHS of the V-problem when using KSP
       Type(AppCtx_Type)                            :: AppCtx
@@ -522,6 +534,8 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSV_Assembly
    
+#undef __FUNC__ 
+#define __FUNC__ "MatV_AssemblyBlk_ElastBrittle"
    Subroutine MatV_AssemblyBlk_ElastBrittle(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -622,6 +636,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_ElastBrittle
 
+#undef __FUNC__ 
+#define __FUNC__ "MatV_AssemblyBlk_SurfaceAT2"
    Subroutine MatV_AssemblyBlk_SurfaceAT2(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -687,6 +703,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_SurfaceAT2
 
+#undef __FUNC__ 
+#define __FUNC__ "MatV_AssemblyBlk_SurfaceAT1"
    Subroutine MatV_AssemblyBlk_SurfaceAT1(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -748,6 +766,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_SurfaceAT1
 
+#undef __FUNC__ 
+#define __FUNC__ "RHSV_AssemblyBlk_AT2"
    Subroutine RHSV_AssemblyBlk_AT2(RHSV_Sec, iBlk, AppCtx)
       Type(SectionReal)                            :: RHSV_Sec
       PetscInt                                     :: iBlk
@@ -802,6 +822,8 @@ Contains
    End Subroutine RHSV_AssemblyBlk_AT2
    
 #if defined WITH_TAO   
+#undef __FUNC__ 
+#define __FUNC__ "GradientV_AssemblyBlk_ElastBrittle"
    Subroutine GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
@@ -880,6 +902,8 @@ Contains
       DeAllocate(V_Loc)
    End Subroutine GradientV_AssemblyBlk_ElastBrittle
    
+#undef __FUNC__ 
+#define __FUNC__ "GradientV_AssemblyBlk_SurfaceAT1"
    Subroutine GradientV_AssemblyBlk_SurfaceAT1(GradientV_Sec, iBlk, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
@@ -924,6 +948,8 @@ Contains
       DeAllocate(GradientV_Loc)
    End Subroutine GradientV_AssemblyBlk_SurfaceAT1
 
+#undef __FUNC__ 
+#define __FUNC__ "GradientV_AssemblyBlk_SurfaceAT2"
    Subroutine GradientV_AssemblyBlk_SurfaceAT2(GradientV_Sec, iBlk, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
