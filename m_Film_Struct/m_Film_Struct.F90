@@ -161,6 +161,7 @@ Module m_Film_Struct
       PetscBool                                    :: SaveStrain
       
       PetscBool                                    :: V_UseTao
+      PetscBool                                    :: U_UseSNES
       PetscInt                                     :: CoupledUW
 
    End Type VarFracSchemeParam_Type
