@@ -96,6 +96,7 @@ Module m_VarFilmQS_Types
       Type(PC)                                     :: PCU, PCV, PCW
       Type(LogInfo_Type)                           :: LogInfo
       PetscBool                                    :: IsBT
+      Type(SNES)                                   :: snesAppU
 #if defined WITH_TAO
       TAO_SOLVER                                   :: taoV
       TAO_APPLICATION                              :: taoAppV
