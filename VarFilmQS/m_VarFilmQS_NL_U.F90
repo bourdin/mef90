@@ -84,6 +84,24 @@ End Subroutine HessianU_Assembly
 #undef __FUNC__ 
 #define __FUNC__ "GradientU_Assembly"
 Subroutine GradientU_Assembly(SNES, U, GradientU, AppCtx)
+	Type(Vec)                                    :: GradientU
+	Type(AppCtx_Type)                            :: AppCtx
+	
+	PetscInt                                     :: iBlk, iBlkID, iErr
+	
+	! log
+	! 
+	Do_Elem_iBlk: Do iBlk=1, AppCtx%MeshTopology%Num_Elem_Blks
+		iBlkID=AppCtx%MeshTopology%Elem_Blk(iBlkID)%ID
+		
+		If ( AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0 ) Then
+			Call GradientU_AssemblyBlk_Brittle(K, iBlk, AppCtx)
+		Else
+			Call GradientU_AssemblyBlk_NonBrittle(K, iBlk, AppCtx)
+		End If
+	End Do Do_Elem_iBlk
+	
+End Subroutine GradientU_Assembly
  
    !!! 
    !!! Block Assembly Routines
