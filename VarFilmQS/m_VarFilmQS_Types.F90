@@ -91,12 +91,12 @@ Module m_VarFilmQS_Types
       PetscReal, Dimension(:), Pointer             :: ExtForcesWorkBlock   ! Current TS, All Blocks
       PetscReal, Dimension(:), Pointer             :: TotalEnergyBlock     ! Current TS, All Blocks
       PetscReal                                    :: ErrV
-      Type(Mat)                                    :: KU, KV, KW
-      Type(KSP)                                    :: KSPU, KSPV, KSPW
-      Type(PC)                                     :: PCU, PCV, PCW
+      Type(Mat)                                    :: KU, KV
+      Type(KSP)                                    :: KSPU, KSPV
+      Type(PC)                                     :: PCU, PCV
       Type(LogInfo_Type)                           :: LogInfo
       PetscBool                                    :: IsBT
-      Type(SNES)                                   :: snesAppU
+      Type(SNES)                                   :: SNESU
 #if defined WITH_TAO
       TAO_SOLVER                                   :: taoV
       TAO_APPLICATION                              :: taoAppV
