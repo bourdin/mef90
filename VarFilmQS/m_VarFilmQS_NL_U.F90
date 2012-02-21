@@ -45,7 +45,7 @@ End Subroutine Init_TS_U
 !!! 
 #undef __FUNC__ 
 #define __FUNC__ "HessianU_Assembly"
-Subroutine HessianU_Assembly(H, AppCtx)
+Subroutine HessianU_Assembly(SNES, U, H, HPC, flag, AppCtx)
 	Type(Mat)                                    :: H
 	Type(AppCtx_Type)                            :: AppCtx
    
@@ -83,7 +83,7 @@ End Subroutine HessianU_Assembly
 
 #undef __FUNC__ 
 #define __FUNC__ "GradientU_Assembly"
-Subroutine GradientU_Assembly(GradientU, AppCtx)
+Subroutine GradientU_Assembly(SNES, U, GradientU, AppCtx)
  
    !!! 
    !!! Block Assembly Routines
