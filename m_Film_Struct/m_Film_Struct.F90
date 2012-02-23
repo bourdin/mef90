@@ -361,6 +361,8 @@ Module m_Film_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-v_tao ', L1, A)")               dSchemeParam%V_UseTao, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-u_snes ', L1, A)")               dSchemeParam%U_UseSNES, '\n'
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-coupleduw ', L1, A)")               dSchemeParam%coupleduw, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
    End Subroutine VarFracSchemeParam_View
@@ -393,6 +395,7 @@ Module m_Film_Struct
       dSchemeParam%SaveStress       = PETSC_FALSE
       dSchemeParam%SaveStrain       = PETSC_FALSE
       dSchemeParam%V_UseTao         = PETSC_TRUE
+      dSchemeParam%U_UseSNES        = PETSC_FALSE
 
 	dSchemeParam%CoupledUW      = VarFrac_UW_Coupled
 
@@ -423,6 +426,7 @@ Module m_Film_Struct
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-u_snes',         dSchemeParam%U_UseSNES, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,  '-coupleduw',      dSchemeParam%CoupledUW, flag, iErr); CHKERRQ(iErr) 
       
       Select Case(dSchemeParam%ATNum)
