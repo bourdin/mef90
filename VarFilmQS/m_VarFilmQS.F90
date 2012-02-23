@@ -3,6 +3,7 @@ Module m_VarFilmQS
 
    Use m_VarFilmQS_Types
    Use m_VarFilmQS_U
+   Use m_VarFilmQS_NL_U
    Use m_VarFilmQS_V
    Use m_VarFilmQS_W
    Use m_VarFilmQS_Post
@@ -17,7 +18,6 @@ Contains
 #undef __FUNC__ 
 #define __FUNC__ "VarFilmQSInit"
    Subroutine VarFilmQSInit(AppCtx)
-!!!startregion VARIABLES
       Type(AppCtx_Type)                            :: AppCtx
 
       PetscInt                                     :: iErr, i, iBlk, iTS
@@ -42,8 +42,6 @@ Contains
       PetscReal                                    :: TAO_Default_crtol
       Type(PetscViewer)                            :: flgviewer
       PetscInt, Dimension(:), Pointer              :: SizeVect, SizeScal
-
-!!!endregion VARIABLES      
 
       Call MEF90_Initialize()
 #if defined WITH_TAO
@@ -106,7 +104,6 @@ Contains
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
       AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr) 
 
-!!!startregion READING & DISTRIB MESH
       !!! Reading and distributing sequential mesh
       If (MEF90_NumProcs == 1) Then
          Call DMMeshCreateExodus(PETSC_COMM_WORLD, AppCtx%EXO%filename, AppCtx%MeshTopology%mesh, ierr); CHKERRQ(iErr)
@@ -129,10 +126,6 @@ Contains
       Write(AppCtx%MyEXO%filename, 99) trim(AppCtx%AppParam%prefix), MEF90_MyRank
       AppCtx%MyEXO%exoid = EXOPEN(AppCtx%MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr) 
  99  Format(A, '-', I4.4, '.gen')
-
-!!!endregion READING & DISTRIB MESH
-
-!!!startregion PROPERTIES AND VARIABLES
 
 !!! Initializes the values and names of the properties and variables
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
@@ -181,10 +174,7 @@ Contains
          Write(IOBuffer, *) "Done with ElementInit Scal\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-!!!endregion INIT PROPERTIES AND VARIABLES
 
-
-!!!startregion ALLOC FIELDS 
       !!! Create the Fields for the variables
       Allocate(SizeVect(AppCtx%MeshTopology%Num_dim))
       SizeVect= 1
@@ -238,14 +228,22 @@ Contains
    Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%U%Sec, MATMPIAIJ, AppCtx%KU, iErr); CHKERRQ(iErr)
    Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh, AppCtx%V%Sec, MATMPIAIJ, AppCtx%KV, iErr); CHKERRQ(iErr)
 
-!!!endregion ALLOC FIELDS 
-
 
 !!!startregion Solver context for U
 If (AppCtx%VarFracSchemeParam%U_UseSNES) Then
-! SNES Solver Ctx
+! SNES Solver Ctx for U
+	Call SNESCreate(PETSC_COMM_WORLD, AppCtx%SNESU, iErr); CHKERRQ(iErr)
+	Call SNESSetFunction(AppCtx%SNESU, AppCtx%U, GradientU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
+	Call SNESSetJacobian(AppCtx%SNESU, AppCtx%KU, AppCtx%KU, HessianU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
+	Call SNESGetKSP(AppCtx%SNESU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
+	Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr) 
+	Call PCSetType(AppCtx%PCU, KSPCG, iErr); CHKERRQ(iErr) 
+	Call KSPSetTolerances(AppCtx%KSPU,1.e-4, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr); CHKERRQ(ierr);
+	Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
+	Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
+	Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
+	Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
 Else
-
 
    Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
    Call KSPSetOperators(AppCtx%KSPU, AppCtx%KU, AppCtx%KU, SAME_NONZERO_PATTERN, iErr); CHKERRQ(iErr)
@@ -302,13 +300,6 @@ End If
 !      Call KSPView(AppCtx%KSPV, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 !!!endregion Solver context for V      
 
-!!!startregion Solver context for W     
-
-
-
- 
-!!!endregion Solver context for W      
-
       If (AppCtx%AppParam%verbose > 0) Then
          Write(IOBuffer, *) "Done Creating fields Section, Vec, KSP and Mat\n"
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -340,9 +331,6 @@ End If
          Write(IOBuffer, *) 'Total Number of Time Steps', AppCtx%NumTimeSteps, '\n'
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
       End If
-
-!!!startregion ENERGIES COMPUTATION
-
 
       !!! Allocate energies, and open matching files
    Allocate(AppCtx%FractureEnergy(AppCtx%NumTimeSteps))
@@ -435,7 +423,6 @@ End If
       
       !!! We are not backTracking
       AppCtx%IsBT = PETSC_FALSE
-!!!endregion ENERGIES COMPUTATION
 
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine VarFilmQSInit
