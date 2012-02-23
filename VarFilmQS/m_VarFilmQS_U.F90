@@ -427,7 +427,7 @@ Subroutine Step_U(AppCtx)
    
    PetscInt                                     :: iErr
    KSPConvergedReason                           :: reason
-   PetscInt                                     :: KSPNumIter
+   PetscInt                                     :: KSPNumIter, SNESNumIter
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscReal                                    :: VMin, VMax
    PetscReal                                    :: rDum
@@ -436,43 +436,63 @@ Subroutine Step_U(AppCtx)
    Call PetscLogStagePush(AppCtx%LogInfo%UStep_Stage, iErr); CHKERRQ(iErr)
   
    Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-   If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Assembling the Matrix and RHS for the U-subproblem \n' 
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-   End If
-   Call RHSU_Assembly(AppCtx%RHSU%Vec, AppCtx)
-   If (AppCtx%AppParam%verbose > 2) Then
-      Call VecView(AppCtx%RHSU%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-   End If
-   
-   Call MatU_Assembly(AppCtx%KU, AppCtx)
-   If (AppCtx%AppParam%verbose > 2) Then
-      Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-   End If
-   
-   If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n' 
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-   End If
-   
-   Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-   Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-   
-   Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
-   If ( reason > 0) Then
-      Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 100) KSPNumIter, reason
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Else
-      Write(IOBuffer, 101) reason
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%StopOnError) Then
-         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
-      EndIf
-   End If
+	If(AppCtx%VarFracSchemeParam%U_UseSNES) Then
+		Call SNESSolve(AppCtx%snesU, PETSC_NULL, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
+		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+		Call SNESGetIterationNumber(AppCtx%snesU, KSPNumIter); CHKERRQ(ierr)
+		Call SNESGetConvergedReason(AppCtx%snesU, reason, iErr); CHKERRQ(iErr)
+		If ( reason > 0) Then
+			Call SNESGetIterationNumber(AppCtx%snesU, SNESNumIter, iErr); CHKERRQ(iErr)
+			Write(IOBuffer, 200) SNESNumIter, reason
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		Else
+			Write(IOBuffer, 201) reason
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+			If (AppCtx%AppParam%StopOnError) Then
+					SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'SNES failed to converge, aborting...\n', iErr)
+			EndIf
+		End If
+	Else
+		If (AppCtx%AppParam%verbose > 0) Then
+			Write(IOBuffer, *) 'Assembling the Matrix and RHS for the U-subproblem \n' 
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+		End If
+		Call RHSU_Assembly(AppCtx%RHSU%Vec, AppCtx)
+		If (AppCtx%AppParam%verbose > 2) Then
+			Call VecView(AppCtx%RHSU%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+		End If
+		
+		Call MatU_Assembly(AppCtx%KU, AppCtx)
+		If (AppCtx%AppParam%verbose > 2) Then
+			Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+		End If
+		
+		If (AppCtx%AppParam%verbose > 0) Then
+			Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n' 
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+		End If
+		
+		Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
+		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
+		
+		Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
+		If ( reason > 0) Then
+			Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
+			Write(IOBuffer, 100) KSPNumIter, reason
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		Else
+			Write(IOBuffer, 101) reason
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+			If (AppCtx%AppParam%StopOnError) Then
+					SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
+			EndIf
+		End If
+	End If
    Call PetscLogStagePop(iErr); CHKERRQ(iErr)
 100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
+200 Format('     SNES for U converged in  ', I5, ' iterations. SNESConvergedReason is    ', I5, '\n')
+201 Format('[ERROR] SNES for U diverged. KSPConvergedReason is ', I2, '\n')
    End Subroutine Step_U   
 
 
