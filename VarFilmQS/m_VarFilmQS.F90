@@ -182,6 +182,9 @@ Contains
       SizeScal=1
    Call FieldCreateVertex(AppCtx%U,      'U',      AppCtx%MeshTopology, SizeVect)
    Call FieldCreateVertex(AppCtx%UBC,    'UBC',    AppCtx%MeshTopology, SizeVect)
+	If (AppCtx%VarFracSchemeParam%U_UseSNES) Then
+		Call FieldCreateVertex(AppCtx%GradientU,   'GradientU',   AppCtx%MeshTopology, SizeVect)
+	End If
 
    Call FieldCreateVertex(AppCtx%U0,      'U0',    AppCtx%MeshTopology, SizeVect)
       
@@ -233,15 +236,13 @@ Contains
 If (AppCtx%VarFracSchemeParam%U_UseSNES) Then
 ! SNES Solver Ctx for U
 	Call SNESCreate(PETSC_COMM_WORLD, AppCtx%SNESU, iErr); CHKERRQ(iErr)
-	Call SNESSetFunction(AppCtx%snesU, AppCtx%U%Vec, GradientU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
+	Call SNESSetFunction(AppCtx%snesU, AppCtx%GradientU%Vec, GradientU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
 	Call SNESSetJacobian(AppCtx%snesU, AppCtx%KU, AppCtx%KU, HessianU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
 	Call SNESGetKSP(AppCtx%snesU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
 	Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr) 
-	Call PCSetType(AppCtx%PCU, KSPCG, iErr); CHKERRQ(iErr) 
+	Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr) 
 	Call KSPSetTolerances(AppCtx%KSPU,1.e-4, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr); CHKERRQ(ierr);
 	Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
-	Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
-	Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
 	Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
 Else
 
@@ -639,6 +640,9 @@ End Subroutine Save_W
       Call PetscLogStagePush(AppCtx%LogInfo%Setup_Stage, iErr); CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%U);      CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%UBC);    CHKERRQ(iErr)
+	If (AppCtx%VarFracSchemeParam%U_UseSNES) Then
+		Call FieldDestroy(AppCtx%GradientU,   'GradientU',   AppCtx%MeshTopology, SizeVect)
+	End If
       Call FieldDestroy(AppCtx%V);      CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%VBC);    CHKERRQ(iErr)
    Call FieldDestroy(AppCtx%W);      CHKERRQ(iErr)
