@@ -14,7 +14,6 @@ Module m_VarFilmQS_NL_U
    Public :: Init_TS_NL_U
    Public :: HessianU_Assembly
    Public :: GradientU_Assembly
-   Public :: Step_NL_U
    
 Contains
 #undef __FUNC__ 
@@ -45,8 +44,8 @@ End Subroutine Init_TS_NL_U
 !!! 
 #undef __FUNC__ 
 #define __FUNC__ "HessianU_Assembly"
-Subroutine HessianU_Assembly(SNESapp, U_Vec, H, HPC, flag, AppCtx)
-	Type(SNES)                                   :: SNESapp
+Subroutine HessianU_Assembly(SNESappU, U_Vec, H, HPC, flag, AppCtx)
+	Type(SNES)                                   :: SNESappU
 	Type(Vec)                                    :: U_Vec
 	Type(Mat)                                    :: H, HPC
 	Type(AppCtx_Type)                            :: AppCtx
@@ -87,8 +86,8 @@ End Subroutine HessianU_Assembly
 
 #undef __FUNC__ 
 #define __FUNC__ "GradientU_Assembly"
-Subroutine GradientU_Assembly(SNESapp, U_Vec, GradientU, AppCtx)
-	Type(SNES)                                   :: SNESapp
+Subroutine GradientU_Assembly(SNESappU, U_Vec, GradientU, AppCtx)
+	Type(SNES)                                   :: SNESappU
 	Type(Vec)                                    :: U_Vec
 	Type(Vec)                                    :: GradientU
 	Type(AppCtx_Type)                            :: AppCtx
@@ -430,62 +429,6 @@ Subroutine GradientU_AssemblyBlk_NonBrittle(GradientU, iBlk, AppCtx)
 	End Do Do_Elem_iE
 	
 End Subroutine GradientU_AssemblyBlk_NonBrittle
-#undef __FUNC__ 
-#define __FUNC__ "Step_U"
-Subroutine Step_NL_U(AppCtx)
-   Type(AppCtx_Type)                            :: AppCtx
-   
-   PetscInt                                     :: iErr
-   KSPConvergedReason                           :: reason
-   PetscInt                                     :: KSPNumIter
-   Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   PetscReal                                    :: VMin, VMax
-   PetscReal                                    :: rDum
-   PetscInt                                     :: iDum
-
-   Call PetscLogStagePush(AppCtx%LogInfo%UStep_Stage, iErr); CHKERRQ(iErr)
-  
-   Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-   If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Assembling the Matrix and RHS for the U-subproblem \n' 
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-   End If
-   Call RHSU_Assembly(AppCtx%RHSU%Vec, AppCtx)
-   If (AppCtx%AppParam%verbose > 2) Then
-      Call VecView(AppCtx%RHSU%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-   End If
-   
-   Call MatU_Assembly(AppCtx%KU, AppCtx)
-   If (AppCtx%AppParam%verbose > 2) Then
-      Call MatView(AppCtx%KU, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
-   End If
-   
-   If (AppCtx%AppParam%verbose > 0) Then
-      Write(IOBuffer, *) 'Calling KSPSolve for the U-subproblem\n' 
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
-   End If
-   
-   Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-   Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-   
-   Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
-   If ( reason > 0) Then
-      Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
-      Write(IOBuffer, 100) KSPNumIter, reason
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Else
-      Write(IOBuffer, 101) reason
-      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-      If (AppCtx%AppParam%StopOnError) Then
-         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
-      EndIf
-   End If
-   Call PetscLogStagePop(iErr); CHKERRQ(iErr)
-100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
-101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
-   End Subroutine Step_NL_U   
-
-
 
 End Module m_VarFilmQS_NL_U
 
