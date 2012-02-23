@@ -233,7 +233,7 @@ Contains
 If (AppCtx%VarFracSchemeParam%U_UseSNES) Then
 ! SNES Solver Ctx for U
 	Call SNESCreate(PETSC_COMM_WORLD, AppCtx%SNESU, iErr); CHKERRQ(iErr)
-	Call SNESSetFunction(AppCtx%snesU, AppCtx%U, GradientU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
+	Call SNESSetFunction(AppCtx%snesU, AppCtx%U%Vec, GradientU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
 	Call SNESSetJacobian(AppCtx%snesU, AppCtx%KU, AppCtx%KU, HessianU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
 	Call SNESGetKSP(AppCtx%snesU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
 	Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr) 
