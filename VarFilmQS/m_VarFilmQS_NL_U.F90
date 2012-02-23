@@ -97,7 +97,7 @@ Subroutine GradientU_Assembly(SNESappU, U_Vec, GradientU, AppCtx)
 	! log
 	! 
 	Do_Elem_iBlk: Do iBlk=1, AppCtx%MeshTopology%Num_Elem_Blks
-		iBlkID=AppCtx%MeshTopology%Elem_Blk(iBlkID)%ID
+		iBlkID=AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
 		
 		If ( AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0 ) Then
 			Call GradientU_AssemblyBlk_Brittle(GradientU, iBlk, AppCtx)
