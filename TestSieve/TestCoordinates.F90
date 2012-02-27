@@ -4,7 +4,7 @@ Program TestCoordinates
 
    Use m_MEF90
    Use petsc
-
+ 
    Implicit NONE   
 
    Type(MeshTopology_Type)                      :: MeshTopology
@@ -17,6 +17,7 @@ Program TestCoordinates
    PetscErrorCode                               :: iErr
    PetscInt                                     :: NumVert
    Character(len=256)                           :: prefix
+   Type(Mesh)                                   :: Tmp_Mesh
    Type(SectionReal)                            :: coordSection
    
    Call MEF90_Initialize()

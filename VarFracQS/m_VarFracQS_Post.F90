@@ -558,13 +558,21 @@ Contains
       PetscInt                                     :: iBlk, iBlkID, iELoc, iE, iDoF, iGauss
       PetscReal, Dimension(:), Pointer             :: Stress_Ptr, Strain_Ptr
       PetscLogDouble                               :: flops       
+      
+      
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
+      PetscInt                                     :: iDoF1
+      PetscReal, Dimension(:), Pointer             :: V_Loc
+      PetscReal                                    :: V_Elem, CoefV
+      PetscLogDouble, Parameter                    :: oneflop = 1.0
         
       Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage, iErr); CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event, iErr); CHKERRQ(iErr)
 
       flops = 0.0
-      Allocate(Stress_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
-      Allocate(Strain_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim-1 ) / 2))
+      Allocate(Stress_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim+1 ) / 2))
+      Allocate(Strain_Ptr( AppCtx%MeshTopology%Num_Dim * ( AppCtx%MeshTopology%Num_Dim+1 ) / 2))
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
          NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
          NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
@@ -572,21 +580,27 @@ Contains
          
          Allocate(U(NumDoFVect))
          Allocate(Theta(NumDoFScal))
+         Allocate(V_Loc(NumDoFScal))
 
          Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
             iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
 
             Call SectionRealRestrictClosure(AppCtx%U%Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, U,     iErr); CHKERRQ(ierr)
             Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta, iErr); CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%V%Sec,     AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, V_Loc, iErr); CHKERRQ(ierr)
+            
             Strain_Elem       = 0.0_Kr
             Stress_Elem       = 0.0_Kr
             Theta_Elem        = 0.0_Kr
             Vol               = 0.0_Kr
+            V_Elem = 0.0_Kr        
             Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
                Do iDof = 1, NumDoFScal
                      Theta_Elem  = Theta_Elem + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Theta(iDoF)
                      Vol         = Vol        + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss)
                      flops = flops + 5.0
+                     V_Elem = V_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * V_Loc(iDoF)
+                     flops = flops + 2.0
                End Do
                Do iDoF = 1, NumDoFVect
                   Strain_Elem = Strain_Elem + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) * U(iDoF)
@@ -594,7 +608,15 @@ Contains
             End Do
             Strain_Elem = Strain_Elem / Vol
             Theta_Elem  = Theta_Elem / Vol
-            Stress_Elem = AppCtx%MatProp(iBlkID)%Hookes_Law * ( Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlkId)%Therm_Exp) )
+            V_Elem = V_Elem /Size(AppCtx%ElemVect(iE)%Gauss_C) !This is ugly ... 
+
+            If (AppCtx%VarFracSchemeParam%DamageStress) Then
+               CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
+            Else
+               CoefV = 1
+            End IF 
+
+            Stress_Elem = CoefV*AppCtx%MatProp(iBlkID)%Hookes_Law * ( Strain_Elem - Theta_Elem * (AppCtx%MatProp(iBlkId)%Therm_Exp) )
             flops = flops + 2.0
 #if defined PB_2D
             Stress_Ptr = (/ Stress_Elem%XX, Stress_Elem%YY, Stress_Elem%XY /)
@@ -609,6 +631,7 @@ Contains
          End Do Do_Elem_iE
          DeAllocate(U)
          DeAllocate(Theta)
+         DeAllocate(V_Loc)
       End Do Do_Elem_iBlk
       DeAllocate(Stress_Ptr)
       DeAllocate(Strain_Ptr)

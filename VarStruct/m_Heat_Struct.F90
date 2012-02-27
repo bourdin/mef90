@@ -1,0 +1,162 @@
+Module m_Heat_Struct
+#include "finclude/petscdef.h"
+
+   Use m_MEF90
+
+   Implicit NONE
+
+   PetscInt, Parameter, Public                     :: Heat_Num_Laws                 = 6
+   PetscInt, Parameter, Public                     :: Heat_Constant_ID              = 1
+   PetscInt, Parameter, Public                     :: Heat_Increasing_ID            = 2
+   PetscInt, Parameter, Public                     :: Heat_Decreasing_ID            = 3
+   PetscInt, Parameter, Public                     :: Heat_Non_Monotonic_ID         = 4
+   PetscInt, Parameter, Public                     :: Heat_Damage_ID                = 5
+   PetscInt, Parameter, Public                     :: Heat_Crack_Open_ID            = 6
+   PetscInt, Dimension(Heat_Num_Laws), Parameter, Public  :: Heat_Num_Param  =  (/1, 2, 3, 5, 2, 1/)
+
+   Type MatHeat_Type
+      PetscInt                                     :: Type_Law
+      PetscReal, Dimension(:), Pointer             :: Diffusivity
+   End Type MatHeat_Type
+   
+   Type HeatSchemeParam_Type
+      PetscInt                                     :: HeatMaxIter
+      Character(len=MEF90_MXSTRLEN)                :: HeatTSType
+      Character(len=MEF90_MXSTRLEN)                :: TSTypeOpt1
+   End Type HeatSchemeParam_Type
+
+   Type Heat_TestCase_Type
+      PetscInt                                  :: Index
+      Character(len=MEF90_MXSTRLEN)             :: Description
+   End Type
+
+ Contains
+#undef __FUNCT__
+#define __FUNCT__ "HeatSchemeParam_View"
+   Subroutine HeatSchemeParam_View(dSchemeParam, viewer)
+      Type(HeatSchemeParam_Type)                :: dSchemeParam
+      Type(PetscViewer)                            :: viewer
+      PetscInt                                     :: iErr
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+  
+      Write(IOBuffer, "('-HeatMaxIter ', I1, A)")          dSchemeParam%HeatMaxIter, '\n'
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+
+   End Subroutine HeatSchemeParam_View
+      
+#undef __FUNCT__
+#define __FUNCT__ "HeatSchemeParam_GetFromOptions"
+   Subroutine HeatSchemeParam_GetFromOptions(dSchemeParam)
+      Type(HeatSchemeParam_Type)                   :: dSchemeParam
+      PetscInt                                     :: iErr
+      PetscBool                                    :: flag
+
+      dSchemeParam%HeatMaxIter      =  1000
+      dSchemeParam%HeatTSType       = 'rosw' 
+      dSchemeParam%TSTypeOpt1       = 'ra3pw' 
+      
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-heatmaxiter',          dSchemeParam%HeatMaxIter, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-heattstype',          dSchemeParam%HeatTSType,   flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-tstypeopt1',          dSchemeParam%TSTypeOpt1,   flag, iErr); CHKERRQ(iErr) 
+
+   End Subroutine HeatSchemeParam_GetFromOptions
+   
+#undef __FUNCT__
+#define __FUNCT__ "MatHeat_Write"
+   Subroutine MatHeat_Write(MeshTopology, MatProp, filename)
+      Type(MeshTopology_Type)                      :: MeshTopology
+      Type(MatHeat_Type), Dimension(:), Pointer    :: MatProp
+      Character(len=*)                             :: filename
+      PetscMPIInt                                  :: rank
+      PetscInt                                     :: iBlk, i 
+      
+      Open(File = filename, Unit = F_OUT, Status = 'Unknown')
+      Rewind(F_OUT)
+      Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
+      Do iBlk = 1, Size(MatProp)
+         Write(F_OUT, 120, advance='no') iBlk, MatProp(iBlk)%Type_Law
+         Do i = 1, Heat_Num_Param(MatProp(iBlk)%Type_Law) 
+            Write(F_OUT,121, advance='no') MatProp(iBlk)%Diffusivity(i)
+         End Do
+      End Do
+      Close(F_OUT)
+      
+120   Format(I6, '      ', I6, 2(ES12.5,' '))  
+121   Format((ES12.5,' '))
+   End Subroutine MatHeat_Write
+   
+   
+#undef __FUNCT__
+#define __FUNCT__ "MatHeat_Read"
+   Subroutine MatHeat_Read(MeshTopology, MatProp, filename)
+      Type(MeshTopology_Type)                      :: MeshTopology
+      Type(MatHeat_Type), Dimension(:), Pointer    :: MatProp
+      Character(len=*)                             :: filename
+
+      PetscInt                                     :: iBlk, iErr
+      
+      PetscInt                                     :: NumBlks, IdxMin, IdxMax
+      PetscInt                                     :: Idx, Type_Law, i, col 
+      !PetscReal, Dimension(;), Pointer             :: Diffusivity
+   
+      Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
+      Rewind(F_IN)
+      Read(F_IN, *) NumBlks
+      If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
+         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatHeatRead: non matching blocks numbers', iErr)
+      End If
+      !!! Reading the file once first to get the right number of blocks
+      IdxMin =  100000000
+      IdxMax = -100000000
+      Do iBlk = 1, NumBlks
+         Read(F_IN, *) Idx
+         IdxMin = Min(IdxMin, Idx)
+         IdxMax = Max(IdxMax, Idx)
+      End Do
+      Allocate(MatProp(IdxMin:IdxMax))
+      Rewind(F_IN)
+      Read(F_IN, *) Idx
+      Do iBlk = 1, NumBlks
+         Read(F_IN, *) Idx, Type_Law
+         MatProp(Idx)%Type_Law  = Type_Law
+         Allocate(MatProp(Idx)%Diffusivity(Heat_Num_Param(MatProp(Idx)%Type_Law)))
+      End Do
+      Rewind(F_IN) 
+      Read(F_IN, *) NumBlks
+      Do iBlk = 1, NumBlks
+         Read(F_IN, *) Idx, Type_Law, (MatProp(IBlk)%Diffusivity(col),col=1,Heat_Num_Param(MatProp(IBlk)%Type_Law))
+         print *, Idx, Type_Law, MatProp(IBlk)%Diffusivity
+      End DO 
+      Close(F_IN)
+      Return
+   End Subroutine MatHeat_Read
+
+#undef __FUNCT__
+#define __FUNCT__ "View_Available_Diffusion_Laws"
+   Subroutine View_Available_Diffusion_Laws
+      Type(Heat_TestCase_Type), Dimension(:) , Pointer                 :: DiffusionLaw
+      Character(len=MEF90_MXSTRLEN)                               ::  IOBuffer
+      PetscInt                                                    :: i, iErr 
+
+      Allocate(DiffusionLaw(Heat_Num_Laws))
+      Do i = 1, Heat_Num_Laws
+             DiffusionLaw(i)%Index = i
+      End Do
+      DiffusionLaw(Heat_Constant_ID)%Description      = "Constant diffusion parameter D(T, v) = P1"
+      DiffusionLaw(Heat_Increasing_ID)%Description    = "Increasing diffusion paramter, Mensi's law D(T, v) = P1 exp(P2*T)"
+      DiffusionLaw(Heat_Decreasing_ID)%Description    = "Decreasing diffusion parameter D(T, v) = P1*(P2-T)**P3"
+      DiffusionLaw(Heat_Non_Monotonic_ID)%Description = "Non motonic diffusion D(T, v) = P1(P2-T)**P3+P4*exp(P5*T)"
+      DiffusionLaw(Heat_Damage_ID)%Description        = "Diffusion depending on damage field D(T, v) = min(P1/v, P2)"
+      DiffusionLaw(Heat_Crack_Open_ID)%Description    = "Diffusion depending on crack opening [NOT IMPLEMENTED]"
+
+      Write(IOBuffer, *) '\nDiffusion laws:\n'
+      Write(IOBuffer, *) '\nP1, P2, ..., Pn  Diffusion Parameters\n'
+      Do i = 1, Heat_Num_Laws
+         Write(IOBuffer, "('   [',I2.2,'] ',A)"), DiffusionLaw(i)%Index, Trim(DiffusionLaw(i)%Description)//'\n'
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr);   CHKERRQ(iErr)
+      End Do
+   DeAllocate(DiffusionLaw)
+
+   End Subroutine View_Available_Diffusion_Laws
+
+End Module m_Heat_Struct

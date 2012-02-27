@@ -5,7 +5,7 @@ Program TestFibration
 
    Use m_MEF90
    Use petsc
-
+ 
    Implicit NONE   
 
    Type (MeshTopology_Type)                     :: MeshTopology
@@ -36,7 +36,19 @@ Program TestFibration
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, MeshTopology%meshFS,ierr); CHKERRQ(iErr)
+   If (MEF90_NumProcs == 1) Then
+      Write(IOBuffer, *) "Reading the mesh\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+   Else
+      Write(IOBuffer, *) "Calling MeshCreateExodus\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call MeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, Tmp_mesh, ierr); CHKERRQ(iErr)
+      Write(IOBuffer, *) "Calling MeshDistribute\n"
+      Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      Call MeshDistribute(Tmp_mesh, PETSC_NULL_CHARACTER, MeshTopology%mesh, ierr); CHKERRQ(iErr)
+      Call MeshDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
+   End If
    
    Write(IOBuffer, *) "Initializing MeshTopology object\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)

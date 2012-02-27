@@ -5,7 +5,7 @@ Program TestFibration
 
    Use m_MEF90
    Use petsc
-
+ 
    Implicit NONE   
 
    Type(MeshTopology_Type)                      :: MeshTopology
@@ -20,6 +20,7 @@ Program TestFibration
    Character(len=256)                           :: CharBuffer, IOBuffer, filename
    Character(len=256)                           :: prefix
    Type(PetscViewer)                            :: LogViewer, MyLogViewer
+   Type(Mesh)                                   :: Tmp_Mesh
    PetscInt                                     :: num_components, num_dof
    PetscInt, Dimension(:), Pointer              :: component_length 
    Type(SectionReal)                            :: Comp1, Comp2

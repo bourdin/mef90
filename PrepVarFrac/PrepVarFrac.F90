@@ -109,7 +109,7 @@ Program PrepVarFrac
          End If
       End If
    End If
-   NumTestCase = 14
+   NumTestCase = 15
    Allocate(TestCase(NumTestCase))
    Do i = 1, NumTestCase
       TestCase(i)%Index = i
@@ -128,6 +128,7 @@ Program PrepVarFrac
    TestCase(12)%Description = "Cooling: infinite domain, thermal conduction only with randomly spaced initial cracks (2D)"
    TestCase(13)%Description = "Cooling: Sphere with a spherical cavity, Dirichlet BC"
    TestCase(14)%Description = "Mixed mode I-III 3D"
+   TestCase(15)%Description = "Mode-II loading, using asymptotic form of displacement (scaling) Plane Stress"
    
 
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
@@ -247,7 +248,7 @@ Program PrepVarFrac
    Call MEF90_AskInt(iCase, 'Test Case', BatchUnit, IsBatch)
 
    Select Case(iCase)
-   Case (1,2,3,4,5,6,7,8,9,10,11,12,13)! MIL, geothermal PoC
+   Case (1,2,3,4,5,6,7,8,9,10,11,12,13,15)! MIL, geothermal PoC
 
       !!! Time Steps
       Write(IOBuffer, *) '\nGlobal Variables\n'
@@ -285,6 +286,12 @@ Program PrepVarFrac
       End If
       If (iCase == 13) Then
          Call MEF90_AskReal(a,  'Internal cavity radius',  BatchUnit, IsBatch)
+      End If
+      If (iCase == 15) Then
+         Call MEF90_AskReal(E,  'E effective (for displacement field)',  BatchUnit, IsBatch)
+         Call MEF90_AskReal(nu, 'nu effective (for displacement field)', BatchUnit, IsBatch)
+         Kappa = (3.0-nu)/(1.0+nu)
+         Mu = E / (1.0_Kr + nu) * .5_Kr
       End If
       
       If (.NOT. IsBatch) Then
@@ -776,6 +783,26 @@ Program PrepVarFrac
                   Call SectionRealUpdateClosure(USec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
                   Call SectionRealUpdateClosure(VSec, MeshTopology%Mesh, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr)            
                End Do
+            Case(15)
+               !!! this will break when we do P2 elements, just like everything else here...
+               Do j = 1, MeshTopology%Node_Set(iloc)%Num_Nodes
+                  Call SectionRealRestrict(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+                  R        = sqrt(CoordElem(1)**2 + CoordElem(2)**2)
+                  CTheta   = CoordElem(1)/R
+                  Ctheta2 = sqrt((1.0_Kr + CTheta) * .5_Kr)
+                  If (CoordElem(2) > 0.) Then
+                     Stheta2 = sqrt((1.0_Kr - CTheta) * .5_Kr)
+                  Else
+                     Stheta2 = -sqrt((1.0_Kr - CTheta) * .5_Kr)
+                  End If
+                  Uelem(1) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * STheta2 * (Kappa +2 + CTheta) * U(i)%X
+                  Uelem(2) = T(iStep) * sqrt(R / PETSC_PI * .5_Kr) / mu * .5_Kr * CTheta2 * (2 - Kappa  - CTheta) * U(i)%Y
+                  Uelem(3) = 0.
+                  Velem = V(i)
+                  Call SectionRealUpdate(USec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Uelem, INSERT_VALUES, iErr); CHKERRQ(iErr)
+                  Call SectionRealUpdate(VSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Velem, INSERT_VALUES, iErr); CHKERRQ(iErr) 
+                  Call SectionRealRestore(CoordSec, MeshTopology%Num_Elems + MeshTopology%Node_Set(iloc)%Node_ID(j)-1, Coordelem, iErr); CHKERRQ(iErr)
+               End Do   
             End Select
          End Do
          Call Write_EXO_Result_Vertex(MyEXO, MeshTopology, MyEXO%VertVariable(VarFrac_VertVar_Fracture)%Offset, iStep, VSec) 
