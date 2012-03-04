@@ -269,7 +269,7 @@ Module m_VarFrac_Struct
       
       Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
-      Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
+      Write(F_OUT, *) MeshTopology%Num_Elem_Blks
       Do iBlk = 1, Size(MatProp)
          Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
       End Do
@@ -288,7 +288,7 @@ Module m_VarFrac_Struct
       
       Open(File = filename, Unit = F_OUT, Status = 'Unknown')
       Rewind(F_OUT)
-      Write(F_OUT, *) MeshTopology%Num_Elem_Blks_Global
+      Write(F_OUT, *) MeshTopology%Num_Elem_Blks
       Do iBlk = 1, Size(MatProp)
          Write(F_OUT,120) iBlk, MatProp(iBlk)%Toughness, MatProp(iBlk)%Hookes_Law, MatProp(iBlk)%Therm_Exp
       End Do
@@ -313,7 +313,7 @@ Module m_VarFrac_Struct
       Open(File = filename, Unit = F_IN, Status = 'Unknown', Action = 'Read')
       Rewind(F_IN)
       Read(F_IN, *) NumBlks
-      If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
+      If (NumBlks /= MeshTopology%Num_Elem_Blks) Then
          SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatProp2DRead: non matching blocks numbers', iErr)
       End If
       !!! Reading the file once first to get the right number of blocks
@@ -355,7 +355,7 @@ Module m_VarFrac_Struct
       Open(File = filename, Unit = F_IN, Status = 'Old', Action = 'Read')
       Rewind(F_IN)
       Read(F_IN, *) NumBlks
-      If (NumBlks /= MeshTopology%Num_Elem_Blks_Global) Then
+      If (NumBlks /= MeshTopology%Num_Elem_Blks) Then
          SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, 'MatProp3DRead: non matching blocks numbers', iErr)
       End If
       !!! Reading the file once first to get the right number of blocks
@@ -517,9 +517,9 @@ Module m_VarFrac_Struct
           
       Call MPI_COMM_RANK(dEXO%Comm, EXO_MyRank, iErr)
 
-      NumEB = dMeshTopology%Num_Elem_Blks_Global
-      NumSS = dMeshTopology%Num_Side_Sets_Global
-      NumNS = dMeshTopology%Num_Node_Sets_Global
+      NumEB = dMeshTopology%Num_Elem_Blks
+      NumSS = dMeshTopology%Num_Side_Sets
+      NumNS = dMeshTopology%Num_Node_Sets
       
       If ( (NumEB == 0) .AND. (NumSS == 0) .AND. (NumSS ==0) ) Then
          Call PetscPrintf(PETSC_COMM_WORLD, '[WARNING]: The EXO file contains no EB, SS or NS is this right?\n', iErr); CHKERRQ(iErr)

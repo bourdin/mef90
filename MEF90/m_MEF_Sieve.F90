@@ -59,7 +59,7 @@ Contains
       !!! Compare to the number initialized in MeshTopology
       Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',labels,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(Comm,labels)
-;     Call ISGetIndicesF90(labels,labels_ptr,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(labels,labels_ptr,ierr);CHKERRQ(ierr)
 
       Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_elem_blks))
       Do iBlk = 1,dMeshTopology%Num_elem_blks
