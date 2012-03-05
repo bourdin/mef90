@@ -235,15 +235,16 @@ Contains
 !!!startregion Solver context for U
 If (AppCtx%VarFracSchemeParam%U_UseSNES) Then
 ! SNES Solver Ctx for U
-	Call SNESCreate(PETSC_COMM_WORLD, AppCtx%SNESU, iErr); CHKERRQ(iErr)
+	Call SNESCreate(PETSC_COMM_WORLD, AppCtx%snesU, iErr); CHKERRQ(iErr)
 	Call SNESSetFunction(AppCtx%snesU, AppCtx%GradientU%Vec, GradientU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
 	Call SNESSetJacobian(AppCtx%snesU, AppCtx%KU, AppCtx%KU, HessianU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
+	Call SNESSetFromOptions(AppCtx%snesU, iErr); CHKERRQ(iErr)
 	Call SNESGetKSP(AppCtx%snesU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
+	Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
+	Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
 	Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr) 
 	Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr) 
 	Call KSPSetTolerances(AppCtx%KSPU,1.e-4, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr); CHKERRQ(ierr);
-	Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
-	Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
 Else
 
    Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -641,7 +642,7 @@ End Subroutine Save_W
       Call FieldDestroy(AppCtx%U);      CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%UBC);    CHKERRQ(iErr)
 	If (AppCtx%VarFracSchemeParam%U_UseSNES) Then
-		Call FieldDestroy(AppCtx%GradientU,   'GradientU',   AppCtx%MeshTopology, SizeVect)
+		Call FieldDestroy(AppCtx%GradientU); CHKERRQ(iErr)
 	End If
       Call FieldDestroy(AppCtx%V);      CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%VBC);    CHKERRQ(iErr)
