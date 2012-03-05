@@ -429,7 +429,7 @@ Subroutine Step_U(AppCtx)
    Type(AppCtx_Type)                            :: AppCtx
    
    PetscInt                                     :: iErr
-   KSPConvergedReason                           :: reason
+   SNESConvergedReason                          :: reason
    PetscInt                                     :: KSPNumIter, SNESNumIter
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscReal                                    :: VMin, VMax
@@ -442,7 +442,7 @@ Subroutine Step_U(AppCtx)
 	If(AppCtx%VarFracSchemeParam%U_UseSNES) Then
 		Call SNESSolve(AppCtx%snesU, PETSC_NULL, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-		Call SNESGetIterationNumber(AppCtx%snesU, KSPNumIter); CHKERRQ(ierr)
+		Call SNESGetIterationNumber(AppCtx%snesU, SNESNumIter, iErr); CHKERRQ(ierr)
 		Call SNESGetConvergedReason(AppCtx%snesU, reason, iErr); CHKERRQ(iErr)
 		If ( reason > 0) Then
 			Call SNESGetIterationNumber(AppCtx%snesU, SNESNumIter, iErr); CHKERRQ(iErr)
@@ -454,6 +454,12 @@ Subroutine Step_U(AppCtx)
 			If (AppCtx%AppParam%StopOnError) Then
 					SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'SNES failed to converge, aborting...\n', iErr)
 			EndIf
+		End If
+		
+		If (AppCtx%AppParam%verbose > 1) Then
+		Write(IOBuffer, *) 'VecView(AppCtx U Vec)'
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+			Call VecView(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_SELF, iErr)
 		End If
 	Else
 		If (AppCtx%AppParam%verbose > 0) Then
