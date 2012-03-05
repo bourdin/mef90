@@ -1,7 +1,6 @@
 Module m_VarFilmQS_NL_U
 
 #include "finclude/petscdef.h"
-      use petscsnes
    Use m_VarFilmQS_Types
    Use m_VarFilmQS_Post
    Use m_MEF90
@@ -68,8 +67,8 @@ Subroutine HessianU_Assembly(SNESappU, U_Vec, H, HPC, flag, AppCtx)
 	Call MatAssemblyBegin(H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
 	Call MatAssemblyEnd  (H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
 	
-	Do_Elem_iBlk: Do iBlk=1, AppCtx%MeshTopology%Num_Elem_Blks
-		iBlkID=AppCtx%MeshTopology%Elem_Blk(iBlkID)%ID
+	Do_Elem_iBlk: Do iBlk=120, AppCtx%MeshTopology%Num_Elem_Blks * (-1) / 0
+		iBlkID=AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
 		
 		If ( AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0 ) Then
 			Call HessianU_AssemblyBlk_Brittle(H, iBlk, AppCtx, .TRUE.)
@@ -80,6 +79,11 @@ Subroutine HessianU_Assembly(SNESappU, U_Vec, H, HPC, flag, AppCtx)
 	
 	Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 	Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
+	Call MatDuplicate(H, MAT_COPY_VALUES, HPC, iErr); CHKERRQ(iErr)
+	
+	If (AppCtx%AppParam%verbose > 1) Then
+		Call MatView(H, PETSC_VIEWER_STDOUT_SELF, iErr)
+	End If
 	Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    
 End Subroutine HessianU_Assembly
@@ -105,6 +109,7 @@ Subroutine GradientU_Assembly(SNESappU, U_Vec, GradientU, AppCtx)
 			Call GradientU_AssemblyBlk_NonBrittle(GradientU, iBlk, AppCtx)
 		End If
 	End Do Do_Elem_iBlk
+! 	Call VecView(GradientU, PETSC_VIEWER_STDOUT_SELF, iErr)
 	
 End Subroutine GradientU_Assembly
  
@@ -113,7 +118,7 @@ End Subroutine GradientU_Assembly
    !!!
 #undef __FUNC__ 
 #define __FUNC__ "HessianU_AssemblyBlk_Brittle"
-Subroutine HessianU_AssemblyBlk_Brittle(H, iBlkID, AppCtx, DoBC)
+Subroutine HessianU_AssemblyBlk_Brittle(H, iBlk, AppCtx, DoBC)
 	Type(Mat)                                    :: H
 	PetscInt                                     :: iBlk, iBlkID
 	Type(AppCtx_Type)                            :: AppCtx
@@ -191,7 +196,7 @@ Subroutine HessianU_AssemblyBlk_Brittle(H, iBlkID, AppCtx, DoBC)
 	
 	! clean
 	DeAllocate(H_Loc)
-	DeAllocate(BCFlag_Loc)
+	DeAllocate(BCUFlag_Loc)
 	DeAllocate(V_loc)
 	DeAllocate(U0_loc)
 	DeAllocate(U_loc)
@@ -200,7 +205,7 @@ Subroutine HessianU_AssemblyBlk_Brittle(H, iBlkID, AppCtx, DoBC)
 End Subroutine HessianU_AssemblyBlk_Brittle
 #undef __FUNC__ 
 #define __FUNC__ "HessianU_AssemblyBlk_NonBrittle"
-Subroutine HessianU_AssemblyBlk_NonBrittle(H, iBlkID, AppCtx, DoBC)
+Subroutine HessianU_AssemblyBlk_NonBrittle(H, iBlk, AppCtx, DoBC)
 	Type(Mat)                                    :: H
 	PetscInt                                     :: iBlk, iBlkID
 	Type(AppCtx_Type)                            :: AppCtx
@@ -294,7 +299,7 @@ Subroutine GradientU_AssemblyBlk_Brittle(GradientU, iBlk, AppCtx)
 	! init
 	NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
 	NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems * AppCtx%MeshTopology%Num_Dim
-
+	iBlkId = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
 	If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
 		Has_ThermExp = PETSC_TRUE
 	Else                 
@@ -375,6 +380,7 @@ Subroutine GradientU_AssemblyBlk_NonBrittle(GradientU, iBlk, AppCtx)
 	! init
 	NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
 	NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems * AppCtx%MeshTopology%Num_Dim
+	iBlkId = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
 
 	If (Norm(AppCtx%MatProp(iBlkId)%Therm_Exp) > 0.0_Kr) Then
 		Has_ThermExp = PETSC_TRUE
