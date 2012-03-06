@@ -440,9 +440,16 @@ Subroutine Step_U(AppCtx)
   
    Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
 	If(AppCtx%VarFracSchemeParam%U_UseSNES) Then
-		Call SNESSolve(AppCtx%snesU, PETSC_NULL, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
+		If (AppCtx%AppParam%verbose > 0) Then
+			Write(IOBuffer, *) 'Assembling RHS for the U-subproblem \n' 
+			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr) 
+		End If
+		Call RHSU_Assembly(AppCtx%RHSU%Vec, AppCtx)
+		If (AppCtx%AppParam%verbose > 2) Then
+			Call VecView(AppCtx%RHSU%Vec, PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
+		End If
+		Call SNESSolve(AppCtx%snesU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-		Call SNESGetIterationNumber(AppCtx%snesU, SNESNumIter, iErr); CHKERRQ(ierr)
 		Call SNESGetConvergedReason(AppCtx%snesU, reason, iErr); CHKERRQ(iErr)
 		If ( reason > 0) Then
 			Call SNESGetIterationNumber(AppCtx%snesU, SNESNumIter, iErr); CHKERRQ(iErr)
@@ -456,7 +463,7 @@ Subroutine Step_U(AppCtx)
 			EndIf
 		End If
 		
-		If (AppCtx%AppParam%verbose > 1) Then
+		If (AppCtx%AppParam%verbose > 2) Then
 		Write(IOBuffer, *) 'VecView(AppCtx U Vec)'
 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 			Call VecView(AppCtx%U%Vec, PETSC_VIEWER_STDOUT_SELF, iErr)
@@ -468,7 +475,8 @@ Subroutine Step_U(AppCtx)
 		End If
 		Call RHSU_Assembly(AppCtx%RHSU%Vec, AppCtx)
 		If (AppCtx%AppParam%verbose > 2) Then
-			Call VecView(AppCtx%RHSU%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+! 			Call VecView(AppCtx%RHSU%Vec, AppCtx%AppParam%LogViewer, iErr); CHKERRQ(iErr)
+			Call VecView(AppCtx%RHSU%Vec, PETSC_VIEWER_STDOUT_SELF, iErr); CHKERRQ(iErr)
 		End If
 		
 		Call MatU_Assembly(AppCtx%KU, AppCtx)
