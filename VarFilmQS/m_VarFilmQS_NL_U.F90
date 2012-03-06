@@ -67,7 +67,7 @@ Subroutine HessianU_Assembly(SNESappU, U_Vec, H, HPC, flag, AppCtx)
 	Call MatAssemblyBegin(H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
 	Call MatAssemblyEnd  (H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
 	
-	Do_Elem_iBlk: Do iBlk=120, AppCtx%MeshTopology%Num_Elem_Blks * (-1) / 0
+	Do_Elem_iBlk: Do iBlk=1, AppCtx%MeshTopology%Num_Elem_Blks 
 		iBlkID=AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
 		
 		If ( AppCtx%MyEXO%EBProperty(VarFrac_EBProp_IsBrittle)%Value(iBlkID) /= 0 ) Then
@@ -81,7 +81,7 @@ Subroutine HessianU_Assembly(SNESappU, U_Vec, H, HPC, flag, AppCtx)
 	Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 	Call MatDuplicate(H, MAT_COPY_VALUES, HPC, iErr); CHKERRQ(iErr)
 	
-	If (AppCtx%AppParam%verbose > 1) Then
+	If (AppCtx%AppParam%verbose > 2) Then
 		Call MatView(H, PETSC_VIEWER_STDOUT_SELF, iErr)
 	End If
 	Call PetscLogStagePop(iErr); CHKERRQ(iErr)
@@ -129,7 +129,7 @@ Subroutine HessianU_AssemblyBlk_Brittle(H, iBlk, AppCtx, DoBC)
 	PetscReal, Dimension(:), Pointer             :: U_loc, U0_loc, V_loc
 	PetscInt, Dimension(:), Pointer              :: BCUFlag_Loc
 	PetscReal, Dimension(:, :), Pointer          :: H_loc
-	Type(Vect2D)                                  :: U_elem, U0_elem, U_eff_elem
+	Type(Vect2D)                                 :: U_elem, U_eff_elem
 	PetscReal                                    :: V_elem
 	PetscReal                                    :: CoefV
 	
@@ -162,7 +162,6 @@ Subroutine HessianU_AssemblyBlk_Brittle(H, iBlk, AppCtx, DoBC)
 		End If
 		Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
 			U_Elem = 0.0_Kr        
-			U0_Elem = 0.0_Kr       
 			U_eff_elem = 0.0_Kr
 			
 			V_Elem = 0.0_Kr        
@@ -174,7 +173,7 @@ Subroutine HessianU_AssemblyBlk_Brittle(H, iBlk, AppCtx, DoBC)
 			CoefV = V_Elem**2 + AppCtx%VarFracSchemeParam%KEpsilon
 			
 			Do iDof1=1, NumDoFVect
-! 				U_Elem = U_Elem + U_Loc(iDoF1) * AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) 
+				U_Elem = U_Elem + U_Loc(iDoF1) * AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) 
 ! 				U0_Elem = U0_Elem + U0_Loc(iDoF1) * AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) 
 				U_eff_elem = U_eff_elem + AppCtx%ElemVect(iE)%BF(iDoF1, iGauss) * (U_Loc(iDoF1) - U0_Loc(iDoF1))
 				! assemble local H matrix
@@ -182,7 +181,7 @@ Subroutine HessianU_AssemblyBlk_Brittle(H, iBlk, AppCtx, DoBC)
 				Do iDof2=1, NumDoFVect
 					H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * CoefV * ((AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
 					If ((U_eff_elem .DotP. U_eff_elem) .LE. 2_Kr * AppCtx%MatProp(iBlkID)%DelamToughness / AppCtx%MatProp(iBlkID)%Ksubst) Then
-						H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + 0.5_Kr * AppCtx%MatProp(iBlkID)%Ksubst
+						H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%MatProp(iBlkID)%Ksubst * (AppCtx%ElemVect(iE)%BF(iDof1, iGauss) .DotP. AppCtx%ElemVect(iE)%BF(iDof2, iGauss))
 					End If
 				End Do
 			End Do 
@@ -259,7 +258,7 @@ Subroutine HessianU_AssemblyBlk_NonBrittle(H, iBlk, AppCtx, DoBC)
 				Do iDof2=1, NumDoFVect
 					H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * ((AppCtx%MatProp(iBlkID)%Hookes_Law * AppCtx%ElemVect(iE)%GradS_BF(iDoF1, iGauss)) .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDoF2, iGauss))
 					If ((U_eff_elem .DotP. U_eff_elem) .LE. 2_Kr * AppCtx%MatProp(iBlkID)%DelamToughness / AppCtx%MatProp(iBlkID)%Ksubst) Then
-						H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + 0.5_Kr * AppCtx%MatProp(iBlkID)%Ksubst
+						H_loc(iDof1, iDof2) = H_loc(iDof1, iDof2) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * AppCtx%MatProp(iBlkID)%Ksubst * (AppCtx%ElemVect(iE)%BF(iDof1, iGauss) .DotP. AppCtx%ElemVect(iE)%BF(iDof2, iGauss))
 					End If
 				End Do
 			End Do 
@@ -290,7 +289,7 @@ Subroutine GradientU_AssemblyBlk_Brittle(GradientU, iBlk, AppCtx)
 	PetscReal, Dimension(:), Pointer             :: U_loc, U0_loc, V_loc, Theta_loc
 	Type(MatS2D)                                 :: Strain_Elem, EffectiveStrain_Elem, Stress_elem
 	PetscReal, Dimension(:), Pointer             :: GradientU_loc
-	Type(Vect2D)                                 :: U_elem, U_eff_elem, U0_elem
+	Type(Vect2D)                                 :: U_elem, U_eff_elem
 	PetscReal                                    :: V_elem, Theta_elem, CoefV
 	PetscInt                                     :: NumDoFScal, NumDoFVect, iDoF, iGauss
 	PetscBool                                    :: Has_ThermExp
@@ -322,7 +321,6 @@ Subroutine GradientU_AssemblyBlk_Brittle(GradientU, iBlk, AppCtx)
 		Call SectionRealRestrictClosure(AppCtx%Theta%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Theta_Loc, iErr) 
 		Do_iGauss: Do iGauss = 1, Size(AppCtx%ElemVect(iE)%Gauss_C)
 			U_elem = 0.0_Kr
-			U0_elem = 0.0_Kr
 			V_elem = 0.0_Kr
 			Strain_elem = 0.0_Kr
 			Stress_elem = 0.0_Kr
