@@ -236,15 +236,19 @@ Contains
 If (AppCtx%VarFracSchemeParam%U_UseSNES) Then
 ! SNES Solver Ctx for U
 	Call SNESCreate(PETSC_COMM_WORLD, AppCtx%snesU, iErr); CHKERRQ(iErr)
+! 	Call SNESSetType(AppCtx%SNESU, 'ksponly', iErr); CHKERRQ(iErr)
 	Call SNESSetFunction(AppCtx%snesU, AppCtx%GradientU%Vec, GradientU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
 	Call SNESSetJacobian(AppCtx%snesU, AppCtx%KU, AppCtx%KU, HessianU_Assembly, AppCtx, iErr); CHKERRQ(iErr)
 	Call SNESSetFromOptions(AppCtx%snesU, iErr); CHKERRQ(iErr)
+	
 	Call SNESGetKSP(AppCtx%snesU, AppCtx%KSPU, iErr); CHKERRQ(iErr)
 	Call KSPSetType(AppCtx%KSPU, KSPCG, iErr); CHKERRQ(iErr)
+	Call KSPSetTolerances(AppCtx%KSPU, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr)
+
 	Call KSPSetFromOptions(AppCtx%KSPU, iErr); CHKERRQ(iErr)
+	
 	Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr) 
-	Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr) 
-	Call KSPSetTolerances(AppCtx%KSPU,1.e-4, KSP_Default_rtol, KSP_Default_atol, PETSC_DEFAULT_DOUBLE_PRECISION, KSP_Default_MaxIt, iErr); CHKERRQ(ierr);
+	Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
 Else
 
    Call KSPCreate(PETSC_COMM_WORLD, AppCtx%KSPU, iErr); CHKERRQ(iErr)
@@ -258,7 +262,7 @@ Else
       Call KSPGetPC(AppCtx%KSPU, AppCtx%PCU, iErr); CHKERRQ(iErr)
       Call PCSetType(AppCtx%PCU, PCBJACOBI, iErr); CHKERRQ(iErr)
       Call PCSetFromOptions(AppCtx%PCU, iErr); CHKERRQ(iErr)
-!      Call KSPView(AppCtx%KSPU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+     Call KSPView(AppCtx%KSPU, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 End If
 !!!endregion Solver context for U      
          
