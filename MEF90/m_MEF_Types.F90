@@ -13,7 +13,7 @@ Module m_MEF_Types
    Public :: BoundaryElement2D
    Public :: BoundaryElement3D
 
-   Public :: Elem_Blk_Type,Side_Set_Type,Node_Set_Type,MeshTopology_Type
+   Public :: Elem_Blk_Type,Node_Set_Type,MeshTopology_Type
    Public :: EXO_Type,EXO_Property_Type,EXO_Variable_Type
    
    Public :: EXOView
@@ -104,25 +104,11 @@ Module m_MEF_Types
       PetscInt                                     :: Num_Elems
       Type(IS)                                     :: Cell_IS
       !!! Cell_IS will eventually replace Elem_ID
-      PetscInt,Dimension(:),Pointer                :: Elem_ID
       PetscInt                                     :: Num_Face      
       PetscInt                                     :: Num_Edge
       PetscInt                                     :: Num_Vert
+      PetscInt                                     :: CoDimension
    End Type Elem_Blk_Type
- 
-   Type Side_Set_Type
-      PetscInt                                     :: ID
-      PetscInt                                     :: Elem_Type
-      PetscInt,Dimension(3)                        :: DoF_Location
-      !!! DoF location is Faces,edges,vertices in 3D and
-      !!!                 Edges,vertices in2D
-      PetscInt                                     :: Num_DoF !! = sum(DoF_Location)
-      PetscInt                                     :: Num_Elems
-      Type(IS)                                     :: Face_IS
-      PetscInt,Dimension(:),Pointer                :: Elem_ID
-      PetscInt                                     :: Num_Edge
-      PetscInt                                     :: Num_Vert
-   End Type Side_Set_Type
  
    Type Node_Set_Type
       PetscInt                                     :: ID
@@ -144,11 +130,7 @@ Module m_MEF_Types
       ! Node sets datas
       PetscInt                                     :: num_node_sets 
       Type(Node_Set_Type),Dimension(:),Pointer     :: node_set
-      ! Side Sets DATAS
-      PetscInt                                     :: num_side_sets
-      Type(Side_Set_Type),Dimension(:),Pointer     :: Face_Set
       Type(DM)                                     :: mesh
-      Type(DM)                                     :: meshFS
    End Type MeshTopology_Type
    
    Type EXO_Type
@@ -163,8 +145,6 @@ Module m_MEF_Types
       PetscInt                                     :: Num_EBProperties
       Type(EXO_Property_Type),Dimension(:),Pointer :: EBProperty
       PetscInt                                     :: Num_SSProperties
-      Type(EXO_Property_Type),Dimension(:),Pointer :: SSProperty
-      PetscInt                                     :: Num_NSProperties
       Type(EXO_Property_Type),Dimension(:),Pointer :: NSProperty
       ! Variables
       PetscInt                                     :: Num_GlobVariables    
@@ -227,17 +207,6 @@ Contains
          End Do
       End Do
 
-      Write(CharBuffer,107) dEXO%Num_SSProperties
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Do i = 1,dEXO%Num_SSProperties
-         Write(CharBuffer,109) dEXO%SSProperty(i)%Name,Size(dEXO%SSProperty(i)%Value)
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         Do j = 1,Size(dEXO%SSProperty(i)%Value)
-            Write(CharBuffer,202) j,dEXO%SSProperty(i)%Value(j)
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         End Do
-      End Do
-
       Write(CharBuffer,108) dEXO%Num_NSProperties
       Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
       Do i = 1,dEXO%Num_NSProperties
@@ -273,14 +242,12 @@ Contains
  102 Format('filename:           ',A,      '\n')
  105 Format('Communicator:       ',A,I3,  '\n')
  106 Format('Number of EB Properties: ',I3,'\n')
- 107 Format('Number of SS Properties: ',I3,'\n')
  108 Format('Number of NS Properties: ',I3,'\n')
  109 Format('   ',A,'num values:',I3,    '\n')
  110 Format('Global Variables: ',I3,       '\n')
  111 Format('Cell Variables:   ',I3,       '\n')
  112 Format('Vertex Variables: ',I3,       '\n')
  201 Format('   Element Block ',I3,' value ',I3,'\n')
- 202 Format('   Side Set      ',I3,' value ',I3,'\n')
  203 Format('   Node Set      ',I3,' value ',I3,'\n')
  210 Format(A,I3,'\n')
    End Subroutine EXOView
@@ -298,15 +265,6 @@ Contains
             If (dMeshTopology%Node_set(iSet)%num_nodes>0) Then
                Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
                Call ISDestroy(dMeshTopology%Node_set(iSet)%Vertex_IS,ierr);CHKERRQ(ierr)
-            End If
-         End Do
-         Deallocate (dMeshTopology%Node_Set)
-      End If
-      If (Size(dMeshTopology%Face_set) > 0) Then
-         Do iSet = 1,Size(dMeshTopology%Face_set)
-            If (dMeshTopology%Face_set(iSet)%num_Elems>0) Then
-               Deallocate(dMeshTopology%Face_Set(iSet)%Elem_ID)
-               Call ISDestroy(dMeshTopology%Face_set(iSet)%Face_IS,ierr);CHKERRQ(ierr)
             End If
          End Do
          Deallocate (dMeshTopology%Node_Set)
@@ -342,8 +300,6 @@ Contains
       Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
       Write(CharBuffer,107) dMeshTopology%Num_Node_Sets
       Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,108) dMeshTopology%Num_Side_Sets
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
    
       Write(CharBuffer,600) '\n'
       Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
@@ -357,6 +313,8 @@ Contains
          Write(CharBuffer,204) dMeshTopology%Elem_Blk(i)%ID,dMeshTopology%Elem_blk(i)%Elem_Type
          Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
          Write(CharBuffer,205) dMeshTopology%Elem_Blk(i)%ID,dMeshTopology%Elem_blk(i)%DoF_Location
+         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+         Write(CharBuffer,206) dMeshTopology%Elem_Blk(i)%ID,dMeshTopology%Elem_blk(i)%CoDimension
          Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
          Write(CharBuffer,207) dMeshTopology%Elem_Blk(i)%ID
          Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
@@ -389,24 +347,18 @@ Contains
       End Do
       
       
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,400)
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,401) dMeshTopology%num_side_sets
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      
 103 Format('    Number of dimensions ============ ',I6,'\n')
 104 Format('    Number of vertices ============== ',I6,'\n')
 105 Format('    Number of elements ============== ',I6,'\n')
 106 Format('    Number of elements blocks ======= ',I6,'\n')
 107 Format('    Number of node sets ============= ',I6,'\n')
-108 Format('    Number of side sets ============= ',I6,'\n')
 
 200 Format('*** ELEMENT BLOCKS ***','\n')
 201 Format('    Number of blocks ================ ',I4,'\n')
 203 Format('    Block ',I3,' Number of elements ==== ',I4,'\n')
 204 Format('    Block ',I3,' Element type ========== ',I4,'\n')
 205 Format('    Block ',I3,' DoF location ========== ',4(I4,' '),'\n')
+205 Format('    Block ',I3,' Co-dimension ========== ',I4,'\n')
 207 Format('    Block ',I3,' IDs: ')
 208 Format(' ',I4)
 
@@ -416,9 +368,6 @@ Contains
 303 Format('    Set ',I3,' IDs: ')
 !304 Format('    Set ',I3,' Number of dist. factors = ',I4)
 
-400 Format('*** SIDE SETS ***','\n')
-401 Format('    Number of side sets ============= ',I4,'\n')
-    
 500 Format(I4) 
 600 Format(A)
 601 Format('    Number of blocks global ========= ',I4,'\n')

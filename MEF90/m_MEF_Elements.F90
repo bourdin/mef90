@@ -42,15 +42,27 @@ Module m_MEF_Elements
       Case (2)
          Select Case (dBlk%Elem_Type)
          Case (MEF90_P1_Lagrange)         
-            dBlk%DoF_Location = (/ 0,0,0,3/)
+            dBlk%DoF_Location = (/ 0,0,0,3 /)
             dBlk%Num_Face = 0
             dBlk%Num_Edge = 3
             dBlk%Num_Vert = 3
+            dSet%Codimension = 0
+         Case (MEF90_P1_Lagrange_Boundary)         
+            dSet%DoF_Location = (/ 0,0,0,2 /)
+            dSet%Num_Edge = 1
+            dSet%Num_Vert = 2
+            dSet%Codimension = 1
          Case (MEF90_P2_Lagrange)
-            dBlk%DoF_Location = (/ 0,0,3,3/)
+            dBlk%DoF_Location = (/ 0,0,3,3 /)
             dBlk%Num_Face = 0
             dBlk%Num_Edge = 3
             dBlk%Num_Vert = 3
+            dSet%Codimension = 0
+         Case (MEF90_P2_Lagrange_Boundary)         
+            dSet%DoF_Location = (/ 0,0,1,2 /)
+            dSet%Num_Edge = 1
+            dSet%Num_Vert = 2
+            dSet%Codimension = 1
          Case Default
             Print*,__FUNCT__,': Unknown element type',dBlk%Elem_Type
             STOP
@@ -58,15 +70,27 @@ Module m_MEF_Elements
       Case (3)
          Select Case (dBlk%Elem_Type)
          Case (MEF90_P1_Lagrange)         
-            dBlk%DoF_Location = (/ 0,0,0,4/)
+            dBlk%DoF_Location = (/ 0,0,0,4 /)
             dBlk%Num_Face = 4
             dBlk%Num_Edge = 6
             dBlk%Num_Vert = 4
+            dSet%Codimension = 0
+         Case (MEF90_P1_Lagrange_Boundary)         
+            dSet%DoF_Location = (/ 0,0,0,3 /)
+            dSet%Num_Edge = 3
+            dSet%Num_Vert = 3
+            dSet%Codimension = 1
          Case (MEF90_P2_Lagrange)
-            dBlk%DoF_Location = (/ 0,0,6,4/)
+            dBlk%DoF_Location = (/ 0,0,6,4 /)
             dBlk%Num_Face = 4
             dBlk%Num_Edge = 6
             dBlk%Num_Vert = 4
+            dSet%Codimension = 0
+         Case (MEF90_P2_Lagrange_Boundary)
+            dSet%DoF_Location = (/ 0,0,3,3 /)
+            dSet%Num_Edge = 3
+            dSet%Num_Vert = 3
+            dSet%Codimension = 1
          Case Default
             Print*,__FUNCT__,': Unknown element type',dBlk%Elem_Type
             STOP
