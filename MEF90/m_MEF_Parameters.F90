@@ -30,7 +30,11 @@ Module m_MEF_Parameters
    !!!
    PetscInt,Parameter,Public           :: MEF90_P1_Lagrange = 1
    PetscInt,Parameter,Public           :: MEF90_P2_Lagrange = 2
+   PetscInt,Parameter,Public           :: MEF90_P1_Lagrange_Boundary = 3
+   PetscInt,Parameter,Public           :: MEF90_P2_Lagrange_Boundary = 4
    
-!   PetscInt,Parameter,Public           :: MEF90_Q1_Lagrange = 3
-!   PetscInt,Parameter,Public           :: MEF90_Q2_Lagrange = 4
+!   PetscInt,Parameter,Public           :: MEF90_Q1_Lagrange = 5
+!   PetscInt,Parameter,Public           :: MEF90_Q2_Lagrange = 6
+!   PetscInt,Parameter,Public           :: MEF90_Q1_Lagrange_Boundary = 7
+!   PetscInt,Parameter,Public           :: MEF90_Q2_Lagrange_Boundary = 8
 End Module m_MEF_Parameters

@@ -53,11 +53,11 @@ Contains
       Case (3)
          Select Case (dSet%Elem_Type)
          Case (MEF90_P1_Lagrange)         
-            dSet%DoF_Location = (/ 0,0,3/)
+            dSet%DoF_Location = (/ 0,0,3 /)
             dSet%Num_Edge = 3
             dSet%Num_Vert = 3
          Case (MEF90_P2_Lagrange)
-            dSet%DoF_Location = (/ 0,3,3/)
+            dSet%DoF_Location = (/ 0,3,3 /)
             dSet%Num_Edge = 3
             dSet%Num_Vert = 3
          Case Default
@@ -135,7 +135,7 @@ Contains
             dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
             Do iDoF = 1,Num_doF
                Do iG = 1,Num_Gauss
-                  dElem%BF(iDoF,iG) = (tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 2.0_Kr) * NormalVector
+                  dElem%BF(iDoF,iG) = tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 2.0_Kr
                End Do
             End Do
 
