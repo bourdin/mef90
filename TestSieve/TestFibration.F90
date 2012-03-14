@@ -23,8 +23,17 @@ Program TestFibration
    Character(len=256)                           :: prefix
    PetscInt                                     :: num_components, num_dof
    PetscInt, Dimension(:), Pointer              :: component_length 
+   Integer                                      :: cpu_ws = 0
+   Integer                                      :: io_ws = 0
+   Integer                                      :: rank,numproc
+   Type(DM)                                     :: tmpDM
+   Integer                                      :: numCellSet,numDim
+   Integer                                      :: exoid
+   PetscReal                                    :: vers
 
    Call MEF90_Initialize()
+   Call MPI_Comm_size(PETSC_COMM_WORLD,numproc,iErr);CHKERRQ(iErr)
+   Call MPI_Comm_rank(PETSC_COMM_WORLD,rank,iErr);CHKERRQ(iErr)
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr)    
    If (.NOT. HasPrefix) Then
       Call PetscPrintf(PETSC_COMM_WORLD, "No input file prefix given\n", iErr)
@@ -36,17 +45,26 @@ Program TestFibration
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, MeshTopology%meshFS,ierr); CHKERRQ(iErr)
+   exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   If (numproc == 1) Then
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
+   Else
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,tmpDM,ierr);CHKERRQ(ierr)
+      Call DMMeshDistribute(tmpDM,PETSC_NULL_CHARACTER,MeshTopology%mesh,ierr);CHKERRQ(iErr)
+      Call DMDestroy(tmpDM,ierr);CHKERRQ(iErr)
+   End If
    
    Write(IOBuffer, *) "Initializing MeshTopology object\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
+   Call MeshTopologyGetInfo(MeshTopology)
+   Call DMMeshGetLabelSize(MeshTopology%mesh,"Cell Sets",numCellSet,ierr);CHKERRQ(ierr)
+   Call DMMeshGetDimension(MeshTopology%Mesh,numDim,ierr);CHKERRQ(ierr)
    
    Write(IOBuffer, *) "Initializing Element types\n"
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-   MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
-   Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
+   MeshTopology%cellSet%ElemType    = MEF90_P1_Lagrange
+   Do iBlk = 1, numCellSet
+      Call cellSetElemTypeInit(MeshTopology%cellSet(iBlk), numDim)
    End Do
    
    MyEXO%comm = PETSC_COMM_SELF
@@ -132,7 +150,6 @@ Program TestFibration
 !   Call MatDestroy(M, iErr); CHKERRQ(iErr)
    Call FieldDestroy(Field1)
    Call FlagDestroy(Flag1)
-300 Format(A)   
    Call MEF90_Finalize()
 
 End Program TestFibration
