@@ -39,7 +39,9 @@ Program TestCoordinates
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
 
-   exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   If (rank == 0) Then
+      exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   End If
    If (numproc == 1) Then
       Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
    Else
@@ -71,6 +73,8 @@ Program TestCoordinates
    Write(MEF90_MyRank + 100,*) array(:,2)
    Call DMMeshRestoreCoordinatesF90(MeshTopology%mesh,array,iErr); CHKERRQ(iErr)
 
-   Call EXCLOS(exoid,ierr)
+   If (rank == 0) Then
+      Call EXCLOS(exoid,ierr)
+   End If
    Call MEF90_Finalize()
 End Program TestCoordinates
