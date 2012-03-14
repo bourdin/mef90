@@ -92,7 +92,7 @@ Module m_MEF_Elements
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       
       PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices,numCellSets
+      PetscInt                                    :: numDim,numCells,numVertices
       PetscInt                                    :: numVertexinCell,point
       PetscInt,Dimension(:),Pointer               :: cone
       Type(IS)                                    :: CellIS,CellSetIS
@@ -160,21 +160,21 @@ Module m_MEF_Elements
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
-            Call Init_Element_P_Lagrange_2D_Scal(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 
          Case (MEF90_P2_Lagrange)
-            Call Init_Element_P_Lagrange_2D_Scal(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
 
          Case (MEF90_P1_Lagrange_Boundary)
-            Call Init_Element_P_Lagrange_2D_Scal(dElem,dCoord,1,QuadratureOrder)
+            !Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 
          Case (MEF90_P2_Lagrange_Boundary)
-            Call Init_Element_P_Lagrange_2D_Scal(dElem,dCoord,2,QuadratureOrder)
+            !Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
 
 !         Case (MEF90_Q1_Lagrange)
-!            Call Init_Element_Q_Lagrange_2D_Scal(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange)
-!            Call Init_Element_Q_Lagrange_2D_Scal(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',Element_Type
       End Select
@@ -191,7 +191,7 @@ Module m_MEF_Elements
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       
       PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices,numCellSets
+      PetscInt                                    :: numDim,numCells,numVertices
       PetscInt                                    :: numVertexinCell,point
       PetscInt,Dimension(:),Pointer               :: cone
       Type(IS)                                    :: CellIS,CellSetIS
@@ -259,15 +259,15 @@ Module m_MEF_Elements
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
-            Call Init_Element_P_Lagrange_2D(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Init(dElem,dCoord,1,QuadratureOrder)
 
          Case (MEF90_P2_Lagrange)
-            Call Init_Element_P_Lagrange_2D(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Init(dElem,dCoord,2,QuadratureOrder)
 
 !         Case (MEF90_Q1_Lagrange)
-!            Call Init_Element_Q_Lagrange_2D_Scal(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange)
-!            Call Init_Element_Q_Lagrange_2D_Scal(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',Element_Type
       End Select
@@ -284,7 +284,7 @@ Module m_MEF_Elements
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       
       PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices,numCellSets
+      PetscInt                                    :: numDim,numCells,numVertices
       PetscInt                                    :: numVertexinCell,point
       PetscInt,Dimension(:),Pointer               :: cone
       Type(IS)                                    :: CellIS,CellSetIS
@@ -352,15 +352,15 @@ Module m_MEF_Elements
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
-            Call Init_Element_P_Lagrange_2D_Elast(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 
          Case (MEF90_P2_Lagrange)
-            Call Init_Element_P_Lagrange_2D_Elast(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
 
 !         Case (MEF90_Q1_Lagrange)
-!            Call Init_Element_Q_Lagrange_2D_Scal(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange)
-!            Call Init_Element_Q_Lagrange_2D_Scal(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',Element_Type
       End Select
@@ -378,7 +378,7 @@ Module m_MEF_Elements
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       
       PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices,numCellSets
+      PetscInt                                    :: numDim,numCells,numVertices
       PetscInt                                    :: numVertexinCell,point
       PetscInt,Dimension(:),Pointer               :: cone
       Type(IS)                                    :: CellIS,CellSetIS
@@ -446,15 +446,15 @@ Module m_MEF_Elements
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
-            Call Init_Element_P_Lagrange_3D_Scal(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 
          Case (MEF90_P2_Lagrange)
-            Call Init_Element_P_Lagrange_3D_Scal(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
 
 !         Case (MEF90_Q1_Lagrange)
-!            Call Init_Element_Q_Lagrange_3D_Scal(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange)
-!            Call Init_Element_Q_Lagrange_3D_Scal(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',Element_Type
       End Select
@@ -471,7 +471,7 @@ Module m_MEF_Elements
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       
       PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices,numCellSets
+      PetscInt                                    :: numDim,numCells,numVertices
       PetscInt                                    :: numVertexinCell,point
       PetscInt,Dimension(:),Pointer               :: cone
       Type(IS)                                    :: CellIS,CellSetIS
@@ -539,15 +539,15 @@ Module m_MEF_Elements
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
-            Call Init_Element_P_Lagrange_3D(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Init(dElem,dCoord,1,QuadratureOrder)
 
          Case (MEF90_P2_Lagrange)
-            Call Init_Element_P_Lagrange_3D(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
 
 !         Case (MEF90_Q1_Lagrange)
-!            Call Init_Element_Q_Lagrange_3D(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange)
-!            Call Init_Element_Q_Lagrange_3D(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',Element_Type
       End Select
@@ -564,7 +564,7 @@ Module m_MEF_Elements
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       
       PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices,numCellSets
+      PetscInt                                    :: numDim,numCells,numVertices
       PetscInt                                    :: numVertexinCell,point
       PetscInt,Dimension(:),Pointer               :: cone
       Type(IS)                                    :: CellIS,CellSetIS
@@ -632,15 +632,15 @@ Module m_MEF_Elements
       
       Select Case (Element_Type)
          Case (MEF90_P1_Lagrange)
-            Call Init_Element_P_Lagrange_3D_Elast(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 
          Case (MEF90_P2_Lagrange)
-            Call Init_Element_P_Lagrange_3D_Elast(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
 
 !         Case (MEF90_Q1_Lagrange)
-!            Call Init_Element_Q_Lagrange_3D_Elast(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange)
-!            Call Init_Element_Q_Lagrange_3D_Elast(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',Element_Type
       End Select

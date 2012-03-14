@@ -14,7 +14,7 @@ Contains
       PetscInt                                  :: argunit
       PetscBool                                 :: IsBatch
 
-      Character(len=MEF90_MXSTRLEN)             :: prefix,IOBuffer   
+      Character(len=MEF90_MXSTRLEN)             :: IOBuffer   
       PetscInt                                  :: ierr   
       If (IsBatch) Then
          If (MEF90_MyRank == 0) Then
@@ -40,7 +40,7 @@ Contains
       PetscInt                                  :: argunit
       PetscBool                                 :: IsBatch
 
-      Character(len=MEF90_MXSTRLEN)             :: prefix,IOBuffer      
+      Character(len=MEF90_MXSTRLEN)             :: IOBuffer      
       PetscInt                                  :: ierr
       If (IsBatch) Then
          If (MEF90_MyRank == 0) Then
@@ -67,11 +67,9 @@ Contains
       PetscBool                                      :: IsBatch
 
       PetscInt                                       :: ierr
-      PetscInt                                       :: i,j,IntBuffer
+      PetscInt                                       :: i,j
       PetscInt                                       :: numVertexSetGlobal
 
-      PetscInt                                       :: NumNS
-      PetscInt                                       :: EXO_MyRank
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
    
       Call ISGetLocalSize(dMeshTopology%vertexSetGlobalIS,numVertexSetGlobal,ierr);CHKERRQ(ierr)
@@ -100,13 +98,10 @@ Contains
       PetscBool                                      :: IsBatch
 
       PetscInt                                       :: ierr
-      PetscInt                                       :: i,j,IntBuffer
+      PetscInt                                       :: i,j
       PetscInt                                       :: numCellSetGlobal
 
-      PetscInt                                       :: NumEB
-      PetscInt                                       :: EXO_MyRank
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
-      PetscReal                                      :: TmpEBProperty
 
       Call ISGetLocalSize(dMeshTopology%cellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
       Do i = 1,numCellSetGlobal

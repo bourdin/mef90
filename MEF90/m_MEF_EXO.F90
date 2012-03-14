@@ -68,7 +68,6 @@ Module m_MEF_EXO
       PetscInt                                       :: EXO_MyRank
       PetscReal                                      :: rDummy
       Character                                      :: cDummy
-      PetscInt                                       :: vers
       
       ErrorCode = 0
       
@@ -108,7 +107,6 @@ Module m_MEF_EXO
       End If
       Call MPI_BCast(ErrorCode,1,MPIU_INTEGER,0,dEXO%Comm,ierr)
  100 Format('[ERROR] in MeshTopology_Check Numbering. Element block ',I3,' index is ',I3,'\n')   
- 101 Format('[ERROR] in MeshTopology_Check Numbering. Side Set ',I3,' index is ',I3,'\n')   
  102 Format('[ERROR] in MeshTopology_Check Numbering. Node Set ',I3,' index is ',I3,'\n')   
    End Subroutine EXO_Check_Numbering
 
@@ -117,6 +115,7 @@ Module m_MEF_EXO
 #define __FUNCT__ "EXOProperty_Copy"
    Subroutine EXOProperty_Copy(dEXO_in,dEXO_out)
       Type(EXO_Type)                                 :: dEXO_in,dEXO_out
+
       PetscInt                                       :: i
       
       dEXO_out%Num_EBProperties = dEXO_in%Num_EBProperties
@@ -141,10 +140,9 @@ Module m_MEF_EXO
 #define __FUNCT__ "EXOProperty_Write"
    Subroutine EXOProperty_Write(dEXO)
       Type(EXO_Type)                                 :: dEXO
-      PetscInt                                       :: vers
+
       PetscInt                                       :: ierr
       PetscInt                                       :: i
-
       PetscInt                                       :: NumEB,NumNS
       PetscInt                                       :: EXO_MyRank
       PetscReal                                      :: rDummy
@@ -180,12 +178,10 @@ Module m_MEF_EXO
    Subroutine EXOProperty_Ask(dEXO,dMeshTopology)
       Type(EXO_Type)                                 :: dEXO
       Type(MeshTopology_Type)                        :: dMeshTopology
-      PetscInt                                       :: ierr
-      PetscInt                                       :: i,j,IntBuffer
-      PetscInt                                       :: numCellSetGlobal,numVertexSetGlobal
 
-      PetscInt                                       :: NumEB,NumNS
-      PetscInt                                       :: EXO_MyRank
+      PetscInt                                       :: ierr
+      PetscInt                                       :: i,j
+      PetscInt                                       :: numCellSetGlobal,numVertexSetGlobal
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
 
       Call ISGetLocalSize(dMeshTopology%cellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
@@ -224,15 +220,14 @@ Module m_MEF_EXO
 #define __FUNCT__ "EXOProperty_Read"
    Subroutine EXOProperty_Read(dEXO)
       Type(EXO_Type)                                 :: dEXO
-      PetscInt                                       :: vers
+
       PetscInt                                       :: ierr
       PetscInt                                       :: i
       PetscInt                                       :: NumProp,NumVal
       PetscReal                                      :: rDummy
       Character                                      :: cDummy
-      
+      PetscInt                                       :: EXO_MyRank
       Character(len=MXSTLN),Dimension(:),Pointer     :: PropName
-      Integer                                        :: EXO_MyRank
       
       Call MPI_COMM_RANK(dEXO%Comm,EXO_MyRank,ierr)
 
@@ -334,14 +329,12 @@ Module m_MEF_EXO
    Subroutine EXOVariable_Write(dEXO)
       Type(EXO_Type)                                 :: dEXO
  
-      PetscInt                                       :: i,ierr
+      PetscInt                                       :: ierr
       Integer                                        :: EXO_MyRank
-      PetscInt                                       :: vers
       
       Call MPI_COMM_RANK(dEXO%Comm,EXO_MyRank,ierr)
 
       If (EXO_MyRank == 0) Then
-         !dEXO%exoid = EXOPEN(dEXO%filename,EXWRIT,exo_cpu_ws,exo_io_ws,vers,ierr)
          If (dEXO%exoid == 0) Then
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_NULL,"[ERROR]: Exodus file not open before IO operations\n",ierr)
          End If
@@ -358,8 +351,6 @@ Module m_MEF_EXO
             Call EXPVP (dEXO%exoid,'n',dEXO%Num_VertVariables,ierr)
             Call EXPVAN(dEXO%exoid,'n',dEXO%Num_VertVariables,dEXO%VertVariable(:)%Name,ierr)
          End If
-         !Call EXCLOS(dEXO%exoid,ierr)
-         !dEXO%exoid = 0
       End If
    End Subroutine EXOVariable_Write 
    
@@ -367,13 +358,9 @@ Module m_MEF_EXO
 #define __FUNCT__ "EXOVariable_Read"
    Subroutine EXOVariable_Read(dEXO)
       Type(EXO_Type)                                 :: dEXO
-      PetscInt                                       :: vers
+
       PetscInt                                       :: ierr
       PetscInt                                       :: i
-      PetscInt                                       :: NumProp,NumVal
-      PetscReal                                      :: rDummy
-      Character                                      :: cDummy
-      
       Integer                                        :: EXO_MyRank
       
       Call MPI_COMM_RANK(dEXO%Comm,EXO_MyRank,ierr)
@@ -443,11 +430,8 @@ Module m_MEF_EXO
       
       PetscReal                                      :: MyRes
       PetscInt                                       :: ierr
-      PetscReal                                      :: Vers
       PetscReal,Dimension(:),Pointer                 :: Tmp_Res
-      PetscInt                                       :: Num_Vars,Num_TS
-      PetscReal                                      :: fDum
-      Character                                      :: cDum
+      PetscInt                                       :: Num_Vars
       
       dRes = 0.0_Kr
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
@@ -481,10 +465,7 @@ Module m_MEF_EXO
       PetscReal,Dimension(:),Pointer                 :: dRes
       
       PetscInt                                       :: ierr
-      PetscReal                                      :: Vers
       PetscInt                                       :: Num_Vars
-      PetscReal                                      :: fDum
-      Character                                      :: cDum
       
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
          If (dEXO%exoid == 0) Then
@@ -507,11 +488,8 @@ Module m_MEF_EXO
       PetscReal                                      :: dRes
       
       PetscInt                                       :: ierr
-      PetscReal                                      :: Vers
       PetscReal,Dimension(:),Pointer                 :: Tmp_Res
       PetscInt                                       :: Num_Vars
-      PetscReal                                      :: fDum
-      Character                                      :: cDum
       
       If ( ((dEXO%comm == PETSC_COMM_WORLD) .AND. (MEF90_MyRank == 0)) .OR. (dEXO%comm == PETSC_COMM_SELF) ) Then
          If (dEXO%exoid == 0) Then

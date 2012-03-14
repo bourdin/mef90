@@ -31,9 +31,9 @@ Contains
 
       MPI_Comm                                     :: comm
       PetscErrorCode                               :: ierr
-      Type(IS)                                     :: cellSetIS,vertexSetIS
-      PetscInt,Dimension(:),Pointer                :: cellSetID,vertexSetID
-      PetscInt                                     :: set,setID
+      Type(IS)                                     :: cellSetIS
+      PetscInt,Dimension(:),Pointer                :: cellSetID
+      PetscInt                                     :: set
       
       Call PetscObjectGetComm(dMeshTopology%mesh,comm,ierr);CHKERRQ(ierr)      
       !!!
@@ -200,7 +200,7 @@ Contains
       PetscInt                                     :: set,vertex
       Type(IS)                                     :: setIS,vertexIS
       PetscInt,Dimension(:),Pointer                :: setID,vertexID
-      PetscInt                                     :: numVertexSet,numCells
+      PetscInt                                     :: numCells
       PetscInt,Dimension(:),Pointer                :: Sec_Ptr
       
       Call DMMeshGetStratumSize(MeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
