@@ -116,6 +116,16 @@ Module m_MEF_Elements
          Call DMMeshGetStratumIS(dMeshTopology%mesh,'Cell Sets',setId,CellIS,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
 
+
+      !!! 
+      !!! This is debatable...
+      !!! In an interpolated mesh, we will get the vertices thius way
+      !!! In a non interpolated but higher order mesh (which is going to be much easier to deal with)
+      !!! the "vertices" are really the location of the dof
+      !!! instead of reconstructing the cone size, we'd be better off using the info on the 
+      !!! cell geometry (i.e,. # vertices) and make the assumption that the actual vertices
+      !!! are always numbered first (cf exo numbering
+      !!!
          !!! Get the number of vertices per cell for the cells in the set
          !!! We always assume that all cells in a set are of the same type so
          !!! we only need to do this once.
@@ -123,14 +133,18 @@ Module m_MEF_Elements
          Call DMMeshGetConeSize(dMeshTopology%mesh,CellID(1),numVertexinCell,ierr);CHKERRQ(ierr)    
          !!! The cone may contain faces and edges in the case of an interpolated mesh
          !!! so we need to filter out based on the vertex point number:
-         Allocate(cone(numVertexinCell))
+         
+         !!! WTF No way to get the cone in F90????
+         !!!Allocate(cone(numVertexinCell))
+         Call DMMeshGetCone(dMeshTopology%mesh,cellID(1),cone,ierr);CHKERRQ(ierr)
          numVertexinCell = 0
          Do point = 1, size(cone)
             If ( (cone(point) >= numCells) .AND. (cone(point) < numCells + numVertices) ) Then
                numVertexinCell = numVertexinCell + 1
             End If
          End Do
-         DeAllocate(cone)
+         Call DMMeshRestoreCone(dMeshTopology%mesh,cellID(1),cone,ierr);CHKERRQ(ierr)
+         !!!DeAllocate(cone)
          
          Allocate(TmpCoords(numDim * numVertexinCell))
          Allocate(Coords   (numDim,  numVertexinCell))

@@ -405,15 +405,23 @@ Module m_MEF_EXO
          End If
       End If      
 
-      Call MPI_BCast(dEXO%GlobVariable(:)%Offset,dEXO%Num_GlobVariables,MPIU_INTEGER,0,dEXO%Comm,ierr)
+      If (dEXO%Num_GlobVariables > 0) Then
+         Call MPI_BCast(dEXO%GlobVariable(:)%Offset,dEXO%Num_GlobVariables,MPIU_INTEGER,0,dEXO%Comm,ierr)
+      End If
       Do i = 1,dEXO%Num_GlobVariables
          Call MPI_BCast(dEXO%GlobVariable(i)%Name,MXSTLN,MPI_CHARACTER,0,dEXO%Comm,ierr)
       End Do
-      Call MPI_BCast(dEXO%CellVariable(:)%Offset,dEXO%Num_CellVariables,MPIU_INTEGER,0,dEXO%Comm,ierr)
+
+      If (dEXO%Num_CellVariables > 0) Then
+         Call MPI_BCast(dEXO%CellVariable(:)%Offset,dEXO%Num_CellVariables,MPIU_INTEGER,0,dEXO%Comm,ierr)
+      End If
       Do i = 1,dEXO%Num_CellVariables
          Call MPI_BCast(dEXO%CellVariable(i)%Name,MXSTLN,MPI_CHARACTER,0,dEXO%Comm,ierr)
       End Do
-      Call MPI_BCast(dEXO%VertVariable(:)%Offset,dEXO%Num_VertVariables,MPIU_INTEGER,0,dEXO%Comm,ierr)
+
+      If (dEXO%Num_VertVariables > 0) Then
+         Call MPI_BCast(dEXO%VertVariable(:)%Offset,dEXO%Num_VertVariables,MPIU_INTEGER,0,dEXO%Comm,ierr)
+      End If
       Do i = 1,dEXO%Num_VertVariables
          Call MPI_BCast(dEXO%VertVariable(i)%Name,MXSTLN,MPI_CHARACTER,0,dEXO%Comm,ierr)
       End Do

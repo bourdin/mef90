@@ -105,8 +105,8 @@ Module m_MEF_Types
       Character(len=MXLNLN)                        :: filename  
       Character(len=MXLNLN)                        :: title     
       ! QA DATAS
-      Integer                                      :: num_QA    
-      Character(len=MXSTLN),Dimension(:,:),Pointer :: QA_rec
+      !Integer                                      :: num_QA    
+      !Character(len=MXSTLN),Dimension(:,:),Pointer :: QA_rec
       ! Properties
       PetscInt                                     :: Num_EBProperties
       Type(EXO_Property_Type),Dimension(:),Pointer :: EBProperty
