@@ -88,6 +88,7 @@ Contains
       Type(IS)                                     :: setIS,vertexIS
       PetscInt,Dimension(:),Pointer                :: setID,vertexID
       PetscInt                                     :: set,vertex
+      Type(SectionReal)                            :: coordSection
 
       Call MEF90_Initialize()
       AppCtx%AppParam%verbose = 0
@@ -247,53 +248,73 @@ Contains
                Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,iErr);CHKERRQ(iErr)
             End If
 
-            !!! Test of non homogeneous Dirichlet BC
-            Allocate(ValPtr(1))
-            ValPtr = 0.0_Kr
-            Call SectionRealSet(AppCtx%F,0.0_Kr,iErr);CHKERRQ(iErr);
-            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
-               
-            Do iDoF = 1,Size(Coords,1)
-#if defined PB_2D
-               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2
-               ValPtr = Coords(iDoF,1)**2 + Coords(iDoF,2)**2
-               ValPtr = Coords(iDoF,1)**3
-#elif defined PB_3D
-               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
-#endif
-               Call SectionRealUpdate(AppCtx%U%Sec,AppCtx%MeshTopology%Num_Elems+iDoF-1,ValPtr,INSERT_VALUES,iErr);CHKERRQ(iErr)
-            End Do
-            DeAllocate(ValPtr)
-            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
-         Case(3)
-            If (AppCtx%AppParam%verbose > 0) Then
-               Write(IOBuffer,*) 'Solving Test Case 3: F=sgn(x) . sgn(y) [. sgn(z)] \n'
-               Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,iErr);CHKERRQ(iErr)
-            End If
 
-            !!! Test of non homogeneous Dirichlet BC
+      !!! OLD WAY
+! Test of non homogeneous Dirichlet BC
+!            Allocate(ValPtr(1))
+!            ValPtr = 0.0_Kr
+!            Call SectionRealSet(AppCtx%F,0.0_Kr,iErr);CHKERRQ(iErr);
+!            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
+!               
+!            Do iDoF = 1,Size(Coords,1)
+!#if defined PB_2D
+!               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2
+!               ValPtr = Coords(iDoF,1)**2 + Coords(iDoF,2)**2
+!               ValPtr = Coords(iDoF,1)**3
+!#elif defined PB_3D
+!               ValPtr = (Coords(iDoF,1)-0.5_Kr)**2 + (Coords(iDoF,2)+0.5_Kr)**2 +  (Coords(iDoF,3)+.5_Kr)**2
+!#endif
+!               Call SectionRealUpdate(AppCtx%U%Sec,AppCtx%MeshTopology%Num_Elems+iDoF-1,ValPtr,INSERT_VALUES,iErr);CHKERRQ(iErr)
+!            End Do
+!            DeAllocate(ValPtr)
+!            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
+      !!! NEW WAY
             Allocate(ValPtr(1))
-            ValPtr = 0.0_Kr
-            Call SectionRealSet(AppCtx%U,1.0_Kr,iErr);CHKERRQ(iErr);
-            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
-            
-            Do iDoF = 1,Size(Coords,1)
-#if defined PB_2D
-               If ( Coords(iDoF,1) * Coords(iDoF,2) < 0.0_Kr ) Then
-                  ValPtr = -1.0_Kr
-               Else
-                  ValPtr = 1.0_Kr
-               End If
-#elif defined PB_3D
-               If ( Coords(iDoF,1) * Coords(iDoF,2) * Coords(iDoF,3) < 0.0_Kr ) Then
-                  ValPtr = -1.0_Kr
-               Else
-                  ValPtr = 1.0_Kr
-               End If
-#endif
-               Call SectionRealUpdate(AppCtx%F%Sec,AppCtx%MeshTopology%Num_Elems+iDoF-1,ValPtr,INSERT_VALUES,iErr);CHKERRQ(iErr)
+            Call DMMeshGetSectionReal(AppCtx%MeshTopology%mesh,'coordinates',coordSection,iErr); CHKERRQ(ierr)
+            Call DMMeshGetStratumIS(AppCtx%MeshTopology%mesh,'height',0,vertexIS,ierr);CHKERRQ(ierr)
+            Call ISGetIndicesF90(vertexIS,vertexID,iErr);CHKERRQ(iErr)
+            Do vertex = 1, size(vertexID)
+               Call SectionRealRestrict(coordSection,vertexID(vertex),coord,ierr);CHKERRQ(ierr)
+               ValPtr = 0
+               Do c = 1,numDim
+                  ValPtr = ValPtr + coord(c)**2
+               End Do
+               Call SectionRealUpdate(AppCtx%U%Sec,vertexID(vertex),ValPtr,INSERT_VALUES,iErr);CHKERRQ(iErr)
+               Call SectionRealRestore(coordSection,vertexID(vertex),coord,ierr);CHKERRQ(ierr)
             End Do
-            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
+            Call ISRestoreIndicesF90(vertexIS,vertexID,iErr);CHKERRQ(iErr)
+            Call ISDestroy(vertexIS,ierr);CHKERRQ(ierr)
+            Call SectionRealDestroy(coordSection,ierr);CHKERRQ(ierr)
+            DeAllocate(ValPtr)
+!         Case(3)
+!            If (AppCtx%AppParam%verbose > 0) Then
+!               Write(IOBuffer,*) 'Solving Test Case 3: F=sgn(x) . sgn(y) [. sgn(z)] \n'
+!               Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,iErr);CHKERRQ(iErr)
+!            End If
+!
+!            !!! Test of non homogeneous Dirichlet BC
+!            Allocate(ValPtr(1))
+!            ValPtr = 0.0_Kr
+!            Call SectionRealSet(AppCtx%U,1.0_Kr,iErr);CHKERRQ(iErr);
+!            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
+!            
+!            Do iDoF = 1,Size(Coords,1)
+!#if defined PB_2D
+!               If ( Coords(iDoF,1) * Coords(iDoF,2) < 0.0_Kr ) Then
+!                  ValPtr = -1.0_Kr
+!               Else
+!                  ValPtr = 1.0_Kr
+!               End If
+!#elif defined PB_3D
+!               If ( Coords(iDoF,1) * Coords(iDoF,2) * Coords(iDoF,3) < 0.0_Kr ) Then
+!                  ValPtr = -1.0_Kr
+!               Else
+!                  ValPtr = 1.0_Kr
+!               End If
+!#endif
+!               Call SectionRealUpdate(AppCtx%F%Sec,AppCtx%MeshTopology%Num_Elems+iDoF-1,ValPtr,INSERT_VALUES,iErr);CHKERRQ(iErr)
+!            End Do
+!            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
          End Select            
       End If
       
@@ -376,8 +397,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MatAssembly"
    Subroutine HeatMatAssembly(AppCtx,MeshTopology)   
-      Type(Heat_AppCtx_Type)                            :: AppCtx
-      Type (MeshTopology_Type)                     :: MeshTopology
+      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(MeshTopology_Type)                      :: MeshTopology
       PetscInt                                     :: iBlk,iErr
       
       Call MatInsertVertexBoundaryValues(AppCtx%K,AppCtx%U,AppCtx%BCFlag,MeshTopology)
@@ -400,13 +421,13 @@ Contains
       PetscInt                                     :: iBlk
       
       PetscInt                                     :: iE,iELoc,iErr,i
-      PetscReal,Dimension(:,:),Pointer           :: MatElem
-      PetscInt,Dimension(:),Pointer              :: BCFlag
+      PetscReal,Dimension(:,:),Pointer             :: MatElem
+      PetscInt,Dimension(:),Pointer                :: BCFlag
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscInt                                     :: NumDoFScal
       PetscLogDouble                               :: flops = 0
       PetscReal                                    :: lDiff
-      PetscReal,Dimension(:),Pointer             :: T_Loc
+      PetscReal,Dimension(:),Pointer               :: T_Loc
       PetscReal                                    :: T_Elem
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event,iErr);CHKERRQ(iErr)
      
@@ -500,8 +521,8 @@ Contains
       PetscInt                                     :: iBlkId
       PetscInt                                     :: Num_DoF,iDoF
       PetscInt                                     :: iEloc,iE,iGauss
-      PetscInt,Dimension(:),Pointer              :: BCFlag_Loc
-      PetscReal,Dimension(:),Pointer             :: RHS_Loc,F_Loc
+      PetscInt,Dimension(:),Pointer                :: BCFlag_Loc
+      PetscReal,Dimension(:),Pointer               :: RHS_Loc,F_Loc
       PetscReal                                    :: F_Elem
       PetscLogDouble                               :: flops 
       
@@ -545,11 +566,11 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "ComputeEnergy"
    Subroutine ComputeEnergy(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                       :: AppCtx
       
       PetscInt                                     :: iErr
       PetscInt                                     :: NumDoF,NumGauss
-      PetscReal,Dimension(:),Pointer             :: F,U
+      PetscReal,Dimension(:),Pointer               :: F,U
       PetscInt                                     :: iBlk,iELoc,iE
       PetscInt                                     :: iDoF,iGauss
 #if defined PB_2D
@@ -607,7 +628,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "ComputeGradU"
    Subroutine ComputeGradU(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                       :: AppCtx
       
       PetscInt                                     :: iErr
 #if defined PB_2D
@@ -617,10 +638,10 @@ Contains
 #endif
       PetscReal                                    :: Vol
       PetscInt                                     :: NumDoF,NumGauss
-      PetscReal,Dimension(:),Pointer             :: U
+      PetscReal,Dimension(:),Pointer               :: U
       PetscInt                                     :: iBlk,iELoc,iE
       PetscInt                                     :: iDoF,iGauss
-      PetscReal,Dimension(:),Pointer             :: Grad_Ptr
+      PetscReal,Dimension(:),Pointer               :: Grad_Ptr
       PetscLogDouble                               :: flops = 0
 
       Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage,iErr);CHKERRQ(iErr)
@@ -663,7 +684,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonFinalize"
    Subroutine SimplePoissonFinalize(AppCtx)   
-      Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                       :: AppCtx
 
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename

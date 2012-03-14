@@ -21,7 +21,7 @@ Program TestCoordinates
    Type(SectionReal)                            :: coordSection
    Integer                                      :: cpu_ws = 0
    Integer                                      :: io_ws = 0
-=   PetscReal                                    :: vers
+   PetscReal                                    :: vers
    
    Call MEF90_Initialize()
 
@@ -62,6 +62,8 @@ Program TestCoordinates
 
    Write(MEF90_MyRank + 100,*) 'Now creating the coordinates section'
    Call DMMeshGetSectionReal(MeshTopology%mesh,'coordinates',coordSection,iErr); CHKERRQ(ierr)
+   Call SectionRealView(coordSection,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(coordSection,ierr);CHKERRQ(ierr)
 
    Call DMMeshGetCoordinatesF90(MeshTopology%mesh,array,iErr); CHKERRQ(iErr)
    Write(MEF90_MyRank + 100,*) 'Size(array)',Size(array,1),Size(Array,2)

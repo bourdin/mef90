@@ -196,6 +196,11 @@ Program TestAssembly
    Call PetscPrintf(PETSC_COMM_WORLD,"\n\nVec U_Vec: \n",iErr); CHKERRQ(iErr)
    Call VecView(U_Vec,PETSC_VIEWER_STDOUT_WORLD,iErr); CHKERRQ(iErr)
 
+   Call DMMeshGetStratumIS(MeshTopology%mesh,'height',0,cellIS,ierr);CHKERRQ(ierr)
+   Call ISGetIndicesF90(cellIS,cellID,iErr);CHKERRQ(iErr)
+   write(*,*) cellID
+   Call ISRestoreIndicesF90(cellIS,cellID,iErr);CHKERRQ(iErr)
+   Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
    
    Call MeshTopologyDestroy(MeshTopology)
    Call SectionRealDestroy(U_Sec,iErr); CHKERRQ(iErr)
