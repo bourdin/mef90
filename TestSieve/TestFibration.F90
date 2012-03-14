@@ -1,11 +1,7 @@
 Program TestFibration
-
-
 #include "finclude/petscdef.h"
-
    Use m_MEF90
    Use petsc
-
    Implicit NONE   
 
    Type (MeshTopology_Type)                     :: MeshTopology
@@ -23,17 +19,14 @@ Program TestFibration
    Character(len=256)                           :: prefix
    PetscInt                                     :: num_components, num_dof
    PetscInt, Dimension(:), Pointer              :: component_length 
+   Integer                                      :: rank,numproc
+   Integer                                      :: numCellSet,numDim
+   Type(DM)                                     :: tmpDM
    Integer                                      :: cpu_ws = 0
    Integer                                      :: io_ws = 0
-   Integer                                      :: rank,numproc
-   Type(DM)                                     :: tmpDM
-   Integer                                      :: numCellSet,numDim
-   Integer                                      :: exoid
    PetscReal                                    :: vers
 
    Call MEF90_Initialize()
-   Call MPI_Comm_size(PETSC_COMM_WORLD,numproc,iErr);CHKERRQ(iErr)
-   Call MPI_Comm_rank(PETSC_COMM_WORLD,rank,iErr);CHKERRQ(iErr)
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr)    
    If (.NOT. HasPrefix) Then
       Call PetscPrintf(PETSC_COMM_WORLD, "No input file prefix given\n", iErr)
@@ -43,17 +36,18 @@ Program TestFibration
 
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
-
-
-   If (rank == 0) Then
-      exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   If (MEF90_Myrank == 0) Then
+      EXO%exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
    End If
-   If (numproc == 1) Then
-      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
+   If (MEF90_numprocs == 1) Then
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,EXO%exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
    Else
-      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,tmpDM,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,EXO%exoid,tmpDM,ierr);CHKERRQ(ierr)
       Call DMMeshDistribute(tmpDM,PETSC_NULL_CHARACTER,MeshTopology%mesh,ierr);CHKERRQ(iErr)
       Call DMDestroy(tmpDM,ierr);CHKERRQ(iErr)
+   End If
+   If (MEF90_Myrank == 0) Then
+      Call EXCLOS(EXO%exoid,ierr)
    End If
    
    Write(IOBuffer, *) "Initializing MeshTopology object\n"
@@ -67,8 +61,7 @@ Program TestFibration
    MeshTopology%cellSet%ElemType    = MEF90_P1_Lagrange
    Do iBlk = 1, numCellSet
       Call cellSetElemTypeInit(MeshTopology%cellSet(iBlk), numDim)
-   End Do
-    
+   End Do    
 
 !!! Creating the Sec component of the field and flags
    Write(IOBuffer, *) "Creating Sections\n"
@@ -127,9 +120,6 @@ Program TestFibration
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionIntView(Flag1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
-   If (rank == 0) Then
-      Call EXCLOS(exoid,ierr)
-   End If
    Call FieldDestroy(Field1)
    Call FlagDestroy(Flag1)
    Call MEF90_Finalize()
