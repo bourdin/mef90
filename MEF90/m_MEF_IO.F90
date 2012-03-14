@@ -68,12 +68,14 @@ Contains
 
       PetscInt                                       :: ierr
       PetscInt                                       :: i,j,IntBuffer
+      PetscInt                                       :: numVertexSetGlobal
 
       PetscInt                                       :: NumNS
       PetscInt                                       :: EXO_MyRank
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
-
-      Do i = 1,dMeshTopology%Num_Node_Sets
+   
+      Call ISGetLocalSize(dMeshTopology%vertexSetGlobalIS,numVertexSetGlobal,ierr);CHKERRQ(ierr)
+      Do i = 1,numVertexSetGlobal
          Write(IOBuffer,102) i
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          Do j = 1,dEXO%Num_NSProperties
@@ -99,13 +101,15 @@ Contains
 
       PetscInt                                       :: ierr
       PetscInt                                       :: i,j,IntBuffer
+      PetscInt                                       :: numCellSetGlobal
 
       PetscInt                                       :: NumEB
       PetscInt                                       :: EXO_MyRank
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
       PetscReal                                      :: TmpEBProperty
 
-      Do i = 1,dMeshTopology%Num_Elem_Blks
+      Call ISGetLocalSize(dMeshTopology%cellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
+      Do i = 1,numCellSetGlobal
          Write(IOBuffer,100) i
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          Do j = 1,dEXO%Num_EBProperties
@@ -119,35 +123,4 @@ Contains
 100 Format('    Element Block ',T24,I3,'\n')
 200 Format('EB',I4.4,': ',A)
    End Subroutine EXOEBProperty_AskWithBatch
- 
-#undef __FUNCT__
-#define __FUNCT__ "EXOSSProperty_AskWithBatch"
-   Subroutine EXOSSProperty_AskWithBatch(dEXO,dMeshTopology,BatchUnit,IsBatch)
-      Type(EXO_Type)                                 :: dEXO
-      Type(MeshTopology_Type)                        :: dMeshTopology
-      PetscInt                                       :: BatchUnit
-      PetscBool                                      :: IsBatch
-
-      PetscInt                                       :: ierr
-      PetscInt                                       :: i,j,IntBuffer
-
-      PetscInt                                       :: NumSS
-      PetscInt                                       :: EXO_MyRank
-      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
-
-      Do i = 1,dMeshTopology%Num_Side_Sets
-         Write(IOBuffer,101) i
-         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-         Do j = 1,dEXO%Num_SSProperties
-            Write(IOBuffer,201) i,Trim(dEXO%SSProperty(j)%Name)
-            Call MEF90_AskInt(dEXO%SSProperty(j)%Value(i),IOBuffer,BatchUnit,IsBatch)
-         End Do
-         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
-            Write(BatchUnit,*)
-         End If
-      End Do
-101 Format('    Side Set      ',T24,I3,'\n')
-201 Format('SS',I4.4,': ',A)
-   End Subroutine EXOSSProperty_AskWithBatch
-
-End Module m_MEF_IO
+ End Module m_MEF_IO

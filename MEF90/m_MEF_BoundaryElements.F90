@@ -29,49 +29,6 @@ Module m_MEF_BoundaryElements
    End Interface BoundaryElement_View
 
 Contains
-#undef __FUNCT__
-#define __FUNCT__ "Init_Side_Set_Type"
-   Subroutine Init_Side_Set_Type(dSet,dDim)
-      Type(Side_Set_Type)                    :: dSet
-      PetscInt                               :: dDim
-      
-      Select Case (dDim)
-      Case (2)
-         Select Case (dSet%Elem_Type)
-         Case (MEF90_P1_Lagrange)         
-            dSet%DoF_Location = (/ 0,0,2/)
-            dSet%Num_Edge = 1
-            dSet%Num_Vert = 2
-         Case (MEF90_P2_Lagrange)
-            dSet%DoF_Location = (/ 0,1,2/)
-            dSet%Num_Edge = 1
-            dSet%Num_Vert = 2
-         Case Default
-            Print*,__FUNCT__,'Unknown element type',dSet%Elem_Type
-            STOP
-         End Select
-      Case (3)
-         Select Case (dSet%Elem_Type)
-         Case (MEF90_P1_Lagrange)         
-            dSet%DoF_Location = (/ 0,0,3 /)
-            dSet%Num_Edge = 3
-            dSet%Num_Vert = 3
-         Case (MEF90_P2_Lagrange)
-            dSet%DoF_Location = (/ 0,3,3 /)
-            dSet%Num_Edge = 3
-            dSet%Num_Vert = 3
-         Case Default
-            Print*,__FUNCT__,'Unknown element type',dSet%Elem_Type
-            STOP
-         End Select
-      Case Default
-         Print*,__FUNCT__,'Unknown dimension',dDim
-         STOP
-      End Select
-      dSet%Num_DoF = sum(dSet%DoF_Location)
-   End Subroutine Init_Side_Set_Type     
-   
-   
 !!!
 !!! 2D
 !!!
@@ -150,61 +107,6 @@ Contains
       
    End Subroutine BoundaryElement_P_Lagrange_2D_Init                          
    
-#undef __FUNCT__
-#define __FUNCT__ "BoundaryElement2D_Destroy"
-   Subroutine BoundaryElement2D_Destroy(dElem)
-      Type(BoundaryElement2D)               :: dElem
-      
-      If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF)
-      End If
-      If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C)
-      End If
-   End Subroutine BoundaryElement2D_Destroy                                
-   
-#undef __FUNCT__
-#define __FUNCT__ "BoundaryElement2D_View"
-   Subroutine BoundaryElement2D_View(dElem,viewer)
-      Type(BoundaryElement2D)                :: dElem
-      Type(PetscViewer)                      :: viewer
-      
-      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
-      Character(len=512)                     :: CharBuffer
-                
-      Nb_DoF   = size(dElem%BF,1)
-      Nb_Gauss = size(dElem%BF,2)
-      Write(CharBuffer,102) Nb_DoF
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      Write(CharBuffer,103) Nb_Gauss
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-      Nb_Gauss = Size(dElem%BF,2)
-      Do iDoF = 1,Nb_DoF
-         Write(CharBuffer,104) iDoF
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         !Write(CharBuffer,200) '        Normal vector (X,Y) \n    '
-         !Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         !Write(CharBuffer,202) dElem%NormalVector%X,dElem%NormalVector%Y
-         !Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        BF \n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,202) dElem%BF(iDoF,iG)%X,dElem%BF(iDoF,iG)%Y
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      End Do
-102 Format('    Nb_DoF   ',I9,'\n')
-103 Format('    Nb_Gauss ',I9,'\n')
-104 Format('    *** DoF  ',I9,'\n')
-200 Format(A)
-202 Format('(',F5.2,',',F5.2,')\n')
-   End Subroutine BoundaryElement2D_View                                   
-
 !!! 
 !!! 3D
 !!!
@@ -289,55 +191,5 @@ Contains
       deAllocate(tmpCoord)
    End Subroutine BoundaryElement_P_Lagrange_3D_Init
    
-#undef __FUNCT__
-#define __FUNCT__ "BoundaryElement3D_Destroy"
-   Subroutine BoundaryElement3D_Destroy(dElem)
-      Type(BoundaryElement3D)                :: dElem
-      
-      If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF)
-      End If
-      If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C)
-      End If
-   End Subroutine BoundaryElement3D_Destroy                                
-   
-#undef __FUNCT__
-#define __FUNCT__ "BoundaryElement3D_View"
-   Subroutine BoundaryElement3D_View(dElem,viewer)
-      Type(BoundaryElement3D)                :: dElem
-      Type(PetscViewer)                      :: viewer
-      
-      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
-      Character(len=512)                     :: CharBuffer
-                
-      Nb_DoF   = size(dElem%BF,1)
-      Nb_Gauss = size(dElem%BF,2)
-      Write(CharBuffer,102) Nb_DoF
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      Write(CharBuffer,103) Nb_Gauss
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-      Nb_Gauss = Size(dElem%BF,2)
-      Do iDoF = 1,Nb_DoF
-         Write(CharBuffer,104) iDoF
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        BF \n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,202) dElem%BF(iDoF,iG)%X,dElem%BF(iDoF,iG)%Y,dElem%BF(iDoF,iG)%Z
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-      End Do
-102 Format('    Nb_DoF   ',I9,'\n')
-103 Format('    Nb_Gauss ',I9,'\n')
-104 Format('    *** DoF  ',I9,'\n')
-200 Format(A)
-202 Format('(',F5.2,',',F5.2,',',F5.2,')\n')
-   End Subroutine BoundaryElement3D_View                                   
 End Module m_MEF_BoundaryElements
 

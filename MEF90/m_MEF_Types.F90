@@ -10,14 +10,12 @@ Module m_MEF_Types
    Public :: Element1D
    Public :: Element2D,Element2D_Scal,Element2D_Elast 
    Public :: Element3D,Element3D_Scal,Element3D_Elast 
-   Public :: BoundaryElement2D
-   Public :: BoundaryElement3D
 
-   Public :: Elem_Blk_Type,Node_Set_Type,MeshTopology_Type
+   Public :: CellSet_Type,MeshTopology_Type
    Public :: EXO_Type,EXO_Property_Type,EXO_Variable_Type
    
    Public :: EXOView
-   Public :: MeshTopologyDestroy,MeshTopologyView
+   Public :: MeshTopologyDestroy
       
    Type Field
       !!! A Field is a general container containing a section,a vector of sections for its components
@@ -84,55 +82,23 @@ Module m_MEF_Types
       PetscReal,Dimension(:),Pointer               :: Gauss_C
    End Type Element3D_Elast
    
-   Type BoundaryElement2D
-      Type(Vect2D),Dimension(:,:),Pointer          :: BF
-      PetscReal,Dimension(:),Pointer               :: Gauss_C
-   End Type BoundaryElement2D
-
-   Type BoundaryElement3D
-      Type(Vect3D),Dimension(:,:),Pointer          :: BF
-      PetscReal,Dimension(:),Pointer               :: Gauss_C
-   End Type BoundaryElement3D
-   
-   Type Elem_Blk_Type
-      PetscInt                                     :: ID
-      PetscInt                                     :: Elem_Type
-      PetscInt,Dimension(4)                        :: DoF_Location
+   Type CellSet_Type
+      PetscInt                                     :: ElemType
+      PetscInt,Dimension(4)                        :: dofLocation
       !!! DoF location is Cells,faces,edges,vertices in 3D and
       !!!                  Cell,unused,edges,vertices in2D
-      PetscInt                                     :: Num_DoF !! = sum(DoF_Location)
-      PetscInt                                     :: Num_Elems
-      Type(IS)                                     :: Cell_IS
-      !!! Cell_IS will eventually replace Elem_ID
-      PetscInt                                     :: Num_Face      
-      PetscInt                                     :: Num_Edge
-      PetscInt                                     :: Num_Vert
-      PetscInt                                     :: CoDimension
-   End Type Elem_Blk_Type
- 
-   Type Node_Set_Type
-      PetscInt                                     :: ID
-      PetscInt                                     :: Num_Nodes
-      Type(IS)                                     :: Vertex_IS
-      PetscInt,Dimension(:),Pointer                :: Node_ID
-   End Type Node_Set_Type
+      PetscInt                                     :: numDoF !! = sum(DoF_Location)
+      PetscInt                                     :: coDimension
+   End Type CellSet_Type
  
    Type MeshTopology_Type
-!      Sequence
-      ! Global datas
-      PetscInt                                     :: num_dim
-      PetscInt                                     :: num_verts
-      PetscInt                                     :: num_faces
-      PetscInt                                     :: num_elems
-      ! Element Blocks datas
-      PetscInt                                     :: num_elem_blks
-      Type(Elem_Blk_Type),Dimension(:),Pointer     :: elem_blk
-      ! Node sets datas
-      PetscInt                                     :: num_node_sets 
-      Type(Node_Set_Type),Dimension(:),Pointer     :: node_set
+      !!! One could debate if these should really be part of MeshTopology
+      Type(IS)                                     :: cellSetGlobalIS,vertexSetGlobalIS
+      Type(CellSet_Type),Dimension(:),Pointer      :: cellSet
       Type(DM)                                     :: mesh
    End Type MeshTopology_Type
    
+!!! Hopefully, all of this will be moved into the PETSc exodus viewer   
    Type EXO_Type
       MPI_Comm                                     :: comm      
       Integer                                      :: exoid
@@ -144,7 +110,7 @@ Module m_MEF_Types
       ! Properties
       PetscInt                                     :: Num_EBProperties
       Type(EXO_Property_Type),Dimension(:),Pointer :: EBProperty
-      PetscInt                                     :: Num_SSProperties
+      PetscInt                                     :: Num_NSProperties
       Type(EXO_Property_Type),Dimension(:),Pointer :: NSProperty
       ! Variables
       PetscInt                                     :: Num_GlobVariables    
@@ -156,7 +122,7 @@ Module m_MEF_Types
    End Type EXO_Type
    
    Type EXO_Property_Type
-      !!! Derived type used to store the values of a property at ALL NS,EB or SS
+      !!! Derived type used to store the values of a property at ALL NS,EB
       !!! in an EXO file
       Character(MXSTLN)                            :: Name
       PetscInt,Dimension(:),Pointer                :: Value
@@ -257,120 +223,11 @@ Contains
 #define __FUNCT__ "MeshTopologyDestroy"
    Subroutine MeshTopologyDestroy(dMeshTopology)
       Type(MeshTopology_Type)                      :: dMeshTopology
-      PetscInt                                     :: iSet,iBlk
-      PetscErrorCode                               :: iErr
+      PetscErrorCode                               :: ierr
       
-      If (Size(dMeshTopology%Node_set) > 0) Then
-         Do iSet = 1,Size(dMeshTopology%Node_set)
-            If (dMeshTopology%Node_set(iSet)%num_nodes>0) Then
-               Deallocate(dMeshTopology%Node_Set(iSet)%Node_ID)
-               Call ISDestroy(dMeshTopology%Node_set(iSet)%Vertex_IS,ierr);CHKERRQ(ierr)
-            End If
-         End Do
-         Deallocate (dMeshTopology%Node_Set)
-      End If
-      If (Size(dMeshTopology%Elem_Blk) > 0) Then
-         Do iBlk = 1,Size(dMeshTopology%Elem_Blk)
-            If (dMeshTopology%Elem_Blk(iBlk)%Num_Elems > 0) Then
-               Deallocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID)
-               Call ISDestroy(dMeshTopology%Elem_blk(iBlk)%Cell_IS,ierr);CHKERRQ(ierr)
-            End If
-         End Do
-         Deallocate(dMeshTopology%Elem_blk)
-      End If
+      Call ISDestroy(dMeshTopology%cellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call ISDestroy(dMeshTopology%vertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      DeAllocate(dMeshTopology%cellSet)
    End Subroutine MeshTopologyDestroy
 
-#undef __FUNCT__
-#define __FUNCT__ "MeshTopologyView"
-   Subroutine MeshTopologyView(dMeshTopology,viewer)
-      Type(MeshTopology_Type),Intent(IN)           :: dMeshTopology
-      Type(PetscViewer)                            :: viewer
-      
-      Integer                                      :: iErr
-      Character(len=MEF90_MXSTRLEN)                :: CharBuffer
-      Integer                                      :: i,j
-
-      Write(CharBuffer,103) dMeshTopology%num_dim
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,104) dMeshTopology%num_Verts
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,105) dMeshTopology%num_elems
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,106) dMeshTopology%Num_Elem_blks
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,107) dMeshTopology%Num_Node_Sets
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-   
-      Write(CharBuffer,600) '\n'
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,200)
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,201) dMeshTopology%num_elem_blks
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Do i = 1,dMeshTopology%Num_Elem_blks
-         Write(CharBuffer,203) dMeshTopology%Elem_Blk(i)%ID,dMeshTopology%Elem_blk(i)%Num_Elems
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         Write(CharBuffer,204) dMeshTopology%Elem_Blk(i)%ID,dMeshTopology%Elem_blk(i)%Elem_Type
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         Write(CharBuffer,205) dMeshTopology%Elem_Blk(i)%ID,dMeshTopology%Elem_blk(i)%DoF_Location
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         Write(CharBuffer,206) dMeshTopology%Elem_Blk(i)%ID,dMeshTopology%Elem_blk(i)%CoDimension
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         Write(CharBuffer,207) dMeshTopology%Elem_Blk(i)%ID
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         Do j = 1,dMeshTopology%Elem_blk(i)%Num_Elems
-            Write(CharBuffer,208) dMeshTopology%Elem_blk(i)%Elem_ID(j)
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         End Do
-         Write(CharBuffer,600) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      End Do
-      
-      
-      Write(CharBuffer,600) '\n'
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,300)
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Write(CharBuffer,301) dMeshTopology%num_node_sets
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      Do i = 1,dMeshTopology%num_node_sets
-         Write(CharBuffer,302) dMeshTopology%Node_Set(i)%ID,dMeshTopology%Node_Set(i)%Num_Nodes
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         Write(CharBuffer,303) dMeshTopology%Node_Set(i)%ID
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         Do j = 1,dMeshTopology%Node_Set(i)%Num_Nodes
-            Write(CharBuffer,500) dMeshTopology%Node_Set(i)%Node_ID(j)
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-         End Do
-         Write(CharBuffer,600) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
-      End Do
-      
-      
-103 Format('    Number of dimensions ============ ',I6,'\n')
-104 Format('    Number of vertices ============== ',I6,'\n')
-105 Format('    Number of elements ============== ',I6,'\n')
-106 Format('    Number of elements blocks ======= ',I6,'\n')
-107 Format('    Number of node sets ============= ',I6,'\n')
-
-200 Format('*** ELEMENT BLOCKS ***','\n')
-201 Format('    Number of blocks ================ ',I4,'\n')
-203 Format('    Block ',I3,' Number of elements ==== ',I4,'\n')
-204 Format('    Block ',I3,' Element type ========== ',I4,'\n')
-205 Format('    Block ',I3,' DoF location ========== ',4(I4,' '),'\n')
-205 Format('    Block ',I3,' Co-dimension ========== ',I4,'\n')
-207 Format('    Block ',I3,' IDs: ')
-208 Format(' ',I4)
-
-300 Format('*** NODE SETS ***','\n')
-301 Format('    Number of sets ================== ',I4,'\n')
-302 Format('    Set ',I3,' Number of nodes ========= ',I4,'\n')
-303 Format('    Set ',I3,' IDs: ')
-!304 Format('    Set ',I3,' Number of dist. factors = ',I4)
-
-500 Format(I4) 
-600 Format(A)
-601 Format('    Number of blocks global ========= ',I4,'\n')
-701 Format('    Number of sets global =========== ',I4,'\n')
-   End Subroutine MeshTopologyView
 End Module m_MEF_Types
