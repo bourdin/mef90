@@ -9,7 +9,7 @@ Program TestFibration
    Implicit NONE   
 
    Type (MeshTopology_Type)                     :: MeshTopology
-   Type (EXO_Type)                              :: EXO, MyEXO
+   Type (EXO_Type)                              :: EXO
    Type(Element2D_Elast), Dimension(:), Pointer :: ElemVect
    Type(Element2D_Scal), Dimension(:), Pointer  :: ElemScal
    Type(Field)                                  :: Field1
@@ -45,7 +45,9 @@ Program TestFibration
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   If (rank == 0) Then
+      exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   End If
    If (numproc == 1) Then
       Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
    Else
@@ -66,12 +68,7 @@ Program TestFibration
    Do iBlk = 1, numCellSet
       Call cellSetElemTypeInit(MeshTopology%cellSet(iBlk), numDim)
    End Do
-   
-   MyEXO%comm = PETSC_COMM_SELF
-   MyEXO%exoid = EXO%exoid
-   Write(MyEXO%filename, 200) trim(prefix), MEF90_MyRank
-200 Format(A, '-', I4.4, '.gen')
- 
+    
 
 !!! Creating the Sec component of the field and flags
    Write(IOBuffer, *) "Creating Sections\n"
@@ -130,24 +127,9 @@ Program TestFibration
    Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    Call SectionIntView(Flag1%Component_Sec(2), PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
-
-!   Call MeshSetMaxDof(MeshTopology%Mesh, num_dof, iErr); CHKERRQ(iErr) 
-!   Call MeshCreateMatrix(MeshTopology%mesh, Field1%Sec, MATMPIAIJ, M, iErr); CHKERRQ(iErr)
-!
-!   j = 5
-!   Do i = 1, num_components
-!      Allocate(MatElem(component_length(i),component_length(i)))
-!      MatElem = 100.0_Kr * i 
-!      Call DMMeshAssembleMatrix(M, MeshTopology%mesh, Field1%Component_Sec(i), MeshTopology%Num_Elems+j-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
-!      DeAllocate(MatElem)
-!   End Do
-!   
-!   Call MatAssemblyBegin(M, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-!   Call MatAssemblyEnd  (M, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-!
-!   Call MatView(M, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
-!   
-!   Call MatDestroy(M, iErr); CHKERRQ(iErr)
+   If (rank == 0) Then
+      Call EXCLOS(exoid,ierr)
+   End If
    Call FieldDestroy(Field1)
    Call FlagDestroy(Flag1)
    Call MEF90_Finalize()

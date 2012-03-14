@@ -23,8 +23,17 @@ Program TestFibration
    PetscInt                                     :: num_components, num_dof
    PetscInt, Dimension(:), Pointer              :: component_length 
    Type(SectionReal)                            :: Comp1, Comp2
+   Integer                                      :: cpu_ws = 0
+   Integer                                      :: io_ws = 0
+   Integer                                      :: rank,numproc
+   Type(DM)                                     :: tmpDM
+   Integer                                      :: numCellSet,numDim,numVertices,numCells
+   Integer                                      :: exoid
+   PetscReal                                    :: vers
 
    Call MEF90_Initialize()
+   Call MPI_Comm_size(PETSC_COMM_WORLD,numproc,iErr);CHKERRQ(iErr)
+   Call MPI_Comm_rank(PETSC_COMM_WORLD,rank,iErr);CHKERRQ(iErr)
    verbose = 0
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, flg, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr)    
@@ -55,21 +64,32 @@ Program TestFibration
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, MeshTopology%meshFS,ierr); CHKERRQ(iErr)
+   If (rank == 0) Then
+      exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   End If
+   If (numproc == 1) Then
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
+   Else
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,tmpDM,ierr);CHKERRQ(ierr)
+      Call DMMeshDistribute(tmpDM,PETSC_NULL_CHARACTER,MeshTopology%mesh,ierr);CHKERRQ(iErr)
+      Call DMDestroy(tmpDM,ierr);CHKERRQ(iErr)
+   End If
    
    If (verbose > 0) Then
       Write(IOBuffer, *) "Initializing MeshTopology object\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
+   Call MeshTopologyGetInfo(MeshTopology)
+   Call DMMeshGetLabelSize(MeshTopology%mesh,"Cell Sets",numCellSet,ierr);CHKERRQ(ierr)
+   Call DMMeshGetDimension(MeshTopology%Mesh,numDim,ierr);CHKERRQ(ierr)
    
    If (verbose > 0) Then
       Write(IOBuffer, *) "Initializing Element types\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   MeshTopology%Elem_Blk%Elem_Type    = MEF90_P1_Lagrange
-   Do iBlk = 1, MeshTopology%Num_Elem_Blks
-      Call Init_Elem_Blk_Type(MeshTopology%Elem_Blk(iBlk), MeshTopology%num_dim)
+   MeshTopology%cellSet%ElemType    = MEF90_P1_Lagrange
+   Do iBlk = 1, numCellSet
+      Call cellSetElemTypeInit(MeshTopology%cellSet(iBlk), numDim)
    End Do
    
    MyEXO%comm = PETSC_COMM_SELF
@@ -102,9 +122,11 @@ Program TestFibration
 !!! For some reason, it looks like one doesn't need to call SectionRealAllocate if the Section was created with MeshGetVertexSectionReal
    Call SectionRealAllocate(Field1%Sec, iErr); CHKERRQ(iErr)
 
-   Do i = 1, MeshTopology%num_verts
+   Call DMMeshGetStratumSize(MeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
+   Call DMMeshGetStratumSize(MeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
+   Do i = 1, numVertices
       Do j = 1, num_components
-         Call SectionRealSetFiberDimensionField(Field1%Sec, i+MeshTopology%Num_Elems-1, component_length(j), j-1, iErr); CHKERRQ(iErr)
+         Call SectionRealSetFiberDimensionField(Field1%Sec, i+numCells-1, component_length(j), j-1, iErr); CHKERRQ(iErr)
       End Do
    End Do 
 
@@ -135,8 +157,8 @@ Program TestFibration
    Call SectionRealToVec(Field1%Sec,Field1%Scatter,SCATTER_FORWARD,Field1%Vec,iErr);CHKERRQ(iErr);
    Call VecView(Field1%Vec,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(iErr)
 
-   
-300 Format(A)   
+   If (rank == 0) Then
+      Call EXCLOS(exoid,ierr)
+   End If
    Call MEF90_Finalize()
-
 End Program TestFibration
