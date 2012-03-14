@@ -8,8 +8,8 @@ Program TestDuplicate
    Type(EXO_Type)                               :: EXO, MyEXO
    Type(Element2D_Scal), Dimension(:), Pointer  :: Elem2DA
    
-   PetscBool                                   :: HasPrefix
-   PetscBool                                   :: verbose
+   PetscBool                                    :: HasPrefix
+   PetscBool                                    :: verbose
    PetscErrorCode                               :: iErr
    Character(len=256)                           :: filename
    Character(len=256)                           :: prefix
@@ -21,6 +21,12 @@ Program TestDuplicate
    PetscReal                                    :: one = 1.0_Kr
    Character(len=256)                           :: IO_Buffer
    Type(PetscViewer)                            :: MeshViewer
+
+   Integer                                      :: cpu_ws = 0
+   Integer                                      :: io_ws = 0
+   Type(DM)                                     :: tmpDM
+   Integer                                      :: exoid
+   PetscReal                                    :: vers
      
    Call MEF90_Initialize()
    dof=1
@@ -37,8 +43,21 @@ Program TestDuplicate
    EXO%filename = Trim(prefix)//'.gen'
 
 
-   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, MeshTopology%meshFS,ierr); CHKERRQ(iErr)   
-   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
+   If (MEF90_Myrank == 0) Then
+      exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   End If
+   If (MEF90_numprocs == 1) Then
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
+   Else
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,tmpDM,ierr);CHKERRQ(ierr)
+      Call DMMeshDistribute(tmpDM,PETSC_NULL_CHARACTER,MeshTopology%mesh,ierr);CHKERRQ(iErr)
+      Call DMDestroy(tmpDM,ierr);CHKERRQ(iErr)
+   End If
+   If (MEF90_Myrank == 0) Then
+      Call EXCLOS(exoid,ierr)
+   End If
+
+   Call MeshTopologyGetInfo(MeshTopology)
    
    Call DMMeshSetMaxDof(MeshTopology%Mesh, dof, iErr); CHKERRQ(iErr) 
    Call DMMeshGetVertexSectionReal(MeshTopology%mesh, 'U', dof, U_Sec, iErr); CHKERRQ(iErr)
@@ -56,19 +75,9 @@ Program TestDuplicate
    Call PetscPrintf(PETSC_COMM_WORLD, "\n\nSection V_Sec: \n", iErr); CHKERRQ(iErr)
    Call SectionRealView(V_Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
-   !!! DMView doesn't do anything interestying on an ASCII viewer and segfaults in parallel with a binary viewer
-   !Call PetscViewerBinaryOpen(PETSC_COMM_WORLD, Trim(Prefix)//'.dat', FILE_MODE_WRITE, MeshViewer, iErr); CHKERRQ(iErr)
-   !!Call PetscViewerASCIIOpen(PETSC_COMM_WORLD, Trim(Prefix)//'.dat', MeshViewer, iErr); CHKERRQ(iErr)
-   !Call DMView(MeshTopology%Mesh, MeshViewer, iErr); CHKERRQ(iErr)
-   !Call DMView(MeshTopology%MeshFS, MeshViewer, iErr); CHKERRQ(iErr)
-   !Call PetscViewerDestroy(MeshViewer,iErr);CHKERRQ(iErr)
-
    Call MeshTopologyDestroy(MeshTopology)
    Call SectionRealDestroy(U_Sec, iErr); CHKERRQ(iErr)
-   
-   
+   Call SectionRealDestroy(V_Sec, iErr); CHKERRQ(iErr)
    Call VecScatterDestroy(scatter, iErr); CHKERRQ(iErr)
-   
-300 Format(A)   
    Call MEF90_Finalize()
 End Program TestDuplicate

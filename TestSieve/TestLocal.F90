@@ -48,16 +48,12 @@ Program TestLocal
 
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
-   exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   EXO%exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
 
-
-   If (rank == 0) Then
-      exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
-   End If
    If (numproc == 1) Then
-      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,EXO%exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
    Else
-      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,tmpDM,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,EXO%exoid,tmpDM,ierr);CHKERRQ(ierr)
       Call DMMeshDistribute(tmpDM,PETSC_NULL_CHARACTER,MeshTopology%mesh,ierr);CHKERRQ(iErr)
       Call DMDestroy(tmpDM,ierr);CHKERRQ(iErr)
    End If
@@ -90,10 +86,9 @@ Program TestLocal
       Write(IOBuffer,200) 'EXO\n'
       Call PetscViewerASCIIPrintf(myviewer,IOBuffer,ierr);CHKERRQ(ierr)
       Call EXOView(EXO,myviewer)
-
    End If
    
-   Call EXCLOS(exoid,ierr)
+   Call EXCLOS(EXO%exoid,ierr)
    Call MEF90_Finalize()
 101 Format(A,'.log')
 102 Format(A,'-',I4.4,'.log')

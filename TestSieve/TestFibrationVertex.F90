@@ -25,15 +25,12 @@ Program TestFibration
    Type(SectionReal)                            :: Comp1, Comp2
    Integer                                      :: cpu_ws = 0
    Integer                                      :: io_ws = 0
-   Integer                                      :: rank,numproc
    Type(DM)                                     :: tmpDM
    Integer                                      :: numCellSet,numDim,numVertices,numCells
-   Integer                                      :: exoid
+   Integer                                      :: EXO%exoid
    PetscReal                                    :: vers
 
    Call MEF90_Initialize()
-   Call MPI_Comm_size(PETSC_COMM_WORLD,numproc,iErr);CHKERRQ(iErr)
-   Call MPI_Comm_rank(PETSC_COMM_WORLD,rank,iErr);CHKERRQ(iErr)
    verbose = 0
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', verbose, flg, iErr)    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER, '-p', prefix, HasPrefix, iErr)    
@@ -62,17 +59,18 @@ Program TestFibration
 
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
-
-
-   If (rank == 0) Then
-      exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   If (MEF90_MyRank == 0) Then
+      EXO%exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
    End If
-   If (numproc == 1) Then
-      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
+   If (MEF90_numprocs == 1) Then
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,EXO%exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
    Else
-      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,tmpDM,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,EXO%exoid,tmpDM,ierr);CHKERRQ(ierr)
       Call DMMeshDistribute(tmpDM,PETSC_NULL_CHARACTER,MeshTopology%mesh,ierr);CHKERRQ(iErr)
       Call DMDestroy(tmpDM,ierr);CHKERRQ(iErr)
+   End If
+   If (MEF90_MyRank == 0) Then
+      Call EXCLOS(EXO%exoid,ierr)
    End If
    
    If (verbose > 0) Then
@@ -93,7 +91,7 @@ Program TestFibration
    End Do
    
    MyEXO%comm = PETSC_COMM_SELF
-   MyEXO%exoid = EXO%exoid
+   MyEXO%EXO%exoid = EXO%EXO%exoid
    Write(MyEXO%filename, 200) trim(prefix), MEF90_MyRank
 200 Format(A, '-', I4.4, '.gen')
  
@@ -157,8 +155,5 @@ Program TestFibration
    Call SectionRealToVec(Field1%Sec,Field1%Scatter,SCATTER_FORWARD,Field1%Vec,iErr);CHKERRQ(iErr);
    Call VecView(Field1%Vec,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(iErr)
 
-   If (rank == 0) Then
-      Call EXCLOS(exoid,ierr)
-   End If
    Call MEF90_Finalize()
 End Program TestFibration
