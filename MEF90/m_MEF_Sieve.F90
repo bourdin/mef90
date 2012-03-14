@@ -26,112 +26,54 @@ Contains
 !!! Same as before except that each cpu has the same number of blocks and sets
 !!! with potentially 0 size. 
 !!! 
-   Subroutine MeshTopologyGetInfo(dMeshTopology,Comm)
+   Subroutine MeshTopologyGetInfo(dMeshTopology)
       Type (MeshTopology_Type)                     :: dMeshTopology
-      MPI_Comm                                     :: Comm
-      PetscInt                                     :: ierr,iBlk,iSet
-      
-      PetscReal,Dimension(:,:),Pointer             :: array
-      PetscInt,Dimension(:,:),Pointer              :: arrayCon
-      PetscInt                                     :: embedDim
-      PetscInt                                     :: iE,iElem,blkId,setId,i
-      Type(IS)                                     :: labels
-      PetscInt,Dimension(:),Pointer                :: labels_ptr,set_ptr
 
-
-      !!! Zero out all informations
-      dMeshTopology%num_dim = 0
-      dMeshTopology%num_verts = 0
-      dMeshTopology%num_elems = 0
-      dMeshTopology%num_elem_blks = 0
-      dMeshTopology%num_side_sets = 0
-      dMeshTopology%num_node_sets = 0
+      MPI_Comm                                     :: comm
+      PetscErrorCode                               :: ierr
+      Type(IS)                                     :: cellSetIS,vertexSetIS
+      PetscInt,Dimension(:),Pointer                :: cellSetID,vertexSetID
+      PetscInt                                     :: set,setID
       
-      ! Read Global Geometric Parameters
-      !!! Extracts sizes from the Mesh oject
-      Call DMMeshGetDimension(dMeshTopology%mesh,dMeshTopology%num_dim,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,dMeshTopology%Num_Elems,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%meshFS,"height",0,dMeshTopology%Num_Faces,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,dMeshTopology%Num_Verts,ierr);CHKERRQ(ierr)
+      Call PetscObjectGetComm(dMeshTopology%mesh,comm,ierr);CHKERRQ(ierr)      
+      !!!
+      !!! Get global IS for vertex and cell sets.
+      !!! This is required for synchronous loops over sets (like I/O)
+      !!!
+      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',dMeshTopology%cellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(comm,dMeshTopology%cellSetGlobalIS)
+      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Vertex Sets',dMeshTopology%vertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(comm,dMeshTopology%vertexSetGlobalIS)
       
-      ! Read Elem block information
-      !!! Get the number of labels of type 'CellBlocks' in the mesh
-      !!! Compare to the number initialized in MeshTopology
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',labels,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(Comm,labels)
-      Call ISGetIndicesF90(labels,labels_ptr,ierr);CHKERRQ(ierr)
-
-      Allocate(dMeshTopology%Elem_blk(dMeshTopology%Num_elem_blks))
-      Do iBlk = 1,dMeshTopology%Num_elem_blks
-         blkId = labels_ptr(iBlk)
-         dMeshTopology%elem_blk(iBlk)%elem_type = -1
-         dMeshTopology%elem_blk(iBlk)%dof_location = -1
-         dMeshTopology%Elem_blk(iBlk)%ID = blkId
-         Call DMMeshGetStratumSize(dMeshTopology%mesh,'Cell Sets',blkId,dMeshTopology%elem_blk(iBlk)%Num_Elems,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh,'Cell Sets',blkId,dMeshTopology%elem_blk(iBlk)%Cell_IS,ierr);CHKERRQ(ierr)
-         !!!
-         !!! Remove when  getting rid of Elem_ID in Elem_Blk_Type
-         !!! vvvvvv
-         If (dMeshTopology%elem_blk(iBlk)%Num_Elems > 0) Then
-            Allocate(dMeshTopology%Elem_blk(iBlk)%Elem_ID(dMeshTopology%elem_blk(iBlk)%Num_Elems))
-            Call ISGetIndicesF90(dMeshTopology%elem_blk(iBlk)%Cell_IS,set_ptr,ierr);CHKERRQ(ierr)
-            !!! Get the layer (stratum) 'CellBlock' of Mesh in C numbering
-            Do i = 1,dMeshTopology%elem_blk(iBlk)%Num_Elems
-               dMeshTopology%Elem_blk(iBlk)%Elem_ID(i) = set_ptr(i) + 1 
-            End Do   
-            !!! Converts to Fortran style indexing
-            Call ISRestoreIndicesF90(dMeshTopology%elem_blk(iBlk)%Cell_IS,set_ptr,ierr);CHKERRQ(ierr)
-         End If
-         !!! ^^^^^^
-         !!! Remove when  getting rid of Elem_ID in Elem_Blk_Type
-         !!! 
+      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',cellSetIS,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(cellSetIS,cellSetID,ierr);CHKERRQ(ierr)
+      Allocate(dMeshTopology%cellSet(size(cellSetID)))
+      Do set = 1, size(cellSetID)
+         dMeshTopology%cellSet(set)%ElemType    = -1
+         dMeshTopology%cellSet(set)%dofLocation = -1
+         dMeshTopology%cellSet(set)%numDof      = -1
+         dMeshTopology%cellSet(set)%coDimension = -1
       End Do
-      Call ISRestoreIndicesF90(labels,labels_ptr,ierr);CHKERRQ(ierr)
-      
-      ! Read Node set information
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Vertex Sets',labels,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(Comm,labels)
-      Call ISGetLocalSize(labels,dMeshTopology%Num_node_sets,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(labels,labels_ptr,ierr);CHKERRQ(ierr)
-
-      Allocate(dMeshTopology%node_set(dMeshTopology%Num_node_sets))
-      Do iBlk = 1,dMeshTopology%Num_node_sets
-         blkId = labels_ptr(iBlk)
-         dMeshTopology%node_set(iBlk)%ID = blkId
-         Call DMMeshGetStratumSize(dMeshTopology%mesh,'Vertex Sets',blkId,dMeshTopology%node_set(iBlk)%Num_Nodes,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh,'Vertex Sets',blkId,dMeshTopology%node_set(iBlk)%Vertex_IS,ierr);CHKERRQ(ierr)
-         !!!
-         !!! Remove everything when geting rid of node_IS in Node_Set_Type
-         !!! vvvvvv
-         If (dMeshTopology%node_set(iBlk)%num_nodes > 0) Then
-            Allocate(dMeshTopology%node_set(iBlk)%Node_ID(dMeshTopology%node_set(iBlk)%num_nodes))
-         
-            Call ISGetIndicesF90(dMeshTopology%node_set(iBlk)%Vertex_IS,set_ptr,ierr);CHKERRQ(ierr)
-            Do i = 1,dMeshTopology%node_set(iBlk)%num_nodes
-               dMeshTopology%node_set(iBlk)%node_ID(i) = set_ptr(i) + 1 - dMeshTopology%num_elems
-            End Do   
-            !!! Converts to Fortran style indexing
-            Call ISRestoreIndicesF90(dMeshTopology%node_set(iBlk)%Vertex_IS,set_ptr,ierr);CHKERRQ(ierr)
-         End If
-         !!! ^^^^^^
-         !!! Remove everything when geting rid of node_IS in Node_Set_Type
-         !!! 
-      End Do
-      Call ISRestoreIndicesF90(labels,labels_ptr,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(cellSetIS,cellSetID,ierr);CHKERRQ(ierr)
    End Subroutine MeshTopologyGetInfo
 
-
+!!!
+!!! Replace with an IS version
+!!!
 #undef __FUNCT__
 #define __FUNCT__ "FieldCreateVertex"
    Subroutine FieldCreateVertex(F,Fname,MeshTopology,component_size)
       Type(Field)                                  :: F
       Character(len=*)                             :: Fname
       Type(MeshTopology_Type)                      :: MeshTopology
-      PetscInt,Dimension(:),Pointer              :: component_size
+      PetscInt,Dimension(:),Pointer                :: component_size
       Character(len=256)                           :: component_name
-
+      PetscInt                                     :: numCells,numVertices
       PetscInt                                     :: i,j,ierr
       
+      Call DMMeshGetStratumSize(MeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
+      Call DMMeshGetStratumSize(MeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
+
       F%num_components = Size(component_size)
 
       !!! Create the Main Section
@@ -146,9 +88,9 @@ Contains
       Call SectionRealAllocate(F%Sec,ierr);CHKERRQ(ierr)
       
       !!! Set the fibration size
-      Do i = 1,MeshTopology%num_verts
+      Do i = 1,numVertices
          Do j = 1,F%num_components
-            Call SectionRealSetFiberDimensionField(F%Sec,i+MeshTopology%Num_Elems-1,component_size(j),j-1,ierr);CHKERRQ(ierr)
+            Call SectionRealSetFiberDimensionField(F%Sec,i+numCells-1,component_size(j),j-1,ierr);CHKERRQ(ierr)
          End Do
       End Do 
       
@@ -193,11 +135,14 @@ Contains
       Type(Flag)                                   :: F
       Character(len=*)                             :: Fname
       Type(MeshTopology_Type)                      :: MeshTopology
-      PetscInt,Dimension(:),Pointer              :: component_size
+      PetscInt,Dimension(:),Pointer                :: component_size
       Character(len=256)                           :: component_name
-
+      PetscInt                                     :: numCells,numVertices
       PetscInt                                     :: i,j,ierr
       
+      Call DMMeshGetStratumSize(MeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
+      Call DMMeshGetStratumSize(MeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
+
       F%num_components = Size(component_size)
 
       !!! Create the Main Section
@@ -212,9 +157,9 @@ Contains
       Call SectionIntAllocate(F%Sec,ierr);CHKERRQ(ierr)
       
       !!! Set the fibration size
-      Do i = 1,MeshTopology%num_verts
+      Do i = 1,numVertices
          Do j = 1,F%num_components
-            Call SectionIntSetFiberDimensionField(F%Sec,i+MeshTopology%Num_Elems-1,component_size(j),j-1,ierr);CHKERRQ(ierr)
+            Call SectionIntSetFiberDimensionField(F%Sec,i+numCells-1,component_size(j),j-1,ierr);CHKERRQ(ierr)
          End Do
       End Do 
       
@@ -251,17 +196,28 @@ Contains
       Type(EXO_Property_Type)                      :: NSProperty
       Type(MeshTopology_Type)                      :: MeshTopology
       
-      PetscInt                                     :: ierr,i,j
-      PetscInt,Dimension(:),Pointer              :: Sec_Ptr
+      PetscErrorCode                               :: ierr
+      PetscInt                                     :: set,vertex
+      Type(IS)                                     :: setIS,vertexIS
+      PetscInt,Dimension(:),Pointer                :: setID,vertexID
+      PetscInt                                     :: numVertexSet,numCells
+      PetscInt,Dimension(:),Pointer                :: Sec_Ptr
       
-      Do i = 1,MeshTopology%Num_Node_Sets
+      Call DMMeshGetStratumSize(MeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
+      Call DMMeshGetLabelIdIS(MeshTopology%mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
          Allocate(Sec_Ptr(1))
-         Sec_Ptr = NSProperty%Value( MeshTopology%Node_Set(i)%ID )
-         Do j = 1,MeshTopology%Node_Set(i)%Num_Nodes
-            Call SectionIntUpdate(Sec,MeshTopology%Node_Set(i)%Node_ID(j) + MeshTopology%Num_Elems-1,Sec_Ptr,ADD_VALUES,ierr);CHKERRQ(ierr)
+         Sec_Ptr = NSProperty%Value(setID(set))
+         Call DMMeshGetStratumIS(MeshTopology%mesh,'Vertex Sets',setID(set),vertexIS,ierr);CHKERRQ(ierr)
+         Call ISGetIndicesF90(vertexIS,vertexID,ierr);CHKERRQ(ierr)
+         Do vertex = 1,size(vertexID)
+            Call SectionIntUpdate(Sec,vertexID(vertex) + numCells - 1,Sec_Ptr,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do
          DeAllocate(Sec_Ptr)
+         Call ISRestoreIndicesF90(vertexIS,vertexID,ierr);CHKERRQ(ierr)
       End Do
+      Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
    End Subroutine SectionIntAddNSProperty
    
 #undef __FUNCT__
@@ -273,9 +229,9 @@ Contains
       Type(MeshTopology_Type)                      :: MeshTopology
       
       PetscInt                                     :: ierr
-      PetscInt,Dimension(:),Pointer              :: BCFlag_Ptr
-      PetscReal,Dimension(:,:),Pointer           :: MatElem
-      PetscInt                                     :: i,j,num_dof,zero
+      PetscInt,Dimension(:),Pointer                :: BCFlag_Ptr
+      PetscReal,Dimension(:,:),Pointer             :: MatElem
+      PetscInt                                     :: i,j,num_dof,zero,numCells,numVertices
       !!! As soon as I can get access to the layout data of a SectionReal,I won't need the MeshTopology and the specific Vertex case
 
       !!!
@@ -284,11 +240,13 @@ Contains
       !!! therefre erasing exsting values....
       !!! MatInsertBoundaryValues needs to be called BEFORE building the hessian or stiffness matrix
       !!!
+      Call DMMeshGetStratumSize(MeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
+      Call DMMeshGetStratumSize(MeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
       zero = 0
       num_dof = sum(BCFlag%component_size)
       Allocate(MatElem(num_dof,num_dof))  
-      Do i = 1,MeshTopology%num_verts
-         Call SectionIntRestrict(BCFlag%Sec,MeshTopology%Num_Elems+i-1,BCFlag_Ptr,ierr);CHKERRQ(ierr)
+      Do i = 1,numVertices
+         Call SectionIntRestrict(BCFlag%Sec,numCells+i-1,BCFlag_Ptr,ierr);CHKERRQ(ierr)
          If (Sum(BCFlag_Ptr) /= 0) Then
             MatElem = 0.0_Kr
             Do j = 1,num_dof
@@ -296,7 +254,7 @@ Contains
                   MatElem(j,j) = 1.0_Kr
                End If  
             End Do
-            Call DMMeshAssembleMatrix(M,MeshTopology%mesh,U%Sec,MeshTopology%Num_Elems+i-1,MatElem,INSERT_VALUES,ierr);CHKERRQ(ierr)
+            Call DMMeshAssembleMatrix(M,MeshTopology%mesh,U%Sec,numCells+i-1,MatElem,INSERT_VALUES,ierr);CHKERRQ(ierr)
          End If
       End Do
       DeAllocate(MatElem)
@@ -311,23 +269,26 @@ Contains
       Type(MeshTopology_Type)                      :: MeshTopology
       
       PetscInt                                     :: ierr,zero
-      PetscInt,Dimension(:),Pointer              :: BCFlag_Ptr
-      PetscReal,Dimension(:),Pointer             :: FBC_Ptr
-      PetscInt                                     :: i,j
+      PetscInt,Dimension(:),Pointer                :: BCFlag_Ptr
+      PetscReal,Dimension(:),Pointer               :: FBC_Ptr
+      PetscInt                                     :: i,j,numCells,numVertices
       !!! As soon as I can get access to the layout data of a SectionReal,I won't need the MeshTopology and the specific Vertex case
+
+      Call DMMeshGetStratumSize(MeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
+      Call DMMeshGetStratumSize(MeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
       zero = 0
       Do j = 1,BCFlag%num_components 
          If (BCFlag%Component_size(j) /= 1 ) Then
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,'FieldInsertVertexBoundaryValues requires scalar components',ierr)
          End If
-         Do i = 1,MeshTopology%Num_Verts
-            Call SectionIntRestrict(BCFlag%Component_Sec(j),MeshTopology%Num_Elems+i-1,BCFlag_Ptr,ierr);CHKERRQ(ierr)
+         Do i = 1,numVertices
+            Call SectionIntRestrict(BCFlag%Component_Sec(j),numCells+i-1,BCFlag_Ptr,ierr);CHKERRQ(ierr)
             If (BCFlag_Ptr(1) /= zero) Then
-               Call SectionRealRestrict(FBC%Component_Sec(j),MeshTopology%Num_Elems+i-1,FBC_Ptr,ierr);CHKERRQ(ierr)
-               Call SectionRealUpdate  (F%Component_Sec(j), MeshTopology%Num_Elems+i-1,FBC_Ptr,INSERT_VALUES,ierr);CHKERRQ(ierr)
-               Call SectionRealRestore (FBC%Component_Sec(j),MeshTopology%Num_Elems+i-1,FBC_Ptr,ierr);CHKERRQ(ierr)
+               Call SectionRealRestrict(FBC%Component_Sec(j),numCells+i-1,FBC_Ptr,ierr);CHKERRQ(ierr)
+               Call SectionRealUpdate  (F%Component_Sec(j),numCells+i-1,FBC_Ptr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+               Call SectionRealRestore (FBC%Component_Sec(j),numCells+i-1,FBC_Ptr,ierr);CHKERRQ(ierr)
             End If
-            Call SectionIntRestore(BCFlag%Component_Sec(j),MeshTopology%Num_Elems+i-1,BCFlag_Ptr,ierr);CHKERRQ(ierr)
+            Call SectionIntRestore(BCFlag%Component_Sec(j),numCells+i-1,BCFlag_Ptr,ierr);CHKERRQ(ierr)
          End Do
       End Do
    End Subroutine FieldInsertVertexBoundaryValues
