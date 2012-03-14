@@ -191,7 +191,6 @@ Contains
       Logical, Dimension(:,:), Pointer            :: lMask
       PetscReal                                   :: pivinv , DumR
       PetscReal, Dimension(:),Pointer             :: dumc 
-      PetscReal, Dimension(:,:), Pointer          :: DumC2
       Integer, Target                             :: irc(2) 
       Integer                                     :: i,l,n 
       Integer, Pointer                            :: irow,icol 
