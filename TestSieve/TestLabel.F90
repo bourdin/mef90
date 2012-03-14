@@ -7,7 +7,7 @@ Program TestLabel
 
    Implicit NONE   
 
-   Type(DM)                                     :: dmBody,dmFS
+   Type(DM)                                     :: dmBody,tmpDM
    
    PetscBool                                    :: HasPrefix,flg
    PetscErrorCode                               :: ierr
@@ -17,6 +17,11 @@ Program TestLabel
    PetscInt                                     :: num_set
    PetscInt,Dimension(:),Pointer                :: set_ids
    Type(IS)                                     :: set_IS
+   Integer                                      :: cpu_ws = 0
+   Integer                                      :: io_ws = 0
+   Integer                                      :: numCellSet,numDim
+   Integer                                      :: exoid
+   PetscReal                                    :: vers
    
    Call MEF90_Initialize()
    !Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
@@ -32,7 +37,16 @@ Program TestLabel
 
    !!! Read Mesh
    filename = Trim(prefix)//'.gen'
-   Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,filename,dmBody,PETSC_NULL,ierr);CHKERRQ(ierr)
+   If (rank == 0) Then
+      exoid = EXOPEN(filename,EXREAD,cpu_ws,io_ws,vers,ierr)
+   End If
+   If (numproc == 1) Then
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,dmBody,ierr);CHKERRQ(ierr)
+   Else
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoid,tmpDM,ierr);CHKERRQ(ierr)
+      Call DMMeshDistribute(tmpDM,PETSC_NULL_CHARACTER,dmBody,ierr);CHKERRQ(iErr)
+      Call DMDestroy(tmpDM,ierr);CHKERRQ(iErr)
+   End If
 
    Call DMMeshGetLabelIdIS(dmBody,'Cell Sets',set_IS,ierr);CHKERRQ(ierr)
    Call DMMeshGetLabelSize(dmBody,'Cell Sets',num_set,ierr);CHKERRQ(ierr)
@@ -73,8 +87,9 @@ Program TestLabel
    Call PetscSynchronizedFlush(PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
 
 
-   !Call DMDestroy(dmBody,ierr);CHKERRQ(ierr);
-!   Call DMDestroy(dmFS,ierr);CHKERRQ(ierr);
-
+   Call DMDestroy(dmBody,ierr);CHKERRQ(ierr);
+   If (rank == 0) Then
+      Call EXCLOS(exoid,ierr)
+   End If
    Call MEF90_Finalize()
 End Program TestLabel
