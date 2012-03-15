@@ -35,13 +35,17 @@ Module m_Poisson3D
 
 
    Type Heat_AppCtx_Type
-      Type (MeshTopology_Type)                     :: MeshTopology
+      Type (dm)                                    :: mesh
       Type (EXO_Type)                              :: EXO,MyEXO
 #if defined PB_2D
-      Type(Element2D_Scal),Dimension(:),Pointer    :: Elem
+      Type(Element2D_Scal),Dimension(:,:),Pointer  :: Elem
 #elif defined PB_3D
-      Type(Element3D_Scal),Dimension(:),Pointer    :: Elem
+      Type(Element3D_Scal),Dimension(:,:),Pointer  :: Elem
 #endif
+      Type(IS)                                     :: CellSetGlobalIS
+      Type(IS)                                     :: VertexSetGlobalIS
+      Type(Elem_Type),Dimension(:),Pointer         :: cellSet
+      !!! Since everything is done block after block, it is simpler to have one set of elements per block
       Type(SectionReal)                            :: GradU
       PetscReal                                    :: ElasticEnergy
       Type(Field)                                  :: U
@@ -137,7 +141,7 @@ Contains
       !!! Read and partition the mesh
       If (MEF90_NumProcs == 1) Then
          Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage,iErr);CHKERRQ(iErr)
-         Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,AppCtx%EXO%exoid,AppCtx%MeshTopology%mesh,ierr);CHKERRQ(iErr)
+         Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,AppCtx%EXO%exoid,AppCtx%mesh,ierr);CHKERRQ(iErr)
          Call PetscLogStagePop(iErr);CHKERRQ(iErr)
       Else
          Call PetscLogStagePush(AppCtx%LogInfo%MeshCreateExodus_Stage,iErr);CHKERRQ(iErr)
@@ -145,18 +149,24 @@ Contains
          Call PetscLogStagePop(iErr);CHKERRQ(iErr)
       
          Call PetscLogStagePush(AppCtx%LogInfo%MeshDistribute_Stage,iErr);CHKERRQ(iErr)
-         Call DMMeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,AppCtx%MeshTopology%mesh,ierr);CHKERRQ(iErr)
+         Call DMMeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,AppCtx%mesh,ierr);CHKERRQ(iErr)
          Call DMDestroy(Tmp_mesh,ierr);CHKERRQ(iErr)
          Call PetscLogStagePop(iErr);CHKERRQ(iErr)
       End If
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage,iErr);CHKERRQ(iErr)
-      Call MeshTopologyGetInfo(AppCtx%MeshTopology)
 
-      Call DMMeshGetLabelSize(AppCtx%MeshTopology%mesh,"Cell Sets",numCellSet,ierr);CHKERRQ(ierr)
-      Call DMMeshGetLabelSize(AppCtx%MeshTopology%mesh,"Vertex Sets",numVertexSet,ierr);CHKERRQ(ierr)
-      Call DMMeshGetDimension(AppCtx%MeshTopology%Mesh,numDim,ierr);CHKERRQ(ierr)
+      Call DMMeshGetLabelSize(AppCtx%mesh,"Cell Sets",numCellSet,ierr);CHKERRQ(ierr)
+      Call DMMeshGetLabelSize(AppCtx%mesh,"Vertex Sets",numVertexSet,ierr);CHKERRQ(ierr)
+      Call DMMeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
+      
+      Call DMMeshGetLabelIdIS(MeshTopology%mesh,'Cell Sets',AppCtx%CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,AppCtx%CellSetGlobalIS)
+      Call DMMeshGetLabelIdIS(MeshTopology%mesh,'Vertex Sets',AppCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,AppCtx%VertexSetGlobalIS)
+      
       !!! Sets the type of elements for each block
+      Allocate(cellSet(numCellSet))
       AppCtx%MeshTopology%cellSet%ElemType = MEF90_P1_Lagrange
       Do set = 1,numCellSet
          Call cellSetElemTypeInit(AppCtx%MeshTopology%cellSet(set),numDim)
@@ -180,10 +190,10 @@ Contains
       
       Allocate(TmpFlag(1))
       TmpFlag = 1
-      Call DMMeshGetLabelIdIS(AppCtx%MeshTopology%mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
+      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call DMMeshGetStratumIS(AppCtx%MeshTopology%mesh,'Vertex Sets',setID(set),vertexIS,ierr); CHKERRQ(iErr)
+         Call DMMeshGetStratumIS(AppCtx%mesh,'Vertex Sets',setID(set),vertexIS,ierr); CHKERRQ(iErr)
          Call ISGetIndicesF90(vertexIS,vertexID,iErr);CHKERRQ(iErr)
          Do vertex = 1, size(vertexID)
             Call SectionIntUpdate(AppCtx%BCFlag%Sec,vertexID(vertex),TmpFlag,INSERT_VALUES,iErr);CHKERRQ(iErr)
@@ -196,8 +206,8 @@ Contains
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
       !!! Initialize the matrix and vector for the linear system
-      Call DMMeshSetMaxDof(AppCtx%MeshTopology%Mesh,1,iErr);CHKERRQ(iErr) 
-      Call DMMeshCreateMatrix(AppCtx%MeshTopology%mesh,AppCtx%U%Sec,MATMPIAIJ,AppCtx%K,iErr);CHKERRQ(iErr)
+      Call DMMeshSetMaxDof(AppCtx%mesh,1,iErr);CHKERRQ(iErr) 
+      Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%U%Sec,MATMPIAIJ,AppCtx%K,iErr);CHKERRQ(iErr)
      
 
       Call KSPCreate(PETSC_COMM_WORLD,AppCtx%KSP,iErr);CHKERRQ(iErr)
@@ -254,7 +264,7 @@ Contains
 !            Allocate(ValPtr(1))
 !            ValPtr = 0.0_Kr
 !            Call SectionRealSet(AppCtx%F,0.0_Kr,iErr);CHKERRQ(iErr);
-!            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
+!            Call DMMeshGetCoordinatesF90(AppCtx%mesh,Coords,iErr);CHKERRQ(iErr)
 !               
 !            Do iDoF = 1,Size(Coords,1)
 !#if defined PB_2D
@@ -267,11 +277,11 @@ Contains
 !               Call SectionRealUpdate(AppCtx%U%Sec,AppCtx%MeshTopology%Num_Elems+iDoF-1,ValPtr,INSERT_VALUES,iErr);CHKERRQ(iErr)
 !            End Do
 !            DeAllocate(ValPtr)
-!            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
+!            Call DMMeshRestoreCoordinatesF90(AppCtx%mesh,Coords,iErr);CHKERRQ(iErr)
       !!! NEW WAY
             Allocate(ValPtr(1))
-            Call DMMeshGetSectionReal(AppCtx%MeshTopology%mesh,'coordinates',coordSection,iErr); CHKERRQ(ierr)
-            Call DMMeshGetStratumIS(AppCtx%MeshTopology%mesh,'height',0,vertexIS,ierr);CHKERRQ(ierr)
+            Call DMMeshGetSectionReal(AppCtx%mesh,'coordinates',coordSection,iErr); CHKERRQ(ierr)
+            Call DMMeshGetStratumIS(AppCtx%mesh,'height',0,vertexIS,ierr);CHKERRQ(ierr)
             Call ISGetIndicesF90(vertexIS,vertexID,iErr);CHKERRQ(iErr)
             Do vertex = 1, size(vertexID)
                Call SectionRealRestrict(coordSection,vertexID(vertex),coord,ierr);CHKERRQ(ierr)
@@ -296,7 +306,7 @@ Contains
 !            Allocate(ValPtr(1))
 !            ValPtr = 0.0_Kr
 !            Call SectionRealSet(AppCtx%U,1.0_Kr,iErr);CHKERRQ(iErr);
-!            Call DMMeshGetCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
+!            Call DMMeshGetCoordinatesF90(AppCtx%mesh,Coords,iErr);CHKERRQ(iErr)
 !            
 !            Do iDoF = 1,Size(Coords,1)
 !#if defined PB_2D
@@ -314,7 +324,7 @@ Contains
 !#endif
 !               Call SectionRealUpdate(AppCtx%F%Sec,AppCtx%MeshTopology%Num_Elems+iDoF-1,ValPtr,INSERT_VALUES,iErr);CHKERRQ(iErr)
 !            End Do
-!            Call DMMeshRestoreCoordinatesF90(AppCtx%MeshTopology%Mesh,Coords,iErr);CHKERRQ(iErr)
+!            Call DMMeshRestoreCoordinatesF90(AppCtx%mesh,Coords,iErr);CHKERRQ(iErr)
          End Select            
       End If
       
@@ -378,7 +388,7 @@ Contains
       Call PetscLogStagePush(AppCtx%LogInfo%KSPSolve_Stage,iErr);CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%U%Sec,AppCtx%U%Scatter,SCATTER_FORWARD,AppCtx%U%Vec,iErr);CHKERRQ(iErr)
 
-      Call DMMeshCreateVector(AppCtx%MeshTopology%mesh,AppCtx%RHS,AppCtx%RHS%Vec,iErr);CHKERRQ(iErr)
+      Call DMMeshCreateVector(AppCtx%mesh,AppCtx%RHS,AppCtx%RHS%Vec,iErr);CHKERRQ(iErr)
       Call SectionRealToVec(AppCtx%RHS%Sec,AppCtx%RHS%Scatter,SCATTER_FORWARD,AppCtx%RHS%Vec,iErr);CHKERRQ(iErr)
 
       Call KSPSolve(AppCtx%KSP,AppCtx%RHS%Vec,AppCtx%U%Vec,iErr);CHKERRQ(iErr)
@@ -441,7 +451,7 @@ Contains
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          MatElem = 0.0_Kr
          BCFlag = 0
-         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec,MeshTopology%mesh,iE-1,MeshTopology%Elem_Blk(iBlk)%Num_DoF,BCFlag,iErr);CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec,mesh,iE-1,MeshTopology%Elem_Blk(iBlk)%Num_DoF,BCFlag,iErr);CHKERRQ(ierr)
          Do iGauss = 1,size(AppCtx%Elem(iE)%Gauss_C)
             Select Case(AppCtx%AppParam%TestCase)
             Case(2)
@@ -450,7 +460,7 @@ Contains
                ! Mensi Law D(C) = A exp (B*C) 
                ! 1988 Mensi-Acker-Attolou Mater Struct
                ! C : water content, A and B material parameters
-               Call SectionRealRestrictClosure(AppCtx%U%Sec,MeshTopology%mesh, iE-1,NumDoFScal,T_Loc,iErr);CHKERRQ(ierr)
+               Call SectionRealRestrictClosure(AppCtx%U%Sec,mesh, iE-1,NumDoFScal,T_Loc,iErr);CHKERRQ(ierr)
                T_Elem = 0.0_Kr
                Do iDoF1 = 1,NumDoFScal
                   T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1,iGauss) * T_Loc(iDoF1)
@@ -469,8 +479,8 @@ Contains
                End If
             End Do
          End Do
-         Call DMMeshAssembleMatrix(AppCtx%K,MeshTopology%mesh,AppCtx%U%Sec,iE-1,MatElem,ADD_VALUES,iErr);CHKERRQ(iErr)
-         !Call DMMeshAssembleMatrix(AppCtx%K,MeshTopology%mesh,AppCtx%U%Sec,iE-1,MatElem,INSERT_VALUES,iErr);CHKERRQ(iErr)
+         Call DMMeshAssembleMatrix(AppCtx%K,mesh,AppCtx%U%Sec,iE-1,MatElem,ADD_VALUES,iErr);CHKERRQ(iErr)
+         !Call DMMeshAssembleMatrix(AppCtx%K,mesh,AppCtx%U%Sec,iE-1,MatElem,INSERT_VALUES,iErr);CHKERRQ(iErr)
       End Do Do_iELoc
    
       Call PetscLogFlops(flops,iErr);CHKERRQ(iErr)
@@ -538,8 +548,8 @@ Contains
       Do_iEloc: Do iELoc = 1,MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          RHS_Loc = 0.0_Kr
-         Call SectionRealRestrictClosure(AppCtx%F%Sec,MeshTopology%mesh,iE-1,Num_DoF,F_Loc,iErr);CHKERRQ(ierr)
-         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec,MeshTopology%mesh,iE-1,Num_DoF,BCFlag_Loc,iErr);CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%F%Sec,mesh,iE-1,Num_DoF,F_Loc,iErr);CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCFlag%Sec,mesh,iE-1,Num_DoF,BCFlag_Loc,iErr);CHKERRQ(ierr)
          Do iGauss = 1,Size(AppCtx%Elem(iE)%Gauss_C)
             F_Elem = 0.0_Kr
             Do iDoF = 1,Num_DoF
@@ -553,7 +563,7 @@ Contains
                End If
             End Do
          End Do
-         Call SectionRealUpdateClosure(AppCtx%RHS%Sec,MeshTopology%Mesh,iE-1,RHS_Loc,ADD_VALUES,iErr);CHKERRQ(iErr)
+         Call SectionRealUpdateClosure(AppCtx%RHS%Sec,mesh,iE-1,RHS_Loc,ADD_VALUES,iErr);CHKERRQ(iErr)
       End Do Do_iEloc
 
       DeAllocate(BCFlag_Loc)
@@ -594,9 +604,9 @@ Contains
             NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
             NumGauss = Size(AppCtx%Elem(iE)%BF,2)
             Allocate(F(NumDoF))
-            Call SectionRealRestrictClosure(AppCtx%F%Sec,AppCtx%MeshTopology%mesh,iE-1,NumDoF,F,iErr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%F%Sec,AppCtx%mesh,iE-1,NumDoF,F,iErr);CHKERRQ(ierr)
             Allocate(U(NumDoF))
-            Call SectionRealRestrictClosure(AppCtx%U%Sec,AppCtx%MeshTopology%mesh,iE-1,NumDoF,U,iErr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%U%Sec,AppCtx%mesh,iE-1,NumDoF,U,iErr);CHKERRQ(ierr)
             Do iGauss = 1,NumGauss
                Strain_Elem = 0.0_Kr
                Stress_Elem = 0.0_Kr
@@ -646,7 +656,7 @@ Contains
 
       Call PetscLogStagePush (AppCtx%LogInfo%PostProc_Stage,iErr);CHKERRQ(iErr)
       Call PetscLogEventBegin(AppCtx%LogInfo%PostProc_Event,iErr);CHKERRQ(iErr)
-      Call DMMeshGetCellSectionReal(AppCtx%MeshTopology%mesh,  'GradU',AppCtx%MeshTopology%Num_Dim,AppCtx%GradU,iErr);CHKERRQ(iErr)
+      Call DMMeshGetCellSectionReal(AppCtx%mesh,  'GradU',AppCtx%MeshTopology%Num_Dim,AppCtx%GradU,iErr);CHKERRQ(iErr)
 
       Allocate(Grad_Ptr(AppCtx%MeshTopology%Num_Dim))
       Do_Elem_iBlk: Do iBlk = 1,AppCtx%MeshTopology%Num_Elem_Blks
@@ -655,7 +665,7 @@ Contains
             NumDoF   = Size(AppCtx%Elem(iE)%BF,1)
             NumGauss = Size(AppCtx%Elem(iE)%BF,2)
             Allocate(U(NumDoF))
-            Call SectionRealRestrictClosure(AppCtx%U%Sec,AppCtx%MeshTopology%mesh,iE-1,NumDoF,U,iErr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(AppCtx%U%Sec,AppCtx%mesh,iE-1,NumDoF,U,iErr);CHKERRQ(ierr)
             Grad = 0.0_Kr
             Vol  = 0.0_Kr
             Do iGauss = 1,NumGauss
@@ -671,7 +681,7 @@ Contains
 #elif defined PB_3D
             Grad_Ptr = (/ Grad%X,Grad%Y,Grad%Z /)
 #endif
-            Call SectionRealUpdateClosure(AppCtx%GradU,AppCtx%MeshTopology%Mesh,iE-1,Grad_Ptr,INSERT_VALUES,iErr)
+            Call SectionRealUpdateClosure(AppCtx%GradU,AppCtx%mesh,iE-1,Grad_Ptr,INSERT_VALUES,iErr)
             DeAllocate(U)
          End Do Do_Elem_iE
       End Do Do_Elem_iBlk
@@ -699,7 +709,7 @@ Contains
       Call SectionIntDestroy(AppCtx%BCFlag,iErr);CHKERRQ(iErr)
       Call MatDestroy(AppCtx%K,iErr);CHKERRQ(iErr)
       Call KSPDestroy(AppCtx%KSP,iErr);CHKERRQ(iErr)
-      Call DMDestroy(AppCtx%MeshTopology%Mesh,iErr);CHKERRQ(ierr)
+      Call DMDestroy(AppCtx%mesh,iErr);CHKERRQ(ierr)
       
       If (AppCtx%AppParam%verbose > 1) Then
          Call PetscViewerFlush(AppCtx%AppParam%MyLogViewer,iErr);CHKERRQ(iErr)
