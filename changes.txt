@@ -1,9 +1,0 @@
-Changes since last version compatible with petsc-3.2
-
-- New exodus reader returns *distributed* meshes using PETSc's default partitioner
-- all sets are _global_, but can have size 0 if they do not intersect the sub-domain
-  of a given cpu
-
-
-To Do:
-- Check if MeshTopologyWriteGlobal is still needed / working
