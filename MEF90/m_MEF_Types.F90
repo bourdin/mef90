@@ -89,6 +89,8 @@ Module m_MEF_Types
       !!!                  Cell,unused,edges,vertices in2D
       PetscInt                                     :: numDoF !! = sum(DoF_Location)
       PetscInt                                     :: coDimension
+      !!! Add num vertices, edges, faces back
+      !!! Add name and ID (?)
    End Type CellSet_Type
  
    Type MeshTopology_Type

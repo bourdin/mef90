@@ -102,7 +102,6 @@ m_TestCorruption.o: ${PETSC_ARCH}
 TestDistribute: TestDistribute.o  chkopts
 	-${CLINKER} -o TestDistribute TestDistribute.o ${PETSC_LIB}
 
-
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
 	@rmdir ${PETSC_ARCH}
