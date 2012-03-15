@@ -1,7 +1,6 @@
 Module m_MEF_Elements
 #include "finclude/petscdef.h"
    Use m_MEF_LinAlg
-   Use m_MEF_Types
    Use m_MEF_Utils
    Use m_MEF_Parameters
    Use petsc
@@ -11,654 +10,631 @@ Module m_MEF_Elements
    Public :: ElementInit
    Public :: ElementDestroy
    Public :: ElementView
-   Public :: cellSetElemTypeInit
+   Public :: Element_Type
+   Public :: Element1D
+   Public :: Element2D_Vect,Element2D_Scal,Element2D_Elast 
+   Public :: Element3D_Vect,Element3D_Scal,Element3D_Elast 
 
+   Type Element_Type
+      ! name is the element name in english language
+      Character(len=MEF90_MXSTRLEN)                :: Name
+      ! shortID is a numerical shortcut used in the prep, for instance
+      PetscInt                                     :: ShortID
+      
+      !!! Geometry of the cell associated with the element
+      PetscInt                                     :: numVertex
+      PetscInt                                     :: numEdge
+      PetscInt                                     :: numFaces
+      
+      !!! Number of dof at each vertex edge face cell
+      PetscInt                                     :: numVertexDof
+      PetscInt                                     :: numEdgeDof
+      PetscInt                                     :: numFaceDof
+      PetscInt                                     :: numCellDof
+      PetscInt                                     :: numDoF 
+      !!! numDof = numVertexDof * numVertex + numEdgeDof * numEdge 
+      !!!          + numFaceDof * numFace + numCellDof
+      PetscInt                                     :: dim
+      !!! The dimension of the cell associated with the element
+      PetscInt                                     :: coDim
+      !!! The co-dimension of the cell associated with the element
+      PetscInt                                     :: order
+      !!! The polynomial order
+   End Type Element_Type
+ 
+   !!! 
+   !!! Linear Lagrange elements
+   !!!
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2D_Scal = Element_Type(   &
+      "MEF90_P1_Lagrange_2D_Scal",  &  ! name
+      1,                            &  ! shortID
+      3,3,0,                        &  ! numVertex,numEdge,numFace
+      1,0,0,0,3,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,0,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3D_Scal = Element_Type(   &
+      "MEF90_P1_Lagrange_3D_Scal",  &  ! name
+      2,                            &  ! shortID
+      4,6,4,                        &  ! numVertex,numEdge,numFace
+      1,0,0,0,4,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,0,1                         &  ! dim,codim,order                         
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2D_Elast = Element_Type(   &
+      "MEF90_P1_Lagrange_2D_Elast", &  ! name
+      3,                            &  ! shortID
+      3,3,0,                        &  ! numVertex,numEdge,numFace
+      2,0,0,0,6,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,0,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3D_Elast = Element_Type(   &
+      "MEF90_P1_Lagrange_3D_Elast", &  ! name
+      4,                            &  ! shortID
+      4,6,4,                        &  ! numVertex,numEdge,numFace
+      3,0,0,0,12,                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,0,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2D_Vect = Element_Type(   &
+      "MEF90_P1_Lagrange_2D_Vect",  &  ! name
+      5,                            &  ! shortID
+      3,3,0,                        &  ! numVertex,numEdge,numFace
+      2,0,0,0,6,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,0,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3D_Vect = Element_Type(   &
+      "MEF90_P1_Lagrange_3D_Vect",  &  ! name
+      6,                            &  ! shortID
+      4,6,4,                        &  ! numVertex,numEdge,numFace
+      3,0,0,0,12,                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,0,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2DBoundary_Scal = Element_Type(   &
+      "MEF90_P1_Lagrange_2DBoundary_Scal",  &  ! name
+      7,                            &  ! shortID
+      2,1,0,                        &  ! numVertex,numEdge,numFace
+      1,0,0,0,2,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,1,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3DBoundary_Scal = Element_Type(   &
+      "MEF90_P1_Lagrange_3DBoundary_Scal",  &  ! name
+      8,                            &  ! shortID
+      3,3,0,                        &  ! numVertex,numEdge,numFace
+      1,0,0,0,3,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,1,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2DBoundary_Vect = Element_Type(   &
+      "MEF90_P1_Lagrange_2DBoundary_Vect",  &  ! name
+      9,                            &  ! shortID
+      2,1,0,                        &  ! numVertex,numEdge,numFace
+      2,0,0,0,4,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,1,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3DBoundary_Vect = Element_Type(   &
+      "MEF90_P1_Lagrange_3DBoundary_Vect",  &  ! name
+      10,                           &  ! shortID
+      3,3,0,                        &  ! numVertex,numEdge,numFace
+      3,0,0,0,9,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,1,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2DBoundary_Elast = Element_Type(   &
+      "MEF90_P1_Lagrange_2DBoundary_Elast",  &  ! name
+      11,                           &  ! shortID
+      2,1,0,                        &  ! numVertex,numEdge,numFace
+      2,0,0,0,4,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,1,1                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3DBoundary_Elast = Element_Type(   &
+      "MEF90_P1_Lagrange_3DBoundary_Elast",  &  ! name
+      12,                           &  ! shortID
+      3,3,0,                        &  ! numVertex,numEdge,numFace
+      3,0,0,0,9,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,1,1                         &  ! dim,codim,order                             
+   )
+   !!!
+   !!! Quadratic Lagrange elements
+   !!!
+   Type(Element_Type), Parameter :: MEF90_P2_Lagrange_2D_Scal = Element_Type(   &
+      "MEF90_P2_Lagrange_2D_Scal",  &  ! name
+      13,                            &  ! shortID
+      3,3,0,                        &  ! numVertex,numEdge,numFace
+      3,3,0,0,6,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,0,2                         &  ! dim,codim,order                             
+   )
+   Type(Element_Type), Parameter :: MEF90_P2_Lagrange_3D_Scal = Element_Type(   &
+      "MEF90_P2_Lagrange_3D_Scal",  &  ! name
+      14,                            &  ! shortID
+      4,6,4,                        &  ! numVertex,numEdge,numFace
+      4,6,0,0,10,                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,0,2                         &  ! dim,codim,order                             
+   )
+
+   ! I would really like to be able to define allKnownElements = (MEF90_P1_Lagrange_2D_Scal,MEF90_P1_Lagrange_3D_Scal, ...
+   ! as a parameter, but I can't seem to be able to do that
+   Type Element1D
+      PetscReal,Dimension(:,:),Pointer             :: BF
+      PetscReal,Dimension(:,:),Pointer             :: Der_BF
+      PetscReal,Dimension(:),Pointer               :: Gauss_C
+   End Type Element1D
+ 
+   Type Element2D_Scal
+      PetscReal,Dimension(:,:),Pointer             :: BF
+      Type(Vect2D),Dimension(:,:),Pointer          :: Grad_BF
+      PetscReal,Dimension(:),Pointer               :: Gauss_C
+   End Type Element2D_Scal
+ 
+   Type Element2D_Vect
+      Type (Vect2D),Dimension(:,:),Pointer         :: BF
+      Type (Mat2D),Dimension(:,:),Pointer          :: Der_BF
+      PetscReal,Dimension(:),Pointer               :: Gauss_C
+   End Type Element2D_Vect
+ 
+   Type Element2D_Elast
+      Type (Vect2D),Dimension(:,:),Pointer         :: BF
+      Type (MatS2D),Dimension(:,:),Pointer         :: GradS_BF
+      PetscReal,Dimension(:),Pointer               :: Gauss_C
+   End Type Element2D_Elast
+ 
+   Type Element3D_Vect
+      Type (Vect3D),Dimension(:,:),Pointer         :: BF
+      Type (Mat3D),Dimension(:,:),Pointer          :: Der_BF
+      PetscReal,Dimension(:),Pointer               :: Gauss_C
+   End Type Element3D_Vect
+ 
+   Type Element3D_Scal
+      PetscReal,Dimension(:,:),Pointer             :: BF
+      Type (Vect3D),Dimension(:,:),Pointer         :: Grad_BF
+      PetscReal,Dimension(:),Pointer               :: Gauss_C
+   End Type Element3D_Scal
+ 
+   Type Element3D_Elast
+      Type (Vect3D),Dimension(:,:),Pointer         :: BF
+      Type (MatS3D),Dimension(:,:),Pointer         :: GradS_BF
+      PetscReal,Dimension(:),Pointer               :: Gauss_C
+   End Type Element3D_Elast
 
    Interface ElementInit
-      Module Procedure Element2D_Scal_Init,Element2D_Init,Element2D_Elast_Init,Element3D_Scal_Init,Element3D_Init, &
-      Element3D_Elast_Init,Element2D_Scal_InitAll,Element2D_InitAll,Element2D_Elast_InitAll,Element3D_Scal_InitAll, &
-      Element3D_InitAll,Element3D_Elast_InitAll
+      Module Procedure Element2D_Scal_Init,Element2D_Vect_Init,Element2D_Elast_Init, &
+                       Element3D_Scal_Init,Element3D_Vect_Init,Element3D_Elast_Init
    End Interface ElementInit
    
+   Interface ElementInitSet
+      Module Procedure Element2D_Scal_InitSet,Element2D_Vect_InitSet,Element2D_Elast_InitSet, &
+                       Element3D_Scal_InitSet,Element3D_Vect_InitSet,Element3D_Elast_InitSet
+   End Interface ElementInitSet
+   
    Interface ElementDestroy
-      Module Procedure Element2D_Scal_Destroy,Element2D_Destroy,Element2D_Elast_Destroy,Element3D_Scal_Destroy, &
-      Element3D_Destroy,Element3D_Elast_Destroy
+      Module Procedure Element2D_Scal_Destroy,Element2D_Vect_Destroy,Element2D_Elast_Destroy,&
+                       Element3D_Scal_Destroy,Element3D_Vect_Destroy,Element3D_Elast_Destroy
    End Interface ElementDestroy
    
    Interface ElementView
-      Module Procedure Element2D_Scal_View,Element2D_View,Element2D_Elast_View, &
-      Element3D_Scal_View,Element3D_View,Element3D_Elast_View
+      Module Procedure Element2D_Scal_View,Element2D_Vect_View,Element2D_Elast_View, &
+                       Element3D_Scal_View,Element3D_Vect_View,Element3D_Elast_View
    End Interface ElementView
    
- Contains
+Contains
+
 #undef __FUNCT__
-#define __FUNCT__ "cellSetElemTypeInit"
-   Subroutine cellSetElemTypeInit(set,dDim)
-      Type(CellSet_Type)                     :: set
-      PetscInt                               :: dDim
-      
-      Select Case (dDim)
-      Case (2)
-         Select Case (set%ElemType)
-         Case (MEF90_P1_Lagrange)         
-            set%dofLocation = (/ 0,0,0,3 /)
-            set%Codimension = 0
-         Case (MEF90_P1_Lagrange_Boundary)         
-            set%dofLocation = (/ 0,0,0,2 /)
-            set%Codimension = 1
-         Case (MEF90_P2_Lagrange)
-            set%dofLocation = (/ 0,0,3,3 /)
-            set%Codimension = 0
-         Case (MEF90_P2_Lagrange_Boundary)         
-            set%dofLocation = (/ 0,0,1,2 /)
-            set%Codimension = 1
-         Case Default
-            Print*,__FUNCT__,': Unknown element type',set%ElemType
-            STOP
-         End Select
-      Case (3)
-         Select Case (set%ElemType)
-         Case (MEF90_P1_Lagrange)         
-            set%dofLocation = (/ 0,0,0,4 /)
-            set%Codimension = 0
-         Case (MEF90_P1_Lagrange_Boundary)         
-            set%dofLocation = (/ 0,0,0,3 /)
-            set%Codimension = 1
-         Case (MEF90_P2_Lagrange)
-            set%dofLocation = (/ 0,0,6,4 /)
-            set%Codimension = 0
-         Case (MEF90_P2_Lagrange_Boundary)
-            set%dofLocation = (/ 0,0,3,3 /)
-            set%Codimension = 1
-         Case Default
-            Print*,__FUNCT__,': Unknown element type',set%ElemType
-            STOP
-         End Select
-      Case Default
-         Print*,__FUNCT__,': Unknown dimension',dDim
-         STOP
-      End Select
-      set%numDoF = sum(set%dofLocation)
-   End Subroutine cellSetElemTypeInit     
-   
-#undef __FUNCT__
-#define __FUNCT__ "Element2D_Scal_InitAll"
-!!!
-!!! This routine does not use the values cached in dMeshtopology that are also directly accessible from the mesh
-!!!
-   Subroutine Element2D_Scal_InitAll(dMeshTopology,dElem,dQuadratureOrder)
-      Type(MeshTopology_Type)                     :: dMeshTopology
+#define __FUNCT__ "Element2D_Scal_InitSet"
+   Subroutine Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Type(Element_Type),intent(IN)               :: elemType
       
-      PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices
-      PetscInt                                    :: numVertexinCell,point
-      PetscInt,Dimension(:),Pointer               :: cone
-      Type(IS)                                    :: CellIS,CellSetIS
-      PetscInt,Dimension(:),Pointer               :: CellID,CellSetID
-      PetscReal,Dimension(:,:),Pointer            :: Coords
-      PetscReal,Dimension(:),Pointer              :: TmpCoords
+      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: i,j,k
+      PetscInt,Dimension(:),Pointer               :: CellID
+      PetscReal,Dimension(:,:),Pointer            :: Coord
+      PetscReal,Dimension(:),Pointer              :: TmpCoord
       Type(SectionReal)                           :: CoordSection
       
-      Call DMMeshGetDimension(dMeshTopology%mesh,numDim,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
 
-      Allocate(dElem(numCells))
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-
-      !!! Initialize the Basis Functions in each element
-      Call DMMeshGetSectionReal(dMeshTopology%mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
-      Do_CellSet: Do set = 1,size(CellSetID)
-         setID = CellSetID(set)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh,'Cell Sets',setId,CellIS,ierr);CHKERRQ(ierr)
-         Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-
-
+      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
       !!! 
-      !!! This is debatable...
-      !!! In an interpolated mesh, we will get the vertices thius way
-      !!! In a non interpolated but higher order mesh (which is going to be much easier to deal with)
-      !!! the "vertices" are really the location of the dof
-      !!! instead of reconstructing the cone size, we'd be better off using the info on the 
-      !!! cell geometry (i.e,. # vertices) and make the assumption that the actual vertices
-      !!! are always numbered first (cf exo numbering
-      !!!
-         !!! Get the number of vertices per cell for the cells in the set
-         !!! We always assume that all cells in a set are of the same type so
-         !!! we only need to do this once.
-         !!! This is a bit crazy but will get much better when we switch to DMComplex
-         Call DMMeshGetConeSize(dMeshTopology%mesh,CellID(1),numVertexinCell,ierr);CHKERRQ(ierr)    
-         !!! The cone may contain faces and edges in the case of an interpolated mesh
-         !!! so we need to filter out based on the vertex point number:
-         
-         !!! WTF No way to get the cone in F90????
-         !!!Allocate(cone(numVertexinCell))
-         Call DMMeshGetCone(dMeshTopology%mesh,cellID(1),cone,ierr);CHKERRQ(ierr)
-         numVertexinCell = 0
-         Do point = 1, size(cone)
-            If ( (cone(point) >= numCells) .AND. (cone(point) < numCells + numVertices) ) Then
-               numVertexinCell = numVertexinCell + 1
-            End If
+      !!! conesize*numdim is an upper bound on the size of the restriction
+      !!! of the coordinate section to a cell (interpolated mesh) 
+      Allocate(TmpCoord(conesize * elemType%dim))
+      Allocate(Coord(elemType%dim,elemType%numVertex))
+      Do_Elem_iE: Do iELoc = 1,size(CellID)
+         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+         k = 1
+         Do i = 1, elemType%numVertex
+            Do j = 1, elemType%dim
+               Coord(j,i) = TmpCoord(k)
+               k = k+1
+            End Do
          End Do
-         Call DMMeshRestoreCone(dMeshTopology%mesh,cellID(1),cone,ierr);CHKERRQ(ierr)
-         !!!DeAllocate(cone)
-         
-         Allocate(TmpCoords(numDim * numVertexinCell))
-         Allocate(Coords   (numDim,  numVertexinCell))
+         Call Element2D_Scal_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+      End Do Do_Elem_iE
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      DeAllocate(TmpCoord)
+      DeAllocate(Coord)
 
-         Do_Elem_iE: Do iELoc = 1,size(CellID)
-            iE = CellID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection,dMeshTopology%mesh,iE-1,Size(TmpCoords),TmpCoords,ierr);CHKERRQ(ierr)
-            Coords = Reshape(TmpCoords,(/numDim,numVertexinCell /) )
-            !!! WTF? why not reshaping the arguments in Init_Element? 
-            Call ElementInit(dElem(iE),Coords,dQuadratureOrder,dMeshTopology%cellSet(set)%ElemType)
-         End Do Do_Elem_iE
-         Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         DeAllocate(TmpCoords)
-         DeAllocate(Coords)
-      End Do Do_CellSet
       Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-   End Subroutine Element2D_Scal_InitAll
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+   End Subroutine Element2D_Scal_InitSet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Vect_InitSet"
+   Subroutine Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element2D_Vect),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Type(Element_Type),intent(IN)               :: elemType
+      
+      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: i,j,k
+      PetscInt,Dimension(:),Pointer               :: CellID
+      PetscReal,Dimension(:,:),Pointer            :: Coord
+      PetscReal,Dimension(:),Pointer              :: TmpCoord
+      Type(SectionReal)                           :: CoordSection
+      
+      Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+
+      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+      !!! 
+      !!! conesize*numdim is an upper bound on the size of the restriction
+      !!! of the coordinate section to a cell (interpolated mesh) 
+      Allocate(TmpCoord(conesize * elemType%dim))
+      Allocate(Coord(elemType%dim,elemType%numVertex))
+      Do_Elem_iE: Do iELoc = 1,size(CellID)
+         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+         k = 1
+         Do i = 1, elemType%numVertex
+            Do j = 1, elemType%dim
+               Coord(j,i) = TmpCoord(k)
+               k = k+1
+            End Do
+         End Do
+         Call Element2D_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+      End Do Do_Elem_iE
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      DeAllocate(TmpCoord)
+      DeAllocate(Coord)
+
+      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+   End Subroutine Element2D_Vect_InitSet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Elast_InitSet"
+   Subroutine Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element2D_Elast),Dimension(:),Pointer  :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Type(Element_Type),intent(IN)               :: elemType
+      
+      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: i,j,k
+      PetscInt,Dimension(:),Pointer               :: CellID
+      PetscReal,Dimension(:,:),Pointer            :: Coord
+      PetscReal,Dimension(:),Pointer              :: TmpCoord
+      Type(SectionReal)                           :: CoordSection
+      
+      Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+
+      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+      !!! 
+      !!! conesize*numdim is an upper bound on the size of the restriction
+      !!! of the coordinate section to a cell (interpolated mesh) 
+      Allocate(TmpCoord(conesize * elemType%dim))
+      Allocate(Coord(elemType%dim,elemType%numVertex))
+      Do_Elem_iE: Do iELoc = 1,size(CellID)
+         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+         k = 1
+         Do i = 1, elemType%numVertex
+            Do j = 1, elemType%dim
+               Coord(j,i) = TmpCoord(k)
+               k = k+1
+            End Do
+         End Do
+         Call Element2D_Elast_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+      End Do Do_Elem_iE
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      DeAllocate(TmpCoord)
+      DeAllocate(Coord)
+
+      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+   End Subroutine Element2D_Elast_InitSet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Scal_InitSet"
+   Subroutine Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element3D_Scal),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Type(Element_Type),intent(IN)               :: elemType
+      
+      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: i,j,k
+      PetscInt,Dimension(:),Pointer               :: CellID
+      PetscReal,Dimension(:,:),Pointer            :: Coord
+      PetscReal,Dimension(:),Pointer              :: TmpCoord
+      Type(SectionReal)                           :: CoordSection
+      
+      Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+
+      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+      !!! 
+      !!! conesize*numdim is an upper bound on the size of the restriction
+      !!! of the coordinate section to a cell (interpolated mesh) 
+      Allocate(TmpCoord(conesize * elemType%dim))
+      Allocate(Coord(elemType%dim,elemType%numVertex))
+      Do_Elem_iE: Do iELoc = 1,size(CellID)
+         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+         k = 1
+         Do i = 1, elemType%numVertex
+            Do j = 1, elemType%dim
+               Coord(j,i) = TmpCoord(k)
+               k = k+1
+            End Do
+         End Do
+         Call Element3D_Scal_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+      End Do Do_Elem_iE
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      DeAllocate(TmpCoord)
+      DeAllocate(Coord)
+
+      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+   End Subroutine Element3D_Scal_InitSet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Vect_InitSet"
+   Subroutine Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element3D_Vect),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Type(Element_Type),intent(IN)               :: elemType
+      
+      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: i,j,k
+      PetscInt,Dimension(:),Pointer               :: CellID
+      PetscReal,Dimension(:,:),Pointer            :: Coord
+      PetscReal,Dimension(:),Pointer              :: TmpCoord
+      Type(SectionReal)                           :: CoordSection
+      
+      Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+
+      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+      !!! 
+      !!! conesize*numdim is an upper bound on the size of the restriction
+      !!! of the coordinate section to a cell (interpolated mesh) 
+      Allocate(TmpCoord(conesize * elemType%dim))
+      Allocate(Coord(elemType%dim,elemType%numVertex))
+      Do_Elem_iE: Do iELoc = 1,size(CellID)
+         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+         k = 1
+         Do i = 1, elemType%numVertex
+            Do j = 1, elemType%dim
+               Coord(j,i) = TmpCoord(k)
+               k = k+1
+            End Do
+         End Do
+         Call Element3D_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+      End Do Do_Elem_iE
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      DeAllocate(TmpCoord)
+      DeAllocate(Coord)
+
+      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+   End Subroutine Element3D_Vect_InitSet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Elast_InitSet"
+   Subroutine Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element3D_Elast),Dimension(:),Pointer  :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Type(Element_Type),intent(IN)               :: elemType
+      
+      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: i,j,k
+      PetscInt,Dimension(:),Pointer               :: CellID
+      PetscReal,Dimension(:,:),Pointer            :: Coord
+      PetscReal,Dimension(:),Pointer              :: TmpCoord
+      Type(SectionReal)                           :: CoordSection
+      
+      Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+
+      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+      !!! 
+      !!! conesize*numdim is an upper bound on the size of the restriction
+      !!! of the coordinate section to a cell (interpolated mesh) 
+      Allocate(TmpCoord(conesize * elemType%dim))
+      Allocate(Coord(elemType%dim,elemType%numVertex))
+      Do_Elem_iE: Do iELoc = 1,size(CellID)
+         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+         k = 1
+         Do i = 1, elemType%numVertex
+            Do j = 1, elemType%dim
+               Coord(j,i) = TmpCoord(k)
+               k = k+1
+            End Do
+         End Do
+         Call Element3D_Elast_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+      End Do Do_Elem_iE
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      DeAllocate(TmpCoord)
+      DeAllocate(Coord)
+
+      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+   End Subroutine Element3D_Elast_InitSet
+
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_Init"
-   Subroutine Element2D_Scal_Init(dElem,dCoord,QuadratureOrder,Element_Type)
+   Subroutine Element2D_Scal_Init(dElem,dCoord,QuadratureOrder,elemType)
       Type(Element2D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
+      Type(Element_Type),intent(IN)          :: elemType
       
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange)
+      Select Case (elemType%shortID)
+         Case (MEF90_P1_Lagrange_2D_Scal%shortID)
             Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
-
-         Case (MEF90_P2_Lagrange)
+         Case (MEF90_P2_Lagrange_2D_Scal%shortID)
             Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
-
-         Case (MEF90_P1_Lagrange_Boundary)
-            !Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
-
-         Case (MEF90_P2_Lagrange_Boundary)
-            !Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
-
-!         Case (MEF90_Q1_Lagrange)
+!         Case (MEF90_P1_Lagrange_2DBoundary_Scal%shortID)
+!            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+!         Case (MEF90_P2_Lagrange_2DBoundary_Scal%shortID)
+!            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_Q1_Lagrange_2D_Scal%shortID)
 !            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_Q2_Lagrange)
+!         Case (MEF90_Q2_Lagrange_2D_Scal%shortID)
 !            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',Element_Type
+            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
       End Select
    End Subroutine Element2D_Scal_Init                                
    
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_InitAll"
-!!!
-!!! This routine does not use the values cached in dMeshtopology that are also directly accessible from the mesh
-!!!
-   Subroutine Element2D_InitAll(dMeshTopology,dElem,dQuadratureOrder)
-      Type(MeshTopology_Type)                     :: dMeshTopology
-      Type(Element2D),Dimension(:),Pointer        :: dElem
-      PetscInt,Intent(IN)                         :: dQuadratureOrder
-      
-      PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices
-      PetscInt                                    :: numVertexinCell,point
-      PetscInt,Dimension(:),Pointer               :: cone
-      Type(IS)                                    :: CellIS,CellSetIS
-      PetscInt,Dimension(:),Pointer               :: CellID,CellSetID
-      PetscReal,Dimension(:,:),Pointer            :: Coords
-      PetscReal,Dimension(:),Pointer              :: TmpCoords
-      Type(SectionReal)                           :: CoordSection
-      
-      Call DMMeshGetDimension(dMeshTopology%mesh,numDim,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
-
-      Allocate(dElem(numCells))
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-
-      !!! Initialize the Basis Functions in each element
-      Call DMMeshGetSectionReal(dMeshTopology%mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
-      Do_CellSet: Do set = 1,size(CellSetID)
-         setID = CellSetID(set)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh,'Cell Sets',setId,CellIS,ierr);CHKERRQ(ierr)
-         Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-
-         !!! Get the number of vertices per cell for the cells in the set
-         !!! We always assume that all cells in a set are of the same type so
-         !!! we only need to do this once.
-         !!! This is a bit crazy but will get much better when we switch to DMComplex
-         Call DMMeshGetConeSize(dMeshTopology%mesh,CellID(1),numVertexinCell,ierr);CHKERRQ(ierr)    
-         !!! The cone may contain faces and edges in the case of an interpolated mesh
-         !!! so we need to filter out based on the vertex point number:
-         Allocate(cone(numVertexinCell))
-         numVertexinCell = 0
-         Do point = 1, size(cone)
-            If ( (cone(point) >= numCells) .AND. (cone(point) < numCells + numVertices) ) Then
-               numVertexinCell = numVertexinCell + 1
-            End If
-         End Do
-         DeAllocate(cone)
-         
-         Allocate(TmpCoords(numDim * numVertexinCell))
-         Allocate(Coords   (numDim,  numVertexinCell))
-
-         Do_Elem_iE: Do iELoc = 1,size(CellID)
-            iE = CellID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection,dMeshTopology%mesh,iE-1,Size(TmpCoords),TmpCoords,ierr);CHKERRQ(ierr)
-            Coords = Reshape(TmpCoords,(/numDim,numVertexinCell /) )
-            !!! WTF? why not reshaping the arguments in Init_Element? 
-            Call ElementInit(dElem(iE),Coords,dQuadratureOrder,dMeshTopology%cellSet(set)%ElemType)
-         End Do Do_Elem_iE
-         Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         DeAllocate(TmpCoords)
-         DeAllocate(Coords)
-      End Do Do_CellSet
-      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-   End Subroutine Element2D_InitAll
-
-#undef __FUNCT__
-#define __FUNCT__ "Element2D_Init"
-   Subroutine Element2D_Init(dElem,dCoord,QuadratureOrder,Element_Type)
-      Type(Element2D)                        :: dElem
+#define __FUNCT__ "Element2D_Vect_Init"
+   Subroutine Element2D_Vect_Init(dElem,dCoord,QuadratureOrder,elemType)
+      Type(Element2D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
+      Type(Element_Type),intent(IN)          :: elemType
       
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange)
+      Select Case (elemType%shortID)
+         Case (MEF90_P1_Lagrange_2D_Vect%shortID)
             Call Element_P_Lagrange_2D_Init(dElem,dCoord,1,QuadratureOrder)
-
-         Case (MEF90_P2_Lagrange)
-            Call Element_P_Lagrange_2D_Init(dElem,dCoord,2,QuadratureOrder)
-
-!         Case (MEF90_Q1_Lagrange)
-!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_Q2_Lagrange)
-!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_P2_Lagrange_2D_Vect%shortID)
+!            Call Element_P_Lagrange_2D_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_P1_Lagrange_2DBoundary_Vect%shortID)
+!            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+!         Case (MEF90_P2_Lagrange_2DBoundary_Vect%shortID)
+!            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_Q1_Lagrange_2D_Vect%shortID)
+!            Call Element_Q_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+!         Case (MEF90_Q2_Lagrange_2D_Vect%shortID)
+!            Call Element_Q_Lagrange_2D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',Element_Type
+            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
       End Select
-   End Subroutine Element2D_Init                                
-
-#undef __FUNCT__
-#define __FUNCT__ "Element2D_Elast_InitAll"
-!!!
-!!! This routine does not use the values cached in dMeshtopology that are also directly accessible from the mesh
-!!!
-   Subroutine Element2D_Elast_InitAll(dMeshTopology,dElem,dQuadratureOrder)
-      Type(MeshTopology_Type)                     :: dMeshTopology
-      Type(Element2D_Elast),Dimension(:),Pointer  :: dElem
-      PetscInt,Intent(IN)                         :: dQuadratureOrder
-      
-      PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices
-      PetscInt                                    :: numVertexinCell,point
-      PetscInt,Dimension(:),Pointer               :: cone
-      Type(IS)                                    :: CellIS,CellSetIS
-      PetscInt,Dimension(:),Pointer               :: CellID,CellSetID
-      PetscReal,Dimension(:,:),Pointer            :: Coords
-      PetscReal,Dimension(:),Pointer              :: TmpCoords
-      Type(SectionReal)                           :: CoordSection
-      
-      Call DMMeshGetDimension(dMeshTopology%mesh,numDim,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
-
-      Allocate(dElem(numCells))
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-
-      !!! Initialize the Basis Functions in each element
-      Call DMMeshGetSectionReal(dMeshTopology%mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
-      Do_CellSet: Do set = 1,size(CellSetID)
-         setID = CellSetID(set)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh,'Cell Sets',setId,CellIS,ierr);CHKERRQ(ierr)
-         Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-
-         !!! Get the number of vertices per cell for the cells in the set
-         !!! We always assume that all cells in a set are of the same type so
-         !!! we only need to do this once.
-         !!! This is a bit crazy but will get much better when we switch to DMComplex
-         Call DMMeshGetConeSize(dMeshTopology%mesh,CellID(1),numVertexinCell,ierr);CHKERRQ(ierr)    
-         !!! The cone may contain faces and edges in the case of an interpolated mesh
-         !!! so we need to filter out based on the vertex point number:
-         Allocate(cone(numVertexinCell))
-         numVertexinCell = 0
-         Do point = 1, size(cone)
-            If ( (cone(point) >= numCells) .AND. (cone(point) < numCells + numVertices) ) Then
-               numVertexinCell = numVertexinCell + 1
-            End If
-         End Do
-         DeAllocate(cone)
-         
-         Allocate(TmpCoords(numDim * numVertexinCell))
-         Allocate(Coords   (numDim,  numVertexinCell))
-
-         Do_Elem_iE: Do iELoc = 1,size(CellID)
-            iE = CellID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection,dMeshTopology%mesh,iE-1,Size(TmpCoords),TmpCoords,ierr);CHKERRQ(ierr)
-            Coords = Reshape(TmpCoords,(/numDim,numVertexinCell /) )
-            !!! WTF? why not reshaping the arguments in Init_Element? 
-            Call ElementInit(dElem(iE),Coords,dQuadratureOrder,dMeshTopology%cellSet(set)%ElemType)
-         End Do Do_Elem_iE
-         Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         DeAllocate(TmpCoords)
-         DeAllocate(Coords)
-      End Do Do_CellSet
-      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-   End Subroutine Element2D_Elast_InitAll
+   End Subroutine Element2D_Vect_Init                                
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_Init"
-   Subroutine Element2D_Elast_Init(dElem,dCoord,QuadratureOrder,Element_Type)
-      Type(Element2D_Elast)                  :: dElem
+   Subroutine Element2D_Elast_Init(dElem,dCoord,QuadratureOrder,elemType)
+      Type(Element2D_Elast)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
+      Type(Element_Type),intent(IN)          :: elemType
       
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange)
+      Select Case (elemType%shortID)
+         Case (MEF90_P1_Lagrange_2D_Elast%shortID)
             Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
-
-         Case (MEF90_P2_Lagrange)
-            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
-
-!         Case (MEF90_Q1_Lagrange)
-!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_Q2_Lagrange)
-!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_P2_Lagrange_2D_Elast%shortID)
+!            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_P1_Lagrange_2DBoundary_Elast%shortID)
+!            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+!         Case (MEF90_P2_Lagrange_2DBoundary_Elast%shortID)
+!            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_Q1_Lagrange_2D_Elast%shortID)
+!            Call Element_Q_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+!         Case (MEF90_Q2_Lagrange_2D_Elast%shortID)
+!            Call Element_Q_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',Element_Type
+            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
       End Select
-   End Subroutine Element2D_Elast_Init
-
-
-#undef __FUNCT__
-#define __FUNCT__ "Element3D_Scal_InitAll"
-!!!
-!!! This routine does not use the values cached in dMeshtopology that are also directly accessible from the mesh
-!!!
-   Subroutine Element3D_Scal_InitAll(dMeshTopology,dElem,dQuadratureOrder)
-      Type(MeshTopology_Type)                     :: dMeshTopology
-      Type(Element3D_Scal),Dimension(:),Pointer   :: dElem
-      PetscInt,Intent(IN)                         :: dQuadratureOrder
-      
-      PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices
-      PetscInt                                    :: numVertexinCell,point
-      PetscInt,Dimension(:),Pointer               :: cone
-      Type(IS)                                    :: CellIS,CellSetIS
-      PetscInt,Dimension(:),Pointer               :: CellID,CellSetID
-      PetscReal,Dimension(:,:),Pointer            :: Coords
-      PetscReal,Dimension(:),Pointer              :: TmpCoords
-      Type(SectionReal)                           :: CoordSection
-      
-      Call DMMeshGetDimension(dMeshTopology%mesh,numDim,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
-
-      Allocate(dElem(numCells))
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-
-      !!! Initialize the Basis Functions in each element
-      Call DMMeshGetSectionReal(dMeshTopology%mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
-      Do_CellSet: Do set = 1,size(CellSetID)
-         setID = CellSetID(set)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh,'Cell Sets',setId,CellIS,ierr);CHKERRQ(ierr)
-         Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-
-         !!! Get the number of vertices per cell for the cells in the set
-         !!! We always assume that all cells in a set are of the same type so
-         !!! we only need to do this once.
-         !!! This is a bit crazy but will get much better when we switch to DMComplex
-         Call DMMeshGetConeSize(dMeshTopology%mesh,CellID(1),numVertexinCell,ierr);CHKERRQ(ierr)    
-         !!! The cone may contain faces and edges in the case of an interpolated mesh
-         !!! so we need to filter out based on the vertex point number:
-         Allocate(cone(numVertexinCell))
-         numVertexinCell = 0
-         Do point = 1, size(cone)
-            If ( (cone(point) >= numCells) .AND. (cone(point) < numCells + numVertices) ) Then
-               numVertexinCell = numVertexinCell + 1
-            End If
-         End Do
-         DeAllocate(cone)
-         
-         Allocate(TmpCoords(numDim * numVertexinCell))
-         Allocate(Coords   (numDim,  numVertexinCell))
-
-         Do_Elem_iE: Do iELoc = 1,size(CellID)
-            iE = CellID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection,dMeshTopology%mesh,iE-1,Size(TmpCoords),TmpCoords,ierr);CHKERRQ(ierr)
-            Coords = Reshape(TmpCoords,(/numDim,numVertexinCell /) )
-            !!! WTF? why not reshaping the arguments in Init_Element? 
-            Call ElementInit(dElem(iE),Coords,dQuadratureOrder,dMeshTopology%cellSet(set)%ElemType)
-         End Do Do_Elem_iE
-         Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         DeAllocate(TmpCoords)
-         DeAllocate(Coords)
-      End Do Do_CellSet
-      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-   End Subroutine Element3D_Scal_InitAll
-
+   End Subroutine Element2D_Elast_Init                                
+   
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_Init"
-   Subroutine Element3D_Scal_Init(dElem,dCoord,QuadratureOrder,Element_Type)
+   Subroutine Element3D_Scal_Init(dElem,dCoord,QuadratureOrder,elemType)
       Type(Element3D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
+      Type(Element_Type),intent(IN)          :: elemType
       
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange)
+      Select Case (elemType%shortID)
+         Case (MEF90_P1_Lagrange_3D_Scal%shortID)
             Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
-
-         Case (MEF90_P2_Lagrange)
+         Case (MEF90_P2_Lagrange_3D_Scal%shortID)
             Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
-
-!         Case (MEF90_Q1_Lagrange)
+!         Case (MEF90_P1_Lagrange_3DBoundary_Scal%shortID)
+!            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+!         Case (MEF90_P2_Lagrange_3DBoundary_Scal%shortID)
+!            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_Q1_Lagrange_3D_Scal%shortID)
 !            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_Q2_Lagrange)
+!         Case (MEF90_Q2_Lagrange_3D_Scal%shortID)
 !            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',Element_Type
+            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
       End Select
    End Subroutine Element3D_Scal_Init                                
-
+   
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_InitAll"
-!!!
-!!! This routine does not use the values cached in dMeshtopology that are also directly accessible from the mesh
-!!!
-   Subroutine Element3D_InitAll(dMeshTopology,dElem,dQuadratureOrder)
-      Type(MeshTopology_Type)                     :: dMeshTopology
-      Type(Element3D),Dimension(:),Pointer        :: dElem
-      PetscInt,Intent(IN)                         :: dQuadratureOrder
-      
-      PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices
-      PetscInt                                    :: numVertexinCell,point
-      PetscInt,Dimension(:),Pointer               :: cone
-      Type(IS)                                    :: CellIS,CellSetIS
-      PetscInt,Dimension(:),Pointer               :: CellID,CellSetID
-      PetscReal,Dimension(:,:),Pointer            :: Coords
-      PetscReal,Dimension(:),Pointer              :: TmpCoords
-      Type(SectionReal)                           :: CoordSection
-      
-      Call DMMeshGetDimension(dMeshTopology%mesh,numDim,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
-
-      Allocate(dElem(numCells))
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-
-      !!! Initialize the Basis Functions in each element
-      Call DMMeshGetSectionReal(dMeshTopology%mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
-      Do_CellSet: Do set = 1,size(CellSetID)
-         setID = CellSetID(set)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh,'Cell Sets',setId,CellIS,ierr);CHKERRQ(ierr)
-         Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-
-         !!! Get the number of vertices per cell for the cells in the set
-         !!! We always assume that all cells in a set are of the same type so
-         !!! we only need to do this once.
-         !!! This is a bit crazy but will get much better when we switch to DMComplex
-         Call DMMeshGetConeSize(dMeshTopology%mesh,CellID(1),numVertexinCell,ierr);CHKERRQ(ierr)    
-         !!! The cone may contain faces and edges in the case of an interpolated mesh
-         !!! so we need to filter out based on the vertex point number:
-         Allocate(cone(numVertexinCell))
-         numVertexinCell = 0
-         Do point = 1, size(cone)
-            If ( (cone(point) >= numCells) .AND. (cone(point) < numCells + numVertices) ) Then
-               numVertexinCell = numVertexinCell + 1
-            End If
-         End Do
-         DeAllocate(cone)
-         
-         Allocate(TmpCoords(numDim * numVertexinCell))
-         Allocate(Coords   (numDim,  numVertexinCell))
-
-         Do_Elem_iE: Do iELoc = 1,size(CellID)
-            iE = CellID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection,dMeshTopology%mesh,iE-1,Size(TmpCoords),TmpCoords,ierr);CHKERRQ(ierr)
-            Coords = Reshape(TmpCoords,(/numDim,numVertexinCell /) )
-            !!! WTF? why not reshaping the arguments in Init_Element? 
-            Call ElementInit(dElem(iE),Coords,dQuadratureOrder,dMeshTopology%cellSet(set)%ElemType)
-         End Do Do_Elem_iE
-         Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         DeAllocate(TmpCoords)
-         DeAllocate(Coords)
-      End Do Do_CellSet
-      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-   End Subroutine Element3D_InitAll
-
-#undef __FUNCT__
-#define __FUNCT__ "Element3D_Init"
-   Subroutine Element3D_Init(dElem,dCoord,QuadratureOrder,Element_Type)
-      Type(Element3D)                        :: dElem
+#define __FUNCT__ "Element3D_Vect_Init"
+   Subroutine Element3D_Vect_Init(dElem,dCoord,QuadratureOrder,elemType)
+      Type(Element3D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
+      Type(Element_Type),intent(IN)          :: elemType
       
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange)
+      Select Case (elemType%shortID)
+         Case (MEF90_P1_Lagrange_3D_Vect%shortID)
             Call Element_P_Lagrange_3D_Init(dElem,dCoord,1,QuadratureOrder)
-
-         Case (MEF90_P2_Lagrange)
-            Call Element_P_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
-
-!         Case (MEF90_Q1_Lagrange)
-!            Call Element_Q_Lagrange_3D_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_Q2_Lagrange)
-!            Call Element_Q_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_P2_Lagrange_3D_Vect%shortID)
+!            Call Element_P_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_P1_Lagrange_3DBoundary_Vect%shortID)
+!            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+!         Case (MEF90_P2_Lagrange_3DBoundary_Vect%shortID)
+!            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_Q1_Lagrange_3D_Vect)
+!            Call Element_Q_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+!         Case (MEF90_Q2_Lagrange_3D_Vect)
+!            Call Element_Q_Lagrange_3D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',Element_Type
+            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
       End Select
-   End Subroutine Element3D_Init                                
-
-#undef __FUNCT__
-#define __FUNCT__ "Element3D_Elast_InitAll"
-!!!
-!!! This routine does not use the values cached in dMeshtopology that are also directly accessible from the mesh
-!!!
-   Subroutine Element3D_Elast_InitAll(dMeshTopology,dElem,dQuadratureOrder)
-      Type(MeshTopology_Type)                     :: dMeshTopology
-      Type(Element3D_Elast),Dimension(:),Pointer  :: dElem
-      PetscInt,Intent(IN)                         :: dQuadratureOrder
-      
-      PetscInt                                    :: set,setID,iELoc,iE,ierr
-      PetscInt                                    :: numDim,numCells,numVertices
-      PetscInt                                    :: numVertexinCell,point
-      PetscInt,Dimension(:),Pointer               :: cone
-      Type(IS)                                    :: CellIS,CellSetIS
-      PetscInt,Dimension(:),Pointer               :: CellID,CellSetID
-      PetscReal,Dimension(:,:),Pointer            :: Coords
-      PetscReal,Dimension(:),Pointer              :: TmpCoords
-      Type(SectionReal)                           :: CoordSection
-      
-      Call DMMeshGetDimension(dMeshTopology%mesh,numDim,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
-      Call DMMeshGetStratumSize(dMeshTopology%mesh,"depth",0,numVertices,ierr);CHKERRQ(ierr)
-
-      Allocate(dElem(numCells))
-      Call DMMeshGetLabelIdIS(dMeshTopology%mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-
-      !!! Initialize the Basis Functions in each element
-      Call DMMeshGetSectionReal(dMeshTopology%mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
-      Do_CellSet: Do set = 1,size(CellSetID)
-         setID = CellSetID(set)
-         Call DMMeshGetStratumIS(dMeshTopology%mesh,'Cell Sets',setId,CellIS,ierr);CHKERRQ(ierr)
-         Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-
-         !!! Get the number of vertices per cell for the cells in the set
-         !!! We always assume that all cells in a set are of the same type so
-         !!! we only need to do this once.
-         !!! This is a bit crazy but will get much better when we switch to DMComplex
-         Call DMMeshGetConeSize(dMeshTopology%mesh,CellID(1),numVertexinCell,ierr);CHKERRQ(ierr)    
-         !!! The cone may contain faces and edges in the case of an interpolated mesh
-         !!! so we need to filter out based on the vertex point number:
-         Allocate(cone(numVertexinCell))
-         numVertexinCell = 0
-         Do point = 1, size(cone)
-            If ( (cone(point) >= numCells) .AND. (cone(point) < numCells + numVertices) ) Then
-               numVertexinCell = numVertexinCell + 1
-            End If
-         End Do
-         DeAllocate(cone)
-         
-         Allocate(TmpCoords(numDim * numVertexinCell))
-         Allocate(Coords   (numDim,  numVertexinCell))
-
-         Do_Elem_iE: Do iELoc = 1,size(CellID)
-            iE = CellID(iELoc)
-            Call SectionRealRestrictClosure(CoordSection,dMeshTopology%mesh,iE-1,Size(TmpCoords),TmpCoords,ierr);CHKERRQ(ierr)
-            Coords = Reshape(TmpCoords,(/numDim,numVertexinCell /) )
-            !!! WTF? why not reshaping the arguments in Init_Element? 
-            Call ElementInit(dElem(iE),Coords,dQuadratureOrder,dMeshTopology%cellSet(set)%ElemType)
-         End Do Do_Elem_iE
-         Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         DeAllocate(TmpCoords)
-         DeAllocate(Coords)
-      End Do Do_CellSet
-      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(CellSetIS,CellSetID,ierr);CHKERRQ(ierr)
-   End Subroutine Element3D_Elast_InitAll
+   End Subroutine Element3D_Vect_Init                                
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_Init"
-   Subroutine Element3D_Elast_Init(dElem,dCoord,QuadratureOrder,Element_Type)
-      Type(Element3D_Elast)                  :: dElem
+   Subroutine Element3D_Elast_Init(dElem,dCoord,QuadratureOrder,elemType)
+      Type(Element3D_Elast)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
+      Type(Element_Type),intent(IN)          :: elemType
       
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange)
+      Select Case (elemType%shortID)
+         Case (MEF90_P1_Lagrange_3D_Elast%shortID)
             Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
-
-         Case (MEF90_P2_Lagrange)
-            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
-
-!         Case (MEF90_Q1_Lagrange)
+!         Case (MEF90_P2_Lagrange_3D_Elast%shortID)
+!            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_P1_Lagrange_3DBoundary_Elast%shortID)
+!            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+!         Case (MEF90_P2_Lagrange_3DBoundary_Elast%shortID)
+!            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+!         Case (MEF90_Q1_Lagrange_3D_Elast%shortID)
 !            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_Q2_Lagrange)
+!         Case (MEF90_Q2_Lagrange_3D_Elast%shortID)
 !            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',Element_Type
+            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
       End Select
    End Subroutine Element3D_Elast_Init                                
+
+
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2D_Scal_Init"
@@ -796,9 +772,9 @@ Module m_MEF_Elements
    End Subroutine Element_P_Lagrange_2D_Scal_Init
    
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_2D_Init"
-   Subroutine Element_P_Lagrange_2D_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
-      Type(Element2D)                        :: dElem
+#define __FUNCT__ "Element_P_Lagrange_2D_Vect_Init"
+   Subroutine Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Type(Element2D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
    
@@ -831,7 +807,7 @@ Module m_MEF_Elements
          dElem%Der_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
       Call ElementDestroy(Elem_Scal)
-   End Subroutine Element_P_Lagrange_2D_Init
+   End Subroutine Element_P_Lagrange_2D_Vect_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2D_Elast_Init"
@@ -983,9 +959,9 @@ Module m_MEF_Elements
    End Subroutine Element_P_Lagrange_3D_Scal_Init
 
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_3D_Init"
-   Subroutine Element_P_Lagrange_3D_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
-      Type(Element3D)                        :: dElem
+#define __FUNCT__ "Element_P_Lagrange_3D_Vect_Init"
+   Subroutine Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Type(Element3D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
    
@@ -1030,7 +1006,7 @@ Module m_MEF_Elements
          dElem%Der_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
       End Do
       Call ElementDestroy(Elem_Scal)
-   End Subroutine Element_P_Lagrange_3D_Init
+   End Subroutine Element_P_Lagrange_3D_Vect_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3D_Elast_Init"
@@ -1101,8 +1077,8 @@ Module m_MEF_Elements
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Destroy"
-   Subroutine Element2D_Destroy(dElem)
-      Type(Element2D)                        :: dElem
+   Subroutine Element2D_Vect_Destroy(dElem)
+      Type(Element2D_Vect)                        :: dElem
       If (Associated(dElem%BF)) Then
          DeAllocate(dElem%BF)
       End If
@@ -1115,7 +1091,7 @@ Module m_MEF_Elements
 !      If (Associated(dElem%ID_DoF)) Then
 !         DeAllocate(dElem%ID_DoF)
 !      End If
-   End Subroutine Element2D_Destroy
+   End Subroutine Element2D_Vect_Destroy
    
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_Destroy"
@@ -1130,9 +1106,6 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-!      If (Associated(dElem%ID_DoF)) Then
-!         DeAllocate(dElem%ID_DoF)
-!      End If
    End Subroutine Element2D_Elast_Destroy
    
 #undef __FUNCT__
@@ -1148,15 +1121,12 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-!      If (Associated(dElem%ID_DoF)) Then
-!         DeAllocate(dElem%ID_DoF)
-!      End If
    End Subroutine Element3D_Scal_Destroy
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Destroy"
-   Subroutine Element3D_Destroy(dElem)
-      Type(Element3D)                        :: dElem
+#define __FUNCT__ "Element3D_Vect_Destroy"
+   Subroutine Element3D_Vect_Destroy(dElem)
+      Type(Element3D_Vect)                        :: dElem
       If (Associated(dElem%BF)) Then
          DeAllocate(dElem%BF)
       End If
@@ -1166,10 +1136,7 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-!      If (Associated(dElem%ID_DoF)) Then
-!         DeAllocate(dElem%ID_DoF)
-!      End If
-   End Subroutine Element3D_Destroy
+   End Subroutine Element3D_Vect_Destroy
    
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_Destroy"
@@ -1184,9 +1151,6 @@ Module m_MEF_Elements
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-!      If (Associated(dElem%ID_DoF)) Then
-!         DeAllocate(dElem%ID_DoF)
-!      End If
    End Subroutine Element3D_Elast_Destroy
 
 !!!
@@ -1246,9 +1210,9 @@ Module m_MEF_Elements
    End Subroutine Element2D_Scal_View
    
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_View"
-   Subroutine Element2D_View(dElem,viewer)
-      Type(Element2D)                                 :: dElem
+#define __FUNCT__ "Element2D_Vect_View"
+   Subroutine Element2D_Vect_View(dElem,viewer)
+      Type(Element2D_Vect)                            :: dElem
       Type(PetscViewer)                               :: viewer
       
       PetscInt                                        :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
@@ -1313,7 +1277,7 @@ Module m_MEF_Elements
 104 Format('    *** DoF  ',I9,'\n')
 200 Format(A)
 201 Format('   ',F5.2)
-   End Subroutine Element2D_View
+   End Subroutine Element2D_Vect_View
    
    Subroutine Element2D_Elast_View(dElem,viewer)
       Type(Element2D_Elast)                           :: dElem
@@ -1436,8 +1400,8 @@ Module m_MEF_Elements
    
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_View"
-   Subroutine Element3D_View(dElem,viewer)
-      Type(Element3D)                                 :: dElem
+   Subroutine Element3D_Vect_View(dElem,viewer)
+      Type(Element3D_Vect)                            :: dElem
       Type(PetscViewer)                               :: viewer
       
       PetscInt                                        :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
@@ -1537,7 +1501,7 @@ Module m_MEF_Elements
 104 Format('    *** DoF  ',I9,'\n')
 200 Format(A)
 201 Format('   ',F5.2)
-   End Subroutine Element3D_View
+   End Subroutine Element3D_Vect_View
    
    Subroutine Element3D_Elast_View(dElem,viewer)
       Type(Element3D_Elast)                           :: dElem

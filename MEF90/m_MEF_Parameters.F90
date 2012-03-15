@@ -7,7 +7,7 @@ Module m_MEF_Parameters
    include "exodusII.inc"  
    
    ! The following ensures that mef90 and PETSC real types are compatible:
-   ! thank's to Michael Metcalf in comp.lang.fortran
+   ! thanks to Michael Metcalf in comp.lang.fortran
    PetscReal,Parameter                 :: PReal = 1.0
    Integer,Parameter,Public            :: Kr = Selected_Real_Kind(Precision(PReal))
                                          
@@ -24,17 +24,4 @@ Module m_MEF_Parameters
    PetscInt,Public                     :: MEF90_MyRank
    PetscInt,Public                     :: MEF90_NumProcs
    PetscInt,Parameter,Public           :: MEF90_MXSTRLEN = 256
-
-   !!!   
-   !!! Element names
-   !!!
-   PetscInt,Parameter,Public           :: MEF90_P1_Lagrange = 1
-   PetscInt,Parameter,Public           :: MEF90_P2_Lagrange = 2
-   PetscInt,Parameter,Public           :: MEF90_P1_Lagrange_Boundary = 3
-   PetscInt,Parameter,Public           :: MEF90_P2_Lagrange_Boundary = 4
-   
-!   PetscInt,Parameter,Public           :: MEF90_Q1_Lagrange = 5
-!   PetscInt,Parameter,Public           :: MEF90_Q2_Lagrange = 6
-!   PetscInt,Parameter,Public           :: MEF90_Q1_Lagrange_Boundary = 7
-!   PetscInt,Parameter,Public           :: MEF90_Q2_Lagrange_Boundary = 8
 End Module m_MEF_Parameters

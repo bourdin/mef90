@@ -1,16 +1,12 @@
 Module m_MEF_EXO
 #include "finclude/petscdef.h"
-   Use m_MEF_LinAlg
    Use m_MEF_Parameters
-   Use m_MEF_Types
-   Use m_MEF_MPI
-   Use m_MEF_Elements
    Use m_MEF_Utils
    Use petsc
    IMPLICIT NONE
 
-   Integer,Parameter,Public                        :: exo_cpu_ws = 8
-   Integer,Parameter,Public                        :: exo_io_ws = 8
+   !Integer,Parameter,Public                        :: exo_cpu_ws = 8
+   !Integer,Parameter,Public                        :: exo_io_ws = 8
    PetscInt,Public                                 :: exo_ver
 
    
@@ -23,13 +19,57 @@ Module m_MEF_EXO
 
    Public :: EXOProperty_Copy
    Public :: EXOProperty_Write
-   Public :: EXOProperty_Ask
+   Public :: EXOCellSetProperty_Ask,EXOVertexSetProperty_Ask
    Public :: EXOProperty_Read
    
    Public :: EXOVariable_Copy
    Public :: EXOVariable_Write
    Public :: EXOVariable_Read
    
+   Public :: EXO_Type,EXO_Property_Type,EXO_Variable_Type
+   
+   Public :: EXOView
+      
+
+!!! To do:
+!!! 1. Remove EXO type (filename and exoid will be in a exo viewer one day
+!!! 2. rename EXO_Property_Type MEF90_RealProperty_Type
+!!! 3. rename EXO_Variable_Type, MEF90_Variable_Type
+   Type EXO_Type
+      MPI_Comm                                     :: comm      
+      Integer                                      :: exoid
+      Character(len=MXLNLN)                        :: filename  
+      Character(len=MXLNLN)                        :: title     
+      ! QA DATAS
+      !Integer                                      :: num_QA    
+      !Character(len=MXSTLN),Dimension(:,:),Pointer :: QA_rec
+      ! Properties
+      PetscInt                                     :: Num_EBProperties
+      Type(EXO_Property_Type),Dimension(:),Pointer :: EBProperty
+      PetscInt                                     :: Num_NSProperties
+      Type(EXO_Property_Type),Dimension(:),Pointer :: NSProperty
+      ! Variables
+      PetscInt                                     :: Num_GlobVariables    
+      Type(EXO_Variable_Type),Dimension(:),Pointer :: GlobVariable
+      PetscInt                                     :: Num_CellVariables    
+      Type(EXO_Variable_Type),Dimension(:),Pointer :: CellVariable
+      PetscInt                                     :: Num_VertVariables    
+      Type(EXO_Variable_Type),Dimension(:),Pointer :: VertVariable
+   End Type EXO_Type
+   
+   Type EXO_Property_Type
+      !!! Derived type used to store the values of a property at ALL NS,EB
+      !!! in an EXO file
+      Character(MXSTLN)                            :: Name
+      PetscInt,Dimension(:),Pointer                :: Value
+   End Type EXO_Property_Type
+   
+   Type EXO_Variable_Type
+      !!! Links variable name and offset in an exodus file
+      Character(MXSTLN)                            :: Name
+      PetscInt                                     :: Offset
+      !!! the position of the variable in the exo file
+   End Type EXO_Variable_Type   
  Contains
 #undef __FUNCT__
 #define __FUNCT__ "Write_EXO_Case"
@@ -55,7 +95,9 @@ Module m_MEF_EXO
    
 #undef __FUNCT__
 #define __FUNCT__ "EXO_Check_Numbering"
-!!! I don;t think that this is required anymore
+!!! I don't think that this is required anymore
+!!! It is only needed if we don;t want to seek for material properties
+
    Subroutine EXO_Check_Numbering(dEXO,ErrorCode)
       Type(EXO_Type)                                 :: dEXO
       PetscInt,Intent(OUT)                           :: ErrorCode
@@ -106,8 +148,8 @@ Module m_MEF_EXO
          End If
       End If
       Call MPI_BCast(ErrorCode,1,MPIU_INTEGER,0,dEXO%Comm,ierr)
- 100 Format('[ERROR] in MeshTopology_Check Numbering. Element block ',I3,' index is ',I3,'\n')   
- 102 Format('[ERROR] in MeshTopology_Check Numbering. Node Set ',I3,' index is ',I3,'\n')   
+ 100 Format('[ERROR] in EXO_Check_Numbering. Element block ',I3,' index is ',I3,'\n')   
+ 102 Format('[ERROR] in EXO_Check_Numbering. Node Set ',I3,' index is ',I3,'\n')   
    End Subroutine EXO_Check_Numbering
 
 
@@ -174,17 +216,17 @@ Module m_MEF_EXO
    End Subroutine EXOProperty_Write
    
 #undef __FUNCT__
-#define __FUNCT__ "EXOProperty_Ask"   
-   Subroutine EXOProperty_Ask(dEXO,dMeshTopology)
+#define __FUNCT__ "EXOCellSetProperty_Ask"   
+   Subroutine EXOCellSetProperty_Ask(dEXO,cellSetGlobalIS)
       Type(EXO_Type)                                 :: dEXO
-      Type(MeshTopology_Type)                        :: dMeshTopology
+      Type(IS)                                       :: cellSetGlobalIS
 
       PetscInt                                       :: ierr
       PetscInt                                       :: i,j
-      PetscInt                                       :: numCellSetGlobal,numVertexSetGlobal
+      PetscInt                                       :: numCellSetGlobal
       Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
 
-      Call ISGetLocalSize(dMeshTopology%cellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
+      Call ISGetLocalSize(cellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
       Do i = 1,numCellSetGlobal 
          Write(IOBuffer,100) i
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
@@ -197,8 +239,52 @@ Module m_MEF_EXO
             Call MPI_BCast(dEXO%EBProperty(j)%Value(i),1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
          End Do
       End Do
-      
-      Call ISGetLocalSize(dMeshTopology%vertexSetGlobalIS,numVertexSetGlobal,ierr);CHKERRQ(ierr)
+ 100 Format('*** Cell Set ',T24,I3,'\n')
+ 110 Format(T24,A,T60,': ')
+   End Subroutine EXOCellSetProperty_Ask    
+   
+#undef __FUNCT__
+#define __FUNCT__ "EXOCellSetProperty_AskWithBatch"
+   Subroutine EXOCellSetProperty_AskWithBatch(dEXO,cellSetGlobalIS,BatchUnit,IsBatch)
+      Type(EXO_Type)                                 :: dEXO
+      Type(IS)                                       :: cellSetGlobalIS
+      PetscInt                                       :: BatchUnit
+      PetscBool                                      :: IsBatch
+
+      PetscInt                                       :: ierr
+      PetscInt                                       :: i,j
+      PetscInt                                       :: numCellSetGlobal
+
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+
+      Call ISGetLocalSize(cellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
+      Do i = 1,numCellSetGlobal
+         Write(IOBuffer,100) i
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         Do j = 1,dEXO%Num_EBProperties
+            Write(IOBuffer,200) i,Trim(dEXO%EBProperty(j)%Name)
+            Call MEF90_AskInt(dEXO%EBProperty(j)%Value(i),IOBuffer,BatchUnit,IsBatch)
+         End Do
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
+            Write(BatchUnit,*)
+         End If
+      End Do
+100 Format('    Element Block ',T24,I3,'\n')
+200 Format('EB',I4.4,': ',A)
+   End Subroutine EXOCellSetProperty_AskWithBatch
+
+#undef __FUNCT__
+#define __FUNCT__ "EXOVertexSetProperty_Ask"
+   Subroutine EXOVertexSetProperty_Ask(dEXO,vertexSetGlobalIS)
+      Type(EXO_Type)                                 :: dEXO
+      Type(IS)                                       :: vertexSetGlobalIS
+
+      PetscInt                                       :: ierr
+      PetscInt                                       :: i,j
+      PetscInt                                       :: numvertexSetGlobal
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+
+      Call ISGetLocalSize(vertexSetGlobalIS,numVertexSetGlobal,ierr);CHKERRQ(ierr)
       Do i = 1,numVertexSetGlobal
          Write(IOBuffer,102) i
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
@@ -211,11 +297,40 @@ Module m_MEF_EXO
             Call MPI_BCast(dEXO%NSProperty(j)%Value(i),1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
          End Do
       End Do
- 100 Format('*** Element Block ',T24,I3,'\n')
- 102 Format('*** Node Set      ',T24,I3,'\n')
+ 102 Format('*** Vertex Set      ',T24,I3,'\n')
  110 Format(T24,A,T60,': ')
-   End Subroutine EXOProperty_Ask
+   End Subroutine EXOVertexSetProperty_Ask
       
+#undef __FUNCT__
+#define __FUNCT__ "EXOVertexProperty_AskWithBatch"
+   Subroutine EXOVertexProperty_AskWithBatch(dEXO,vertexSetGlobalIS,BatchUnit,IsBatch)
+      Type(EXO_Type)                                 :: dEXO
+      Type(IS)                                       :: vertexSetGlobalIS
+      PetscInt                                       :: BatchUnit
+      PetscBool                                      :: IsBatch
+
+      PetscInt                                       :: ierr
+      PetscInt                                       :: i,j
+      PetscInt                                       :: numVertexSetGlobal
+
+      Character(len=MEF90_MXSTRLEN)                  :: IOBuffer
+   
+      Call ISGetLocalSize(vertexSetGlobalIS,numVertexSetGlobal,ierr);CHKERRQ(ierr)
+      Do i = 1,numVertexSetGlobal
+         Write(IOBuffer,102) i
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         Do j = 1,dEXO%Num_NSProperties
+            Write(IOBuffer,202) i,Trim(dEXO%NSProperty(j)%Name)
+            Call MEF90_AskInt(dEXO%NSProperty(j)%Value(i),IOBuffer,BatchUnit,IsBatch)
+         End Do
+         If ((.NOT. IsBatch) .AND. (MEF90_MyRank == 0)) Then
+            Write(BatchUnit,*)
+         End If
+      End Do
+102 Format('    Node Set      ',T24,I3,'\n')
+202 Format('NS',I4.4,': ',A)
+   End Subroutine EXOVertexProperty_AskWithBatch
+
 #undef __FUNCT__
 #define __FUNCT__ "EXOProperty_Read"
    Subroutine EXOProperty_Read(dEXO)
@@ -517,6 +632,88 @@ Module m_MEF_EXO
          DeAllocate (Tmp_Res)
       End If
    End Subroutine Write_EXO_Result_Global
+
+#undef __FUNCT__
+#define __FUNCT__ "EXOView"
+   Subroutine EXOView(dEXO,viewer)
+      Type(EXO_Type)                               :: dEXO
+      Type(PetscViewer)                            :: viewer
+      
+      PetscInt                                     :: i,j,iErr
+      Character(len=MEF90_MXSTRLEN)                :: CharBuffer
+   
+      If (dEXO%comm == PETSC_COMM_WORLD) Then
+         Write(CharBuffer,100) 'PETSC_COMM_WORLD'
+      ElseIf (dEXO%comm == PETSC_COMM_SELF) Then
+         Write(CharBuffer,100) 'PETSC_COMM_SELF'
+      Else  
+         Write(CharBuffer,105) 'unknown',dEXO%comm
+      End If
+      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+      
+      Write(CharBuffer,101) dEXO%exoid
+      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+      Write(CharBuffer,102) dEXO%filename
+      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+!      Write(CharBuffer,103) dEXO%title//' '
+!      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+!      Write(CharBuffer,'(A)') '\n'
+
+      Write(CharBuffer,106) dEXO%Num_EBProperties
+      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+      Do i = 1,dEXO%Num_EBProperties
+         Write(CharBuffer,109) dEXO%EBProperty(i)%Name,Size(dEXO%EBProperty(i)%Value)
+         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+         Do j = 1,Size(dEXO%EBProperty(i)%Value)
+            Write(CharBuffer,201) j,dEXO%EBProperty(i)%Value(j)
+            Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+         End Do
+      End Do
+
+      Write(CharBuffer,108) dEXO%Num_NSProperties
+      Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+      Do i = 1,dEXO%Num_NSProperties
+         Write(CharBuffer,109) dEXO%NSProperty(i)%Name,Size(dEXO%NSProperty(i)%Value)
+         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+         Do j = 1,Size(dEXO%NSProperty(i)%Value)
+            Write(CharBuffer,203) j,dEXO%NSProperty(i)%Value(j)
+            Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+         End Do
+      End Do
+!      Do i = 1,dEXO%Num_QA
+!         Write(CharBuffer,104) i,dEXO%QA_rec(i,:)
+!         Call PetscViewerASCIIPrintf(viewer,CharBuffer,iErr); CHKERRQ(iErr)
+!      End Do
+      Write(CharBuffer,110) dEXO%Num_GlobVariables
+      Do i = 1,dEXO%Num_GlobVariables
+         Write(CharBuffer,210) dEXO%GlobVariable(i)%Name,dEXO%GlobVariable(i)%offset
+      End Do
+
+      Write(CharBuffer,111) dEXO%Num_CellVariables
+      Do i = 1,dEXO%Num_CellVariables
+         Write(CharBuffer,210) dEXO%CellVariable(i)%Name,dEXO%CellVariable(i)%offset
+      End Do
+
+      Write(CharBuffer,112) dEXO%Num_VertVariables
+      Do i = 1,dEXO%Num_VertVariables
+         Write(CharBuffer,210) dEXO%VertVariable(i)%Name,dEXO%VertVariable(i)%offset
+      End Do
+    
+      
+ 100 Format('Communicator:       ',A,      '\n')
+ 101 Format('exo ID:             ',I3,     '\n')
+ 102 Format('filename:           ',A,      '\n')
+ 105 Format('Communicator:       ',A,I3,  '\n')
+ 106 Format('Number of EB Properties: ',I3,'\n')
+ 108 Format('Number of NS Properties: ',I3,'\n')
+ 109 Format('   ',A,'num values:',I3,    '\n')
+ 110 Format('Global Variables: ',I3,       '\n')
+ 111 Format('Cell Variables:   ',I3,       '\n')
+ 112 Format('Vertex Variables: ',I3,       '\n')
+ 201 Format('   Element Block ',I3,' value ',I3,'\n')
+ 203 Format('   Node Set      ',I3,' value ',I3,'\n')
+ 210 Format(A,I3,'\n')
+   End Subroutine EXOView
 
 End Module m_MEF_EXO
 
