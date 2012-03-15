@@ -27,7 +27,62 @@ Contains
       Call ISDestroy(tmplabels,ierr);CHKERRQ(ierr)
    End Subroutine MEF90_ISAllGatherMerge
    
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_AskInt"
+   Subroutine MEF90_AskInt(val,msg,ArgUnit,IsBatch)
+      PetscInt                                  :: Val
+      Character(len=*)                          :: msg 
+      PetscInt                                  :: argunit
+      PetscBool                                 :: IsBatch
+
+      Character(len=MEF90_MXSTRLEN)             :: IOBuffer   
+      PetscInt                                  :: ierr   
+      If (IsBatch) Then
+         If (MEF90_MyRank == 0) Then
+            Read(ArgUnit,*) Val
+         End If
+         Call MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+      Else
+         Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         If (MEF90_MyRank == 0) Then
+            Read(*,*) Val
+            Write(ArgUnit,"(I4,t60,A)") val,Trim(msg)
+         End If
+         Call MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+      End If
+   End Subroutine MEF90_AskInt   
    
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_AskReal"
+   Subroutine MEF90_AskReal(val,msg,ArgUnit,IsBatch)
+      PetscReal                                 :: Val
+      Character(len=*)                          :: msg 
+      PetscInt                                  :: argunit
+      PetscBool                                 :: IsBatch
+
+      Character(len=MEF90_MXSTRLEN)             :: IOBuffer      
+      PetscInt                                  :: ierr
+      If (IsBatch) Then
+         If (MEF90_MyRank == 0) Then
+            Read(ArgUnit,*) Val
+         End If
+         Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
+      Else
+         Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         If (MEF90_MyRank == 0) Then
+            Read(*,*) Val
+            Write(ArgUnit,"(ES12.5,t60,A)") val,Trim(msg)
+         End If
+         Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
+      End If
+   End Subroutine MEF90_AskReal
+ 
+
+!!! 
+!!! This should not be needed anywhere anymore
+!!!   
    Subroutine Uniq(dComm, dMyVals, dVals)
       MPI_Comm                         :: dComm
       PetscInt, Dimension(:), Pointer  :: dMyVals, dVals
@@ -49,12 +104,6 @@ Contains
          MyMaxVal = MaxVal(dMyVals)
          Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPIU_INTEGER, MPI_MIN, dComm, iErr)
          Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPIU_INTEGER, MPI_MAX, dComm, iErr)
-!!!$         openmpi doesn't like these so we do a Reduce followed by a Bcast
-!!!$         Call MPI_Reduce(MyMinVal, GlobMinVal, 1, MPIU_INTEGER, MPI_MIN, 0, dComm, iErr)
-!!!$         Call MIP_Bcast(GlobMinVal, 1, MPIU_INTEGER, 0, dComm, iErr)   
-!!!$         Call MPI_Reduce(MyMaxVal, GlobMaxVal, 1, MPIU_INTEGER, MPI_MAX, 0, dComm, iErr)
-!!!$         Call MIP_Bcast(GlobMaxVal, 1, MPIU_INTEGER, 0, dComm, iErr)   
-!!!$   
          Allocate(ValCount(GlobMinVal:GlobMaxVal))
          ValCount = .FALSE.
          Do i = 1, Size(dMyVals)
