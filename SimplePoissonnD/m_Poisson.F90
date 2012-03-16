@@ -36,11 +36,12 @@ Module m_Poisson3D
 
    Type Heat_AppCtx_Type
       Type (dm)                                    :: mesh
-      Type (EXO_Type)                              :: EXO,MyEXO
+      Type (EXO_Type)                              :: EXO
 #if defined PB_2D
-      Type(Element2D_Scal),Dimension(:,:),Pointer  :: Elem
+
+      Type(Element2D_Scal),Dimension(:),Pointer    :: Elem
 #elif defined PB_3D
-      Type(Element3D_Scal),Dimension(:,:),Pointer  :: Elem
+      Type(Element3D_Scal),Dimension(:),Pointer    :: Elem
 #endif
       Type(IS)                                     :: CellSetGlobalIS
       Type(IS)                                     :: VertexSetGlobalIS
@@ -136,7 +137,7 @@ Contains
       AppCtx%EXO%num_ebproperties = 0
       AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'.gen'
       If (MEF90_MyRank == 0) Then
-         AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename,EXREAD,exo_cpu_ws,exo_io_ws,PETSC_NULL_INTEGER,ierr)
+         AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename,EXWRIT,exo_cpu_ws,exo_io_ws,PETSC_NULL_INTEGER,ierr)
       End If
       !!! Read and partition the mesh
       If (MEF90_NumProcs == 1) Then
@@ -156,36 +157,51 @@ Contains
 
       Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage,iErr);CHKERRQ(iErr)
 
-      Call DMMeshGetLabelSize(AppCtx%mesh,"Cell Sets",numCellSet,ierr);CHKERRQ(ierr)
-      Call DMMeshGetLabelSize(AppCtx%mesh,"Vertex Sets",numVertexSet,ierr);CHKERRQ(ierr)
-      Call DMMeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
       
-      Call DMMeshGetLabelIdIS(MeshTopology%mesh,'Cell Sets',AppCtx%CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',AppCtx%CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,AppCtx%CellSetGlobalIS)
-      Call DMMeshGetLabelIdIS(MeshTopology%mesh,'Vertex Sets',AppCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Vertex Sets',AppCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,AppCtx%VertexSetGlobalIS)
       
+      Call DMMeshGetStratumSize(AppCtx%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
+      Allocate(AppCtx%Elem(numCells))
+
+      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+
+      Allocate(AppCtx%ElementType(size(setID)))
       !!! Sets the type of elements for each block
-      Allocate(cellSet(numCellSet))
-      AppCtx%MeshTopology%cellSet%ElemType = MEF90_P1_Lagrange
-      Do set = 1,numCellSet
-         Call cellSetElemTypeInit(AppCtx%MeshTopology%cellSet(set),numDim)
+      !!! NO THis is a GLOBAL property and the size should be that of the GLOBAL # cell sets
+      !!!
+#if defined PB_2D
+      AppCtx%ElementType(:) = MEF90_P1_Lagrange_2D_Scal
+#elif defined PB_3D
+      AppCtx%ElementType(:) = MEF90_P1_Lagrange_2D_Scal
+#endif
+
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call DMMeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(iErr)
+#if defined PB_2D
+         Call ElementInit(AppCtx%mesh,cellIS,AppCtx%Elem,2,MEF90_P1_Lagrange_2D_Scal)
+#elif defined PB_3D
+         Call ElementInit(AppCtx%mesh,cellIS,AppCtx%Elem,2,MEF90_P1_Lagrange_3D_Scal)
+#endif
+         Call ISDestroy(cellIS)
       End Do    
-
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    
-      Call ElementInit(AppCtx%MeshTopology,AppCtx%Elem,2)
-
       !!! Allocate the Section for U and F
       Allocate(SizeScal(1))
       SizeScal=1
 
-      Call FieldCreateVertex(AppCtx%U,    'U',        AppCtx%MeshTopology,SizeScal)
-      Call FieldCreateVertex(AppCtx%F,    'F',        AppCtx%MeshTopology,SizeScal)
-      Call FieldCreateVertex(AppCtx%RHS,  'RHS',      AppCtx%MeshTopology,SizeScal)
+      Call FieldCreateVertex(AppCtx%U,    'U',        AppCtx%mesh,SizeScal)
+      Call FieldCreateVertex(AppCtx%F,    'F',        AppCtx%mesh,SizeScal)
+      Call FieldCreateVertex(AppCtx%RHS,  'RHS',      AppCtx%mesh,SizeScal)
 
 
       !!! Allocate and initialize the Section for the flag
-      Call FlagCreateVertex(AppCtx%BCFlag,'BC',AppCtx%MeshTopology,SizeScal)
+      Call FlagCreateVertex(AppCtx%BCFlag,'BC',AppCtx%mesh,SizeScal)
 !could we use    Call SectionIntAddNsProperty()  yes 
       
       Allocate(TmpFlag(1))
@@ -223,21 +239,20 @@ Contains
       
       
       !!! Read Force and BC from Data file or reformat it
-      AppCtx%MyEXO%comm = PETSC_COMM_SELF
-      AppCtx%MyEXO%exoid = AppCtx%EXO%exoid
-      Write(AppCtx%MyEXO%filename,200) trim(AppCtx%AppParam%prefix),MEF90_MyRank
-   200 Format(A,'-',I4.4,'.gen')
-      AppCtx%MyEXO%exoid = EXCRE (AppCtx%MyEXO%filename,EXCLOB,exo_cpu_ws,exo_io_ws,iErr)
-      AppCtx%MyEXO%title = trim(AppCtx%EXO%title)
+      
+      !!!
+      !!! Create local vectors, then call 
+      !!! VecLoadExodusVertex(dm,res,IOcomm,exoidout,step,offset)
+      !!!
       If (AppCtx%AppParam%Restart) Then
          Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage,iErr);CHKERRQ(iErr)
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO,AppCtx%MeshTopology,1,1,AppCtx%U) 
-         Call Read_EXO_Result_Vertex(AppCtx%MyEXO,AppCtx%MeshTopology,2,1,AppCtx%F) 
+         Call VecLoadExodusVertex(AppCtx%mesh,AppCtx%U%LocalVec,PETSC_COMM_WORLD,AppCtx%EXO%exoid,1,1,ierr);CHKERRQ(ierr)
+         Call VecLoadExodusVertex(AppCtx%mesh,AppCtx%F%LocalVec,PETSC_COMM_WORLD,AppCtx%EXO%exoid,1,2,ierr);CHKERRQ(ierr)
          Call PetscLogStagePop(iErr);CHKERRQ(iErr)
       Else
          !!! Prepare and format the output mesh   
          Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage,iErr);CHKERRQ(iErr)
-         Call MeshTopologyWriteGlobal(AppCtx%MeshTopology,AppCtx%MyEXO,PETSC_COMM_WORLD)
+         !!! Check. We probably don't want to overwrite the input file
          Call EXOFormat_SimplePoisson(AppCtx)
          Call PetscLogStagePop(iErr);CHKERRQ(iErr)
          
@@ -337,28 +352,28 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "ExoFormat_SimplePoisson"
-   Subroutine EXOFormat_SimplePoisson(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
+   Subroutine EXOFormat_SimplePoisson(EXO)
+      Type(EXO_Type)                               :: EXO
       PetscInt                                     :: iErr
    
-      Call EXPVP (AppCtx%MyEXO%exoid,'g',3,iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid,'g',3,(/'Elastic Energy ','Ext Forces work','Total Energy   '/),iErr)
-      Call EXPVP (AppCtx%MyEXO%exoid,'n',2,iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid,'n',2,(/'U','F'/),iErr)
+      Call EXPVP (EXO%exoid,'g',3,iErr)
+      Call EXPVAN(EXO%exoid,'g',3,(/'Elastic Energy ','Ext Forces work','Total Energy   '/),iErr)
+      Call EXPVP (EXO%exoid,'n',2,iErr)
+      Call EXPVAN(EXO%exoid,'n',2,(/'U','F'/),iErr)
 #if defined PB_2D
-      Call EXPVP (AppCtx%MyEXO%exoid,'e',2,iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid,'e',2,(/'Grad U_X','Grad U_Y'/),iErr)
+      Call EXPVP (EXO%exoid,'e',2,iErr)
+      Call EXPVAN(EXO%exoid,'e',2,(/'Grad U_X','Grad U_Y'/),iErr)
 #elif defined PB_3D
-      Call EXPVP (AppCtx%MyEXO%exoid,'e',3,iErr)
-      Call EXPVAN(AppCtx%MyEXO%exoid,'e',3,(/'Grad U_X','Grad U_Y','Grad U_Z'/),iErr)
+      Call EXPVP (EXO%exoid,'e',3,iErr)
+      Call EXPVAN(EXO%exoid,'e',3,(/'Grad U_X','Grad U_Y','Grad U_Z'/),iErr)
 #endif
-      Call EXPTIM(AppCtx%MyEXO%exoid,1,1.0_Kr,iErr)
+      Call EXPTIM(EXO%exoid,1,1.0_Kr,iErr)
    End Subroutine EXOFormat_SimplePoisson
    
 #undef __FUNCT__
 #define __FUNCT__ "InitLog"
    Subroutine InitLog(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                       :: AppCtx
       PetscInt                                     :: iErr
       
       Call PetscLogEventRegister('MatAssembly Block',0,AppCtx%LogInfo%MatAssemblyBlock_Event,ierr);CHKERRQ(ierr)
@@ -378,7 +393,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Solve"
    Subroutine Solve(AppCtx)
-      Type(Heat_AppCtx_Type)                            :: AppCtx
+      Type(Heat_AppCtx_Type)                       :: AppCtx
       
       PetscInt                                     :: iErr
       KSPConvergedReason                           :: KSPreason
@@ -406,28 +421,35 @@ Contains
  
 #undef __FUNCT__
 #define __FUNCT__ "MatAssembly"
-   Subroutine HeatMatAssembly(AppCtx,MeshTopology)   
+   Subroutine HeatMatAssembly(AppCtx)   
       Type(Heat_AppCtx_Type)                       :: AppCtx
-      Type(MeshTopology_Type)                      :: MeshTopology
       PetscInt                                     :: iBlk,iErr
       
-      Call MatInsertVertexBoundaryValues(AppCtx%K,AppCtx%U,AppCtx%BCFlag,MeshTopology)
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
+      PetscInt                                     :: set
+      
+      Call MatInsertVertexBoundaryValues(AppCtx%K,AppCtx%U,AppCtx%BCFlag,AppCtx%mesh)
       Call MatAssemblyBegin(AppCtx%K,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
 
 !      Call PetscLogStagePush(AppCtx%LogInfo%MatAssembly_Stage,iErr);CHKERRQ(iErr)
-      Do_iBlk: Do iBlk = 1,MeshTopology%Num_Elem_Blks
-         Call MatAssemblyBlock(iBlk,AppCtx,MeshTopology)
-      End Do Do_iBlk
+      Call DMMeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call MatAssemblyBlock(set,AppCtx)
+         !!! set or setID(set)?
+      End Do
+      Call ISRestoreIndices(setIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       Call MatAssemblyBegin(AppCtx%K,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
       Call MatAssemblyEnd  (AppCtx%K,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
 
 !      Call PetscLogStagePop(iErr);CHKERRQ(iErr)
    End Subroutine HeatMatAssembly
       
-   Subroutine MatAssemblyBlock(iBlk,AppCtx,MeshTopology)
+   Subroutine MatAssemblyBlock(iBlk,AppCtx)
       Type(Heat_AppCtx_Type)                       :: AppCtx
-      Type (MeshTopology_Type)                     :: MeshTopology
       PetscInt                                     :: iBlk
       
       PetscInt                                     :: iE,iELoc,iErr,i
@@ -441,6 +463,9 @@ Contains
       PetscReal                                    :: T_Elem
 !      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyBlock_Event,iErr);CHKERRQ(iErr)
      
+     !!! iBlk needs to be the GLOBAL set ID so that I can recover the proper material properties
+     !!! get Diff as a PETScOption
+     !!! 
       NumDoFScal = MeshTopology%Elem_Blk(iBlk)%Num_DoF
       Allocate(MatElem(MeshTopology%Elem_Blk(iBlk)%Num_DoF,MeshTopology%Elem_Blk(iBlk)%Num_DoF))
       Allocate(BCFlag(MeshTopology%Elem_Blk(iBlk)%Num_DoF))
@@ -480,7 +505,6 @@ Contains
             End Do
          End Do
          Call DMMeshAssembleMatrix(AppCtx%K,mesh,AppCtx%U%Sec,iE-1,MatElem,ADD_VALUES,iErr);CHKERRQ(iErr)
-         !Call DMMeshAssembleMatrix(AppCtx%K,mesh,AppCtx%U%Sec,iE-1,MatElem,INSERT_VALUES,iErr);CHKERRQ(iErr)
       End Do Do_iELoc
    
       Call PetscLogFlops(flops,iErr);CHKERRQ(iErr)

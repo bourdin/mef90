@@ -90,6 +90,7 @@ Contains
       Call DMMeshCreateGlobalScatter(mesh,F%Sec,F%Scatter,ierr);CHKERRQ(ierr)
       Call DMMeshCreateVector(mesh,F%Sec,F%Vec,ierr);CHKERRQ(ierr)
       Call SectionRealCreateLocalVector(F%Sec,F%LocalVec,ierr);CHKERRQ(ierr)
+      !!! Set block size here
    End Subroutine FieldCreateVertex
    
 #undef __FUNCT__
