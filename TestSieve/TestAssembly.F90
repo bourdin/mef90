@@ -4,7 +4,8 @@ Program TestAssembly
    Use petsc
    Implicit NONE   
 
-   Type(MeshTopology_Type)                      :: MeshTopology
+   Type(DM)                                     :: mesh
+   Type(IS)                                     :: cellSetGlobalIS
    Type(EXO_Type)                               :: EXO,MyEXO
    Type(Element2D_Scal),Dimension(:),Pointer    :: Elem2DA
    
@@ -50,23 +51,22 @@ Program TestAssembly
       EXO%exoid = EXOPEN(EXO%filename,EXREAD,cpu_ws,io_ws,vers,ierr)
    End If
    If (MEF90_numprocs == 1) Then
-      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,EXO%exoid,MeshTopology%mesh,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,EXO%exoid,mesh,ierr);CHKERRQ(ierr)
    Else
       Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,EXO%exoid,tmpDM,ierr);CHKERRQ(ierr)
-      Call DMMeshDistribute(tmpDM,PETSC_NULL_CHARACTER,MeshTopology%mesh,ierr);CHKERRQ(iErr)
+      Call DMMeshDistribute(tmpDM,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(iErr)
       Call DMDestroy(tmpDM,ierr);CHKERRQ(iErr)
    End If
    If (MEF90_Myrank == 0) Then
       Call EXCLOS(EXO%exoid,ierr)
    End If
-   Call MeshTopologyGetInfo(MeshTopology)
-   Call DMMeshSetMaxDof(MeshTopology%Mesh,dof,iErr); CHKERRQ(iErr) 
+   Call DMMeshSetMaxDof(mesh,dof,iErr); CHKERRQ(iErr) 
 
-   Call DMMeshGetVertexSectionReal(MeshTopology%mesh,'U',dof,U_Sec,iErr); CHKERRQ(iErr)
-   Call DMMeshCreateGlobalScatter(MeshTopology%mesh,U_Sec,U_Scatter,ierr);CHKERRQ(ierr)
-   Call DMMeshCreateVector(MeshTopology%mesh,U_Sec,U_Vec,ierr);CHKERRQ(ierr)
+   Call DMMeshGetVertexSectionReal(mesh,'U',dof,U_Sec,iErr); CHKERRQ(iErr)
+   Call DMMeshCreateGlobalScatter(mesh,U_Sec,U_Scatter,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateVector(mesh,U_Sec,U_Vec,ierr);CHKERRQ(ierr)
 
-   Call DMMeshCreateMatrix(MeshTopology%mesh,U_Sec,MATMPIAIJ,K,iErr); CHKERRQ(iErr)
+   Call DMMeshCreateMatrix(mesh,U_Sec,MATMPIAIJ,K,iErr); CHKERRQ(iErr)
 
    !!! 
    !!! Semi-Synchronized assembly: each cpu goes through all cell sets 
@@ -76,37 +76,28 @@ Program TestAssembly
    Call MatZeroEntries(K,ierr);CHKERRQ(ierr)
    Call SectionRealSet(U_Sec,0.0_Kr,iErr);CHKERRQ(ierr)
    
-   !!!
-   !!! Get the IS containing the ID of all cell sets across all processors
-   !!! and the associated F90 array
-   !!! This information is not trivially in the mesh, so it is cached in 
-   !!! MeshTopology. 
-   !!! FWIW, here is how to reconstruct it:
-   !!!    Call DMMeshGetLabelIdIS(MeshTopology%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-   !!!    Call PetscObjectGetComm(MeshTopology%mesh,comm,ierr);CHKERRQ(ierr)
-   !!!    Call MEF90_ISAllGatherMerge(comm,setIS)
-   !!! MEF90_ISAllGatherMerge is potentially expensive on many processors (it involves an AllGather and a sort)
-   !!!
-   Call ISGetIndicesF90(MeshTopology%cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call DMMeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS)
+   Call ISGetIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       !!!
       !!! Get the IS containing the cell ID of the cells in the cell set setID(set)
       !!! and the associated F90 array
       !!!
-      Call DMMeshGetStratumIS(MeshTopology%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(iErr)
+      Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(iErr)
       Call ISGetIndicesF90(cellIS,cellID,iErr);CHKERRQ(iErr)
       Do cell = 1,size(cellID)
          !!! 
          !!! Get the cone size of the local cell i.e. its number of vertices (+ number of edges in an interpolated mesh)
          !!!
-         Call DMMeshGetConeSize(MeshTopology%mesh,cellID(cell),conesize,ierr);CHKERRQ(ierr);
+         Call DMMeshGetConeSize(mesh,cellID(cell),conesize,ierr);CHKERRQ(ierr);
             
          Allocate(val(conesize*dof))
          Allocate(Kelem(conesize*dof,conesize*dof))
          val = 1.0_Kr
          Kelem = 1.0_Kr
-         Call DMMeshAssembleMatrix(K,MeshTopology%mesh,U_Sec,cellID(cell),Kelem,ADD_VALUES,iErr); CHKERRQ(iErr)
-         Call SectionRealUpdateClosure(U_Sec,MeshTopology%mesh,cellID(cell),val,ADD_VALUES,iErr); CHKERRQ(iErr)  
+         Call DMMeshAssembleMatrix(K,mesh,U_Sec,cellID(cell),Kelem,ADD_VALUES,iErr); CHKERRQ(iErr)
+         Call SectionRealUpdateClosure(U_Sec,mesh,cellID(cell),val,ADD_VALUES,iErr); CHKERRQ(iErr)  
          DeAllocate(val)
          DeAllocate(Kelem)
       End Do
@@ -143,16 +134,16 @@ Program TestAssembly
    !!! intersect its subdomain. 
    !!! The only difference from the previous case is that the outer
    !!! loop is given by cellIS obtained with
-   !!!    Call DMMeshGetLabelIdIS(MeshTopology%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+   !!!    Call DMMeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
 
-   Call DMMeshGetLabelIdIS(MeshTopology%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+   Call DMMeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
    Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       !!!
       !!! Get the IS containing the cell ID of the cells in the cell set setID(set)
       !!! and the associated F90 array
       !!!
-      Call DMMeshGetStratumIS(MeshTopology%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(iErr)
+      Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(iErr)
       Call ISGetIndicesF90(cellIS,cellID,iErr);CHKERRQ(iErr)
       Do cell = 1,size(cellID)
          !!! 
@@ -160,13 +151,13 @@ Program TestAssembly
          !!! Since we know that in a cell set all cells are of the same type
          !!! We could have allocated just once outside of the loop
          !!!
-         Call DMMeshGetConeSize(MeshTopology%mesh,cellID(cell),conesize,ierr);CHKERRQ(ierr);
+         Call DMMeshGetConeSize(mesh,cellID(cell),conesize,ierr);CHKERRQ(ierr);
          Allocate(val(conesize*dof))
          Allocate(Kelem(conesize*dof,conesize*dof))
          val = 1.0_Kr
          Kelem = 1.0_Kr
-         Call DMMeshAssembleMatrix(K,MeshTopology%mesh,U_Sec,cellID(cell),Kelem,ADD_VALUES,iErr); CHKERRQ(iErr)
-         Call SectionRealUpdateClosure(U_Sec,MeshTopology%mesh,cellID(cell),val,ADD_VALUES,iErr); CHKERRQ(iErr)  
+         Call DMMeshAssembleMatrix(K,mesh,U_Sec,cellID(cell),Kelem,ADD_VALUES,iErr); CHKERRQ(iErr)
+         Call SectionRealUpdateClosure(U_Sec,mesh,cellID(cell),val,ADD_VALUES,iErr); CHKERRQ(iErr)  
          DeAllocate(val)
          DeAllocate(Kelem)
       End Do
@@ -196,7 +187,7 @@ Program TestAssembly
    Call PetscPrintf(PETSC_COMM_WORLD,"\n\nVec U_Vec: \n",iErr); CHKERRQ(iErr)
    Call VecView(U_Vec,PETSC_VIEWER_STDOUT_WORLD,iErr); CHKERRQ(iErr)
 
-   Call DMMeshGetStratumIS(MeshTopology%mesh,'height',0,cellIS,ierr);CHKERRQ(ierr)
+   Call DMMeshGetStratumIS(mesh,'height',0,cellIS,ierr);CHKERRQ(ierr)
    Call ISGetIndicesF90(cellIS,cellID,iErr);CHKERRQ(iErr)
    write(*,*) cellID
    Call ISRestoreIndicesF90(cellIS,cellID,iErr);CHKERRQ(iErr)

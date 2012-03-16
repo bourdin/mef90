@@ -247,7 +247,7 @@ Contains
                k = k+1
             End Do
          End Do
-         Call Element2D_Scal_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+         Call Element2D_Scal_Init(dElem(CellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
@@ -291,7 +291,7 @@ Contains
                k = k+1
             End Do
          End Do
-         Call Element2D_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+         Call Element2D_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
@@ -335,7 +335,7 @@ Contains
                k = k+1
             End Do
          End Do
-         Call Element2D_Elast_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+         Call Element2D_Elast_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
@@ -423,7 +423,7 @@ Contains
                k = k+1
             End Do
          End Do
-         Call Element3D_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+         Call Element3D_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
@@ -467,7 +467,7 @@ Contains
                k = k+1
             End Do
          End Do
-         Call Element3D_Elast_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+         Call Element3D_Elast_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)

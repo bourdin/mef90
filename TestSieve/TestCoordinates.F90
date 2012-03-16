@@ -16,7 +16,6 @@ Program TestCoordinates
    PetscBool                                    :: HasPrefix
    PetscReal,Dimension(:,:),Pointer             :: array
    PetscErrorCode                               :: iErr
-   PetscInt                                     :: NumVert
    Character(len=256)                           :: prefix
    Type(SectionReal)                            :: coordSection
    Integer                                      :: cpu_ws = 0
