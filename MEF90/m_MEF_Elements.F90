@@ -14,6 +14,7 @@ Module m_MEF_Elements
    Public :: Element1D
    Public :: Element2D_Vect,Element2D_Scal,Element2D_Elast 
    Public :: Element3D_Vect,Element3D_Scal,Element3D_Elast 
+   
 
    Type Element_Type
       ! name is the element name in english language
@@ -45,84 +46,84 @@ Module m_MEF_Elements
    !!! 
    !!! Linear Lagrange elements
    !!!
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2D_Scal = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2D_Scal = Element_Type(   &
       "MEF90_P1_Lagrange_2D_Scal",  &  ! name
       1,                            &  ! shortID
       3,3,0,                        &  ! numVertex,numEdge,numFace
       1,0,0,0,3,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       2,0,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3D_Scal = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3D_Scal = Element_Type(   &
       "MEF90_P1_Lagrange_3D_Scal",  &  ! name
       2,                            &  ! shortID
       4,6,4,                        &  ! numVertex,numEdge,numFace
       1,0,0,0,4,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,0,1                         &  ! dim,codim,order                         
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2D_Elast = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2D_Elast = Element_Type(   &
       "MEF90_P1_Lagrange_2D_Elast", &  ! name
       3,                            &  ! shortID
       3,3,0,                        &  ! numVertex,numEdge,numFace
       2,0,0,0,6,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       2,0,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3D_Elast = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3D_Elast = Element_Type(   &
       "MEF90_P1_Lagrange_3D_Elast", &  ! name
       4,                            &  ! shortID
       4,6,4,                        &  ! numVertex,numEdge,numFace
       3,0,0,0,12,                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,0,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2D_Vect = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2D_Vect = Element_Type(   &
       "MEF90_P1_Lagrange_2D_Vect",  &  ! name
       5,                            &  ! shortID
       3,3,0,                        &  ! numVertex,numEdge,numFace
       2,0,0,0,6,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       2,0,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3D_Vect = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3D_Vect = Element_Type(   &
       "MEF90_P1_Lagrange_3D_Vect",  &  ! name
       6,                            &  ! shortID
       4,6,4,                        &  ! numVertex,numEdge,numFace
       3,0,0,0,12,                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,0,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2DBoundary_Scal = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2DBoundary_Scal = Element_Type(   &
       "MEF90_P1_Lagrange_2DBoundary_Scal",  &  ! name
       7,                            &  ! shortID
       2,1,0,                        &  ! numVertex,numEdge,numFace
       1,0,0,0,2,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       2,1,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3DBoundary_Scal = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3DBoundary_Scal = Element_Type(   &
       "MEF90_P1_Lagrange_3DBoundary_Scal",  &  ! name
       8,                            &  ! shortID
       3,3,0,                        &  ! numVertex,numEdge,numFace
       1,0,0,0,3,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,1,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2DBoundary_Vect = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2DBoundary_Vect = Element_Type(   &
       "MEF90_P1_Lagrange_2DBoundary_Vect",  &  ! name
       9,                            &  ! shortID
       2,1,0,                        &  ! numVertex,numEdge,numFace
       2,0,0,0,4,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       2,1,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3DBoundary_Vect = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3DBoundary_Vect = Element_Type(   &
       "MEF90_P1_Lagrange_3DBoundary_Vect",  &  ! name
       10,                           &  ! shortID
       3,3,0,                        &  ! numVertex,numEdge,numFace
       3,0,0,0,9,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,1,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_2DBoundary_Elast = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2DBoundary_Elast = Element_Type(   &
       "MEF90_P1_Lagrange_2DBoundary_Elast",  &  ! name
       11,                           &  ! shortID
       2,1,0,                        &  ! numVertex,numEdge,numFace
       2,0,0,0,4,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       2,1,1                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P1_Lagrange_3DBoundary_Elast = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3DBoundary_Elast = Element_Type(   &
       "MEF90_P1_Lagrange_3DBoundary_Elast",  &  ! name
       12,                           &  ! shortID
       3,3,0,                        &  ! numVertex,numEdge,numFace
@@ -132,14 +133,14 @@ Module m_MEF_Elements
    !!!
    !!! Quadratic Lagrange elements
    !!!
-   Type(Element_Type), Parameter :: MEF90_P2_Lagrange_2D_Scal = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2D_Scal = Element_Type(   &
       "MEF90_P2_Lagrange_2D_Scal",  &  ! name
       13,                            &  ! shortID
       3,3,0,                        &  ! numVertex,numEdge,numFace
       3,3,0,0,6,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       2,0,2                         &  ! dim,codim,order                             
    )
-   Type(Element_Type), Parameter :: MEF90_P2_Lagrange_3D_Scal = Element_Type(   &
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3D_Scal = Element_Type(   &
       "MEF90_P2_Lagrange_3D_Scal",  &  ! name
       14,                            &  ! shortID
       4,6,4,                        &  ! numVertex,numEdge,numFace
