@@ -52,8 +52,8 @@ TimeStep: Do
    End If
 
 ! 
-! 	Write(IOBuffer, *) 'W Section prior to Update Irrev W \n' 
-! 	Call SectionRealView(AppCtx%V%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
+!  Write(IOBuffer, *) 'W Section prior to Update Irrev W \n' 
+!  Call SectionRealView(AppCtx%V%Sec, PETSC_VIEWER_STDOUT_WORLD, iErr); CHKERRQ(iErr)
 
    !! Update WBCFlag accounting for irreversibility
    Call Update_IrrevW(AppCtx)
@@ -89,17 +89,17 @@ TimeStep: Do
       Write(IOBuffer, "('Iteration ', I4, ' /', I4, A)") AppCtx%TimeStep, AltMinIter,'\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-	Select Case(AppCtx%VarFracSchemeParam%CoupledUW)
-		Case(VarFrac_UW_Coupled)
-		If (AppCtx%AppParam%verbose > 0) Then
-			Write(IOBuffer, *) 'Alternate UW \n' 
-			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-		End If
-			Call Step_UW(AppCtx)
-		Case(VarFrac_UW_Uncoupled)
-			Call Step_U(AppCtx)
-			Call Step_W(AppCtx)
-	End Select
+   Select Case(AppCtx%VarFracSchemeParam%CoupledUW)
+      Case(VarFrac_UW_Coupled)
+      If (AppCtx%AppParam%verbose > 0) Then
+         Write(IOBuffer, *) 'Alternate UW \n' 
+         Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+      End If
+         Call Step_UW(AppCtx)
+      Case(VarFrac_UW_Uncoupled)
+         Call Step_U(AppCtx)
+         Call Step_W(AppCtx)
+   End Select
       !------------------------------------------------------------------- 
       ! Problem for U
       !-------------------------------------------------------------------
@@ -131,29 +131,29 @@ TimeStep: Do
          End If
          Call ComputeEnergies(AppCtx)
          
-	Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
-	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-	Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
-	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-	Write(IOBuffer, 109) AppCtx%FilmEnergy(AppCtx%TimeStep)
-	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-	
-	Write(IOBuffer, 108) AppCtx%BondingLayerEnergy(AppCtx%TimeStep)
-	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, 109) AppCtx%FilmEnergy(AppCtx%TimeStep)
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-	Write(IOBuffer, 102) AppCtx%FractureEnergy(AppCtx%TimeStep)
-	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-	
-	Write(IOBuffer, 107) AppCtx%DelaminationEnergy(AppCtx%TimeStep)
-	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, 108) AppCtx%BondingLayerEnergy(AppCtx%TimeStep)
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-	Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
-	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-	
-	Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
-	Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   Write(IOBuffer, 102) AppCtx%FractureEnergy(AppCtx%TimeStep)
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   
+   Write(IOBuffer, 107) AppCtx%DelaminationEnergy(AppCtx%TimeStep)
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+
+   Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+   
+   Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
+   Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          
          If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
             Call ComputeStrainStress(AppCtx)

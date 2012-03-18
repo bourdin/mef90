@@ -4,17 +4,18 @@ Program  SimplePoisson
 
    Use m_MEF90
 #if defined PB_2D
-   Use m_Poisson2D
+   Use m_SimplePoisson2D
 #elif defined PB_3D 
-   Use m_Poisson3D
+   Use m_SimplePoisson3D
 #endif
 
    Implicit NONE   
 
 
-   Type(Heat_AppCtx_Type)                            :: AppCtx
+   Type(AppCtx_Type)                            :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+   PetscReal                                    :: one 
    Call SimplePoissonInit(AppCtx)
    
    If (AppCtx%AppParam%verbose > 4) Then
@@ -28,7 +29,7 @@ Program  SimplePoisson
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call HeatMatAssembly(AppCtx, AppCtx%MeshTopology)
+   Call MatAssembly(AppCtx)
    If (AppCtx%AppParam%verbose > 3) Then
       Write(IOBuffer, *) 'Matrix\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -39,7 +40,7 @@ Program  SimplePoisson
       Write(IOBuffer, *) 'Assembling the RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call RHSAssembly(AppCtx, AppCtx%MeshTopology, AppCtx%MyEXO)
+   Call RHSAssembly(AppCtx)
    If (AppCtx%AppParam%verbose > 2) Then
       Write(IOBuffer, *) 'RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -77,11 +78,6 @@ Program  SimplePoisson
    Call Write_EXO_Result_Vertex(AppCtx%MyEXO, AppCtx%MeshTopology, 2, 1, AppCtx%F%Sec) 
    Call Write_EXO_Result_Cell(AppCtx%MyEXO, AppCtx%MeshTopology, 1, 1, AppCtx%GradU) 
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
-  
-    Call EXCLOS(AppCtx%EXO%exoid, iErr)
-    AppCtx%EXO%exoid = 0
-    Call EXCLOS(AppCtx%MyEXO%exoid, iErr)
-    AppCtx%MyEXO%exoid =0
-
+   
    Call SimplePoissonFinalize(AppCtx)
 End Program  SimplePoisson

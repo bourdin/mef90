@@ -69,7 +69,7 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Full  = 1
    PetscInt, Parameter, Public                     :: VarFrac_Unilateral_Shear = 2
 
-   PetscInt, Parameter, Public                     :: VarFrac_Num_VertVar           = 8
+   PetscInt, Parameter, Public                     :: VarFrac_Num_VertVar           = 9
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_Fracture      = 1
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_DisplacementX = 2   
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_DisplacementY = 3
@@ -78,6 +78,7 @@ Module m_VarFrac_Struct
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_ForceY        = 6
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_ForceZ        = 7   
    PetscInt, Parameter, Public                     :: VarFrac_VertVar_Temperature   = 8
+   PetscInt, Parameter, Public                     :: VarFrac_VertVar_ForceTemp     = 9
    
    PetscInt, Parameter, Public                     :: VarFrac_Num_CellVar      = 12
    PetscInt, Parameter, Public                     :: VarFrac_CellVar_StrainXX = 1
@@ -169,6 +170,7 @@ Module m_VarFrac_Struct
       PetscBool                                    :: SaveBlk
       PetscBool                                    :: SaveStress
       PetscBool                                    :: SaveStrain
+      PetscBool                                    :: DamageStress
       
       PetscBool                                    :: U_UseTao
       PetscBool                                    :: V_UseTao
@@ -329,15 +331,12 @@ Module m_VarFrac_Struct
       Read(F_IN, *) Idx
       Do iBlk = 1, NumBlks
          Read(F_IN, *) Idx, Toughness, Hookes_Law, Therm_exp
-
          MatProp(Idx)%Toughness  = Toughness
          MatProp(Idx)%Hookes_Law = Hookes_Law
          MatProp(Idx)%Therm_Exp  = Therm_Exp
       End Do
       Close(F_IN)
       Return
-!120   Format(I6, '      ', 10(ES12.5,' '))   
-!120   Format(*)
    End Subroutine MatProp2D_Read
    
    Subroutine MatProp3D_Read(MeshTopology, MatProp, filename)
@@ -422,6 +421,8 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-savestress ', L1, A)")          dSchemeParam%SaveStress, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-damagestress ', L1, A)")          dSchemeParam%DamageStress, '\n'
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-saveblk    ', L1, A)")          dSchemeParam%SaveBlk, '\n'
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-savestrain ', L1, A)")          dSchemeParam%SaveStrain, '\n'
@@ -459,6 +460,7 @@ Module m_VarFrac_Struct
       dSchemeParam%SaveBlk          = PETSC_FALSE
       dSchemeParam%SaveStress       = PETSC_FALSE
       dSchemeParam%SaveStrain       = PETSC_FALSE
+      dSchemeParam%DamageStress     = PETSC_FALSE
       dSchemeParam%U_UseTao         = PETSC_FALSE
       dSchemeParam%V_UseTao         = PETSC_TRUE
 
@@ -488,6 +490,7 @@ Module m_VarFrac_Struct
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-saveblk',        dSchemeParam%SaveBlk, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-damagestress',   dSchemeParam%DamageStress, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-u_tao',          dSchemeParam%U_UseTao, flag, iErr); CHKERRQ(iErr) 
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
       
@@ -608,6 +611,7 @@ Module m_VarFrac_Struct
       dEXO%VertVariable(VarFrac_VertVar_ForceY)%Name        = 'Force Y'
       dEXO%VertVariable(VarFrac_VertVar_ForceZ)%Name        = 'Force Z'   
       dEXO%VertVariable(VarFrac_VertVar_Temperature)%Name   = 'Temperature'
+      dEXO%VertVariable(VarFrac_VertVar_ForceTemp)%Name     = 'Thermal Source'
       dEXO%VertVariable(:)%Offset = (/ (i, i=1,dEXO%Num_VertVariables) /)
    End Subroutine VarFracEXOVariable_Init
   
