@@ -79,7 +79,7 @@ Subroutine HessianU_Assembly(SNESappU, U_Vec, H, HPC, flag, AppCtx)
 	
 	Call MatAssemblyBegin(H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
 	Call MatAssemblyEnd  (H, MAT_FINAL_ASSEMBLY, iErr); CHKERRQ(iErr)
-	Call MatDuplicate(H, MAT_COPY_VALUES, HPC, iErr); CHKERRQ(iErr)
+! 	Call MatDuplicate(H, MAT_COPY_VALUES, HPC, iErr); CHKERRQ(iErr)
 	
 	If (AppCtx%AppParam%verbose > 2) Then
 		Call MatView(H, PETSC_VIEWER_STDOUT_SELF, iErr)
@@ -335,21 +335,22 @@ Subroutine GradientU_AssemblyBlk_Brittle(GradientU, iBlk, AppCtx)
 			
 			! compute U-U0 and Strain_elem and EffectiveStrain_elem at current Gauss pt 
 			Do iDof = 1, NumDoFVect 
-				U_eff_elem = U_elem + (U_Loc(iDoF)-U0_Loc(iDoF)) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)
+				U_eff_elem = U_eff_elem + (U_Loc(iDoF)-U0_Loc(iDoF)) * AppCtx%ElemVect(iE)%BF(iDoF, iGauss)
 				Strain_elem = Strain_elem + U_Loc(iDoF) * AppCtx%ElemVect(iE)%GradS_BF(iDoF, iGauss) 
 				If(Has_ThermExp) Then
-					EffectiveStrain_elem = Strain_elem - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)
+					EffectiveStrain_elem = Strain_elem ! - (Theta_Elem * AppCtx%MatProp(iBlkID)%Therm_Exp)
 				Else
 					EffectiveStrain_elem = Strain_elem
-					Stress_elem = AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_elem 
 				End If
+				Stress_elem = AppCtx%MatProp(iBlkID)%Hookes_Law * EffectiveStrain_elem 
+				
 			End Do
 			
 			! compute GradE_U vector
 			Do iDof = 1, NumDoFVect
 				GradientU_loc(iDof) = GradientU_loc(iDof) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * CoefV * (Stress_elem .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDof, iGauss)) 
 				If ((U_eff_elem .DotP. U_eff_elem ) .LT. 2.0_Kr * AppCtx%MatProp(iBlkID)%DelamToughness / AppCtx%MatProp(iBlkID)%Ksubst) Then
-				GradientU_loc(iDof) = GradientU_loc(iDof) + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * 0.5_Kr * AppCtx%MatProp(iBlkID)%Ksubst * (U_eff_elem .DotP. AppCtx%ElemVect(iE)%BF(iDof, iGauss) )
+				GradientU_loc(iDof) = GradientU_loc(iDof) + AppCtx%ElemVect(iE)%Gauss_C(iGauss)  * AppCtx%MatProp(iBlkID)%Ksubst * (U_eff_elem .DotP. AppCtx%ElemVect(iE)%BF(iDof, iGauss) )
 				End If
 			End Do
 		End Do Do_iGauss
@@ -426,7 +427,7 @@ Subroutine GradientU_AssemblyBlk_NonBrittle(GradientU, iBlk, AppCtx)
 			Do iDof = 1, NumDoFVect
 				GradientU_loc = GradientU_loc + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * (Stress_elem .DotP. AppCtx%ElemVect(iE)%GradS_BF(iDof, iGauss))
 				If ((U_eff_elem .DotP. U_eff_elem) .LT. 2.0_Kr * AppCtx%MatProp(iBlkID)%DelamToughness / AppCtx%MatProp(iBlkID)%Ksubst) Then
-					GradientU_loc = GradientU_loc + AppCtx%ElemVect(iE)%Gauss_C(iGauss) * 0.5_Kr * AppCtx%MatProp(iBlkID)%Ksubst *  (U_eff_elem .DotP. AppCtx%ElemVect(iE)%BF(iDof, iGauss)) 
+					GradientU_loc = GradientU_loc + AppCtx%ElemVect(iE)%Gauss_C(iGauss)  * AppCtx%MatProp(iBlkID)%Ksubst *  (U_eff_elem .DotP. AppCtx%ElemVect(iE)%BF(iDof, iGauss)) 
 				End If
 			End Do
 		End Do Do_iGauss

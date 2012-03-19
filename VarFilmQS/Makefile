@@ -10,13 +10,11 @@ M_FILMSTRUCTOBJS = ${M_FILMSTRUCTDIR}/m_Film_Struct.o
 
 all: VarFilmQS
 
-#include ${PETSC_DIR}/conf/rules
-#include ${PETSC_DIR}/conf/variables
 include ${TAO_DIR}/bmake/tao_common       # for tao-lite
 # include ${TAO_DIR}/conf/tao_base        # for tao-2.0beta7
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=-DWITH_TAO ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form -Wtabs	
+	MEF90_FC_FLAGS=-DWITH_TAO ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS} -Wtabs -ffree-line-length-none -ffixed-line-length-none  -ffree-form 
 else
 	MEF90_FC_FLAGS=-DWITH_TAO ${FC_MODULE_OUTPUT_FLAG} ${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS}
 endif
