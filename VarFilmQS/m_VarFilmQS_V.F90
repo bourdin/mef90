@@ -10,7 +10,7 @@ Module m_VarFilmQS_V
    Private 
       
 #if defined WITH_TAO
-#include "include/finclude/taosolver.h"
+#include "include/finclude/tao_solver.h"
    Public :: HessianV_Assembly
    Public :: FormFunctionAndGradientV
    Public :: InitTaoBoundsV
