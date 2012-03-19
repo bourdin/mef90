@@ -12,8 +12,8 @@ all: VarFilmQS
 
 #include ${PETSC_DIR}/conf/rules
 #include ${PETSC_DIR}/conf/variables
-# include ${TAO_DIR}/bmake/tao_common       # for tao-lite
-include ${TAO_DIR}/conf/tao_base        # for tao-2.0beta7
+include ${TAO_DIR}/bmake/tao_common       # for tao-lite
+# include ${TAO_DIR}/conf/tao_base        # for tao-2.0beta7
 
 ifneq (,$(findstring gcc,$(PETSC_ARCH)))
 	MEF90_FC_FLAGS=-DWITH_TAO ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} -I${M_FILMSTRUCTDIR} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form -Wtabs	
