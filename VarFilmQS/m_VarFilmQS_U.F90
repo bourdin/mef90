@@ -429,7 +429,8 @@ Subroutine Step_U(AppCtx)
    Type(AppCtx_Type)                            :: AppCtx
    
    PetscInt                                     :: iErr
-   SNESConvergedReason                          :: reason
+   SNESConvergedReason                          :: SNESreason
+   KSPConvergedReason                           :: KSPreason
    PetscInt                                     :: KSPNumIter, SNESNumIter
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscReal                                    :: VMin, VMax
@@ -450,14 +451,18 @@ Subroutine Step_U(AppCtx)
 		End If
 		Call SNESSolve(AppCtx%snesU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
-		Call SNESGetConvergedReason(AppCtx%snesU, reason, iErr); CHKERRQ(iErr)
-		If ( reason > 0) Then
+		Call SNESGetConvergedReason(AppCtx%snesU, SNESreason, iErr); CHKERRQ(iErr)
+		Call SNESGetFunctionNorm(AppCtx%snesU, rDum, iErr)
+		Write(IOBuffer, *) '[SNES] Function 2-norm: ', rDum, '\n' 
+		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+		If ( SNESreason > 0) Then
 			Call SNESGetIterationNumber(AppCtx%snesU, SNESNumIter, iErr); CHKERRQ(iErr)
-			Write(IOBuffer, 200) SNESNumIter, reason
+			Write(IOBuffer, 200) SNESNumIter, SNESreason
 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 		Else
-			Write(IOBuffer, 201) reason
+			Write(IOBuffer, 201) SNESreason
 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+			
 			If (AppCtx%AppParam%StopOnError) Then
 					SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'SNES failed to converge, aborting...\n', iErr)
 			EndIf
@@ -492,13 +497,13 @@ Subroutine Step_U(AppCtx)
 		Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 		Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
 		
-		Call KSPGetConvergedReason(AppCtx%KSPU, reason, iErr); CHKERRQ(iErr)
-		If ( reason > 0) Then
+		Call KSPGetConvergedReason(AppCtx%KSPU, KSPreason, iErr); CHKERRQ(iErr)
+		If ( KSPreason > 0) Then
 			Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
-			Write(IOBuffer, 100) KSPNumIter, reason
+			Write(IOBuffer, 100) KSPNumIter, KSPreason
 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 		Else
-			Write(IOBuffer, 101) reason
+			Write(IOBuffer, 101) KSPreason
 			Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 			If (AppCtx%AppParam%StopOnError) Then
 					SETERRQ(PETSC_COMM_SELF,PETSC_ERR_CONV_FAILED, 'KSP failed to converge, aborting...\n', iErr)
@@ -509,7 +514,7 @@ Subroutine Step_U(AppCtx)
 100 Format('     KSP for U converged in  ', I5, ' iterations. KSPConvergedReason is    ', I5, '\n')
 101 Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')
 200 Format('     SNES for U converged in  ', I5, ' iterations. SNESConvergedReason is    ', I5, '\n')
-201 Format('[ERROR] SNES for U diverged. KSPConvergedReason is ', I2, '\n')
+201 Format('[ERROR] SNES for U diverged. SNESConvergedReason is ', I2, '\n')
    End Subroutine Step_U   
 
 

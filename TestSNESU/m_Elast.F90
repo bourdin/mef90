@@ -245,6 +245,8 @@ Contains
       
       
       Call SNESCreate(PETSC_COMM_WORLD, AppCtx%SNESU, iErr); CHKERRQ(iErr)
+! 	Call SNESSetType(AppCtx%SNESU, 'ksponly', iErr); CHKERRQ(iErr)
+
       Call SNESAppendOptionsPrefix(AppCtx%SNESU, "U_", iErr); CHKERRQ(iErr) 
       Call SNESSetFunction(AppCtx%SNESU, AppCtx%GradientU%Vec, FormGradient, AppCtx, iErr); CHKERRQ(iErr)
       Call SNESSetJacobian(AppCtx%SNESU, AppCtx%KU, AppCtx%KU, FormHessian, AppCtx, iErr); CHKERRQ(iErr)
@@ -335,9 +337,10 @@ Contains
       
       PetscInt                                     :: iErr
       KSPConvergedReason                           :: KSPreason
+      SNESConvergedReason                          :: SNESreason
       TaoTerminateReason                           :: TaoReason
       PetscReal                                    :: TaoResidual
-      PetscInt                                     :: KSPNumIter
+      PetscInt                                     :: KSPNumIter, SNESNumIter
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer
       Integer                                      :: iDum
       PetscReal                                    :: rDum
@@ -392,23 +395,38 @@ Contains
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_FORWARD, AppCtx%U%Vec, ierr); CHKERRQ(ierr)
 !          Call KSPSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
 ! 	Call SNESSolve(AppCtx%KSPU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-		Call SNESSolve(AppCtx%snesU, PETSC_NULL, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
-	
+		Call SNESSolve(AppCtx%snesU, AppCtx%RHSU%Vec, AppCtx%U%Vec, iErr); CHKERRQ(iErr)
+	 Call SNESGetConvergedReason(AppCtx%SNESU, SNESreason, iErr); CHKERRQ(iErr)
+	If ( SNESreason > 0) Then
+		Call SNESGetIterationNumber(AppCtx%SNESU, SNESNumIter, iErr); CHKERRQ(iErr)
+		Write(IOBuffer, 200) SNESNumIter
+		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         
+	Else
+	   Write(IOBuffer, 201) SNESreason
+	 Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+        
+	End If
+        
          Call SectionRealToVec(AppCtx%U%Sec, AppCtx%U%Scatter, SCATTER_REVERSE, AppCtx%U%Vec, iErr); CHKERRQ(ierr)
          Call PetscLogStagePop(iErr); CHKERRQ(iErr)
          
          Call KSPGetConvergedReason(AppCtx%KSPU, KSPreason, iErr); CHKERRQ(iErr)
          If ( KSPreason > 0) Then
-            Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 100) KSPNumIter
+		Call KSPGetIterationNumber(AppCtx%KSPU, KSPNumIter, iErr); CHKERRQ(iErr)
+		Write(IOBuffer, 100) KSPNumIter
+		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          Else
-            Write(IOBuffer, 101) KSPreason
+		Write(IOBuffer, 101) KSPreason
+		Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
          End If
          Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 !       End If
       
 100   Format('     KSP for U converged in ', I5, ' iterations \n')
 101   Format('[ERROR] KSP for U diverged. KSPConvergedReason is ', I2, '\n')      
+200   Format('     SNES for U converged in ', I5, ' iterations \n')
+201   Format('[ERROR] SNES for U diverged. SNESConvergedReason is ', I2, '\n')      
 102   Format('     TAO solver converged in ', I5, ' iterations. Tao termination reason is ', I2, '\n')
 103   Format('[ERROR] TaoSolveApplication did not converge. ', I2, '\n')      
    End Subroutine Solve
@@ -463,7 +481,7 @@ Contains
       Call MatInsertVertexBoundaryValues(H, AppCtx%U, AppCtx%BCUFlag, AppCtx%MeshTopology)
       Call MatAssemblyBegin(H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
       Call MatAssemblyEnd  (H, MAT_FLUSH_ASSEMBLY, iErr); CHKERRQ(iErr)
-
+      flg = DIFFERENT_NONZERO_PATTERN
       Do_Elem_iBlk: Do iBlk = 1, AppCtx%MeshTopology%Num_Elem_Blks
 !         Call HessianAssemblyBlock(iBlk, H, .FALSE.,  AppCtx)
          Call HessianAssemblyBlock(iBlk, H, .TRUE.,  AppCtx)
