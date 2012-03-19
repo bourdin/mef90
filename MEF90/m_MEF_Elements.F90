@@ -194,13 +194,10 @@ Module m_MEF_Elements
 
    Interface ElementInit
       Module Procedure Element2D_Scal_Init,Element2D_Vect_Init,Element2D_Elast_Init, &
-                       Element3D_Scal_Init,Element3D_Vect_Init,Element3D_Elast_Init
-   End Interface ElementInit
-   
-   Interface ElementInitSet
-      Module Procedure Element2D_Scal_InitSet,Element2D_Vect_InitSet,Element2D_Elast_InitSet, &
+                       Element3D_Scal_Init,Element3D_Vect_Init,Element3D_Elast_Init, &
+                       Element2D_Scal_InitSet,Element2D_Vect_InitSet,Element2D_Elast_InitSet, &
                        Element3D_Scal_InitSet,Element3D_Vect_InitSet,Element3D_Elast_InitSet
-   End Interface ElementInitSet
+   End Interface ElementInit
    
    Interface ElementDestroy
       Module Procedure Element2D_Scal_Destroy,Element2D_Vect_Destroy,Element2D_Elast_Destroy,&

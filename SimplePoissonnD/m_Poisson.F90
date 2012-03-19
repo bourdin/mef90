@@ -25,6 +25,7 @@ Module m_Poisson3D
 
    Type AppParam_Type
       PetscBool                                    :: Restart
+      PetscBool                                    :: splitIO
       PetscInt                                     :: Verbose
       PetscInt                                     :: TestCase
       Character(len=MEF90_MXSTRLEN)                :: prefix
@@ -32,11 +33,10 @@ Module m_Poisson3D
    End Type AppParam_Type
 
 
-   Type Heat_AppCtx_Type
+   Type Poisson_AppCtx_Type
       Type (dm)                                    :: mesh
       Type (EXO_Type)                              :: EXO
 #if defined PB_2D
-
       Type(Element2D_Scal),Dimension(:),Pointer    :: Elem
 #elif defined PB_3D
       Type(Element3D_Scal),Dimension(:),Pointer    :: Elem
@@ -67,14 +67,14 @@ Module m_Poisson3D
       PetscReal                                    :: maxtime
       PetscInt                                     :: VertVar_Temperature 
       PetscReal,Dimension(:),Pointer               :: Diff,B_Mensi
-   End Type Heat_AppCtx_Type
+   End Type Poisson_AppCtx_Type
    
    
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonInit"
    Subroutine SimplePoissonInit(AppCtx)
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
       
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk,iDoF      
@@ -82,12 +82,12 @@ Contains
       PetscInt,Dimension(:),Pointer                :: TmpFlag
       
       PetscReal,Dimension(:),Pointer               :: ValPtr
-      PetscReal,Dimension(:,:),Pointer             :: Coords
+      PetscReal,Dimension(:),Pointer               :: Coord
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer,filename   
       Type(DM)                                     :: Tmp_Mesh
       PetscReal                                    :: Val
       PetscInt,Dimension(:),Pointer                :: SizeScal
-      PetscInt                                     :: numCellSet,numVertexSet,numDim,c
+      PetscInt                                     :: numCellSet,numVertexSet,numCell,numVertex,numDim,c
       Type(IS)                                     :: setIS,vertexIS,cellIS
       PetscInt,Dimension(:),Pointer                :: setID,vertexID
       PetscInt                                     :: set,vertex
@@ -100,6 +100,9 @@ Contains
       
       AppCtx%AppParam%Restart = PETSC_FALSE
       Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,'-restart',AppCtx%AppParam%restart,Flag,iErr);CHKERRQ(iErr)
+      
+      AppCtx%AppParam%splitIO = PETSC_FALSE
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,'-splitIO',AppCtx%AppParam%splitIO,Flag,iErr);CHKERRQ(iErr)
       
       Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-p',      AppCtx%AppParam%prefix,HasPrefix,iErr);CHKERRQ(iErr)
       If (.NOT. HasPrefix) Then
@@ -164,8 +167,8 @@ Contains
       Call DMMeshGetLabelIdIS(AppCtx%mesh,'Vertex Sets',AppCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,AppCtx%VertexSetGlobalIS)
       
-      Call DMMeshGetStratumSize(AppCtx%mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
-      Allocate(AppCtx%Elem(numCells))
+      Call DMMeshGetStratumSize(AppCtx%mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+      Allocate(AppCtx%Elem(numCell))
 
       Call DMMeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
@@ -183,11 +186,7 @@ Contains
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call DMMeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(iErr)
-#if defined PB_2D
-         Call ElementInit(AppCtx%mesh,cellIS,AppCtx%Elem,2,MEF90_P1_Lagrange_2D_Scal)
-#elif defined PB_3D
-         Call ElementInit(AppCtx%mesh,cellIS,AppCtx%Elem,2,MEF90_P1_Lagrange_3D_Scal)
-#endif
+         Call ElementInit(AppCtx%mesh,cellIS,AppCtx%Elem,2,AppCtx%ElementType(setID(set)))
          Call ISDestroy(cellIS)
       End Do    
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -254,7 +253,7 @@ Contains
          !!! Prepare and format the output mesh   
          Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage,iErr);CHKERRQ(iErr)
          !!! Check. We probably don't want to overwrite the input file
-         Call EXOFormat_SimplePoisson(AppCtx)
+         Call EXOFormat_SimplePoisson(AppCtx%EXO)
          Call PetscLogStagePop(iErr);CHKERRQ(iErr)
          
          Select Case (AppCtx%AppParam%TestCase)
@@ -375,7 +374,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "InitLog"
    Subroutine InitLog(AppCtx)
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
       PetscInt                                     :: iErr
       
       Call PetscLogEventRegister('MatAssembly Block',0,AppCtx%LogInfo%MatAssemblyBlock_Event,ierr);CHKERRQ(ierr)
@@ -395,7 +394,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Solve"
    Subroutine Solve(AppCtx)
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
       
       PetscInt                                     :: iErr
       KSPConvergedReason                           :: KSPreason
@@ -423,8 +422,9 @@ Contains
  
 #undef __FUNCT__
 #define __FUNCT__ "MatAssembly"
-   Subroutine HeatMatAssembly(AppCtx)   
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+!!! Make interface compatible with SNES
+   Subroutine PoissonMatAssembly(AppCtx)   
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
       PetscInt                                     :: iBlk,iErr
       
       Type(IS)                                     :: setIS
@@ -448,17 +448,17 @@ Contains
       Call MatAssemblyEnd  (AppCtx%K,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
 
 !      Call PetscLogStagePop(iErr);CHKERRQ(iErr)
-   End Subroutine HeatMatAssembly
+   End Subroutine PoissonMatAssembly
       
    Subroutine MatAssemblyBlock(iBlk,AppCtx)
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
       PetscInt                                     :: iBlk
       
       Type(IS)                                     :: cellIS
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
       PetscInt                                     :: numDof
-      PetscInt                                     :: iE,iELoc,iErr,i
+      PetscInt                                     :: iErr,i
       PetscReal,Dimension(:,:),Pointer             :: MatElem
       PetscInt,Dimension(:),Pointer                :: BCFlag
       PetscInt                                     :: iDoF1,iDoF2,iGauss
@@ -495,7 +495,7 @@ Contains
                Call SectionRealRestrictClosure(AppCtx%U%Sec,AppCtx%mesh,cellID(cell),numDoF,T_Loc,iErr);CHKERRQ(ierr)
                T_Elem = 0.0_Kr
                Do iDoF1 = 1,numDof
-                  T_Elem = T_Elem + AppCtx%Elem(iE)%BF(iDoF1,iGauss) * T_Loc(iDoF1)
+                  T_Elem = T_Elem + AppCtx%Elem(cellID(cell)+1)%BF(iDoF1,iGauss) * T_Loc(iDoF1)
                End DO
                lDiff = AppCtx%Diff(iBlk)*exp(AppCtx%B_Mensi(iBlk)*T_Elem) 
                !!! SAME AS ABOVE
@@ -508,8 +508,8 @@ Contains
                     ! MatElem(iDoF1,iDoF1) = 1./2.
                      MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + lDiff * AppCtx%Elem(cellID(cell)+1)%Gauss_C(iGauss) * &
                                            (AppCtx%Elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss) .DotP. AppCtx%Elem(cellID(cell)+1)%Grad_BF(iDoF2,iGauss) )
-                     flops = flops + 1
                   End Do
+                  flops = flops + 3 * numDof
                End If
             End Do
          End Do
@@ -527,8 +527,10 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "RHSAssembly"
+!!! Change interface.
+!!! Should be RHSAssembly(mesh,X,RHS,AppCtx) in order to facilitate transition to snes
    Subroutine RHSAssembly(AppCtx)
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
 
       PetscInt                                     :: iErr
       PetscInt                                     :: set
@@ -563,7 +565,7 @@ Contains
 #define __FUNCT__ "RHSAssemblyBlock"
    Subroutine RHSAssemblyBlock(setID,AppCtx)
       PetscInt                                     :: setID
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
 
       PetscInt                                     :: cell
       PetscInt,Dimension(:),Pointer                :: cellID
@@ -617,8 +619,9 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ComputeEnergy"
+!!! Change interface to make compatible with TAO
    Subroutine ComputeEnergy(AppCtx)
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
       
       PetscInt                                     :: iErr
       PetscInt                                     :: NumDoF
@@ -688,7 +691,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "ComputeGradU"
    Subroutine ComputeGradU(AppCtx)
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
       
       PetscInt                                     :: iErr
 #if defined PB_2D
@@ -754,8 +757,9 @@ Contains
  
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonFinalize"
+!!! Check for missing destroys / deallocate
    Subroutine SimplePoissonFinalize(AppCtx)   
-      Type(Heat_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                       :: AppCtx
 
       PetscInt                                     :: iErr
       Character(len=MEF90_MXSTRLEN)                :: filename
