@@ -5,7 +5,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
             $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
             $(MEF90DIR)/m_MEF_Sieve.o
 
-all: SimplePoisson${DIM} TransientHeat${DIM}
+all: SimplePoisson${DIM} #TransientHeat${DIM}
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
