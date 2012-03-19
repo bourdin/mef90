@@ -7,7 +7,7 @@ Module m_VarFilmQS_Types
    Implicit NONE   
    Private
 #if defined WITH_TAO
-#include "include/finclude/tao_solver.h"
+#include "include/finclude/taosolver.h"
 #endif
 
    Public :: LogInfo_Type
