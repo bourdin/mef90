@@ -22,7 +22,7 @@ Program  SimplePoisson
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
    
-   Call HeatMatAssembly(AppCtx, AppCtx%mesh)
+   Call PoissonMatAssembly(AppCtx)
    If (AppCtx%AppParam%verbose > 3) Then
       Write(IOBuffer, *) 'Matrix\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -33,7 +33,7 @@ Program  SimplePoisson
       Write(IOBuffer, *) 'Assembling the RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
-   Call RHSAssembly(AppCtx%mesh,RHS,V,AppCtx)
+   Call RHSAssembly(AppCtx%mesh,AppCtx%RHS%Vec,AppCtx%U%Vec,AppCtx)
    If (AppCtx%AppParam%verbose > 2) Then
       Write(IOBuffer, *) 'RHS\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -65,17 +65,18 @@ Program  SimplePoisson
 
    Call PetscLogStagePush(AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
    !!! 
-   Call VecViewExodusVertex(AppCtx%mesh,AppCtx%U%LocalVec,IO_COMM,AppCtx%EXO%exoid,1,1)
-   Call VecViewExodusVertex(AppCtx%mesh,AppCtx%F%LocalVec,IO_COMM,AppCtx%EXO%exoid,1,2)
-   Call VecViewExodusCell(AppCtx%mesh,AppCtx%GradU%LocalVec,IO_COMM,AppCtx%EXO%exoid,1,1)
+   Call VecViewExodusVertex(AppCtx%mesh,AppCtx%U%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1)
+   Call VecViewExodusVertex(AppCtx%mesh,AppCtx%F%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,2)
+   !Call SectionRealGetLocalVector(AppCtx%GradU,GradULocalVec,ierr);CHKERRQ(ierr)
+   !Call VecViewExodusCell(AppCtx%mesh,GradULocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1)
    
-   Call Write_EXO_Result_Global(AppCtx%MyExo, 1, 1, AppCtx%ElasticEnergy)
-   Call Write_EXO_Result_Global(AppCtx%MyExo, 2, 1, AppCtx%ExtForcesWork)
-   Call Write_EXO_Result_Global(AppCtx%MyExo, 3, 1, AppCtx%TotalEnergy)
+   Call Write_EXO_Result_Global(AppCtx%Exo, 1, 1, AppCtx%ElasticEnergy)
+   Call Write_EXO_Result_Global(AppCtx%Exo, 2, 1, AppCtx%ExtForcesWork)
+   Call Write_EXO_Result_Global(AppCtx%Exo, 3, 1, AppCtx%TotalEnergy)
    Call PetscLogStagePop (AppCtx%LogInfo%IO_Stage, iErr); CHKERRQ(iErr)
   
-    Call EXCLOS(AppCtx%EXO%exoid, iErr)
-    AppCtx%EXO%exoid = 0
+   Call EXCLOS(AppCtx%EXO%exoid, iErr)
+   AppCtx%EXO%exoid = 0
 
    Call SimplePoissonFinalize(AppCtx)
 End Program  SimplePoisson
