@@ -1,6 +1,6 @@
 MEF90DIR  = ../MEF90/${PETSC_ARCH}
 MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
-            $(MEF90DIR)/m_MEF_Types.o      $(MEF90DIR)/m_MEF_Elements.o  \
+            $(MEF90DIR)/m_MEF_Elements.o  \
             $(MEF90DIR)/m_MEF90.o          $(MEF90DIR)/m_MEF_Utils.o         \
             $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
             $(MEF90DIR)/m_MEF_Sieve.o 
@@ -17,7 +17,7 @@ else
 endif
 
 .F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -DMEF90_DIM=${MEF90_DIM} -o ${PETSC_ARCH}/$@ $<
 
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
@@ -94,6 +94,9 @@ TestMeshLoad:   ${PETSC_ARCH} TestMeshLoad.o ${PETSC_ARCH}/TestMeshLoad.o
 	
 TestLabel:   ${PETSC_ARCH} TestLabel.o ${PETSC_ARCH}/TestLabel.o
 		-${FLINKER} -o ${PETSC_ARCH}/TestLabel ${PETSC_ARCH}/TestLabel.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
+TestPreProcessor:   ${PETSC_ARCH} TestPreProcessor.o ${PETSC_ARCH}/TestPreProcessor.o
+		-${FLINKER} -o ${PETSC_ARCH}/TestPreProcessor ${PETSC_ARCH}/TestPreProcessor.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
 TestCorruption:   ${PETSC_ARCH} TestCorruption.o m_TestCorruption.o ${PETSC_ARCH}/TestCorruption.o ${PETSC_ARCH}/m_TestCorruption.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestCorruption ${PETSC_ARCH}/TestCorruption.o ${PETSC_ARCH}/m_TestCorruption.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}

@@ -1,8 +1,14 @@
 #if defined PB_2D
-Module m_Poisson2D
+#define M_POISSON m_Poisson2D
+#define ELEMENT_SCAL Element2D_Scal
+#define VECT Vect2D
 #elif defined PB_3D
-Module m_Poisson3D
+#define M_POISSON m_Poisson3D
+#define ELEMENT_SCAL Element3D_Scal
+#define VECT Vect3D
 #endif
+
+Module M_POISSON
 
 #include "finclude/petscdef.h"
    Use m_MEF90
@@ -36,11 +42,7 @@ Module m_Poisson3D
    Type Poisson_AppCtx_Type
       Type (dm)                                    :: mesh
       Type (EXO_Type)                              :: EXO
-#if defined PB_2D
-      Type(Element2D_Scal),Dimension(:),Pointer    :: Elem
-#elif defined PB_3D
-      Type(Element3D_Scal),Dimension(:),Pointer    :: Elem
-#endif
+      Type(ELEMENT_SCAL),Dimension(:),Pointer      :: Elem
       Type(IS)                                     :: CellSetGlobalIS
       Type(IS)                                     :: VertexSetGlobalIS
       Type(Element_Type),Dimension(:),Pointer      :: ElementType
@@ -180,7 +182,7 @@ Contains
 #if defined PB_2D
       AppCtx%ElementType(:) = MEF90_P1_Lagrange_2D_Scal
 #elif defined PB_3D
-      AppCtx%ElementType(:) = MEF90_P1_Lagrange_2D_Scal
+      AppCtx%ElementType(:) = MEF90_P1_Lagrange_3D_Scal
 #endif
 
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
@@ -424,7 +426,7 @@ Contains
 #define __FUNCT__ "MatAssembly"
 !!! Make interface compatible with SNES
    Subroutine PoissonMatAssembly(AppCtx)   
-      Type(Poisson_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                    :: AppCtx
       PetscInt                                     :: iBlk,iErr
       
       Type(IS)                                     :: setIS
@@ -528,8 +530,13 @@ Contains
 #define __FUNCT__ "RHSAssembly"
 !!! Change interface.
 !!! Should be RHSAssembly(mesh,X,RHS,AppCtx) in order to facilitate transition to snes
-   Subroutine RHSAssembly(AppCtx)
-      Type(Poisson_AppCtx_Type)                       :: AppCtx
+   Subroutine RHSAssembly(mesh,RHSVec,UVec,AppCtx)
+      Type(DM),intent(IN)                          :: mesh
+      Type(Vec),intent(IN)                         :: RHSVec
+      !!! Technically, RHS is an INOUT arg, but the value of RHSVec
+      !!! should not be modified by this function
+      Type(Vec),intent(IN)                         :: UVec
+      Type(Poisson_AppCtx_Type)                    :: AppCtx
 
       PetscInt                                     :: iErr
       PetscInt                                     :: set
@@ -543,6 +550,7 @@ Contains
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call RHSAssemblyBlock(setID(set),AppCtx)
+         ! Change interface here too
       End Do ! set
       Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -556,6 +564,7 @@ Contains
 
       Call SectionRealToVec(AppCtx%RHS%Sec,AppCtx%RHS%Scatter,SCATTER_FORWARD,AppCtx%RHS%Vec,iErr);CHKERRQ(iErr)
       Call FieldInsertVertexBoundaryValues(AppCtx%RHS,AppCtx%UBC,AppCtx%BCFlag,AppCtx%mesh)
+      Call VecCopy(AppCtx%RHS%Vec,RHSVec,ierr);CHKERRQ(ierr)
       !!! VERY important! This is the equivalent of a ghost update
 !      Call PetscLogStagePop(iErr);CHKERRQ(iErr)
    End Subroutine RHSAssembly
@@ -629,11 +638,7 @@ Contains
       PetscInt,Dimension(:),Pointer                :: setID,cellID
       Type(IS)                                     :: setIS,cellIS
       PetscInt                                     :: iDoF,iGauss
-#if defined PB_2D
-      Type(Vect2D)                                 :: Strain_Elem,Stress_Elem      
-#elif defined PB_3D
-      Type(Vect3D)                                 :: Strain_Elem,Stress_Elem      
-#endif
+      Type(VECT)                                   :: Strain_Elem,Stress_Elem      
       PetscReal                                    :: F_Elem,U_Elem
       PetscReal                                    :: MyElasticEnergy,MyExtForcesWork
       PetscLogDouble                               :: flops
@@ -693,11 +698,7 @@ Contains
       Type(Poisson_AppCtx_Type)                       :: AppCtx
       
       PetscInt                                     :: iErr
-#if defined PB_2D
-      Type(Vect2D)                                 :: Grad
-#elif defined PB_3D
-      Type(Vect3D)                                 :: Grad
-#endif
+      Type(VECT)                                   :: Grad
       PetscReal                                    :: Vol
       PetscInt                                     :: numDof
       PetscReal,Dimension(:),Pointer               :: U
@@ -791,8 +792,4 @@ Contains
       Call MEF90_Finalize()
    End Subroutine SimplePoissonFinalize
 
-#if defined PB_2D
-End Module m_Poisson2D
-#elif defined PB_3D
-End Module m_Poisson3D
-#endif
+End Module M_POISSON

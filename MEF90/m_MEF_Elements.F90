@@ -289,7 +289,7 @@ Contains
                k = k+1
             End Do
          End Do
-         Call Element2D_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
+         Call Element2D_Vect_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
@@ -421,7 +421,7 @@ Contains
                k = k+1
             End Do
          End Do
-         Call Element3D_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
+         Call Element3D_Vect_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
@@ -512,7 +512,7 @@ Contains
       
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_2D_Vect%shortID)
-            Call Element_P_Lagrange_2D_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_2D_Vect%shortID)
 !            Call Element_P_Lagrange_2D_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_P1_Lagrange_2DBoundary_Vect%shortID)
@@ -590,7 +590,7 @@ Contains
       
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_3D_Vect%shortID)
-            Call Element_P_Lagrange_3D_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_3D_Vect%shortID)
 !            Call Element_P_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_P1_Lagrange_3DBoundary_Vect%shortID)

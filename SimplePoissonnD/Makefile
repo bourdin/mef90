@@ -36,8 +36,6 @@ SimplePoisson.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o
 
 m_Poisson.o: ${PETSC_ARCH}
 
-m_MEF_Integrate.o: ${PETSC_ARCH} 
-
 TransientHeat.o:   ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${DIM}m_Poisson.o \
                              m_TransientHeat.o ${PETSC_ARCH}/${DIM}m_TransientHeat.o
 
