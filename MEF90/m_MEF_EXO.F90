@@ -48,6 +48,10 @@ Module m_MEF_EXO
       Type(EXO_Property_Type),Dimension(:),Pointer :: EBProperty
       PetscInt                                     :: Num_NSProperties
       Type(EXO_Property_Type),Dimension(:),Pointer :: NSProperty
+      ! Since I always use EXOProperties as boolean flags, these
+      ! Could be replaced by ISes
+      ! OR I could get rid of them and use PETSc options instead
+      
       ! Variables
       PetscInt                                     :: Num_GlobVariables    
       Type(EXO_Variable_Type),Dimension(:),Pointer :: GlobVariable
