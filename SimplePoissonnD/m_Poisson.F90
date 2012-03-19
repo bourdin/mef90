@@ -87,7 +87,7 @@ Contains
       Type(DM)                                     :: Tmp_Mesh
       PetscReal                                    :: Val
       PetscInt,Dimension(:),Pointer                :: SizeScal
-      PetscInt                                     :: numCellSet,numVertexSet,numCell,numVertex,numDim,c
+      PetscInt                                     :: numCell,numDim,c
       Type(IS)                                     :: setIS,vertexIS,cellIS
       PetscInt,Dimension(:),Pointer                :: setID,vertexID
       PetscInt                                     :: set,vertex
@@ -439,8 +439,7 @@ Contains
       Call DMMeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call MatAssemblyBlock(set,AppCtx)
-         !!! set or setID(set)?
+         Call MatAssemblyBlock(setID(set),AppCtx)
       End Do
       Call ISRestoreIndices(setIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -451,7 +450,7 @@ Contains
    End Subroutine PoissonMatAssembly
       
    Subroutine MatAssemblyBlock(iBlk,AppCtx)
-      Type(Poisson_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                    :: AppCtx
       PetscInt                                     :: iBlk
       
       Type(IS)                                     :: cellIS
@@ -621,7 +620,7 @@ Contains
 #define __FUNCT__ "ComputeEnergy"
 !!! Change interface to make compatible with TAO
    Subroutine ComputeEnergy(AppCtx)
-      Type(Poisson_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                    :: AppCtx
       
       PetscInt                                     :: iErr
       PetscInt                                     :: NumDoF
