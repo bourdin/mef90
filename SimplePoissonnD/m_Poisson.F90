@@ -51,7 +51,6 @@ Module M_POISSON
       Type(SectionReal)                            :: GradU
       PetscReal                                    :: ElasticEnergy
       Type(Field)                                  :: U
-      Type(Field)                                  :: UBC
       Type(Field)                                  :: F
       PetscReal                                    :: ExtForcesWork
       PetscReal                                    :: TotalEnergy
@@ -77,7 +76,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonInit"
    Subroutine SimplePoissonInit(AppCtx)
-      Type(Poisson_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                    :: AppCtx
       
       PetscInt                                     :: ierr
       PetscInt                                     :: iBlk,iDoF      
@@ -165,7 +164,8 @@ Contains
          Write(AppCtx%EXO%filename,105) AppCtx%AppParam%prefix,MEF90_MyRank
       Else
          AppCtx%EXO%Comm = PETSC_COMM_WORLD
-         !!!Write(filename,106) AppCtx%AppParam%prefix
+         !Write(AppCtx%EXO%filename,106) AppCtx%AppParam%prefix
+         ! Why is this not working?
          AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'_out.gen'
       End If
       
@@ -183,7 +183,6 @@ Contains
             If (MEF90_MyRank == 0) Then
                cpu_ws = 0
                io_ws = 0
-               write(*,*) 'trying to create file', AppCtx%EXO%filename
                AppCtx%EXO%exoid = EXCRE(AppCtx%EXO%filename,EXCLOB,cpu_ws,io_ws,ierr)
                Call EXCOPY(exoidIN,AppCtx%EXO%exoid)
             End If
@@ -223,9 +222,6 @@ Contains
             AppCtx%ElementType(setID(set)) = MEF90_P1_Lagrange_3D_Scal
          End If
          Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
-         Write(*,*) 'setID:', setID(set)
-         Write(*,*) 'AppCtx%ElementType(setID(set))%name', AppCtx%ElementType(setID(set))%name
-         Write(*,*) 'AppCtx%ElementType(setID(set))%shortid', AppCtx%ElementType(setID(set))%shortid
          Call ElementInit(AppCtx%mesh,cellIS,AppCtx%Elem,2,AppCtx%ElementType(setID(set)))
          Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
       End Do    
@@ -258,7 +254,6 @@ Contains
       DeAllocate(TmpFlag)
       Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-      Call SectionIntView(AppCtx%BCFlag%Sec,PETSC_VIEWER_STDOUT_SELF,ierr);CHKERRQ(ierr)
 
 
       !!! Initialize the matrix and vector for the linear system
@@ -532,30 +527,24 @@ Contains
       Call DMmeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call RHSAssemblyBlock(setID(set),AppCtx)
-         ! Change interface here too
+         Call RHSAssemblyBlock(AppCtx%RHS,setID(set),AppCtx)
       End Do ! set
       Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
       Call SectionRealComplete(AppCtx%RHS%Sec,ierr);CHKERRQ(ierr)
 
-      !!! Set Dirichlet Boundary Values
-!Suppose that loading is contant (replace second to last by AppCtx%Timestep otherwise)
-      !!! TODOCall Read_EXO_Result_Vertex(MyEXO,AppCtx%meshTopology,AppCtx%VertVar_Temperature,1,AppCtx%UBC)
-      Call FieldInsertVertexBoundaryValues(AppCtx%RHS,AppCtx%UBC,AppCtx%BCFlag,AppCtx%mesh)
-
-      Call SectionRealToVec(AppCtx%RHS%Sec,AppCtx%RHS%Scatter,SCATTER_FORWARD,AppCtx%RHS%Vec,ierr);CHKERRQ(ierr)
-      Call FieldInsertVertexBoundaryValues(AppCtx%RHS,AppCtx%UBC,AppCtx%BCFlag,AppCtx%mesh)
-      Call VecCopy(AppCtx%RHS%Vec,RHSVec,ierr);CHKERRQ(ierr)
-      !!! VERY important! This is the equivalent of a ghost update
+      Call FieldInsertVertexBoundaryValues(AppCtx%RHS,AppCtx%U,AppCtx%BCFlag,AppCtx%mesh)
+      Call SectionRealToVec(AppCtx%RHS%Sec,AppCtx%RHS%Scatter,SCATTER_FORWARD,RHSVec,ierr);CHKERRQ(ierr)
+      !Call VecCopy(AppCtx%RHS%Vec,RHSVec,ierr);CHKERRQ(ierr)
    End Subroutine RHSAssembly
 
 #undef __FUNCT__
 #define __FUNCT__ "RHSAssemblyBlock"
-   Subroutine RHSAssemblyBlock(setID,AppCtx)
-      PetscInt                                     :: setID
-      Type(Poisson_AppCtx_Type)                       :: AppCtx
+   Subroutine RHSAssemblyBlock(RHS,setID,AppCtx)
+      Type(Field),Intent(IN)                       :: RHS
+      PetscInt,Intent(IN)                          :: setID
+      Type(Poisson_AppCtx_Type),Intent(IN)         :: AppCtx
 
       PetscInt                                     :: cell
       PetscInt,Dimension(:),Pointer                :: cellID
