@@ -17,8 +17,8 @@ Module M_POISSON
    Type LogInfo_Type
       PetscLogStage                                :: IO_Stage
       PetscLogStage                                :: Setup_Stage 
-      PetscLogStage                                :: MeshCreateExodus_Stage
-      PetscLogStage                                :: MeshDistribute_Stage
+      PetscLogStage                                :: meshCreateExodus_Stage
+      PetscLogStage                                :: meshDistribute_Stage
       PetscLogStage                                :: MatAssembly_Stage    
       PetscLogStage                                :: RHSAssembly_Stage
       PetscLogStage                                :: KSPSolve_Stage
@@ -87,7 +87,7 @@ Contains
       PetscReal,Dimension(:),Pointer               :: ValPtr
       PetscReal,Dimension(:),Pointer               :: Coord
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer,filename   
-      Type(DM)                                     :: Tmp_Mesh
+      Type(DM)                                     :: Tmp_mesh
       PetscReal                                    :: Val
       PetscInt,Dimension(:),Pointer                :: SizeScal
       PetscInt                                     :: numCell,numDim,c
@@ -138,7 +138,7 @@ Contains
 104 Format('Collective output redirected to file ',A,'\n')
 
 
-      !!! Read Mesh from <prefix>.gen
+      !!! Read mesh from <prefix>.gen
       If (MEF90_MyRank == 0) Then
          cpu_ws = 0
          io_ws = 0
@@ -148,11 +148,11 @@ Contains
       
       !!! Read the mesh from <prefix.gen> and partition it
       If (MEF90_NumProcs == 1) Then
-         Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoidIN,AppCtx%mesh,ierr);CHKERRQ(ierr)
+         Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoidIN,AppCtx%mesh,ierr);CHKERRQ(ierr)
       Else
-         Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoidIN,Tmp_mesh,ierr);CHKERRQ(ierr)
+         Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoidIN,Tmp_mesh,ierr);CHKERRQ(ierr)
       
-         Call DMMeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,AppCtx%mesh,ierr);CHKERRQ(ierr)
+         Call DMmeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,AppCtx%mesh,ierr);CHKERRQ(ierr)
          Call DMDestroy(Tmp_mesh,ierr);CHKERRQ(ierr)
       End If
       
@@ -162,10 +162,11 @@ Contains
       ! not sure if we still need this
       If (AppCtx%AppParam%splitIO) Then
          AppCtx%EXO%Comm = PETSC_COMM_SELF
-         Write(filename,105) AppCtx%AppParam%prefix,MEF90_MyRank
+         Write(AppCtx%EXO%filename,105) AppCtx%AppParam%prefix,MEF90_MyRank
       Else
          AppCtx%EXO%Comm = PETSC_COMM_WORLD
-         Write(filename,106) AppCtx%AppParam%prefix
+         !!!Write(filename,106) AppCtx%AppParam%prefix
+         AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'_out.gen'
       End If
       
       !!! Open the output file, save geometry and format the file if restart is false
@@ -176,13 +177,14 @@ Contains
          End If
       Else
          If (AppCtx%AppParam%splitIO) Then
-            ierr = EXCRE(AppCtx%EXO%filename,EXCLOB,cpu_ws,io_ws)
-            Call DMMeshViewExodusSplit(AppCtx%mesh,AppCtx%EXO%exoid,ierr)
+            AppCtx%EXO%exoid = EXCRE(AppCtx%EXO%filename,EXCLOB,cpu_ws,io_ws,ierr)
+            Call DMmeshViewExodusSplit(AppCtx%mesh,AppCtx%EXO%exoid,ierr)
          Else
             If (MEF90_MyRank == 0) Then
                cpu_ws = 0
                io_ws = 0
-               ierr = EXCRE(AppCtx%EXO%filename,EXCLOB,cpu_ws,io_ws)
+               write(*,*) 'trying to create file', AppCtx%EXO%filename
+               AppCtx%EXO%exoid = EXCRE(AppCtx%EXO%filename,EXCLOB,cpu_ws,io_ws,ierr)
                Call EXCOPY(exoidIN,AppCtx%EXO%exoid)
             End If
          End If
@@ -197,35 +199,37 @@ Contains
       !!!
       !!! Compute global IS for cell and vertex sets
       !!!
-      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',AppCtx%CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',AppCtx%CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,AppCtx%CellSetGlobalIS)
-      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Vertex Sets',AppCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(AppCtx%mesh,'Vertex Sets',AppCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,AppCtx%VertexSetGlobalIS)
       
       !!!
       !!! Allocate Element array
       !!!
-      Call DMMeshGetStratumSize(AppCtx%mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+      Call DMmeshGetStratumSize(AppCtx%mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       Allocate(AppCtx%Elem(numCell))
 
       !!! 
       !!! Set element type to P1 Lagrange on all sets
       !!!
-      Call DMMeshGetDimension(AppCtx%Mesh,numDim,ierr);CHKERRQ(ierr)
-      If (numDim == 2) Then
-         AppCtx%ElementType(:) = MEF90_P1_Lagrange_2D_Scal
-      Else
-         AppCtx%ElementType(:) = MEF90_P1_Lagrange_2D_Scal
-      End If
-
+      Call DMmeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Allocate(AppCtx%ElementType(size(setID)))
       Do set = 1,size(setID)
-         Call DMMeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
+         If (numDim == 2) Then
+            AppCtx%ElementType(setID(set)) = MEF90_P1_Lagrange_2D_Scal
+         Else
+            AppCtx%ElementType(setID(set)) = MEF90_P1_Lagrange_3D_Scal
+         End If
+         Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
+         Write(*,*) 'setID:', setID(set)
+         Write(*,*) 'AppCtx%ElementType(setID(set))%name', AppCtx%ElementType(setID(set))%name
+         Write(*,*) 'AppCtx%ElementType(setID(set))%shortid', AppCtx%ElementType(setID(set))%shortid
          Call ElementInit(AppCtx%mesh,cellIS,AppCtx%Elem,2,AppCtx%ElementType(setID(set)))
-         Call ISDestroy(cellIS)
+         Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
       End Do    
-      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    
       !!! Allocate the Section for U and F
       Allocate(SizeScal(1))
@@ -240,10 +244,10 @@ Contains
       Call FlagCreateVertex(AppCtx%BCFlag,'BC',AppCtx%mesh,SizeScal)      
       Allocate(TmpFlag(1))
       TmpFlag = 1
-      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(AppCtx%mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call DMMeshGetStratumIS(AppCtx%mesh,'Vertex Sets',setID(set),vertexIS,ierr); CHKERRQ(ierr)
+         Call DMmeshGetStratumIS(AppCtx%mesh,'Vertex Sets',setID(set),vertexIS,ierr); CHKERRQ(ierr)
          Call ISGetIndicesF90(vertexIS,vertexID,ierr);CHKERRQ(ierr)
          Do vertex = 1, size(vertexID)
             Call SectionIntUpdate(AppCtx%BCFlag%Sec,vertexID(vertex),TmpFlag,INSERT_VALUES,ierr);CHKERRQ(ierr)
@@ -254,11 +258,12 @@ Contains
       DeAllocate(TmpFlag)
       Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      Call SectionIntView(AppCtx%BCFlag%Sec,PETSC_VIEWER_STDOUT_SELF,ierr);CHKERRQ(ierr)
 
 
       !!! Initialize the matrix and vector for the linear system
-      Call DMMeshSetMaxDof(AppCtx%mesh,1,ierr);CHKERRQ(ierr) 
-      Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%U%Sec,MATMPIAIJ,AppCtx%K,ierr);CHKERRQ(ierr)
+      Call DMmeshSetMaxDof(AppCtx%mesh,1,ierr);CHKERRQ(ierr) 
+      Call DMmeshCreateMatrix(AppCtx%mesh,AppCtx%U%Sec,MATMPIAIJ,AppCtx%K,ierr);CHKERRQ(ierr)
 
       !!! Create the SNEs from which we will get the KSP and PC
       !Call SNESCreate(PETSC_COMM_WORLD,AppCtx%SNESU,ierr);CHKERRQ(ierr)
@@ -308,9 +313,9 @@ Contains
             End If
 
             Allocate(ValPtr(1))
-            Call DMMeshGetDimension(AppCtx%Mesh,numDim,ierr);CHKERRQ(ierr)
-            Call DMMeshGetSectionReal(AppCtx%mesh,'coordinates',coordSection,ierr); CHKERRQ(ierr)
-            Call DMMeshGetStratumIS(AppCtx%mesh,'height',0,vertexIS,ierr);CHKERRQ(ierr)
+            Call DMmeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
+            Call DMmeshGetSectionReal(AppCtx%mesh,'coordinates',coordSection,ierr); CHKERRQ(ierr)
+            Call DMmeshGetStratumIS(AppCtx%mesh,'height',0,vertexIS,ierr);CHKERRQ(ierr)
             Call ISGetIndicesF90(vertexIS,vertexID,ierr);CHKERRQ(ierr)
             Do vertex = 1, size(vertexID)
                Call SectionRealRestrict(coordSection,vertexID(vertex),coord,ierr);CHKERRQ(ierr)
@@ -364,8 +369,8 @@ Contains
       Call PetscLogEventRegister('RHSAssembly Block',0,AppCtx%LogInfo%RHSAssemblyBlock_Event,ierr);CHKERRQ(ierr)
       Call PetscLogEventRegister('Post Processing',  0,AppCtx%LogInfo%PostProc_Event,        ierr);CHKERRQ(ierr)
 
-      Call PetscLogStageRegister("MeshCreateExodus",AppCtx%LogInfo%MeshCreateExodus_Stage,ierr)
-      Call PetscLogStageRegister("MeshDistribute",  AppCtx%LogInfo%MeshDistribute_Stage,  ierr)
+      Call PetscLogStageRegister("meshCreateExodus",AppCtx%LogInfo%meshCreateExodus_Stage,ierr)
+      Call PetscLogStageRegister("meshDistribute",  AppCtx%LogInfo%meshDistribute_Stage,  ierr)
       Call PetscLogStageRegister("IO Stage",        AppCtx%LogInfo%IO_Stage,              ierr)
       Call PetscLogStageRegister("Setup",           AppCtx%LogInfo%Setup_Stage,           ierr)
       Call PetscLogStageRegister("Mat Assembly",    AppCtx%LogInfo%MatAssembly_Stage,     ierr)
@@ -386,7 +391,7 @@ Contains
       
       Call SectionRealToVec(AppCtx%U%Sec,AppCtx%U%Scatter,SCATTER_FORWARD,AppCtx%U%Vec,ierr);CHKERRQ(ierr)
 
-      Call DMMeshCreateVector(AppCtx%mesh,AppCtx%RHS,AppCtx%RHS%Vec,ierr);CHKERRQ(ierr)
+      Call DMmeshCreateVector(AppCtx%mesh,AppCtx%RHS,AppCtx%RHS%Vec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(AppCtx%RHS%Sec,AppCtx%RHS%Scatter,SCATTER_FORWARD,AppCtx%RHS%Vec,ierr);CHKERRQ(ierr)
 
       Call KSPSolve(AppCtx%KSPU,AppCtx%RHS%Vec,AppCtx%U%Vec,ierr);CHKERRQ(ierr)
@@ -421,12 +426,12 @@ Contains
       Call MatAssemblyBegin(K,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)
       Call MatAssemblyEnd  (K,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call MatAssemblyBlock(K,setID(set),AppCtx)
       End Do
-      Call ISRestoreIndices(setIS,setID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       Call MatAssemblyBegin(K,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)
       Call MatAssemblyEnd  (K,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)
@@ -458,7 +463,7 @@ Contains
       Allocate(BCFlag(numDof))
       Allocate(T_Loc(numDof))
 
-      Call DMMeshGetStratumIS(AppCtx%mesh,'Cell Sets',iBlk,cellIS,ierr); CHKERRQ(ierr)
+      Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',iBlk,cellIS,ierr); CHKERRQ(ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
          MatElem = 0.0_Kr
@@ -495,7 +500,7 @@ Contains
                End If
             End Do
          End Do
-         Call DMMeshAssembleMatrix(K,AppCtx%mesh,AppCtx%U%Sec,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+         Call DMmeshAssembleMatrix(K,AppCtx%mesh,AppCtx%U%Sec,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
@@ -524,7 +529,7 @@ Contains
 
       Call SectionRealZero(AppCtx%RHS%Sec,ierr);CHKERRQ(ierr)
       
-      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call RHSAssemblyBlock(setID(set),AppCtx)
@@ -571,7 +576,7 @@ Contains
       Allocate(RHS_Loc(numDof))
       Allocate(BCFlag_Loc(numDof))
 
-      Call DMMeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID,cellIS,ierr); CHKERRQ(ierr)
+      Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID,cellIS,ierr); CHKERRQ(ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
          RHS_Loc = 0.0_Kr
@@ -623,11 +628,11 @@ Contains
       MyElasticEnergy = 0.0_Kr
       MyExtForcesWork = 0.0_Kr
       flops = 0.0_Kr
-      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          numDof = AppCtx%ElementType(setID(set))%numDof
-         Call DMMeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
+         Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
          Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          Do cell = 1,size(cellID)      
             Allocate(F(NumDoF))
@@ -682,16 +687,16 @@ Contains
       PetscReal,Dimension(:),Pointer               :: Grad_Ptr
       PetscLogDouble                               :: flops = 0
 
-      Call DMMeshGetDimension(AppCtx%Mesh,numDim,ierr);CHKERRQ(ierr)
+      Call DMmeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetCellSectionReal(AppCtx%mesh,'GradU',numDim,AppCtx%GradU,ierr);CHKERRQ(ierr)
+      Call DMmeshGetCellSectionReal(AppCtx%mesh,'GradU',numDim,AppCtx%GradU,ierr);CHKERRQ(ierr)
       Allocate(Grad_Ptr(numDim))
       
-      Call DMMeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          numDof = AppCtx%ElementType(setID(set))%numDof
-         Call DMMeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
+         Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
          Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          Do cell = 1,size(cellID)      
             Allocate(U(NumDoF))
