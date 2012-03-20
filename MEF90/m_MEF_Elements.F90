@@ -229,8 +229,10 @@ Contains
       
       Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-
-      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+      
+      If (size(CellID) > 0) Then
+         iELoc = CellID(1)
+      Call DMMeshGetConeSize(mesh,iELoc,coneSize,ierr);CHKERRQ(ierr)    
       !!! 
       !!! conesize*numdim is an upper bound on the size of the restriction
       !!! of the coordinate section to a cell (interpolated mesh) 
@@ -247,10 +249,9 @@ Contains
          End Do
          Call Element2D_Scal_Init(dElem(CellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
-      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
       DeAllocate(Coord)
-
+      End If
       Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
    End Subroutine Element2D_Scal_InitSet
@@ -291,7 +292,6 @@ Contains
          End Do
          Call Element2D_Vect_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
-      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
       DeAllocate(Coord)
 
@@ -335,7 +335,6 @@ Contains
          End Do
          Call Element2D_Elast_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
-      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
       DeAllocate(Coord)
 
@@ -379,7 +378,6 @@ Contains
          End Do
          Call Element3D_Scal_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
-      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
       DeAllocate(Coord)
 
@@ -423,7 +421,6 @@ Contains
          End Do
          Call Element3D_Vect_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
-      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
       DeAllocate(Coord)
 
@@ -467,7 +464,6 @@ Contains
          End Do
          Call Element3D_Elast_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
-      Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       DeAllocate(TmpCoord)
       DeAllocate(Coord)
 
