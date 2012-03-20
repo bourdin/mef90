@@ -15,6 +15,7 @@ Program  SimplePoisson
    Type(Poisson_AppCtx_Type)                    :: AppCtx
    PetscInt                                     :: iErr
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+
    Call SimplePoissonInit(AppCtx)
    
    If (AppCtx%AppParam%verbose > 0) Then
@@ -64,7 +65,7 @@ Program  SimplePoisson
    End If
 
    Call VecViewExodusVertex(AppCtx%mesh,AppCtx%U%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1)
-   Call VecViewExodusVertex(AppCtx%mesh,AppCtx%F%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,2)
+   !!Call VecViewExodusVertex(AppCtx%mesh,AppCtx%F%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,2)
    !Call SectionRealGetLocalVector(AppCtx%GradU,GradULocalVec,ierr);CHKERRQ(ierr)
    !Call VecViewExodusCell(AppCtx%mesh,GradULocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1)
    
@@ -72,7 +73,9 @@ Program  SimplePoisson
    Call Write_EXO_Result_Global(AppCtx%Exo, 2, 1, AppCtx%ExtForcesWork)
    Call Write_EXO_Result_Global(AppCtx%Exo, 3, 1, AppCtx%TotalEnergy)
   
-   Call EXCLOS(AppCtx%EXO%exoid, iErr)
+   if (AppCtx%EXO%exoid > 0) Then
+      Call EXCLOS(AppCtx%EXO%exoid, iErr)
+   End If
    AppCtx%EXO%exoid = 0
 
    Call SimplePoissonFinalize(AppCtx)

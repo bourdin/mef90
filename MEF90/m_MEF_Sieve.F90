@@ -99,8 +99,8 @@ Contains
       Type(Field)                                  :: F
       PetscInt                                     :: i,ierr
       
-      Call SectionRealDestroy(F%Sec,ierr);CHKERRQ(ierr)
       DeAllocate(F%Component_size)
+      Call SectionRealDestroy(F%Sec,ierr);CHKERRQ(ierr)
       Do i = 1,F%Num_Components   
          Call SectionRealDestroy(F%Component_Sec(i),ierr);CHKERRQ(ierr)   
       End Do
