@@ -139,8 +139,8 @@ Contains
 
       !!! Read mesh from <prefix>.gen
       If (MEF90_MyRank == 0) Then
-         cpu_ws = 0
-         io_ws = 0
+         cpu_ws = 8
+         io_ws = 8
          filename = Trim(AppCtx%AppParam%prefix)//'.gen'
          exoidIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,ierr)
       End If
@@ -156,12 +156,9 @@ Contains
       End If
       
       !!! Prepare the output file(s)
-      AppCtx%EXO%num_nsproperties = 0
-      AppCtx%EXO%num_ebproperties = 0
-      ! not sure if we still need this
       If (AppCtx%AppParam%splitIO) Then
          AppCtx%EXO%Comm = PETSC_COMM_SELF
-         Write(AppCtx%EXO%filename,105) AppCtx%AppParam%prefix,MEF90_MyRank
+         Write(AppCtx%EXO%filename,105) trim(AppCtx%AppParam%prefix),MEF90_MyRank
       Else
          AppCtx%EXO%Comm = PETSC_COMM_WORLD
          !Write(AppCtx%EXO%filename,106) AppCtx%AppParam%prefix
@@ -181,10 +178,13 @@ Contains
             Call DMmeshViewExodusSplit(AppCtx%mesh,AppCtx%EXO%exoid,ierr)
          Else
             If (MEF90_MyRank == 0) Then
-               cpu_ws = 0
-               io_ws = 0
+               cpu_ws = 8
+               io_ws = 8
                AppCtx%EXO%exoid = EXCRE(AppCtx%EXO%filename,EXCLOB,cpu_ws,io_ws,ierr)
-               Call EXCOPY(exoidIN,AppCtx%EXO%exoid)
+               Call EXCOPY(exoidIN,AppCtx%EXO%exoid,ierr)
+               !cpu_ws = 8
+               !io_ws = 8
+               !AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename,EXWRIT,cpu_ws,io_ws,exo_version,ierr)
             End If
          End If
          Call EXOFormat_SimplePoisson(AppCtx%EXO)
@@ -194,7 +194,7 @@ Contains
          Call EXCLOS(exoidIN,ierr)
       End If
 105 Format(A,'-',I4.4,'.gen')
-106 Format(A,'_out.gen')
+!106 Format(A,'_out.gen')
       !!!
       !!! Compute global IS for cell and vertex sets
       !!!
@@ -231,6 +231,8 @@ Contains
       Allocate(SizeScal(1))
       SizeScal=1
 
+      Call FieldCreateVertex(AppCtx%U,    'U',        AppCtx%mesh,SizeScal)
+      Call FieldDestroy(AppCtx%U)
       Call FieldCreateVertex(AppCtx%U,    'U',        AppCtx%mesh,SizeScal)
       Call FieldCreateVertex(AppCtx%F,    'F',        AppCtx%mesh,SizeScal)
       Call FieldCreateVertex(AppCtx%RHS,  'RHS',      AppCtx%mesh,SizeScal)
@@ -340,16 +342,22 @@ Contains
       Type(EXO_Type)                               :: EXO
       PetscInt                                     :: ierr
    
+      EXO%num_nsproperties = 0
+      EXO%num_ebproperties = 0
+      EXO%num_globvariables = 3
       Call EXPVP (EXO%exoid,'g',3,ierr)
       Call EXPVAN(EXO%exoid,'g',3,(/'Elastic Energy ','Ext Forces work','Total Energy   '/),ierr)
       Call EXPVP (EXO%exoid,'n',2,ierr)
       Call EXPVAN(EXO%exoid,'n',2,(/'U','F'/),ierr)
+      EXO%num_vertvariables = 2
 #if defined PB_2D
       Call EXPVP (EXO%exoid,'e',2,ierr)
       Call EXPVAN(EXO%exoid,'e',2,(/'Grad U_X','Grad U_Y'/),ierr)
+      EXO%num_cellvariables = 2
 #elif defined PB_3D
       Call EXPVP (EXO%exoid,'e',3,ierr)
       Call EXPVAN(EXO%exoid,'e',3,(/'Grad U_X','Grad U_Y','Grad U_Z'/),ierr)
+      EXO%num_cellvariables = 3
 #endif
       Call EXPTIM(EXO%exoid,1,1.0_Kr,ierr)
    End Subroutine EXOFormat_SimplePoisson
@@ -721,7 +729,7 @@ Contains
 #define __FUNCT__ "SimplePoissonFinalize"
 !!! Check for missing destroys / deallocate
    Subroutine SimplePoissonFinalize(AppCtx)   
-      Type(Poisson_AppCtx_Type)                       :: AppCtx
+      Type(Poisson_AppCtx_Type)                    :: AppCtx
 
       PetscInt                                     :: ierr
       Character(len=MEF90_MXSTRLEN)                :: filename
@@ -729,7 +737,6 @@ Contains
 
       Call SectionRealDestroy(AppCtx%GradU,ierr);CHKERRQ(ierr)
       Call FieldDestroy(AppCtx%U)
-      !Call FieldDestroy(AppCtx%GradU)
       Call FieldDestroy(AppCtx%F)
       Call FieldDestroy(AppCtx%RHS)
 
