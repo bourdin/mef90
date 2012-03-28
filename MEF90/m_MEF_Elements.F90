@@ -14,6 +14,7 @@ Module m_MEF_Elements
    Public :: Element1D
    Public :: Element2D_Vect,Element2D_Scal,Element2D_Elast 
    Public :: Element3D_Vect,Element3D_Scal,Element3D_Elast 
+   Public :: ElementIDToType
    
 
    Type Element_Type
@@ -135,14 +136,14 @@ Module m_MEF_Elements
    !!!
    Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2D_Scal = Element_Type(   &
       "MEF90_P2_Lagrange_2D_Scal",  &  ! name
-      13,                            &  ! shortID
+      13,                           &  ! shortID
       3,3,0,                        &  ! numVertex,numEdge,numFace
       3,3,0,0,6,                    &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       2,0,2                         &  ! dim,codim,order                             
    )
    Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3D_Scal = Element_Type(   &
       "MEF90_P2_Lagrange_3D_Scal",  &  ! name
-      14,                            &  ! shortID
+      14,                           &  ! shortID
       4,6,4,                        &  ! numVertex,numEdge,numFace
       4,6,0,0,10,                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,0,2                         &  ! dim,codim,order                             
@@ -210,7 +211,48 @@ Module m_MEF_Elements
    End Interface ElementView
    
 Contains
+#undef __FUNCT__
+#define __FUNCT__ "ElementIDToType"
+   Subroutine ElementIDToType(ID,elemType)
+      PetscInt, Intent(IN)                        :: ID
+      Type(Element_Type),Intent(OUT)              :: elemType
+      
+      Select Case(ID)
+         Case(MEF90_P1_Lagrange_2D_Scal%ShortID)
+            elemType = MEF90_P1_Lagrange_2D_Scal
+         Case(MEF90_P1_Lagrange_3D_Scal%ShortID)
+            elemType = MEF90_P1_Lagrange_3D_Scal
+         Case(MEF90_P1_Lagrange_2D_Elast%ShortID)
+            elemType = MEF90_P1_Lagrange_2D_Elast
+         Case(MEF90_P1_Lagrange_3D_Elast%ShortID)
+            elemType = MEF90_P1_Lagrange_3D_Elast
+         Case(MEF90_P1_Lagrange_2D_Vect%ShortID)
+            elemType = MEF90_P1_Lagrange_2D_Vect
+         Case(MEF90_P1_Lagrange_3D_Vect%ShortID)
+            elemType = MEF90_P1_Lagrange_3D_Vect
 
+         Case(MEF90_P1_Lagrange_2DBoundary_Scal%ShortID)
+            elemType = MEF90_P1_Lagrange_2DBoundary_Scal
+         Case(MEF90_P1_Lagrange_3DBoundary_Scal%ShortID)
+            elemType = MEF90_P1_Lagrange_3DBoundary_Scal
+         Case(MEF90_P1_Lagrange_2DBoundary_Elast%ShortID)
+            elemType = MEF90_P1_Lagrange_2DBoundary_Elast
+         Case(MEF90_P1_Lagrange_3DBoundary_Elast%ShortID)
+            elemType = MEF90_P1_Lagrange_3DBoundary_Elast
+         Case(MEF90_P1_Lagrange_2DBoundary_Vect%ShortID)
+            elemType = MEF90_P1_Lagrange_2DBoundary_Vect
+         Case(MEF90_P1_Lagrange_3DBoundary_Vect%ShortID)
+            elemType = MEF90_P1_Lagrange_3DBoundary_Vect
+
+         Case(MEF90_P2_Lagrange_2D_Scal%ShortID)
+            elemType = MEF90_P2_Lagrange_2D_Scal
+         Case(MEF90_P2_Lagrange_3D_Scal%ShortID)
+            elemType = MEF90_P2_Lagrange_3D_Scal
+         Case default
+            Write(*,*) "[ERROR]: Unknown element ID", ID
+      End Select
+   End Subroutine ElementIDToType
+   
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet"
    Subroutine Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)

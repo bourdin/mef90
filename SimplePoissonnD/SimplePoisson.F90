@@ -13,11 +13,14 @@ Program  SimplePoisson
 
 
    Type(Poisson_AppCtx_Type)                    :: AppCtx
-   PetscInt                                     :: iErr
+   PetscErrorCode                               :: iErr
+   PetscInt                                     :: exo_step,exo_field
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-
-   Call SimplePoissonInit(AppCtx)
+   Type(Vec)                                    :: GradULocalVec
+   PetscInt                                     :: numDim
    
+   
+   Call SimplePoissonInit(AppCtx)
    If (AppCtx%AppParam%verbose > 0) Then
       Write(IOBuffer, *) 'Assembling the matrix\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -63,11 +66,15 @@ Program  SimplePoisson
       Write(IOBuffer, *) 'Saving results\n'
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
+   
+   Call VecViewExodusVertex(AppCtx%mesh,AppCtx%U%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1,ierr)
+   Call VecViewExodusVertex(AppCtx%mesh,AppCtx%F%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,2,ierr)
 
-   Call VecViewExodusVertex(AppCtx%mesh,AppCtx%U%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1)
-   !!Call VecViewExodusVertex(AppCtx%mesh,AppCtx%F%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,2)
-   !Call SectionRealGetLocalVector(AppCtx%GradU,GradULocalVec,ierr);CHKERRQ(ierr)
-   !Call VecViewExodusCell(AppCtx%mesh,GradULocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1)
+   Call SectionRealCreateLocalVector(AppCtx%GradU,GradULocalVec,ierr);CHKERRQ(ierr)
+   Call DMmeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
+   Call VecSetBlockSize(GradULocalVec,numDim,ierr);CHKERRQ(ierr)
+   Call VecViewExodusCell(AppCtx%mesh,GradULocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1,ierr)
+   Call VecDestroy(GradULocalVec,ierr);CHKERRQ(ierr)
    
    Call Write_EXO_Result_Global(AppCtx%Exo, 1, 1, AppCtx%ElasticEnergy)
    Call Write_EXO_Result_Global(AppCtx%Exo, 2, 1, AppCtx%ExtForcesWork)

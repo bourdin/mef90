@@ -96,6 +96,9 @@ Contains
       Type(SectionReal)                            :: coordSection
       Integer                                      :: cpu_ws,io_ws,exoidIN
       Real                                         :: exo_version
+      PetscInt                                     :: numSizes
+      PetscInt,Dimension(:),Pointer                :: elemTypes
+      PetscBool                                    :: flg
 
       Call MEF90_Initialize()
       AppCtx%AppParam%verbose = 0
@@ -161,9 +164,9 @@ Contains
          Write(AppCtx%EXO%filename,105) trim(AppCtx%AppParam%prefix),MEF90_MyRank
       Else
          AppCtx%EXO%Comm = PETSC_COMM_WORLD
-         !Write(AppCtx%EXO%filename,106) AppCtx%AppParam%prefix
+         Write(AppCtx%EXO%filename,106) trim(AppCtx%AppParam%prefix)
          ! Why is this not working?
-         AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'_out.gen'
+         !AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'_out.gen'
       End If
       
       !!! Open the output file, save geometry and format the file if restart is false
@@ -174,7 +177,10 @@ Contains
          End If
       Else
          If (AppCtx%AppParam%splitIO) Then
-            AppCtx%EXO%exoid = EXCRE(AppCtx%EXO%filename,EXCLOB,cpu_ws,io_ws,ierr)
+            cpu_ws = 8
+            io_ws = 8
+            AppCtx%EXO%exoid = EXCRE(trim(AppCtx%EXO%filename),EXCLOB,cpu_ws,io_ws,ierr)
+            Write(*,*) MEF90_MyRank, trim(AppCtx%EXO%filename), AppCtx%EXO%exoid
             Call DMmeshViewExodusSplit(AppCtx%mesh,AppCtx%EXO%exoid,ierr)
          Else
             If (MEF90_MyRank == 0) Then
@@ -182,9 +188,6 @@ Contains
                io_ws = 8
                AppCtx%EXO%exoid = EXCRE(AppCtx%EXO%filename,EXCLOB,cpu_ws,io_ws,ierr)
                Call EXCOPY(exoidIN,AppCtx%EXO%exoid,ierr)
-               !cpu_ws = 8
-               !io_ws = 8
-               !AppCtx%EXO%exoid = EXOPEN(AppCtx%EXO%filename,EXWRIT,cpu_ws,io_ws,exo_version,ierr)
             End If
          End If
          Call EXOFormat_SimplePoisson(AppCtx%EXO)
@@ -194,7 +197,7 @@ Contains
          Call EXCLOS(exoidIN,ierr)
       End If
 105 Format(A,'-',I4.4,'.gen')
-!106 Format(A,'_out.gen')
+106 Format(A,'_out.gen')
       !!!
       !!! Compute global IS for cell and vertex sets
       !!!
@@ -221,6 +224,18 @@ Contains
          Else
             AppCtx%ElementType(setID(set)) = MEF90_P1_Lagrange_3D_Scal
          End If
+      End Do
+      Allocate(elemTypes(size(setID)))
+      elemTypes = -2
+      numSizes = size(setID)
+      Call PetscOptionsGetIntArray(PETSC_NULL_CHARACTER,"-elem_type",elemTypes,numSizes,flg,ierr);CHKERRQ(ierr)
+      write(*,*) numSizes,elemTypes
+      Do set = 1, numSizes
+         Call ElementIDToType(elemTypes(set),AppCtx%ElementType(set))
+         Write(*,*) "Changed element type for set ", set, "to ",trim(AppCtx%ElementType(set)%name)
+      End Do      
+      DeAllocate(elemTypes)      
+      Do set = 1,size(setID)
          Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
          Call ElementInit(AppCtx%mesh,cellIS,AppCtx%Elem,2,AppCtx%ElementType(setID(set)))
          Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
