@@ -14,7 +14,7 @@ Module m_MEF_Elements
    Public :: Element1D
    Public :: Element2D_Vect,Element2D_Scal,Element2D_Elast 
    Public :: Element3D_Vect,Element3D_Scal,Element3D_Elast 
-   Public :: ElementIDToType
+   Public :: Element_TypeFindByID,Element_TypeFindByName
    
 
    Type Element_Type
@@ -149,8 +149,16 @@ Module m_MEF_Elements
       3,0,2                         &  ! dim,codim,order                             
    )
 
-   ! I would really like to be able to define allKnownElements = (MEF90_P1_Lagrange_2D_Scal,MEF90_P1_Lagrange_3D_Scal, ...
-   ! as a parameter, but I can't seem to be able to do that
+   Integer,Parameter,Public :: MEF90_numKnownElements = 14       
+   Type(Element_Type),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90_knownElements = (/ &
+      MEF90_P1_Lagrange_2D_Scal,MEF90_P1_Lagrange_3D_Scal,                    &
+      MEF90_P1_Lagrange_2D_Elast,MEF90_P1_Lagrange_3D_Elast,                  &
+      MEF90_P1_Lagrange_2D_Vect,MEF90_P1_Lagrange_3D_Vect,                    &
+      MEF90_P1_Lagrange_2DBoundary_Scal,MEF90_P1_Lagrange_3DBoundary_Scal,    &
+      MEF90_P1_Lagrange_2DBoundary_Elast,MEF90_P1_Lagrange_3DBoundary_Elast,  &
+      MEF90_P1_Lagrange_2DBoundary_Vect,MEF90_P1_Lagrange_3DBoundary_Vect,    &
+      MEF90_P2_Lagrange_2D_Scal,MEF90_P2_Lagrange_3D_Scal                     /)
+      
    Type Element1D
       PetscReal,Dimension(:,:),Pointer             :: BF
       PetscReal,Dimension(:,:),Pointer             :: Der_BF
@@ -212,46 +220,44 @@ Module m_MEF_Elements
    
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "ElementIDToType"
-   Subroutine ElementIDToType(ID,elemType)
+#define __FUNCT__ "Element_TypeFindByID"
+   Subroutine Element_TypeFindByID(ID,elemType)
       PetscInt, Intent(IN)                        :: ID
       Type(Element_Type),Intent(OUT)              :: elemType
-      
-      Select Case(ID)
-         Case(MEF90_P1_Lagrange_2D_Scal%ShortID)
-            elemType = MEF90_P1_Lagrange_2D_Scal
-         Case(MEF90_P1_Lagrange_3D_Scal%ShortID)
-            elemType = MEF90_P1_Lagrange_3D_Scal
-         Case(MEF90_P1_Lagrange_2D_Elast%ShortID)
-            elemType = MEF90_P1_Lagrange_2D_Elast
-         Case(MEF90_P1_Lagrange_3D_Elast%ShortID)
-            elemType = MEF90_P1_Lagrange_3D_Elast
-         Case(MEF90_P1_Lagrange_2D_Vect%ShortID)
-            elemType = MEF90_P1_Lagrange_2D_Vect
-         Case(MEF90_P1_Lagrange_3D_Vect%ShortID)
-            elemType = MEF90_P1_Lagrange_3D_Vect
 
-         Case(MEF90_P1_Lagrange_2DBoundary_Scal%ShortID)
-            elemType = MEF90_P1_Lagrange_2DBoundary_Scal
-         Case(MEF90_P1_Lagrange_3DBoundary_Scal%ShortID)
-            elemType = MEF90_P1_Lagrange_3DBoundary_Scal
-         Case(MEF90_P1_Lagrange_2DBoundary_Elast%ShortID)
-            elemType = MEF90_P1_Lagrange_2DBoundary_Elast
-         Case(MEF90_P1_Lagrange_3DBoundary_Elast%ShortID)
-            elemType = MEF90_P1_Lagrange_3DBoundary_Elast
-         Case(MEF90_P1_Lagrange_2DBoundary_Vect%ShortID)
-            elemType = MEF90_P1_Lagrange_2DBoundary_Vect
-         Case(MEF90_P1_Lagrange_3DBoundary_Vect%ShortID)
-            elemType = MEF90_P1_Lagrange_3DBoundary_Vect
+      Integer                                     :: i
+      PetscBool                                   :: knownID = PETSC_FALSE      
+      Do i = 1, size(MEF90_knownElements)
+         If (MEF90_knownElements(i)%shortID == ID) Then
+            elemType = MEF90_knownElements(i)
+            knownID  = PETSC_TRUE
+            EXIT
+         End If
+      End Do
+      If (.NOT. knownID) Then
+         Write(*,*) "[ERROR]: Unknown element ID", ID
+      End If
+   End Subroutine Element_TypeFindByID
+   
+#undef __FUNCT__
+#define __FUNCT__ "Element_TypeFindByname"
+   Subroutine Element_TypeFindByname(name,elemType)
+      Character(len=*), Intent(IN)                :: name
+      Type(Element_Type),Intent(OUT)              :: elemType
 
-         Case(MEF90_P2_Lagrange_2D_Scal%ShortID)
-            elemType = MEF90_P2_Lagrange_2D_Scal
-         Case(MEF90_P2_Lagrange_3D_Scal%ShortID)
-            elemType = MEF90_P2_Lagrange_3D_Scal
-         Case default
-            Write(*,*) "[ERROR]: Unknown element ID", ID
-      End Select
-   End Subroutine ElementIDToType
+      Integer                                     :: i
+      PetscBool                                   :: knownID = PETSC_FALSE      
+      Do i = 1, size(MEF90_knownElements)
+         If (trim(MEF90_knownElements(i)%name) == trim(name)) Then
+            elemType = MEF90_knownElements(i)
+            knownID  = PETSC_TRUE
+            EXIT
+         End If
+      End Do
+      If (.NOT. knownID) Then
+         Write(*,*) "[ERROR]: Unknown element ", trim(name)
+      End If
+   End Subroutine Element_TypeFindByname
    
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet"

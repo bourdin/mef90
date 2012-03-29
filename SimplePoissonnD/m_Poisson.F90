@@ -231,7 +231,7 @@ Contains
       Call PetscOptionsGetIntArray(PETSC_NULL_CHARACTER,"-elem_type",elemTypes,numSizes,flg,ierr);CHKERRQ(ierr)
       write(*,*) numSizes,elemTypes
       Do set = 1, numSizes
-         Call ElementIDToType(elemTypes(set),AppCtx%ElementType(set))
+         Call Element_TypeFindByID(elemTypes(set),AppCtx%ElementType(set))
          Write(*,*) "Changed element type for set ", set, "to ",trim(AppCtx%ElementType(set)%name)
       End Do      
       DeAllocate(elemTypes)      
