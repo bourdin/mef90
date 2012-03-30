@@ -165,8 +165,6 @@ Contains
       Else
          AppCtx%EXO%Comm = PETSC_COMM_WORLD
          Write(AppCtx%EXO%filename,106) trim(AppCtx%AppParam%prefix)
-         ! Why is this not working?
-         !AppCtx%EXO%filename = Trim(AppCtx%AppParam%prefix)//'_out.gen'
       End If
       
       !!! Open the output file, save geometry and format the file if restart is false
@@ -180,7 +178,6 @@ Contains
             cpu_ws = 8
             io_ws = 8
             AppCtx%EXO%exoid = EXCRE(trim(AppCtx%EXO%filename),EXCLOB,cpu_ws,io_ws,ierr)
-            Write(*,*) MEF90_MyRank, trim(AppCtx%EXO%filename), AppCtx%EXO%exoid
             Call DMmeshViewExodusSplit(AppCtx%mesh,AppCtx%EXO%exoid,ierr)
          Else
             If (MEF90_MyRank == 0) Then

@@ -1,7 +1,7 @@
 MEF90DIR  = ../MEF90/${PETSC_ARCH}
 MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
-            $(MEF90DIR)/m_MEF_Elements.o  \
-            $(MEF90DIR)/m_MEF90.o          $(MEF90DIR)/m_MEF_Utils.o         \
+            $(MEF90DIR)/m_MEF_Elements.o   $(MEF90DIR)/m_MEF_Norm.o      \
+            $(MEF90DIR)/m_MEF90.o          $(MEF90DIR)/m_MEF_Utils.o     \
             $(MEF90DIR)/m_MEF_EXO.o        $(MEF90DIR)/m_MEF_MPI.o       \
             $(MEF90DIR)/m_MEF_Sieve.o 
 
@@ -101,6 +101,9 @@ TestPreProcessor:   ${PETSC_ARCH} TestPreProcessor.o ${PETSC_ARCH}/TestPreProces
 TestCorruption:   ${PETSC_ARCH} TestCorruption.o m_TestCorruption.o ${PETSC_ARCH}/TestCorruption.o ${PETSC_ARCH}/m_TestCorruption.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestCorruption ${PETSC_ARCH}/TestCorruption.o ${PETSC_ARCH}/m_TestCorruption.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 m_TestCorruption.o: ${PETSC_ARCH}
+
+TestElements:     ${PETSC_ARCH} TestElements.o ${PETSC_ARCH}/TestElements.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestElements ${PETSC_ARCH}/TestElements.o ${MEF90OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
 TestDistribute: TestDistribute.o  chkopts
 	-${CLINKER} -o TestDistribute TestDistribute.o ${PETSC_LIB}
