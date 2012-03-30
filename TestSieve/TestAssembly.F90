@@ -78,7 +78,7 @@ Program TestAssembly
    
    Call DMMeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS)
-   Call ISGetIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       !!!
       !!! Get the IS containing the cell ID of the cells in the cell set setID(set)
@@ -109,9 +109,8 @@ Program TestAssembly
       End If
       Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
    End Do
-   If (size(setID) > 0) Then
-      Call ISRestoreIndicesF90(MeshTopology%cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   End If
+   Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
    Call MatAssemblyBegin(K,MAT_FINAL_ASSEMBLY,iErr); CHKERRQ(iErr)
    Call MatAssemblyEnd(K,MAT_FINAL_ASSEMBLY,iErr); CHKERRQ(iErr)
