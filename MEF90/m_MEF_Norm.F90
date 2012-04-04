@@ -16,12 +16,11 @@ Module m_MEF_Norm
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "SectionRealL2DotProductSet_2DScal"
-   Subroutine SectionRealL2DotProductSet_2DScal(Mesh,setID,U_sec,V_Sec,Elem,p,L2DotProduct,ierr)
+   Subroutine SectionRealL2DotProductSet_2DScal(Mesh,setID,U_sec,V_Sec,Elem,L2DotProduct,ierr)
       Type(DM),Intent(IN)                          :: Mesh
       PetscInt,Intent(IN)                          :: setID
       Type(SectionReal),Intent(IN)                 :: U_Sec,V_Sec
       Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
-      PetscInt,Intent(IN)                          :: p
       PetscReal,Intent(OUT)                        :: L2DotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
@@ -70,11 +69,10 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "SectionRealL2DotProduct_2DScal"
-   Subroutine SectionRealL2DotProduct_2DScal(Mesh,U_sec,V_Sec,Elem,p,L2DotProduct,ierr)
+   Subroutine SectionRealL2DotProduct_2DScal(Mesh,U_sec,V_Sec,Elem,L2DotProduct,ierr)
       Type(DM),Intent(IN)                          :: Mesh
       Type(SectionReal),Intent(IN)                 :: U_sec,V_Sec
       Type(Element2D_Scal), Dimension(:), Pointer  :: Elem
-      PetscInt,Intent(IN)                          :: p
       PetscReal,Intent(OUT)                        :: L2DotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
@@ -89,7 +87,7 @@ Contains
       L2DotProductSet = 0.0_Kr
       L2DotProduct = 0.0_Kr
       Do set = 1,size(setID)
-         Call SectionRealL2DotProductSet_2DScal(Mesh,setID(set),U_sec,V_Sec,Elem,p,L2DotProductSet,ierr);CHKERRQ(ierr)
+         Call SectionRealL2DotProductSet_2DScal(Mesh,setID(set),U_sec,V_Sec,Elem,L2DotProductSet,ierr);CHKERRQ(ierr)
          L2DotProduct = L2DotProduct + L2DotProductSet
       End Do !set
       Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)

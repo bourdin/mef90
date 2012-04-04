@@ -660,8 +660,10 @@ Contains
                F_Elem      = 0.0_Kr
                U_Elem      = 0.0_Kr
                Do iDoF = 1,NumDoF
-                  Stress_Elem = Stress_Elem + AppCtx%Elem(cellID(cell)+1)%Grad_BF(iDoF,iGauss) * U(iDoF)
-                  Strain_Elem = Strain_Elem + AppCtx%Elem(cellID(cell)+1)%Grad_BF(iDoF,iGauss) * U(iDoF)
+                  If (AppCtx%ElementType(set)%codim == 0) Then
+                     Stress_Elem = Stress_Elem + AppCtx%Elem(cellID(cell)+1)%Grad_BF(iDoF,iGauss) * U(iDoF)
+                     Strain_Elem = Strain_Elem + AppCtx%Elem(cellID(cell)+1)%Grad_BF(iDoF,iGauss) * U(iDoF)
+                  End If
                   F_Elem = F_Elem + AppCtx%Elem(cellID(cell)+1)%BF(iDoF,iGauss) * F(iDoF)
                   U_Elem = U_Elem + AppCtx%Elem(cellID(cell)+1)%BF(iDoF,iGauss) * U(iDoF)
                   flops = flops + 4
@@ -710,32 +712,34 @@ Contains
       Call DMmeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         numDof = AppCtx%ElementType(setID(set))%numDof
-         Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
-         Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-         Do cell = 1,size(cellID)      
-            Allocate(U(NumDoF))
-            Call SectionRealRestrictClosure(AppCtx%U%Sec,AppCtx%mesh,cellID(cell),NumDoF,U,ierr);CHKERRQ(ierr)
-            Grad = 0.0_Kr
-            Vol  = 0.0_Kr
-            Do iGauss = 1,size(AppCtx%Elem(cellID(cell)+1)%Gauss_C)
-               Do iDoF = 1,NumDoF
-                  Grad = Grad + (AppCtx%Elem(cellID(cell)+1)%Gauss_C(iGauss) * U(iDoF) ) * AppCtx%Elem(cellID(cell)+1)%Grad_BF(iDoF,iGauss) 
-                  Vol = Vol + AppCtx%Elem(cellID(cell)+1)%Gauss_C(iGauss) * AppCtx%Elem(cellID(cell)+1)%BF(iDoF,iGauss)
-                  flops = flops + 3
+         If (AppCtx%ElementType(set)%codim == 0) Then
+            numDof = AppCtx%ElementType(setID(set))%numDof
+            Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
+            Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+            Do cell = 1,size(cellID)      
+               Allocate(U(NumDoF))
+               Call SectionRealRestrictClosure(AppCtx%U%Sec,AppCtx%mesh,cellID(cell),NumDoF,U,ierr);CHKERRQ(ierr)
+               Grad = 0.0_Kr
+               Vol  = 0.0_Kr
+               Do iGauss = 1,size(AppCtx%Elem(cellID(cell)+1)%Gauss_C)
+                  Do iDoF = 1,NumDoF
+                     Grad = Grad + (AppCtx%Elem(cellID(cell)+1)%Gauss_C(iGauss) * U(iDoF) ) * AppCtx%Elem(cellID(cell)+1)%Grad_BF(iDoF,iGauss) 
+                     Vol = Vol + AppCtx%Elem(cellID(cell)+1)%Gauss_C(iGauss) * AppCtx%Elem(cellID(cell)+1)%BF(iDoF,iGauss)
+                     flops = flops + 3
+                  End Do
                End Do
-            End Do
-            Grad = Grad / Vol
+               Grad = Grad / Vol
 #if defined PB_2D
-            Grad_Ptr = (/ Grad%X,Grad%Y /)
+               Grad_Ptr = (/ Grad%X,Grad%Y /)
 #elif defined PB_3D
-            Grad_Ptr = (/ Grad%X,Grad%Y,Grad%Z /)
+               Grad_Ptr = (/ Grad%X,Grad%Y,Grad%Z /)
 #endif
-            Call SectionRealUpdateClosure(AppCtx%GradU,AppCtx%mesh,cellID(cell),Grad_Ptr,INSERT_VALUES,ierr)
-            DeAllocate(U)
-         End Do ! cell
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-         Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
+               Call SectionRealUpdateClosure(AppCtx%GradU,AppCtx%mesh,cellID(cell),Grad_Ptr,INSERT_VALUES,ierr)
+               DeAllocate(U)
+            End Do ! cell
+            Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+            Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
+         End If
       End Do ! set
       Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)

@@ -22,7 +22,7 @@ Program TestElements
    Type(Field)                                  :: U,V
    Type(SectionReal)                            :: coordSection,GradU
    
-   PetscReal,Dimension(:),Pointer               :: val
+   PetscReal,Dimension(:),Pointer               :: valU,valV
    
    Type(IS)                                     :: setIS,cellIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                :: setID,cellID
@@ -133,7 +133,6 @@ Program TestElements
       End If
       Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
    End Do    
-   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    DeAllocate(ElemTypeID)
    
    !!! Allocate the Section for U and GradU
@@ -143,167 +142,127 @@ Program TestElements
    Call FieldCreateVertex(V,'V',mesh,SizeScal)
    DeAllocate(sizeScal)
    Call DMMeshGetVertexSectionReal(mesh,'GradU',numDim,gradU,ierr);CHKERRQ(ierr)
-   Allocate(Val(1))
+   Allocate(ValU(1))
+   Allocate(ValV(1))
 
    !!! Initialize the section for U   
    Call DMMeshGetSectionReal(mesh,'coordinates',coordSection,ierr); CHKERRQ(ierr)
    Call DMmeshGetStratumSize(mesh,'depth',0,numVertex,ierr);CHKERRQ(ierr)
 
-   !!! U = 1
+   !!! U = 1, V=1
    Do vertex = 1, numVertex
       Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = 1
-      Call SectionRealUpdate(U%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
-      Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-   End Do
-   Call VecViewExodusVertex(mesh,U%LocalVec,EXO%comm,EXO%exoid,offset,1,ierr);CHKERRQ(ierr)
-   offset = offset+1
-   If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<1,1>_2 = ', LpNorm
-   End If
-
-   Do vertex = 1, numVertex
-      Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(1)
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      valU = 1
+      ValV = 1
+      Call SectionRealUpdate(U%Sec,vertex+numCell-1,valU,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
       Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
    End Do
    If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<1,X>_2 = ', LpNorm
-      Call SectionRealL2DotProduct(mesh,V%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<X,1>_2 = ', LpNorm
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<1,1>_2 = ', LpNorm
+      End Do
    End If
-      
-   Do vertex = 1, numVertex
-      Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(2)
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
-      Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-   End Do
-   If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<1,Y>_2 = ', LpNorm
-      Call SectionRealL2DotProduct(mesh,V%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<Y,1>_2 = ', LpNorm
-   End If
-      
-   Do vertex = 1, numVertex
-      Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(1)**2
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
-      Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-   End Do
-   If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<1,X^2>_2 = ', LpNorm
-      Call SectionRealL2DotProduct(mesh,V%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<X^2,1>_2 = ', LpNorm
-   End If
-
-   Do vertex = 1, numVertex
-      Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(1)*coord(2)
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
-      Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-   End Do
-   If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<1,XY>_2 = ', LpNorm
-      Call SectionRealL2DotProduct(mesh,V%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<XY,1>_2 = ', LpNorm
-   End If
-      
-   Do vertex = 1, numVertex
-      Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(2)**2
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
-      Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-   End Do
-   If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<1,Y^2>_2 = ', LpNorm
-      Call SectionRealL2DotProduct(mesh,V%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<Y^2,1>_2 = ', LpNorm
-   End If
-
-
-   !!! U = x
-   Do vertex = 1, numVertex
-      Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(1)
-      Call SectionRealUpdate(U%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
-      Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-   End Do
-   Call VecViewExodusVertex(mesh,U%LocalVec,EXO%comm,EXO%exoid,offset,1,ierr);CHKERRQ(ierr)
-   offset = offset+1
    
    Do vertex = 1, numVertex
       Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(1)
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      valU = 1
+      ValV = coord(1)
+      Call SectionRealUpdate(U%Sec,vertex+numCell-1,valU,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
       Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
    End Do
    If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<X,X>_2 = ', LpNorm
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<1,X>_2 = ', LpNorm
+      End Do
    End If
-      
+   
    Do vertex = 1, numVertex
       Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(2)
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      valU = 1
+      ValV = coord(2)
+      Call SectionRealUpdate(U%Sec,vertex+numCell-1,valU,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
       Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
    End Do
    If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<X,Y>_2 = ', LpNorm
-      Call SectionRealL2DotProduct(mesh,V%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<Y,X>_2 = ', LpNorm
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<1,Y>_2 = ', LpNorm
+      End Do
    End If
-      
+   
    Do vertex = 1, numVertex
       Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(1)**2
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      valU = coord(1)
+      ValV = coord(2)
+      Call SectionRealUpdate(U%Sec,vertex+numCell-1,valU,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
       Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
    End Do
    If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<X,X^2>_2 = ', LpNorm
-      Call SectionRealL2DotProduct(mesh,V%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<X^2,X>_2 = ', LpNorm
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,U%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<X,X>_2 = ', LpNorm
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<X,Y>_2 = ', LpNorm
+         Call SectionRealL2DotProduct(mesh,setID(set),V%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<Y,Y>_2 = ', LpNorm
+      End Do
    End If
 
    Do vertex = 1, numVertex
       Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(1)*coord(2)
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      valU = 1
+      ValV = coord(1)**2
+      Call SectionRealUpdate(U%Sec,vertex+numCell-1,valU,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
       Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
    End Do
    If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<X,XY>_2 = ', LpNorm
-      Call SectionRealL2DotProduct(mesh,V%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<XY,X>_2 = ', LpNorm
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<1,X^2>_2 = ', LpNorm
+      End Do
    End If
-      
+
    Do vertex = 1, numVertex
       Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
-      val = coord(2)**2
-      Call SectionRealUpdate(V%Sec,vertex+numCell-1,val,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      valU = 1
+      ValV = coord(1)*coord(2)
+      Call SectionRealUpdate(U%Sec,vertex+numCell-1,valU,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
       Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
    End Do
    If (numDim == 2) Then
-      Call SectionRealL2DotProduct(mesh,U%Sec,V%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<X,Y^2>_2 = ', LpNorm
-      Call SectionRealL2DotProduct(mesh,V%Sec,U%Sec,Elem2D_Scal,1,LpNorm,ierr);CHKERRQ(ierr)
-      Write(*,*) '<Y^2,X>_2 = ', LpNorm
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<1,XY>_2 = ', LpNorm
+      End Do
+   End If
+   
+   Do vertex = 1, numVertex
+      Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
+      valU = 1
+      ValV = coord(2)**2
+      Call SectionRealUpdate(U%Sec,vertex+numCell-1,valU,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
+      Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
+   End Do
+   If (numDim == 2) Then
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<1,Y^2>_2 = ', LpNorm
+      End Do
    End If
 
 
-   DeAllocate(val)
+   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   DeAllocate(valU)
+   DeAllocate(valV)
    DeAllocate(ElemType)
    Call ISDestroy(CellSetGlobalIS)
    Call FieldDestroy(U)

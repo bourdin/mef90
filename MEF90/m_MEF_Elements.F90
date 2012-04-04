@@ -241,21 +241,21 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "Element_TypeFindByname"
-   Subroutine Element_TypeFindByname(elenName)
-      Character(len=*), Intent(IN)                :: elenName
+   Subroutine Element_TypeFindByname(elemName,elemType)
+      Character(len=*), Intent(IN)                :: elemName
       Type(Element_Type),Intent(OUT)              :: elemType
 
       Integer                                     :: i
       PetscBool                                   :: knownID = PETSC_FALSE      
       Do i = 1, size(MEF90_knownElements)
-         If (trim(MEF90_knownElements(i)%name) == trim(elenName)) Then
+         If (trim(MEF90_knownElements(i)%name) == trim(elemName)) Then
             elemType = MEF90_knownElements(i)
             knownID  = PETSC_TRUE
             EXIT
          End If
       End Do
       If (.NOT. knownID) Then
-         Write(*,*) "[ERROR]: Unknown element ", trim(elenName)
+         Write(*,*) "[ERROR]: Unknown element ", trim(elemName)
       End If
    End Subroutine Element_TypeFindByname
 
@@ -534,7 +534,7 @@ Contains
          Case (MEF90_P2_Lagrange_2D_Scal%shortID)
             Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
          Case (MEF90_P1_Lagrange_2DBoundary_Scal%shortID)
-            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_2DBoundary_Scal%shortID)
 !            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_2D_Scal%shortID)
@@ -835,8 +835,8 @@ Contains
       NormalVector%X = tmpCoord(2,2) - tmpCoord(2,1)
       NormalVector%Y = tmpCoord(1,1) - tmpCoord(1,2)
       NormalVector = NormalVector / Norm(NormalVector)
-      tmpCoord(1,3) = dCoord(1,1) - NormalVector%X 
-      tmpCoord(2,3) = dCoord(2,1) - NormalVector%Y
+      tmpCoord(1,3) = (dCoord(1,1) + dCoord(1,2))*.5_Kr - NormalVector%X 
+      tmpCoord(2,3) = (dCoord(2,1) + dCoord(2,2))*.5_Kr - NormalVector%Y
       
       Call Element_P_Lagrange_2D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder)
       Select Case (dPolynomialOrder)
@@ -845,10 +845,10 @@ Contains
             Num_Gauss = size(tmpElem%BF,2)
             Allocate(dElem%Gauss_C(Num_Gauss))
             Allocate(dElem%BF(Num_DoF,Num_Gauss))
-            dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
+            dElem%Gauss_C = tmpElem%Gauss_C !* 2.0_Kr
             Do iDoF = 1,Num_doF
                Do iG = 1,Num_Gauss
-                  dElem%BF(iDoF,iG) = tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 2.0_Kr
+                  dElem%BF(iDoF,iG) = tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) * .5_Kr
                   !!! Not completely sure about this...
                End Do
             End Do
