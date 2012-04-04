@@ -33,36 +33,11 @@ Contains
 !!! 2D
 !!!
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement2D_Init"
-   Subroutine BoundaryElement2D_Init(dElem,dCoord,QuadratureOrder,Element_Type)
-      Type(BoundaryElement2D)                :: dElem
-      PetscReal,Dimension(:,:),Pointer       :: dCoord
-      PetscInt,Intent(IN)                    :: QuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
-      
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange)
-            Call BoundaryElement_P_Lagrange_2D_Init(dElem,dCoord,1,QuadratureOrder,Element_Type)
-
-         Case (MEF90_P2_Lagrange)
-            Call BoundaryElement_P_Lagrange_2D_Init(dElem,dCoord,2,QuadratureOrder,Element_Type)
-
-         !!!Case (MEF90_Q1_Lagrange)
-         !!!   Call BoundaryElement_Q_Lagrange_2D_Init(dElem,dCoord,1,QuadratureOrder)
-         !!!Case (MEF90_Q2_Lagrange)
-         !!!   Call BoundaryElement_Q_Lagrange_2D_Init(dElem,dCoord,2,QuadratureOrder)
-         Case Default
-            Print*,__FUNCT__,'Element type not implemented yet',Element_Type
-      End Select
-   End Subroutine BoundaryElement2D_Init         
-   
-#undef __FUNCT__
-#define __FUNCT__ "BoundaryElement_P_Lagrange_2D_Init"
-   Subroutine BoundaryElement_P_Lagrange_2D_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,Element_Type)
-      Type(BoundaryElement2D)                :: dElem
+#define __FUNCT__ "Element_P_Lagrange_2DBoundary_Scal_Init"
+   Subroutine Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Type(Element2D_Scal),intent(INOUT)     :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
-      PetscInt                               :: dPolynomialOrder,dQuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
+      PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
       
       Type(Element2D_Scal)                   :: tmpElem
       PetscReal,Dimension(:,:),Pointer       :: tmpCoord
@@ -82,9 +57,9 @@ Contains
       tmpCoord(1,3) = dCoord(1,1) - NormalVector%X 
       tmpCoord(2,3) = dCoord(2,1) - NormalVector%Y
       
-      Call ElementInit(tmpElem,tmpCoord,dQuadratureOrder,Element_Type)
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange)
+      Call Element_P_Lagrange_2D_Scal_Init(tmpElem,tmpCoord,dQuadratureOrder)
+      Select Case (dPolynomialOrder)
+         Case (1)
             Num_DoF  = 2
             Num_Gauss = size(tmpElem%BF,2)
             Allocate(dElem%Gauss_C(Num_Gauss))
@@ -95,48 +70,19 @@ Contains
                   dElem%BF(iDoF,iG) = tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 2.0_Kr
                End Do
             End Do
-
-         !Case (MEF90_P2_Lagrange)
          Case Default
-            Print*,__FUNCT__,'Element type not implemented yet',Element_Type
+            Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
-
-
-      Call ElementDestroy(tmpElem)
+      Call Element2D_Scal_Destroy(tmpElem)
       deAllocate(tmpCoord)
-      
-   End Subroutine BoundaryElement_P_Lagrange_2D_Init                          
+   End Subroutine Element_P_Lagrange_2DBoundary_Scal_Init                          
    
-!!! 
-!!! 3D
-!!!
 #undef __FUNCT__
-#define __FUNCT__ "BoundaryElement3D_Init"
-   Subroutine BoundaryElement3D_Init(dElem,dCoord,QuadratureOrder,Element_Type)
-      Type(BoundaryElement3D)                :: dElem
-      PetscReal,Dimension(:,:),Pointer       :: dCoord
-      PetscInt,Intent(IN)                    :: QuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
-      
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange,MEF90_P2_Lagrange)
-            Call BoundaryElement_P_Lagrange_3D_Init(dElem,dCoord,QuadratureOrder,Element_Type)
-
-         !!!Case (MEF90_Q1_Lagrange,MEF90_Q2_Lagrange)
-         !!!   Call BoundaryElement_Q_Lagrange_3D_Init(dElem,dCoord,QuadratureOrder,Element_Type)
-         Case Default
-            Print*,__FUNCT__,'Element type not implemented yet',Element_Type
-      End Select
-   End Subroutine BoundaryElement3D_Init         
-   
-
-#undef __FUNCT__
-#define __FUNCT__ "BoundaryElement_P_Lagrange_3D_Init"
-   Subroutine BoundaryElement_P_Lagrange_3D_Init(dElem,dCoord,dQuadratureOrder,Element_Type)
+#define __FUNCT__ "Element_P_Lagrange_3DBoundary_Scal_Init"
+   Subroutine Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
       Type(BoundaryElement3D)                :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
-      PetscInt,Intent(IN)                    :: dQuadratureOrder
-      PetscInt,Intent(IN)                    :: Element_Type
+      PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
       
       Type(Element3D_Scal)                   :: tmpElem
       PetscReal,Dimension(:,:),Pointer       :: tmpCoord
@@ -163,9 +109,9 @@ Contains
       tmpCoord(3,4) = dCoord(3,1) + NormalVector%Z 
       
             
-      Call ElementInit(tmpElem,tmpCoord,dQuadratureOrder,Element_Type)
-      Select Case (Element_Type)
-         Case (MEF90_P1_Lagrange)
+      Call Element_P_Lagrange_3D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder)
+      Select Case (dPolynomialOrder)
+         Case (1)
             Num_DoF  = 3
             Num_Gauss = size(tmpElem%BF,2)
             Allocate(dElem%Gauss_C(Num_Gauss))
@@ -178,18 +124,16 @@ Contains
             End Do
             !dElem%BF(3,:) = dElem%BF(3,:) + tmpElem%BF(4,:)
 
-         !Case (MEF90_P2_Lagrange)
+         !Case (2)
             !!! I need to think about DoF ordering in this case... 
             !!! This is going to work out the same way. The mid-edge dof with 
             !!! xi3>0 are linear combinations of the other dof  
          Case Default
-            Print*,__FUNCT__,'Element type not implemented yet',Element_Type
+            Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
-
-
-      Call ElementDestroy(tmpElem)
+      Call Element3D_Scal_Destroy(tmpElem)
       deAllocate(tmpCoord)
-   End Subroutine BoundaryElement_P_Lagrange_3D_Init
+   End Subroutine Element_P_Lagrange_3DBoundary_Scal_Init
    
 End Module m_MEF_BoundaryElements
 

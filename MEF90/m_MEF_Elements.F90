@@ -221,44 +221,44 @@ Module m_MEF_Elements
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element_TypeFindByID"
-   Subroutine Element_TypeFindByID(ID,elemType)
-      PetscInt, Intent(IN)                        :: ID
+   Subroutine Element_TypeFindByID(elemID,elemType)
+      PetscInt, Intent(IN)                        :: elemID
       Type(Element_Type),Intent(OUT)              :: elemType
-
+      
       Integer                                     :: i
       PetscBool                                   :: knownID = PETSC_FALSE      
       Do i = 1, size(MEF90_knownElements)
-         If (MEF90_knownElements(i)%shortID == ID) Then
+         If (MEF90_knownElements(i)%shortID == elemID) Then
             elemType = MEF90_knownElements(i)
             knownID  = PETSC_TRUE
             EXIT
          End If
       End Do
       If (.NOT. knownID) Then
-         Write(*,*) "[ERROR]: Unknown element ID", ID
+         Write(*,*) "[ERROR]: Unknown element ID", elemID
       End If
    End Subroutine Element_TypeFindByID
    
 #undef __FUNCT__
 #define __FUNCT__ "Element_TypeFindByname"
-   Subroutine Element_TypeFindByname(name,elemType)
-      Character(len=*), Intent(IN)                :: name
+   Subroutine Element_TypeFindByname(elenName)
+      Character(len=*), Intent(IN)                :: elenName
       Type(Element_Type),Intent(OUT)              :: elemType
 
       Integer                                     :: i
       PetscBool                                   :: knownID = PETSC_FALSE      
       Do i = 1, size(MEF90_knownElements)
-         If (trim(MEF90_knownElements(i)%name) == trim(name)) Then
+         If (trim(MEF90_knownElements(i)%name) == trim(elenName)) Then
             elemType = MEF90_knownElements(i)
             knownID  = PETSC_TRUE
             EXIT
          End If
       End Do
       If (.NOT. knownID) Then
-         Write(*,*) "[ERROR]: Unknown element ", trim(name)
+         Write(*,*) "[ERROR]: Unknown element ", trim(elenName)
       End If
    End Subroutine Element_TypeFindByname
-   
+
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet"
    Subroutine Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
@@ -280,25 +280,25 @@ Contains
       
       If (size(CellID) > 0) Then
          iELoc = CellID(1)
-      Call DMMeshGetConeSize(mesh,iELoc,coneSize,ierr);CHKERRQ(ierr)    
-      !!! 
-      !!! conesize*numdim is an upper bound on the size of the restriction
-      !!! of the coordinate section to a cell (interpolated mesh) 
-      Allocate(TmpCoord(conesize * elemType%dim))
-      Allocate(Coord(elemType%dim,elemType%numVertex))
-      Do_Elem_iE: Do iELoc = 1,size(CellID)
-         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
-         k = 1
-         Do i = 1, elemType%numVertex
-            Do j = 1, elemType%dim
-               Coord(j,i) = TmpCoord(k)
-               k = k+1
+         Call DMMeshGetConeSize(mesh,iELoc,coneSize,ierr);CHKERRQ(ierr)    
+         !!! 
+         !!! conesize*numdim is an upper bound on the size of the restriction
+         !!! of the coordinate section to a cell (interpolated mesh) 
+         Allocate(TmpCoord(conesize * elemType%dim))
+         Allocate(Coord(elemType%dim,elemType%numVertex))
+         Do_Elem_iE: Do iELoc = 1,size(CellID)
+            Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+            k = 1
+            Do i = 1, elemType%numVertex
+               Do j = 1, elemType%dim
+                  Coord(j,i) = TmpCoord(k)
+                  k = k+1
+               End Do
             End Do
-         End Do
-         Call Element2D_Scal_Init(dElem(CellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
-      End Do Do_Elem_iE
-      DeAllocate(TmpCoord)
-      DeAllocate(Coord)
+            Call Element2D_Scal_Init(dElem(CellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoord)
+         DeAllocate(Coord)
       End If
       Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
@@ -533,8 +533,8 @@ Contains
             Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
          Case (MEF90_P2_Lagrange_2D_Scal%shortID)
             Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
-!         Case (MEF90_P1_Lagrange_2DBoundary_Scal%shortID)
-!            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+         Case (MEF90_P1_Lagrange_2DBoundary_Scal%shortID)
+            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_2DBoundary_Scal%shortID)
 !            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_2D_Scal%shortID)
@@ -814,6 +814,52 @@ Contains
    End Subroutine Element_P_Lagrange_2D_Scal_Init
    
 #undef __FUNCT__
+#define __FUNCT__ "Element_P_Lagrange_2DBoundary_Scal_Init"
+   Subroutine Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Type(Element2D_Scal),intent(INOUT)     :: dElem
+      PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
+      PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
+      
+      Type(Element2D_Scal)                   :: tmpElem
+      PetscReal,Dimension(:,:),Pointer       :: tmpCoord
+      PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
+      Type(Vect2D)                           :: NormalVector
+      
+      !!! Create a bogus tri element with unit height by adding a 3rd vertex
+      Allocate(tmpCoord(2,3))
+      Do i = 1,2
+         Do j = 1,2
+            tmpCoord(i,j) = dCoord(i,j)
+         End Do
+      End Do
+      NormalVector%X = tmpCoord(2,2) - tmpCoord(2,1)
+      NormalVector%Y = tmpCoord(1,1) - tmpCoord(1,2)
+      NormalVector = NormalVector / Norm(NormalVector)
+      tmpCoord(1,3) = dCoord(1,1) - NormalVector%X 
+      tmpCoord(2,3) = dCoord(2,1) - NormalVector%Y
+      
+      Call Element_P_Lagrange_2D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder)
+      Select Case (dPolynomialOrder)
+         Case (1)
+            Num_DoF  = 2
+            Num_Gauss = size(tmpElem%BF,2)
+            Allocate(dElem%Gauss_C(Num_Gauss))
+            Allocate(dElem%BF(Num_DoF,Num_Gauss))
+            dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
+            Do iDoF = 1,Num_doF
+               Do iG = 1,Num_Gauss
+                  dElem%BF(iDoF,iG) = tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 2.0_Kr
+                  !!! Not completely sure about this...
+               End Do
+            End Do
+         Case Default
+            Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
+      End Select
+      Call Element2D_Scal_Destroy(tmpElem)
+      deAllocate(tmpCoord)
+   End Subroutine Element_P_Lagrange_2DBoundary_Scal_Init                          
+      
+#undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2D_Vect_Init"
    Subroutine Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
       Type(Element2D_Vect)                   :: dElem
@@ -1000,6 +1046,65 @@ Contains
       DeAllocate(GradPhiHat)
    End Subroutine Element_P_Lagrange_3D_Scal_Init
 
+#undef __FUNCT__
+#define __FUNCT__ "Element_P_Lagrange_3DBoundary_Scal_Init"
+   Subroutine Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Type(Element3D_Scal)                   :: dElem
+      PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
+      PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
+      
+      Type(Element3D_Scal)                   :: tmpElem
+      PetscReal,Dimension(:,:),Pointer       :: tmpCoord
+      PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
+      Type(Vect3D)                           :: Edge1,Edge2,NormalVector
+      
+      !!!
+      !!! Create a bogus tet element by adding a 4th vertex along the normal of the
+      !!! face,at distance XXX so that if a function is constant along the normal
+      !!! direction of the face,one has \int_face fdx = \int_tet fdx 
+      !!!
+      Allocate(tmpCoord(3,4))
+      Do i = 1,3
+         Do j = 1,3
+            tmpCoord(i,j) = dCoord(i,j)
+         End Do
+      End Do
+      Edge1 = dCoord(:,2) - dCoord(:,1)
+      Edge2 = dCoord(:,3) - dCoord(:,1)
+      NormalVector = CrossP3D(Edge1,Edge2)
+      NormalVector = NormalVector / Norm(NormalVector)
+      tmpCoord(1,4) = dCoord(1,1) + NormalVector%X 
+      tmpCoord(2,4) = dCoord(2,1) + NormalVector%Y 
+      tmpCoord(3,4) = dCoord(3,1) + NormalVector%Z 
+      
+            
+      Call Element_P_Lagrange_3D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder)
+      Select Case (dPolynomialOrder)
+         Case (1)
+            Num_DoF  = 3
+            Num_Gauss = size(tmpElem%BF,2)
+            Allocate(dElem%Gauss_C(Num_Gauss))
+            Allocate(dElem%BF(Num_DoF,Num_Gauss))
+            dElem%Gauss_C = tmpElem%Gauss_C * 3.0_Kr
+            Do iDoF = 1,Num_doF
+               Do iG = 1,Num_Gauss
+                  dElem%BF(iDoF,iG) = (tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 3.0_Kr)
+                  !!! Not completely sure about this...
+               End Do
+            End Do
+            !dElem%BF(3,:) = dElem%BF(3,:) + tmpElem%BF(4,:)
+
+         !Case (2)
+            !!! I need to think about DoF ordering in this case... 
+            !!! This is going to work out the same way. The mid-edge dof with 
+            !!! xi3>0 are linear combinations of the other dof  
+         Case Default
+            Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
+      End Select
+      Call Element3D_Scal_Destroy(tmpElem)
+      deAllocate(tmpCoord)
+   End Subroutine Element_P_Lagrange_3DBoundary_Scal_Init
+   
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3D_Vect_Init"
    Subroutine Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)

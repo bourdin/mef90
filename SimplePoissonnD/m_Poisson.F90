@@ -444,7 +444,10 @@ Contains
       Call DMmeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call MatAssemblyBlock(K,setID(set),AppCtx)
+         !!! Test if block corresponds to a volume or surface element
+         If (AppCtx%ElementType(set)%codim == 0) Then
+            Call MatAssemblyBlock(K,setID(set),AppCtx)
+         End If
       End Do
       Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -547,7 +550,10 @@ Contains
       Call DMmeshGetLabelIdIS(AppCtx%mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call RHSAssemblyBlock(AppCtx%RHS,setID(set),AppCtx)
+         If (AppCtx%ElementType(set)%codim > 0) Then
+            !!! Only surface forces
+            Call RHSAssemblyBlock(AppCtx%RHS,setID(set),AppCtx)
+         End If
       End Do ! set
       Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
