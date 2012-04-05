@@ -39,7 +39,7 @@ Program TestElements
    Integer                                      :: exoidIN
    Integer                                      :: offset = 1
    PetscReal                                    :: LpNorm
-   PetscInt                                     :: GaussOrder = 4
+   PetscInt                                     :: GaussOrder = 2
      
    Call MEF90_Initialize()
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER,'-verbose',verbose,iErr)    
@@ -158,12 +158,14 @@ Program TestElements
       Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
       Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
    End Do
-   If (numDim == 2) Then
-      Do set = 1,size(setID)
+   Do set = 1,size(setID)
+      If (numDim == 2) Then
          Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+      Else
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem3D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+      End If
          Write(*,*) 'Set ', setID(set), '<1,1>_2 = ', LpNorm
-      End Do
-   End If
+   End Do
    
    Do vertex = 1, numVertex
       Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
@@ -173,12 +175,14 @@ Program TestElements
       Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
       Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
    End Do
-   If (numDim == 2) Then
-      Do set = 1,size(setID)
+   Do set = 1,size(setID)
+      If (numDim == 2) Then
          Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+      Else
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem3D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+      End If
          Write(*,*) 'Set ', setID(set), '<1,X>_2 = ', LpNorm
-      End Do
-   End If
+   End Do
    
    Do vertex = 1, numVertex
       Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
@@ -188,13 +192,30 @@ Program TestElements
       Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
       Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
    End Do
-   If (numDim == 2) Then
-      Do set = 1,size(setID)
+   Do set = 1,size(setID)
+      If (numDim == 2) Then
          Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+      Else
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem3D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+      End If
          Write(*,*) 'Set ', setID(set), '<1,Y>_2 = ', LpNorm
+   End Do
+   
+   If (numDim == 3) Then
+      Do vertex = 1, numVertex
+         Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
+         valU = 1
+         ValV = coord(3)
+         Call SectionRealUpdate(U%Sec,vertex+numCell-1,valU,INSERT_VALUES,iErr); CHKERRQ(iErr)
+         Call SectionRealUpdate(V%Sec,vertex+numCell-1,valV,INSERT_VALUES,iErr); CHKERRQ(iErr)
+         Call SectionRealRestore(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
+      End Do
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem3D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<1,Z>_2 = ', LpNorm
       End Do
    End If
-   
+      
    Do vertex = 1, numVertex
       Call SectionRealRestrict(coordSection,vertex+numCell-1,coord,iErr); CHKERRQ(iErr)
       valU = coord(1)
@@ -212,6 +233,16 @@ Program TestElements
          Call SectionRealL2DotProduct(mesh,setID(set),V%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
          Write(*,*) 'Set ', setID(set), '<Y,Y>_2 = ', LpNorm
       End Do
+   Else
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,U%Sec,Elem3D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<X,X>_2 = ', LpNorm
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem3D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<X,Y>_2 = ', LpNorm
+         Call SectionRealL2DotProduct(mesh,setID(set),V%Sec,V%Sec,Elem3D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<Y,Y>_2 = ', LpNorm
+      End Do
+   
    End If
 
    Do vertex = 1, numVertex
@@ -227,6 +258,11 @@ Program TestElements
          Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem2D_Scal,LpNorm,ierr);CHKERRQ(ierr)
          Write(*,*) 'Set ', setID(set), '<1,X^2>_2 = ', LpNorm
       End Do
+   Else
+      Do set = 1,size(setID)
+         Call SectionRealL2DotProduct(mesh,setID(set),U%Sec,V%Sec,Elem3D_Scal,LpNorm,ierr);CHKERRQ(ierr)
+         Write(*,*) 'Set ', setID(set), '<1,X^2>_2 = ', LpNorm
+      End Do   
    End If
 
    Do vertex = 1, numVertex

@@ -973,6 +973,8 @@ Contains
       NormalVector = NormalVector / Norm(NormalVector)
       tmpCoord(1,3) = (dCoord(1,1) + dCoord(1,2))*.5_Kr - NormalVector%X 
       tmpCoord(2,3) = (dCoord(2,1) + dCoord(2,2))*.5_Kr - NormalVector%Y
+      tmpCoord(1,3) = dCoord(1,1) - NormalVector%X 
+      tmpCoord(2,3) = dCoord(2,1) - NormalVector%Y
       
       Call Element_P_Lagrange_2D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder)
       Select Case (dPolynomialOrder)
@@ -981,7 +983,7 @@ Contains
             Num_Gauss = size(tmpElem%BF,2)
             Allocate(dElem%Gauss_C(Num_Gauss))
             Allocate(dElem%BF(Num_DoF,Num_Gauss))
-            dElem%Gauss_C = tmpElem%Gauss_C !* 2.0_Kr
+            dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
             Do iDoF = 1,Num_doF
                Do iG = 1,Num_Gauss
                   dElem%BF(iDoF,iG) = tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) * .5_Kr
