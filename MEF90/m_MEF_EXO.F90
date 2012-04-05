@@ -29,7 +29,7 @@ Module m_MEF_EXO
    Public :: EXO_Type,EXO_Property_Type,EXO_Variable_Type
    
    Public :: EXOView
-      
+   Public :: EXOSetElementType_Load      
 
 !!! To do:
 !!! 1. Remove EXO type (filename and exoid will be in a exo viewer one day
@@ -73,11 +73,25 @@ Module m_MEF_EXO
       Character(MXSTLN)                            :: Name
       PetscInt                                     :: Offset
       !!! the position of the variable in the exo file
-   End Type EXO_Variable_Type   
- Contains
+   End Type EXO_Variable_Type 
+   
+     
+Contains
+#undef __FUNCT__
+#define __FUNCT__ "EXOSetElementType_Load"
+   Subroutine EXOSetElementType_Load(exoID,setID,EXOElemType)
+      Integer,Intent(IN)                             :: exoID
+      PetscInt,Intent(IN)                            :: setID
+      Character(len=*),Intent(OUT)                   :: EXOElemType
+      
+      Integer                                        :: junk1,junk2,junk3,ierr
+      
+      Call EXGELB(exoID,setID,EXOElemType,junk1,junk2,junk3,ierr)
+   End Subroutine EXOSetElementType_Load
+      
 #undef __FUNCT__
 #define __FUNCT__ "Write_EXO_Case"
-    Subroutine Write_EXO_Case(prefix,formatstring,numprocs)
+   Subroutine Write_EXO_Case(prefix,formatstring,numprocs)
       Character(len=*)                               :: prefix,formatstring
       PetscInt                                       :: numprocs
       

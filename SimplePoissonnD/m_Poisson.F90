@@ -94,11 +94,11 @@ Contains
       PetscInt,Dimension(:),Pointer                :: setID,vertexID
       PetscInt                                     :: set,vertex
       Type(SectionReal)                            :: coordSection
-      Integer                                      :: cpu_ws,io_ws,exoidIN
+      Integer                                      :: cpu_ws,io_ws,exoidIN=0
       Real                                         :: exo_version
       PetscInt                                     :: numSizes
-      PetscInt,Dimension(:),Pointer                :: elemTypes
-      PetscBool                                    :: flg
+!      PetscBool                                    :: flg
+      Character(len=MXSTLN)                        :: EXOElemName
 
       Call MEF90_Initialize()
       AppCtx%AppParam%verbose = 0
@@ -189,10 +189,6 @@ Contains
          End If
          Call EXOFormat_SimplePoisson(AppCtx%EXO)
       End If
-      !!! Close the geometry file
-      If (MEF90_MyRank == 0) Then
-         Call EXCLOS(exoidIN,ierr)
-      End If
 105 Format(A,'-',I4.4,'.gen')
 106 Format(A,'_out.gen')
       !!!
@@ -210,35 +206,30 @@ Contains
       Allocate(AppCtx%Elem(numCell))
 
       !!! 
-      !!! Set element type to P1 Lagrange on all sets
+      !!! Set default element type from EXO file and initialize elements
       !!!
-      Call DMmeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
+      Call DMMeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Allocate(AppCtx%ElementType(size(setID)))
       Do set = 1,size(setID)
-         If (numDim == 2) Then
-            AppCtx%ElementType(setID(set)) = MEF90_P1_Lagrange_2D_Scal
-         Else
-            AppCtx%ElementType(setID(set)) = MEF90_P1_Lagrange_3D_Scal
+         If (MEF90_MyRank == 0) Then
+            Call EXOSetElementType_Load(exoIDIN,setID(set),EXOElemName)
          End If
-      End Do
-      Allocate(elemTypes(size(setID)))
-      elemTypes = -2
-      numSizes = size(setID)
-      Call PetscOptionsGetIntArray(PETSC_NULL_CHARACTER,"-elem_type",elemTypes,numSizes,flg,ierr);CHKERRQ(ierr)
-      write(*,*) numSizes,elemTypes
-      Do set = 1, numSizes
-         Call Element_TypeFindByID(elemTypes(set),AppCtx%ElementType(set))
-         Write(*,*) "Changed element type for set ", set, "to ",trim(AppCtx%ElementType(set)%name)
-      End Do      
-      DeAllocate(elemTypes)      
-      Do set = 1,size(setID)
+         Call MPI_BCast(EXOElemName,MXSTLN,MPI_CHARACTER,0,PETSC_COMM_WORLD,ierr)
+         Call Element_TypeSetDefaultEXO_Scal(trim(EXOElemName),numDim,AppCtx%ElementType(set))
          Call DMmeshGetStratumIS(AppCtx%mesh,'Cell Sets',setID(set),cellIS,ierr); CHKERRQ(ierr)
          Call ElementInit(AppCtx%mesh,cellIS,AppCtx%Elem,2,AppCtx%ElementType(setID(set)))
          Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
+         Write(*,*) 'set / element type', setid(set), trim(AppCtx%ElementType(setID(set))%name)
       End Do    
       Call ISRestoreIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    
+      !!! Close the geometry file
+      If (MEF90_MyRank == 0) Then
+         Call EXCLOS(exoidIN,ierr);exoIDIN = 0
+      End If
+
+
       !!! Allocate the Section for U and F
       Allocate(SizeScal(1))
       SizeScal=1

@@ -18,8 +18,6 @@ Program  SimplePoisson
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    Type(Vec)                                    :: GradULocalVec
    PetscInt                                     :: numDim
-   PetscReal                                    :: Umin,Umax
-   PetscInt                                     :: imin,imax
    
    
    Call SimplePoissonInit(AppCtx)
@@ -82,11 +80,6 @@ Program  SimplePoisson
    Call Write_EXO_Result_Global(AppCtx%Exo, 2, 1, AppCtx%ExtForcesWork)
    Call Write_EXO_Result_Global(AppCtx%Exo, 3, 1, AppCtx%TotalEnergy)
   
-   Call VecMin(AppCtx%U%Vec,imin,Umin,ierr);CHKERRQ(ierr)
-   Write(*,*) 'U_Min: ', umin, 'at vertex ',imin
-   Call VecMax(AppCtx%U%Vec,imax,Umax,ierr);CHKERRQ(ierr)
-   Write(*,*) 'U_Max: ', umax, 'at vertex ',imax
-
    if (AppCtx%EXO%exoid > 0) Then
       Call EXCLOS(AppCtx%EXO%exoid, iErr)
    End If

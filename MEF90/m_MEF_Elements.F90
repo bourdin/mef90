@@ -15,6 +15,7 @@ Module m_MEF_Elements
    Public :: Element2D_Vect,Element2D_Scal,Element2D_Elast 
    Public :: Element3D_Vect,Element3D_Scal,Element3D_Elast 
    Public :: Element_TypeFindByID,Element_TypeFindByName
+   Public :: Element_TypeSetDefaultEXO_Scal,Element_TypeSetDefaultEXO_Vect,Element_TypeSetDefaultEXO_Elast
    
 
    Type Element_Type
@@ -220,6 +221,141 @@ Module m_MEF_Elements
    
 Contains
 #undef __FUNCT__
+#define __FUNCT__ "Element_TypeSetDefaultEXO_Scal"
+   Subroutine Element_TypeSetDefaultEXO_Scal(exoName,dim,elemType)
+      Character(len=*),Intent(IN)                 :: EXOName
+      PetscInt,Intent(IN)                         :: dim
+      Type(Element_Type),Intent(OUT)              :: elemType
+
+      Select Case(trim(exoName))
+         Case("TETRA","TETRA4")
+            elemType = MEF90_P1_Lagrange_3D_Scal
+         Case("TETRA10")
+            elemType = MEF90_P2_Lagrange_3D_Scal
+         Case("TRI","TRI3","TRISHELL","TRISHELL3")
+            If (dim == 2) Then
+               elemType = MEF90_P1_Lagrange_2D_Scal
+            Else
+               elemType = MEF90_P1_Lagrange_3DBoundary_Scal
+            End If
+         Case("TRI6","TRISHELL6")
+            If (dim == 2) Then
+               elemType = MEF90_P2_Lagrange_2D_Scal
+            !Else
+            !   elemType = MEF90_P2_Lagrange_3DBoundary_Scal
+            End If
+         !Case("QUAD","QUAD4","SHELL","SHELL4")
+         !   If (dim == 2) Then
+         !      elemType = MEF90_Q1_Lagrange_2D_Scal
+         !   Else
+         !      elemType = MEF90_Q1_Lagrange_3DBoundary_Scal
+         !   End If
+         !Case("QUAD9","SHELL9")
+         !   If (dim == 2) Then
+         !      elemType = MEF90_Q2_Lagrange_2D_Scal
+         !   Else
+         !      elemType = MEF90_Q2_Lagrange_3DBoundary_Scal
+         !   End If
+         Case("BAR","BAR2")
+            elemType = MEF90_P1_Lagrange_2DBoundary_Scal
+         !Case("BAR3")
+         !   eleType = MEF90_P2_Lagrange_2DBoundary_Scal
+         Case default
+            Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
+      End Select
+   End Subroutine Element_TypeSetDefaultEXO_Scal
+
+#undef __FUNCT__
+#define __FUNCT__ "Element_TypeSetDefaultEXO_Vect"
+   Subroutine Element_TypeSetDefaultEXO_Vect(exoName,dim,elemType)
+      Character(len=*),Intent(IN)                 :: EXOName
+      PetscInt,Intent(IN)                         :: dim
+      Type(Element_Type),Intent(OUT)              :: elemType
+
+      Select Case(trim(exoName))
+         Case("TETRA","TETRA4")
+            elemType = MEF90_P1_Lagrange_3D_Vect
+         !Case("TETRA10")
+            !elemType = MEF90_P2_Lagrange_3D_Vect
+         Case("TRI","TRI3","TRISHELL","TRISHELL3")
+            If (dim == 2) Then
+               elemType = MEF90_P1_Lagrange_2D_Vect
+            Else
+               elemType = MEF90_P1_Lagrange_3DBoundary_Vect
+            End If
+         !Case("TRI6","TRISHELL6")
+            !If (dim == 2) Then
+            !   elemType = MEF90_P2_Lagrange_2D_Vect
+            !Else
+            !   elemType = MEF90_P2_Lagrange_3DBoundary_Vect
+            !End If
+         !Case("QUAD","QUAD4","SHELL","SHELL4")
+            !If (dim == 2) Then
+            !   elemType = MEF90_Q1_Lagrange_2D_Vect
+            !Else
+            !   elemType = MEF90_Q1_Lagrange_3DBoundary_Vect
+            !End If
+         !Case("QUAD9","SHELL9")
+            !If (dim == 2) Then
+            !   elemType = MEF90_Q2_Lagrange_2D_Vect
+            !Else
+            !   elemType = MEF90_Q2_Lagrange_3DBoundary_Vect
+            !End If
+         Case("BAR","BAR2")
+            elemType = MEF90_P1_Lagrange_2DBoundary_Vect
+         !Case("BAR3")
+         !   eleType = MEF90_P2_Lagrange_2DBoundary_Vect
+         Case default
+            Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
+      End Select
+   End Subroutine Element_TypeSetDefaultEXO_Vect
+
+#undef __FUNCT__
+#define __FUNCT__ "Element_TypeSetDefaultEXO_Elast"
+   Subroutine Element_TypeSetDefaultEXO_Elast(exoName,dim,elemType)
+      Character(len=*),Intent(IN)                 :: EXOName
+      PetscInt,Intent(IN)                         :: dim
+      Type(Element_Type),Intent(OUT)              :: elemType
+
+      Select Case(trim(exoName))
+         Case("TETRA","TETRA4")
+            elemType = MEF90_P1_Lagrange_3D_Elast
+         !Case("TETRA10")
+            !elemType = MEF90_P2_Lagrange_3D_Elast
+         Case("TRI","TRI3","TRISHELL","TRISHELL3")
+            If (dim == 2) Then
+               elemType = MEF90_P1_Lagrange_2D_Elast
+            Else
+               elemType = MEF90_P1_Lagrange_3DBoundary_Elast
+            End If
+         !Case("TRI6","TRISHELL6")
+            !If (dim == 2) Then
+            !   elemType = MEF90_P2_Lagrange_2D_Elast
+            !Else
+            !   elemType = MEF90_P2_Lagrange_3DBoundary_Elast
+            !End If
+         !Case("QUAD","QUAD4","SHELL","SHELL4")
+            !If (dim == 2) Then
+            !   elemType = MEF90_Q1_Lagrange_2D_Elast
+            !Else
+            !   elemType = MEF90_Q1_Lagrange_3DBoundary_Elast
+            !End If
+         !Case("QUAD9","SHELL9")
+            !If (dim == 2) Then
+            !   elemType = MEF90_Q2_Lagrange_2D_Elast
+            !Else
+            !   elemType = MEF90_Q2_Lagrange_3DBoundary_Elast
+            !End If
+         Case("BAR","BAR2")
+            elemType = MEF90_P1_Lagrange_2DBoundary_Elast
+         !Case("BAR3")
+         !   eleType = MEF90_P2_Lagrange_2DBoundary_Elast
+         Case default
+            Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
+      End Select
+   End Subroutine Element_TypeSetDefaultEXO_Elast
+
+#undef __FUNCT__
 #define __FUNCT__ "Element_TypeFindByID"
    Subroutine Element_TypeFindByID(elemID,elemType)
       PetscInt, Intent(IN)                        :: elemID
@@ -412,7 +548,7 @@ Contains
       Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
       !!! 
       !!! conesize*numdim is an upper bound on the size of the restriction
-      !!! of the coordinate section to a cell (interpolated mesh) 
+      !!! of the coordinate section to a cell (interpolated mesh)
       Allocate(TmpCoord(conesize * elemType%dim))
       Allocate(Coord(elemType%dim,elemType%numVertex))
       Do_Elem_iE: Do iELoc = 1,size(CellID)
@@ -424,7 +560,7 @@ Contains
                k = k+1
             End Do
          End Do
-         Call Element3D_Scal_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType)
+         Call Element3D_Scal_Init(dElem(CellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
       End Do Do_Elem_iE
       DeAllocate(TmpCoord)
       DeAllocate(Coord)
@@ -536,7 +672,7 @@ Contains
          Case (MEF90_P1_Lagrange_2DBoundary_Scal%shortID)
             Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_2DBoundary_Scal%shortID)
-!            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_2D_Scal%shortID)
 !            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_2D_Scal%shortID)
@@ -560,9 +696,9 @@ Contains
 !         Case (MEF90_P2_Lagrange_2D_Vect%shortID)
 !            Call Element_P_Lagrange_2D_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_P1_Lagrange_2DBoundary_Vect%shortID)
-!            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_2DBoundary_Vect%shortID)
-!            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_2D_Vect%shortID)
 !            Call Element_Q_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_2D_Vect%shortID)
@@ -586,9 +722,9 @@ Contains
 !         Case (MEF90_P2_Lagrange_2D_Elast%shortID)
 !            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_P1_Lagrange_2DBoundary_Elast%shortID)
-!            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_2DBoundary_Elast%shortID)
-!            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_2D_Elast%shortID)
 !            Call Element_Q_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_2D_Elast%shortID)
@@ -611,10 +747,10 @@ Contains
             Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
          Case (MEF90_P2_Lagrange_3D_Scal%shortID)
             Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
-!         Case (MEF90_P1_Lagrange_3DBoundary_Scal%shortID)
-!            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+         Case (MEF90_P1_Lagrange_3DBoundary_Scal%shortID)
+            Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_3DBoundary_Scal%shortID)
-!            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_3D_Scal%shortID)
 !            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_3D_Scal%shortID)
@@ -638,9 +774,9 @@ Contains
 !         Case (MEF90_P2_Lagrange_3D_Vect%shortID)
 !            Call Element_P_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_P1_Lagrange_3DBoundary_Vect%shortID)
-!            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_3DBoundary_Vect%shortID)
-!            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_3D_Vect)
 !            Call Element_Q_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_3D_Vect)
@@ -664,9 +800,9 @@ Contains
 !         Case (MEF90_P2_Lagrange_3D_Elast%shortID)
 !            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_P1_Lagrange_3DBoundary_Elast%shortID)
-!            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_3DBoundary_Elast%shortID)
-!            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_3D_Elast%shortID)
 !            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_3D_Elast%shortID)
