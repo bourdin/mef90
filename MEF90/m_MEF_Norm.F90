@@ -8,8 +8,9 @@ Module m_MEF_Norm
    IMPLICIT NONE
 
    Private   
-   Public :: SectionRealL2DotProduct,SectionRealH1semiDotProduct
-   
+   Public :: SectionRealL2DotProduct,SectionRealH1semiDotProduct,SectionRealH1DotProduct, &
+             SectionRealL2Norm,SectionRealH1semiNorm,SectionRealH1Norm
+             
    Interface SectionRealL2DotProduct
       Module Procedure SectionRealL2DotProductSet_2DScal,SectionRealL2DotProduct_2DScal, &
                        SectionRealL2DotProductSet_2DVect,SectionRealL2DotProduct_2DVect, &
