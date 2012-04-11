@@ -1,0 +1,36 @@
+   1                                                       EB0001: Is_Brittle
+   0                                                       EB0001: Has_BForce
+   1                                                       EB0001: Elem_Type
+ 
+   1                                                       NS0001: BCU_Type_X
+   1                                                       NS0001: BCU_Type_Y
+   0                                                       NS0001: BCU_Type_Z
+   1                                                       NS0001: BCV_Type
+   0                                                       NS0001: Has_PForce
+ 
+   1                                                       NS0002: BCU_Type_X
+   1                                                       NS0002: BCU_Type_Y
+   0                                                       NS0002: BCU_Type_Z
+   1                                                       NS0002: BCV_Type
+   0                                                       NS0002: Has_PForce
+ 
+   1                                                       Test Case
+ 0.00000E+00                                               TMin
+  %TMAX%                                                   TMax
+  %NUMSTEPS%                                               NumSteps
+ 
+ %TOUGHNESS0001%                                               EB0001: Toughness
+ %YOUNG0001%                                               EB0001: Young Modulus
+ %POISSON0001%                                               EB0001: Poisson Ratio
+ 0.00000E+00                                               EB0001: Therm Exp
+ 
+ 0.00000E+00                                               EB0001: Theta
+ 
+ %Ux0001%                                               NS0001: Ux
+ %Uy0001%                                               NS0001: Uy
+ %V0001%                                              NS0001: V
+ 
+ %Ux0002%                                               NS0002: Ux
+ %Uy0002%                                               NS0002: Uy
+ %V0002%                                               NS0002: V
+ 
