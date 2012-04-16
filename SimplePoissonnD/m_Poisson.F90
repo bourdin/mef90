@@ -120,7 +120,7 @@ Contains
       AppCtx%AppParam%TestCase = 1
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-test',      AppCtx%AppParam%TestCase,Flag,ierr);CHKERRQ(ierr)
       
-      Call InitLog(AppCtx)
+      !Call InitLog(AppCtx)
       If (AppCtx%AppParam%verbose > 1) Then
          Write(filename,101) Trim(AppCtx%AppParam%prefix),MEF90_MyRank
          Call PetscViewerASCIIOpen(PETSC_COMM_SELF,filename,AppCtx%AppParam%MyLogViewer,ierr);CHKERRQ(ierr);  
@@ -770,7 +770,7 @@ Contains
       Call PetscViewerASCIIPrintf(LogViewer,filename,ierr);CHKERRQ(ierr)
       Call PetscLogView(LogViewer,ierr);CHKERRQ(ierr)
       Call PetscViewerDestroy(LogViewer,ierr);CHKERRQ(ierr)
-!       Call PetscLogPrintSummary(PETSC_COMM_WORLD,filename,ierr);CHKERRQ(ierr)
+      !Call PetscLogPrintSummary(PETSC_COMM_WORLD,filename,ierr);CHKERRQ(ierr)
       Call MEF90_Finalize()
    End Subroutine SimplePoissonFinalize
 
