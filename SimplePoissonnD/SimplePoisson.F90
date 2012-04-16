@@ -70,11 +70,11 @@ Program  SimplePoisson
    Call VecViewExodusVertex(AppCtx%mesh,AppCtx%U%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1,ierr)
    Call VecViewExodusVertex(AppCtx%mesh,AppCtx%F%LocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,2,ierr)
 
-   Call SectionRealCreateLocalVector(AppCtx%GradU,GradULocalVec,ierr);CHKERRQ(ierr)
-   Call DMmeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
-   Call VecSetBlockSize(GradULocalVec,numDim,ierr);CHKERRQ(ierr)
-   Call VecViewExodusCell(AppCtx%mesh,GradULocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1,ierr)
-   Call VecDestroy(GradULocalVec,ierr);CHKERRQ(ierr)
+   !Call SectionRealCreateLocalVector(AppCtx%GradU,GradULocalVec,ierr);CHKERRQ(ierr)
+   !Call DMmeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
+   !Call VecSetBlockSize(GradULocalVec,numDim,ierr);CHKERRQ(ierr)
+   !Call VecViewExodusCell(AppCtx%mesh,GradULocalVec,AppCtx%EXO%comm,AppCtx%EXO%exoid,1,1,ierr)
+   !Call VecDestroy(GradULocalVec,ierr);CHKERRQ(ierr)
    
    Call Write_EXO_Result_Global(AppCtx%Exo, 1, 1, AppCtx%ElasticEnergy)
    Call Write_EXO_Result_Global(AppCtx%Exo, 2, 1, AppCtx%ExtForcesWork)
