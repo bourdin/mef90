@@ -1,0 +1,20 @@
+MEF90_OBJS = ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF90.o          \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Elements.o   \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_EXO.o        \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_LinAlg.o     \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_MassMatrix.o \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_MPI.o        \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Norm.o       \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Parameters.o \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Sieve.o      \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Utils.o
+
+ifneq (,${findstring gcc,${PETSC_ARCH}})
+	MEF90_FC_FLAGS=-DMEF90_DIM=${MEF90_DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} -ffree-line-length-none -ffixed-line-length-none  -ffree-form
+else
+	MEF90_FC_FLAGS=-DMEF90_DIM=${MEF90_DIM} ${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} -I./${PETSC_ARCH} -I../MEF90/${PETSC_ARCH} ${FC_FLAGS} 
+endif
+
+.F90.o: 
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/${MEF90_DIM}$@ $<
+

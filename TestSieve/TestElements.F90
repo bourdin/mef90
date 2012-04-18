@@ -1,5 +1,5 @@
 Program TestElements
-#include 'finclude/petscdef.h'
+#include "finclude/petscdef.h"
    Use m_MEF90
    Use petsc
    Implicit NONE   
@@ -322,7 +322,7 @@ Contains
       EXO%num_vertvariables = 1
       EXO%num_cellvariables = numDim
       Call EXPVP (EXO%exoid,'g',EXO%num_globvariables,ierr)
-      Call EXPVAN(EXO%exoid,'g',EXO%num_globvariables,(/'L1 norm','L2 norm','H1 semi-norm'/),ierr)
+      Call EXPVAN(EXO%exoid,'g',EXO%num_globvariables,(/'L1 norm     ','L2 norm     ','H1 semi-norm'/),ierr)
       Call EXPVP (EXO%exoid,'n',EXO%num_vertvariables,ierr)
       Call EXPVAN(EXO%exoid,'n',EXO%num_vertvariables,(/'U'/),ierr)
 
