@@ -598,7 +598,7 @@ Contains
       PetscReal,Intent(OUT)                        :: L2NormSet
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Call SectionRealL3DotProductSet_3DScal(Mesh,setID,U_sec,U_Sec,Elem,L2NormSet,ierr);CHKERRQ(ierr)
+      Call SectionRealL2DotProductSet_3DScal(Mesh,setID,U_sec,U_Sec,Elem,L2NormSet,ierr);CHKERRQ(ierr)
       L2NormSet = sqrt(L2NormSet)
    End Subroutine SectionRealL2NormSet_3DScal
    
@@ -612,7 +612,7 @@ Contains
       PetscReal,Intent(OUT)                        :: L2NormSet
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Call SectionRealL3DotProductSet_3DVect(Mesh,setID,U_sec,U_Sec,Elem,L2NormSet,ierr);CHKERRQ(ierr)
+      Call SectionRealL2DotProductSet_3DVect(Mesh,setID,U_sec,U_Sec,Elem,L2NormSet,ierr);CHKERRQ(ierr)
       L2NormSet = sqrt(L2NormSet)
    End Subroutine SectionRealL2NormSet_3DVect
    
@@ -626,7 +626,7 @@ Contains
       PetscReal,Intent(OUT)                        :: L2NormSet
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Call SectionRealL3DotProductSet_3DElast(Mesh,setID,U_sec,U_Sec,Elem,L2NormSet,ierr);CHKERRQ(ierr)
+      Call SectionRealL2DotProductSet_3DElast(Mesh,setID,U_sec,U_Sec,Elem,L2NormSet,ierr);CHKERRQ(ierr)
       L2NormSet = sqrt(L2NormSet)
    End Subroutine SectionRealL2NormSet_3DElast
    
@@ -1004,7 +1004,7 @@ Contains
       End If !(size(elemID) > 0)
       Call ISRestoreIndicesF90(elemIS,elemID,ierr);CHKERRQ(ierr)
       !!!
-      !!! Accumulate myL3DotProduct across all CPUs
+      !!! Accumulate myL2DotProduct across all CPUs
       !!!
       Call PetscObjectGetComm(mesh,comm,ierr);CHKERRQ(ierr)
       Call MPI_AllReduce(myH1semiDotProduct,H1semiDotProduct,1,MPIU_SCALAR,MPI_SUM,comm,ierr);CHKERRQ(ierr)
@@ -1057,7 +1057,7 @@ Contains
       End If !(size(elemID) > 0)
       Call ISRestoreIndicesF90(elemIS,elemID,ierr);CHKERRQ(ierr)
       !!!
-      !!! Accumulate myL3DotProduct across all CPUs
+      !!! Accumulate myL2DotProduct across all CPUs
       !!!
       Call PetscObjectGetComm(mesh,comm,ierr);CHKERRQ(ierr)
       Call MPI_AllReduce(myH1semiDotProduct,H1semiDotProduct,1,MPIU_SCALAR,MPI_SUM,comm,ierr);CHKERRQ(ierr)
@@ -1110,7 +1110,7 @@ Contains
       End If !(size(elemID) > 0)
       Call ISRestoreIndicesF90(elemIS,elemID,ierr);CHKERRQ(ierr)
       !!!
-      !!! Accumulate myL3DotProduct across all CPUs
+      !!! Accumulate myL2DotProduct across all CPUs
       !!!
       Call PetscObjectGetComm(mesh,comm,ierr);CHKERRQ(ierr)
       Call MPI_AllReduce(myH1semiDotProduct,H1semiDotProduct,1,MPIU_SCALAR,MPI_SUM,comm,ierr);CHKERRQ(ierr)
@@ -1330,7 +1330,7 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiNormSet
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Call SectionRealL3DotProductSet_3DScal(Mesh,setID,U_sec,U_Sec,Elem,H1semiNormSet,ierr);CHKERRQ(ierr)
+      Call SectionRealH1semiDotProductSet_3DScal(Mesh,setID,U_sec,U_Sec,Elem,H1semiNormSet,ierr);CHKERRQ(ierr)
       H1semiNormSet = sqrt(H1semiNormSet)
    End Subroutine SectionRealH1semiNormSet_3DScal
    
@@ -1344,7 +1344,7 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiNormSet
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Call SectionRealL3DotProductSet_3DVect(Mesh,setID,U_sec,U_Sec,Elem,H1semiNormSet,ierr);CHKERRQ(ierr)
+      Call SectionRealH1semiDotProductSet_3DVect(Mesh,setID,U_sec,U_Sec,Elem,H1semiNormSet,ierr);CHKERRQ(ierr)
       H1semiNormSet = sqrt(H1semiNormSet)
    End Subroutine SectionRealH1semiNormSet_3DVect
    
@@ -1358,7 +1358,7 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiNormSet
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Call SectionRealL3DotProductSet_3DElast(Mesh,setID,U_sec,U_Sec,Elem,H1semiNormSet,ierr);CHKERRQ(ierr)
+      Call SectionRealH1semiDotProductSet_3DElast(Mesh,setID,U_sec,U_Sec,Elem,H1semiNormSet,ierr);CHKERRQ(ierr)
       H1semiNormSet = sqrt(H1semiNormSet)
    End Subroutine SectionRealH1semiNormSet_3DElast
    
@@ -1780,7 +1780,7 @@ Contains
       PetscReal,Intent(OUT)                        :: H1NormSet
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Call SectionRealL3DotProductSet_3DScal(Mesh,setID,U_sec,U_Sec,Elem,H1NormSet,ierr);CHKERRQ(ierr)
+      Call SectionRealH1DotProductSet_3DScal(Mesh,setID,U_sec,U_Sec,Elem,H1NormSet,ierr);CHKERRQ(ierr)
       H1NormSet = sqrt(H1NormSet)
    End Subroutine SectionRealH1NormSet_3DScal
    
@@ -1794,7 +1794,7 @@ Contains
       PetscReal,Intent(OUT)                        :: H1NormSet
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Call SectionRealL3DotProductSet_3DVect(Mesh,setID,U_sec,U_Sec,Elem,H1NormSet,ierr);CHKERRQ(ierr)
+      Call SectionRealH1DotProductSet_3DVect(Mesh,setID,U_sec,U_Sec,Elem,H1NormSet,ierr);CHKERRQ(ierr)
       H1NormSet = sqrt(H1NormSet)
    End Subroutine SectionRealH1NormSet_3DVect
    
@@ -1808,7 +1808,7 @@ Contains
       PetscReal,Intent(OUT)                        :: H1NormSet
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Call SectionRealL3DotProductSet_3DElast(Mesh,setID,U_sec,U_Sec,Elem,H1NormSet,ierr);CHKERRQ(ierr)
+      Call SectionRealH1DotProductSet_3DElast(Mesh,setID,U_sec,U_Sec,Elem,H1NormSet,ierr);CHKERRQ(ierr)
       H1NormSet = sqrt(H1NormSet)
    End Subroutine SectionRealH1NormSet_3DElast
    
