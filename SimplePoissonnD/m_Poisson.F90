@@ -89,7 +89,7 @@ Contains
       Type(DM)                                     :: Tmp_mesh
       PetscReal                                    :: Val
       PetscInt,Dimension(:),Pointer                :: SizeScal
-      PetscInt                                     :: numCell,numDim,c
+      PetscInt                                     :: numCell,numVertex,numDim,c
       Type(IS)                                     :: setIS,vertexIS,cellIS
       PetscInt,Dimension(:),Pointer                :: setID,vertexID
       PetscInt                                     :: set,vertex
@@ -99,6 +99,7 @@ Contains
       PetscInt                                     :: numSizes
 !      PetscBool                                    :: flg
       Character(len=MXSTLN)                        :: EXOElemName
+      PetscReal,Dimension(:,:),Pointer             :: coordArray
 
       Call MEF90_Initialize()
       AppCtx%AppParam%verbose = 0
@@ -199,16 +200,19 @@ Contains
       Call DMmeshGetLabelIdIS(AppCtx%mesh,'Vertex Sets',AppCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,AppCtx%VertexSetGlobalIS)
       
+      !!! Get number of cell, vertices and dimension
+      Call DMmeshGetStratumSize(AppCtx%mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
+      Call DMmeshGetStratumSize(AppCtx%mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+      Call DMMeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
+
       !!!
       !!! Allocate Element array
       !!!
-      Call DMmeshGetStratumSize(AppCtx%mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       Allocate(AppCtx%Elem(numCell))
 
       !!! 
       !!! Set default element type from EXO file and initialize elements
       !!!
-      Call DMMeshGetDimension(AppCtx%mesh,numDim,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Allocate(AppCtx%ElementType(size(setID)))
       Do set = 1,size(setID)
@@ -278,11 +282,13 @@ Contains
       Call KSPSetOperators(AppCtx%KSPU,AppCtx%K,AppCtx%K,SAME_NONZERO_PATTERN,ierr);CHKERRQ(ierr)
       Call KSPSetInitialGuessNonzero(AppCtx%KSPU,PETSC_TRUE,ierr);CHKERRQ(ierr)
       Call KSPSetType(AppCtx%KSPU,KSPCG,ierr);CHKERRQ(ierr)
+      Call KSPSetFromOptions(AppCtx%KSPU,ierr);CHKERRQ(ierr)
 
       Call KSPGetPC(AppCtx%KSPU,AppCtx%PCU,ierr);CHKERRQ(ierr)
       Call PCSetType(AppCtx%PCU,PCBJACOBI,ierr);CHKERRQ(ierr)
-      Call KSPSetFromOptions(AppCtx%KSPU,ierr);CHKERRQ(ierr)
-      
+      Call DMMeshGetCoordinatesF90(AppCtx%mesh,coordArray,iErr); CHKERRQ(iErr)
+      Call PCSetCoordinates(AppCtx%PCU,numdim,numVertices,coordArray,ierr);CHKERRQ(ierr)
+      Call DMMeshRestoreCoordinatesF90(AppCtx%mesh,coordArray,iErr); CHKERRQ(iErr
       
       
       !!! Read Force and BC from Data file or reformat it
