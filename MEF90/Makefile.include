@@ -3,6 +3,7 @@ MEF90_OBJS = ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF90.o          \
              ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_EXO.o        \
              ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_LinAlg.o     \
              ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_MassMatrix.o \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Materials.o  \
              ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_MPI.o        \
              ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Norm.o       \
              ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Parameters.o \
