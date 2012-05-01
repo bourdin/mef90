@@ -101,6 +101,32 @@ Module m_MEF_LinAlg
       
       PetscReal          :: ZZZZ
    End Type Tens4OS3D
+   
+   Type(Vect2D),Parameter    :: MEF90_Vect2D_e1 = Vect2D(1.0_Kr,0.0_Kr)
+   Type(Vect2D),Parameter    :: MEF90_Vect2D_e2 = Vect2D(0.0_Kr,1.0_Kr)
+
+   Type(Vect3D),Parameter    :: MEF90_Vect3D_e1 = Vect3D(1.0_Kr,0.0_Kr,0.0_Kr)
+   Type(Vect3D),Parameter    :: MEF90_Vect3D_e2 = Vect3D(0.0_Kr,1.0_Kr,0.0_Kr)
+   Type(Vect3D),Parameter    :: MEF90_Vect3D_e3 = Vect3D(0.0_Kr,0.0_Kr,1.0_Kr)
+   
+   Type(Mat2D),Parameter     :: MEF90_Mat2D_Identity = Mat2D(1.0_Kr,0.0_Kr,          &
+                                                             0.0_Kr,1.0_Kr)
+   Type(MatS2D),Parameter    :: MEF90_MatS2D_Identity = MatS2D(1.0_Kr,1.0_Kr,0.0_Kr)
+   Type(Mat3D),Parameter     :: MEF90_Mat3D_Identity = Mat3D(1.0_Kr,0.0_Kr,0.0_Kr,   &
+                                                             0.0_Kr,1.0_Kr,0.0_Kr,   &
+                                                             0.0_Kr,0.0_Kr,1.0_Kr)
+   Type(MatS3D),Parameter    :: MEF90_MatS3D_Identity = MatS3D(1.0_Kr,1.0_Kr,1.0_Kr, &
+                                                               0.0_Kr,0.0_Kr,0.0_Kr)
+
+   Type(Tens4OS2D),Parameter :: MEF90_Tens4OS2D_Identity = Tens4OS2D(1.0_Kr,0.0_Kr,0.0_Kr, &
+                                                                     1.0_Kr,0.0_Kr,        & 
+                                                                     1.0_Kr)
+   Type(Tens4OS3D),Parameter :: MEF90_Tens4OS3D_Identity = Tens4OS3D(1.0_Kr,0.0_Kr,0.0_Kr,1.0_Kr,0.0_Kr,1.0_Kr, &
+                                                                     1.0_Kr,0.0_Kr,1.0_Kr,1.0_Kr,0.0_Kr,        &
+                                                                     1.0_Kr,0.0_Kr,1.0_Kr,0.0_Kr,               &
+                                                                     0.0_Kr,0.0_Kr,0.0_Kr,                      &
+                                                                     0.0_Kr,0.0_Kr,                             &
+                                                                     0.0_Kr)
 
    Interface Operator (+)
       Module Procedure SumVect2D,SumVect3D,SumMat2D,SumMat3D,SumMatS2D,SumMatS3D,SumTens4OS2D,SumTens4OS3D
