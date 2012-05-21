@@ -1,9 +1,8 @@
 all: TestSieve TestSieve3D TestNodeSet TestLocal TestAssembly TestSectionInt
 
-
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
-include $(MEF90_DIR)/MEF90/Makefile.include
+include ${MEF90_DIR}/MEF90/Makefile.include
 
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
@@ -90,6 +89,10 @@ m_TestCorruption.o: ${PETSC_ARCH}
 
 TestElements:     ${PETSC_ARCH} TestElements.o ${PETSC_ARCH}/TestElements.o
 	-${FLINKER} -o ${PETSC_ARCH}/TestElements ${PETSC_ARCH}/TestElements.o ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
+TestMaterials: TestMaterials.o  chkopts
+	-${FLINKER} -o ${PETSC_ARCH}/TestMaterials ${PETSC_ARCH}/TestMaterials.o ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
 
 TestDistribute: TestDistribute.o  chkopts
 	-${CLINKER} -o TestDistribute TestDistribute.o ${PETSC_LIB}

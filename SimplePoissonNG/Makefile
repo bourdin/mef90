@@ -9,7 +9,7 @@ ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 	
 SimplePoisson${MEF90_DIM}D: ${PETSC_ARCH} SimplePoisson.o   ${PETSC_ARCH}/${MEF90_DIM}SimplePoisson.o \
-                             m_Poisson.o ${PETSC_ARCH/${MEF90_DIM}m_Poisson.o 
+                             m_Poisson.o ${PETSC_ARCH}/${MEF90_DIM}m_Poisson.o 
 	${FLINKER} -o ${PETSC_ARCH}/SimplePoisson${MEF90_DIM}D ${PETSC_ARCH}/${MEF90_DIM}SimplePoisson.o  ${PETSC_ARCH}/${MEF90_DIM}m_Poisson.o  ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
 SimplePoisson.o: ${PETSC_ARCH} m_Poisson.o ${PETSC_ARCH}/${MEF90_DIM}m_Poisson.o
