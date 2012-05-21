@@ -75,6 +75,8 @@ Module m_MEF_Materials_Interface3D
 #include <finclude/petscbagdef.h>
    Use petsc
    Use m_MEF_Materials_Types
+   Implicit NONE
+   
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF_Materials_Types
@@ -120,15 +122,20 @@ Contains
       PetscErrorCode,intent(OUT)             :: ierr
 
       Type(MEF90_MatProp2D_Type),pointer     :: matprop
+      
       Call PetscBagGetData_MEF90_MatProp(bag,matprop,ierr)
-      Call PetscBagSetName(bag,trim(name),'Material name',ierr)
+      Call PetscBagSetName(bag,trim(name),'Name',ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
-      Call PetscBagRegisterInt(bag,matprop%density,default%density,'density','density (rho)',ierr)
-      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'Fracture toughness','Fracture toughness (G_c)',ierr)
-      Call PetscBagRegisterReal(bag,matprop%LatentHeat,default%LatentHeat,'Latent Heat','Latent Heat (C_p)',ierr)
-      Call PetscBagRegisterRealArray(bag,matprop%HeatConductivity,2,'Heat Conductivityn','HeatConductivity (kappa)',ierr)
-      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,2,'Linear Thermal Expansion','Linear Thermal Expansion (alpha)',ierr)
-      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'Hooke''s law','Hooke''s law (A)',ierr)
+      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','density (rho)',ierr)
+      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','Fracture toughness (G_c)',ierr)
+      Call PetscBagRegisterReal(bag,matprop%LatentHeat,default%LatentHeat,'LatentHeat','Latent Heat (C_p)',ierr)
+      matprop%HeatConductivity = default%HeatConductivity
+      Call PetscBagRegisterRealArray(bag,matprop%HeatConductivity,3,'HeatConductivity','HeatConductivity (kappa)',ierr)
+      matprop%LinearThermalExpansion = default%LinearThermalExpansion
+      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','Linear Thermal Expansion (alpha)',ierr)
+      matprop%HookesLaw = default%HookesLaw
+      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','Hooke''s law (A)',ierr)
+      Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','Material name',ierr)
       Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine MEF90_MatProp2DBagRegister
 
@@ -142,14 +149,18 @@ Contains
 
       Type(MEF90_MatProp3D_Type),pointer     :: matprop
       Call PetscBagGetData_MEF90_MatProp(bag,matprop,ierr)
-      Call PetscBagSetName(bag,trim(name),'Material name',ierr)
+      Call PetscBagSetName(bag,trim(name),'Name',ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
-      Call PetscBagRegisterInt(bag,matprop%density,default%density,'density','density (rho)',ierr)
-      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'Fracture toughness','Fracture toughness (G_c)',ierr)
-      Call PetscBagRegisterReal(bag,matprop%LatentHeat,default%LatentHeat,'Latent Heat','Latent Heat (C_p)',ierr)
-      Call PetscBagRegisterRealArray(bag,matprop%HeatConductivity,6,'Heat Conductivityn','HeatConductivity (kappa)',ierr)
-      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'Linear Thermal Expansion','Linear Thermal Expansion (alpha)',ierr)
-      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'Hooke''s law','Hooke''s law (A)',ierr)
+      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','density (rho)',ierr)
+      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','Fracture toughness (G_c)',ierr)
+      Call PetscBagRegisterReal(bag,matprop%LatentHeat,default%LatentHeat,'LatentHeat','Latent Heat (C_p)',ierr)
+      matprop%HeatConductivity = default%HeatConductivity
+      Call PetscBagRegisterRealArray(bag,matprop%HeatConductivity,6,'HeatConductivity','HeatConductivity (kappa)',ierr)
+      matprop%LinearThermalExpansion = default%LinearThermalExpansion
+      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','Linear Thermal Expansion (alpha)',ierr)
+      matprop%HookesLaw = default%HookesLaw
+      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','Hooke''s law (A)',ierr)
+      Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','Material name',ierr)
       Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine MEF90_MatProp3DBagRegister
 
@@ -162,29 +173,33 @@ Contains
       Type(PetscViewer),Intent(IN)          :: viewer
       PetscErrorCode,Intent(OUT)            :: ierr
       
-      Character(len=MEF90_MXSTRLEN)         :: IOBuffer
-      Write(IOBuffer,100) Trim(MatProp%Name)
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
+      Character(len=MEF90_MXSTRLEN+100)         :: IOBuffer
+
+      Write(IOBuffer,100) trim(MatProp%Name)
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,*) "\n"
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+
       Write(IOBuffer,101) MatProp%Density
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%FractureToughness
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%LatentHeat
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%HeatConductivity
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%LinearThermalExpansion
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%HookesLaw
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,102) MatProp%FractureToughness
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,103) MatProp%LatentHeat
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,104) MatProp%HeatConductivity
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,105) MatProp%LinearThermalExpansion
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,106) MatProp%HookesLaw
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
       
-100 Format("Name:...................",A)
-101 Format("Density:................",ES12.5)
-102 Format("FractureToughness:......",ES12.5)
-103 Format("LatentHeat:.............",ES12.5)
-104 Format("HeatConductivity:.......",3(ES12.5,'  '))
-105 Format("LinearThermatExpansion:.",3(ES12.5,'  '))
-106 Format("HookesLaw:..............",6(ES12.5,'  '))
+100 Format("Name:................... ",A)
+101 Format("Density:................",ES12.5,"\n")
+102 Format("FractureToughness:......",ES12.5,"\n")
+103 Format("LatentHeat:.............",ES12.5,"\n")
+104 Format("HeatConductivity:.......",3(ES12.5,'  '),"\n")
+105 Format("LinearThermatExpansion:.",3(ES12.5,'  '),"\n")
+106 Format("HookesLaw:..............",6(ES12.5,'  '),"\n")
    End Subroutine MEF90_MatPropView_2D  
    
 #undef __FUNCT__
@@ -194,29 +209,32 @@ Contains
       Type(PetscViewer),Intent(IN)          :: viewer
       PetscErrorCode,Intent(OUT)            :: ierr
       
-      Character(len=MEF90_MXSTRLEN)         :: IOBuffer
-      Write(IOBuffer,100) Trim(MatProp%Name)
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%Density
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%FractureToughness
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%LatentHeat
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%HeatConductivity
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%LinearThermalExpansion
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%HookesLaw
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
+      Character(len=MEF90_MXSTRLEN+100)     :: IOBuffer
+
+      Write(IOBuffer,200) Trim(MatProp%Name)
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,*) "\n"
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,201) MatProp%Density
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,202) MatProp%FractureToughness
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,203) MatProp%LatentHeat
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,204) MatProp%HeatConductivity
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,205) MatProp%LinearThermalExpansion
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,206) MatProp%HookesLaw
+      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
       
-100 Format("Name:...................",A)
-101 Format("Density:................",ES12.5)
-102 Format("FractureToughness:......",ES12.5)
-103 Format("LatentHeat:.............",ES12.5)
-104 Format("HeatConductivity:.......",6(ES12.5,'  '))
-105 Format("LinearThermatExpansion:.",6(ES12.5,'  '))
-106 Format("HookesLaw:..............",21(ES12.5,'  '))
+200 Format("Name:................... ",A)
+201 Format("Density:................",ES12.5,"\n")
+202 Format("FractureToughness:......",ES12.5,"\n")
+203 Format("LatentHeat:.............",ES12.5,"\n")
+204 Format("HeatConductivity:.......",6(ES12.5,'  '),"\n")
+205 Format("LinearThermatExpansion:.",6(ES12.5,'  '),"\n")
+206 Format("HookesLaw:..............",21(ES12.5,'  '),"\n")
    End Subroutine MEF90_MatPropView_3D  
    
 !!! Subroutine generating various types of Hooke's laws 

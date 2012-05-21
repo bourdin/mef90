@@ -7,5 +7,7 @@ Module m_MEF90
    Use m_MEF_Norm
    Use m_MEF_EXO  
    Use m_MEF_Sieve
+   !Use m_MEF_Materials_Types
+   Use m_MEF_Materials
 End Module m_MEF90
 
