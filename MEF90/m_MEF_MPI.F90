@@ -5,9 +5,6 @@ Module m_MEF_MPI
    Implicit None
 
    Private
-   Public :: MEF90_Initialize
-   Public :: MEF90_Finalize
-
    Integer,Public                      :: Vect2D_MPIType
    Integer,Public                      :: Vect3D_MPIType
    
@@ -19,27 +16,10 @@ Module m_MEF_MPI
    Integer,Public                      :: Tens4OS2D_MPIType
    Integer,Public                      :: Tens4OS3D_MPIType
    
-Contains
-#undef __FUNCT__
-#define __FUNCT__ "MEF90_Initialize"
-   Subroutine MEF90_Initialize()
-       PetscInt                        :: ierr
-       
-      Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
-      Call MPIType_Initialize()
-      
-      Call MPI_COMM_RANK(MPI_COMM_WORLD,MEF90_MyRank,ierr)
-      Call MPI_COMM_SIZE(MPI_COMM_WORLD,MEF90_NumProcs,ierr)
-   End Subroutine MEF90_Initialize
+   Public   :: MPIType_Initialize
+   Public   :: MPIType_Finalize
    
-#undef __FUNCT__
-#define __FUNCT__ "MEF90_Finalize"
-   Subroutine MEF90_Finalize()
-      PetscInt                         :: ierr
-      
-      Call MPIType_Finalize()
-      Call PetscFinalize(ierr)
-   End Subroutine MEF90_Finalize
+Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MPIType_Initialize"
