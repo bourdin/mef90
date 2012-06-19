@@ -59,10 +59,11 @@ Module m_MEF_Materials_Interface2D
 Contains
    Subroutine PetscBagGetData_MEF90_MatProp2D_Type(bag,data,ierr)
       PetscBag                              :: bag
-      type(MEF90_MatProp2D_Type),pointer    :: data
+      type(MEF90_MatProp2D_Type),target    :: data
       PetscErrorCode                        :: ierr
       
-      Call PetscBagGetData(bag,data,ierr)
+      type(MEF90_MatProp2D_Type),pointer    :: dataPtr => data
+      Call PetscBagGetData(bag,dataPtr,ierr)
    End Subroutine PetscBagGetData_MEF90_MatProp2D_Type
 End Module m_MEF_Materials_Interface2D
 
@@ -107,7 +108,24 @@ Module m_MEF_Materials
    Interface MEF90_MatPropView
      Module procedure MEF90_MatPropView_2D,MEF90_MatPropView_3D 
    End Interface
+   
+   PetscSizeT,protected   :: sizeofMEF90_MatProp2D,sizeofMEF90_MatProp3D
 Contains
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_MaterialsInitialize"
+   Subroutine MEF90_MaterialsInitialize(ierr)
+      PetscErrorCode,intent(OUT)          :: ierr
+
+      Type(MEF90_MatProp2D_Type),Target   :: matProp2D
+      Type(MEF90_MatProp3D_Type),Target   :: matProp3D
+      character(len=1),pointer            :: dummychar(:)
+      PetscSizeT                          :: sizeofchar
+   
+      Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
+      sizeofMEF90_MatProp2D = size(transfer(matProp2D,dummychar))*sizeofchar
+      sizeofMEF90_MatProp3D = size(transfer(matProp3D,dummychar))*sizeofchar
+   End Subroutine MEF90_MaterialsInitialize
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_MatProp2DBagRegister"
