@@ -121,12 +121,12 @@ Module m_MEF_LinAlg
    Type(Tens4OS2D),Parameter :: MEF90_Tens4OS2D_Identity = Tens4OS2D(1.0_Kr,0.0_Kr,0.0_Kr, &
                                                                      1.0_Kr,0.0_Kr,        & 
                                                                      1.0_Kr)
-   Type(Tens4OS3D),Parameter :: MEF90_Tens4OS3D_Identity = Tens4OS3D(1.0_Kr,0.0_Kr,0.0_Kr,1.0_Kr,0.0_Kr,1.0_Kr, &
-                                                                     1.0_Kr,0.0_Kr,1.0_Kr,1.0_Kr,0.0_Kr,        &
-                                                                     1.0_Kr,0.0_Kr,1.0_Kr,0.0_Kr,               &
-                                                                     0.0_Kr,0.0_Kr,0.0_Kr,                      &
-                                                                     0.0_Kr,0.0_Kr,                             &
-                                                                     0.0_Kr)
+   Type(Tens4OS3D),Parameter :: MEF90_Tens4OS3D_Identity = Tens4OS3D(1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, & ! 1111,1112,1113,1122,1123,1133
+                                                                     1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,        & ! 1212,1213,1222,1223,1233
+                                                                     1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,               & ! 1313,1322,1323,1333
+                                                                     1.0_Kr,0.0_Kr,0.0_Kr,                      & ! 2222,2223,2233
+                                                                     1.0_Kr,0.0_Kr,                             & ! 2323,2333
+                                                                     1.0_Kr)                                      ! 3333
 
    Interface Operator (+)
       Module Procedure SumVect2D,SumVect3D,SumMat2D,SumMat3D,SumMatS2D,SumMatS3D,SumTens4OS2D,SumTens4OS3D
