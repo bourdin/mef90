@@ -59,11 +59,10 @@ Module m_MEF_Materials_Interface2D
 Contains
    Subroutine PetscBagGetData_MEF90_MatProp2D_Type(bag,data,ierr)
       PetscBag                              :: bag
-      type(MEF90_MatProp2D_Type),target    :: data
+      type(MEF90_MatProp2D_Type),pointer    :: data
       PetscErrorCode                        :: ierr
       
-      type(MEF90_MatProp2D_Type),pointer    :: dataPtr => data
-      Call PetscBagGetData(bag,dataPtr,ierr)
+      Call PetscBagGetData(bag,data,ierr)
    End Subroutine PetscBagGetData_MEF90_MatProp2D_Type
 End Module m_MEF_Materials_Interface2D
 
