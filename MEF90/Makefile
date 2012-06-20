@@ -24,7 +24,8 @@ m_MEF_Parameters.o: ${PETSC_ARCH}
 m_MEF_LinAlg.o:     m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
                     m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
 
-m_MEF_Utils.o:      m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o 
+m_MEF_Utils.o:      m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
+                    m_MEF_MPI.o                ${PETSC_ARCH}/m_MEF_MPI.o 
 
 m_MEF_MPI.o:        m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o 
 
@@ -38,6 +39,10 @@ m_MEF_Norm.o:       m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o 
                     m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
 
 m_MEF_MassMatrix.o: m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
+                    m_MEF_Elements.o           ${PETSC_ARCH}/m_MEF_Elements.o     \
+                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
+
+m_MEF_Diffusion.o:  m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
                     m_MEF_Elements.o           ${PETSC_ARCH}/m_MEF_Elements.o     \
                     m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
 
@@ -60,6 +65,7 @@ m_MEF90.o:          m_MEF_LinAlg.o             ${PETSC_ARCH}/m_MEF_LinAlg.o     
                     m_MEF_Norm.o               ${PETSC_ARCH}/m_MEF_Norm.o         \
                     m_MEF_MassMatrix.o         ${PETSC_ARCH}/m_MEF_MassMatrix.o   \
                     m_MEF_Materials.o          ${PETSC_ARCH}/m_MEF_Materials.o    \
+                    m_MEF_Diffusion.o          ${PETSC_ARCH}/m_MEF_Diffusion.o    \
                     m_MEF_EXO.o                ${PETSC_ARCH}/m_MEF_EXO.o          \
                     m_MEF_Sieve.o              ${PETSC_ARCH}/m_MEF_Sieve.o        \
 

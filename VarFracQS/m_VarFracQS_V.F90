@@ -991,7 +991,7 @@ Contains
       Type(AppCtx_Type)                            :: AppCtx
 
       !!!   _Loc are restriction of fields to local patch (the element)
-      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      !!!   _Elem are local contribution over the element (u_Elem = \sum_i U_Loc(i) BF(i))
       PetscReal, Dimension(:), Pointer             :: RHS_Loc
       PetscInt, Dimension(:), Pointer              :: BCFlag_Loc, IrrevFlag_Loc
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
