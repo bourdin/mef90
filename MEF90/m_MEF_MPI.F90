@@ -5,28 +5,36 @@ Module m_MEF_MPI
    Implicit None
 
    Private
-   Integer,Public                      :: Vect2D_MPIType
-   Integer,Public                      :: Vect3D_MPIType
+   Integer,Public,protected   :: Vect2D_MPIType
+   Integer,Public,protected   :: Vect3D_MPIType
    
-   Integer,Public                      :: Mat2D_MPIType
-   Integer,Public                      :: Mat3D_MPIType
-   Integer,Public                      :: MatS2D_MPIType
-   Integer,Public                      :: MatS3D_MPIType
+   Integer,Public,protected   :: Mat2D_MPIType
+   Integer,Public,protected   :: Mat3D_MPIType
+   Integer,Public,protected   :: MatS2D_MPIType
+   Integer,Public,protected   :: MatS3D_MPIType
    
-   Integer,Public                      :: Tens4OS2D_MPIType
-   Integer,Public                      :: Tens4OS3D_MPIType
+   Integer,Public,protected   :: Tens4OS2D_MPIType
+   Integer,Public,protected   :: Tens4OS3D_MPIType
    
-   Public   :: MPIType_Initialize
-   Public   :: MPIType_Finalize
+   PetscInt,Public,protected  :: MEF90_MyRank
+   PetscInt,Public,protected  :: MEF90_NumProcs
+
+   
+   Public   :: MEF90_MPIInitialize
+   Public   :: MEF90_MPIFinalize
    
 Contains
 
 #undef __FUNCT__
-#define __FUNCT__ "MPIType_Initialize"
-   Subroutine MPIType_Initialize()
+#define __FUNCT__ "MEF90_MPIInitialize"
+   Subroutine MEF90_MPIInitialize(ierr)
+      PetscErrorCode,Intent(OUT)       :: ierr
       PetscInt,Dimension(:),Pointer    :: BlkCounts,Offsets,DataTypes
-      PetscInt                         :: NumBlk,ierr
+      PetscInt                         :: NumBlk
       
+      Call MPI_COMM_RANK(MPI_COMM_WORLD,MEF90_MyRank,ierr)
+      Call MPI_COMM_SIZE(MPI_COMM_WORLD,MEF90_NumProcs,ierr)
+
       !!! Vect2D,Vect3D,Mat2D,MatS2D,Mat3D,MatS3D,Tens4OS2D,Tens4OSD3D
       NumBlk=1
       Allocate(BlkCounts(0:NumBlk-1))
@@ -70,12 +78,15 @@ Contains
       Call MPI_TYPE_STRUCT(1,BlkCounts,Offsets,DataTypes,Tens4OS3D_MPIType,ierr)
       Call MPI_TYPE_COMMIT(Tens4OS3D_MPIType,ierr)
       DeAllocate(BlkCounts,Offsets,DataTypes)
-   End Subroutine MPIType_Initialize
+      
+      Call MPI_COMM_RANK(MPI_COMM_WORLD,MEF90_MyRank,ierr)
+      Call MPI_COMM_SIZE(MPI_COMM_WORLD,MEF90_NumProcs,ierr)
+   End Subroutine MEF90_MPIInitialize
    
 #undef __FUNCT__
-#define __FUNCT__ "MPIType_Finalize"
-   Subroutine MPIType_Finalize()
-      PetscInt                         :: ierr
+#define __FUNCT__ "MEF90_MPIFinalize"
+   Subroutine MEF90_MPIFinalize(ierr)
+      PetscInt,Intent(OUT)             :: ierr
       
       Call MPI_TYPE_FREE(Vect2D_MPIType,ierr)
       Call MPI_TYPE_FREE(Vect3D_MPIType,ierr)
@@ -85,5 +96,5 @@ Contains
       Call MPI_TYPE_FREE(MatS3D_MPIType,ierr)
       Call MPI_TYPE_FREE(Tens4OS2D_MPIType,ierr)
       Call MPI_TYPE_FREE(Tens4OS3D_MPIType,ierr)
-   End Subroutine MPIType_Finalize
+   End Subroutine MEF90_MPIFinalize
 End Module m_MEF_MPI

@@ -21,7 +21,5 @@ Module m_MEF_Parameters
    ! Default unit to write files
    
    PetscInt,Public                     :: MEF90_GaussOrder
-   PetscInt,Public                     :: MEF90_MyRank
-   PetscInt,Public                     :: MEF90_NumProcs
    PetscInt,Parameter,Public           :: MEF90_MXSTRLEN = 256
 End Module m_MEF_Parameters

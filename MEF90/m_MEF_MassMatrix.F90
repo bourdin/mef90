@@ -9,11 +9,12 @@ Module m_MEF_MassMatrix
    IMPLICIT NONE
 
    Private   
-   Public :: MassMatrixAssembleSet
+   Public :: MEF90_MassMatrixAssembleSet
    
-   Interface MassMatrixAssembleSet
-      Module Procedure MassMatrixAssembleSet_2DScal
-   End Interface MassMatrixAssembleSet
+   Interface MEF90_MassMatrixAssembleSet
+      Module Procedure MassMatrixAssembleSet_2DScal, MassMatrixAssembleSet_2DVect, MassMatrixAssembleSet_2DElast, &
+                       MassMatrixAssembleSet_3DScal, MassMatrixAssembleSet_3DVect, MassMatrixAssembleSet_3DElast 
+   End Interface MEF90_MassMatrixAssembleSet
 
 Contains
 #undef __FUNCT__
@@ -21,7 +22,7 @@ Contains
    Subroutine MassMatrixAssembleSet_2DScal(M,mesh,U,iBlk,elem,elemType,BC)
       Type(Mat),Intent(IN)                         :: M
       Type(DM),Intent(IN)                          :: mesh
-      Type(SectionREal),Intent(IN)                 :: U
+      Type(SectionReal),Intent(IN)                 :: U
       PetscInt,Intent(IN)                          :: iBlk
       Type(Element2D_Scal), Dimension(:), Pointer  :: elem
       Type(Element_Type),Intent(IN)                :: elemType
@@ -35,8 +36,9 @@ Contains
       PetscReal,Dimension(:,:),Pointer             :: MatElem
       PetscInt,Dimension(:),Pointer                :: BCFlag
       PetscInt                                     :: iDoF1,iDoF2,iGauss
-      PetscLogDouble                               :: flops = 0
+      PetscLogDouble                               :: flops
      
+      flops = 0
       numDof = elemType%numDof
       Allocate(MatElem(numDof,numDof))
       Allocate(BCFlag(numDof))

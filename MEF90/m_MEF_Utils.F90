@@ -1,6 +1,7 @@
 Module m_MEF_Utils
 #include "finclude/petscdef.h"
    Use m_MEF_Parameters
+   Use m_MEF_MPI
    Use petsc
    Implicit None
 

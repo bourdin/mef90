@@ -21,9 +21,7 @@ Contains
       PetscInt                      :: ierr
        
       Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
-      Call MPIType_Initialize()
-      Call MPI_COMM_RANK(MPI_COMM_WORLD,MEF90_MyRank,ierr)
-      Call MPI_COMM_SIZE(MPI_COMM_WORLD,MEF90_NumProcs,ierr)
+      Call MEF90_MPIInitialize(ierr);CHKERRQ(ierr)
       
       Call MEF90_MaterialsInitialize(ierr);CHKERRQ(ierr)
    End Subroutine MEF90_Initialize
@@ -33,7 +31,7 @@ Contains
    Subroutine MEF90_Finalize()
       PetscInt                         :: ierr
       
-      Call MPIType_Finalize()
+      Call MEF90_MPIFinalize(ierr);CHKERRQ(ierr)
       Call PetscFinalize(ierr)
    End Subroutine MEF90_Finalize
 End Module m_MEF90
