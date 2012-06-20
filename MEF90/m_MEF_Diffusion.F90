@@ -10,10 +10,20 @@ Module m_MEF_Diffusion
 
    Private   
    Public :: MEF90_DiffusionBilinearFormSet
+   Public :: MEF90_DiffusionOperatorSet
+   Public :: MEF90_DiffusionEnergySet
    
    Interface MEF90_DiffusionBilinearFormSet
       Module Procedure DiffusionBilinearFormSet_2D, DiffusionBilinearFormSet_3D
    End Interface MEF90_DiffusionBilinearFormSet
+   
+   Interface MEF90_DiffusionRHSSet
+      Module procedure DiffusionRHSSet_2D
+   End Interface MEF90_DiffusionRHSSet
+
+   Interface MEF90_DiffusionOperatorSet
+      Module procedure DiffusionOperatorSet_2D
+   End Interface MEF90_DiffusionOperatorSet
 
 !  Assembles all components required to solve a diffusion equation in the form
 !
@@ -35,16 +45,20 @@ Module m_MEF_Diffusion
 !     the "Energy" is E
 !
 !     when using a SNES to solve (1),
-!        the "Function" is the Operator
-!        the "Jacobian" is the Bilinear Form
-!        the "RHS" is the RHS
+!        the "Function" is G (operator)
+!        the "Jacobian" is K (bilinear form)
+!        the "RHS" is F (RHS)
+!        OR
+!        the "Function" is G-F (operator - RHS)
+!        the "Jacobian" is K (bilinear form)
+!        the "RHS" is 0
 !     when using a KSP to solve (1)
-!        the "Matrix" is the Bilinear Form
-!        the "RHS" is the RHS
+!        the "Matrix" is K (bilinear form)
+!        the "RHS" is F (RHS)
 !     when using TAO to solve (2):
-!        the "Objective Function" is the energy
-!        the "Gradient" is G-F
-!        the "Hessian" is the bilinear form
+!        the "Objective Function" is E (energy)
+!        the "Gradient" is G-F (operator - RHS)
+!        the "Hessian" is K (bilinear form)
 !
 
 Contains
@@ -93,6 +107,11 @@ Contains
             End Do
          End Do
          Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+         !!
+         !! Another way would be to get the point number through the cone of the element
+         !! then calling MatSetValuesTopology
+         !! The caveat is that this would only work if dof are only vertices
+         !! but this we already make this asumption in many other locations
       End Do
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    
@@ -165,6 +184,62 @@ Contains
       DeAllocate(Gloc)
       DeAllocate(Vloc)
    End Subroutine DiffusionOperatorSet_2D
+
+   Subroutine DiffusionRHSSet_2D(RHS,mesh,F,cellIS,elem,elemType,BC,ierr)
+      Type(SectionReal),Intent(IN)                 :: RHS
+      Type(DM),Intent(IN)                          :: mesh
+      Type(SectionReal),Intent(IN)                 :: F
+      Type(IS),Intent(IN)                          :: cellIS
+      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(Element_Type),Intent(IN)                :: elemType
+      Type(Flag),Intent(IN),Optional               :: BC
+      PetscErrorCode,Intent(OUT)                   :: ierr
+      
+      PetscInt,Dimension(:),Pointer                :: cellID
+      PetscInt                                     :: cell
+      PetscReal,Dimension(:),Pointer               :: RHSloc
+      PetscReal,Dimension(:),Pointer               :: Vloc
+      PetscReal                                    :: Felem
+      PetscInt,Dimension(:),Pointer                :: BCFlag
+      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscLogDouble                               :: flops
+     
+      flops = 0
+      Allocate(Vloc(elemType%numDof))
+      Allocate(Gloc(elemType%numDof))
+      Allocate(BCFlag(elemType%numDof))
+      
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Do cell = 1,size(cellID)      
+         Gloc = 0.0_Kr
+         BCFlag = 0
+         If (present(BC)) Then
+            Call SectionIntRestrictClosure(BC%Sec,mesh,cellID(cell),elemType%numDof,BCFlag,ierr);CHKERRQ(ierr)
+         End If
+         Call SectionRealRestrictClosure(F,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
+         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+            Felem     = 0.0_Kr
+            Do iDoF1 = 1,elemType%numDof
+               Felem = Felem + Floc(iDof1) * elem(cellID(cell)+1)%BF(iDoF1,iGauss)
+            End Do
+            flops = flops + 2 * elemType%numDof
+            Do iDoF1 = 1,elemType%numDof
+               If (BCFlag(iDoF1) == 0) Then
+                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
+                                 elem(cellID(cell)+1)%BF(iDoF1,iGauss) * Felem
+                  flops = flops + 3
+               End If
+            End Do
+         End Do
+         Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+      End Do
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      DeAllocate(BCFlag)
+      DeAllocate(RHSloc)
+      DeAllocate(Floc)
+   End Subroutine DiffusionRHSSet_2D
 
    Subroutine DiffusionBilinearFormSet_3D(K,mesh,U,cellIS,A,lambda,elem,elemType,BC,ierr)
       Type(Mat),Intent(IN)                         :: K
