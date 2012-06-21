@@ -11,7 +11,7 @@ Module m_MEF_Diffusion
    Private   
    Public :: MEF90_DiffusionBilinearFormSet
    Public :: MEF90_DiffusionOperatorSet
-   Public :: MEF90_DiffusionEnergySet
+   !Public :: MEF90_DiffusionEnergySet
    
    Interface MEF90_DiffusionBilinearFormSet
       Module Procedure DiffusionBilinearFormSet_2D, DiffusionBilinearFormSet_3D
@@ -62,7 +62,7 @@ Module m_MEF_Diffusion
 !
 
 Contains
-   Subroutine DiffusionBilinearFormSet_2D(K,mesh,U,cellIS,A,lambda,elem,elemType,BC,ierr)
+   Subroutine DiffusionBilinearFormSet_2D(K,mesh,U,cellIS,A,lambda,elem,elemType,ierr)
       Type(Mat),Intent(IN)                         :: K
       Type(DM),Intent(IN)                          :: mesh
       Type(SectionReal),Intent(IN)                 :: U
@@ -71,56 +71,38 @@ Contains
       PetscReal,Intent(IN)                         :: lambda
       Type(Element2D_Scal), Dimension(:), Pointer  :: elem
       Type(Element_Type),Intent(IN)                :: elemType
-      Type(Flag),Intent(IN),Optional               :: BC
       PetscErrorCode,Intent(OUT)                   :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
       PetscReal,Dimension(:,:),Pointer             :: MatElem
-      PetscInt,Dimension(:),Pointer                :: BCFlag
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      flops = 0
       Allocate(MatElem(elemType%numDof,elemType%numDof))
-      Allocate(BCFlag(elemType%numDof))
 
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
          MatElem = 0.0_Kr
-         BCFlag = 0
-         If (present(BC)) Then
-            Call SectionIntRestrictClosure(BC%Sec,mesh,cellID(cell),elemType%numDof,BCFlag,ierr);CHKERRQ(ierr)
-         End If
          Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
             Do iDoF1 = 1,elemType%numDof
-               If (BCFlag(iDoF1) == 0) Then
-                  Do iDoF2 = 1,elemType%numDof
-                     If (BCFlag(iDoF2) == 0) Then
-                        MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                                       (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * elem(cellID(cell)+1)%BF(iDoF2,iGauss) + &
-                                       ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cellID(cell)+1)%Grad_BF(iDoF2,iGauss)))
-                        flops = flops + 5
-                     End If
-                  End Do
-               End If
+               Do iDoF2 = 1,elemType%numDof
+                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
+                                 (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * elem(cellID(cell)+1)%BF(iDoF2,iGauss) + &
+                                 ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cellID(cell)+1)%Grad_BF(iDoF2,iGauss)))
+               End Do
             End Do
          End Do
          Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
-         !!
-         !! Another way would be to get the point number through the cone of the element
-         !! then calling MatSetValuesTopology
-         !! The caveat is that this would only work if dof are only vertices
-         !! but this we already make this asumption in many other locations
       End Do
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    
+      flops = 5 * elemType%numDof**2 * size(elem(cellID(cell)+1)%Gauss_C) * size(cellID) 
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      DeAllocate(BCFlag)
       DeAllocate(MatElem)
    End Subroutine DiffusionBilinearFormSet_2D
 
-   Subroutine DiffusionOperatorSet_2D(G,mesh,V,cellIS,A,lambda,elem,elemType,BC,ierr)
+   Subroutine DiffusionOperatorSet_2D(G,mesh,V,cellIS,A,lambda,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                 :: G
       Type(DM),Intent(IN)                          :: mesh
       Type(SectionReal),Intent(IN)                 :: V
@@ -129,7 +111,6 @@ Contains
       PetscReal,Intent(IN)                         :: lambda
       Type(Element2D_Scal), Dimension(:), Pointer  :: elem
       Type(Element_Type),Intent(IN)                :: elemType
-      Type(Flag),Intent(IN),Optional               :: BC
       PetscErrorCode,Intent(OUT)                   :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
@@ -138,25 +119,15 @@ Contains
       PetscReal,Dimension(:),Pointer               :: Vloc
       PetscReal                                    :: Velem
       Type(Vect2D)                                 :: GradVelem
-      PetscInt,Dimension(:),Pointer                :: BCFlag
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      flops = 0
       Allocate(Vloc(elemType%numDof))
       Allocate(Gloc(elemType%numDof))
-      Allocate(BCFlag(elemType%numDof))
       
-      !sum_g cg  [ A (sum_i v_i  \nabla phi_i(xi_g))\cdot \nabla phi_j(xi_g) + \lambda (sum_i v_i phi_i(xi_g)) phi_j(xi_g)]
-      ! GradVElem = (sum_i v_i  \nabla phi_i(xi_g))
-      ! VElem     = (sum_i v_i  phi_i(xi_g))
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
          Gloc = 0.0_Kr
-         BCFlag = 0
-         If (present(BC)) Then
-            Call SectionIntRestrictClosure(BC%Sec,mesh,cellID(cell),elemType%numDof,BCFlag,ierr);CHKERRQ(ierr)
-         End If
          Call SectionRealRestrictClosure(V,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
          Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
             Velem     = 0.0_Kr
@@ -165,83 +136,66 @@ Contains
                Velem     = Velem     + Vloc(iDof1) * elem(cellID(cell)+1)%BF(iDoF1,iGauss)
                GradVelem = GradVelem + Vloc(iDof1) * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)
             End Do
-            flops = flops + 2 * elemType%numDof
             Do iDoF1 = 1,elemType%numDof
-               If (BCFlag(iDoF1) == 0) Then
-                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                                 (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * Velem + &
-                                  ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
-                  flops = flops + 5
-               End If
+               Gloc(iDoF1) = Gloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
+                              (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * Velem + &
+                               ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
             End Do
          End Do
          Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
       End Do
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    
+      flops = 7 * elemType%numDof * size(elem(cellID(cell)+1)%Gauss_C) * size(cellID) 
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      DeAllocate(BCFlag)
       DeAllocate(Gloc)
       DeAllocate(Vloc)
    End Subroutine DiffusionOperatorSet_2D
 
-   Subroutine DiffusionRHSSet_2D(RHS,mesh,F,cellIS,elem,elemType,BC,ierr)
+   Subroutine DiffusionRHSSet_2D(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                 :: RHS
       Type(DM),Intent(IN)                          :: mesh
       Type(SectionReal),Intent(IN)                 :: F
       Type(IS),Intent(IN)                          :: cellIS
       Type(Element2D_Scal), Dimension(:), Pointer  :: elem
       Type(Element_Type),Intent(IN)                :: elemType
-      Type(Flag),Intent(IN),Optional               :: BC
       PetscErrorCode,Intent(OUT)                   :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
-      PetscReal,Dimension(:),Pointer               :: RHSloc
-      PetscReal,Dimension(:),Pointer               :: Vloc
+      PetscReal,Dimension(:),Pointer               :: Floc,RHSloc
       PetscReal                                    :: Felem
-      PetscInt,Dimension(:),Pointer                :: BCFlag
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      flops = 0
-      Allocate(Vloc(elemType%numDof))
-      Allocate(Gloc(elemType%numDof))
-      Allocate(BCFlag(elemType%numDof))
+      Allocate(Floc(elemType%numDof))
+      Allocate(RHSloc(elemType%numDof))
       
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
-         Gloc = 0.0_Kr
-         BCFlag = 0
-         If (present(BC)) Then
-            Call SectionIntRestrictClosure(BC%Sec,mesh,cellID(cell),elemType%numDof,BCFlag,ierr);CHKERRQ(ierr)
-         End If
-         Call SectionRealRestrictClosure(F,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
+         RHSloc = 0.0_Kr
+         Call SectionRealRestrictClosure(F,mesh,cellID(cell),elemType%numDof,Floc,ierr);CHKERRQ(ierr)
          Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
             Felem     = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
                Felem = Felem + Floc(iDof1) * elem(cellID(cell)+1)%BF(iDoF1,iGauss)
             End Do
-            flops = flops + 2 * elemType%numDof
             Do iDoF1 = 1,elemType%numDof
-               If (BCFlag(iDoF1) == 0) Then
-                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                                 elem(cellID(cell)+1)%BF(iDoF1,iGauss) * Felem
-                  flops = flops + 3
-               End If
+               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
+                              elem(cellID(cell)+1)%BF(iDoF1,iGauss) * Felem
             End Do
          End Do
          Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
       End Do
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    
+      flops = 5 * elemType%numDof * size(elem(cellID(cell)+1)%Gauss_C) * size(cellID) 
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      DeAllocate(BCFlag)
       DeAllocate(RHSloc)
       DeAllocate(Floc)
    End Subroutine DiffusionRHSSet_2D
 
-   Subroutine DiffusionBilinearFormSet_3D(K,mesh,U,cellIS,A,lambda,elem,elemType,BC,ierr)
+   Subroutine DiffusionBilinearFormSet_3D(K,mesh,U,cellIS,A,lambda,elem,elemType,ierr)
       Type(Mat),Intent(IN)                         :: K
       Type(DM),Intent(IN)                          :: mesh
       Type(SectionReal),Intent(IN)                 :: U
@@ -250,47 +204,33 @@ Contains
       PetscReal,Intent(IN)                         :: lambda
       Type(Element3D_Scal), Dimension(:), Pointer  :: elem
       Type(Element_Type),Intent(IN)                :: elemType
-      Type(Flag),Intent(IN),Optional               :: BC
       PetscErrorCode,Intent(OUT)                   :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
       PetscReal,Dimension(:,:),Pointer             :: MatElem
-      PetscInt,Dimension(:),Pointer                :: BCFlag
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      flops = 0
       Allocate(MatElem(elemType%numDof,elemType%numDof))
-      Allocate(BCFlag(elemType%numDof))
-
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
          MatElem = 0.0_Kr
-         BCFlag = 0
-         If (present(BC)) Then
-            Call SectionIntRestrictClosure(BC%Sec,mesh,cellID(cell),elemType%numDof,BCFlag,ierr);CHKERRQ(ierr)
-         End If
          Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
             Do iDoF1 = 1,elemType%numDof
-               If (BCFlag(iDoF1) == 0) Then
-                  Do iDoF2 = 1,elemType%numDof
-                     If (BCFlag(iDoF2) == 0) Then
-                        MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                                       (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * elem(cellID(cell)+1)%BF(iDoF2,iGauss) + &
-                                       ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cellID(cell)+1)%Grad_BF(iDoF2,iGauss)))
-                        flops = flops + 5
-                     End If
-                  End Do
-               End If
+               Do iDoF2 = 1,elemType%numDof
+                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
+                                 (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * elem(cellID(cell)+1)%BF(iDoF2,iGauss) + &
+                                 ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cellID(cell)+1)%Grad_BF(iDoF2,iGauss)))
+                  flops = flops + 5
+               End Do
             End Do
          End Do
          Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   
+      flops =  5 * elemType%numDof**2 * size(elem(cellID(cell)+1)%Gauss_C) * size(cellID)   
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      DeAllocate(BCFlag)
       DeAllocate(MatElem)
    End Subroutine DiffusionBilinearFormSet_3D
 End Module m_MEF_Diffusion

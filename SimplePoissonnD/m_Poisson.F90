@@ -239,8 +239,6 @@ Contains
       SizeScal=1
 
       Call FieldCreateVertex(AppCtx%U,    'U',        AppCtx%mesh,SizeScal)
-      Call FieldDestroy(AppCtx%U)
-      Call FieldCreateVertex(AppCtx%U,    'U',        AppCtx%mesh,SizeScal)
       Call FieldCreateVertex(AppCtx%F,    'F',        AppCtx%mesh,SizeScal)
       Call FieldCreateVertex(AppCtx%RHS,  'RHS',      AppCtx%mesh,SizeScal)
 
