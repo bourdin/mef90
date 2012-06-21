@@ -4,6 +4,7 @@ Module m_MEF_Elements
    Use m_MEF_Utils
    Use m_MEF_Parameters
    Use petsc
+   use,intrinsic :: iso_c_binding
    IMPLICIT NONE
 
    Private   
@@ -159,6 +160,24 @@ Module m_MEF_Elements
       MEF90_P1_Lagrange_2DBoundary_Elast,MEF90_P1_Lagrange_3DBoundary_Elast,  &
       MEF90_P1_Lagrange_2DBoundary_Vect,MEF90_P1_Lagrange_3DBoundary_Vect,    &
       MEF90_P2_Lagrange_2D_Scal,MEF90_P2_Lagrange_3D_Scal                     /)
+   Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = (/ &
+      "P1_Lagrange_2D_Scal         ",     &
+      "P1_Lagrange_3D_Scal         ",     &
+      "P1_Lagrange_2D_Elast        ",     &
+      "P1_Lagrange_3D_Elast        ",     &
+      "P1_Lagrange_2D_Vect         ",     &
+      "P1_Lagrange_3D_Vect         ",     &
+      "P1_Lagrange_2DBoundary_Scal ",     &
+      "P1_Lagrange_3DBoundary_Scal ",     &
+      "P1_Lagrange_2DBoundary_Elast",     &
+      "P1_Lagrange_3DBoundary_Elast",     &
+      "P1_Lagrange_2DBoundary_Vect ",     &
+      "P1_Lagrange_3DBoundary_Vect ",     &
+      "P2_Lagrange_2D_Scal         ",     &
+      "P2_Lagrange_3D_Scal         ",     &
+      "MEF90_knownElementNames     ",     &
+      "prefix_                     ",     &
+      C_NULL_CHAR//"                           "/)
       
    Type Element1D
       PetscReal,Dimension(:,:),Pointer             :: BF

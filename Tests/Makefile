@@ -6,7 +6,7 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 
 
 
-{PETSC_ARCH}:
+${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
 	
 TestBoundaryElement3D:      ${PETSC_ARCH} TestBoundaryElement3D.o ${PETSC_ARCH}/TestBoundaryElement3D.o
