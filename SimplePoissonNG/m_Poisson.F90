@@ -1,27 +1,25 @@
-#if MEF90_DIM == 3
-#define M_POISSON_TYPES m_Poisson3D_Types
-#else
-#define M_POISSON_TYPES m_Poisson2D_Types
-#endif
+#include "SimplePoisson.inc"
 
 Module M_POISSON_TYPES
-#include "../MEF90/mef90.inc"
 #include "finclude/petscdef.h"
    Use m_MEF90
    Implicit none
-   Private  
-   Public :: PoissonCtx_Type
-   Public :: PoissonCellSetProperties_Type
-   Public :: PoissonVertexSetProperties_Type
+   !Private  
+   !Public :: PoissonCtx_Type
+   !Public :: PoissonCellSetProperties_Type
+   !Public :: PoissonVertexSetProperties_Type
    
    Type PoissonCtx_Type
       Type(DM)                                        :: mesh
       Type(IS)                                        :: CellSetGlobalIS,VertexSetGlobalIS
       Type(IS)                                        :: CellSetLocalIS,VertexSetLocalIS
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: Elem
-      !Type(Element_Type),Dimension(:),Pointer         :: ElementType ! move to CellSetProperty_Type
       Type(Field)                                     :: BCU
-      Type(Field)                                     :: F !Make forces cell centered in assembly routines
+      !Type(Field)                                     :: F !Make forces cell centered in assembly routines
+      PetscInt                                        :: verbose
+      PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
+      PetscBag,Dimension(:),Pointer                   :: VertexSetPropertiesBag
+      PetscBag,Dimension(:),Pointer                   :: MaterialPropertiesBag
    End Type PoissonCtx_Type
 
    Type PoissonCellSetProperties_Type   
@@ -36,13 +34,7 @@ Module M_POISSON_TYPES
 End Module M_POISSON_TYPES
 
 
-#if MEF90_DIM == 3
-#define M_POISSONCELLSETPROPERTY_INTERFACE m_PoissonCellSetProperty3D_Interface
-#else
-#define M_POISSONCELLSETPROPERTY_INTERFACE m_PoissonCellSetProperty2D_Interface
-#endif
 Module M_POISSONCELLSETPROPERTY_INTERFACE   
-#include "../MEF90/mef90.inc"
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use m_MEF90
@@ -61,39 +53,59 @@ Module M_POISSONCELLSETPROPERTY_INTERFACE
    End interface
 Contains
    Subroutine PetscBagGetDataPoissonCellSetProperties(bag,data,ierr)
-      PetscBag                                     :: bag
-      type(PoissonCellSetProperties_Type),pointer  :: data
-      PetscErrorCode                               :: ierr
+      PetscBag                                        :: bag
+      type(PoissonCellSetProperties_Type),pointer     :: data
+      PetscErrorCode                                  :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
    End Subroutine PetscBagGetDataPoissonCellSetProperties
 End Module M_POISSONCELLSETPROPERTY_INTERFACE   
+
+
+Module M_POISSONVERTEXSETPROPERTY_INTERFACE   
+#include "finclude/petscdef.h"
+#include "finclude/petscbagdef.h"
+   Use m_MEF90
+   Use M_POISSON_TYPES
+   Implicit None
+   Private
+   Public :: PetscBagGetDataPoissonVertexSetProperties
+
+   Interface PetscBagGetData
+      Subroutine PetscBagGetData(bag,data,ierr)
+         Use M_POISSON_TYPES
+         PetscBag                                        :: bag
+         type(PoissonVertexSetProperties_Type),pointer   :: data
+         PetscErrorCode                                  :: ierr
+      End subroutine PetscBagGetData
+   End interface
+Contains
+   Subroutine PetscBagGetDataPoissonVertexSetProperties(bag,data,ierr)
+      PetscBag                                           :: bag
+      type(PoissonVertexSetProperties_Type),pointer      :: data
+      PetscErrorCode                                     :: ierr
+      
+      Call PetscBagGetData(bag,data,ierr)
+   End Subroutine PetscBagGetDataPoissonVertexSetProperties
+End Module M_POISSONVERTEXSETPROPERTY_INTERFACE   
 !!!
 !!!   
    
-#if MEF90_DIM == 3
-#define M_POISSON m_Poisson3D
-#else
-#define M_POISSON m_Poisson2D
-#endif
-
 Module M_POISSON
-#include "../MEF90/mef90.inc"
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use M_POISSON_TYPES
    Use M_POISSONCELLSETPROPERTY_INTERFACE
+   Use M_POISSONVERTEXSETPROPERTY_INTERFACE
    Use m_MEF90
    Implicit NONE
-   Private
+   !Private
    
    !Public :: m_Poisson_Initialize
-   Public :: PetscBagRegisterPoissonCellSetProperties
-   Public :: PetscBagGetDataPoissonCellSetProperties
+   !Public :: PetscBagRegisterPoissonCellSetProperties
+   !Public :: PetscBagGetDataPoissonCellSetProperties
    !Public :: PetscBagRegisterPoissonVertexSetProperties
    !Public :: PetscBagGetDataPoissonVertexSetProperties
-   !Public :: PetscBagRegisterPoissonCtx
-   !Public :: PetscBagGetDataPoissonCtx
    
    PetscSizeT,protected    :: sizeofPoissonCellSetProperties
    PetscSizeT,protected    :: sizeofPoissonVertexSetProperties
@@ -116,7 +128,7 @@ Contains
       sizeofPoissonVertexSetProperties = size(transfer(VertexSetProperties,dummychar))*sizeofchar
       sizeofPoissonCtx = size(transfer(PoissonCtx,dummychar))*sizeofchar
    End Subroutine m_Poisson_Initialize
-
+   
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterPoissonCellSetProperties"
    Subroutine PetscBagRegisterPoissonCellSetProperties(bag,name,prefix,default,ierr)
@@ -134,4 +146,22 @@ Contains
                                 MEF90_P1_Lagrange_2D_Scal%shortID,'Element type')
       Call PetscBagRegisterReal(bag,CellSetProperties%Force,0.0_Kr,'Force','Magnitude of the applied force',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterPoissonCellSetProperties
+
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagRegisterPoissonVertexSetProperties"
+   Subroutine PetscBagRegisterPoissonVertexSetProperties(bag,name,prefix,default,ierr)
+      PetscBag                                           :: bag
+      Character(len=*),intent(IN)                        :: prefix,name
+      type(PoissonVertexSetProperties_Type),intent(IN)   :: default
+      PetscErrorCode,intent(OUT)                         :: ierr
+
+      Type(PoissonVertexSetProperties_Type),pointer      :: VertexSetProperties
+
+      Call PetscBagGetDataPoissonVertexSetProperties(bag,VertexSetProperties,ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"VertexSetProperties object: Vertex Set properties",ierr)
+      Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
+      Call PetscBagRegisterBool(bag,VertexSetProperties%Has_BC,PETSC_FALSE,'Temp_HasBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,VertexSetProperties%BC,0.0_Kr,'Temp_BC','Temperature boundary value',ierr);CHKERRQ(ierr)
+   End Subroutine PetscBagRegisterPoissonVertexSetProperties
+
 End Module M_POISSON
