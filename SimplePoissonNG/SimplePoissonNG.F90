@@ -51,6 +51,7 @@ Contains
       Character(len=*),intent(IN)               :: prefix
       PetscErrorCode,Intent(OUT)                :: ierr
 
+      Call PetscLogBegin(ierr);CHKERRQ(ierr)
       Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
       Call PoissonCtxInit(PoissonCtx,prefix,ierr);CHKERRQ(ierr)
    End Subroutine SimplePoissonInitialize   
