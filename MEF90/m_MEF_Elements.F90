@@ -17,9 +17,8 @@ Module m_MEF_Elements
    Public :: Element2D_Vect,Element2D_Scal,Element2D_Elast 
    Public :: Element3D_Vect,Element3D_Scal,Element3D_Elast 
    Public :: Element_TypeFindByID,Element_TypeFindByName
-   Public :: Element_TypeSetDefaultEXO_Scal,Element_TypeSetDefaultEXO_Vect,Element_TypeSetDefaultEXO_Elast
+   Public :: EXO2Element_TypeScal,EXO2Element_TypeVect,EXO2Element_TypeElast
    
-
    Type Element_Type
       ! name is the element name in english language
       Character(len=MEF90_MXSTRLEN)                :: Name
@@ -261,8 +260,8 @@ Module m_MEF_Elements
    
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "Element_TypeSetDefaultEXO_Scal"
-   Subroutine Element_TypeSetDefaultEXO_Scal(exoName,dim,elemType)
+#define __FUNCT__ "EXO2Element_TypeScal"
+   Subroutine EXO2Element_TypeScal(exoName,dim,elemType)
       Character(len=*),Intent(IN)                 :: EXOName
       PetscInt,Intent(IN)                         :: dim
       Type(Element_Type),Intent(OUT)              :: elemType
@@ -303,11 +302,11 @@ Contains
          Case default
             Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
       End Select
-   End Subroutine Element_TypeSetDefaultEXO_Scal
+   End Subroutine EXO2Element_TypeScal
 
 #undef __FUNCT__
-#define __FUNCT__ "Element_TypeSetDefaultEXO_Vect"
-   Subroutine Element_TypeSetDefaultEXO_Vect(exoName,dim,elemType)
+#define __FUNCT__ "EXO2Element_TypeVect"
+   Subroutine EXO2Element_TypeVect(exoName,dim,elemType)
       Character(len=*),Intent(IN)                 :: EXOName
       PetscInt,Intent(IN)                         :: dim
       Type(Element_Type),Intent(OUT)              :: elemType
@@ -348,11 +347,11 @@ Contains
          Case default
             Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
       End Select
-   End Subroutine Element_TypeSetDefaultEXO_Vect
+   End Subroutine EXO2Element_TypeVect
 
 #undef __FUNCT__
-#define __FUNCT__ "Element_TypeSetDefaultEXO_Elast"
-   Subroutine Element_TypeSetDefaultEXO_Elast(exoName,dim,elemType)
+#define __FUNCT__ "EXO2Element_TypeElast"
+   Subroutine EXO2Element_TypeElast(exoName,dim,elemType)
       Character(len=*),Intent(IN)                 :: EXOName
       PetscInt,Intent(IN)                         :: dim
       Type(Element_Type),Intent(OUT)              :: elemType
@@ -393,7 +392,7 @@ Contains
          Case default
             Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
       End Select
-   End Subroutine Element_TypeSetDefaultEXO_Elast
+   End Subroutine EXO2Element_TypeElast
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_TypeFindByID"

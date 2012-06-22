@@ -47,11 +47,12 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonInitialize"
    Subroutine SimplePoissonInitialize(PoissonCtx,prefix,ierr)
-      Type(PoissonCtx_Type),intent(IN)          :: PoissonCtx
-      Character(len=MEF90_MXSTRLEN),intent(IN)  :: prefix
+      Type(PoissonCtx_Type),intent(INOUT)       :: PoissonCtx
+      Character(len=*),intent(IN)               :: prefix
       PetscErrorCode,Intent(OUT)                :: ierr
-      
-      ierr = 0
+
+      Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
+      Call PoissonCtxInit(PoissonCtx,prefix,ierr);CHKERRQ(ierr)
    End Subroutine SimplePoissonInitialize   
 
 #undef __FUNCT__
