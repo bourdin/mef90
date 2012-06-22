@@ -23,7 +23,8 @@ Module M_POISSON_TYPES
    End Type PoissonCtx_Type
 
    Type PoissonCellSetProperties_Type   
-      Character(len=MEF90_MXSTRLEN)                   :: ElemTypeName
+      PetscInt                                        :: ElemTypeShortID
+      !PetscInt                                        :: ElemTypeName
       PetscReal                                       :: Force
    End Type PoissonCellSetProperties_Type   
    
@@ -31,8 +32,10 @@ Module M_POISSON_TYPES
       PetscBool                                       :: Has_BC
       PetscReal                                       :: BC
    End Type PoissonVertexSetProperties_Type   
-End Module M_POISSON_TYPES
 
+   Type(PoissonCellSetProperties_Type),Parameter      :: defaultCellSetProperties = PoissonCellSetProperties_Type( DEFAULT_ELEMENT_SHORTID,0.0_Kr )
+   Type(PoissonVertexSetProperties_Type),Parameter    :: defaultVertexSetProperties = PoissonVertexSetProperties_Type( PETSC_TRUE,0.0_Kr )
+End Module M_POISSON_TYPES
 
 Module M_POISSONCELLSETPROPERTY_INTERFACE   
 #include "finclude/petscdef.h"
@@ -140,11 +143,11 @@ Contains
       Type(PoissonCellSetProperties_Type),pointer     :: CellSetProperties
 
       Call PetscBagGetDataPoissonCellSetProperties(bag,CellSetProperties,ierr);CHKERRQ(ierr)
-      Call PetscBagSetName(bag,trim(name),"CellSetProperties object: Cell Set properties",ierr)
-      Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
-      Call PetscBagRegisterEnum(bag,CellSetProperties%ElemTypeName,MEF90_knownElementNames, &
-                                MEF90_P1_Lagrange_2D_Scal%shortID,'Element type')
-      Call PetscBagRegisterReal(bag,CellSetProperties%Force,0.0_Kr,'Force','Magnitude of the applied force',ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"CellSetProperties object: Cell Set properties",ierr);CHKERRQ(ierr)
+      Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
+      !Call PetscBagRegisterEnum(bag,CellSetProperties%ElemTypeName,MEF90_knownElementNames,default%ElemTypeShortID,'Element type name',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt(bag,CellSetProperties%ElemTypeShortID,default%ElemTypeShortID,'Element type ShortID',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,CellSetProperties%Force,default%force,'Force','Magnitude of the applied force',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterPoissonCellSetProperties
 
 #undef __FUNCT__
@@ -163,5 +166,88 @@ Contains
       Call PetscBagRegisterBool(bag,VertexSetProperties%Has_BC,PETSC_FALSE,'Temp_HasBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,VertexSetProperties%BC,0.0_Kr,'Temp_BC','Temperature boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterPoissonVertexSetProperties
+   
 
+
+#undef __FUNCT__
+#define __FUNCT__ "PoissonCtxInit"
+   !!!
+   !!!  
+   !!!  PoissonCtxInit:
+   !!!  
+   !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+   !!!
+   Subroutine PoissonCtxInit(PoissonCtx,prefix,ierr)
+      Type(PoissonCtx_Type),intent(OUT)         :: PoissonCtx
+      Character(len=MEF90_MXSTRLEN),intent(IN)  :: prefix
+      PetscErrorCode,Intent(OUT)                :: ierr
+     
+      Integer                                   :: cpu_ws,io_ws,exoidIN=0
+      Real                                      :: exo_version
+      Character(len=MEF90_MXSTRLEN)             :: filename,name   
+      Type(DM)                                  :: tmp_mesh
+      PetscInt                                  :: numCell
+      PetscInt,Dimension(:),Pointer             :: setID
+      PetscInt                                  :: set
+      PetscInt                                  :: numCellSetGlobal,numVertexSetGlobal
+
+      !!! 1. Read and distribute the DM from the exo file <prefix>.gen
+      If (MEF90_MyRank == 0) Then
+         cpu_ws = 8
+         io_ws = 8
+         filename = Trim(prefix)//'.gen'
+         exoidIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,ierr)
+      End If
+      
+      !!! Read the mesh from <prefix.gen> and partition it
+      If (MEF90_NumProcs == 1) Then
+         Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoidIN,PoissonCtx%mesh,ierr);CHKERRQ(ierr)
+      Else
+         Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoidIN,Tmp_mesh,ierr);CHKERRQ(ierr)
+      
+         Call DMmeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,PoissonCtx%mesh,ierr);CHKERRQ(ierr)
+         Call DMDestroy(Tmp_mesh,ierr);CHKERRQ(ierr)
+      End If
+      
+      !!!
+      !!! Get local and compute global IS for cell and vertex sets
+      !!!
+      Call DMmeshGetLabelIdIS(PoissonCtx%mesh,'Cell Sets',PoissonCtx%CellSetLocalIS,ierr);CHKERRQ(ierr)
+      Call ISDuplicate(PoissonCtx%CellSetLocalIS,PoissonCtx%CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,PoissonCtx%CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      
+      Call DMmeshGetLabelIdIS(PoissonCtx%mesh,'Vertex Sets',PoissonCtx%VertexSetLocalIS,ierr);CHKERRQ(ierr)
+      Call ISDuplicate(PoissonCtx%VertexSetLocalIS,PoissonCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,PoissonCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      
+      !!! Get number of cell, vertices and dimension
+      !Call DMmeshGetStratumSize(PoissonCtx%mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
+      Call DMmeshGetStratumSize(PoissonCtx%mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+      !Call DMMeshGetDimension(PoissonCtx%mesh,numDim,ierr);CHKERRQ(ierr)
+
+      !!! Allocate elements array and bags
+      Allocate(PoissonCtx%Elem(numCell))
+
+      !!! Allocate and register bags:
+      Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Allocate(PoissonCtx%CellSetPropertiesBag(size(setID)))
+      Allocate(PoissonCtx%MaterialPropertiesBag(size(setID)))
+      Do set = 1, size(setID)
+         !!! get set name from EXO file
+         !!! Write a function for this in m_EXO
+         !!! Set a reasonable default value for the default element here
+         Call PetscBagRegisterPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),name,prefix,defaultCellSetProperties,ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterMatProp(PoissonCtx%MaterialPropertiesBag(set),name,prefix,DEFAULT_MATERIAL,ierr);CHKERRQ(ierr)
+      End Do
+      Call ISRestoreIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      
+      !!! Allocate and register bags:
+      Call ISGetIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Allocate(PoissonCtx%VertexSetPropertiesBag(size(setID)))
+      Do set = 1, size(setID)
+         Call PetscBagRegisterPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),name,prefix,defaultVertexSetProperties,ierr);CHKERRQ(ierr)
+      End Do
+      Call ISRestoreIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+
+   End Subroutine PoissonCtxInit
 End Module M_POISSON

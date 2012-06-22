@@ -9,14 +9,13 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_ISAllGatherMerge"
    !!! Merge all values of an IS, deleting duplicates
-   Subroutine MEF90_ISAllGatherMerge(Comm,labels)
-      MPI_Comm                         :: Comm
-      Type(IS)                         :: labels
-      
+   Subroutine MEF90_ISAllGatherMerge(Comm,labels,ierr)
+      MPI_Comm,Intent(IN)              :: Comm
+      Type(IS),intent(INOUT)           :: labels
+      PetscErrorCode,intent(OUT)       :: ierr
       Type(IS)                         :: tmplabels
       PetscInt, Dimension(:), Pointer  :: tmplabels_ptr
       PetscInt                         :: numval
-      PetscErrorCode                   :: ierr
       
       Call ISAllGather(labels,tmplabels,ierr);CHKERRQ(ierr)
       Call ISGetSize(tmplabels,numval,ierr);CHKERRQ(ierr)
@@ -26,6 +25,7 @@ Contains
       Call ISCreateGeneral(Comm,numval,tmplabels_ptr,PETSC_COPY_VALUES,labels,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
       Call ISDestroy(tmplabels,ierr);CHKERRQ(ierr)
+      ierr = 0
    End Subroutine MEF90_ISAllGatherMerge
    
 #undef __FUNCT__
