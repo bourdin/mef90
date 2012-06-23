@@ -23,6 +23,8 @@ Module M_POISSON_TYPES
 
    Type PoissonCellSetProperties_Type   
       PetscInt                                        :: ElemTypeShortID
+      !!! Maybe this plus handling of short name + gauss quadrature order 
+      !!! should be part of a ElementBag and handled in m_MEF_Elements?
       !PetscInt                                        :: ElemTypeShortIDEnum
       PetscReal                                       :: Force
    End Type PoissonCellSetProperties_Type   
@@ -56,7 +58,7 @@ Module M_POISSONCELLSETPROPERTY_INTERFACE
 Contains
    Subroutine PetscBagGetDataPoissonCellSetProperties(bag,data,ierr)
       PetscBag                                        :: bag
-      type(PoissonCellSetProperties_Type),pointer     :: data
+      Type(PoissonCellSetProperties_Type),pointer     :: data
       PetscErrorCode                                  :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
@@ -193,10 +195,14 @@ Contains
       PetscInt                                     :: set
       PetscInt                                     :: numCellSetGlobal,numVertexSetGlobal
       Type(Element_Type)                           :: defaultElemType
-      Type(PoissonCellSetProperties_Type)  :: defaultCellSetProperties
-      Type(PoissonVertexSetProperties_Type):: defaultVertexSetProperties
+      Type(PoissonCellSetProperties_Type)          :: defaultCellSetProperties
+      Type(PoissonCellSetProperties_Type),pointer  :: CellSetProperties
+      Type(PoissonVertexSetProperties_Type)        :: defaultVertexSetProperties
       integer                                      :: exoerr
-
+      PetscInt,Parameter                           :: QuadratureOrder = 2
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: cellID
+      
       verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'--verbose',verbose,flg,ierr);CHKERRQ(ierr)
 
@@ -206,6 +212,11 @@ Contains
          io_ws = 8
          filename = Trim(prefix)//'.gen'
          exoidIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
+         If (verbose >0) Then
+            Write(IOBuffer,99) exoidIN, exoerr
+            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr)
+         End If
+99 Format('EXOPEN status: ',I4,' exoidIN: ',I4,'\n')         
          If (exoerr < 0) Then
             Write(IOBuffer,*) '\n\nError opening EXO file ', trim(filename),'\n\n'
             Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr);
@@ -238,11 +249,11 @@ Contains
       !Call DMmeshGetStratumSize(PoissonCtx%mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
       Call DMmeshGetStratumSize(PoissonCtx%mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       !Call DMMeshGetDimension(PoissonCtx%mesh,numDim,ierr);CHKERRQ(ierr)
-
-      !!! Allocate elements array and bags
-      Allocate(PoissonCtx%Elem(numCell))
-
-      !!! Allocate and register bags:
+      
+      
+      !!! Allocate and register cell sets bags: CellSetProperties and MatProp
+      !!! A loop on CellSetGlobalIS is required since PetscBarRegister is collective on PETSC_COMM_WORLD
+      !!!
       Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Allocate(PoissonCtx%CellSetPropertiesBag(size(setID)))
       Allocate(PoissonCtx%MaterialPropertiesBag(size(setID)))
@@ -276,7 +287,7 @@ Contains
       End Do
       Call ISRestoreIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 
-      !!! Allocate and register bags:
+      !!! Allocate and register vertex properties bags:
       Call ISGetIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Allocate(PoissonCtx%VertexSetPropertiesBag(size(setID)))
       defaultVertexSetProperties = PoissonVertexSetProperties_Type( PETSC_TRUE,0.0_Kr )
@@ -300,6 +311,34 @@ Contains
 200 Format('Vertex set ',I4)
 201 Format('vs',I4.4,'_')
 203 Format('=== Registering vertex set ',I4,' prefix: ',A,'\n')
+
+      !!! Geometry and properties is done
+      !!! Now passing to FE part
+
+      !!! Allocate elements array then initialize the elements
+      Allocate(PoissonCtx%Elem(numCell))
+      Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      !!! This again needs to use the GLOBAL IS since the elemType is a global property
+      Do set = 1, size(setID)
+         Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),CellSetProperties,ierr)
+
+         Call DMmeshGetStratumIS(PoissonCtx%mesh,'Cell Sets',setID(set),setIS,ierr); CHKERRQ(ierr)
+         Call ElementInit(PoissonCtx%mesh,setIS,PoissonCtx%Elem,QuadratureOrder,CellSetProperties%ElemTypeShortID)
+         !!! I could use a different quadrature order on different blocks if I'd add it to the CellSetProperties!
+
+         !!! I need a function that allocates a SectionReal using the mesh and the dof layout from the elemType
+
+         !!! Get IS for block setID(set)
+         !Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+   
+         !Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      End Do
+
+
+      !!! 
+      !!! Create a Section consistent with the element choice
+      !!!
 
    End Subroutine PoissonCtxInit
 End Module M_POISSON
