@@ -245,7 +245,9 @@ Module m_MEF_Elements
       Module Procedure Element2D_Scal_Init,Element2D_Vect_Init,Element2D_Elast_Init, &
                        Element3D_Scal_Init,Element3D_Vect_Init,Element3D_Elast_Init, &
                        Element2D_Scal_InitSet,Element2D_Vect_InitSet,Element2D_Elast_InitSet, &
-                       Element3D_Scal_InitSet,Element3D_Vect_InitSet,Element3D_Elast_InitSet
+                       Element3D_Scal_InitSet,Element3D_Vect_InitSet,Element3D_Elast_InitSet, &
+                       Element2D_Scal_InitSet_ByShortID,Element2D_Vect_InitSet_ByShortID,Element2D_Elast_InitSet_ByShortID,&
+                       Element3D_Scal_InitSet_ByShortID,Element3D_Vect_InitSet_ByShortID,Element3D_Elast_InitSet_ByShortID
    End Interface ElementInit
    
    Interface ElementDestroy
@@ -433,6 +435,180 @@ Contains
          Write(*,*) "[ERROR]: Unknown element ", trim(elemName)
       End If
    End Subroutine Element_TypeFindByname
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Scal_InitSet_ByName"
+   Subroutine Element2D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element2D_Scal),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Character(len=*), Intent(IN)                :: elemName
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByName(elemName,elemType)
+      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element2D_Scal_InitSet_ByName
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Vect_InitSet_ByName"
+   Subroutine Element2D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element2D_Vect),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Character(len=*), Intent(IN)                :: elemName
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByName(elemName,elemType)
+      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element2D_Vect_InitSet_ByName
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Elast_InitSet_ByName"
+   Subroutine Element2D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element2D_Elast),Dimension(:),Pointer  :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Character(len=*), Intent(IN)                :: elemName
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByName(elemName,elemType)
+      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element2D_Elast_InitSet_ByName
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Scal_InitSet_ByName"
+   Subroutine Element3D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element3D_Scal),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Character(len=*), Intent(IN)                :: elemName
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByName(elemName,elemType)
+      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element3D_Scal_InitSet_ByName
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Vect_InitSet_ByName"
+   Subroutine Element3D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element3D_Vect),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Character(len=*), Intent(IN)                :: elemName
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByName(elemName,elemType)
+      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element3D_Vect_InitSet_ByName
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Elast_InitSet_ByName"
+   Subroutine Element3D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element3D_Elast),Dimension(:),Pointer  :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder
+      Character(len=*), Intent(IN)                :: elemName
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByName(elemName,elemType)
+      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element3D_Elast_InitSet_ByName
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Scal_InitSet_ByShortID"
+   Subroutine Element2D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element2D_Scal),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByID(shortID,elemType)
+      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element2D_Scal_InitSet_ByShortID
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Vect_InitSet_ByShortID"
+   Subroutine Element2D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element2D_Vect),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByID(shortID,elemType)
+      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element2D_Vect_InitSet_ByShortID
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Elast_InitSet_ByShortID"
+   Subroutine Element2D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element2D_Elast),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByID(shortID,elemType)
+      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element2D_Elast_InitSet_ByShortID
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Scal_InitSet_ByShortID"
+   Subroutine Element3D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element3D_Scal),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByID(shortID,elemType)
+      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element3D_Scal_InitSet_ByShortID
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Vect_InitSet_ByShortID"
+   Subroutine Element3D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element3D_Vect),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByID(shortID,elemType)
+      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element3D_Vect_InitSet_ByShortID
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Elast_InitSet_ByShortID"
+   Subroutine Element3D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+      Type(DM),intent(IN)                         :: mesh
+      Type(IS),intent(IN)                         :: cellIS
+      Type(Element3D_Elast),Dimension(:),Pointer   :: dElem
+      PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      
+      Type(Element_Type)                          :: elemType
+
+      Call Element_TypeFindByID(shortID,elemType)
+      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   End Subroutine Element3D_Elast_InitSet_ByShortID
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet"
