@@ -41,6 +41,9 @@ Module m_MEF_Sieve
    End Type Flag
 
 Contains
+
+#undef __FUNCT__
+#define __FUNCT__ "SectionRealSetFibrationCellSetdof"
 !!!
 !!! Replace with an IS version
 !!!

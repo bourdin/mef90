@@ -14,7 +14,7 @@ Module M_POISSON_TYPES
       Type(IS)                                        :: CellSetGlobalIS,VertexSetGlobalIS
       Type(IS)                                        :: CellSetLocalIS,VertexSetLocalIS
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: Elem
-      Type(Field)                                     :: BCU
+      Type(SectionReal)                               :: Section
       !Type(Field)                                     :: F !Make forces cell centered in assembly routines
       PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: VertexSetPropertiesBag
@@ -327,11 +327,7 @@ Contains
          !!! I could use a different quadrature order on different blocks if I'd add it to the CellSetProperties!
 
          !!! I need a function that allocates a SectionReal using the mesh and the dof layout from the elemType
-
-         !!! Get IS for block setID(set)
-         !Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
-   
-         !Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         !!! But with old style sieve, it is a bit of a pain in the ass, so I'll use th shortcuts for now.
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do
 
@@ -339,6 +335,7 @@ Contains
       !!! 
       !!! Create a Section consistent with the element choice
       !!!
-
+      Call DMMeshGetVertexSectionReal(PoissonCtx%mesh,"default",1,PoissonCtx%Section,ierr);CHKERRQ(ierr)
+      Call SectionRealView(PoissonCtx%Section,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr);
    End Subroutine PoissonCtxInit
 End Module M_POISSON
