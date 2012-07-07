@@ -10,6 +10,7 @@ Module m_MEF90
    Use m_MEF_EXO  
    Use m_MEF_Sieve
    Use m_MEF_Materials
+   Use m_MEF_Diffusion
 
    Public :: MEF90_Initialize
    Public :: MEF90_Finalize
@@ -22,7 +23,10 @@ Contains
        
       Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
       Call MEF90_MPIInitialize(ierr);CHKERRQ(ierr)
+
+      Call PetscLogBegin(ierr);CHKERRQ(ierr)
       
+      !!! Individual modules runtime initialization should be called here
       Call MEF90_MaterialsInitialize(ierr);CHKERRQ(ierr)
    End Subroutine MEF90_Initialize
    

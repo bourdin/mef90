@@ -1,4 +1,5 @@
 MEF90_OBJS = ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF90.o          \
+             ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Diffusion.o  \
              ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_Elements.o   \
              ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_EXO.o        \
              ${MEF90_DIR}/MEF90/${PETSC_ARCH}/m_MEF_LinAlg.o     \
