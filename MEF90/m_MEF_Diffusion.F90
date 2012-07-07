@@ -95,9 +95,8 @@ Contains
          End Do
          Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
       End Do
+      flops = 5 * elemType%numDof**2 * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   
-      flops = 5 * elemType%numDof**2 * size(elem(cellID(cell)+1)%Gauss_C) * size(cellID) 
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       DeAllocate(MatElem)
    End Subroutine DiffusionBilinearFormSet_2D
@@ -144,9 +143,9 @@ Contains
          End Do
          Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
       End Do
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    
-      flops = 7 * elemType%numDof * size(elem(cellID(cell)+1)%Gauss_C) * size(cellID) 
+      flops = 7 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       DeAllocate(Gloc)
       DeAllocate(Vloc)
@@ -187,10 +186,10 @@ Contains
          End Do
          Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
       End Do
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    
-      flops = 5 * elemType%numDof * size(elem(cellID(cell)+1)%Gauss_C) * size(cellID) 
+      flops = 5 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       DeAllocate(RHSloc)
       DeAllocate(Floc)
    End Subroutine DiffusionRHSSet_2D
@@ -228,9 +227,9 @@ Contains
          End Do
          Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
       End Do
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      flops =  5 * elemType%numDof**2 * size(elem(cellID(cell)+1)%Gauss_C) * size(cellID)   
+      flops =  5 * elemType%numDof**2 * size(elem(cellID(1)+1)%Gauss_C) * size(cellID)   
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       DeAllocate(MatElem)
    End Subroutine DiffusionBilinearFormSet_3D
 End Module m_MEF_Diffusion
