@@ -17,10 +17,18 @@ Program  SimplePoissonNG
    PetscBool                                    :: Restart
    PetscBool                                    :: splitIO
    PetscBool                                    :: flg
+   Type(SNES)                                   :: snesTemp
+   Type(KSP)                                    :: kspTemp
+   Type(PC)                                     :: pcTemp
+   Type(Mat)                                    :: matTemp
+   Type(Vec)                                    :: solTemp
    
-   
+      MatStructure                     :: matflg
+
 
    Call MEF90_Initialize()
+   Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
+
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'--prefix',prefix,flg,ierr);CHKERRQ(ierr)
    If (.NOT. flg) Then
       Call PetscPrintf(PETSC_COMM_WORLD,"No mesh prefix given\n",ierr)
@@ -36,32 +44,35 @@ Program  SimplePoissonNG
    splitIO = PETSC_FALSE
    Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,'--splitIO',splitIO,flg,ierr);CHKERRQ(ierr)
    
-   Call SimplePoissonInitialize(AppCtx,prefix,ierr);CHKERRQ(ierr)
+   !!! 
+   !!! Create PoissonCtx
+   !!!
+   Call PoissonCtxCreate(AppCtx,prefix,ierr);CHKERRQ(ierr)
    
+   !!!
+   !!! Get Matrix for the Jacobian / SNES and unknown vector
+   !!!
+   Call DMMeshSetMaxDof(AppCtx%mesh,1,iErr); CHKERRQ(iErr) 
+   Call DMMeshCreateVector(AppCtx%mesh,AppCtx%Section,solTemp,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%Section,MATMPIAIJ,matTemp,iErr);CHKERRQ(iErr)
+   Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
+   !!!
+   !!! Create SNES, 
+   !!!
+   Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
+   Call SNESSetDM(snesTemp,AppCtx%mesh,ierr);CHKERRQ(ierr)
+   Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
+   Call SNESSetFromOptions(snesTemp,ierr);CHKERRQ(ierr)
+   If (verbose > 0) Then
+      Call SNESView(snesTemp,PETSC_VIEWER_STDOUT_WORLD,ierr)
+   End If
+
+   Call SimplePoissonNGBilinearFormAssembly(snesTemp,solTemp,matTemp,matTemp,matflg,AppCtx,ierr)   
+   Call MatView(matTemp,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)   
    
-   Call SimplePoissonFinalize(AppCtx,ierr);CHKERRQ(ierr)
+      
+   Call PoissonCtxDestroy(AppCtx,ierr);CHKERRQ(ierr)
    Call MEF90_Finalize()
 
 
-Contains
-#undef __FUNCT__
-#define __FUNCT__ "SimplePoissonInitialize"
-   Subroutine SimplePoissonInitialize(PoissonCtx,prefix,ierr)
-      Type(PoissonCtx_Type),intent(INOUT)       :: PoissonCtx
-      Character(len=*),intent(IN)               :: prefix
-      PetscErrorCode,Intent(OUT)                :: ierr
-
-      Call PetscLogBegin(ierr);CHKERRQ(ierr)
-      Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
-      Call PoissonCtxInit(PoissonCtx,prefix,ierr);CHKERRQ(ierr)
-   End Subroutine SimplePoissonInitialize   
-
-#undef __FUNCT__
-#define __FUNCT__ "SimplePoissonFinalize"
-   Subroutine SimplePoissonFinalize(PoissonCtx,ierr)
-      Type(PoissonCtx_Type),intent(IN)          :: PoissonCtx
-      PetscErrorCode,Intent(OUT)                :: ierr
-      
-      ierr = 0
-   End Subroutine SimplePoissonFinalize   
 End Program  SimplePoissonNG
