@@ -15,7 +15,6 @@ Module M_POISSON_TYPES
       Type(IS)                                        :: CellSetLocalIS,VertexSetLocalIS
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: Elem
       Type(SectionReal)                               :: Section
-      !Type(Field)                                     :: F !Make forces cell centered in assembly routines
       PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: VertexSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: MaterialPropertiesBag
@@ -51,7 +50,7 @@ Module M_POISSONCELLSETPROPERTY_INTERFACE
       Subroutine PetscBagGetData(bag,data,ierr)
          Use M_POISSON_TYPES
          PetscBag                                     :: bag
-         type(PoissonCellSetProperties_Type),pointer  :: data
+         Type(PoissonCellSetProperties_Type),pointer  :: data
          PetscErrorCode                               :: ierr
       End subroutine PetscBagGetData
    End interface
@@ -171,14 +170,14 @@ Contains
 
 
 #undef __FUNCT__
-#define __FUNCT__ "PoissonCtxInit"
+#define __FUNCT__ "PoissonCtxCreate"
    !!!
    !!!  
    !!!  PoissonCtxInit:
    !!!  
    !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
    !!!
-   Subroutine PoissonCtxInit(PoissonCtx,prefix,ierr)
+   Subroutine PoissonCtxCreate(PoissonCtx,prefix,ierr)
       Type(PoissonCtx_Type),intent(OUT)            :: PoissonCtx
       Character(len=*),intent(IN)                  :: prefix
       PetscErrorCode,Intent(OUT)                   :: ierr
@@ -322,7 +321,7 @@ Contains
       Do set = 1, size(setID)
          Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),CellSetProperties,ierr)
 
-         Call DMmeshGetStratumIS(PoissonCtx%mesh,'Cell Sets',setID(set),setIS,ierr); CHKERRQ(ierr)
+         Call DMmeshGetStratumIS(PoissonCtx%mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
          Call ElementInit(PoissonCtx%mesh,setIS,PoissonCtx%Elem,QuadratureOrder,CellSetProperties%ElemTypeShortID)
          !!! I could use a different quadrature order on different blocks if I'd add it to the CellSetProperties!
 
@@ -336,6 +335,93 @@ Contains
       !!! Create a Section consistent with the element choice
       !!!
       Call DMMeshGetVertexSectionReal(PoissonCtx%mesh,"default",1,PoissonCtx%Section,ierr);CHKERRQ(ierr)
-      Call SectionRealView(PoissonCtx%Section,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr);
-   End Subroutine PoissonCtxInit
+      !Call SectionRealView(PoissonCtx%Section,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr);
+   End Subroutine PoissonCtxCreate
+   
+#undef __FUNCT__
+#define __FUNCT__ "PoissonCtxDestroy"
+!!!
+!!!  
+!!!  PoissonCtxDestroy:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine PoissonCtxDestroy(PoissonCtx,ierr)
+   Type(PoissonCtx_Type)                                    :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                               :: ierr
+   
+   PetscInt                                                 :: e,set,nset
+   
+   Call ISGetLocalSize(PoissonCtx%CellSetGlobalIS,nset,ierr);CHKERRQ(ierr)
+   Do set = 1, nset
+      Call PetscBagDestroy(PoissonCtx%CellSetPropertiesBag(set),ierr);CHKERRQ(ierr)
+      Call PetscBagDestroy(PoissonCtx%MaterialPropertiesBag(set),ierr);CHKERRQ(ierr)
+   End Do
+   DeAllocate(PoissonCtx%CellSetPropertiesBag)
+   DeAllocate(PoissonCtx%MaterialPropertiesBag)
+   Call ISDestroy(PoissonCtx%CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call ISDestroy(PoissonCtx%CellSetLocalIS,ierr);CHKERRQ(ierr)
+
+   Call ISGetLocalSize(PoissonCtx%VertexSetGlobalIS,nset,ierr);CHKERRQ(ierr)
+   Do set = 1, nset
+      Call PetscBagDestroy(PoissonCtx%VertexSetPropertiesBag(set),ierr);CHKERRQ(ierr)
+   End Do
+   DeAllocate(PoissonCtx%VertexSetPropertiesBag)
+   Call ISDestroy(PoissonCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   
+   Call SectionRealDestroy(PoissonCtx%Section,ierr);CHKERRQ(ierr)
+   Do e = 1, size(PoissonCtx%Elem)
+      Call ElementDestroy(PoissonCtx%Elem(e))
+   End Do
+   DeAllocate(PoissonCtx%Elem)
+   
+   Call DMDestroy(PoissonCtx%mesh,ierr);CHKERRQ(ierr);
+End Subroutine PoissonCtxDestroy 
+
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonNGBilinearFormAssembly"
+!!!
+!!!  
+!!!  SimplePoissonNGBilinearFormAssembly:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonNGBilinearFormAssembly(snesTemp,x,A,M,flag,PoissonCtx,ierr)
+   Type(SNES),Intent(IN)                        :: snesTemp
+   Type(Vec),Intent(IN)                         :: x
+   Type(Mat),Intent(INOUT)                      :: A,M
+   MatStructure,Intent(INOUT)                     :: flag
+   Type(PoissonCtx_Type),intent(IN)             :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                   :: ierr  
+   
+   Type(IS)                                     :: setIS
+   PetscInt,dimension(:),Pointer                :: setID
+   PetscInt                                     :: set
+   Type(MEF90_MATPROP),pointer                  :: matpropSet
+   Type(PoissonCellSetProperties_Type),pointer  :: cellSetProperties
+   Type(Element_Type)                           :: elemType
+   
+   Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call DMMeshGetStratumIS(PoissonCtx%mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+
+      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
+
+      Call Element_TypeFindByID(cellSetProperties%ElemTypeShortID,elemType) 
+
+      If (elemType%coDim == 0) Then
+         Write(*,*) '======== Assembling cell set',setID(set)
+         Call ISView(setIS,PETSC_VIEWER_STDOUT_SELF,ierr)         
+         Call MEF90_DiffusionBilinearFormSet(A,PoissonCtx%mesh,PoissonCtx%Section,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,PoissonCtx%elem,elemType,ierr);CHKERRQ(ierr)
+      Else 
+         Write(*,*) '======== Skipping cell set',setID(set)
+      End If
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+   End Do     
+   Call ISRestoreIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
+   Call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
+
+End Subroutine SimplePoissonNGBilinearFormAssembly
 End Module M_POISSON
