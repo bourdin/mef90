@@ -386,20 +386,21 @@ End Subroutine PoissonCtxDestroy
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine SimplePoissonNGBilinearFormAssembly(snesTemp,x,A,M,flag,PoissonCtx,ierr)
-   Type(SNES),Intent(IN)                        :: snesTemp
-   Type(Vec),Intent(IN)                         :: x
-   Type(Mat),Intent(INOUT)                      :: A,M
-   MatStructure,Intent(INOUT)                     :: flag
-   Type(PoissonCtx_Type),intent(IN)             :: PoissonCtx
-   PetscErrorCode,Intent(OUT)                   :: ierr  
+Subroutine SimplePoissonNGBilinearFormAssembly(snesTemp,x,A,M,flg,PoissonCtx,ierr)
+   Type(SNES),Intent(IN)                           :: snesTemp
+   Type(Vec),Intent(IN)                            :: x
+   Type(Mat),Intent(INOUT)                         :: A,M
+   MatStructure,Intent(INOUT)                      :: flg
+   Type(PoissonCtx_Type),intent(IN)                :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr  
    
-   Type(IS)                                     :: setIS
-   PetscInt,dimension(:),Pointer                :: setID
-   PetscInt                                     :: set
-   Type(MEF90_MATPROP),pointer                  :: matpropSet
-   Type(PoissonCellSetProperties_Type),pointer  :: cellSetProperties
-   Type(Element_Type)                           :: elemType
+   Type(IS)                                        :: setIS,setISdof
+   PetscInt,dimension(:),Pointer                   :: setID
+   PetscInt                                        :: set
+   Type(MEF90_MATPROP),pointer                     :: matpropSet
+   Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
+   Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
+   Type(Element_Type)                              :: elemType
    
    Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
@@ -423,5 +424,25 @@ Subroutine SimplePoissonNGBilinearFormAssembly(snesTemp,x,A,M,flag,PoissonCtx,ie
    Call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
    Call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
 
+   !!!
+   !!! Should this really be called here?
+   !!!
+   Call ISGetIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
+      Write(*,*) vertexSetProperties%Has_BC
+      If (vertexSetProperties%Has_BC) Then
+         Call DMMeshGetStratumIS(PoissonCtx%mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call DMMeshISCreateISglobaldof(PoissonCtx%mesh,PoissonCtx%Section,setIS,1,setISdof,ierr);CHKERRQ(ierr)
+         Write(*,*) '======== Adding boundary condition on vertex set ', setID(set)
+         Call ISView(setIS,PETSC_VIEWER_STDOUT_SELF,ierr)         
+         Call ISView(setISdof,PETSC_VIEWER_STDOUT_SELF,ierr)         
+         !!! Change this
+         Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,x,x,ierr);CHKERRQ(ierr)
+      End If
+   End Do
+   Call ISRestoreIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   
+   flg = SAME_PRECONDITIONER
 End Subroutine SimplePoissonNGBilinearFormAssembly
 End Module M_POISSON
