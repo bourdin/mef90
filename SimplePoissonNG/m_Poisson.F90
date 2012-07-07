@@ -437,8 +437,7 @@ Subroutine SimplePoissonNGBilinearFormAssembly(snesTemp,x,A,M,flg,PoissonCtx,ier
          Write(*,*) '======== Adding boundary condition on vertex set ', setID(set)
          Call ISView(setIS,PETSC_VIEWER_STDOUT_SELF,ierr)         
          Call ISView(setISdof,PETSC_VIEWER_STDOUT_SELF,ierr)         
-         !!! Change this
-         Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,x,x,ierr);CHKERRQ(ierr)
+         Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
       End If
    End Do
    Call ISRestoreIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
