@@ -180,15 +180,13 @@ Contains
    !!!  
    !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
    !!!
-   Subroutine PoissonCtxCreate(PoissonCtx,prefix,ierr)
+   Subroutine PoissonCtxCreate(PoissonCtx,exoid,ierr)
       Type(PoissonCtx_Type),intent(OUT)            :: PoissonCtx
-      Character(len=*),intent(IN)                  :: prefix
+      Integer,Intent(IN)                           :: exoid
       PetscErrorCode,Intent(OUT)                   :: ierr
      
       PetscInt                                     :: verbose
       PetscBool                                    :: flg
-      Integer                                      :: cpu_ws,io_ws,exoidIN=0
-      Real                                         :: exo_version
       Character(len=MXSTLN)                        :: filename,EXOElemType
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer,setName,setprefix
       Type(DM)                                     :: tmp_mesh
@@ -200,7 +198,6 @@ Contains
       Type(PoissonCellSetProperties_Type)          :: defaultCellSetProperties
       Type(PoissonCellSetProperties_Type),pointer  :: CellSetProperties
       Type(PoissonVertexSetProperties_Type)        :: defaultVertexSetProperties
-      integer                                      :: exoerr
       PetscInt,Parameter                           :: QuadratureOrder = 2
       Type(IS)                                     :: setIS
       PetscInt,Dimension(:),Pointer                :: cellID
@@ -208,29 +205,11 @@ Contains
       verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'--verbose',verbose,flg,ierr);CHKERRQ(ierr)
 
-      !!! 1. Read and distribute the DM from the exo file <prefix>.gen
-      If (MEF90_MyRank == 0) Then
-         cpu_ws = 8
-         io_ws = 8
-         filename = Trim(prefix)//'.gen'
-         exoidIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
-         If (verbose >0) Then
-            Write(IOBuffer,99) exoidIN, exoerr
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr)
-         End If
-99 Format('EXOPEN status: ',I4,' exoidIN: ',I4,'\n')         
-         If (exoerr < 0) Then
-            Write(IOBuffer,*) '\n\nError opening EXO file ', trim(filename),'\n\n'
-            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr);
-            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
-         EndIf
-      End If
-      
       !!! Read the mesh from <prefix.gen> and partition it
       If (MEF90_NumProcs == 1) Then
-         Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoidIN,PoissonCtx%mesh,ierr);CHKERRQ(ierr)
+         Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoid,PoissonCtx%mesh,ierr);CHKERRQ(ierr)
       Else
-         Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoidIN,Tmp_mesh,ierr);CHKERRQ(ierr)
+         Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoid,Tmp_mesh,ierr);CHKERRQ(ierr)
       
          Call DMmeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,PoissonCtx%mesh,ierr);CHKERRQ(ierr)
          Call DMDestroy(Tmp_mesh,ierr);CHKERRQ(ierr)
@@ -269,7 +248,7 @@ Contains
          End if
          !!! Use a reasonable guess from the EXO file if nothing is given
          If (MEF90_MyRank == 0) Then
-            Call EXOSetElementType_Load(exoidIN,setID(set),EXOElemType)
+            Call EXOSetElementType_Load(exoid,setID(set),EXOElemType)
             Call EXO2Element_TypeScal(EXOElemType,MEF90_DIM,defaultElemType)
          End If
          Call MPI_BCast(defaultElemType%ShortID,MXSTLN,MPI_CHARACTER,0,PETSC_COMM_WORLD,ierr)
@@ -487,7 +466,6 @@ Subroutine SimplePoissonNGOperatorAssembly(snesTemp,x,residual,PoissonCtx,ierr)
       !!! Assembly part of the residual coming from the bilinear form on the blocks of 
       !!! codimension 0
       If (elemType%coDim == 0) Then
-         Write(*,*) 'Building block ', setID(set), cellSetProperties%Force
          Call MEF90_DiffusionOperatorSet(residualSec,PoissonCtx%mesh,PoissonCtx%Section,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,PoissonCtx%elem,elemType,ierr);CHKERRQ(ierr)
       End If
       !!! Assembly the force part
@@ -525,21 +503,41 @@ Subroutine SimplePoissonNGOperatorAssembly(snesTemp,x,residual,PoissonCtx,ierr)
    Call ISRestoreIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 End Subroutine SimplePoissonNGOperatorAssembly
 
-Subroutine SimplePoissonNGEXOFormat(EXO)
-   Type(EXO_Type)                               :: EXO
-   PetscInt                                     :: ierr
 
-   EXO%num_nsproperties = 0
-   EXO%num_ebproperties = 0
-   EXO%num_globvariables = 3
-   Call EXPVP (EXO%exoid,'g',3,ierr)
-   Call EXPVAN(EXO%exoid,'g',3,(/'Elastic Energy ','Ext Forces work','Total Energy   '/),ierr)
-   Call EXPVP (EXO%exoid,'n',1,ierr)
-   Call EXPVAN(EXO%exoid,'n',1,(/'U'/),ierr)
-   EXO%num_vertvariables = 1
-   Call EXPVAN(EXO%exoid,'e',1,(/'F'/),ierr)
-   EXO%num_cellvariables = 1
-End Subroutine SimplePoissonNGEXOFormat
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonFormInitialGuess"
+!!!
+!!!  
+!!!  SimplePoissonFormInitialGuess:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonFormInitialGuess(x,PoissonCtx,ierr)
+   Type(Vec),Intent(IN)                            :: x
+   Type(PoissonCtx_Type),intent(IN)                :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
 
+   Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
+   Type(IS)                                        :: setIS,setISdof
+   PetscInt,dimension(:),Pointer                   :: setID
+   PetscInt,Dimension(:),Pointer                   :: setIdx
+   PetscInt                                        :: set
+   PetscReal,Dimension(:),Pointer                  :: BC
+
+   Call ISGetIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
+      If (vertexSetProperties%Has_BC) Then
+         Call DMMeshGetStratumIS(PoissonCtx%mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call DMMeshISCreateISglobaldof(PoissonCtx%mesh,PoissonCtx%Section,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+         Allocate(BC(size(setIdx)))
+         BC = vertexSetProperties%BC
+         Call VecSetValues(x,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         DeAllocate(BC)
+         Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+      End If
+   End Do
+   Call ISRestoreIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+End Subroutine SimplePoissonFormInitialGuess
 End Module M_POISSON
-
