@@ -14,7 +14,6 @@ Program  SimplePoissonNG
    Character(len=MEF90_MXSTRLEN)                :: IOBuffer
    PetscInt                                     :: numDim
    PetscInt                                     :: Verbose
-   PetscBool                                    :: Restart
    PetscBool                                    :: splitIO
    PetscBool                                    :: flg
    Type(SNES)                                   :: snesTemp
@@ -39,19 +38,16 @@ Program  SimplePoissonNG
 
    verbose = 0
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'--verbose',verbose,flg,ierr);CHKERRQ(ierr)
-   restart = PETSC_FALSE
-   Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,'--restart',restart,flg,ierr);CHKERRQ(ierr)
    
    splitIO = PETSC_FALSE
    Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,'--splitIO',splitIO,flg,ierr);CHKERRQ(ierr)
-   
 
    If (MEF90_MyRank == 0) Then
       cpu_ws = 8
       io_ws = 8
       filename = Trim(prefix)//'.gen'
       exoIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
-      If (verbose >0) Then
+      If (verbose > 0) Then
          Write(IOBuffer,99) exoERR, exoIN
          Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr)
       End If

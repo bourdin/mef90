@@ -33,9 +33,6 @@ Module M_POISSON_TYPES
       PetscBool                                       :: Has_BC
       PetscReal                                       :: BC
    End Type PoissonVertexSetProperties_Type   
-
-   !Type(PoissonCellSetProperties_Type),Parameter      :: defaultCellSetProperties = PoissonCellSetProperties_Type( DEFAULT_ELEMENT_SHORTID,0.0_Kr )
-   !Type(PoissonVertexSetProperties_Type),Parameter    :: defaultVertexSetProperties = PoissonVertexSetProperties_Type( PETSC_TRUE,0.0_Kr )
 End Module M_POISSON_TYPES
 
 Module M_POISSONCELLSETPROPERTY_INTERFACE   
@@ -151,6 +148,7 @@ Contains
       Call PetscBagRegisterInt(bag,CellSetProperties%ElemTypeShortID,default%ElemTypeShortID,'ShortID','Element type ShortID',ierr);CHKERRQ(ierr)
       !Call PetscBagRegisterEnum(bag,CellSetProperties%ElemTypeShortIDEnum,MEF90_knownElementNames,default%ElemTypeShortIDEnum,'shortidenum','Element type name',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,CellSetProperties%Force,default%force,'Force','Magnitude of the applied force',ierr);CHKERRQ(ierr)
+      !Call PetscBagSetFromOptions(bag,ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterPoissonCellSetProperties
 
 #undef __FUNCT__
@@ -168,6 +166,7 @@ Contains
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
       Call PetscBagRegisterBool(bag,VertexSetProperties%Has_BC,PETSC_FALSE,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,VertexSetProperties%BC,0.0_Kr,'Temp','Temperature boundary value',ierr);CHKERRQ(ierr)
+      !Call PetscBagSetFromOptions(bag,ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterPoissonVertexSetProperties
    
 
