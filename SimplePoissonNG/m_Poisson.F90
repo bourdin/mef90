@@ -539,4 +539,58 @@ Subroutine SimplePoissonFormInitialGuess(x,PoissonCtx,ierr)
    End Do
    Call ISRestoreIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 End Subroutine SimplePoissonFormInitialGuess
+
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonComputeEnergies"
+!!!
+!!!  
+!!!  SimplePoissonComputeEnergies:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonComputeEnergies(x,PoissonCtx,energy,work,ierr)
+   Type(Vec),Intent(IN)                            :: x
+   Type(PoissonCtx_Type),intent(IN)                :: PoissonCtx
+   PetscReal,Dimension(:),Pointer                  :: energy,work
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   Type(IS)                                        :: setIS,setISdof
+   PetscInt,dimension(:),Pointer                   :: setID
+   PetscInt,Dimension(:),Pointer                   :: setIdx
+   PetscInt                                        :: set
+   Type(MEF90_MATPROP),pointer                     :: matpropSet
+   Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
+   PetscReal                                       :: myenergy,mywork
+   Type(Element_Type)                              :: elemType
+
+   energy = 0.0_Kr
+   work = 0.0_Kr
+   
+   Call SectionRealToVec(PoissonCtx%Section,PoissonCtx%ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)
+   Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      myenergy = 0.0_Kr
+      mywork   = 0.0_Kr
+      Call DMMeshGetStratumIS(PoissonCtx%mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+
+      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
+      Call Element_TypeFindByID(cellSetProperties%ElemTypeShortID,elemType) 
+
+      !!! Assembly part of the residual coming from the bilinear form on the blocks of 
+      !!! codimension 0
+      If (elemType%coDim == 0) Then
+         Call MEF90_DiffusionEnergySet(myenergy,PoissonCtx%Section,PoissonCtx%mesh,matpropSet%ThermalDiffusivity,0.0_Kr,setIS,PoissonCtx%elem,elemType,ierr)
+      End If
+      Call MPI_AllReduce(myenergy,energy(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+      If (cellSetProperties%Force /= 0.0_Kr) Then
+         Call MEF90_DiffusionWorkSet(mywork,PoissonCtx%Section,PoissonCtx%mesh,cellSetProperties%Force,setIS,PoissonCtx%elem,elemType,ierr)
+      End If
+      Call MPI_AllReduce(mywork,work(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+   End Do     
+   Call ISRestoreIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+
+   
+End Subroutine SimplePoissonComputeEnergies
 End Module M_POISSON

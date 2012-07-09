@@ -1,3 +1,6 @@
+!!!
+!!! Try: mpiexec -n 2 ./Darwin-intel11.1-mef90-g/SimplePoissonNG2D -vs0001_tempBC 1 -vs0001_temp 0 -vs0002_tempBC 1 -vs0002_temp 0 -cs0001_force 0. -cs0002_force 1. -temp_pc_type bjacobi -temp_ksp_monitor -temp_snes_type ksponly --prefix SquareNG2
+!!! 
 Program  SimplePoissonNG
 #include "SimplePoisson.inc"
 #include "finclude/petscdef.h"
@@ -25,6 +28,9 @@ Program  SimplePoissonNG
    Real                                         :: exo_version
    Integer                                      :: exoerr
    MPI_Comm                                     :: IOComm
+   PetscReal,Dimension(:),Pointer               :: energy,work
+   PetscInt,dimension(:),Pointer                :: setID
+   PetscInt                                     :: set
 
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
@@ -48,25 +54,25 @@ Program  SimplePoissonNG
       filename = Trim(prefix)//'.gen'
       exoIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
       If (verbose > 0) Then
-         Write(IOBuffer,99) exoERR, exoIN
+         Write(IOBuffer,99) exoERR,exoIN
          Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr)
       End If
 99 Format('EXOPEN status: ',I4,' exoIN: ',I4,'\n')         
       If (exoerr < 0) Then
-         Write(IOBuffer,*) '\n\nError opening EXO file ', trim(filename),'\n\n'
+         Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr);
          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
       EndIf
    End If
    If (splitIO) Then
       IOComm = PETSC_COMM_SELF
-      Write(filename,105) trim(prefix),MEF90_MyRank
+      Write(filename,100) trim(prefix),MEF90_MyRank
    Else
       IOComm = PETSC_COMM_WORLD
-      Write(filename,106) trim(prefix)
+      Write(filename,101) trim(prefix)
    End If
-105 Format(A,'-',I4.4,'.gen')
-106 Format(A,'_out.gen')
+100 Format(A,'-',I4.4,'.gen')
+101 Format(A,'_out.gen')
 
    !!! 
    !!! Create PoissonCtx
@@ -82,10 +88,10 @@ Program  SimplePoissonNG
       exoOUT = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
       Call DMmeshViewExodusSplit(AppCtx%mesh,exoOUT,ierr)
       Call EXPVP (exoOUT,'g',3,ierr)
-      Call EXPVAN(exoOUT,'g',3,(/'Elastic Energy ','Ext Forces work','Total Energy   '/),ierr)
+      Call EXPVAN(exoOUT,'g',3,(/'Energy         ','Ext Forces work','Total Energy   '/),ierr)
       Call EXPVP (exoOUT,'n',1,ierr)
       Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
-      Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
+      !Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
    Else
       If (MEF90_MyRank == 0) Then
          cpu_ws = 8
@@ -113,7 +119,7 @@ Program  SimplePoissonNG
    Call MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
    !!!
-   !!! Create SNES, 
+   !!! Create SNES,
    !!!
    Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
    Call SNESSetDM(snesTemp,AppCtx%mesh,ierr);CHKERRQ(ierr)
@@ -129,20 +135,35 @@ Program  SimplePoissonNG
 
    Call KSPGetPC(kspTemp,pcTemp,ierr);CHKERRQ(ierr)
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
-   !!! Setup GAMG here (coordinates, in particular)
+   !!! Setup GAMG here (coordinates,in particular)
    If (verbose > 0) Then
       Call SNESView(snesTemp,PETSC_VIEWER_STDOUT_WORLD,ierr)
    End If
    
-   
+   !!! Solve Poisson Equation
    Call SimplePoissonFormInitialGuess(solTemp,AppCtx,ierr);CHKERRQ(ierr)
    Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
    
+   !!! Compute energy and work
+   Call ISGetIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Allocate(energy(size(setID)))
+   Allocate(work(size(setID)))
+   Call SimplePoissonComputeEnergies(solTemp,AppCtx,energy,work,ierr)
+   Do set = 1,size(setID)
+      Write(IOBuffer,102) setID(set),energy(set),work(set)
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   End Do
+   Call ISRestoreIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+102 Format('set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
+
    Call SectionRealToVec(AppCtx%Section,AppCtx%ScatterSecToVec,SCATTER_REVERSE,solTemp,ierr);CHKERRQ(ierr)
-   !!! solTemp values have copied to the Section, localTemp values should magically be up to date in the local
+   !!! solTemp values are copied to the Section,localTemp values should magically be up to date in the local
    !!! Vector since it shares the same storage space.
    Call VecViewExodusVertex(AppCtx%mesh,locTemp,IOComm,exoOUT,1,1,ierr)
-   
+   Call EXPGV(exoOUT,1,3,(/ sum(energy),sum(work),sum(energy)-sum(work) /),ierr)   
+   Write(IOBuffer,103) sum(energy),sum(work)
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+103 Format('Total:  energy: ',ES12.5,' work: ',ES12.5,'\n')
 
    !!!
    !!! Cleanup
@@ -154,6 +175,8 @@ Program  SimplePoissonNG
    Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)   
    Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)   
    Call VecDestroy(locTemp,ierr);CHKERRQ(ierr)   
+   DeAllocate(work)
+   DeAllocate(energy)
    Call MEF90_Finalize()
 
 
