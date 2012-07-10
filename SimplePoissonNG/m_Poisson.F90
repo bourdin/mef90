@@ -538,6 +538,8 @@ Subroutine SimplePoissonFormInitialGuess(x,PoissonCtx,ierr)
       End If
    End Do
    Call ISRestoreIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
+   Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
 End Subroutine SimplePoissonFormInitialGuess
 
 #undef __FUNCT__

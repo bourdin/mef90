@@ -290,6 +290,7 @@ Contains
       PetscErrorCode,Intent(OUT)                   :: ierr
 
       PetscReal,Dimension(:),Pointer               :: xloc
+      PetscReal                                    :: xelem
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
       PetscInt                                     :: iDoF1,iDoF2,iGauss
@@ -300,13 +301,15 @@ Contains
       Do cell = 1,size(cellID)   
          Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
          Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+            xelem = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
-               work = work + elem(cellID(cell)+1)%Gauss_C(iGauss) * F * xloc(iDof1)
+               xelem = xelem + xloc(iDof1) * elem(cellID(cell)+1)%BF(iDof1,iGauss)
             End Do
+            work = work + elem(cellID(cell)+1)%Gauss_C(iGauss) * F * xelem
          End Do
       End Do
    
-      flops = 3 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+      flops = (2 * elemType%numDof + 3 )* size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       DeAllocate(xloc)

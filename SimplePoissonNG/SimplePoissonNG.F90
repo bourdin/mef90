@@ -148,6 +148,7 @@ Program  SimplePoissonNG
    Call ISGetIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Allocate(energy(size(setID)))
    Allocate(work(size(setID)))
+
    Call SimplePoissonComputeEnergies(solTemp,AppCtx,energy,work,ierr)
    Do set = 1,size(setID)
       Write(IOBuffer,102) setID(set),energy(set),work(set)
