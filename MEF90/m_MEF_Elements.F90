@@ -1210,6 +1210,7 @@ Contains
       End Select
       Call Element2D_Scal_Destroy(tmpElem)
       deAllocate(tmpCoord)
+      Allocate(delem%Grad_BF(0,0))
    End Subroutine Element_P_Lagrange_2DBoundary_Scal_Init                          
       
 #undef __FUNCT__
@@ -1456,6 +1457,7 @@ Contains
       End Select
       Call Element3D_Scal_Destroy(tmpElem)
       deAllocate(tmpCoord)
+      Allocate(dElem%Grad_BF(0,0))
    End Subroutine Element_P_Lagrange_3DBoundary_Scal_Init
    
 #undef __FUNCT__
@@ -1561,6 +1563,7 @@ Contains
 #define __FUNCT__ "Element2D_Scal_Destroy"
    Subroutine Element2D_Scal_Destroy(dElem)
       Type(Element2D_Scal)                   :: dElem
+      
       If (Associated(dElem%BF)) Then
          DeAllocate(dElem%BF)
       End If
@@ -1570,9 +1573,6 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-!      If (Associated(dElem%ID_DoF)) Then
-!         DeAllocate(dElem%ID_DoF)
-!      End If
    End Subroutine Element2D_Scal_Destroy
 
 #undef __FUNCT__
@@ -1588,9 +1588,6 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C)
       End If
-!      If (Associated(dElem%ID_DoF)) Then
-!         DeAllocate(dElem%ID_DoF)
-!      End If
    End Subroutine Element2D_Vect_Destroy
    
 #undef __FUNCT__
