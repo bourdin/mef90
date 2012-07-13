@@ -256,7 +256,7 @@ Contains
          Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonCellSetProperties,PoissonCtx%CellSetPropertiesBag(set),ierr)
          Call PetscBagRegisterPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),setName,setprefix,defaultCellSetProperties,ierr);CHKERRQ(ierr)
 
-         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90_MatProp2D,PoissonCtx%MaterialPropertiesBag(set),ierr)
+         Call PetscBagCreate(PETSC_COMM_WORLD,SIZEOFMATPROP,PoissonCtx%MaterialPropertiesBag(set),ierr)
          Call PetscBagRegisterMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),setName,setprefix,DEFAULT_MATERIAL,ierr);CHKERRQ(ierr)
          if (verbose > 0) Then
             Call PetscBagView(PoissonCtx%CellSetPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)

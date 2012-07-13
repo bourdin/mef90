@@ -136,9 +136,6 @@ Program  SimplePoissonNG
    Call KSPGetPC(kspTemp,pcTemp,ierr);CHKERRQ(ierr)
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
    !!! Setup GAMG here (coordinates,in particular)
-   If (verbose > 0) Then
-      Call SNESView(snesTemp,PETSC_VIEWER_STDOUT_WORLD,ierr)
-   End If
    
    !!! Solve Poisson Equation
    Call SimplePoissonFormInitialGuess(solTemp,AppCtx,ierr);CHKERRQ(ierr)
@@ -155,7 +152,7 @@ Program  SimplePoissonNG
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    End Do
    Call ISRestoreIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-102 Format('set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
+102 Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
 
    Call SectionRealToVec(AppCtx%Section,AppCtx%ScatterSecToVec,SCATTER_REVERSE,solTemp,ierr);CHKERRQ(ierr)
    !!! solTemp values are copied to the Section,localTemp values should magically be up to date in the local
@@ -178,6 +175,10 @@ Program  SimplePoissonNG
    Call VecDestroy(locTemp,ierr);CHKERRQ(ierr)   
    DeAllocate(work)
    DeAllocate(energy)
+   
+   If (verbose > 0) Then
+      Call PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+   EndIf
    Call MEF90_Finalize()
 
 

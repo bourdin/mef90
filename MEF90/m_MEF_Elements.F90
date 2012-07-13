@@ -48,16 +48,16 @@ Module m_MEF_Elements
  
    Enum,bind(c)
       enumerator  :: &
-         MEF90_P1_Lagrange_2D_Scal_ShortID = 1,       &
-         MEF90_P1_Lagrange_3D_Scal_ShortID,           &
-         MEF90_P1_Lagrange_2D_Elast_ShortID,          &
-         MEF90_P1_Lagrange_3D_Elast_ShortID,          &
-         MEF90_P1_Lagrange_2D_Vect_ShortID,           &
-         MEF90_P1_Lagrange_3D_Vect_ShortID,           &
-         MEF90_P1_Lagrange_2DBoundary_Scal_ShortID,   &
-         MEF90_P1_Lagrange_3DBoundary_Scal_ShortID,   &
-         MEF90_P1_Lagrange_2DBoundary_Elast_ShortID,  &
-         MEF90_P1_Lagrange_3DBoundary_Elast_ShortID,  &
+         MEF90_P1_Lagrange_2D_Scal_ShortID = 1,       &  ! 1
+         MEF90_P1_Lagrange_3D_Scal_ShortID,           &  ! 2
+         MEF90_P1_Lagrange_2D_Elast_ShortID,          &  ! 3
+         MEF90_P1_Lagrange_3D_Elast_ShortID,          &  ! 4
+         MEF90_P1_Lagrange_2D_Vect_ShortID,           &  ! 5
+         MEF90_P1_Lagrange_3D_Vect_ShortID,           &  ! 6
+         MEF90_P1_Lagrange_2DBoundary_Scal_ShortID,   &  ! 7
+         MEF90_P1_Lagrange_3DBoundary_Scal_ShortID,   &  ! 8
+         MEF90_P1_Lagrange_2DBoundary_Elast_ShortID,  &  ! 9
+         MEF90_P1_Lagrange_3DBoundary_Elast_ShortID,  &  ! 10
          MEF90_P1_Lagrange_2DBoundary_Vect_ShortID,   &
          MEF90_P1_Lagrange_3DBoundary_Vect_ShortID,   &
          MEF90_P2_Lagrange_2D_Scal_ShortID,           &
@@ -1414,8 +1414,8 @@ Contains
       
       !!!
       !!! Create a bogus tet element by adding a 4th vertex along the normal of the
-      !!! face,at distance XXX so that if a function is constant along the normal
-      !!! direction of the face,one has \int_face fdx = \int_tet fdx 
+      !!! face, at distance XXX so that if a function is constant along the normal
+      !!! direction of the face, one has \int_face fdx = \int_tet fdx 
       !!!
       Allocate(tmpCoord(3,4))
       Do i = 1,3

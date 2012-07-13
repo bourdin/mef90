@@ -30,7 +30,6 @@ Program TestMaterials
       write(name,200) i
       write(prefix,201) i
       Call PetscBagRegisterMEF90_MatProp(matBag2D(i),name,prefix,MEF90_Mathium2D,ierr)
-      !Call PetscBagSetFromOptions(matBag2D(i),ierr)
       Call PetscBagView(matBag2D(i),PETSC_VIEWER_STDOUT_WORLD,ierr)
       Call PetscBagGetDataMEF90_MatProp(matBag2D(i),matProp2D,ierr)
       Call PetscPrintf(PETSC_COMM_WORLD,'\n',ierr)
