@@ -11,6 +11,7 @@
 #define SIZEOFMEF90_MAT     9
 #define SIZEOFMEF90_MATS    6
 #define SIZEOFMEF90_TENS4OS 21
+#define SIZEOFMATPROP       sizeofMEF90_MatProp3D
 #else
 #define MEF90_ELEMENT_SCAL  Element2D_Scal
 #define MEF90_ELEMENT_VECT  Element2D_Vect
@@ -24,4 +25,5 @@
 #define SIZEOFMEF90_MAT     4
 #define SIZEOFMEF90_MATS    3
 #define SIZEOFMEF90_TENS4OS 6
+#define SIZEOFMATPROP       sizeofMEF90_MatProp2D
 #endif
