@@ -93,6 +93,8 @@ TestElements:     ${PETSC_ARCH} TestElements.o ${PETSC_ARCH}/TestElements.o
 TestMaterials: TestMaterials.o  chkopts
 	-${FLINKER} -o ${PETSC_ARCH}/TestMaterials ${PETSC_ARCH}/TestMaterials.o ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
+TestTri6:     ${PETSC_ARCH} TestTri6.o ${PETSC_ARCH}/TestTri6.o
+	-${FLINKER} -o ${PETSC_ARCH}/TestTri6 ${PETSC_ARCH}/TestTri6.o ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 
 TestDistribute: TestDistribute.o  chkopts
 	-${CLINKER} -o TestDistribute TestDistribute.o ${PETSC_LIB}

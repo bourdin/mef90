@@ -1034,11 +1034,6 @@ Contains
    Subroutine Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
-      ! One day when I am smart I will use FIAT for that...
-      !
-      ! Assumes that the elements connectivity is known
-      !
-      
       Type(Element2D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
@@ -1133,19 +1128,19 @@ Contains
          Num_DoF = 6
          Allocate(PhiHat(Num_DoF,Nb_Gauss))
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss))
-         PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (2.0_Kr - Xi%X - Xi%Y)      
-         PhiHat(2,:) = 2.0_Kr * Xi%X**2 - Xi%X     
-         PhiHat(3,:) = 2.0_Kr * Xi%Y**2 - Xi%Y   
-         PhiHat(4,:) = 4.0_Kr * Xi%X - Xi%X**2 - Xi%X*Xi%Y
+         PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)      
+         PhiHat(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         PhiHat(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
          PhiHat(5,:) = 4.0_Kr * Xi%X * Xi%Y
-         PhiHat(6,:) = 4.0_Kr * Xi%Y - Xi%Y**2 - Xi%X*Xi%Y
+         PhiHat(6,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
          
-         !GradPhiHat(1,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);GradPhiHat(1,:)%Y =-4.0_Kr * Xi%X
-         !GradPhiHat(2,:)%X = 4.0_Kr * Xi%Y;                           GradPhiHat(2,:)%Y = 4.0_Kr * Xi%X
-         !GradPhiHat(3,:)%X =-4.0_Kr * Xi%Y;                           GradPhiHat(3,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y)
-         !GradPhiHat(4,:)%X = 1.0_Kr - 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y);GradPhiHat(4,:)%Y = 1.0_Kr - 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y)
-         !GradPhiHat(5,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                  GradPhiHat(5,:)%Y = 0.0_Kr
-         !GradPhiHat(6,:)%X = 0.0_Kr;                                  GradPhiHat(6,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         GradPhiHat(1,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr;     GradPhiHat(1,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr
+         GradPhiHat(2,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                    GradPhiHat(2,:)%Y = 0.0_Kr
+         GradPhiHat(3,:)%X = 0.0_Kr;                                    GradPhiHat(3,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         GradPhiHat(4,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);  GradPhiHat(4,:)%Y = -4.0_Kr * Xi%X
+         GradPhiHat(5,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(5,:)%Y = 4.0_Kr * Xi%X
+         GradPhiHat(6,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(6,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
       Case Default
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
       End Select
@@ -1202,7 +1197,6 @@ Contains
             Do iDoF = 1,Num_doF
                Do iG = 1,Num_Gauss
                   dElem%BF(iDoF,iG) = tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) * .5_Kr
-                  !!! Not completely sure about this...
                End Do
             End Do
          Case Default
@@ -1292,11 +1286,6 @@ Contains
    Subroutine Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
-      ! One day when I am smart I will use FIAT for that...
-      !
-      ! Assumes that the elements connectivity is known
-      !
-      
       Type(Element3D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
@@ -1381,7 +1370,60 @@ Contains
          GradPhiHat(2,:)%X =  1.0_Kr;GradPhiHat(2,:)%Y =  0.0_Kr;GradPhiHat(2,:)%Z =  0.0_Kr;
          GradPhiHat(3,:)%X =  0.0_Kr;GradPhiHat(3,:)%Y =  1.0_Kr;GradPhiHat(3,:)%Z =  0.0_Kr;
          GradPhiHat(4,:)%X =  0.0_Kr;GradPhiHat(4,:)%Y =  0.0_Kr;GradPhiHat(4,:)%Z =  1.0_Kr;
+      Case(2)
+         Num_Dof = 10
+         Allocate(PhiHat(Num_DoF,Nb_Gauss))
+         Allocate(GradPhiHat(Num_DoF,Nb_Gauss))
+         PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
+         PhiHat(2,:) =  Xi%X * (2.0_Kr *  Xi%X - 1.0_Kr)
+         PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         PhiHat(4,:) = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
+         PhiHat(5,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
+         PhiHat(6,:) = 4.0_Kr *  Xi%X * Xi%Y
+         PhiHat(7,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Y
+         PhiHat(8,:) = 4.0_Kr *  Xi%X * Xi%Z
+         PhiHat(9,:) = 4.0_Kr * Xi%Y * Xi%Z
+         PhiHat(10,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
+         
+         GradPhiHat(1,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         GradPhiHat(1,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         GradPhiHat(1,:)%Z = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+
+         GradPhiHat(2,:)%X = 4.0_Kr * Xi%X - 1.0_Kr
+         GradPhiHat(2,:)%Y = 0.0_Kr
+         GradPhiHat(2,:)%Z = 0.0_Kr
+         
+         GradPhiHat(3,:)%X = 0.0_Kr
+         GradPhiHat(3,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         GradPhiHat(3,:)%Z = 0.0_Kr
+         
+         GradPhiHat(4,:)%X = 0.0_Kr
+         GradPhiHat(4,:)%Y = 0.0_Kr
+         GradPhiHat(4,:)%Z = 4.0_Kr * Xi%Z - 1.0_Kr
+         
+         GradPhiHat(5,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y - Xi%Z)
+         GradPhiHat(5,:)%Y = -4.0_Kr * Xi%X
+         GradPhiHat(5,:)%Z = -4.0_Kr * Xi%X
+
+         GradPhiHat(6,:)%X = 4.0_Kr * Xi%Y
+         GradPhiHat(6,:)%Y = 4.0_Kr * Xi%X
+         GradPhiHat(6,:)%Z = 0.0_Kr
+
+         GradPhiHat(7,:)%X = -4.0_Kr * Xi%Y
+         GradPhiHat(7,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y - Xi%Z)
+         GradPhiHat(7,:)%Z = -4.0_Kr * Xi%Y
+
+         GradPhiHat(8,:)%X = 4.0_Kr * Xi%Z
+         GradPhiHat(8,:)%Y = 0.0_Kr
+         GradPhiHat(8,:)%Z = 4.0_Kr * Xi%X
+
+         GradPhiHat(9,:)%X = 0.0_Kr
+         GradPhiHat(9,:)%Y = 4.0_Kr * Xi%Z
+         GradPhiHat(9,:)%Z = 4.0_Kr * Xi%Y
           
+         GradPhiHat(10,:)%X = -4.0_Kr * Xi%Z
+         GradPhiHat(10,:)%Y = -4.0_Kr * Xi%Z
+         GradPhiHat(10,:)%Z = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - 2.0_Kr * Xi%Z)
       Case Default
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
       End Select
