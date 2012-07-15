@@ -58,10 +58,14 @@ Module m_MEF_Elements
          MEF90_P1_Lagrange_3DBoundary_Scal_ShortID,   &  ! 8
          MEF90_P1_Lagrange_2DBoundary_Elast_ShortID,  &  ! 9
          MEF90_P1_Lagrange_3DBoundary_Elast_ShortID,  &  ! 10
-         MEF90_P1_Lagrange_2DBoundary_Vect_ShortID,   &
-         MEF90_P1_Lagrange_3DBoundary_Vect_ShortID,   &
-         MEF90_P2_Lagrange_2D_Scal_ShortID,           &
-         MEF90_P2_Lagrange_3D_Scal_ShortID
+         MEF90_P1_Lagrange_2DBoundary_Vect_ShortID,   &  ! 11 
+         MEF90_P1_Lagrange_3DBoundary_Vect_ShortID,   &  ! 12 
+         MEF90_P2_Lagrange_2D_Scal_ShortID,           &  ! 13
+         MEF90_P2_Lagrange_3D_Scal_ShortID,           &  ! 14
+         MEF90_P2_Lagrange_2D_Elast_ShortID,          &  ! 15
+         MEF90_P2_Lagrange_3D_Elast_ShortID,          &  ! 16
+         MEF90_P2_Lagrange_2D_Vect_ShortID,           &  ! 17
+         MEF90_P2_Lagrange_3D_Vect_ShortID               ! 18
    End Enum      
 
    !!! 
@@ -168,8 +172,36 @@ Module m_MEF_Elements
       4,6,0,0,10,                         &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,0,2                               &  ! dim,codim,order                             
    )
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2D_Elast = Element_Type(   &
+      "MEF90_P2_Lagrange_2D_Elast",       &  ! name
+      MEF90_P2_Lagrange_2D_Elast_ShortID, &  ! shortID
+      3,3,0,                              &  ! numVertex,numEdge,numFace
+      6,6,0,0,12,                         &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,0,2                               &  ! dim,codim,order                             
+   )
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3D_Elast = Element_Type(   &
+      "MEF90_P2_Lagrange_3D_Elast",       &  ! name
+      MEF90_P2_Lagrange_3D_Elast_ShortID, &  ! shortID
+      4,6,4,                              &  ! numVertex,numEdge,numFace
+      8,12,0,0,20,                        &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,0,2                               &  ! dim,codim,order                             
+   )
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2D_Vect = Element_Type(   &
+      "MEF90_P2_Lagrange_2D_Vect",        &  ! name
+      MEF90_P2_Lagrange_2D_Vect_ShortID,  &  ! shortID
+      3,3,0,                              &  ! numVertex,numEdge,numFace
+      6,6,0,0,12,                         &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,0,2                               &  ! dim,codim,order                             
+   )
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3D_Vect = Element_Type(   &
+      "MEF90_P2_Lagrange_3D_Vect",        &  ! name
+      MEF90_P2_Lagrange_3D_Vect_ShortID,  &  ! shortID
+      4,6,4,                              &  ! numVertex,numEdge,numFace
+      8,12,0,0,20,                        &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,0,2                               &  ! dim,codim,order                             
+   )
 
-   Integer,Parameter,Public :: MEF90_numKnownElements = 14       
+   Integer,Parameter,Public :: MEF90_numKnownElements = 18       
    Type(Element_Type),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90_knownElements = (/ &
       MEF90_P1_Lagrange_2D_Scal,MEF90_P1_Lagrange_3D_Scal,                    &
       MEF90_P1_Lagrange_2D_Elast,MEF90_P1_Lagrange_3D_Elast,                  &
@@ -177,7 +209,10 @@ Module m_MEF_Elements
       MEF90_P1_Lagrange_2DBoundary_Scal,MEF90_P1_Lagrange_3DBoundary_Scal,    &
       MEF90_P1_Lagrange_2DBoundary_Elast,MEF90_P1_Lagrange_3DBoundary_Elast,  &
       MEF90_P1_Lagrange_2DBoundary_Vect,MEF90_P1_Lagrange_3DBoundary_Vect,    &
-      MEF90_P2_Lagrange_2D_Scal,MEF90_P2_Lagrange_3D_Scal                     /)
+      MEF90_P2_Lagrange_2D_Scal,MEF90_P2_Lagrange_3D_Scal,                    &
+      MEF90_P2_Lagrange_2D_Vect,MEF90_P2_Lagrange_3D_Vect,                    &
+      MEF90_P2_Lagrange_2D_Elast,MEF90_P2_Lagrange_3D_Elast                   &
+   /)
 
    Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = (/ &
       "P1_Lagrange_2D_Scal         ",     &
@@ -194,6 +229,10 @@ Module m_MEF_Elements
       "P1_Lagrange_3DBoundary_Vect ",     &
       "P2_Lagrange_2D_Scal         ",     &
       "P2_Lagrange_3D_Scal         ",     &
+      "P2_Lagrange_2D_Elast        ",     &
+      "P2_Lagrange_3D_Elast        ",     &
+      "P2_Lagrange_2D_Vect         ",     &
+      "P2_Lagrange_3D_Vect         ",     &
       "MEF90_knownElementNames     ",     &
       "prefix_                     ",     &
       C_NULL_CHAR//"                           "/)
@@ -316,20 +355,20 @@ Contains
       Select Case(trim(exoName))
          Case("TETRA","TETRA4")
             elemType = MEF90_P1_Lagrange_3D_Vect
-         !Case("TETRA10")
-            !elemType = MEF90_P2_Lagrange_3D_Vect
+         Case("TETRA10")
+            elemType = MEF90_P2_Lagrange_3D_Vect
          Case("TRI","TRI3","TRISHELL","TRISHELL3")
             If (dim == 2) Then
                elemType = MEF90_P1_Lagrange_2D_Vect
             Else
                elemType = MEF90_P1_Lagrange_3DBoundary_Vect
             End If
-         !Case("TRI6","TRISHELL6")
-            !If (dim == 2) Then
-            !   elemType = MEF90_P2_Lagrange_2D_Vect
+         Case("TRI6","TRISHELL6")
+            If (dim == 2) Then
+               elemType = MEF90_P2_Lagrange_2D_Vect
             !Else
             !   elemType = MEF90_P2_Lagrange_3DBoundary_Vect
-            !End If
+            End If
          !Case("QUAD","QUAD4","SHELL","SHELL4")
             !If (dim == 2) Then
             !   elemType = MEF90_Q1_Lagrange_2D_Vect
@@ -361,20 +400,20 @@ Contains
       Select Case(trim(exoName))
          Case("TETRA","TETRA4")
             elemType = MEF90_P1_Lagrange_3D_Elast
-         !Case("TETRA10")
-            !elemType = MEF90_P2_Lagrange_3D_Elast
+         Case("TETRA10")
+            elemType = MEF90_P2_Lagrange_3D_Elast
          Case("TRI","TRI3","TRISHELL","TRISHELL3")
             If (dim == 2) Then
                elemType = MEF90_P1_Lagrange_2D_Elast
             Else
                elemType = MEF90_P1_Lagrange_3DBoundary_Elast
             End If
-         !Case("TRI6","TRISHELL6")
-            !If (dim == 2) Then
-            !   elemType = MEF90_P2_Lagrange_2D_Elast
+         Case("TRI6","TRISHELL6")
+            If (dim == 2) Then
+               elemType = MEF90_P2_Lagrange_2D_Elast
             !Else
             !   elemType = MEF90_P2_Lagrange_3DBoundary_Elast
-            !End If
+            End If
          !Case("QUAD","QUAD4","SHELL","SHELL4")
             !If (dim == 2) Then
             !   elemType = MEF90_Q1_Lagrange_2D_Elast
