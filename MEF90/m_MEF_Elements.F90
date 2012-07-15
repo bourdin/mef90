@@ -206,23 +206,75 @@ Module m_MEF_Elements
       8,12,0,0,20,                        &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,0,2                               &  ! dim,codim,order                             
    )
-   
-   !!! Add P2 Boundary elements here
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2DBoundary_Scal = Element_Type(   &
+      "MEF90_P2_Lagrange_2DBoundary_Scal",         &  ! name
+      MEF90_P2_Lagrange_2DBoundary_Scal_ShortID,   &  ! shortID
+      2,1,0,                                       &  ! numVertex,numEdge,numFace
+      1,1,0,0,3,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,1,2                                        &  ! dim,codim,order                             
+   )
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3DBoundary_Scal = Element_Type(   &
+      "MEF90_P2_Lagrange_3DBoundary_Scal",         &  ! name
+      MEF90_P2_Lagrange_3DBoundary_Scal_ShortID,   &  ! shortID
+      3,3,0,                                       &  ! numVertex,numEdge,numFace
+      1,1,0,0,4,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,1,2                                        &  ! dim,codim,order                             
+   )
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2DBoundary_Vect = Element_Type(   &
+      "MEF90_P2_Lagrange_2DBoundary_Vect",         &  ! name
+      MEF90_P2_Lagrange_2DBoundary_Vect_ShortID,   &  ! shortID
+      2,1,0,                                       &  ! numVertex,numEdge,numFace
+      2,2,0,0,6,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,1,2                                        &  ! dim,codim,order                             
+   )
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3DBoundary_Vect = Element_Type(   &
+      "MEF90_P2_Lagrange_3DBoundary_Vect",         &  ! name
+      MEF90_P2_Lagrange_3DBoundary_Vect_ShortID,   &  ! shortID
+      3,3,0,                                       &  ! numVertex,numEdge,numFace
+      3,3,0,0,18,                                  &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,1,2                                        &  ! dim,codim,order                             
+   )
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2DBoundary_Elast = Element_Type(   &
+      "MEF90_P2_Lagrange_2DBoundary_Elast",        &  ! name
+      MEF90_P2_Lagrange_2DBoundary_Elast_ShortID,  &  ! shortID
+      2,1,0,                                       &  ! numVertex,numEdge,numFace
+      2,2,0,0,6,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      2,1,2                                        &  ! dim,codim,order                             
+   )
+   Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3DBoundary_Elast = Element_Type(   &
+      "MEF90_P2_Lagrange_3DBoundary_Elast",        &  ! name
+      MEF90_P2_Lagrange_3DBoundary_Elast_ShortID,  &  ! shortID
+      3,3,0,                                       &  ! numVertex,numEdge,numFace
+      3,3,0,0,18,                                  &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      3,1,2                                        &  ! dim,codim,order                             
+   )
 
    Integer,Parameter,Public :: MEF90_numKnownElements = 24       
    Type(Element_Type),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90_knownElements = (/ &
-      MEF90_P1_Lagrange_2D_Scal,MEF90_P1_Lagrange_3D_Scal,                    &
-      MEF90_P1_Lagrange_2D_Elast,MEF90_P1_Lagrange_3D_Elast,                  &
-      MEF90_P1_Lagrange_2D_Vect,MEF90_P1_Lagrange_3D_Vect,                    &
-      MEF90_P1_Lagrange_2DBoundary_Scal,MEF90_P1_Lagrange_3DBoundary_Scal,    &
-      MEF90_P1_Lagrange_2DBoundary_Elast,MEF90_P1_Lagrange_3DBoundary_Elast,  &
-      MEF90_P1_Lagrange_2DBoundary_Vect,MEF90_P1_Lagrange_3DBoundary_Vect,    &
-      MEF90_P2_Lagrange_2D_Scal,MEF90_P2_Lagrange_3D_Scal,                    &
-      MEF90_P2_Lagrange_2D_Vect,MEF90_P2_Lagrange_3D_Vect,                    &
-      MEF90_P2_Lagrange_2D_Elast,MEF90_P2_Lagrange_3D_Elast,                  &
-      MEF90_P1_Lagrange_2DBoundary_Scal,MEF90_P1_Lagrange_3DBoundary_Scal,    &
-      MEF90_P1_Lagrange_2DBoundary_Elast,MEF90_P1_Lagrange_3DBoundary_Elast,  &
-      MEF90_P1_Lagrange_2DBoundary_Vect,MEF90_P1_Lagrange_3DBoundary_Vect     &
+      MEF90_P1_Lagrange_2D_Scal,          &
+      MEF90_P1_Lagrange_3D_Scal,          &
+      MEF90_P1_Lagrange_2D_Elast,         & 
+      MEF90_P1_Lagrange_3D_Elast,         &
+      MEF90_P1_Lagrange_2D_Vect,          &
+      MEF90_P1_Lagrange_3D_Vect,          &
+      MEF90_P1_Lagrange_2DBoundary_Scal,  &
+      MEF90_P1_Lagrange_3DBoundary_Scal,  &
+      MEF90_P1_Lagrange_2DBoundary_Elast, &
+      MEF90_P1_Lagrange_3DBoundary_Elast, &
+      MEF90_P1_Lagrange_2DBoundary_Vect,  &
+      MEF90_P1_Lagrange_3DBoundary_Vect,  &
+      MEF90_P2_Lagrange_2D_Scal,          &
+      MEF90_P2_Lagrange_3D_Scal,          &
+      MEF90_P2_Lagrange_2D_Vect,          &
+      MEF90_P2_Lagrange_3D_Vect,          &
+      MEF90_P2_Lagrange_2D_Elast,         &
+      MEF90_P2_Lagrange_3D_Elast,         &
+      MEF90_P1_Lagrange_2DBoundary_Scal,  &
+      MEF90_P1_Lagrange_3DBoundary_Scal,  &
+      MEF90_P1_Lagrange_2DBoundary_Elast, &
+      MEF90_P1_Lagrange_3DBoundary_Elast, &
+      MEF90_P1_Lagrange_2DBoundary_Vect,  &
+      MEF90_P1_Lagrange_3DBoundary_Vect   &
    /)
 
    Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = (/ &
@@ -1240,6 +1292,7 @@ Contains
       PetscReal,Dimension(:,:),Pointer       :: tmpCoord
       PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
       Type(Vect2D)                           :: NormalVector
+      PetscReal                              :: InnerBF
       
       !!! Create a bogus tri element with unit height by adding a 3rd vertex
       Allocate(tmpCoord(2,3))
@@ -1268,6 +1321,24 @@ Contains
                Do iG = 1,Num_Gauss
                   dElem%BF(iDoF,iG) = tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) * .5_Kr
                End Do
+            End Do
+         Case (2)
+            !!! dof corrrespondance between a BEAM3 and  a TRI6 element (exodus.pdf figure 4 p.  17)
+            !!! BEAM3   TRI6
+            !!! 1       1
+            !!! 2       2
+            !!! 3       6
+            !!! Inner dof: 3,4,5
+            Num_DoF  = 3
+            Num_Gauss = size(tmpElem%BF,2)
+            Allocate(dElem%Gauss_C(Num_Gauss))
+            Allocate(dElem%BF(Num_DoF,Num_Gauss))
+            dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
+            Do iG = 1,Num_Gauss
+               InnerBF = (tmpElem%BF(3,iG) + tmpElem%BF(4,iG) + tmpElem%BF(5,iG)) / 3.0_Kr
+               dElem%BF(1,iG) = tmpElem%BF(1,iG) + InnerBF
+               dElem%BF(2,iG) = tmpElem%BF(2,iG) + InnerBF
+               dElem%BF(3,iG) = tmpElem%BF(6,iG) + InnerBF
             End Do
          Case Default
             Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
@@ -1631,10 +1702,11 @@ Contains
       PetscReal,Dimension(:,:),Pointer       :: tmpCoord
       PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
       Type(Vect3D)                           :: Edge1,Edge2,NormalVector
+      PetscReal                              :: InnerBF
       
       !!!
-      !!! Create a bogus tet element by adding a 4th vertex along the normal of the
-      !!! face, at distance XXX so that if a function is constant along the normal
+      !!! Create a bogus tet element of unit volume by adding a 4th vertex along the normal of the
+      !!! face, so that if a function is constant along the normal
       !!! direction of the face, one has \int_face fdx = \int_tet fdx 
       !!!
       Allocate(tmpCoord(3,4))
@@ -1663,15 +1735,32 @@ Contains
             Do iDoF = 1,Num_doF
                Do iG = 1,Num_Gauss
                   dElem%BF(iDoF,iG) = (tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 3.0_Kr)
-                  !!! Not completely sure about this...
                End Do
             End Do
-            !dElem%BF(3,:) = dElem%BF(3,:) + tmpElem%BF(4,:)
-
-         !Case (2)
-            !!! I need to think about DoF ordering in this case... 
-            !!! This is going to work out the same way. The mid-edge dof with 
-            !!! xi3>0 are linear combinations of the other dof  
+         Case (2)
+            !!! dof corrrespondance between a TRI6 and  a TETRA10 element (exodus.pdf figure 4 p.  17)
+            !!! TRI6 TETRQ10
+            !!! 1    1
+            !!! 2    2
+            !!! 3    3
+            !!! 4    6
+            !!! 5    7
+            !!! 6    5
+            !!! Inner dof: 4,8,9,10
+            Num_DoF  = 3
+            Num_Gauss = size(tmpElem%BF,2)
+            Allocate(dElem%Gauss_C(Num_Gauss))
+            Allocate(dElem%BF(Num_DoF,Num_Gauss))
+            dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
+            Do iG = 1,Num_Gauss
+               InnerBF = (tmpElem%BF(4,iG) + tmpElem%BF(8,iG) + tmpElem%BF(9,iG) + tmpElem%BF(10,iG)) *.25_Kr
+               dElem%BF(1,iG) = tmpElem%BF(1,iG) + InnerBF
+               dElem%BF(2,iG) = tmpElem%BF(2,iG) + InnerBF
+               dElem%BF(3,iG) = tmpElem%BF(3,iG) + InnerBF
+               dElem%BF(4,iG) = tmpElem%BF(6,iG) + InnerBF
+               dElem%BF(5,iG) = tmpElem%BF(7,iG) + InnerBF
+               dElem%BF(6,iG) = tmpElem%BF(5,iG) + InnerBF
+            End Do
          Case Default
             Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
