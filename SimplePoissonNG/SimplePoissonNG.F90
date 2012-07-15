@@ -114,7 +114,11 @@ Program  SimplePoissonNG
    Call SectionRealCreateLocalVector(AppCtx%Section,locTemp,ierr);CHKERRQ(ierr)
    Call VecDuplicate(solTemp,resTemp,ierr);CHKERRQ(ierr)
 
-   Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%Section,MATMPIAIJ,matTemp,iErr);CHKERRQ(iErr)
+   If (MEF90_NumProcs == 1) Then
+      Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%Section,MATSEQAIJ,matTemp,iErr);CHKERRQ(iErr)
+   Else
+      Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%Section,MATMPIAIJ,matTemp,iErr);CHKERRQ(iErr)
+   End If
    !!! Not sure if this is still needed when using MatZeroRowsColumnsIS for BC handling
    Call MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
@@ -140,6 +144,7 @@ Program  SimplePoissonNG
    !!! Solve Poisson Equation
    Call SimplePoissonFormInitialGuess(solTemp,AppCtx,ierr);CHKERRQ(ierr)
    Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
+   !!! Check SNES / KSP convergence here
    
    !!! Compute energy and work
    Call ISGetIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
