@@ -65,7 +65,13 @@ Module m_MEF_Elements
          MEF90_P2_Lagrange_2D_Elast_ShortID,          &  ! 15
          MEF90_P2_Lagrange_3D_Elast_ShortID,          &  ! 16
          MEF90_P2_Lagrange_2D_Vect_ShortID,           &  ! 17
-         MEF90_P2_Lagrange_3D_Vect_ShortID               ! 18
+         MEF90_P2_Lagrange_3D_Vect_ShortID,           &  ! 18
+         MEF90_P2_Lagrange_2DBoundary_Scal_ShortID,   &  ! 19
+         MEF90_P2_Lagrange_3DBoundary_Scal_ShortID,   &  ! 20
+         MEF90_P2_Lagrange_2DBoundary_Elast_ShortID,  &  ! 21
+         MEF90_P2_Lagrange_3DBoundary_Elast_ShortID,  &  ! 22
+         MEF90_P2_Lagrange_2DBoundary_Vect_ShortID,   &  ! 23 
+         MEF90_P2_Lagrange_3DBoundary_Vect_ShortID       ! 24 
    End Enum      
 
    !!! 
@@ -200,8 +206,10 @@ Module m_MEF_Elements
       8,12,0,0,20,                        &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,0,2                               &  ! dim,codim,order                             
    )
+   
+   !!! Add P2 Boundary elements here
 
-   Integer,Parameter,Public :: MEF90_numKnownElements = 18       
+   Integer,Parameter,Public :: MEF90_numKnownElements = 24       
    Type(Element_Type),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90_knownElements = (/ &
       MEF90_P1_Lagrange_2D_Scal,MEF90_P1_Lagrange_3D_Scal,                    &
       MEF90_P1_Lagrange_2D_Elast,MEF90_P1_Lagrange_3D_Elast,                  &
@@ -211,7 +219,10 @@ Module m_MEF_Elements
       MEF90_P1_Lagrange_2DBoundary_Vect,MEF90_P1_Lagrange_3DBoundary_Vect,    &
       MEF90_P2_Lagrange_2D_Scal,MEF90_P2_Lagrange_3D_Scal,                    &
       MEF90_P2_Lagrange_2D_Vect,MEF90_P2_Lagrange_3D_Vect,                    &
-      MEF90_P2_Lagrange_2D_Elast,MEF90_P2_Lagrange_3D_Elast                   &
+      MEF90_P2_Lagrange_2D_Elast,MEF90_P2_Lagrange_3D_Elast,                  &
+      MEF90_P1_Lagrange_2DBoundary_Scal,MEF90_P1_Lagrange_3DBoundary_Scal,    &
+      MEF90_P1_Lagrange_2DBoundary_Elast,MEF90_P1_Lagrange_3DBoundary_Elast,  &
+      MEF90_P1_Lagrange_2DBoundary_Vect,MEF90_P1_Lagrange_3DBoundary_Vect     &
    /)
 
    Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = (/ &
@@ -233,6 +244,12 @@ Module m_MEF_Elements
       "P2_Lagrange_3D_Elast        ",     &
       "P2_Lagrange_2D_Vect         ",     &
       "P2_Lagrange_3D_Vect         ",     &
+      "P2_Lagrange_2DBoundary_Scal ",     &
+      "P2_Lagrange_3DBoundary_Scal ",     &
+      "P2_Lagrange_2DBoundary_Elast",     &
+      "P2_Lagrange_3DBoundary_Elast",     &
+      "P2_Lagrange_2DBoundary_Vect ",     &
+      "P2_Lagrange_3DBoundary_Vect ",     &
       "MEF90_knownElementNames     ",     &
       "prefix_                     ",     &
       C_NULL_CHAR//"                           "/)
@@ -1025,10 +1042,10 @@ Contains
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_3D_Vect%shortID)
             Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_3D_Vect%shortID)
-!            Call Element_P_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
-!         Case (MEF90_P1_Lagrange_3DBoundary_Vect%shortID)
-!            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_3D_Vect%shortID)
+            Call Element_P_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P1_Lagrange_3DBoundary_Vect%shortID)
+            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_3DBoundary_Vect%shortID)
 !            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_3D_Vect)
@@ -1051,10 +1068,10 @@ Contains
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_3D_Elast%shortID)
             Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_3D_Elast%shortID)
-!            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
-!         Case (MEF90_P1_Lagrange_3DBoundary_Elast%shortID)
-!            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_3D_Elast%shortID)
+            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P1_Lagrange_3DBoundary_Elast%shortID)
+            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_P2_Lagrange_3DBoundary_Elast%shortID)
 !            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_3D_Elast%shortID)
@@ -1299,6 +1316,36 @@ Contains
    End Subroutine Element_P_Lagrange_2D_Vect_Init
 
 #undef __FUNCT__
+#define __FUNCT__ "Element_P_Lagrange_2DBoundary_Vect_Init"
+   Subroutine Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Type(Element2D_Vect)                   :: dElem
+      PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
+      PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+   
+      Type(Element2D_Scal)                   :: Elem_Scal
+      PetscInt                               :: dim = 2 
+      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      
+      
+      Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Num_DoF  = Size(Elem_Scal%BF,1) 
+      Nb_Gauss = Size(Elem_Scal%BF,2)
+      Allocate(dElem%Gauss_C(Nb_Gauss))
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
+      Allocate(dElem%Der_BF(0,Nb_Gauss))
+         
+      dElem%Gauss_C = Elem_Scal%Gauss_C
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
+      
+      Do i = 0,Num_DoF-1
+         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
+      End Do
+      Call ElementDestroy(Elem_Scal)
+   End Subroutine Element_P_Lagrange_2DBoundary_Vect_Init
+
+#undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2D_Elast_Init"
    Subroutine Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
       Type(Element2D_Elast)                  :: dElem
@@ -1333,6 +1380,35 @@ Contains
       End Do
       Call ElementDestroy(Elem_Scal)
    End Subroutine Element_P_Lagrange_2D_Elast_Init
+
+#undef __FUNCT__
+#define __FUNCT__ "Element_P_Lagrange_2DBoundary_Elast_Init"
+   Subroutine Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Type(Element2D_Elast)                  :: dElem
+      PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
+      PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+   
+      Type(Element2D_Scal)                   :: Elem_Scal
+      PetscInt                               :: dim = 2 
+      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      
+      
+      Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Num_DoF   = Size(Elem_Scal%BF,1) 
+      Nb_Gauss = Size(Elem_Scal%BF,2)
+      Allocate(dElem%Gauss_C(Nb_Gauss))
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
+      Allocate(dElem%GradS_BF(0,Nb_Gauss))
+         
+      dElem%Gauss_C = Elem_Scal%Gauss_C
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
+      Do i = 0,Num_DoF-1
+         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
+      End Do
+      Call ElementDestroy(Elem_Scal)
+   End Subroutine Element_P_Lagrange_2DBoundary_Elast_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3D_Scal_Init"
@@ -1655,6 +1731,38 @@ Contains
    End Subroutine Element_P_Lagrange_3D_Vect_Init
 
 #undef __FUNCT__
+#define __FUNCT__ "Element_P_Lagrange_3DBoundary_Vect_Init"
+   Subroutine Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Type(Element3D_Vect)                   :: dElem
+      PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
+      PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+   
+      Type(Element3D_Scal)                   :: Elem_Scal
+      PetscInt                               :: dim = 3 
+      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      
+      
+      Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Num_DoF   = Size(Elem_Scal%BF,1) 
+      Nb_Gauss = Size(Elem_Scal%BF,2)
+      Allocate(dElem%Gauss_C(Nb_Gauss))
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
+      Allocate(dElem%Der_BF(0,Nb_Gauss))
+         
+      dElem%Gauss_C = Elem_Scal%Gauss_C
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
+      dElem%BF(:,:)%Z = 0.0_Kr
+      
+      Do i = 0,Num_DoF-1
+         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
+      End Do
+      Call ElementDestroy(Elem_Scal)
+   End Subroutine Element_P_Lagrange_3DBoundary_Vect_Init
+
+#undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3D_Elast_Init"
    Subroutine Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
       Type(Element3D_Elast)                  :: dElem
@@ -1703,6 +1811,38 @@ Contains
       Call ElementDestroy(Elem_Scal)
    End Subroutine Element_P_Lagrange_3D_Elast_Init
    
+#undef __FUNCT__
+#define __FUNCT__ "Element_P_Lagrange_3DBoundary_Elast_Init"
+   Subroutine Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Type(Element3D_Elast)                  :: dElem
+      PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
+      PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+   
+      Type(Element3D_Scal)                   :: Elem_Scal
+      PetscInt                               :: dim = 3 
+      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      
+      
+      Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Num_DoF   = Size(Elem_Scal%BF,1) 
+      Nb_Gauss = Size(Elem_Scal%BF,2)
+      Allocate(dElem%Gauss_C(Nb_Gauss))
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
+      Allocate(dElem%GradS_BF(0,Nb_Gauss))
+         
+      dElem%Gauss_C = Elem_Scal%Gauss_C
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
+      dElem%BF(:,:)%Z = 0.0_Kr
+      
+      Do i = 0,Num_DoF-1
+         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
+         dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
+      End Do
+      Call ElementDestroy(Elem_Scal)
+   End Subroutine Element_P_Lagrange_3DBoundary_Elast_Init
+
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_Destroy"
    Subroutine Element2D_Scal_Destroy(dElem)
