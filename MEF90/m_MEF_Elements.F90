@@ -994,8 +994,8 @@ Contains
             Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
          Case (MEF90_P1_Lagrange_2DBoundary_Scal%shortID)
             Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_2DBoundary_Scal%shortID)
-!            Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_2DBoundary_Scal%shortID)
+            Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_2D_Scal%shortID)
 !            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_2D_Scal%shortID)
@@ -1016,12 +1016,12 @@ Contains
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_2D_Vect%shortID)
             Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_2D_Vect%shortID)
-!            Call Element_P_Lagrange_2D_Init(dElem,dCoord,2,QuadratureOrder)
-!         Case (MEF90_P1_Lagrange_2DBoundary_Vect%shortID)
-!            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_2DBoundary_Vect%shortID)
-!            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_2D_Vect%shortID)
+            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P1_Lagrange_2DBoundary_Vect%shortID)
+            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_2DBoundary_Vect%shortID)
+            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_2D_Vect%shortID)
 !            Call Element_Q_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_2D_Vect%shortID)
@@ -1042,12 +1042,12 @@ Contains
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_2D_Elast%shortID)
             Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_2D_Elast%shortID)
-!            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
-!         Case (MEF90_P1_Lagrange_2DBoundary_Elast%shortID)
-!            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_2DBoundary_Elast%shortID)
-!            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_2D_Elast%shortID)
+            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P1_Lagrange_2DBoundary_Elast%shortID)
+            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_2DBoundary_Elast%shortID)
+            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_2D_Elast%shortID)
 !            Call Element_Q_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_2D_Elast%shortID)
@@ -1072,8 +1072,8 @@ Contains
             Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
          Case (MEF90_P1_Lagrange_3DBoundary_Scal%shortID)
             Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_3DBoundary_Scal%shortID)
-!            Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_3DBoundary_Scal%shortID)
+            Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_3D_Scal%shortID)
 !            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_3D_Scal%shortID)
@@ -1095,11 +1095,11 @@ Contains
          Case (MEF90_P1_Lagrange_3D_Vect%shortID)
             Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
          Case (MEF90_P2_Lagrange_3D_Vect%shortID)
-            Call Element_P_Lagrange_3D_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
          Case (MEF90_P1_Lagrange_3DBoundary_Vect%shortID)
             Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_3DBoundary_Vect%shortID)
-!            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_3DBoundary_Vect%shortID)
+            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_3D_Vect)
 !            Call Element_Q_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_3D_Vect)
@@ -1124,8 +1124,8 @@ Contains
             Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
          Case (MEF90_P1_Lagrange_3DBoundary_Elast%shortID)
             Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder)
-!         Case (MEF90_P2_Lagrange_3DBoundary_Elast%shortID)
-!            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+         Case (MEF90_P2_Lagrange_3DBoundary_Elast%shortID)
+            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder)
 !         Case (MEF90_Q1_Lagrange_3D_Elast%shortID)
 !            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
 !         Case (MEF90_Q2_Lagrange_3D_Elast%shortID)
@@ -1623,16 +1623,19 @@ Contains
          Num_Dof = 10
          Allocate(PhiHat(Num_DoF,Nb_Gauss))
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss))
-         PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
-         PhiHat(2,:) =  Xi%X * (2.0_Kr *  Xi%X - 1.0_Kr)
-         PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
-         PhiHat(4,:) = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
-         PhiHat(5,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
-         PhiHat(6,:) = 4.0_Kr *  Xi%X * Xi%Y
-         PhiHat(7,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Y
-         PhiHat(8,:) = 4.0_Kr *  Xi%X * Xi%Z
-         PhiHat(9,:) = 4.0_Kr * Xi%Y * Xi%Z
-         PhiHat(10,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
+         PhiHat(1,:)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
+         PhiHat(2,:)  = Xi%X * (2.0_Kr *  Xi%X - 1.0_Kr)
+         PhiHat(3,:)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         PhiHat(4,:)  = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
+         PhiHat(5,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
+         PhiHat(6,:)  = 4.0_Kr *  Xi%X * Xi%Y
+         PhiHat(7,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Y
+!         PhiHat(8,:)  = 4.0_Kr *  Xi%X * Xi%Z
+!         PhiHat(9,:)  = 4.0_Kr * Xi%Y * Xi%Z
+!         PhiHat(10,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
+         PhiHat(8,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
+         PhiHat(9,:)  = 4.0_Kr * Xi%X * Xi%Z
+         PhiHat(10,:) = 4.0_Kr * Xi%Y * Xi%Z
          
          GradPhiHat(1,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
          GradPhiHat(1,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
@@ -1662,17 +1665,17 @@ Contains
          GradPhiHat(7,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y - Xi%Z)
          GradPhiHat(7,:)%Z = -4.0_Kr * Xi%Y
 
-         GradPhiHat(8,:)%X = 4.0_Kr * Xi%Z
-         GradPhiHat(8,:)%Y = 0.0_Kr
-         GradPhiHat(8,:)%Z = 4.0_Kr * Xi%X
+         GradPhiHat(8,:)%X = -4.0_Kr * Xi%Z
+         GradPhiHat(8,:)%Y = -4.0_Kr * Xi%Z
+         GradPhiHat(8,:)%Z = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y -2.0_Kr * Xi%Z)
 
-         GradPhiHat(9,:)%X = 0.0_Kr
-         GradPhiHat(9,:)%Y = 4.0_Kr * Xi%Z
-         GradPhiHat(9,:)%Z = 4.0_Kr * Xi%Y
+         GradPhiHat(9,:)%X = 4.0_Kr * Xi%Z
+         GradPhiHat(9,:)%Y = 0.0_Kr
+         GradPhiHat(9,:)%Z = 4.0_Kr * Xi%X
           
-         GradPhiHat(10,:)%X = -4.0_Kr * Xi%Z
-         GradPhiHat(10,:)%Y = -4.0_Kr * Xi%Z
-         GradPhiHat(10,:)%Z = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - 2.0_Kr * Xi%Z)
+         GradPhiHat(10,:)%X = 0.0_Kr
+         GradPhiHat(10,:)%Y = 4.0_Kr * Xi%Z
+         GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Y
       Case Default
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
       End Select
@@ -1739,7 +1742,7 @@ Contains
             End Do
          Case (2)
             !!! dof corrrespondance between a TRI6 and  a TETRA10 element (exodus.pdf figure 4 p.  17)
-            !!! TRI6 TETRQ10
+            !!! TRI6 TETRA10
             !!! 1    1
             !!! 2    2
             !!! 3    3
