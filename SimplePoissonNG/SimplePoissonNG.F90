@@ -3,10 +3,11 @@
 !!! 
 Program  SimplePoissonNG
 #include "SimplePoisson.inc"
-#include "finclude/petscdef.h"
-#include "finclude/petscbagdef.h"
+#include <finclude/petscdef.h>
+#include <finclude/petscbagdef.h>
    Use m_MEF90
    Use M_POISSON
+   Use petsc
    Implicit NONE   
 
 
@@ -31,6 +32,7 @@ Program  SimplePoissonNG
    PetscReal,Dimension(:),Pointer               :: energy,work
    PetscInt,dimension(:),Pointer                :: setID
    PetscInt                                     :: set
+   !MatNullSpace                                 :: nsp
 
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
@@ -119,6 +121,8 @@ Program  SimplePoissonNG
    Else
       Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%Section,MATMPIAIJ,matTemp,iErr);CHKERRQ(iErr)
    End If
+   !Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
+   !Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
    !!! Not sure if this is still needed when using MatZeroRowsColumnsIS for BC handling
    Call MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
@@ -135,6 +139,7 @@ Program  SimplePoissonNG
    Call SNESGetKSP(snesTemp,kspTemp,ierr);CHKERRQ(ierr)
    Call KSPSetType(kspTemp,KSPCG,ierr);CHKERRQ(ierr)
    Call KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+!!!   Call KSPSetNullSpace(kspTemp,nspTemp,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
 
    Call KSPGetPC(kspTemp,pcTemp,ierr);CHKERRQ(ierr)
