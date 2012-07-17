@@ -1,0 +1,9 @@
+-vs0010_tempBC 1 
+-vs0010_temp 0. 
+-vs0020_tempBC 1 
+-vs0020_temp 1. 
+-cs0001_force 0. 
+-cs0010_force 0. 
+-cs0020_force 0. 
+-temp_snes_type ksponly 
+-temp_KSP_monitor 
