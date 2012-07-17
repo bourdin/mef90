@@ -1697,85 +1697,122 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3DBoundary_Scal_Init"
    Subroutine Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+      ! Compute the quadrature weights and the value of the basis functions and their gradient 
+      ! at the quadrature points.
       Type(Element3D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
-      PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
+      PetscInt                               :: dPolynomialOrder,dQuadratureOrder
       
-      Type(Element3D_Scal)                   :: tmpElem
-      PetscReal,Dimension(:,:),Pointer       :: tmpCoord
-      PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
-      Type(Vect3D)                           :: Edge1,Edge2,NormalVector
-      PetscReal                              :: InnerBF
-      
-      !!!
-      !!! Create a bogus tet element of unit volume by adding a 4th vertex along the normal of the
-      !!! face, so that if a function is constant along the normal
-      !!! direction of the face, one has \int_face fdx = \int_tet fdx 
-      !!!
-      Allocate(tmpCoord(3,4))
-      Do i = 1,3
-         Do j = 1,3
-            tmpCoord(i,j) = dCoord(i,j)
-         End Do
-      End Do
-      Edge1 = dCoord(:,2) - dCoord(:,1)
-      Edge2 = dCoord(:,3) - dCoord(:,1)
-      NormalVector = CrossP3D(Edge1,Edge2)
-      NormalVector = NormalVector / Norm(NormalVector)
-      tmpCoord(1,4) = dCoord(1,1) + NormalVector%X 
-      tmpCoord(2,4) = dCoord(2,1) + NormalVector%Y 
-      tmpCoord(3,4) = dCoord(3,1) + NormalVector%Z 
-      
+      PetscInt                               :: Nb_Gauss
+      PetscInt                               :: Num_Dof
+      PetscInt                               :: iDoF,iG
 
-      Call Element_P_Lagrange_3D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder)
-      Select Case (dPolynomialOrder)
-         Case (1)
-            Num_DoF  = 3
-            Num_Gauss = size(tmpElem%BF,2)
-            Allocate(dElem%Gauss_C(Num_Gauss))
-            Allocate(dElem%BF(Num_DoF,Num_Gauss))
-            dElem%Gauss_C = tmpElem%Gauss_C * 3.0_Kr
-            Do iDoF = 1,Num_doF
-               Do iG = 1,Num_Gauss
-                  dElem%BF(iDoF,iG) = (tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) / 3.0_Kr)
-               End Do
-            End Do
-         Case (2)
-            !!! dof corrrespondance between a TRI6 and  a TETRA10 element (exodus.pdf figure 4 p.  17)
-            !!! TRI6 TETRA10
-            !!! 1    1
-            !!! 2    2
-            !!! 3    3
-            !!! 4    6
-            !!! 5    7
-            !!! 6    5
-            !!! Inner dof: 4,8,9,10
-            Num_DoF  = 6
-            Num_Gauss = size(tmpElem%BF,2)
-            Allocate(dElem%Gauss_C(Num_Gauss))
-            Allocate(dElem%BF(Num_DoF,Num_Gauss))
-            dElem%Gauss_C = tmpElem%Gauss_C * 3.0_Kr
-            Do iG = 1,Num_Gauss
-               InnerBF = (tmpElem%BF(4,iG) + tmpElem%BF(8,iG) + tmpElem%BF(9,iG) + tmpElem%BF(10,iG)) *.25_Kr
-               !!! This does not seem right,
-               !!! I the inner BF must be distributed another way, but how...
-               !!! I suspect 
-               !!!      4,9 -> 2
-               !!!      8 ->5
-               !!!      10 -> 6
-               dElem%BF(1,iG) = tmpElem%BF(1,iG) + InnerBF
-               dElem%BF(2,iG) = tmpElem%BF(2,iG) + InnerBF
-               dElem%BF(3,iG) = tmpElem%BF(3,iG) + InnerBF
-               dElem%BF(4,iG) = tmpElem%BF(6,iG) + InnerBF
-               dElem%BF(5,iG) = tmpElem%BF(7,iG) + InnerBF
-               dElem%BF(6,iG) = tmpElem%BF(5,iG) + InnerBF
-            End Do
-         Case Default
-            Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
+      PetscReal,Dimension(:,:),Pointer       :: PhiHat      ! PhiHat(i,k) The value of the ith basis function at the kth integration point
+      
+      Type(Vect2D),Dimension(:),Pointer      :: Xi ! The quadrature points coordinates in the reference element
+      
+      PetscReal                              :: p,l1,l2,l3,area
+
+      !!! Get the triangle area using Heron's formula
+      !!! It would probably be much smarter to use the std formula for the 
+      !!! area of a planar polygon in space. Roundoff error may be huge with Heron's formula
+      l1 = sqrt( (dCoord(1,2) - dCoord(1,1))**2 + (dCoord(2,2) - dCoord(2,1))**2 + (dCoord(3,2) - dCoord(3,1))**2)
+      l2 = sqrt( (dCoord(1,3) - dCoord(1,2))**2 + (dCoord(2,3) - dCoord(2,2))**2 + (dCoord(3,3) - dCoord(3,2))**2)
+      l3 = sqrt( (dCoord(1,1) - dCoord(1,3))**2 + (dCoord(2,1) - dCoord(2,3))**2 + (dCoord(3,1) - dCoord(3,3))**2)
+      p = (l1 + l2 + l3) / 2.0_Kr
+      area = sqrt( p * (p-l1) * (p-l2) * (p-l3)) 
+      Select Case (dQuadratureOrder)
+      Case(1)
+         Nb_Gauss = 1
+         Allocate(Xi(Nb_Gauss))
+         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Xi(1)%X = 1.0_Kr / 3.0_Kr
+         Xi(1)%Y = 1.0_Kr / 3.0_Kr
+         dElem%Gauss_C = area
+
+      Case(2)
+         Nb_Gauss = 3
+         Allocate(Xi(Nb_Gauss))
+         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Xi(1) = (/ 1.0_Kr / 6.0_Kr,1.0_Kr / 6.0_Kr /)
+         Xi(2) = (/ 2.0_Kr / 3.0_Kr,1.0_Kr / 6.0_Kr /)
+         Xi(3) = (/ 1.0_Kr / 6.0_Kr,2.0_Kr / 3.0_Kr /)
+         dElem%Gauss_C = area / 3.0_Kr
+
+      Case(3)
+         Nb_Gauss = 4
+         Allocate(Xi(Nb_Gauss))
+         Allocate(dElem%Gauss_C(Nb_Gauss))
+         dElem%Gauss_C    =  area * 25.0_Kr / 48.0_Kr
+         dElem%Gauss_C(1) = -area * 9.0_Kr / 16.0_Kr
+         Xi(1) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
+         Xi(2) = (/ 3.0_Kr / 5.0_Kr,1.0_Kr / 5.0_Kr /)
+         Xi(3) = (/ 1.0_Kr / 5.0_Kr,3.0_Kr / 5.0_Kr /)
+         Xi(4) = (/ 1.0_Kr / 5.0_Kr,1.0_Kr / 5.0_Kr /)
+      Case(4)
+         Nb_Gauss = 7
+         Allocate(Xi(Nb_Gauss))
+         Allocate(dElem%Gauss_C(Nb_Gauss))
+         dElem%Gauss_C(1) = area / 20.0_Kr
+         dElem%Gauss_C(2) = area * 2.0_Kr / 15.0_Kr
+         dElem%Gauss_C(3) = area / 10.0_Kr
+         dElem%Gauss_C(4) = area * 2.0_Kr / 15.0_Kr
+         dElem%Gauss_C(5) = area / 20.0_Kr
+         dElem%Gauss_C(6) = area * 2.0_Kr / 15.0_Kr
+         dElem%Gauss_C(7) = area * 9.0_Kr / 20.0_Kr
+         Xi(1) = (/ 0.0_Kr         ,0.0_Kr          /)
+         Xi(2) = (/ 1.0_Kr / 2.0_Kr,0.0_Kr          /)
+         Xi(3) = (/ 1.0_Kr         ,0.0_Kr          /)
+         Xi(4) = (/ 1.0_Kr / 2.0_Kr,1.0_Kr / 2.0_Kr /)
+         Xi(5) = (/ 0.0_Kr         ,1.0_Kr          /)
+         Xi(6) = (/ 0.0_Kr         ,1.0_Kr / 2.0_Kr /)
+         Xi(7) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
+      Case(6)
+         Nb_Gauss = 9
+         Allocate(Xi(Nb_Gauss))
+         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Xi(1) = (/ 0.124949503233232_Kr, 0.437525248383384_Kr /)
+         Xi(2) = (/ 0.437525248383384_Kr, 0.124949503233232_Kr /)
+         Xi(3) = (/ 0.437525248383384_Kr, 0.437525248383384_Kr /)
+         Xi(4) = (/ 0.797112651860071_Kr, 0.165409927389841_Kr /)
+         Xi(5) = (/ 0.797112651860071_Kr, 0.037477420750088_Kr /)
+         Xi(6) = (/ 0.165409927389841_Kr, 0.797112651860071_Kr /)
+         Xi(7) = (/ 0.165409927389841_Kr, 0.037477420750088_Kr /)
+         Xi(8) = (/ 0.037477420750088_Kr, 0.797112651860071_Kr /)
+         Xi(9) = (/ 0.037477420750088_Kr, 0.165409927389841_Kr /)
+         dElem%Gauss_C(1:3) = 0.205950504760887_Kr * area
+         dElem%Gauss_C(4:9) = 0.063691414286223_Kr * area
+      Case Default
+         Print*,__FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
+         STOP
       End Select
-      Call Element3D_Scal_Destroy(tmpElem)
-      deAllocate(tmpCoord)
-      Allocate(dElem%Grad_BF(0,0))
+      
+      Select Case (dPolynomialOrder)
+      Case(1)
+         Num_DoF = 3
+         Allocate(PhiHat(Num_DoF,Nb_Gauss))
+         PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y
+         PhiHat(2,:) = Xi(:)%X
+         PhiHat(3,:) = Xi(:)%Y
+      Case(2)
+         Num_DoF = 6
+         Allocate(PhiHat(Num_DoF,Nb_Gauss))
+         PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)      
+         PhiHat(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         PhiHat(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+         PhiHat(5,:) = 4.0_Kr * Xi%X * Xi%Y
+         PhiHat(6,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+      Case Default
+         Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
+      End Select
+      
+      Allocate (dElem%BF(Num_DoF,Nb_Gauss)) 
+      Allocate (dElem%Grad_BF(0,0))
+      dElem%BF = PhiHat
+     
+      DeAllocate(Xi)
+      DeAllocate(PhiHat)
    End Subroutine Element_P_Lagrange_3DBoundary_Scal_Init
    
 #undef __FUNCT__
