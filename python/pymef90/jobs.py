@@ -35,6 +35,7 @@ def PrepareJob(Geometry,Parameters,debug=False):
         # We are running in interactive mode
         submitdir = os.getcwd()
 
+            
     ###
     ### Set workdir
     ###
@@ -42,8 +43,8 @@ def PrepareJob(Geometry,Parameters,debug=False):
         ###
         ### Try to figure out if workdir is a relative or absolute path
         ### 
-        if not args.workdir[0] == '/':
-            Parameters['workdir'] = os.path.join(submitdir,args.workdir)
+        if not Parameters['workdir'][0] == '/':
+            Parameters['workdir'] = os.path.join(submitdir,Parameters['workdir'])
     else:
         if os.getenv('PBS_O_WORKDIR'):
             # We are runnning inside a PBS job 
