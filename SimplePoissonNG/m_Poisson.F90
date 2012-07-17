@@ -197,7 +197,7 @@ Contains
       Type(PoissonCellSetProperties_Type)          :: defaultCellSetProperties
       Type(PoissonCellSetProperties_Type),pointer  :: CellSetProperties
       Type(PoissonVertexSetProperties_Type)        :: defaultVertexSetProperties
-      PetscInt,Parameter                           :: QuadratureOrder = 2
+      PetscInt,Parameter                           :: QuadratureOrder = 4
       Type(IS)                                     :: setIS
       PetscInt,Dimension(:),Pointer                :: cellID
       
@@ -304,6 +304,7 @@ Contains
 
          Call DMmeshGetStratumIS(PoissonCtx%mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
          Call ElementInit(PoissonCtx%mesh,setIS,PoissonCtx%Elem,QuadratureOrder,CellSetProperties%ElemTypeShortID)
+         
          !!! I could use a different quadrature order on different blocks if I'd add it to the CellSetProperties!
 
          !!! I need a function that allocates a SectionReal using the mesh and the dof layout from the elemType
