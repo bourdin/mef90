@@ -217,7 +217,7 @@ Module m_MEF_Elements
       "MEF90_P2_Lagrange_3DBoundary_Scal",         &  ! name
       MEF90_P2_Lagrange_3DBoundary_Scal_ShortID,   &  ! shortID
       3,3,0,                                       &  ! numVertex,numEdge,numFace
-      1,1,0,0,4,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+      1,1,0,0,6,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,1,2                                        &  ! dim,codim,order                             
    )
    Type(Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2DBoundary_Vect = Element_Type(   &
@@ -269,12 +269,12 @@ Module m_MEF_Elements
       MEF90_P2_Lagrange_3D_Vect,          &
       MEF90_P2_Lagrange_2D_Elast,         &
       MEF90_P2_Lagrange_3D_Elast,         &
-      MEF90_P1_Lagrange_2DBoundary_Scal,  &
-      MEF90_P1_Lagrange_3DBoundary_Scal,  &
-      MEF90_P1_Lagrange_2DBoundary_Elast, &
-      MEF90_P1_Lagrange_3DBoundary_Elast, &
-      MEF90_P1_Lagrange_2DBoundary_Vect,  &
-      MEF90_P1_Lagrange_3DBoundary_Vect   &
+      MEF90_P2_Lagrange_2DBoundary_Scal,  &
+      MEF90_P2_Lagrange_3DBoundary_Scal,  &
+      MEF90_P2_Lagrange_2DBoundary_Elast, &
+      MEF90_P2_Lagrange_3DBoundary_Elast, &
+      MEF90_P2_Lagrange_2DBoundary_Vect,  &
+      MEF90_P2_Lagrange_3DBoundary_Vect   &
    /)
 
    Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = (/ &
@@ -390,8 +390,8 @@ Contains
          Case("TRI6","TRISHELL6")
             If (dim == 2) Then
                elemType = MEF90_P2_Lagrange_2D_Scal
-            !Else
-            !   elemType = MEF90_P2_Lagrange_3DBoundary_Scal
+            Else
+               elemType = MEF90_P2_Lagrange_3DBoundary_Scal
             End If
          !Case("QUAD","QUAD4","SHELL","SHELL4")
          !   If (dim == 2) Then
@@ -407,8 +407,8 @@ Contains
          !   End If
          Case("BAR","BAR2")
             elemType = MEF90_P1_Lagrange_2DBoundary_Scal
-         !Case("BAR3")
-         !   eleType = MEF90_P2_Lagrange_2DBoundary_Scal
+         Case("BAR3")
+            elemType = MEF90_P2_Lagrange_2DBoundary_Scal
          Case default
             Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
       End Select
@@ -435,8 +435,8 @@ Contains
          Case("TRI6","TRISHELL6")
             If (dim == 2) Then
                elemType = MEF90_P2_Lagrange_2D_Vect
-            !Else
-            !   elemType = MEF90_P2_Lagrange_3DBoundary_Vect
+            Else
+               elemType = MEF90_P2_Lagrange_3DBoundary_Vect
             End If
          !Case("QUAD","QUAD4","SHELL","SHELL4")
             !If (dim == 2) Then
@@ -452,8 +452,8 @@ Contains
             !End If
          Case("BAR","BAR2")
             elemType = MEF90_P1_Lagrange_2DBoundary_Vect
-         !Case("BAR3")
-         !   eleType = MEF90_P2_Lagrange_2DBoundary_Vect
+         Case("BAR3")
+            elemType = MEF90_P2_Lagrange_2DBoundary_Vect
          Case default
             Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
       End Select
@@ -480,8 +480,8 @@ Contains
          Case("TRI6","TRISHELL6")
             If (dim == 2) Then
                elemType = MEF90_P2_Lagrange_2D_Elast
-            !Else
-            !   elemType = MEF90_P2_Lagrange_3DBoundary_Elast
+            Else
+               elemType = MEF90_P2_Lagrange_3DBoundary_Elast
             End If
          !Case("QUAD","QUAD4","SHELL","SHELL4")
             !If (dim == 2) Then
@@ -497,8 +497,8 @@ Contains
             !End If
          Case("BAR","BAR2")
             elemType = MEF90_P1_Lagrange_2DBoundary_Elast
-         !Case("BAR3")
-         !   eleType = MEF90_P2_Lagrange_2DBoundary_Elast
+         Case("BAR3")
+            elemType = MEF90_P2_Lagrange_2DBoundary_Elast
          Case default
             Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
       End Select
@@ -1726,7 +1726,7 @@ Contains
       tmpCoord(2,4) = dCoord(2,1) + NormalVector%Y 
       tmpCoord(3,4) = dCoord(3,1) + NormalVector%Z 
       
-            
+
       Call Element_P_Lagrange_3D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder)
       Select Case (dPolynomialOrder)
          Case (1)
@@ -1750,13 +1750,19 @@ Contains
             !!! 5    7
             !!! 6    5
             !!! Inner dof: 4,8,9,10
-            Num_DoF  = 3
+            Num_DoF  = 6
             Num_Gauss = size(tmpElem%BF,2)
             Allocate(dElem%Gauss_C(Num_Gauss))
             Allocate(dElem%BF(Num_DoF,Num_Gauss))
-            dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
+            dElem%Gauss_C = tmpElem%Gauss_C * 3.0_Kr
             Do iG = 1,Num_Gauss
                InnerBF = (tmpElem%BF(4,iG) + tmpElem%BF(8,iG) + tmpElem%BF(9,iG) + tmpElem%BF(10,iG)) *.25_Kr
+               !!! This does not seem right,
+               !!! I the inner BF must be distributed another way, but how...
+               !!! I suspect 
+               !!!      4,9 -> 2
+               !!!      8 ->5
+               !!!      10 -> 6
                dElem%BF(1,iG) = tmpElem%BF(1,iG) + InnerBF
                dElem%BF(2,iG) = tmpElem%BF(2,iG) + InnerBF
                dElem%BF(3,iG) = tmpElem%BF(3,iG) + InnerBF
