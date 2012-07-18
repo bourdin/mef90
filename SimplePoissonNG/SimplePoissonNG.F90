@@ -25,6 +25,7 @@ Program  SimplePoissonNG
    Type(PC)                                     :: pcTemp
    Type(Mat)                                    :: matTemp
    Type(Vec)                                    :: solTemp,resTemp,locTemp
+   !Type(Vec)                                    :: ubTemp,lbTemp
    Integer                                      :: cpu_ws,io_ws,exoIN=0,exoOUT=0
    Real                                         :: exo_version
    Integer                                      :: exoerr
@@ -115,6 +116,9 @@ Program  SimplePoissonNG
    Call DMMeshCreateVector(AppCtx%mesh,AppCtx%Section,solTemp,ierr);CHKERRQ(ierr)
    Call SectionRealCreateLocalVector(AppCtx%Section,locTemp,ierr);CHKERRQ(ierr)
    Call VecDuplicate(solTemp,resTemp,ierr);CHKERRQ(ierr)
+   !Call VecSet(solTemp,0.0_Kr,ierr);CHKERRQ(ierr)
+   !Call VecSet(resTemp,0.0_Kr,ierr);CHKERRQ(ierr)
+
 
    Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%Section,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
 
@@ -134,9 +138,19 @@ Program  SimplePoissonNG
    Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
    Call SNESSetDM(snesTemp,AppCtx%mesh,ierr);CHKERRQ(ierr)
    Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
-   Call SNESSetFromOptions(snesTemp,ierr);CHKERRQ(ierr)
    Call SNESSetFunction(snesTemp,resTemp,SimplePoissonNGOperatorAssembly,AppCtx,ierr);CHKERRQ(ierr)
    Call SNESSetJacobian(snesTemp,matTemp,matTemp,SimplePoissonNGBilinearFormAssembly,AppCtx,ierr);CHKERRQ(ierr)
+
+   !!!
+   !!! Testing SNESVI: does not look ready for prime time...
+   !!!
+   !Call VecDuplicate(solTemp,lbTemp,ierr);CHKERRQ(ierr)
+   !Call VecSet(lbTemp,-1.0_Kr,ierr);CHKERRQ(ierr)
+   !Call VecDuplicate(solTemp,ubTemp,ierr);CHKERRQ(ierr)
+   !Call VecSet(ubTemp,0.2_Kr,ierr);CHKERRQ(ierr)
+   !Call SNESVISetVariableBounds(snesTemp,lbTemp,ubTemp,ierr);CHKERRQ(ierr)
+
+   Call SNESSetFromOptions(snesTemp,ierr);CHKERRQ(ierr)
 
    Call SNESGetKSP(snesTemp,kspTemp,ierr);CHKERRQ(ierr)
    Call KSPSetType(kspTemp,KSPCG,ierr);CHKERRQ(ierr)

@@ -481,7 +481,8 @@ Subroutine SimplePoissonNGOperatorAssembly(snesTemp,x,residual,PoissonCtx,ierr)
    !!! Scatter back from SectionReal to Vec
    Call SectionRealToVec(residualSec,PoissonCtx%ScatterSecToVec,SCATTER_FORWARD,residual,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(residualSec,ierr);CHKERRQ(ierr)
-
+   
+   
    !!!
    !!! Zero-out BC entries in the residual
    !!!
@@ -493,14 +494,15 @@ Subroutine SimplePoissonNGOperatorAssembly(snesTemp,x,residual,PoissonCtx,ierr)
          Call DMMeshISCreateISglobaldof(PoissonCtx%mesh,PoissonCtx%Section,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)))
-         BC = 0.0_Kr!vertexSetProperties%BC
+         BC = 0.0_Kr
          Call VecSetValues(residual,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
-         !!! Pretty sure that what is needed here is 0, not BC!
          DeAllocate(BC)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
       End If
    End Do
    Call ISRestoreIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call VecAssemblyBegin(residual,ierr)
+   Call VecAssemblyEnd(residual,ierr)
 End Subroutine SimplePoissonNGOperatorAssembly
 
 
