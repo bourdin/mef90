@@ -10,7 +10,6 @@ Program  SimplePoissonNG
    Use petsc
    Implicit NONE   
 
-
    Character(len=MEF90_MXSTRLEN)                :: prefix,filename
    Type(PoissonCtx_Type)                        :: AppCtx
    PetscErrorCode                               :: iErr
@@ -34,6 +33,8 @@ Program  SimplePoissonNG
    PetscInt,dimension(:),Pointer                :: setID
    PetscInt                                     :: set
    Type(MatNullSpace)                           :: nspTemp
+   SNESConvergedReason                          :: reasonTemp
+   PetscInt                                     :: itsTemp
 
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
@@ -80,8 +81,7 @@ Program  SimplePoissonNG
    !!! 
    !!! Create PoissonCtx
    !!!
-   Call PoissonCtxCreate(AppCtx,exoIN,ierr);CHKERRQ(ierr)
-   
+   Call PoissonCtxCreate(AppCtx,exoIN,ierr);CHKERRQ(ierr)   
    !!!
    !!! format the output file
    !!!
@@ -165,7 +165,14 @@ Program  SimplePoissonNG
    !!! Solve Poisson Equation
    Call SimplePoissonFormInitialGuess(solTemp,AppCtx,ierr);CHKERRQ(ierr)
    Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
-   !!! Check SNES / KSP convergence here
+
+   !!! Check SNES / KSP convergence
+   Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
+   Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,110) itsTemp,reasonTemp
+110 Format('SNESTemp converged in in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
+ 
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    
    !!! Compute energy and work
    Call ISGetIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -199,6 +206,8 @@ Program  SimplePoissonNG
    Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)   
    Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)   
    Call VecDestroy(locTemp,ierr);CHKERRQ(ierr)   
+!   Call DMDestroy(mesh,ierr);CHKERRQ(ierr);
+
    DeAllocate(work)
    DeAllocate(energy)
    
