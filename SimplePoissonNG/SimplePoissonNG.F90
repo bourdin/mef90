@@ -32,7 +32,7 @@ Program  SimplePoissonNG
    PetscReal,Dimension(:),Pointer               :: energy,work
    PetscInt,dimension(:),Pointer                :: setID
    PetscInt                                     :: set
-   !MatNullSpace                                 :: nsp
+   Type(MatNullSpace)                           :: nspTemp
 
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
@@ -116,14 +116,16 @@ Program  SimplePoissonNG
    Call SectionRealCreateLocalVector(AppCtx%Section,locTemp,ierr);CHKERRQ(ierr)
    Call VecDuplicate(solTemp,resTemp,ierr);CHKERRQ(ierr)
 
-   If (MEF90_NumProcs == 1) Then
-      Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%Section,MATSEQAIJ,matTemp,iErr);CHKERRQ(iErr)
-   Else
-      Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%Section,MATMPIAIJ,matTemp,iErr);CHKERRQ(iErr)
-   End If
+   Call DMMeshCreateMatrix(AppCtx%mesh,AppCtx%Section,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
+
+   !!! Adding a null space when some boundary conditions are prescribes breaks everything...
+   !!! Need to add a flag and make adding the null space optional
    !Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
    !Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
+
    !!! Not sure if this is still needed when using MatZeroRowsColumnsIS for BC handling
+   Call MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
+   Call MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
    !!!
