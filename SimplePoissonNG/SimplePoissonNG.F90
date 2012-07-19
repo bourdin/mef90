@@ -11,7 +11,7 @@ Program  SimplePoissonNG
    Implicit NONE   
 
    Character(len=MEF90_MXSTRLEN)                :: prefix,filename
-   Type(PoissonCtx_Type)                        :: AppCtx
+   Type(MEF90Ctx_Type)                          :: MEF90Ctx
    Type(DM)                                     :: mesh,tmp_mesh
    PetscErrorCode                               :: iErr
    PetscInt                                     :: exo_step,exo_field
@@ -101,7 +101,7 @@ Program  SimplePoissonNG
    !!! 
    !!! Create PoissonCtx
    !!!
-   Call PoissonCtxCreate(AppCtx,snesTemp,exoIN,ierr);CHKERRQ(ierr)
+   Call PoissonCtxCreate(MEF90Ctx,snesTemp,exoIN,ierr);CHKERRQ(ierr)
    !!!
    !!! format the output file
    !!!
@@ -133,14 +133,14 @@ Program  SimplePoissonNG
    !!! Get Matrix for the Jacobian / SNES and unknown vector
    !!!
    Call DMMeshSetMaxDof(mesh,1,iErr); CHKERRQ(iErr) 
-   Call DMMeshCreateVector(mesh,AppCtx%Section,solTemp,ierr);CHKERRQ(ierr)
-   Call SectionRealCreateLocalVector(AppCtx%Section,locTemp,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateVector(mesh,MEF90Ctx%Section,solTemp,ierr);CHKERRQ(ierr)
+   Call SectionRealCreateLocalVector(MEF90Ctx%Section,locTemp,ierr);CHKERRQ(ierr)
    Call VecDuplicate(solTemp,resTemp,ierr);CHKERRQ(ierr)
    !Call VecSet(solTemp,0.0_Kr,ierr);CHKERRQ(ierr)
    !Call VecSet(resTemp,0.0_Kr,ierr);CHKERRQ(ierr)
 
 
-   Call DMMeshCreateMatrix(mesh,AppCtx%Section,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
+   Call DMMeshCreateMatrix(mesh,MEF90Ctx%Section,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
 
    !!! Adding a null space when some boundary conditions are prescribes breaks everything...
    !!! Need to add a flag and make adding the null space optional
@@ -158,8 +158,8 @@ Program  SimplePoissonNG
    !Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
    !Call SNESSetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
    !Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
-   Call SNESSetFunction(snesTemp,resTemp,SimplePoissonOperator,AppCtx,ierr);CHKERRQ(ierr)
-   Call SNESSetJacobian(snesTemp,matTemp,matTemp,SimplePoissonBilinearForm,AppCtx,ierr);CHKERRQ(ierr)
+   Call SNESSetFunction(snesTemp,resTemp,SimplePoissonOperator,MEF90Ctx,ierr);CHKERRQ(ierr)
+   Call SNESSetJacobian(snesTemp,matTemp,matTemp,SimplePoissonBilinearForm,MEF90Ctx,ierr);CHKERRQ(ierr)
 
    !!!
    !!! Testing SNESVI: does not look ready for prime time...
@@ -183,7 +183,7 @@ Program  SimplePoissonNG
    !!! Setup GAMG here (coordinates,in particular)
    
    !!! Solve Poisson Equation
-   Call SimplePoissonFormInitialGuess(snesTemp,solTemp,AppCtx,ierr);CHKERRQ(ierr)
+   Call SimplePoissonFormInitialGuess(snesTemp,solTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
    Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
 
    !!! Check SNES / KSP convergence
@@ -195,19 +195,19 @@ Program  SimplePoissonNG
    Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    
    !!! Compute energy and work
-   Call ISGetIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISGetIndicesF90(MEF90Ctx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Allocate(energy(size(setID)))
    Allocate(work(size(setID)))
 
-   Call SimplePoissonEnergies(snesTemp,solTemp,AppCtx,energy,work,ierr)
+   Call SimplePoissonEnergies(snesTemp,solTemp,MEF90Ctx,energy,work,ierr)
    Do set = 1,size(setID)
       Write(IOBuffer,102) setID(set),energy(set),work(set)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    End Do
-   Call ISRestoreIndicesF90(AppCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(MEF90Ctx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 102 Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
 
-   Call SectionRealToVec(AppCtx%Section,AppCtx%ScatterSecToVec,SCATTER_REVERSE,solTemp,ierr);CHKERRQ(ierr)
+   Call SectionRealToVec(MEF90Ctx%Section,MEF90Ctx%ScatterSecToVec,SCATTER_REVERSE,solTemp,ierr);CHKERRQ(ierr)
    !!! solTemp values are copied to the Section,localTemp values should magically be up to date in the local
    !!! Vector since it shares the same storage space.
    Call VecViewExodusVertex(mesh,locTemp,IOComm,exoOUT,1,1,ierr)
@@ -221,7 +221,7 @@ Program  SimplePoissonNG
    !!!
    Call EXCLOS(exoIN,ierr)
    Call EXCLOS(exoOUT,ierr)
-   Call PoissonCtxDestroy(AppCtx,ierr);CHKERRQ(ierr)
+   Call PoissonCtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)
    Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)   
    Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)   

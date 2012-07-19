@@ -5,20 +5,21 @@ Module M_POISSON_TYPES
    Use m_MEF90
    Implicit none
    Private  
-   Public :: PoissonCtx_Type
+   Public :: MEF90Ctx_Type
    Public :: PoissonCellSetProperties_Type
    Public :: PoissonVertexSetProperties_Type
    
-   Type PoissonCtx_Type
+   Type MEF90Ctx_Type
       Type(IS)                                        :: CellSetGlobalIS,VertexSetGlobalIS
       Type(IS)                                        :: CellSetLocalIS,VertexSetLocalIS
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: Elem
       Type(SectionReal)                               :: Section
       Type(VecScatter)                                :: ScatterSecToVec
+      PetscBag                                        :: GlobalPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: VertexSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: MaterialPropertiesBag
-   End Type PoissonCtx_Type
+   End Type MEF90Ctx_Type
 
    Type PoissonCellSetProperties_Type   
       PetscInt                                        :: ElemTypeShortID
@@ -101,7 +102,7 @@ Module M_POISSON
    Implicit NONE
    Private
   
-   Public :: PoissonCtx_Type
+   Public :: MEF90Ctx_Type
     
    Public :: m_Poisson_Initialize
    Public :: PetscBagRegisterPoissonCellSetProperties
@@ -127,7 +128,7 @@ Contains
 
       Type(PoissonCellSetProperties_Type),Target   :: CellSetProperties
       Type(PoissonVertexSetProperties_Type),Target :: VertexSetProperties
-      Type(PoissonCtx_Type),Target                 :: PoissonCtx
+      Type(MEF90Ctx_Type),Target                   :: PoissonCtx
       character(len=1),pointer                     :: dummychar(:)
       PetscSizeT                                   :: sizeofchar
    
@@ -185,7 +186,7 @@ Contains
    !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
    !!!
    Subroutine PoissonCtxCreate(PoissonCtx,snesTemp,exoid,ierr)
-      Type(PoissonCtx_Type),intent(OUT)            :: PoissonCtx
+      Type(MEF90Ctx_Type),intent(OUT)              :: PoissonCtx
       Type(SNES),Intent(IN)                        :: snesTemp
       Integer,Intent(IN)                           :: exoid
       PetscErrorCode,Intent(OUT)                   :: ierr
@@ -251,10 +252,10 @@ Contains
          Call MPI_BCast(defaultElemType%ShortID,MXSTLN,MPI_CHARACTER,0,PETSC_COMM_WORLD,ierr)
 
          defaultCellSetProperties = PoissonCellSetProperties_Type(defaultElemType%ShortID,0.0_Kr)
-         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonCellSetProperties,PoissonCtx%CellSetPropertiesBag(set),ierr)
+         Call PetscBagCreate(PETSC_COMM_SELF,sizeofPoissonCellSetProperties,PoissonCtx%CellSetPropertiesBag(set),ierr)
          Call PetscBagRegisterPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),setName,setprefix,defaultCellSetProperties,ierr);CHKERRQ(ierr)
 
-         Call PetscBagCreate(PETSC_COMM_WORLD,SIZEOFMATPROP,PoissonCtx%MaterialPropertiesBag(set),ierr)
+         Call PetscBagCreate(PETSC_COMM_SELF,SIZEOFMATPROP,PoissonCtx%MaterialPropertiesBag(set),ierr)
          Call PetscBagRegisterMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),setName,setprefix,DEFAULT_MATERIAL,ierr);CHKERRQ(ierr)
          if (verbose > 0) Then
             Call PetscBagView(PoissonCtx%CellSetPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
@@ -276,7 +277,7 @@ Contains
             Write(IOBuffer,203) setID(set),trim(setprefix)
             Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          End if
-         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonVertexSetProperties,PoissonCtx%VertexSetPropertiesBag(set),ierr)
+         Call PetscBagCreate(PETSC_COMM_SELF,sizeofPoissonVertexSetProperties,PoissonCtx%VertexSetPropertiesBag(set),ierr)
          Call PetscBagRegisterPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),setname,setprefix,defaultVertexSetProperties,ierr);CHKERRQ(ierr)
          if (verbose > 0) Then
             Call PetscBagView(PoissonCtx%VertexSetPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
@@ -302,11 +303,13 @@ Contains
 
          Call DMmeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
          Call ElementInit(mesh,setIS,PoissonCtx%Elem,QuadratureOrder,CellSetProperties%ElemTypeShortID)
-         
          !!! I could use a different quadrature order on different blocks if I'd add it to the CellSetProperties!
+         !!! Or I could initialize the elements on demand before assembling each block, and setup the 
+         !!! quadrature order as a function of the term being assembled
+         !!! This would allow reduced quadrature to avoid locking when using unilateral in elasticity
 
          !!! I need a function that allocates a SectionReal using the mesh and the dof layout from the elemType
-         !!! But with old style sieve, it is a bit of a pain in the ass, so I'll use th shortcuts for now.
+         !!! But with old style sieve, it is a bit of a pain in the ass, so I'll use the shortcuts for now.
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do
 
@@ -316,7 +319,6 @@ Contains
       !!!
       Call DMMeshGetVertexSectionReal(mesh,"default",1,PoissonCtx%Section,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(mesh,PoissonCtx%Section,PoissonCtx%ScatterSecToVec,ierr);CHKERRQ(ierr)
-      !Call SectionRealView(PoissonCtx%Section,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr);
    End Subroutine PoissonCtxCreate
    
 #undef __FUNCT__
@@ -328,7 +330,7 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
 Subroutine PoissonCtxDestroy(PoissonCtx,ierr)
-   Type(PoissonCtx_Type)                                    :: PoissonCtx
+   Type(MEF90Ctx_Type)                                      :: PoissonCtx
    PetscErrorCode,Intent(OUT)                               :: ierr
    
    PetscInt                                                 :: e,set,nset
@@ -371,7 +373,7 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    Type(Vec),Intent(IN)                            :: x
    Type(Mat),Intent(INOUT)                         :: A,M
    MatStructure,Intent(INOUT)                      :: flg
-   Type(PoissonCtx_Type),intent(IN)                :: PoissonCtx
+   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr  
    
    Type(IS)                                        :: setIS,setISdof
@@ -431,7 +433,7 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: x
    Type(Vec),Intent(INOUT)                         :: residual
-   Type(PoissonCtx_Type),intent(IN)                :: PoissonCtx
+   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Type(SectionReal)                               :: residualSec
@@ -516,7 +518,7 @@ End Subroutine SimplePoissonOperator
 Subroutine SimplePoissonFormInitialGuess(snesTemp,x,PoissonCtx,ierr)
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: x
-   Type(PoissonCtx_Type),intent(IN)                :: PoissonCtx
+   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
@@ -558,7 +560,7 @@ End Subroutine SimplePoissonFormInitialGuess
 Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: x
-   Type(PoissonCtx_Type),intent(IN)                :: PoissonCtx
+   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
    PetscReal,Dimension(:),Pointer                  :: energy,work
    PetscErrorCode,Intent(OUT)                      :: ierr
 
