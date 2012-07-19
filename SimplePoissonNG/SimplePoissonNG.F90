@@ -36,7 +36,9 @@ Program  SimplePoissonNG
    Type(MatNullSpace)                           :: nspTemp
    SNESConvergedReason                          :: reasonTemp
    PetscInt                                     :: itsTemp
-
+   Type(SectionReal)                            :: secTemp
+   Type(VecScatter)                             :: ScatterSecToVec
+   
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
 
@@ -102,46 +104,21 @@ Program  SimplePoissonNG
    !!! Create PoissonCtx
    !!!
    Call PoissonCtxCreate(MEF90Ctx,snesTemp,exoIN,ierr);CHKERRQ(ierr)
-   !!!
-   !!! format the output file
-   !!!
-   If (splitIO) Then
-      cpu_ws = 8
-      io_ws = 8
-      exoOUT = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
-      Call DMmeshViewExodusSplit(mesh,exoOUT,ierr)
-      Call EXPVP (exoOUT,'g',3,ierr)
-      Call EXPVAN(exoOUT,'g',3,(/'Energy         ','Ext Forces work','Total Energy   '/),ierr)
-      Call EXPVP (exoOUT,'n',1,ierr)
-      Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
-      !Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
-   Else
-      If (MEF90_MyRank == 0) Then
-         cpu_ws = 8
-         io_ws = 8
-         exoOUT = EXCRE(filename,EXCLOB,cpu_ws,io_ws,ierr)
-         Call EXCOPY(exoIN,exoOUT,ierr)
-         Call EXPVP (exoOUT,'g',3,ierr)
-         Call EXPVAN(exoOUT,'g',3,(/'Elastic Energy ','Ext Forces work','Total Energy   '/),ierr)
-         Call EXPVP (exoOUT,'n',1,ierr)
-         Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
-         Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
-      End If
-   End If
-
+   Call DMMeshGetSectionReal(mesh,'default',secTemp,ierr);CHKERRQ(ierr)
    !!!
    !!! Get Matrix for the Jacobian / SNES and unknown vector
    !!!
    Call DMMeshSetMaxDof(mesh,1,iErr); CHKERRQ(iErr) 
-   Call DMMeshCreateVector(mesh,MEF90Ctx%Section,solTemp,ierr);CHKERRQ(ierr)
-   Call SectionRealCreateLocalVector(MEF90Ctx%Section,locTemp,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateMatrix(mesh,secTemp,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
+
+   !!! There are two ways to get global and local vectors:
+   !!! Through the generic DM interface, which will only pull the layout from the 'default' section
+   !Call DMGetGlobalVector(mesh,solTemp,ierr);CHKERRQ(ierr)
+   !!! Through DMMeshCreateVector which lets use any layout
+   Call DMMeshCreateVector(mesh,secTemp,solTemp,ierr);CHKERRQ(ierr)
+
    Call VecDuplicate(solTemp,resTemp,ierr);CHKERRQ(ierr)
-   !Call VecSet(solTemp,0.0_Kr,ierr);CHKERRQ(ierr)
-   !Call VecSet(resTemp,0.0_Kr,ierr);CHKERRQ(ierr)
-
-
-   Call DMMeshCreateMatrix(mesh,MEF90Ctx%Section,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
-
+      
    !!! Adding a null space when some boundary conditions are prescribes breaks everything...
    !!! Need to add a flag and make adding the null space optional
    !Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
@@ -207,14 +184,56 @@ Program  SimplePoissonNG
    Call ISRestoreIndicesF90(MEF90Ctx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 102 Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
 
-   Call SectionRealToVec(MEF90Ctx%Section,MEF90Ctx%ScatterSecToVec,SCATTER_REVERSE,solTemp,ierr);CHKERRQ(ierr)
-   !!! solTemp values are copied to the Section,localTemp values should magically be up to date in the local
-   !!! Vector since it shares the same storage space.
+
+   !!! Save results
+   
+   !!!
+   !!! format the output file
+   !!!
+   If (splitIO) Then
+      cpu_ws = 8
+      io_ws = 8
+      exoOUT = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
+      Call DMmeshViewExodusSplit(mesh,exoOUT,ierr)
+      Call EXPVP (exoOUT,'g',3,ierr)
+      Call EXPVAN(exoOUT,'g',3,(/'Energy         ','Ext Forces work','Total Energy   '/),ierr)
+      Call EXPVP (exoOUT,'n',1,ierr)
+      Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
+      !Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
+   Else
+      If (MEF90_MyRank == 0) Then
+         cpu_ws = 8
+         io_ws = 8
+         exoOUT = EXCRE(filename,EXCLOB,cpu_ws,io_ws,ierr)
+         Call EXCOPY(exoIN,exoOUT,ierr)
+         Call EXPVP (exoOUT,'g',3,ierr)
+         Call EXPVAN(exoOUT,'g',3,(/'Elastic Energy ','Ext Forces work','Total Energy   '/),ierr)
+         Call EXPVP (exoOUT,'n',1,ierr)
+         Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
+         Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
+      End If
+   End If
+
+   !!! 
+   !!! Write in exo file
+   !!!
+   !!! Just as for global vectors, there are two ways to deal with local vectors
+   !!! Obtaining them from the DM, and using DMLocalToGlobalBegin/End
+   !Call DMGetLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
+   !Call DMGlobalToLocalBegin(mesh,solTemp,INSERT_VALUES,locTemp,ierr);CHKERRQ(ierr)
+   !Call DMGlobalToLocalEnd(mesh,solTemp,INSERT_VALUES,locTemp,ierr);CHKERRQ(ierr)
+   !!! Or by from a SectionReal, and using SectionRealToVec to copy from Vec to Section
+   Call DMMeshCreateGlobalScatter(mesh,secTemp,ScatterSecToVec,ierr);CHKERRQ(ierr)
+   Call SectionRealCreateLocalVector(secTemp,locTemp,ierr);CHKERRQ(ierr)   
+   Call SectionRealToVec(secTemp,ScatterSecToVec,SCATTER_REVERSE,solTemp,ierr);CHKERRQ(ierr)
+   Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+
    Call VecViewExodusVertex(mesh,locTemp,IOComm,exoOUT,1,1,ierr)
    Call EXPGV(exoOUT,1,3,(/ sum(energy),sum(work),sum(energy)-sum(work) /),ierr)   
    Write(IOBuffer,103) sum(energy),sum(work)
    Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 103 Format('Total:  energy: ',ES12.5,' work: ',ES12.5,'\n')
+   Call DMrestoreLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
 
    !!!
    !!! Cleanup
@@ -223,10 +242,11 @@ Program  SimplePoissonNG
    Call EXCLOS(exoOUT,ierr)
    Call PoissonCtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)
    Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
-   Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)   
-   Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)   
-   Call VecDestroy(locTemp,ierr);CHKERRQ(ierr)   
-!   Call DMDestroy(mesh,ierr);CHKERRQ(ierr);
+   Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)
+   Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)
+   Call VecDestroy(locTemp,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(secTemp,ierr);CHKERRQ(ierr)
+   Call DMDestroy(mesh,ierr);CHKERRQ(ierr);
 
    DeAllocate(work)
    DeAllocate(energy)
