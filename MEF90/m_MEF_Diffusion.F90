@@ -1,7 +1,7 @@
 !!! Change the logic so that the elem array be indexed with respect to the current IS
 !!! This way, we can either reallocate the elem before assembling each block
 !!! or have a 2 dimensional array of elemns in a global ctx
-!!! i.e. all references to elem(cellID(cell)+1) should be replaced with elem(cell)
+!!! i.e. all references to elem(cell) should be replaced with elem(cell)
 !!! cellID will only be used in the insertion functions
 Module m_MEF_Diffusion
 #include "finclude/petscdef.h"
@@ -101,12 +101,12 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
          MatElem = 0.0_Kr
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             Do iDoF1 = 1,elemType%numDof
                Do iDoF2 = 1,elemType%numDof
-                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                                 (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * elem(cellID(cell)+1)%BF(iDoF2,iGauss) + &
-                                 ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cellID(cell)+1)%Grad_BF(iDoF2,iGauss)))
+                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                 (lambda * elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) + &
+                                 ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cell)%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          End Do
@@ -147,17 +147,17 @@ Contains
       Do cell = 1,size(cellID)      
          Gloc = 0.0_Kr
          Call SectionRealRestrictClosure(V,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             Velem     = 0.0_Kr
             GradVElem = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
-               Velem     = Velem     + Vloc(iDof1) * elem(cellID(cell)+1)%BF(iDoF1,iGauss)
-               GradVelem = GradVelem + Vloc(iDof1) * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)
+               Velem     = Velem     + Vloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+               GradVelem = GradVelem + Vloc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
             End Do
             Do iDoF1 = 1,elemType%numDof
-               Gloc(iDoF1) = Gloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                              (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * Velem + &
-                               ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
+               Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                              (lambda * elem(cell)%BF(iDoF1,iGauss) * Velem + &
+                               ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
             End Do
          End Do
          Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -195,14 +195,14 @@ Contains
       Do cell = 1,size(cellID)      
          RHSloc = 0.0_Kr
          Call SectionRealRestrictClosure(F,mesh,cellID(cell),elemType%numDof,Floc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             Felem     = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
-               Felem = Felem + Floc(iDof1) * elem(cellID(cell)+1)%BF(iDoF1,iGauss)
+               Felem = Felem + Floc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
             End Do
             Do iDoF1 = 1,elemType%numDof
-               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                              elem(cellID(cell)+1)%BF(iDoF1,iGauss) * Felem
+               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                              elem(cell)%BF(iDoF1,iGauss) * Felem
             End Do
          End Do
          Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -237,10 +237,10 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
          RHSloc = 0.0_Kr
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             Do iDoF1 = 1,elemType%numDof
-               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                              elem(cellID(cell)+1)%BF(iDoF1,iGauss) * F
+               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                              elem(cell)%BF(iDoF1,iGauss) * F
             End Do
          End Do
          Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -277,15 +277,15 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)   
          Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             strain = 0.0_Kr   
             xelem  = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
-               strain = strain + elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
-               xelem = xelem + elem(cellID(cell)+1)%BF(iDoF1,iGauss) * xloc(iDoF1)
+               strain = strain + elem(cell)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
+               xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * xloc(iDoF1)
             End Do
             stress = A * strain
-            energy = energy + elem(cellID(cell)+1)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
+            energy = energy + elem(cell)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
          End Do
       End Do
    
@@ -319,12 +319,12 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)   
          Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             xelem = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
-               xelem = xelem + xloc(iDof1) * elem(cellID(cell)+1)%BF(iDof1,iGauss)
+               xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
             End Do
-            work = work + elem(cellID(cell)+1)%Gauss_C(iGauss) * F * xelem
+            work = work + elem(cell)%Gauss_C(iGauss) * F * xelem
          End Do
       End Do
    
@@ -357,12 +357,12 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
          MatElem = 0.0_Kr
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             Do iDoF1 = 1,elemType%numDof
                Do iDoF2 = 1,elemType%numDof
-                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                                 (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * elem(cellID(cell)+1)%BF(iDoF2,iGauss) + &
-                                 ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cellID(cell)+1)%Grad_BF(iDoF2,iGauss)))
+                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                 (lambda * elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) + &
+                                 ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cell)%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          End Do
@@ -403,17 +403,17 @@ Contains
       Do cell = 1,size(cellID)      
          Gloc = 0.0_Kr
          Call SectionRealRestrictClosure(V,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             Velem     = 0.0_Kr
             GradVElem = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
-               Velem     = Velem     + Vloc(iDof1) * elem(cellID(cell)+1)%BF(iDoF1,iGauss)
-               GradVelem = GradVelem + Vloc(iDof1) * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)
+               Velem     = Velem     + Vloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+               GradVelem = GradVelem + Vloc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
             End Do
             Do iDoF1 = 1,elemType%numDof
-               Gloc(iDoF1) = Gloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                              (lambda * elem(cellID(cell)+1)%BF(iDoF1,iGauss) * Velem + &
-                               ( (A * elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
+               Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                              (lambda * elem(cell)%BF(iDoF1,iGauss) * Velem + &
+                               ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
             End Do
          End Do
          Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -451,14 +451,14 @@ Contains
       Do cell = 1,size(cellID)      
          RHSloc = 0.0_Kr
          Call SectionRealRestrictClosure(F,mesh,cellID(cell),elemType%numDof,Floc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             Felem     = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
-               Felem = Felem + Floc(iDof1) * elem(cellID(cell)+1)%BF(iDoF1,iGauss)
+               Felem = Felem + Floc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
             End Do
             Do iDoF1 = 1,elemType%numDof
-               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                              elem(cellID(cell)+1)%BF(iDoF1,iGauss) * Felem
+               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                              elem(cell)%BF(iDoF1,iGauss) * Felem
             End Do
          End Do
          Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -493,10 +493,10 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)      
          RHSloc = 0.0_Kr
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             Do iDoF1 = 1,elemType%numDof
-               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                              elem(cellID(cell)+1)%BF(iDoF1,iGauss) * F
+               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                              elem(cell)%BF(iDoF1,iGauss) * F
             End Do
          End Do
          Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -533,15 +533,15 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)   
          Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             strain = 0.0_Kr   
             xelem  = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
-               strain = strain + elem(cellID(cell)+1)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
-               xelem = xelem + elem(cellID(cell)+1)%BF(iDoF1,iGauss) * xloc(iDoF1)
+               strain = strain + elem(cell)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
+               xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * xloc(iDoF1)
             End Do
             stress = A * strain
-            energy = energy + elem(cellID(cell)+1)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
+            energy = energy + elem(cell)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
          End Do
       End Do
    
@@ -575,12 +575,12 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Do cell = 1,size(cellID)   
          Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             xelem = 0.0_Kr
             Do iDoF1 = 1,elemType%numDof
-               xelem = xelem + xloc(iDof1) * elem(cellID(cell)+1)%BF(iDof1,iGauss)
+               xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
             End Do
-            work = work + elem(cellID(cell)+1)%Gauss_C(iGauss) * F * xelem
+            work = work + elem(cell)%Gauss_C(iGauss) * F * xelem
          End Do
       End Do
    

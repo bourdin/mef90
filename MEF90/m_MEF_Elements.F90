@@ -9,9 +9,9 @@ Module m_MEF_Elements
 
    !Private   
    ! not sure how to make the enumerator public short of listing them one after each other.
-   Public :: ElementInit
-   Public :: ElementDestroy
-   Public :: ElementView
+   Public :: MEF90_ElementCreate
+   Public :: MEF90_ElementDestroy
+   Public :: MEF90_ElementView
    Public :: Element_Type
    Public :: Element1D
    Public :: Element2D_Vect,Element2D_Scal,Element2D_Elast 
@@ -349,24 +349,26 @@ Module m_MEF_Elements
       PetscReal,Dimension(:),Pointer               :: Gauss_C
    End Type Element3D_Elast
 
-   Interface ElementInit
+   Interface MEF90_ElementCreate
       Module Procedure Element2D_Scal_Init,Element2D_Vect_Init,Element2D_Elast_Init, &
                        Element3D_Scal_Init,Element3D_Vect_Init,Element3D_Elast_Init, &
                        Element2D_Scal_InitSet,Element2D_Vect_InitSet,Element2D_Elast_InitSet, &
                        Element3D_Scal_InitSet,Element3D_Vect_InitSet,Element3D_Elast_InitSet, &
                        Element2D_Scal_InitSet_ByShortID,Element2D_Vect_InitSet_ByShortID,Element2D_Elast_InitSet_ByShortID,&
                        Element3D_Scal_InitSet_ByShortID,Element3D_Vect_InitSet_ByShortID,Element3D_Elast_InitSet_ByShortID
-   End Interface ElementInit
+   End Interface MEF90_ElementCreate
    
-   Interface ElementDestroy
+   Interface MEF90_ElementDestroy
       Module Procedure Element2D_Scal_Destroy,Element2D_Vect_Destroy,Element2D_Elast_Destroy,&
-                       Element3D_Scal_Destroy,Element3D_Vect_Destroy,Element3D_Elast_Destroy
-   End Interface ElementDestroy
+                       Element3D_Scal_Destroy,Element3D_Vect_Destroy,Element3D_Elast_Destroy,&
+                       Element2D_Scal_DestroySet,Element2D_Vect_DestroySet,Element2D_Elast_DestroySet,& 
+                       Element3D_Scal_DestroySet,Element3D_Vect_DestroySet,Element3D_Elast_DestroySet   
+   End Interface MEF90_ElementDestroy
    
-   Interface ElementView
+   Interface MEF90_ElementView
       Module Procedure Element2D_Scal_View,Element2D_Vect_View,Element2D_Elast_View, &
                        Element3D_Scal_View,Element3D_Vect_View,Element3D_Elast_View
-   End Interface ElementView
+   End Interface MEF90_ElementView
    
 Contains
 #undef __FUNCT__
@@ -506,9 +508,10 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_TypeFindByID"
-   Subroutine Element_TypeFindByID(elemID,elemType)
+   Subroutine Element_TypeFindByID(elemID,elemType,ierr)
       PetscInt, Intent(IN)                        :: elemID
       Type(Element_Type),Intent(OUT)              :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
       Integer                                     :: i
       PetscBool                                   :: knownID = PETSC_FALSE      
@@ -521,14 +524,16 @@ Contains
       End Do
       If (.NOT. knownID) Then
          Write(*,*) "[ERROR]: Unknown element ID", elemID
+         ierr = PETSC_ERR_ARG_WRONG
       End If
    End Subroutine Element_TypeFindByID
    
 #undef __FUNCT__
 #define __FUNCT__ "Element_TypeFindByname"
-   Subroutine Element_TypeFindByname(elemName,elemType)
+   Subroutine Element_TypeFindByname(elemName,elemType,ierr)
       Character(len=*), Intent(IN)                :: elemName
       Type(Element_Type),Intent(OUT)              :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
 
       Integer                                     :: i
       PetscBool                                   :: knownID = PETSC_FALSE      
@@ -541,175 +546,189 @@ Contains
       End Do
       If (.NOT. knownID) Then
          Write(*,*) "[ERROR]: Unknown element ", trim(elemName)
+         ierr = PETSC_ERR_ARG_WRONG
       End If
    End Subroutine Element_TypeFindByname
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet_ByName"
-   Subroutine Element2D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+   Subroutine Element2D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Character(len=*), Intent(IN)                :: elemName
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
       Type(Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType)
-      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element2D_Scal_InitSet_ByName
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Vect_InitSet_ByName"
-   Subroutine Element2D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+   Subroutine Element2D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Character(len=*), Intent(IN)                :: elemName
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
       Type(Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType)
-      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element2D_Vect_InitSet_ByName
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_InitSet_ByName"
-   Subroutine Element2D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+   Subroutine Element2D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Character(len=*), Intent(IN)                :: elemName
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
       Type(Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType)
-      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element2D_Elast_InitSet_ByName
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_InitSet_ByName"
-   Subroutine Element3D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+   Subroutine Element3D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element3D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Character(len=*), Intent(IN)                :: elemName
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
       Type(Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType)
-      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element3D_Scal_InitSet_ByName
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Vect_InitSet_ByName"
-   Subroutine Element3D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+   Subroutine Element3D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element3D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Character(len=*), Intent(IN)                :: elemName
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
       Type(Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType)
-      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element3D_Vect_InitSet_ByName
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_InitSet_ByName"
-   Subroutine Element3D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName)
+   Subroutine Element3D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element3D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Character(len=*), Intent(IN)                :: elemName
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
       Type(Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType)
-      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element3D_Elast_InitSet_ByName
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet_ByShortID"
-   Subroutine Element2D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+   Subroutine Element2D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
+      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
    End Subroutine Element2D_Scal_InitSet_ByShortID
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Vect_InitSet_ByShortID"
-   Subroutine Element2D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+   Subroutine Element2D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
+      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
    End Subroutine Element2D_Vect_InitSet_ByShortID
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_InitSet_ByShortID"
-   Subroutine Element2D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+   Subroutine Element2D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Elast),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
+      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
    End Subroutine Element2D_Elast_InitSet_ByShortID
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_InitSet_ByShortID"
-   Subroutine Element3D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+   Subroutine Element3D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element3D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
+      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
    End Subroutine Element3D_Scal_InitSet_ByShortID
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Vect_InitSet_ByShortID"
-   Subroutine Element3D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+   Subroutine Element3D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element3D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
+      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
    End Subroutine Element3D_Vect_InitSet_ByShortID
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_InitSet_ByShortID"
-   Subroutine Element3D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID)
+   Subroutine Element3D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element3D_Elast),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
+      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
    End Subroutine Element3D_Elast_InitSet_ByShortID
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet"
-   Subroutine Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   Subroutine Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Type(Element_Type),intent(IN)               :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: conesize,iELoc
       PetscInt                                    :: i,j,k
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord
@@ -719,14 +738,15 @@ Contains
       Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       
+      Allocate(dElem(size(cellID)),stat=ierr)
       If (size(CellID) > 0) Then
          iELoc = CellID(1)
          Call DMMeshGetConeSize(mesh,iELoc,coneSize,ierr);CHKERRQ(ierr)    
          !!! 
          !!! conesize*numdim is an upper bound on the size of the restriction
          !!! of the coordinate section to a cell (interpolated mesh) 
-         Allocate(TmpCoord(conesize * elemType%dim))
-         Allocate(Coord(elemType%dim,elemType%numVertex))
+         Allocate(TmpCoord(conesize * elemType%dim),stat=ierr)
+         Allocate(Coord(elemType%dim,elemType%numVertex),stat=ierr)
          Do_Elem_iE: Do iELoc = 1,size(CellID)
             Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
             k = 1
@@ -736,10 +756,10 @@ Contains
                   k = k+1
                End Do
             End Do
-            Call Element2D_Scal_Init(dElem(CellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
+            Call Element2D_Scal_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType,ierr)
          End Do Do_Elem_iE
-         DeAllocate(TmpCoord)
-         DeAllocate(Coord)
+         DeAllocate(TmpCoord,stat=ierr)
+         DeAllocate(Coord,stat=ierr)
       End If
       Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
@@ -747,14 +767,15 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Vect_InitSet"
-   Subroutine Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   Subroutine Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Type(Element_Type),intent(IN)               :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: conesize,iELoc
       PetscInt                                    :: i,j,k
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord
@@ -764,40 +785,43 @@ Contains
       Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
-      !!! 
-      !!! conesize*numdim is an upper bound on the size of the restriction
-      !!! of the coordinate section to a cell (interpolated mesh) 
-      Allocate(TmpCoord(conesize * elemType%dim))
-      Allocate(Coord(elemType%dim,elemType%numVertex))
-      Do_Elem_iE: Do iELoc = 1,size(CellID)
-         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
-         k = 1
-         Do i = 1, elemType%numVertex
-            Do j = 1, elemType%dim
-               Coord(j,i) = TmpCoord(k)
-               k = k+1
+      Allocate(dElem(size(cellID)),stat=ierr)
+      If (size(CellID) > 0) Then
+         Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+         !!! 
+         !!! conesize*numdim is an upper bound on the size of the restriction
+         !!! of the coordinate section to a cell (interpolated mesh) 
+         Allocate(TmpCoord(conesize * elemType%dim),stat=ierr)
+         Allocate(Coord(elemType%dim,elemType%numVertex),stat=ierr)
+         Do_Elem_iE: Do iELoc = 1,size(CellID)
+            Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+            k = 1
+            Do i = 1, elemType%numVertex
+               Do j = 1, elemType%dim
+                  Coord(j,i) = TmpCoord(k)
+                  k = k+1
+               End Do
             End Do
-         End Do
-         Call Element2D_Vect_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
-      End Do Do_Elem_iE
-      DeAllocate(TmpCoord)
-      DeAllocate(Coord)
-
+            Call Element2D_Vect_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType,ierr)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoord,stat=ierr)
+         DeAllocate(Coord,stat=ierr)
+      End If
       Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
    End Subroutine Element2D_Vect_InitSet
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_InitSet"
-   Subroutine Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   Subroutine Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element2D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Type(Element_Type),intent(IN)               :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: conesize,iELoc
       PetscInt                                    :: i,j,k
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord
@@ -807,40 +831,43 @@ Contains
       Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
-      !!! 
-      !!! conesize*numdim is an upper bound on the size of the restriction
-      !!! of the coordinate section to a cell (interpolated mesh) 
-      Allocate(TmpCoord(conesize * elemType%dim))
-      Allocate(Coord(elemType%dim,elemType%numVertex))
-      Do_Elem_iE: Do iELoc = 1,size(CellID)
-         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
-         k = 1
-         Do i = 1, elemType%numVertex
-            Do j = 1, elemType%dim
-               Coord(j,i) = TmpCoord(k)
-               k = k+1
+      Allocate(dElem(size(cellID)),stat=ierr)
+      If (size(CellID) > 0) Then
+         Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+         !!! 
+         !!! conesize*numdim is an upper bound on the size of the restriction
+         !!! of the coordinate section to a cell (interpolated mesh) 
+         Allocate(TmpCoord(conesize * elemType%dim),stat=ierr)
+         Allocate(Coord(elemType%dim,elemType%numVertex),stat=ierr)
+         Do_Elem_iE: Do iELoc = 1,size(CellID)
+            Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+            k = 1
+            Do i = 1, elemType%numVertex
+               Do j = 1, elemType%dim
+                  Coord(j,i) = TmpCoord(k)
+                  k = k+1
+               End Do
             End Do
-         End Do
-         Call Element2D_Elast_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
-      End Do Do_Elem_iE
-      DeAllocate(TmpCoord)
-      DeAllocate(Coord)
-
+            Call Element2D_Elast_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType,ierr)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoord,stat=ierr)
+         DeAllocate(Coord,stat=ierr)
+      End If
       Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
    End Subroutine Element2D_Elast_InitSet
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_InitSet"
-   Subroutine Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   Subroutine Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element3D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Type(Element_Type),intent(IN)               :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: conesize,iELoc
       PetscInt                                    :: i,j,k
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord
@@ -850,40 +877,44 @@ Contains
       Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
-      !!! 
-      !!! conesize*numdim is an upper bound on the size of the restriction
-      !!! of the coordinate section to a cell (interpolated mesh)
-      Allocate(TmpCoord(conesize * elemType%dim))
-      Allocate(Coord(elemType%dim,elemType%numVertex))
-      Do_Elem_iE: Do iELoc = 1,size(CellID)
-         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
-         k = 1
-         Do i = 1, elemType%numVertex
-            Do j = 1, elemType%dim
-               Coord(j,i) = TmpCoord(k)
-               k = k+1
+      Allocate(dElem(size(cellID)),stat=ierr)
+      If (size(CellID) > 0) Then
+         Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+         !!! 
+         !!! conesize*numdim is an upper bound on the size of the restriction
+         !!! of the coordinate section to a cell (interpolated mesh)
+         Allocate(TmpCoord(conesize * elemType%dim),stat=ierr)
+         Allocate(Coord(elemType%dim,elemType%numVertex),stat=ierr)
+         Do_Elem_iE: Do iELoc = 1,size(CellID)
+            Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+            k = 1
+            Do i = 1, elemType%numVertex
+               Do j = 1, elemType%dim
+                  Coord(j,i) = TmpCoord(k)
+                  k = k+1
+               End Do
             End Do
-         End Do
-         Call Element3D_Scal_Init(dElem(CellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
-      End Do Do_Elem_iE
-      DeAllocate(TmpCoord)
-      DeAllocate(Coord)
-
+            Call Element3D_Scal_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType,ierr)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoord,stat=ierr)
+         DeAllocate(Coord,stat=ierr)
+      End If
+      
       Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
    End Subroutine Element3D_Scal_InitSet
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Vect_InitSet"
-   Subroutine Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   Subroutine Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element3D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Type(Element_Type),intent(IN)               :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: conesize,iELoc
       PetscInt                                    :: i,j,k
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord
@@ -893,40 +924,44 @@ Contains
       Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
-      !!! 
-      !!! conesize*numdim is an upper bound on the size of the restriction
-      !!! of the coordinate section to a cell (interpolated mesh) 
-      Allocate(TmpCoord(conesize * elemType%dim))
-      Allocate(Coord(elemType%dim,elemType%numVertex))
-      Do_Elem_iE: Do iELoc = 1,size(CellID)
-         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
-         k = 1
-         Do i = 1, elemType%numVertex
-            Do j = 1, elemType%dim
-               Coord(j,i) = TmpCoord(k)
-               k = k+1
+      Allocate(dElem(size(cellID)),stat=ierr)
+      If (size(CellID) > 0) Then
+         Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+         !!! 
+         !!! conesize*numdim is an upper bound on the size of the restriction
+         !!! of the coordinate section to a cell (interpolated mesh) 
+         Allocate(TmpCoord(conesize * elemType%dim),stat=ierr)
+         Allocate(Coord(elemType%dim,elemType%numVertex),stat=ierr)
+         Do_Elem_iE: Do iELoc = 1,size(CellID)
+            Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+            k = 1
+            Do i = 1, elemType%numVertex
+               Do j = 1, elemType%dim
+                  Coord(j,i) = TmpCoord(k)
+                  k = k+1
+               End Do
             End Do
-         End Do
-         Call Element3D_Vect_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
-      End Do Do_Elem_iE
-      DeAllocate(TmpCoord)
-      DeAllocate(Coord)
-
+            Call Element3D_Vect_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType,ierr)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoord,stat=ierr)
+         DeAllocate(Coord,stat=ierr)
+      End If
+      
       Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
    End Subroutine Element3D_Vect_InitSet
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_InitSet"
-   Subroutine Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+   Subroutine Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(DM),intent(IN)                         :: mesh
       Type(IS),intent(IN)                         :: cellIS
       Type(Element3D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder
       Type(Element_Type),intent(IN)               :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc,ierr
+      PetscInt                                    :: conesize,iELoc
       PetscInt                                    :: i,j,k
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord
@@ -936,26 +971,28 @@ Contains
       Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
-      !!! 
-      !!! conesize*numdim is an upper bound on the size of the restriction
-      !!! of the coordinate section to a cell (interpolated mesh) 
-      Allocate(TmpCoord(conesize * elemType%dim))
-      Allocate(Coord(elemType%dim,elemType%numVertex))
-      Do_Elem_iE: Do iELoc = 1,size(CellID)
-         Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
-         k = 1
-         Do i = 1, elemType%numVertex
-            Do j = 1, elemType%dim
-               Coord(j,i) = TmpCoord(k)
-               k = k+1
+      Allocate(dElem(size(cellID)),stat=ierr)
+      If (size(CellID) > 0) Then
+         Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
+         !!! 
+         !!! conesize*numdim is an upper bound on the size of the restriction
+         !!! of the coordinate section to a cell (interpolated mesh) 
+         Allocate(TmpCoord(conesize * elemType%dim),stat=ierr)
+         Allocate(Coord(elemType%dim,elemType%numVertex),stat=ierr)
+         Do_Elem_iE: Do iELoc = 1,size(CellID)
+            Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
+            k = 1
+            Do i = 1, elemType%numVertex
+               Do j = 1, elemType%dim
+                  Coord(j,i) = TmpCoord(k)
+                  k = k+1
+               End Do
             End Do
-         End Do
-         Call Element3D_Elast_Init(dElem(cellID(iELoc)+1),Coord,dQuadratureOrder,elemType)
-      End Do Do_Elem_iE
-      DeAllocate(TmpCoord)
-      DeAllocate(Coord)
-
+            Call Element3D_Elast_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType,ierr)
+         End Do Do_Elem_iE
+         DeAllocate(TmpCoord,stat=ierr)
+         DeAllocate(Coord,stat=ierr)
+      End If
       Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
    End Subroutine Element3D_Elast_InitSet
@@ -963,157 +1000,169 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_Init"
-   Subroutine Element2D_Scal_Init(dElem,dCoord,QuadratureOrder,elemType)
+   Subroutine Element2D_Scal_Init(dElem,dCoord,QuadratureOrder,elemType,ierr)
       Type(Element2D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
       Type(Element_Type),intent(IN)          :: elemType
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_2D_Scal%shortID)
-            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_2D_Scal%shortID)
-            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case (MEF90_P1_Lagrange_2DBoundary_Scal%shortID)
-            Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_2DBoundary_Scal%shortID)
-            Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder,ierr)
 !         Case (MEF90_Q1_Lagrange_2D_Scal%shortID)
-!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,1,QuadratureOrder,ierr)
 !         Case (MEF90_Q2_Lagrange_2D_Scal%shortID)
-!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element2D_Scal_Init                                
    
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Vect_Init"
-   Subroutine Element2D_Vect_Init(dElem,dCoord,QuadratureOrder,elemType)
+   Subroutine Element2D_Vect_Init(dElem,dCoord,QuadratureOrder,elemType,ierr)
       Type(Element2D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
       Type(Element_Type),intent(IN)          :: elemType
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_2D_Vect%shortID)
-            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_2D_Vect%shortID)
-            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case (MEF90_P1_Lagrange_2DBoundary_Vect%shortID)
-            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_2DBoundary_Vect%shortID)
-            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder,ierr)
 !         Case (MEF90_Q1_Lagrange_2D_Vect%shortID)
-!            Call Element_Q_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Vect_Init(dElem,dCoord,1,QuadratureOrder,ierr)
 !         Case (MEF90_Q2_Lagrange_2D_Vect%shortID)
-!            Call Element_Q_Lagrange_2D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Vect_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element2D_Vect_Init                                
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_Init"
-   Subroutine Element2D_Elast_Init(dElem,dCoord,QuadratureOrder,elemType)
-      Type(Element2D_Elast)                   :: dElem
+   Subroutine Element2D_Elast_Init(dElem,dCoord,QuadratureOrder,elemType,ierr)
+      Type(Element2D_Elast)                  :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
       Type(Element_Type),intent(IN)          :: elemType
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_2D_Elast%shortID)
-            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_2D_Elast%shortID)
-            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case (MEF90_P1_Lagrange_2DBoundary_Elast%shortID)
-            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_2DBoundary_Elast%shortID)
-            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder,ierr)
 !         Case (MEF90_Q1_Lagrange_2D_Elast%shortID)
-!            Call Element_Q_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder,ierr)
 !         Case (MEF90_Q2_Lagrange_2D_Elast%shortID)
-!            Call Element_Q_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element2D_Elast_Init                                
    
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_Init"
-   Subroutine Element3D_Scal_Init(dElem,dCoord,QuadratureOrder,elemType)
+   Subroutine Element3D_Scal_Init(dElem,dCoord,QuadratureOrder,elemType,ierr)
       Type(Element3D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
       Type(Element_Type),intent(IN)          :: elemType
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_3D_Scal%shortID)
-            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_3D_Scal%shortID)
-            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case (MEF90_P1_Lagrange_3DBoundary_Scal%shortID)
-            Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_3DBoundary_Scal%shortID)
-            Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,2,QuadratureOrder,ierr)
 !         Case (MEF90_Q1_Lagrange_3D_Scal%shortID)
-!            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,1,QuadratureOrder,ierr)
 !         Case (MEF90_Q2_Lagrange_3D_Scal%shortID)
-!            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element3D_Scal_Init                                
    
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Vect_Init"
-   Subroutine Element3D_Vect_Init(dElem,dCoord,QuadratureOrder,elemType)
+   Subroutine Element3D_Vect_Init(dElem,dCoord,QuadratureOrder,elemType,ierr)
       Type(Element3D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
       Type(Element_Type),intent(IN)          :: elemType
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_3D_Vect%shortID)
-            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_3D_Vect%shortID)
-            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case (MEF90_P1_Lagrange_3DBoundary_Vect%shortID)
-            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_3DBoundary_Vect%shortID)
-            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,2,QuadratureOrder,ierr)
 !         Case (MEF90_Q1_Lagrange_3D_Vect)
-!            Call Element_Q_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Vect_Init(dElem,dCoord,1,QuadratureOrder,ierr)
 !         Case (MEF90_Q2_Lagrange_3D_Vect)
-!            Call Element_Q_Lagrange_3D_Vect_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Vect_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element3D_Vect_Init                                
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_Init"
-   Subroutine Element3D_Elast_Init(dElem,dCoord,QuadratureOrder,elemType)
-      Type(Element3D_Elast)                   :: dElem
+   Subroutine Element3D_Elast_Init(dElem,dCoord,QuadratureOrder,elemType,ierr)
+      Type(Element3D_Elast)                  :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord
       PetscInt,Intent(IN)                    :: QuadratureOrder
       Type(Element_Type),intent(IN)          :: elemType
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_3D_Elast%shortID)
-            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_3D_Elast%shortID)
-            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case (MEF90_P1_Lagrange_3DBoundary_Elast%shortID)
-            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,1,QuadratureOrder,ierr)
          Case (MEF90_P2_Lagrange_3DBoundary_Elast%shortID)
-            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+            Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,2,QuadratureOrder,ierr)
 !         Case (MEF90_Q1_Lagrange_3D_Elast%shortID)
-!            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,1,QuadratureOrder,ierr)
 !         Case (MEF90_Q2_Lagrange_3D_Elast%shortID)
-!            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder)
+!            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
             Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element3D_Elast_Init                                
 
@@ -1121,12 +1170,13 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2D_Scal_Init"
-   Subroutine Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_2D_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
       Type(Element2D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       PetscInt                               :: Nb_Gauss
       PetscInt                               :: Num_Dof
@@ -1150,18 +1200,18 @@ Contains
       Bt = Invert(Bt)
 
       Select Case (dQuadratureOrder)
-      Case(1)
+      Case(0,1)
          Nb_Gauss = 1
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1)%X = 1.0_Kr / 3.0_Kr
          Xi(1)%Y = 1.0_Kr / 3.0_Kr
          dElem%Gauss_C = detBinv / 2.0_Kr
 
       Case(2)
          Nb_Gauss = 3
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1) = (/ 1.0_Kr / 6.0_Kr,1.0_Kr / 6.0_Kr /)
          Xi(2) = (/ 2.0_Kr / 3.0_Kr,1.0_Kr / 6.0_Kr /)
          Xi(3) = (/ 1.0_Kr / 6.0_Kr,2.0_Kr / 3.0_Kr /)
@@ -1169,8 +1219,8 @@ Contains
 
       Case(3)
          Nb_Gauss = 4
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          dElem%Gauss_C    =  detBinv * 25.0_Kr / 96.0_Kr
          dElem%Gauss_C(1) = -detBinv * 9.0_Kr / 32.0_Kr
          Xi(1) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
@@ -1179,8 +1229,8 @@ Contains
          Xi(4) = (/ 1.0_Kr / 5.0_Kr,1.0_Kr / 5.0_Kr /)
       Case(4)
          Nb_Gauss = 7
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          dElem%Gauss_C(1) = detBinv / 40.0_Kr
          dElem%Gauss_C(2) = detBinv / 15.0_Kr
          dElem%Gauss_C(3) = detBinv / 40.0_Kr
@@ -1197,8 +1247,8 @@ Contains
          Xi(7) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
       Case(6)
          Nb_Gauss = 9
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1) = (/ 0.124949503233232_Kr, 0.437525248383384_Kr /)
          Xi(2) = (/ 0.437525248383384_Kr, 0.124949503233232_Kr /)
          Xi(3) = (/ 0.437525248383384_Kr, 0.437525248383384_Kr /)
@@ -1218,8 +1268,8 @@ Contains
       Select Case (dPolynomialOrder)
       Case(1)
          Num_DoF = 3
-         Allocate(PhiHat(Num_DoF,Nb_Gauss))
-         Allocate(GradPhiHat(Num_DoF,Nb_Gauss))
+         Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
+         Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y
          PhiHat(2,:) = Xi(:)%X
          PhiHat(3,:) = Xi(:)%Y
@@ -1230,8 +1280,8 @@ Contains
           
       Case(2)
          Num_DoF = 6
-         Allocate(PhiHat(Num_DoF,Nb_Gauss))
-         Allocate(GradPhiHat(Num_DoF,Nb_Gauss))
+         Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
+         Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)      
          PhiHat(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
          PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
@@ -1249,8 +1299,8 @@ Contains
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
       End Select
       
-      Allocate (dElem%BF(Num_DoF,Nb_Gauss)) 
-      Allocate (dElem%Grad_BF(Num_DoF,Nb_Gauss))
+      Allocate (dElem%BF(Num_DoF,Nb_Gauss),stat=ierr) 
+      Allocate (dElem%Grad_BF(Num_DoF,Nb_Gauss),stat=ierr)
       dElem%BF = PhiHat
       Do iDoF = 1,Num_DoF
          Do iG = 1,Nb_Gauss
@@ -1258,17 +1308,18 @@ Contains
          End Do
       End Do
      
-      DeAllocate(Xi)
-      DeAllocate(PhiHat)
-      DeAllocate(GradPhiHat)
+      DeAllocate(Xi,stat=ierr)
+      DeAllocate(PhiHat,stat=ierr)
+      DeAllocate(GradPhiHat,stat=ierr)
    End Subroutine Element_P_Lagrange_2D_Scal_Init
    
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2DBoundary_Scal_Init"
-   Subroutine Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_2DBoundary_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Type(Element2D_Scal),intent(INOUT)     :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       Type(Element2D_Scal)                   :: tmpElem
       PetscReal,Dimension(:,:),Pointer       :: tmpCoord
@@ -1277,7 +1328,7 @@ Contains
       PetscReal                              :: InnerBF
       
       !!! Create a bogus tri element with unit height by adding a 3rd vertex
-      Allocate(tmpCoord(2,3))
+      Allocate(tmpCoord(2,3),stat=ierr)
       Do i = 1,2
          Do j = 1,2
             tmpCoord(i,j) = dCoord(i,j)
@@ -1291,13 +1342,13 @@ Contains
       tmpCoord(1,3) = dCoord(1,1) - NormalVector%X 
       tmpCoord(2,3) = dCoord(2,1) - NormalVector%Y
       
-      Call Element_P_Lagrange_2D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder)
+      Call Element_P_Lagrange_2D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Select Case (dPolynomialOrder)
          Case (1)
             Num_DoF  = 2
             Num_Gauss = size(tmpElem%BF,2)
-            Allocate(dElem%Gauss_C(Num_Gauss))
-            Allocate(dElem%BF(Num_DoF,Num_Gauss))
+            Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
+            Allocate(dElem%BF(Num_DoF,Num_Gauss),stat=ierr)
             dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
             Do iDoF = 1,Num_doF
                Do iG = 1,Num_Gauss
@@ -1313,8 +1364,8 @@ Contains
             !!! Inner dof: 3,4,5
             Num_DoF  = 3
             Num_Gauss = size(tmpElem%BF,2)
-            Allocate(dElem%Gauss_C(Num_Gauss))
-            Allocate(dElem%BF(Num_DoF,Num_Gauss))
+            Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
+            Allocate(dElem%BF(Num_DoF,Num_Gauss),stat=ierr)
             dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
             Do iG = 1,Num_Gauss
                InnerBF = (tmpElem%BF(3,iG) + tmpElem%BF(4,iG) + tmpElem%BF(5,iG)) / 3.0_Kr
@@ -1325,29 +1376,30 @@ Contains
          Case Default
             Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
-      Call Element2D_Scal_Destroy(tmpElem)
-      deAllocate(tmpCoord)
-      Allocate(delem%Grad_BF(0,0))
+      Call MEF90_ElementDestroy(tmpElem,ierr)
+      deAllocate(tmpCoord,stat=ierr)
+      Allocate(delem%Grad_BF(0,0),stat=ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Scal_Init                          
       
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2D_Vect_Init"
-   Subroutine Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_2D_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Type(Element2D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
    
       Type(Element2D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 2 
       PetscInt                               :: Num_DoF,Nb_Gauss,i
       
       
-      Call Element_P_Lagrange_2D_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Call Element_P_Lagrange_2D_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
-      Allocate(dElem%Der_BF(Num_DoF * dim,Nb_Gauss))
+      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%Der_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -1365,27 +1417,28 @@ Contains
          dElem%Der_BF(i*dim+2,:)%YX = Elem_Scal%Grad_BF(i+1,:)%X
          dElem%Der_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
-      Call ElementDestroy(Elem_Scal)
+      Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2D_Vect_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2DBoundary_Vect_Init"
-   Subroutine Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_2DBoundary_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Type(Element2D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
    
       Type(Element2D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 2 
       PetscInt                               :: Num_DoF,Nb_Gauss,i
       
       
-      Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
-      Allocate(dElem%Der_BF(0,Nb_Gauss))
+      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%Der_BF(0,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -1395,27 +1448,28 @@ Contains
          dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
       End Do
-      Call ElementDestroy(Elem_Scal)
+      Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Vect_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2D_Elast_Init"
-   Subroutine Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Type(Element2D_Elast)                  :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
    
       Type(Element2D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 2 
       PetscInt                               :: Num_DoF,Nb_Gauss,i
       
       
-      Call Element_P_Lagrange_2D_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Call Element_P_Lagrange_2D_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
-      Allocate(dElem%GradS_BF(Num_DoF * dim,Nb_Gauss))
+      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -1431,27 +1485,28 @@ Contains
          dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X / 2.0_Kr
          dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
-      Call ElementDestroy(Elem_Scal)
+      Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2D_Elast_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2DBoundary_Elast_Init"
-   Subroutine Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Type(Element2D_Elast)                  :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
    
       Type(Element2D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 2 
       PetscInt                               :: Num_DoF,Nb_Gauss,i
       
       
-      Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
-      Allocate(dElem%GradS_BF(0,Nb_Gauss))
+      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%GradS_BF(0,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -1460,17 +1515,18 @@ Contains
          dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
       End Do
-      Call ElementDestroy(Elem_Scal)
+      Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Elast_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3D_Scal_Init"
-   Subroutine Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_3D_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
       Type(Element3D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       PetscInt                               :: Nb_Gauss
       PetscInt                               :: Num_Dof
@@ -1502,10 +1558,10 @@ Contains
       Bt = Invert(Bt)
       
       Select Case (dQuadratureOrder)
-      Case (1)
+      Case (0,1)
          Nb_Gauss = 1
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1) = (/ .25_Kr,.25_Kr,.25_Kr /)
          dElem%Gauss_C(1) = 1.0_Kr / 6.0_Kr * detBinv
          
@@ -1513,8 +1569,8 @@ Contains
          a = (5.0_Kr + 3.0_Kr * sqrt(5.0_Kr)) / 20.0_Kr
          b = (5.0_Kr - sqrt(5.0_Kr)) / 20.0_Kr
          Nb_Gauss = 4
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1) = (/ a,b,b /)
          Xi(2) = (/ b,a,b /)
          Xi(3) = (/ b,b,a /)
@@ -1523,8 +1579,8 @@ Contains
             
       Case(3)
          Nb_Gauss = 5
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1) = (/ .25_Kr,.25_Kr,.25_Kr /)
          Xi(2) = (/ .5_Kr,1._Kr / 6._Kr,1._Kr / 6._Kr /)
          Xi(3) = (/ 1._Kr / 6._Kr,.5_Kr,1._Kr / 6._Kr /)
@@ -1534,8 +1590,8 @@ Contains
          dElem%Gauss_C(2:5) = 3.0_Kr / 40.0_Kr * detBinv
       Case(4)
          Nb_Gauss = 11
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1)  = (/ 0.2500000000000000_Kr, 0.2500000000000000_Kr, 0.2500000000000000_Kr /)
          Xi(2)  = (/ 0.7857142857142857_Kr, 0.0714285714285714_Kr, 0.0714285714285714_Kr /)
          Xi(3)  = (/ 0.0714285714285714_Kr, 0.0714285714285714_Kr, 0.0714285714285714_Kr /)
@@ -1552,8 +1608,8 @@ Contains
          dElem%Gauss_C(6:11) =  0.1493333333333333_Kr / 6.0_Kr * detBinv
       Case(6)
          Nb_Gauss = 24
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1)  = (/ 0.3561913862225449_Kr, 0.2146028712591517_Kr, 0.2146028712591517_Kr /)
          Xi(2)  = (/ 0.2146028712591517_Kr, 0.2146028712591517_Kr, 0.2146028712591517_Kr /)
          Xi(3)  = (/ 0.2146028712591517_Kr, 0.2146028712591517_Kr, 0.3561913862225449_Kr /)
@@ -1590,8 +1646,8 @@ Contains
       Select Case (dPolynomialOrder)
       Case(1)
          Num_DoF = 4
-         Allocate(PhiHat(Num_DoF,Nb_Gauss))
-         Allocate(GradPhiHat(Num_DoF,Nb_Gauss))
+         Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
+         Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y - Xi%Z
          PhiHat(2,:) = Xi(:)%X
          PhiHat(3,:) = Xi(:)%Y
@@ -1603,8 +1659,8 @@ Contains
          GradPhiHat(4,:)%X =  0.0_Kr;GradPhiHat(4,:)%Y =  0.0_Kr;GradPhiHat(4,:)%Z =  1.0_Kr;
       Case(2)
          Num_Dof = 10
-         Allocate(PhiHat(Num_DoF,Nb_Gauss))
-         Allocate(GradPhiHat(Num_DoF,Nb_Gauss))
+         Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
+         Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          PhiHat(1,:)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
          PhiHat(2,:)  = Xi%X * (2.0_Kr *  Xi%X - 1.0_Kr)
          PhiHat(3,:)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
@@ -1612,9 +1668,6 @@ Contains
          PhiHat(5,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
          PhiHat(6,:)  = 4.0_Kr *  Xi%X * Xi%Y
          PhiHat(7,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Y
-!         PhiHat(8,:)  = 4.0_Kr *  Xi%X * Xi%Z
-!         PhiHat(9,:)  = 4.0_Kr * Xi%Y * Xi%Z
-!         PhiHat(10,:) = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
          PhiHat(8,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
          PhiHat(9,:)  = 4.0_Kr * Xi%X * Xi%Z
          PhiHat(10,:) = 4.0_Kr * Xi%Y * Xi%Z
@@ -1660,10 +1713,11 @@ Contains
          GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Y
       Case Default
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
+         ierr = PETSC_ERR_SUP
       End Select
       
-      Allocate (dElem%BF(Num_DoF,Nb_Gauss)) 
-      Allocate (dElem%Grad_BF(Num_DoF,Nb_Gauss))
+      Allocate (dElem%BF(Num_DoF,Nb_Gauss),stat=ierr) 
+      Allocate (dElem%Grad_BF(Num_DoF,Nb_Gauss),stat=ierr)
       dElem%BF = PhiHat
       Do iDoF = 1,Num_DoF
          Do iG = 1,Nb_Gauss
@@ -1671,19 +1725,20 @@ Contains
          End Do
       End Do
      
-      DeAllocate(Xi)
-      DeAllocate(PhiHat)
-      DeAllocate(GradPhiHat)
+      DeAllocate(Xi,stat=ierr)
+      DeAllocate(PhiHat,stat=ierr)
+      DeAllocate(GradPhiHat,stat=ierr)
    End Subroutine Element_P_Lagrange_3D_Scal_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3DBoundary_Scal_Init"
-   Subroutine Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_3DBoundary_Scal_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
       Type(Element3D_Scal)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       PetscInt                               :: Nb_Gauss
       PetscInt                               :: Num_Dof
@@ -1706,16 +1761,16 @@ Contains
       Select Case (dQuadratureOrder)
       Case(1)
          Nb_Gauss = 1
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1)%X = 1.0_Kr / 3.0_Kr
          Xi(1)%Y = 1.0_Kr / 3.0_Kr
          dElem%Gauss_C = area
 
       Case(2)
          Nb_Gauss = 3
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1) = (/ 1.0_Kr / 6.0_Kr,1.0_Kr / 6.0_Kr /)
          Xi(2) = (/ 2.0_Kr / 3.0_Kr,1.0_Kr / 6.0_Kr /)
          Xi(3) = (/ 1.0_Kr / 6.0_Kr,2.0_Kr / 3.0_Kr /)
@@ -1723,8 +1778,8 @@ Contains
 
       Case(3)
          Nb_Gauss = 4
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          dElem%Gauss_C    =  area * 25.0_Kr / 48.0_Kr
          dElem%Gauss_C(1) = -area * 9.0_Kr / 16.0_Kr
          Xi(1) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
@@ -1733,8 +1788,8 @@ Contains
          Xi(4) = (/ 1.0_Kr / 5.0_Kr,1.0_Kr / 5.0_Kr /)
       Case(4)
          Nb_Gauss = 7
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          dElem%Gauss_C(1) = area / 20.0_Kr
          dElem%Gauss_C(2) = area * 2.0_Kr / 15.0_Kr
          dElem%Gauss_C(3) = area / 10.0_Kr
@@ -1751,8 +1806,8 @@ Contains
          Xi(7) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
       Case(6)
          Nb_Gauss = 9
-         Allocate(Xi(Nb_Gauss))
-         Allocate(dElem%Gauss_C(Nb_Gauss))
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          Xi(1) = (/ 0.124949503233232_Kr, 0.437525248383384_Kr /)
          Xi(2) = (/ 0.437525248383384_Kr, 0.124949503233232_Kr /)
          Xi(3) = (/ 0.437525248383384_Kr, 0.437525248383384_Kr /)
@@ -1766,19 +1821,20 @@ Contains
          dElem%Gauss_C(4:9) = 0.063691414286223_Kr * area
       Case Default
          Print*,__FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
+         ierr = PETSC_ERR_SUP
          STOP
       End Select
       
       Select Case (dPolynomialOrder)
       Case(1)
          Num_DoF = 3
-         Allocate(PhiHat(Num_DoF,Nb_Gauss))
+         Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y
          PhiHat(2,:) = Xi(:)%X
          PhiHat(3,:) = Xi(:)%Y
       Case(2)
          Num_DoF = 6
-         Allocate(PhiHat(Num_DoF,Nb_Gauss))
+         Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)      
          PhiHat(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
          PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
@@ -1787,34 +1843,36 @@ Contains
          PhiHat(6,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
       Case Default
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
+         ierr = PETSC_ERR_SUP
       End Select
       
-      Allocate (dElem%BF(Num_DoF,Nb_Gauss)) 
-      Allocate (dElem%Grad_BF(0,0))
+      Allocate (dElem%BF(Num_DoF,Nb_Gauss),stat=ierr) 
+      Allocate (dElem%Grad_BF(0,0),stat=ierr)
       dElem%BF = PhiHat
      
-      DeAllocate(Xi)
-      DeAllocate(PhiHat)
+      DeAllocate(Xi,stat=ierr)
+      DeAllocate(PhiHat,stat=ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Scal_Init
    
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3D_Vect_Init"
-   Subroutine Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_3D_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Type(Element3D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
    
       Type(Element3D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 3 
       PetscInt                               :: Num_DoF,Nb_Gauss,i
       
       
-      Call Element_P_Lagrange_3D_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Call Element_P_Lagrange_3D_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
-      Allocate(dElem%Der_BF(Num_DoF * dim,Nb_Gauss))
+      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%Der_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -1844,27 +1902,28 @@ Contains
          dElem%Der_BF(i*dim+3,:)%ZY = Elem_Scal%Grad_BF(i+1,:)%Y
          dElem%Der_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
       End Do
-      Call ElementDestroy(Elem_Scal)
+      Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3D_Vect_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3DBoundary_Vect_Init"
-   Subroutine Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_3DBoundary_Vect_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Type(Element3D_Vect)                   :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
    
       Type(Element3D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 3 
       PetscInt                               :: Num_DoF,Nb_Gauss,i
       
       
-      Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
-      Allocate(dElem%Der_BF(0,Nb_Gauss))
+      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%Der_BF(0,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -1876,27 +1935,28 @@ Contains
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
       End Do
-      Call ElementDestroy(Elem_Scal)
+      Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Vect_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3D_Elast_Init"
-   Subroutine Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_3D_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Type(Element3D_Elast)                  :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
    
       Type(Element3D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 3 
       PetscInt                               :: Num_DoF,Nb_Gauss,i
       
       
-      Call Element_P_Lagrange_3D_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Call Element_P_Lagrange_3D_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
-      Allocate(dElem%GradS_BF(Num_DoF * dim,Nb_Gauss))
+      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -1925,27 +1985,28 @@ Contains
          dElem%GradS_BF(i*dim+3,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Y * 0.5_Kr
          dElem%GradS_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
       End Do
-      Call ElementDestroy(Elem_Scal)
+      Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3D_Elast_Init
    
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3DBoundary_Elast_Init"
-   Subroutine Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder)
+   Subroutine Element_P_Lagrange_3DBoundary_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Type(Element3D_Elast)                  :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
+      PetscErrorCode,Intent(OUT)             :: ierr
    
       Type(Element3D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 3 
       PetscInt                               :: Num_DoF,Nb_Gauss,i
       
       
-      Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder)
+      Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss))
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss))
-      Allocate(dElem%GradS_BF(0,Nb_Gauss))
+      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%GradS_BF(0,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
       dElem%BF(:,:)%X = 0.0_Kr
@@ -1957,99 +2018,193 @@ Contains
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
       End Do
-      Call ElementDestroy(Elem_Scal)
+      Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Elast_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_Destroy"
-   Subroutine Element2D_Scal_Destroy(dElem)
+   Subroutine Element2D_Scal_Destroy(dElem,ierr)
       Type(Element2D_Scal)                   :: dElem
+      PetscErrorCode,Intent(OUT)             :: ierr
       
       If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF)
+         DeAllocate(dElem%BF,stat=ierr)
       End If
       If (Associated(dElem%Grad_BF)) Then
-         DeAllocate(dElem%Grad_BF)
+         DeAllocate(dElem%Grad_BF,stat=ierr)
       End If
       If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C)
+         DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
    End Subroutine Element2D_Scal_Destroy
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Destroy"
-   Subroutine Element2D_Vect_Destroy(dElem)
-      Type(Element2D_Vect)                        :: dElem
+   Subroutine Element2D_Vect_Destroy(dElem,ierr)
+      Type(Element2D_Vect)                   :: dElem
+      PetscErrorCode,Intent(OUT)             :: ierr
+      
       If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF)
+         DeAllocate(dElem%BF,stat=ierr)
       End If
       If (Associated(dElem%Der_BF)) Then
-         DeAllocate(dElem%Der_BF)
+         DeAllocate(dElem%Der_BF,stat=ierr)
       End If
       If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C)
+         DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
    End Subroutine Element2D_Vect_Destroy
    
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_Destroy"
-   Subroutine Element2D_Elast_Destroy(dElem)
+   Subroutine Element2D_Elast_Destroy(dElem,ierr)
       Type(Element2D_Elast)                  :: dElem
+      PetscErrorCode,Intent(OUT)             :: ierr
+      
       If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF)
+         DeAllocate(dElem%BF,stat=ierr)
       End If
       If (Associated(dElem%GradS_BF)) Then
-         DeAllocate(dElem%GradS_BF)
+         DeAllocate(dElem%GradS_BF,stat=ierr)
       End If
       If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C)
+         DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
    End Subroutine Element2D_Elast_Destroy
    
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_Destroy"
-   Subroutine Element3D_Scal_Destroy(dElem)
+   Subroutine Element3D_Scal_Destroy(dElem,ierr)
       Type(Element3D_Scal)                   :: dElem
+      PetscErrorCode,Intent(OUT)             :: ierr
+      
       If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF)
+         DeAllocate(dElem%BF,stat=ierr)
       End If
       If (Associated(dElem%Grad_BF)) Then
-         DeAllocate(dElem%Grad_BF)
+         DeAllocate(dElem%Grad_BF,stat=ierr)
       End If
       If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C)
+         DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
    End Subroutine Element3D_Scal_Destroy
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Vect_Destroy"
-   Subroutine Element3D_Vect_Destroy(dElem)
-      Type(Element3D_Vect)                        :: dElem
+   Subroutine Element3D_Vect_Destroy(dElem,ierr)
+      Type(Element3D_Vect)                   :: dElem
+      PetscErrorCode,Intent(OUT)             :: ierr
       If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF)
+         DeAllocate(dElem%BF,stat=ierr)
       End If
       If (Associated(dElem%Der_BF)) Then
-         DeAllocate(dElem%Der_BF)
+         DeAllocate(dElem%Der_BF,stat=ierr)
       End If
       If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C)
+         DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
    End Subroutine Element3D_Vect_Destroy
    
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_Destroy"
-   Subroutine Element3D_Elast_Destroy(dElem)
+   Subroutine Element3D_Elast_Destroy(dElem,ierr)
       Type(Element3D_Elast)                  :: dElem
+      PetscErrorCode,Intent(OUT)             :: ierr
+
       If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF)
+         DeAllocate(dElem%BF,stat=ierr)
       End If
       If (Associated(dElem%GradS_BF)) Then
-         DeAllocate(dElem%GradS_BF)
+         DeAllocate(dElem%GradS_BF,stat=ierr)
       End If
       If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C)
+         DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
    End Subroutine Element3D_Elast_Destroy
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Scal_DestroySet"
+   Subroutine Element2D_Scal_DestroySet(dElem,ierr)
+      Type(Element2D_Scal),dimension(:),Pointer    :: dElem
+      PetscErrorCode,Intent(OUT)                   :: ierr
+      
+      PetscInt                                     :: cell
+      
+      Do cell = 1, size(dElem)
+         Call MEF90_ElementDestroy(dElem(cell),ierr)
+      End Do
+      DeAllocate(dElem,stat=ierr)
+   End Subroutine Element2D_Scal_DestroySet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Vect_DestroySet"
+   Subroutine Element2D_Vect_DestroySet(dElem,ierr)
+      Type(Element2D_Vect),dimension(:),Pointer    :: dElem
+      PetscErrorCode,Intent(OUT)                   :: ierr
+      
+      PetscInt                                     :: cell
+      
+      Do cell = 1, size(dElem)
+         Call MEF90_ElementDestroy(dElem(cell),ierr)
+      End Do
+      DeAllocate(dElem,stat=ierr)
+   End Subroutine Element2D_Vect_DestroySet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element2D_Elast_DestroySet"
+   Subroutine Element2D_Elast_DestroySet(dElem,ierr)
+      Type(Element2D_Elast),dimension(:),Pointer   :: dElem
+      PetscErrorCode,Intent(OUT)                   :: ierr
+      
+      PetscInt                                     :: cell
+      
+      Do cell = 1, size(dElem)
+         Call MEF90_ElementDestroy(dElem(cell),ierr)
+      End Do
+      DeAllocate(dElem,stat=ierr)
+   End Subroutine Element2D_Elast_DestroySet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Scal_DestroySet"
+   Subroutine Element3D_Scal_DestroySet(dElem,ierr)
+      Type(Element3D_Scal),dimension(:),Pointer    :: dElem
+      PetscErrorCode,Intent(OUT)                   :: ierr
+      
+      PetscInt                                     :: cell
+      
+      Do cell = 1, size(dElem)
+         Call MEF90_ElementDestroy(dElem(cell),ierr)
+      End Do
+      DeAllocate(dElem,stat=ierr)
+   End Subroutine Element3D_Scal_DestroySet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Vect_DestroySet"
+   Subroutine Element3D_Vect_DestroySet(dElem,ierr)
+      Type(Element3D_Vect),dimension(:),Pointer    :: dElem
+      PetscErrorCode,Intent(OUT)                   :: ierr
+      
+      PetscInt                                     :: cell
+      
+      Do cell = 1, size(dElem)
+         Call MEF90_ElementDestroy(dElem(cell),ierr)
+      End Do
+      DeAllocate(dElem,stat=ierr)
+   End Subroutine Element3D_Vect_DestroySet
+
+#undef __FUNCT__
+#define __FUNCT__ "Element3D_Elast_DestroySet"
+   Subroutine Element3D_Elast_DestroySet(dElem,ierr)
+      Type(Element3D_Elast),dimension(:),Pointer   :: dElem
+      PetscErrorCode,Intent(OUT)                   :: ierr
+      
+      PetscInt                                     :: cell
+      
+      Do cell = 1, size(dElem)
+         Call MEF90_ElementDestroy(dElem(cell),ierr)
+      End Do
+      DeAllocate(dElem,stat=ierr)
+   End Subroutine Element3D_Elast_DestroySet
 
 !!!
 !!! ELEMENT VIEWERS
@@ -2057,12 +2212,13 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_View"
-   Subroutine Element2D_Scal_View(dElem,viewer)
-      Type(Element2D_Scal)                            :: dElem
-      Type(PetscViewer)                               :: viewer
+   Subroutine Element2D_Scal_View(dElem,viewer,ierr)
+      Type(Element2D_Scal)                   :: dElem
+      Type(PetscViewer)                      :: viewer
+      PetscErrorCode,Intent(OUT)             :: ierr
       
-      PetscInt                                        :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
-      Character(len=512)                              :: CharBuffer
+      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
+      Character(len=512)                     :: CharBuffer
                 
       Nb_DoF   = size(dElem%BF,1)
       Nb_Gauss = size(dElem%BF,2)
@@ -2109,12 +2265,13 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Vect_View"
-   Subroutine Element2D_Vect_View(dElem,viewer)
-      Type(Element2D_Vect)                            :: dElem
-      Type(PetscViewer)                               :: viewer
+   Subroutine Element2D_Vect_View(dElem,viewer,ierr)
+      Type(Element2D_Vect)                   :: dElem
+      Type(PetscViewer)                      :: viewer
+      PetscErrorCode,Intent(OUT)             :: ierr
       
-      PetscInt                                        :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
-      Character(len=512)                              :: CharBuffer
+      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
+      Character(len=512)                     :: CharBuffer
 
       Nb_DoF   = size(dElem%BF,1)
       Nb_Gauss = size(dElem%BF,2)
@@ -2177,12 +2334,13 @@ Contains
 201 Format('   ',F5.2)
    End Subroutine Element2D_Vect_View
    
-   Subroutine Element2D_Elast_View(dElem,viewer)
-      Type(Element2D_Elast)                           :: dElem
-      Type(PetscViewer)                               :: viewer
+   Subroutine Element2D_Elast_View(dElem,viewer,ierr)
+      Type(Element2D_Elast)                  :: dElem
+      Type(PetscViewer)                      :: viewer
+      PetscErrorCode,Intent(OUT)             :: ierr
       
-      PetscInt                                        :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
-      Character(len=512)                              :: CharBuffer
+      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
+      Character(len=512)                     :: CharBuffer
 
       Nb_DoF   = size(dElem%BF,1)
       Nb_Gauss = size(dElem%BF,2)
@@ -2240,12 +2398,13 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_View"
-   Subroutine Element3D_Scal_View(dElem,viewer)
-      Type(Element3D_Scal)                            :: dElem
-      Type(PetscViewer)                               :: viewer
+   Subroutine Element3D_Scal_View(dElem,viewer,ierr)
+      Type(Element3D_Scal)                   :: dElem
+      Type(PetscViewer)                      :: viewer
+      PetscErrorCode,Intent(OUT)             :: ierr
       
-      PetscInt                                        :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
-      Character(len=512)                              :: CharBuffer
+      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
+      Character(len=512)                     :: CharBuffer
                 
       Nb_DoF   = size(dElem%BF,1)
       Nb_Gauss = size(dElem%BF,2)
@@ -2298,12 +2457,13 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_View"
-   Subroutine Element3D_Vect_View(dElem,viewer)
-      Type(Element3D_Vect)                            :: dElem
-      Type(PetscViewer)                               :: viewer
+   Subroutine Element3D_Vect_View(dElem,viewer,ierr)
+      Type(Element3D_Vect)                   :: dElem
+      Type(PetscViewer)                      :: viewer
+      PetscErrorCode,Intent(OUT)             :: ierr
       
-      PetscInt                                        :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
-      Character(len=512)                              :: CharBuffer
+      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
+      Character(len=512)                     :: CharBuffer
 
       Nb_DoF   = size(dElem%BF,1)
       Nb_Gauss = size(dElem%BF,2)
@@ -2401,12 +2561,13 @@ Contains
 201 Format('   ',F5.2)
    End Subroutine Element3D_Vect_View
    
-   Subroutine Element3D_Elast_View(dElem,viewer)
-      Type(Element3D_Elast)                           :: dElem
-      Type(PetscViewer)                               :: viewer
+   Subroutine Element3D_Elast_View(dElem,viewer,ierr)
+      Type(Element3D_Elast)                  :: dElem
+      Type(PetscViewer)                      :: viewer
+      PetscErrorCode,Intent(OUT)             :: ierr
       
-      PetscInt                                        :: Nb_Gauss,Nb_DoF,iDoF,iG,ierr
-      Character(len=512)                              :: CharBuffer
+      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
+      Character(len=512)                     :: CharBuffer
 
       Nb_DoF   = size(dElem%BF,1)
       Nb_Gauss = size(dElem%BF,2)
