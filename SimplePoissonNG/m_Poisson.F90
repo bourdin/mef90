@@ -12,7 +12,6 @@ Module M_POISSON_TYPES
    Type MEF90Ctx_Type
       Type(IS)                                        :: CellSetGlobalIS,VertexSetGlobalIS
       Type(IS)                                        :: CellSetLocalIS,VertexSetLocalIS
-      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: Elem
       PetscBag                                        :: GlobalPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: VertexSetPropertiesBag
@@ -203,7 +202,6 @@ Contains
       Type(PoissonCellSetProperties_Type)          :: defaultCellSetProperties
       Type(PoissonCellSetProperties_Type),pointer  :: CellSetProperties
       Type(PoissonVertexSetProperties_Type)        :: defaultVertexSetProperties
-      PetscInt,Parameter                           :: QuadratureOrder = 4
       Type(IS)                                     :: setIS
       PetscInt,Dimension(:),Pointer                :: cellID
       Type(SectionReal)                            :: Sec
@@ -233,8 +231,8 @@ Contains
       !!! A loop on CellSetGlobalIS is required since PetscBagRegister is collective on PETSC_COMM_WORLD
       !!! CONVERT THIS LOOP TO use CellSetIS
       Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Allocate(PoissonCtx%CellSetPropertiesBag(size(setID)))
-      Allocate(PoissonCtx%MaterialPropertiesBag(size(setID)))
+      Allocate(PoissonCtx%CellSetPropertiesBag(size(setID)),stat=ierr)
+      Allocate(PoissonCtx%MaterialPropertiesBag(size(setID)),stat=ierr)
       
       Do set = 1, size(setID)
          Write(setName,100) setID(set)
@@ -268,7 +266,7 @@ Contains
       !!! Allocate and register vertex properties bags:
       !!! CONVERT THIS LOOP TO use VertexSetIS
       Call ISGetIndicesF90(PoissonCtx%VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Allocate(PoissonCtx%VertexSetPropertiesBag(size(setID)))
+      Allocate(PoissonCtx%VertexSetPropertiesBag(size(setID)),stat=ierr)
       defaultVertexSetProperties = PoissonVertexSetProperties_Type( PETSC_TRUE,0.0_Kr )
       Do set = 1, size(setID)
          Write(setName,200) setID(set)
@@ -295,20 +293,20 @@ Contains
       !!! Now passing to FE part
 
       !!! Allocate elements array then initialize the elements
-      Allocate(PoissonCtx%Elem(numCell))
-      Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      !!! This again needs to use the GLOBAL IS since the elemType is a global property
-      Do set = 1, size(setID)
-         Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),CellSetProperties,ierr)
-
-         Call DMmeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
-         Call ElementInit(mesh,setIS,PoissonCtx%Elem,QuadratureOrder,CellSetProperties%ElemTypeShortID)
-         !!! I could use a different quadrature order on different blocks if I'd add it to the CellSetProperties!
-         !!! Or I could initialize the elements on demand before assembling each block, and setup the 
-         !!! quadrature order as a function of the term being assembled
-         !!! This would allow reduced quadrature to avoid locking when using unilateral in elasticity
-         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-      End Do
+!      Allocate(PoissonCtx%Elem(numCell),stat=ierr)
+!      Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+!      !!! This again needs to use the GLOBAL IS since the elemType is a global property
+!      Do set = 1, size(setID)
+!         Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),CellSetProperties,ierr)
+!
+!         Call DMmeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
+!         Call MEF90_ElementCreate(mesh,setIS,PoissonCtx%Elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
+!         !!! I could use a different quadrature order on different blocks if I'd add it to the CellSetProperties!
+!         !!! Or I could initialize the elements on demand before assembling each block, and setup the 
+!         !!! quadrature order as a function of the term being assembled
+!         !!! This would allow reduced quadrature to avoid locking when using unilateral in elasticity
+!         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+!      End Do
 
       !!! 
       !!! Create a Section consistent with the element choice
@@ -341,8 +339,8 @@ Subroutine PoissonCtxDestroy(PoissonCtx,ierr)
       Call PetscBagDestroy(PoissonCtx%CellSetPropertiesBag(set),ierr);CHKERRQ(ierr)
       Call PetscBagDestroy(PoissonCtx%MaterialPropertiesBag(set),ierr);CHKERRQ(ierr)
    End Do
-   DeAllocate(PoissonCtx%CellSetPropertiesBag)
-   DeAllocate(PoissonCtx%MaterialPropertiesBag)
+   DeAllocate(PoissonCtx%CellSetPropertiesBag,stat=ierr)
+   DeAllocate(PoissonCtx%MaterialPropertiesBag,stat=ierr)
    Call ISDestroy(PoissonCtx%CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call ISDestroy(PoissonCtx%CellSetLocalIS,ierr);CHKERRQ(ierr)
 
@@ -353,10 +351,10 @@ Subroutine PoissonCtxDestroy(PoissonCtx,ierr)
    DeAllocate(PoissonCtx%VertexSetPropertiesBag)
    Call ISDestroy(PoissonCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
    
-   Do e = 1, size(PoissonCtx%Elem)
-      Call ElementDestroy(PoissonCtx%Elem(e))
-   End Do
-   DeAllocate(PoissonCtx%Elem)
+   !Do e = 1, size(PoissonCtx%Elem)
+   !   Call MEF90_ElementDestroy(PoissonCtx%Elem(e),ierr);CHKERRQ(ierr)
+   !End Do
+   !DeAllocate(PoissonCtx%Elem,stat=ierr)
 End Subroutine PoissonCtxDestroy 
 
 #undef __FUNCT__
@@ -377,12 +375,14 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    
    Type(IS)                                        :: setIS,setISdof
    PetscInt,dimension(:),Pointer                   :: setID
-   PetscInt                                        :: set
+   PetscInt                                        :: set,QuadratureOrder
    Type(MEF90_MATPROP),pointer                     :: matpropSet
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
    Type(DM)                                        :: mesh
    Type(SectionReal)                               :: xSec
+   Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+   Type(Element_Type)                              :: elemType
    
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
@@ -397,11 +397,14 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
       Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
-      !!! Allocate elem here
-      !!! If this proves too costly, I can always add a 2 dimensional array of elem in the global ctx
-      !!! and use elem(set,:) in the function call
-      If (MEF90_knownElements(cellSetProperties%ElemTypeShortID)%coDim == 0) Then
-         Call MEF90_DiffusionBilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr);CHKERRQ(ierr)
+      elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
+      If (elemType%coDim == 0) Then
+         !lambda = 0 in MEF90_DiffusionBilinearFormSet so the polynomial order is indeed 2(p-1) where p is the 
+         ! polynomial order of the element
+         QuadratureOrder = (elemType%order-1) * 2
+         Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
+         Call MEF90_DiffusionBilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,elem,elemType,ierr);CHKERRQ(ierr)
+         Call MEF90_ElementDestroy(elem,ierr)
       End If
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do     
@@ -446,7 +449,7 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
    Type(IS)                                        :: setIS,setISdof
    PetscInt,dimension(:),Pointer                   :: setID
    PetscInt,Dimension(:),Pointer                   :: setIdx
-   PetscInt                                        :: set
+   PetscInt                                        :: set,QuadratureOrder
    Type(MEF90_MATPROP),pointer                     :: matpropSet
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
@@ -454,6 +457,8 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
    PetscReal                                       :: F
    Type(DM)                                        :: mesh
    Type(VecScatter)                                :: ScatterSecToVec
+   Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+   Type(Element_Type)                              :: elemType
    
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
@@ -472,16 +477,20 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
       Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
+      elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
+      QuadratureOrder = elemType%order * 2
+      Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
       !!! Assembly part of the residual coming from the bilinear form on the blocks of 
       !!! codimension 0
       If (MEF90_knownElements(cellSetProperties%ElemTypeShortID)%coDim == 0) Then
-         Call MEF90_DiffusionOperatorSet(residualSec,mesh,xSec,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr);CHKERRQ(ierr)
+         Call MEF90_DiffusionOperatorSet(residualSec,mesh,xSec,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,elem,elemType,ierr);CHKERRQ(ierr)
       End If
       !!! Assembly the force part
       If (cellSetProperties%Force /= 0.0_Kr) Then
          F = -cellSetProperties%Force
-         Call MEF90_DiffusionRHSSet(residualSec,mesh,F,setIS,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr);CHKERRQ(ierr)
+         Call MEF90_DiffusionRHSSet(residualSec,mesh,F,setIS,elem,elemType,ierr);CHKERRQ(ierr)
       End If
+      Call MEF90_ElementDestroy(elem,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do     
    Call ISRestoreIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -580,13 +589,16 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
    Type(IS)                                        :: setIS,setISdof
    PetscInt,dimension(:),Pointer                   :: setID
    PetscInt,Dimension(:),Pointer                   :: setIdx
-   PetscInt                                        :: set
+   PetscInt                                        :: set,QuadratureOrder
    Type(MEF90_MATPROP),pointer                     :: matpropSet
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    PetscReal                                       :: myenergy,mywork
    Type(DM)                                        :: mesh
    Type(SectionReal)                               :: xSec
    Type(VecScatter)                                :: ScatterSecToVec
+   Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+   Type(Element_Type)                              :: elemType
+
    energy = 0.0_Kr
    work = 0.0_Kr   
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
@@ -602,16 +614,20 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
       Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
+      elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
+      QuadratureOrder = elemType%order * 2
+      Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
       !!! Assembly part of the residual coming from the bilinear form on the blocks of 
       !!! codimension 0
       If (MEF90_knownElements(cellSetProperties%ElemTypeShortID)%coDim == 0) Then
-         Call MEF90_DiffusionEnergySet(myenergy,xSec,mesh,matpropSet%ThermalDiffusivity,0.0_Kr,setIS,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr)
+         Call MEF90_DiffusionEnergySet(myenergy,xSec,mesh,matpropSet%ThermalDiffusivity,0.0_Kr,setIS,elem,elemType,ierr)
       End If
       Call MPI_AllReduce(myenergy,energy(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
       If (cellSetProperties%Force /= 0.0_Kr) Then
-         Call MEF90_DiffusionWorkSet(mywork,xSec,mesh,cellSetProperties%Force,setIS,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr)
+         Call MEF90_DiffusionWorkSet(mywork,xSec,mesh,cellSetProperties%Force,setIS,elem,elemType,ierr)
       End If
       Call MPI_AllReduce(mywork,work(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+      Call MEF90_ElementDestroy(elem,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do     
    Call ISRestoreIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
