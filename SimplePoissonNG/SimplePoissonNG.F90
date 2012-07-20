@@ -232,7 +232,7 @@ Program  SimplePoissonNG
    Call EXPGV(exoOUT,1,3,(/ sum(energy),sum(work),sum(energy)-sum(work) /),ierr)   
    Write(IOBuffer,103) sum(energy),sum(work)
    Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-103 Format('Total:  energy: ',ES12.5,' work: ',ES12.5,'\n')
+103 Format('Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
    Call DMrestoreLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
 
    !!!

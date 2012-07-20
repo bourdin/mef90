@@ -642,10 +642,7 @@ Contains
       Type(Element2D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
       
-      Type(Element_Type)                          :: elemType
-
-      Call Element_TypeFindByID(shortID,elemType)
-      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
    End Subroutine Element2D_Scal_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -656,10 +653,7 @@ Contains
       Type(Element2D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
       
-      Type(Element_Type)                          :: elemType
-
-      Call Element_TypeFindByID(shortID,elemType)
-      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
    End Subroutine Element2D_Vect_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -670,10 +664,7 @@ Contains
       Type(Element2D_Elast),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
       
-      Type(Element_Type)                          :: elemType
-
-      Call Element_TypeFindByID(shortID,elemType)
-      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
    End Subroutine Element2D_Elast_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -684,10 +675,7 @@ Contains
       Type(Element3D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
       
-      Type(Element_Type)                          :: elemType
-
-      Call Element_TypeFindByID(shortID,elemType)
-      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
    End Subroutine Element3D_Scal_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -698,10 +686,7 @@ Contains
       Type(Element3D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
       
-      Type(Element_Type)                          :: elemType
-
-      Call Element_TypeFindByID(shortID,elemType)
-      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
    End Subroutine Element3D_Vect_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -712,10 +697,7 @@ Contains
       Type(Element3D_Elast),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                         :: dQuadratureOrder,shortID
       
-      Type(Element_Type)                          :: elemType
-
-      Call Element_TypeFindByID(shortID,elemType)
-      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType)
+      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID))
    End Subroutine Element3D_Elast_InitSet_ByShortID
 
 #undef __FUNCT__

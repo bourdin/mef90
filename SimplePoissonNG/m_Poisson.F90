@@ -310,16 +310,16 @@ Contains
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do
 
-
       !!! 
       !!! Create a Section consistent with the element choice
+      !!! The section is named 'default' so that it can be picked as the default
+      !!! layout for all DM vector creation routines
       !!!
       Call DMMeshGetSectionReal(mesh,'default',Sec,ierr);CHKERRQ(ierr)
       Do point = numCell,numCell+numVertex-1
          Call SectionRealSetFiberDimension(Sec,point,1,ierr);CHKERRQ(ierr)
       End Do
       Call SectionRealAllocate(Sec,ierr);CHKERRQ(ierr)
-      !Call DMMeshCreateGlobalScatter(mesh,Sec,PoissonCtx%ScatterSecToVec,ierr);CHKERRQ(ierr)
    End Subroutine PoissonCtxCreate
    
 #undef __FUNCT__
@@ -353,7 +353,6 @@ Subroutine PoissonCtxDestroy(PoissonCtx,ierr)
    DeAllocate(PoissonCtx%VertexSetPropertiesBag)
    Call ISDestroy(PoissonCtx%VertexSetGlobalIS,ierr);CHKERRQ(ierr)
    
-   !Call VecScatterDestroy(PoissonCtx%ScatterSecToVec,ierr);CHKERRQ(ierr)
    Do e = 1, size(PoissonCtx%Elem)
       Call ElementDestroy(PoissonCtx%Elem(e))
    End Do
@@ -382,7 +381,6 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    Type(MEF90_MATPROP),pointer                     :: matpropSet
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
-   Type(Element_Type)                              :: elemType
    Type(DM)                                        :: mesh
    Type(SectionReal)                               :: xSec
    
@@ -392,16 +390,18 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    !!! No need to zero out Sec because it is only used as a PetscSection when assembling Mat
    !!!
    Call ISGetIndicesF90(PoissonCtx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   !!! use LOCAL IS here
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
 
       Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
-      Call Element_TypeFindByID(cellSetProperties%ElemTypeShortID,elemType) 
-
-      If (elemType%coDim == 0) Then
-         Call MEF90_DiffusionBilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,PoissonCtx%elem,elemType,ierr);CHKERRQ(ierr)
+      !!! Allocate elem here
+      !!! If this proves too costly, I can always add a 2 dimensional array of elem in the global ctx
+      !!! and use elem(set,:) in the function call
+      If (MEF90_knownElements(cellSetProperties%ElemTypeShortID)%coDim == 0) Then
+         Call MEF90_DiffusionBilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr);CHKERRQ(ierr)
       End If
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do     
@@ -450,7 +450,6 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
    Type(MEF90_MATPROP),pointer                     :: matpropSet
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
-   Type(Element_Type)                              :: elemType
    PetscReal,Dimension(:),Pointer                  :: BC
    PetscReal                                       :: F
    Type(DM)                                        :: mesh
@@ -472,17 +471,16 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
 
       Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
-      Call Element_TypeFindByID(cellSetProperties%ElemTypeShortID,elemType) 
 
       !!! Assembly part of the residual coming from the bilinear form on the blocks of 
       !!! codimension 0
-      If (elemType%coDim == 0) Then
-         Call MEF90_DiffusionOperatorSet(residualSec,mesh,xSec,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,PoissonCtx%elem,elemType,ierr);CHKERRQ(ierr)
+      If (MEF90_knownElements(cellSetProperties%ElemTypeShortID)%coDim == 0) Then
+         Call MEF90_DiffusionOperatorSet(residualSec,mesh,xSec,setIS,matpropSet%ThermalDiffusivity,0.0_Kr,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr);CHKERRQ(ierr)
       End If
       !!! Assembly the force part
       If (cellSetProperties%Force /= 0.0_Kr) Then
          F = -cellSetProperties%Force
-         Call MEF90_DiffusionRHSSet(residualSec,mesh,F,setIS,PoissonCtx%elem,elemType,ierr);CHKERRQ(ierr)
+         Call MEF90_DiffusionRHSSet(residualSec,mesh,F,setIS,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr);CHKERRQ(ierr)
       End If
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do     
@@ -586,7 +584,6 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
    Type(MEF90_MATPROP),pointer                     :: matpropSet
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    PetscReal                                       :: myenergy,mywork
-   Type(Element_Type)                              :: elemType
    Type(DM)                                        :: mesh
    Type(SectionReal)                               :: xSec
    Type(VecScatter)                                :: ScatterSecToVec
@@ -604,16 +601,15 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
 
       Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
-      Call Element_TypeFindByID(cellSetProperties%ElemTypeShortID,elemType) 
 
       !!! Assembly part of the residual coming from the bilinear form on the blocks of 
       !!! codimension 0
-      If (elemType%coDim == 0) Then
-         Call MEF90_DiffusionEnergySet(myenergy,xSec,mesh,matpropSet%ThermalDiffusivity,0.0_Kr,setIS,PoissonCtx%elem,elemType,ierr)
+      If (MEF90_knownElements(cellSetProperties%ElemTypeShortID)%coDim == 0) Then
+         Call MEF90_DiffusionEnergySet(myenergy,xSec,mesh,matpropSet%ThermalDiffusivity,0.0_Kr,setIS,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr)
       End If
       Call MPI_AllReduce(myenergy,energy(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
       If (cellSetProperties%Force /= 0.0_Kr) Then
-         Call MEF90_DiffusionWorkSet(mywork,xSec,mesh,cellSetProperties%Force,setIS,PoissonCtx%elem,elemType,ierr)
+         Call MEF90_DiffusionWorkSet(mywork,xSec,mesh,cellSetProperties%Force,setIS,PoissonCtx%elem,MEF90_knownElements(cellSetProperties%ElemTypeShortID),ierr)
       End If
       Call MPI_AllReduce(mywork,work(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)

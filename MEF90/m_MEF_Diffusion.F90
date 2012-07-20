@@ -1,3 +1,8 @@
+!!! Change the logic so that the elem array be indexed with respect to the current IS
+!!! This way, we can either reallocate the elem before assembling each block
+!!! or have a 2 dimensional array of elemns in a global ctx
+!!! i.e. all references to elem(cellID(cell)+1) should be replaced with elem(cell)
+!!! cellID will only be used in the insertion functions
 Module m_MEF_Diffusion
 #include "finclude/petscdef.h"
    Use m_MEF_LinAlg
