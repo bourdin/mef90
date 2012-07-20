@@ -38,7 +38,8 @@ Program  SimplePoissonNG
    PetscInt                                     :: itsTemp
    Type(SectionReal)                            :: secTemp
    Type(VecScatter)                             :: ScatterSecToVec
-   
+   Type(IS)                                     :: CellSetIS,CellSetGlobalIS
+
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
 
@@ -172,7 +173,12 @@ Program  SimplePoissonNG
    Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    
    !!! Compute energy and work
-   Call ISGetIndicesF90(MEF90Ctx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   !!! This is one of the few looks that need to be synchronized across processors!
+   !!!
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
+   Call ISDuplicate(CellSetIS,CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
+   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Allocate(energy(size(setID)))
    Allocate(work(size(setID)))
 
@@ -181,7 +187,9 @@ Program  SimplePoissonNG
       Write(IOBuffer,102) setID(set),energy(set),work(set)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    End Do
-   Call ISRestoreIndicesF90(MEF90Ctx%CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetIS,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 102 Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
 
 
@@ -240,7 +248,7 @@ Program  SimplePoissonNG
    !!!
    Call EXCLOS(exoIN,ierr)
    Call EXCLOS(exoOUT,ierr)
-   Call PoissonCtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)
+   Call PoissonCtxDestroy(MEF90Ctx,snesTemp,ierr);CHKERRQ(ierr)
    Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)
