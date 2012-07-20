@@ -129,12 +129,14 @@ Program PrepVarFrac
    Call Write_EXO_Case(prefix, '%0.4d', MEF90_NumProcs)
    EXO%Comm = PETSC_COMM_WORLD
    EXO%filename = Trim(prefix)//'.gen'
-   
+   EXO%exoid = EXOPEN(EXO%filename, EXREAD, exo_cpu_ws, exo_io_ws, PETSC_NULL_INTEGER, ierr)
+
    Call EXO_Check_Numbering(EXO, iErr)
    If (iErr /= 0) Then
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, 'Unsupported numbering of the element blocks, side sets or node sets\n', iErr)
    End If
 
+   
    !!! Reading and distributing sequential mesh
    If (MEF90_NumProcs == 1) Then
       Call DMMeshCreateExodus(PETSC_COMM_WORLD, EXO%filename, MeshTopology%mesh, ierr); CHKERRQ(iErr)
@@ -144,16 +146,16 @@ Program PrepVarFrac
       Call DMDestroy(Tmp_mesh, ierr); CHKERRQ(iErr)
    End If
 
-   Call MeshTopologyGetInfo(MeshTopology, PETSC_COMM_WORLD)
+   Call MeshTopologyGetInfo(MeshTopology, EXO%comm)
    If (verbose > 0) Then
       Write(IOBuffer, *) "Done reading and partitioning the mesh\n"
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
    End If
 
    MyEXO%comm = PETSC_COMM_SELF
-   MyEXO%exoid = EXO%exoid
    Write(MyEXO%filename, 99) trim(prefix), MEF90_MyRank
  99  Format(A, '-', I4.4, '.gen')
+   MyEXO%exoid = EXCRE (MyEXO%filename, EXCLOB, exo_cpu_ws, exo_io_ws, iErr)
    Call DMMeshGetSectionReal(MeshTopology%mesh, 'coordinates', CoordSec, iErr); CHKERRQ(ierr)
    
    Call VarFracEXOProperty_Init(MyEXO, MeshTopology)   
@@ -256,20 +258,13 @@ Program PrepVarFrac
          T(i) = Tmin + Real(i-1) * (Tmax-TMin)/Real(NumSteps-1)
          GlobVars(VarFrac_GlobVar_Load) = T(i)
          Call Write_EXO_AllResult_Global(MyEXO, i, GlobVars)
-   
-         MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
          Call EXPTIM(MyEXO%exoid, i, T(i), iErr)
-         Call EXCLOS(MyEXO%exoid, iErr)
-         MyEXO%exoid = 0
       End Do
    
       T(NumSteps) = Tmax
       GlobVars(VarFrac_GlobVar_Load) = T(NumSteps)
       Call Write_EXO_AllResult_Global(MyEXO, NumSteps, GlobVars)
-      MyEXO%exoid = EXOPEN(MyEXO%filename, EXWRIT, exo_cpu_ws, exo_io_ws, vers, iErr)
       Call EXPTIM(MyEXO%exoid, NumSteps, T(NumSteps), iErr)
-      Call EXCLOS(MyEXO%exoid, iErr)
-      MyEXO%exoid = 0
    End Select
    DeAllocate(GlobVars)
    
