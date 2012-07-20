@@ -662,6 +662,10 @@ Program PrepVarFrac
 
    Call PetscRandomDestroy(RandomCtx, iErr); CHKERRQ(iErr)
    Close(BatchUnit)
+   Call EXCLOS(EXO%exoid, iErr)
+   EXO%exoid = 0
+   Call EXCLOS(MyEXO%exoid, iErr)
+   MyEXO%exoid = 0
    DeAllocate(TestCase)
    DeAllocate(T)
    Call SectionRealDestroy(CoordSec, iErr); CHKERRQ(iErr)
