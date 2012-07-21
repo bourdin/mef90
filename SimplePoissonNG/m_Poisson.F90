@@ -226,7 +226,7 @@ Contains
          Write(setName,100) setID(set)
          Write(setprefix,101) setID(set)
          If (verbose > 0) Then
-            Write(IOBuffer,103) MEF90_MyRank,setID(set),trim(setprefix)
+            Write(IOBuffer,103) setID(set),trim(setprefix)
             Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          End if
 
@@ -265,7 +265,7 @@ Contains
          Write(setName,200) setID(set)
          Write(setprefix,201) setID(set)
          If (verbose > 0) Then
-            Write(IOBuffer,203) MEF90_MyRank,setID(set),trim(setprefix)
+            Write(IOBuffer,203) setID(set),trim(setprefix)
             Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          End if
          Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonVertexSetProperties,PoissonCtx%VertexSetPropertiesBag(set),ierr)
@@ -279,10 +279,10 @@ Contains
       
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')
-103 Format('[',I4.4,'] Registering cell set ',I4,' prefix: ',A,'\n')
+103 Format('Registering cell set ',I4,' prefix: ',A,'\n')
 200 Format('Vertex set ',I4)
 201 Format('vs',I4.4,'_')
-203 Format('[',I4.4,'] Registering vertex set ',I4,' prefix: ',A,'\n')
+203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
    End Subroutine PoissonCtxCreate
    
 #undef __FUNCT__

@@ -1286,62 +1286,69 @@ Contains
       PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
       PetscErrorCode,Intent(OUT)             :: ierr
       
-      Type(Element2D_Scal)                   :: tmpElem
-      PetscReal,Dimension(:,:),Pointer       :: tmpCoord
+      PetscReal, Dimension(:), Pointer       :: Xi
+      PetscReal                              :: l
       PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
-      Type(Vect2D)                           :: NormalVector
-      PetscReal                              :: InnerBF
-      
-      !!! Create a bogus tri element with unit height by adding a 3rd vertex
-      Allocate(tmpCoord(3,2),stat=ierr)
-      Do i = 1,2
-         Do j = 1,2
-            tmpCoord(i,j) = dCoord(i,j)
-         End Do
-      End Do
-      NormalVector%X = tmpCoord(2,2) - tmpCoord(1,2)
-      NormalVector%Y = tmpCoord(1,1) - tmpCoord(2,1)
-      NormalVector = NormalVector / Norm(NormalVector)
-      tmpCoord(3,1) = dCoord(1,1) - NormalVector%X 
-      tmpCoord(3,2) = dCoord(1,2) - NormalVector%Y
-      
-      Call Element_P_Lagrange_2D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder,ierr)
+
+      l = sqrt( (dCoord(2,1)-dCoord(1,1))**2 + (dCoord(2,2)-dCoord(1,2))**2)
+      Write(*,*) dPolynomialOrder,dQuadratureOrder, l
+      Select Case(dQuadratureOrder)
+      Case(0,1)
+         Num_Gauss = 1
+         Allocate(Xi(Num_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
+         Xi(1) = 0.0_Kr
+         dElem%Gauss_C(1) = l
+      Case(2,3)
+         Num_Gauss = 2
+         Allocate(Xi(Num_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
+         Xi(1) = -1.0_Kr / sqrt(3.0_Kr)
+         Xi(2) =  1.0_Kr / sqrt(3.0_Kr)
+         dElem%Gauss_C = l * .5_Kr
+      Case(4,5)
+         Num_Gauss = 3
+         Allocate(Xi(Num_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
+         Xi(1) = -sqrt(15.0_Kr) / 5.0_Kr
+         Xi(2) = 0.0_Kr
+         Xi(3) = sqrt(15.0_Kr) / 5.0_Kr
+         dElem%Gauss_C(1) = l * 5.0_Kr / 18.0_Kr
+         dElem%Gauss_C(2) = l * 4.0_Kr / 9.0_Kr
+         dElem%Gauss_C(3) = l * 5.0_Kr / 18.0_Kr
+      Case(6,7)
+         Num_Gauss = 4
+         Allocate(Xi(Num_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
+         Xi(1) = -sqrt(525.0_Kr + 70.0_Kr * sqrt(30.0_Kr) / 35.0_Kr)
+         Xi(2) = -sqrt(525.0_Kr - 70.0_Kr * sqrt(30.0_Kr) / 35.0_Kr)
+         Xi(3) =  sqrt(525.0_Kr - 70.0_Kr * sqrt(30.0_Kr) / 35.0_Kr)
+         Xi(4) =  sqrt(525.0_Kr + 70.0_Kr * sqrt(30.0_Kr) / 35.0_Kr)
+         dElem%Gauss_C(1) = l * (18.0_Kr - sqrt(30.0_Kr)) / 72.0_Kr
+         dElem%Gauss_C(2) = l * (18.0_Kr + sqrt(30.0_Kr)) / 72.0_Kr
+         dElem%Gauss_C(3) = l * (18.0_Kr + sqrt(30.0_Kr)) / 72.0_Kr
+         dElem%Gauss_C(4) = l * (18.0_Kr - sqrt(30.0_Kr)) / 72.0_Kr
+      Case Default
+         Print*,__FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
+         STOP
+      End Select         
       Select Case (dPolynomialOrder)
          Case (1)
             Num_DoF  = 2
-            Num_Gauss = size(tmpElem%BF,2)
-            Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
             Allocate(dElem%BF(Num_DoF,Num_Gauss),stat=ierr)
-            dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
-            Do iDoF = 1,Num_doF
-               Do iG = 1,Num_Gauss
-                  dElem%BF(iDoF,iG) = tmpElem%BF(iDoF,iG) + tmpElem%BF(Num_DoF+1,iG) * .5_Kr
-               End Do
-            End Do
+            dElem%BF(1,:) = (1.0_Kr - Xi) * .5_Kr
+            dElem%BF(2,:) = (1.0_Kr + Xi) * .5_Kr
          Case (2)
-            !!! dof corrrespondance between a BEAM3 and  a TRI6 element (exodus.pdf figure 4 p.  17)
-            !!! BEAM3   TRI6
-            !!! 1       1
-            !!! 2       2
-            !!! 3       6
-            !!! Inner dof: 3,4,5
             Num_DoF  = 3
-            Num_Gauss = size(tmpElem%BF,2)
-            Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
             Allocate(dElem%BF(Num_DoF,Num_Gauss),stat=ierr)
-            dElem%Gauss_C = tmpElem%Gauss_C * 2.0_Kr
-            Do iG = 1,Num_Gauss
-               InnerBF = (tmpElem%BF(3,iG) + tmpElem%BF(4,iG) + tmpElem%BF(5,iG)) / 3.0_Kr
-               dElem%BF(1,iG) = tmpElem%BF(1,iG) + InnerBF
-               dElem%BF(2,iG) = tmpElem%BF(2,iG) + InnerBF
-               dElem%BF(3,iG) = tmpElem%BF(6,iG) + InnerBF
-            End Do
+            dElem%BF(1,:) = Xi * (Xi - 1.0_Kr) * .5_Kr
+            dElem%BF(2,:) = (1.0_Kr - Xi) * (1.0_Kr + Xi)
+            dElem%BF(3,:) = Xi * (Xi + 1.0_Kr) * .5_Kr
          Case Default
             Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
-      Call MEF90_ElementDestroy(tmpElem,ierr)
-      deAllocate(tmpCoord,stat=ierr)
       Allocate(delem%Grad_BF(0,0),stat=ierr)
+      DeAllocate(Xi,stat=ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Scal_Init                          
       
 #undef __FUNCT__

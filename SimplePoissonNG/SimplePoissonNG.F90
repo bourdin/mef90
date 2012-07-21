@@ -38,7 +38,7 @@ Program  SimplePoissonNG
    PetscInt                                     :: itsTemp
    Type(SectionReal)                            :: secTemp
    Type(VecScatter)                             :: ScatterSecToVec
-   Type(IS)                                     :: CellSetIS,CellSetGlobalIS
+   Type(IS)                                     :: CellSetGlobalIS
    
    PetscInt                                     :: point,numCell,numVertex
 
@@ -189,37 +189,36 @@ Program  SimplePoissonNG
    !!! Check SNES / KSP convergence
    Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
    Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
+
    Write(IOBuffer,110) itsTemp,reasonTemp
-110 Format('SNESTemp converged in in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
- 
    Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+110 Format('SNESTemp converged in in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
    
    !!! Compute energy and work
    !!! This is one of the few looks that need to be synchronized across processors!
    !!!
-   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-   Call ISDuplicate(CellSetIS,CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
    Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   Allocate(energy(size(setID)))
-   Allocate(work(size(setID)))
+   Allocate(energy(size(setID)),stat=ierr)
+   Allocate(work(size(setID)),stat=ierr)
 
    Call SimplePoissonEnergies(snesTemp,solTemp,MEF90Ctx,energy,work,ierr)
+   Write(IOBuffer,*) '\n'
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Write(IOBuffer,102) setID(set),energy(set),work(set)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    End Do
    Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(CellSetIS,ierr);CHKERRQ(ierr)
    Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-102 Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
    Write(IOBuffer,103) sum(energy),sum(work)
    Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-103 Format('Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
-
+102 Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
+103 Format('=====================================================\n',         &
+           'Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
 
    !!! Save results
-   
    !!!
    !!! format the output file
    !!!
