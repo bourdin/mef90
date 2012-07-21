@@ -1291,7 +1291,6 @@ Contains
       PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
 
       l = sqrt( (dCoord(2,1)-dCoord(1,1))**2 + (dCoord(2,2)-dCoord(1,2))**2)
-      Write(*,*) dPolynomialOrder,dQuadratureOrder, l
       Select Case(dQuadratureOrder)
       Case(0,1)
          Num_Gauss = 1
@@ -1342,8 +1341,8 @@ Contains
             Num_DoF  = 3
             Allocate(dElem%BF(Num_DoF,Num_Gauss),stat=ierr)
             dElem%BF(1,:) = Xi * (Xi - 1.0_Kr) * .5_Kr
-            dElem%BF(2,:) = (1.0_Kr - Xi) * (1.0_Kr + Xi)
-            dElem%BF(3,:) = Xi * (Xi + 1.0_Kr) * .5_Kr
+            dElem%BF(2,:) = Xi * (Xi + 1.0_Kr) * .5_Kr
+            dElem%BF(3,:) = (1.0_Kr - Xi) * (1.0_Kr + Xi)
          Case Default
             Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
