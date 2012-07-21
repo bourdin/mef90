@@ -39,6 +39,9 @@ Program  SimplePoissonNG
    Type(SectionReal)                            :: secTemp
    Type(VecScatter)                             :: ScatterSecToVec
    Type(IS)                                     :: CellSetIS,CellSetGlobalIS
+   
+   PetscInt                                     :: point,numCell,numVertex
+
 
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
@@ -56,6 +59,9 @@ Program  SimplePoissonNG
    splitIO = PETSC_FALSE
    Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,'--splitIO',splitIO,flg,ierr);CHKERRQ(ierr)
 
+   !!!
+   !!! Open INPUT mesh
+   !!!
    If (MEF90_MyRank == 0) Then
       cpu_ws = 8
       io_ws = 8
@@ -72,6 +78,10 @@ Program  SimplePoissonNG
          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
       EndIf
    End If
+   
+   !!!
+   !!! open OUTPUT mesh
+   !!!
    If (splitIO) Then
       IOComm = PETSC_COMM_SELF
       Write(filename,100) trim(prefix),MEF90_MyRank
@@ -101,11 +111,26 @@ Program  SimplePoissonNG
    Call SNESSetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
    Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
 
+
+   !!! 
+   !!! Create a Section consistent with the element choice
+   !!! The section is named 'default' so that it can be picked as the default
+   !!! layout for all DM vector creation routines
+   !!!
+   Call DMmeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
+   Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+   Call DMMeshGetSectionReal(mesh,'default',SecTemp,ierr);CHKERRQ(ierr)
+   Do point = numCell,numCell+numVertex-1
+      Call SectionRealSetFiberDimension(SecTemp,point,1,ierr);CHKERRQ(ierr)
+   End Do
+   Call SectionRealAllocate(SecTemp,ierr);CHKERRQ(ierr)
+
    !!! 
    !!! Create PoissonCtx
    !!!
    Call PoissonCtxCreate(MEF90Ctx,snesTemp,exoIN,ierr);CHKERRQ(ierr)
-   Call DMMeshGetSectionReal(mesh,'default',secTemp,ierr);CHKERRQ(ierr)
+
+   Write(*,*) MEF90_MyRank, 'OK PoissonCtxCreate'
    !!!
    !!! Get Matrix for the Jacobian / SNES and unknown vector
    !!!
@@ -130,12 +155,10 @@ Program  SimplePoissonNG
    Call MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
+
    !!!
-   !!! Create SNES,
+   !!! Set Jacobian and Function for the SNES
    !!!
-   !Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
-   !Call SNESSetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
-   !Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
    Call SNESSetFunction(snesTemp,resTemp,SimplePoissonOperator,MEF90Ctx,ierr);CHKERRQ(ierr)
    Call SNESSetJacobian(snesTemp,matTemp,matTemp,SimplePoissonBilinearForm,MEF90Ctx,ierr);CHKERRQ(ierr)
 
@@ -160,8 +183,11 @@ Program  SimplePoissonNG
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
    !!! Setup GAMG here (coordinates,in particular)
    
+   Write(*,*) MEF90_MyRank, 'OK SNES'
+
    !!! Solve Poisson Equation
    Call SimplePoissonFormInitialGuess(snesTemp,solTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
+   Write(*,*) MEF90_MyRank, 'OK InitialGuess'
    Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
 
    !!! Check SNES / KSP convergence
@@ -191,6 +217,9 @@ Program  SimplePoissonNG
    Call ISDestroy(CellSetIS,ierr);CHKERRQ(ierr)
    Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 102 Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
+   Write(IOBuffer,103) sum(energy),sum(work)
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+103 Format('Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
 
 
    !!! Save results
@@ -222,6 +251,7 @@ Program  SimplePoissonNG
       End If
    End If
 
+   Write(*,*) MEF90_MyRank,"Wrote Glob Var"
    !!! 
    !!! Write in exo file
    !!!
@@ -238,10 +268,8 @@ Program  SimplePoissonNG
 
    Call VecViewExodusVertex(mesh,locTemp,IOComm,exoOUT,1,1,ierr)
    Call EXPGV(exoOUT,1,3,(/ sum(energy),sum(work),sum(energy)-sum(work) /),ierr)   
-   Write(IOBuffer,103) sum(energy),sum(work)
-   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-103 Format('Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
    Call DMrestoreLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
+   Write(*,*) MEF90_MyRank,"Wrote Nodal Var"
 
    !!!
    !!! Cleanup

@@ -194,15 +194,15 @@ Contains
       Character(len=MXSTLN)                        :: filename,EXOElemType
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer,setName,setprefix
       Type(DM)                                     :: tmp_mesh
-      PetscInt                                     :: numCell,numVertex
+      !PetscInt                                     :: numCell,numVertex
       PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set,point
-      PetscInt                                     :: numCellSetGlobal,numVertexSetGlobal
+      !PetscInt                                     :: numCellSetGlobal,numVertexSetGlobal
       Type(Element_Type)                           :: defaultElemType
       Type(PoissonCellSetProperties_Type)          :: defaultCellSetProperties
       Type(PoissonCellSetProperties_Type),pointer  :: CellSetProperties
       Type(PoissonVertexSetProperties_Type)        :: defaultVertexSetProperties
-      Type(IS)                                     :: CellSetIS,VertexSetIS
+      Type(IS)                                     :: CellSetGlobalIS,VertexSetGlobalIS
       !PetscInt,Dimension(:),Pointer                :: cellID
       Type(SectionReal)                            :: Sec
       
@@ -212,16 +212,17 @@ Contains
       Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
       
       !!! Get number of cell, vertices and dimension
-      Call DMmeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
-      Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+      !Call DMmeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
+      !Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       !Call DMMeshGetDimension(mesh,numDim,ierr);CHKERRQ(ierr)
       
       
       !!!
       !!! Allocate and register cell sets bags: CellSetProperties and MatProp
       !!!
-      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(CellSetIS,setID,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Allocate(PoissonCtx%CellSetPropertiesBag(size(setID)),stat=ierr)
       Allocate(PoissonCtx%MaterialPropertiesBag(size(setID)),stat=ierr)
       
@@ -230,7 +231,7 @@ Contains
          Write(setprefix,101) setID(set)
          If (verbose > 0) Then
             Write(IOBuffer,103) MEF90_MyRank,setID(set),trim(setprefix)
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          End if
 !!! FUCK! this looks needs to be collective on PETSC_COMM_WORLD
 !!! Maybe, I can read all ID, all exo elem sig and search for the right one...
@@ -242,26 +243,27 @@ Contains
 !         Call MPI_BCast(defaultElemType%ShortID,MXSTLN,MPI_CHARACTER,0,PETSC_COMM_WORLD,ierr)
 
          defaultCellSetProperties = PoissonCellSetProperties_Type(defaultElemType%ShortID,0.0_Kr)
-         Call PetscBagCreate(PETSC_COMM_SELF,sizeofPoissonCellSetProperties,PoissonCtx%CellSetPropertiesBag(set),ierr)
+         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonCellSetProperties,PoissonCtx%CellSetPropertiesBag(set),ierr)
          Call PetscBagRegisterPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),setName,setprefix,defaultCellSetProperties,ierr);CHKERRQ(ierr)
 
-         Call PetscBagCreate(PETSC_COMM_SELF,SIZEOFMATPROP,PoissonCtx%MaterialPropertiesBag(set),ierr)
+         Call PetscBagCreate(PETSC_COMM_WORLD,SIZEOFMATPROP,PoissonCtx%MaterialPropertiesBag(set),ierr)
          Call PetscBagRegisterMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),setName,setprefix,DEFAULT_MATERIAL,ierr);CHKERRQ(ierr)
          if (verbose > 0) Then
-            Call PetscBagView(PoissonCtx%CellSetPropertiesBag(set),PETSC_VIEWER_STDOUT_SELF,ierr);CHKERRQ(ierr)
-            Call PetscPrintf(PETSC_COMM_SELF,'\n',ierr);CHKERRQ(ierr)
-            Call PetscBagView(PoissonCtx%MaterialPropertiesBag(set),PETSC_VIEWER_STDOUT_SELF,ierr);CHKERRQ(ierr)
-            Call PetscPrintf(PETSC_COMM_SELF,'\n',ierr);CHKERRQ(ierr)
+            Call PetscBagView(PoissonCtx%CellSetPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,'\n',ierr);CHKERRQ(ierr)
+            Call PetscBagView(PoissonCtx%MaterialPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,'\n',ierr);CHKERRQ(ierr)
          End If
       End Do
-      Call ISRestoreIndicesF90(CellSetIS,setID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(CellSetIS,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
       !!!
       !!! Allocate and register vertex properties bags:
       !!!
-      Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetIS,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(VertexSetIS,setID,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Allocate(PoissonCtx%VertexSetPropertiesBag(size(setID)),stat=ierr)
       defaultVertexSetProperties = PoissonVertexSetProperties_Type( PETSC_TRUE,0.0_Kr )
       Do set = 1, size(setID)
@@ -269,34 +271,23 @@ Contains
          Write(setprefix,201) setID(set)
          If (verbose > 0) Then
             Write(IOBuffer,203) MEF90_MyRank,setID(set),trim(setprefix)
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          End if
-         Call PetscBagCreate(PETSC_COMM_SELF,sizeofPoissonVertexSetProperties,PoissonCtx%VertexSetPropertiesBag(set),ierr)
+         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonVertexSetProperties,PoissonCtx%VertexSetPropertiesBag(set),ierr)
          Call PetscBagRegisterPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),setname,setprefix,defaultVertexSetProperties,ierr);CHKERRQ(ierr)
          If (verbose > 0) Then
-            Call PetscBagView(PoissonCtx%VertexSetPropertiesBag(set),PETSC_VIEWER_STDOUT_SELF,ierr);CHKERRQ(ierr)
+            Call PetscBagView(PoissonCtx%VertexSetPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
          End If
       End Do
-      Call ISRestoreIndicesF90(VertexSetIS,setID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(VertexSetIS,ierr);CHKERRQ(ierr)
-
+      Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')
 103 Format('[',I4.4,'] Registering cell set ',I4,' prefix: ',A,'\n')
 200 Format('Vertex set ',I4)
 201 Format('vs',I4.4,'_')
 203 Format('[',I4.4,'] Registering vertex set ',I4,' prefix: ',A,'\n')
-
-      !!! 
-      !!! Create a Section consistent with the element choice
-      !!! The section is named 'default' so that it can be picked as the default
-      !!! layout for all DM vector creation routines
-      !!!
-      Call DMMeshGetSectionReal(mesh,'default',Sec,ierr);CHKERRQ(ierr)
-      Do point = numCell,numCell+numVertex-1
-         Call SectionRealSetFiberDimension(Sec,point,1,ierr);CHKERRQ(ierr)
-      End Do
-      Call SectionRealAllocate(Sec,ierr);CHKERRQ(ierr)
    End Subroutine PoissonCtxCreate
    
 #undef __FUNCT__
@@ -319,6 +310,7 @@ Subroutine PoissonCtxDestroy(PoissonCtx,snesTemp,ierr)
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
 
    Call DMmeshGetLabelIdIS(mesh,'Cell Sets',SetIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
    Call ISGetLocalSize(setIS,nset,ierr);CHKERRQ(ierr)
    Do set = 1, nset
       Call PetscBagDestroy(PoissonCtx%CellSetPropertiesBag(set),ierr);CHKERRQ(ierr)
@@ -329,6 +321,7 @@ Subroutine PoissonCtxDestroy(PoissonCtx,snesTemp,ierr)
    Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
    Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',SetIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
    Call ISGetLocalSize(setIS,nset,ierr);CHKERRQ(ierr)
    Do set = 1, nset
       Call PetscBagDestroy(PoissonCtx%VertexSetPropertiesBag(set),ierr);CHKERRQ(ierr)
@@ -355,7 +348,7 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr  
    
-   Type(IS)                                        :: VertexSetIS,CellSetIS,setIS,setISdof
+   Type(IS)                                        :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
    PetscInt,dimension(:),Pointer                   :: setID
    PetscInt                                        :: set,QuadratureOrder
    Type(MEF90_MATPROP),pointer                     :: matpropSet
@@ -371,8 +364,9 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    !!! 
    !!! No need to zero out Sec because it is only used as a PetscSection when assembling Mat
    !!!
-   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-   Call ISGetIndicesF90(CellSetIS,setID,ierr);CHKERRQ(ierr)
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
 
@@ -390,16 +384,17 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
       End If
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do     
-   Call ISRestoreIndicesF90(CellSetIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(CellSetIS,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
    Call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
 
    !!!
    !!! Boundary conditions
    !!!
-   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetIS,ierr);CHKERRQ(ierr)
-   Call ISGetIndicesF90(VertexSetIS,setID,ierr);CHKERRQ(ierr)
+   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
@@ -408,8 +403,8 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
          Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
       End If
    End Do
-   Call ISRestoreIndicesF90(VertexSetIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(CellSetIS,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    
    flg = SAME_NONZERO_PATTERN
@@ -431,7 +426,7 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Type(SectionReal)                               :: xSec,residualSec
-   Type(IS)                                        :: VertexSetIS,CellSetIS,setIS,setISdof
+   Type(IS)                                        :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
    PetscInt,dimension(:),Pointer                   :: setID
    PetscInt,Dimension(:),Pointer                   :: setIdx
    PetscInt                                        :: set,QuadratureOrder
@@ -456,8 +451,9 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
 
    Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)
 
-   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-   Call ISGetIndicesF90(CellSetIS,setID,ierr);CHKERRQ(ierr)
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
 
@@ -480,8 +476,8 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
       Call MEF90_ElementDestroy(elem,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do     
-   Call ISRestoreIndicesF90(CellSetIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(CellSetIS,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
    !!! "Ghost update" for the residual Section
    Call SectionRealComplete(residualSec,ierr);CHKERRQ(ierr)
    !!! Scatter back from SectionReal to Vec
@@ -491,8 +487,9 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
    !!!
    !!! Zero-out BC entries in the residual
    !!!
-   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetIS,ierr);CHKERRQ(ierr)
-   Call ISGetIndicesF90(VertexSetIS,setID,ierr);CHKERRQ(ierr)
+   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
@@ -506,8 +503,9 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
       End If
    End Do
-   Call ISRestoreIndicesF90(VertexSetIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(VertexSetIS,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+
    Call VecAssemblyBegin(residual,ierr)
    Call VecAssemblyEnd(residual,ierr)
    Call SectionRealDestroy(residualSec,ierr);CHKERRQ(ierr)
@@ -531,7 +529,7 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,PoissonCtx,ierr)
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
-   Type(IS)                                        :: VertexSetIS,setIS,setISdof
+   Type(IS)                                        :: VertexSetGlobalIS,setIS,setISdof
    PetscInt,dimension(:),Pointer                   :: setID
    PetscInt,Dimension(:),Pointer                   :: setIdx
    PetscInt                                        :: set
@@ -542,8 +540,9 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,PoissonCtx,ierr)
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
 
-   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetIS,ierr);CHKERRQ(ierr)
-   Call ISGetIndicesF90(VertexSetIS,setID,ierr);CHKERRQ(ierr)
+   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
@@ -557,8 +556,8 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,PoissonCtx,ierr)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
       End If
    End Do
-   Call ISRestoreIndicesF90(VertexSetIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(VertexSetIS,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
 
    Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
    Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
@@ -580,7 +579,7 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
    PetscReal,Dimension(:),Pointer                  :: energy,work
    PetscErrorCode,Intent(OUT)                      :: ierr
 
-   Type(IS)                                        :: CellSetIS,setIS,setISdof
+   Type(IS)                                        :: CellSetGlobalIS,setIS,setISdof
    PetscInt,dimension(:),Pointer                   :: setID
    PetscInt,Dimension(:),Pointer                   :: setIdx
    PetscInt                                        :: set,QuadratureOrder
@@ -600,8 +599,9 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
    Call DMMeshCreateGlobalScatter(mesh,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
    Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)
 
-   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetIS,ierr);CHKERRQ(ierr)
-   Call ISGetIndicesF90(CellSetIS,setID,ierr);CHKERRQ(ierr)
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
+   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       myenergy = 0.0_Kr
       mywork   = 0.0_Kr
@@ -626,8 +626,8 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
       Call MEF90_ElementDestroy(elem,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do     
-   Call ISRestoreIndicesF90(CellSetIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(CellSetIS,ierr);CHKERRQ(ierr)
+   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
    Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
