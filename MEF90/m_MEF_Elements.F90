@@ -729,40 +729,33 @@ Contains
       PetscErrorCode,Intent(OUT)                  :: ierr
       
       PetscInt                                    :: conesize,iELoc
-      PetscInt                                    :: i,j,k
+      PetscInt                                    :: i,j,numCell
       PetscInt,Dimension(:),Pointer               :: CellID
-      PetscReal,Dimension(:,:),Pointer            :: Coord
-      PetscReal,Dimension(:),Pointer              :: TmpCoord
-      Type(SectionReal)                           :: CoordSection
-      
-      Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
+      PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
+      PetscInt, Dimension(:),Pointer              :: Cone
+
+      Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+      Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
       
       Allocate(dElem(size(cellID)),stat=ierr)
+      Allocate(elemCoord(elemType%numVertex,elemType%dim),stat=ierr)
       If (size(CellID) > 0) Then
          iELoc = CellID(1)
-         Call DMMeshGetConeSize(mesh,iELoc,coneSize,ierr);CHKERRQ(ierr)    
-         !!! 
-         !!! conesize*numdim is an upper bound on the size of the restriction
-         !!! of the coordinate section to a cell (interpolated mesh) 
-         Allocate(TmpCoord(conesize * elemType%dim),stat=ierr)
-         Allocate(Coord(elemType%dim,elemType%numVertex),stat=ierr)
          Do_Elem_iE: Do iELoc = 1,size(CellID)
-            Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
-            k = 1
+            Call DMMeshGetConeF90(mesh,cellID(iEloc),Cone,ierr);CHKERRQ(ierr)
             Do i = 1, elemType%numVertex
                Do j = 1, elemType%dim
-                  Coord(j,i) = TmpCoord(k)
-                  k = k+1
+                  elemCoord(i,j) = Coord(Cone(i)-numCell+1,j)
                End Do
             End Do
-            Call Element2D_Scal_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType,ierr)
+            Call Element2D_Scal_Init(dElem(iELoc),elemCoord,dQuadratureOrder,elemType,ierr)
+            Call DMMeshRestoreConeF90(mesh,cellID(iEloc),Cone,ierr);CHKERRQ(ierr)
          End Do Do_Elem_iE
-         DeAllocate(TmpCoord,stat=ierr)
-         DeAllocate(Coord,stat=ierr)
       End If
-      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      Call DMMeshRestoreCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+      DeAllocate(elemCoord,stat=ierr)
    End Subroutine Element2D_Scal_InitSet
 
 #undef __FUNCT__
@@ -776,39 +769,33 @@ Contains
       PetscErrorCode,Intent(OUT)                  :: ierr
       
       PetscInt                                    :: conesize,iELoc
-      PetscInt                                    :: i,j,k
+      PetscInt                                    :: i,j,numCell
       PetscInt,Dimension(:),Pointer               :: CellID
-      PetscReal,Dimension(:,:),Pointer            :: Coord
-      PetscReal,Dimension(:),Pointer              :: TmpCoord
-      Type(SectionReal)                           :: CoordSection
-      
-      Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
+      PetscInt, Dimension(:),Pointer              :: Cone
 
+      Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+      Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      
       Allocate(dElem(size(cellID)),stat=ierr)
+      Allocate(elemCoord(elemType%numVertex,elemType%dim),stat=ierr)
       If (size(CellID) > 0) Then
-         Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
-         !!! 
-         !!! conesize*numdim is an upper bound on the size of the restriction
-         !!! of the coordinate section to a cell (interpolated mesh) 
-         Allocate(TmpCoord(conesize * elemType%dim),stat=ierr)
-         Allocate(Coord(elemType%dim,elemType%numVertex),stat=ierr)
+         iELoc = CellID(1)
          Do_Elem_iE: Do iELoc = 1,size(CellID)
-            Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
-            k = 1
+            Call DMMeshGetConeF90(mesh,cellID(iEloc),Cone,ierr);CHKERRQ(ierr)
             Do i = 1, elemType%numVertex
                Do j = 1, elemType%dim
-                  Coord(j,i) = TmpCoord(k)
-                  k = k+1
+                  elemCoord(i,j) = Coord(Cone(i)-numCell+1,j)
                End Do
             End Do
-            Call Element2D_Vect_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType,ierr)
+            Call Element2D_Vect_Init(dElem(iELoc),elemCoord,dQuadratureOrder,elemType,ierr)
+            Call DMMeshRestoreConeF90(mesh,cellID(iEloc),Cone,ierr);CHKERRQ(ierr)
          End Do Do_Elem_iE
-         DeAllocate(TmpCoord,stat=ierr)
-         DeAllocate(Coord,stat=ierr)
       End If
-      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      Call DMMeshRestoreCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+      DeAllocate(elemCoord,stat=ierr)
    End Subroutine Element2D_Vect_InitSet
 
 #undef __FUNCT__
@@ -822,39 +809,33 @@ Contains
       PetscErrorCode,Intent(OUT)                  :: ierr
       
       PetscInt                                    :: conesize,iELoc
-      PetscInt                                    :: i,j,k
+      PetscInt                                    :: i,j,numCell
       PetscInt,Dimension(:),Pointer               :: CellID
-      PetscReal,Dimension(:,:),Pointer            :: Coord
-      PetscReal,Dimension(:),Pointer              :: TmpCoord
-      Type(SectionReal)                           :: CoordSection
-      
-      Call DMMeshGetSectionReal(mesh,'coordinates',CoordSection,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
+      PetscInt, Dimension(:),Pointer              :: Cone
 
+      Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+      Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      
       Allocate(dElem(size(cellID)),stat=ierr)
+      Allocate(elemCoord(elemType%numVertex,elemType%dim),stat=ierr)
       If (size(CellID) > 0) Then
-         Call DMMeshGetConeSize(mesh,CellID(1),coneSize,ierr);CHKERRQ(ierr)    
-         !!! 
-         !!! conesize*numdim is an upper bound on the size of the restriction
-         !!! of the coordinate section to a cell (interpolated mesh) 
-         Allocate(TmpCoord(conesize * elemType%dim),stat=ierr)
-         Allocate(Coord(elemType%dim,elemType%numVertex),stat=ierr)
+         iELoc = CellID(1)
          Do_Elem_iE: Do iELoc = 1,size(CellID)
-            Call SectionRealRestrictClosure(CoordSection,mesh,CellID(iELoc),Size(TmpCoord),TmpCoord,ierr);CHKERRQ(ierr)
-            k = 1
+            Call DMMeshGetConeF90(mesh,cellID(iEloc),Cone,ierr);CHKERRQ(ierr)
             Do i = 1, elemType%numVertex
                Do j = 1, elemType%dim
-                  Coord(j,i) = TmpCoord(k)
-                  k = k+1
+                  elemCoord(i,j) = Coord(Cone(i)-numCell+1,j)
                End Do
             End Do
-            Call Element2D_Elast_Init(dElem(iELoc),Coord,dQuadratureOrder,elemType,ierr)
+            Call Element2D_Elast_Init(dElem(iELoc),elemCoord,dQuadratureOrder,elemType,ierr)
+            Call DMMeshRestoreConeF90(mesh,cellID(iEloc),Cone,ierr);CHKERRQ(ierr)
          End Do Do_Elem_iE
-         DeAllocate(TmpCoord,stat=ierr)
-         DeAllocate(Coord,stat=ierr)
       End If
-      Call SectionRealDestroy(CoordSection,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+      Call DMMeshRestoreCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+      DeAllocate(elemCoord,stat=ierr)
    End Subroutine Element2D_Elast_InitSet
 
 #undef __FUNCT__
@@ -1191,10 +1172,10 @@ Contains
       Type(Vect2D),Dimension(:),Pointer     :: Xi ! The quadrature points coordinates in the reference element
       
       !!! The transformation matrix and the determinant of its inverse
-      Bt%XX = dCoord(1,2) - dCoord(1,1) 
-      Bt%XY = dCoord(2,2) - dCoord(2,1)
-      Bt%YX = dCoord(1,3) - dCoord(1,1)
-      Bt%YY = dCoord(2,3) - dCoord(2,1)
+      Bt%XX = dCoord(2,1) - dCoord(1,1) 
+      Bt%XY = dCoord(2,2) - dCoord(1,2)
+      Bt%YX = dCoord(3,1) - dCoord(1,1)
+      Bt%YY = dCoord(3,2) - dCoord(1,2)
       
       DetBinv = Det(Bt)
       Bt = Invert(Bt)
@@ -1328,19 +1309,17 @@ Contains
       PetscReal                              :: InnerBF
       
       !!! Create a bogus tri element with unit height by adding a 3rd vertex
-      Allocate(tmpCoord(2,3),stat=ierr)
+      Allocate(tmpCoord(3,2),stat=ierr)
       Do i = 1,2
          Do j = 1,2
             tmpCoord(i,j) = dCoord(i,j)
          End Do
       End Do
-      NormalVector%X = tmpCoord(2,2) - tmpCoord(2,1)
-      NormalVector%Y = tmpCoord(1,1) - tmpCoord(1,2)
+      NormalVector%X = tmpCoord(2,2) - tmpCoord(1,2)
+      NormalVector%Y = tmpCoord(1,1) - tmpCoord(2,1)
       NormalVector = NormalVector / Norm(NormalVector)
-      tmpCoord(1,3) = (dCoord(1,1) + dCoord(1,2))*.5_Kr - NormalVector%X 
-      tmpCoord(2,3) = (dCoord(2,1) + dCoord(2,2))*.5_Kr - NormalVector%Y
-      tmpCoord(1,3) = dCoord(1,1) - NormalVector%X 
-      tmpCoord(2,3) = dCoord(2,1) - NormalVector%Y
+      tmpCoord(3,1) = dCoord(1,1) - NormalVector%X 
+      tmpCoord(3,2) = dCoord(1,2) - NormalVector%Y
       
       Call Element_P_Lagrange_2D_Scal_Init(tmpElem,tmpCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Select Case (dPolynomialOrder)
