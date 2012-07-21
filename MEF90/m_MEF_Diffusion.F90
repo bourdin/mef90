@@ -97,25 +97,27 @@ Contains
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      Allocate(MatElem(elemType%numDof,elemType%numDof))
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
-         MatElem = 0.0_Kr
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            Do iDoF1 = 1,elemType%numDof
-               Do iDoF2 = 1,elemType%numDof
-                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                 (lambda * elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) + &
-                                 ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cell)%Grad_BF(iDoF2,iGauss)))
+      If (Size(cellID) > 0) Then
+         Allocate(MatElem(elemType%numDof,elemType%numDof))
+         Do cell = 1,size(cellID)      
+            MatElem = 0.0_Kr
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  Do iDoF2 = 1,elemType%numDof
+                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                    (lambda * elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) + &
+                                    ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cell)%Grad_BF(iDoF2,iGauss)))
+                  End Do
                End Do
             End Do
+            Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do
-         Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
-      End Do
-      flops = 5 * elemType%numDof**2 * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(MatElem)
+         flops = 5 * elemType%numDof**2 * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(MatElem)
+      End If
    End Subroutine DiffusionBilinearFormSet_2D
 
 #undef __FUNCT__
@@ -139,35 +141,36 @@ Contains
       Type(Vect2D)                                 :: GradVelem
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
-     
-      Allocate(Vloc(elemType%numDof))
-      Allocate(Gloc(elemType%numDof))
-      
+           
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
-         Gloc = 0.0_Kr
-         Call SectionRealRestrictClosure(V,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            Velem     = 0.0_Kr
-            GradVElem = 0.0_Kr
-            Do iDoF1 = 1,elemType%numDof
-               Velem     = Velem     + Vloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
-               GradVelem = GradVelem + Vloc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
+      If (Size(cellID) > 0) Then
+         Allocate(Vloc(elemType%numDof))
+         Allocate(Gloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            Gloc = 0.0_Kr
+            Call SectionRealRestrictClosure(V,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Velem     = 0.0_Kr
+               GradVElem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  Velem     = Velem     + Vloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+                  GradVelem = GradVelem + Vloc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               Do iDoF1 = 1,elemType%numDof
+                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                 (lambda * elem(cell)%BF(iDoF1,iGauss) * Velem + &
+                                  ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
+               End Do
             End Do
-            Do iDoF1 = 1,elemType%numDof
-               Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                              (lambda * elem(cell)%BF(iDoF1,iGauss) * Velem + &
-                               ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
-            End Do
+            Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
-         Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
-      End Do
-   
-      flops = 7 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      DeAllocate(Gloc)
-      DeAllocate(Vloc)
+      
+         flops = 7 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Gloc)
+         DeAllocate(Vloc)
+      End If
    End Subroutine DiffusionOperatorSet_2D
 
 #undef __FUNCT__
@@ -187,32 +190,33 @@ Contains
       PetscReal                                    :: Felem
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
-     
-      Allocate(Floc(elemType%numDof))
-      Allocate(RHSloc(elemType%numDof))
-      
+           
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
-         RHSloc = 0.0_Kr
-         Call SectionRealRestrictClosure(F,mesh,cellID(cell),elemType%numDof,Floc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            Felem     = 0.0_Kr
-            Do iDoF1 = 1,elemType%numDof
-               Felem = Felem + Floc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+      If (Size(cellID) > 0) Then
+         Allocate(Floc(elemType%numDof))
+         Allocate(RHSloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            RHSloc = 0.0_Kr
+            Call SectionRealRestrictClosure(F,mesh,cellID(cell),elemType%numDof,Floc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Felem     = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  Felem = Felem + Floc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+               End Do
+               Do iDoF1 = 1,elemType%numDof
+                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                 elem(cell)%BF(iDoF1,iGauss) * Felem
+               End Do
             End Do
-            Do iDoF1 = 1,elemType%numDof
-               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                              elem(cell)%BF(iDoF1,iGauss) * Felem
-            End Do
+            Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
-         Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
-      End Do
-   
-      flops = 5 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(RHSloc)
-      DeAllocate(Floc)
+      
+         flops = 5 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(RHSloc)
+         DeAllocate(Floc)
+      End If
    End Subroutine DiffusionRHSSet_2D
 
 #undef __FUNCT__
@@ -231,25 +235,26 @@ Contains
       PetscReal,Dimension(:),Pointer               :: RHSloc
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
-     
-      Allocate(RHSloc(elemType%numDof))
-      
+           
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
-         RHSloc = 0.0_Kr
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            Do iDoF1 = 1,elemType%numDof
-               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                              elem(cell)%BF(iDoF1,iGauss) * F
+      If (Size(cellID) > 0) Then
+         Allocate(RHSloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            RHSloc = 0.0_Kr
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                 elem(cell)%BF(iDoF1,iGauss) * F
+               End Do
             End Do
+            Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
-         Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
-      End Do
-   
-      flops = 3 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(RHSloc)
+      
+         flops = 3 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(RHSloc)
+      End If
    End Subroutine DiffusionRHSCellCstSet_2D
 
 #undef __FUNCT__
@@ -273,27 +278,29 @@ Contains
       PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
      
-      Allocate(xloc(elemType%numDof))
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)   
-         Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            strain = 0.0_Kr   
-            xelem  = 0.0_Kr
-            Do iDoF1 = 1,elemType%numDof
-               strain = strain + elem(cell)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
-               xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * xloc(iDoF1)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               strain = 0.0_Kr   
+               xelem  = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  strain = strain + elem(cell)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
+                  xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * xloc(iDoF1)
+               End Do
+               stress = A * strain
+               energy = energy + elem(cell)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
             End Do
-            stress = A * strain
-            energy = energy + elem(cell)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
          End Do
-      End Do
-   
-      flops = (2 * elemType%numDof + 6) * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
       
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(xloc)
+         flops = (2 * elemType%numDof + 6) * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+      End If
    End Subroutine DiffusionEnergySet_2D
 
 #undef __FUNCT__
@@ -315,23 +322,25 @@ Contains
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      Allocate(xloc(elemType%numDof))
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)   
-         Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            xelem = 0.0_Kr
-            Do iDoF1 = 1,elemType%numDof
-               xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               xelem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+               End Do
+               work = work + elem(cell)%Gauss_C(iGauss) * F * xelem
             End Do
-            work = work + elem(cell)%Gauss_C(iGauss) * F * xelem
          End Do
-      End Do
-   
-      flops = (2 * elemType%numDof + 3 )* size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(xloc)
+      
+         flops = (2 * elemType%numDof + 3 )* size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+      End If
    End Subroutine DiffusionWorkCellCstSet_2D
 
 #undef __FUNCT__
@@ -353,25 +362,27 @@ Contains
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      Allocate(MatElem(elemType%numDof,elemType%numDof))
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
-         MatElem = 0.0_Kr
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            Do iDoF1 = 1,elemType%numDof
-               Do iDoF2 = 1,elemType%numDof
-                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                 (lambda * elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) + &
-                                 ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cell)%Grad_BF(iDoF2,iGauss)))
+      If (Size(cellID) > 0) Then
+         Allocate(MatElem(elemType%numDof,elemType%numDof))
+         Do cell = 1,size(cellID)      
+            MatElem = 0.0_Kr
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  Do iDoF2 = 1,elemType%numDof
+                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                    (lambda * elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) + &
+                                    ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. elem(cell)%Grad_BF(iDoF2,iGauss)))
+                  End Do
                End Do
             End Do
+            Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do
-         Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
-      End Do
-      flops =  5 * elemType%numDof**2 * size(elem(cellID(1)+1)%Gauss_C) * size(cellID)   
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(MatElem)
+         flops =  5 * elemType%numDof**2 * size(elem(cellID(1)+1)%Gauss_C) * size(cellID)   
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(MatElem)
+      End If
    End Subroutine DiffusionBilinearFormSet_3D
 
 #undef __FUNCT__
@@ -396,34 +407,36 @@ Contains
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      Allocate(Vloc(elemType%numDof))
-      Allocate(Gloc(elemType%numDof))
       
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
-         Gloc = 0.0_Kr
-         Call SectionRealRestrictClosure(V,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            Velem     = 0.0_Kr
-            GradVElem = 0.0_Kr
-            Do iDoF1 = 1,elemType%numDof
-               Velem     = Velem     + Vloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
-               GradVelem = GradVelem + Vloc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
+      If (Size(cellID) > 0) Then
+         Allocate(Vloc(elemType%numDof))
+         Allocate(Gloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            Gloc = 0.0_Kr
+            Call SectionRealRestrictClosure(V,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Velem     = 0.0_Kr
+               GradVElem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  Velem     = Velem     + Vloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+                  GradVelem = GradVelem + Vloc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               Do iDoF1 = 1,elemType%numDof
+                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                 (lambda * elem(cell)%BF(iDoF1,iGauss) * Velem + &
+                                  ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
+               End Do
             End Do
-            Do iDoF1 = 1,elemType%numDof
-               Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                              (lambda * elem(cell)%BF(iDoF1,iGauss) * Velem + &
-                               ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
-            End Do
+            Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
-         Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
-      End Do
-   
-      flops = 7 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      DeAllocate(Gloc)
-      DeAllocate(Vloc)
+      
+         flops = 7 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Gloc)
+         DeAllocate(Vloc)
+      End If
    End Subroutine DiffusionOperatorSet_3D
 
 #undef __FUNCT__
@@ -444,31 +457,33 @@ Contains
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      Allocate(Floc(elemType%numDof))
-      Allocate(RHSloc(elemType%numDof))
       
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
-         RHSloc = 0.0_Kr
-         Call SectionRealRestrictClosure(F,mesh,cellID(cell),elemType%numDof,Floc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            Felem     = 0.0_Kr
-            Do iDoF1 = 1,elemType%numDof
-               Felem = Felem + Floc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+      If (Size(cellID) > 0) Then
+         Allocate(Floc(elemType%numDof))
+         Allocate(RHSloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            RHSloc = 0.0_Kr
+            Call SectionRealRestrictClosure(F,mesh,cellID(cell),elemType%numDof,Floc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Felem     = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  Felem = Felem + Floc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+               End Do
+               Do iDoF1 = 1,elemType%numDof
+                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                 elem(cell)%BF(iDoF1,iGauss) * Felem
+               End Do
             End Do
-            Do iDoF1 = 1,elemType%numDof
-               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                              elem(cell)%BF(iDoF1,iGauss) * Felem
-            End Do
+            Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
-         Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
-      End Do
-   
-      flops = 5 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(RHSloc)
-      DeAllocate(Floc)
+      
+         flops = 5 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(RHSloc)
+         DeAllocate(Floc)
+      End If
    End Subroutine DiffusionRHSSet_3D
 
 #undef __FUNCT__
@@ -488,24 +503,26 @@ Contains
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      Allocate(RHSloc(elemType%numDof))
       
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
-         RHSloc = 0.0_Kr
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            Do iDoF1 = 1,elemType%numDof
-               RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                              elem(cell)%BF(iDoF1,iGauss) * F
+      If (Size(cellID) > 0) Then
+         Allocate(RHSloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            RHSloc = 0.0_Kr
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                 elem(cell)%BF(iDoF1,iGauss) * F
+               End Do
             End Do
+            Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
-         Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
-      End Do
-   
-      flops = 3 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(RHSloc)
+      
+         flops = 3 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(RHSloc)
+      EndIf
    End Subroutine DiffusionRHSCellCstSet_3D
 
 #undef __FUNCT__
@@ -529,27 +546,29 @@ Contains
       PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
      
-      Allocate(xloc(elemType%numDof))
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)   
-         Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            strain = 0.0_Kr   
-            xelem  = 0.0_Kr
-            Do iDoF1 = 1,elemType%numDof
-               strain = strain + elem(cell)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
-               xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * xloc(iDoF1)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               strain = 0.0_Kr   
+               xelem  = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  strain = strain + elem(cell)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
+                  xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * xloc(iDoF1)
+               End Do
+               stress = A * strain
+               energy = energy + elem(cell)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
             End Do
-            stress = A * strain
-            energy = energy + elem(cell)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
          End Do
-      End Do
-   
-      flops = (2 * elemType%numDof + 6) * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
       
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(xloc)
+         flops = (2 * elemType%numDof + 6) * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+      End If
    End Subroutine DiffusionEnergySet_3D
 
 #undef __FUNCT__
@@ -571,22 +590,24 @@ Contains
       PetscInt                                     :: iDoF1,iDoF2,iGauss
       PetscLogDouble                               :: flops
      
-      Allocate(xloc(elemType%numDof))
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)   
-         Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            xelem = 0.0_Kr
-            Do iDoF1 = 1,elemType%numDof
-               xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               xelem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+               End Do
+               work = work + elem(cell)%Gauss_C(iGauss) * F * xelem
             End Do
-            work = work + elem(cell)%Gauss_C(iGauss) * F * xelem
          End Do
-      End Do
-   
-      flops = (2 * elemType%numDof + 3 )* size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(xloc)
+      
+         flops = (2 * elemType%numDof + 3 )* size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+      End If
    End Subroutine DiffusionWorkCellCstSet_3D
 End Module m_MEF_Diffusion
