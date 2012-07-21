@@ -193,17 +193,13 @@ Contains
       PetscBool                                    :: flg
       Character(len=MXSTLN)                        :: filename,EXOElemType
       Character(len=MEF90_MXSTRLEN)                :: IOBuffer,setName,setprefix
-      Type(DM)                                     :: tmp_mesh
-      !PetscInt                                     :: numCell,numVertex
       PetscInt,Dimension(:),Pointer                :: setID
-      PetscInt                                     :: set,point
-      !PetscInt                                     :: numCellSetGlobal,numVertexSetGlobal
+      PetscInt                                     :: set
       Type(Element_Type)                           :: defaultElemType
       Type(PoissonCellSetProperties_Type)          :: defaultCellSetProperties
       Type(PoissonCellSetProperties_Type),pointer  :: CellSetProperties
       Type(PoissonVertexSetProperties_Type)        :: defaultVertexSetProperties
       Type(IS)                                     :: CellSetGlobalIS,VertexSetGlobalIS
-      !PetscInt,Dimension(:),Pointer                :: cellID
       Type(SectionReal)                            :: Sec
       
       verbose = 0
@@ -233,14 +229,13 @@ Contains
             Write(IOBuffer,103) MEF90_MyRank,setID(set),trim(setprefix)
             Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          End if
-!!! FUCK! this looks needs to be collective on PETSC_COMM_WORLD
-!!! Maybe, I can read all ID, all exo elem sig and search for the right one...
-!         !!! Use a reasonable guess from the EXO file if nothing is given
-!         If (MEF90_MyRank == 0) Then
-!            Call EXOSetElementType_Load(exoid,setID(set),EXOElemType)
-!            Call EXO2Element_TypeScal(EXOElemType,MEF90_DIM,defaultElemType)
-!         End If
-!         Call MPI_BCast(defaultElemType%ShortID,MXSTLN,MPI_CHARACTER,0,PETSC_COMM_WORLD,ierr)
+
+         !!! Use a reasonable guess from the EXO file if nothing is given
+         If (MEF90_MyRank == 0) Then
+            Call EXOSetElementType_Load(exoid,setID(set),EXOElemType)
+            Call EXO2Element_TypeScal(EXOElemType,MEF90_DIM,defaultElemType)
+         End If
+         Call MPI_BCast(defaultElemType%ShortID,MXSTLN,MPI_CHARACTER,0,PETSC_COMM_WORLD,ierr)
 
          defaultCellSetProperties = PoissonCellSetProperties_Type(defaultElemType%ShortID,0.0_Kr)
          Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonCellSetProperties,PoissonCtx%CellSetPropertiesBag(set),ierr)
