@@ -130,7 +130,6 @@ Program  SimplePoissonNG
    !!!
    Call PoissonCtxCreate(MEF90Ctx,snesTemp,exoIN,ierr);CHKERRQ(ierr)
 
-   Write(*,*) MEF90_MyRank, 'OK PoissonCtxCreate'
    !!!
    !!! Get Matrix for the Jacobian / SNES and unknown vector
    !!!
@@ -183,11 +182,8 @@ Program  SimplePoissonNG
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
    !!! Setup GAMG here (coordinates,in particular)
    
-   Write(*,*) MEF90_MyRank, 'OK SNES'
-
    !!! Solve Poisson Equation
    Call SimplePoissonFormInitialGuess(snesTemp,solTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
-   Write(*,*) MEF90_MyRank, 'OK InitialGuess'
    Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
 
    !!! Check SNES / KSP convergence
@@ -251,7 +247,6 @@ Program  SimplePoissonNG
       End If
    End If
 
-   Write(*,*) MEF90_MyRank,"Wrote Glob Var"
    !!! 
    !!! Write in exo file
    !!!
@@ -269,7 +264,6 @@ Program  SimplePoissonNG
    Call VecViewExodusVertex(mesh,locTemp,IOComm,exoOUT,1,1,ierr)
    Call EXPGV(exoOUT,1,3,(/ sum(energy),sum(work),sum(energy)-sum(work) /),ierr)   
    Call DMrestoreLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
-   Write(*,*) MEF90_MyRank,"Wrote Nodal Var"
 
    !!!
    !!! Cleanup
