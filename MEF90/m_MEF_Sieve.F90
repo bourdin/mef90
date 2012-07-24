@@ -2,7 +2,6 @@ Module m_MEF_Sieve
 #include "finclude/petscdef.h"
 
    Use m_MEF_LinAlg
-   Use m_MEF_EXO
    Use petsc
          
    IMPLICIT NONE
@@ -14,7 +13,6 @@ Module m_MEF_Sieve
    Public :: FlagCreateVertex
    Public :: FieldDestroy
    Public :: FlagDestroy
-   Public :: SectionIntAddNSProperty
    Public :: MatInsertVertexBoundaryValues
    Public :: FieldInsertVertexBoundaryValues   
    
@@ -173,40 +171,6 @@ Contains
       End Do
       DeAllocate(F%Component_Sec)
    End Subroutine FlagDestroy
-
-#undef __FUNCT__
-#define __FUNCT__ "SectionIntAddNSProperty"
-   Subroutine SectionIntAddNSProperty(Sec,NSProperty,mesh)
-      !!!
-      !!! initialize a SectionInt by adding at each point of a nodeset the value of the
-      !!! NSProperty associated to the nodeset
-      Type(SectionInt)                             :: Sec 
-      Type(EXO_Property_Type)                      :: NSProperty
-      Type(DM)                                     :: mesh
-      
-      PetscErrorCode                               :: ierr
-      PetscInt                                     :: set,vertex
-      Type(IS)                                     :: setIS,vertexIS
-      PetscInt,Dimension(:),Pointer                :: setID,vertexID
-      PetscInt                                     :: numCells
-      PetscInt,Dimension(:),Pointer                :: Sec_Ptr
-      
-      Call DMMeshGetStratumSize(mesh,"height",0,numCells,ierr);CHKERRQ(ierr)
-      Call DMMeshGetLabelIdIS(mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
-      Do set = 1,size(setID)
-         Allocate(Sec_Ptr(1))
-         Sec_Ptr = NSProperty%Value(setID(set))
-         Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),vertexIS,ierr);CHKERRQ(ierr)
-         Call ISGetIndicesF90(vertexIS,vertexID,ierr);CHKERRQ(ierr)
-         Do vertex = 1,size(vertexID)
-            Call SectionIntUpdate(Sec,vertexID(vertex) + numCells - 1,Sec_Ptr,ADD_VALUES,ierr);CHKERRQ(ierr)
-         End Do
-         DeAllocate(Sec_Ptr)
-         Call ISRestoreIndicesF90(vertexIS,vertexID,ierr);CHKERRQ(ierr)
-      End Do
-      Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
-   End Subroutine SectionIntAddNSProperty
    
 #undef __FUNCT__
 #define __FUNCT__ "MatInsertVertexBoundaryValues"
