@@ -68,6 +68,7 @@ m_MEF90.o:          m_MEF_LinAlg.o             ${PETSC_ARCH}/m_MEF_LinAlg.o     
                     m_MEF_Diffusion.o          ${PETSC_ARCH}/m_MEF_Diffusion.o    \
                     m_MEF_EXO.o                ${PETSC_ARCH}/m_MEF_EXO.o          \
                     m_MEF_Sieve.o              ${PETSC_ARCH}/m_MEF_Sieve.o        \
+                    m_MEF_Ctx.o                ${PETSC_ARCH}/m_MEF_Ctx.o
 
 clean::
 	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod

@@ -6,13 +6,17 @@ Program  SimplePoissonNG
 #include <finclude/petscdef.h>
 #include <finclude/petscbagdef.h>
    Use m_MEF90
-   Use M_POISSON_TYPES
-   Use M_POISSON
+   Use m_PoissonGlobalProperties
+   Use M_POISSONCELLSETPROPERTIES
+   Use m_PoissonVertexSetProperties
+   Use M_POISSONASSEMBLY
+   Use m_Poisson
+
    Use petsc
    Implicit NONE   
 
    Type(PoissonGlobalProperties_Type),parameter    :: defaultGlobalProperties    = PoissonGlobalProperties_Type(0,PETSC_FALSE)
-   Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(1,0.0_Kr)
+   Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
    Character(len=MEF90_MXSTRLEN)                   :: prefix,filename
@@ -126,7 +130,6 @@ Program  SimplePoissonNG
    !!! 
    !!! Create PoissonCtx
    !!!
-   !Call PoissonCtxCreate(MEF90Ctx,snesTemp,exoIN,ierr);CHKERRQ(ierr)
    Call MEF90CtxPoissonVertexSetPropertiesCreate(MEF90Ctx,snesTemp,defaultVertexSetProperties,ierr);CHKERRQ(ierr)
    Call EXOGetCellSetElementType_Scal(PETSC_COMM_WORLD,exoIN,MEF90_DIM,ElemType,ierr)
    Call MEF90CtxPoissonCellSetPropertiesCreate(MEF90Ctx,snesTemp,defaultCellSetProperties,ElemType,ierr);CHKERRQ(ierr)
@@ -242,7 +245,7 @@ Program  SimplePoissonNG
          Call EXPVAN(exoOUT,'g',3,(/'Elastic Energy ','Ext Forces work','Total Energy   '/),ierr)
          Call EXPVP (exoOUT,'n',1,ierr)
          Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
-         Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
+         //Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
       End If
    End If
 

@@ -11,6 +11,7 @@ Module m_MEF90
    Use m_MEF_Sieve
    Use m_MEF_Materials
    Use m_MEF_Diffusion
+   Use m_MEF_Ctx
 
    Public :: MEF90_Initialize
    Public :: MEF90_Finalize
