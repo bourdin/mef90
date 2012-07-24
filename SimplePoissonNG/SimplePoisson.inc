@@ -1,18 +1,16 @@
 #include "../MEF90/mef90.inc"
 
 #if MEF90_DIM == 3
-#define M_POISSON_TYPES m_Poisson3D_Types
-#define M_POISSONCELLSETPROPERTIES_INTERFACE m_PoissonCellSetProperties3D_Interface
-#define M_POISSONVERTEXSETPROPERTIES_INTERFACE m_PoissonVertexSetProperties3D_Interface
 #define M_POISSON m_Poisson3D
+#define M_POISSONCELLSETPROPERTIES m_PoissonCellSetProperties3D
+#define M_POISSONASSEMBLY m_PoissonAssembly3D
 #define DEFAULT_ELEMENT_SHORTID MEF90_P1_Lagrange_3D_Scal_ShortID 
 #define DEFAULT_ELEMENT MEF90_P1_Lagrange_3D_Scal
 #define DEFAULT_MATERIAL MEF90_Mathium3D
 #else
-#define M_POISSON_TYPES m_Poisson2D_Types
-#define M_POISSONCELLSETPROPERTIES_INTERFACE m_PoissonCellSetProperties2D_Interface
-#define M_POISSONVERTEXSETPROPERTIES_INTERFACE m_PoissonVertexSetProperties2D_Interface
 #define M_POISSON m_Poisson2D
+#define M_POISSONCELLSETPROPERTIES m_PoissonCellSetProperties2D
+#define M_POISSONASSEMBLY m_PoissonAssembly2D
 #define DEFAULT_ELEMENT_SHORTID MEF90_P1_Lagrange_2D_Scal_ShortID 
 #define DEFAULT_ELEMENT MEF90_P1_Lagrange_2D_Scal
 #define DEFAULT_MATERIAL MEF90_Mathium2D
