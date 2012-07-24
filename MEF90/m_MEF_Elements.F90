@@ -1,6 +1,4 @@
 !!! TODO
-!!! - update 2d boundary elements to use 2d integration instead of the current nonsense that 
-!!!   does not work for P2 elements
 !!! - Add a validation of the shortID and names
 Module m_MEF_Elements
 #include "finclude/petscdef.h"
@@ -377,11 +375,13 @@ Module m_MEF_Elements
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "EXO2Element_TypeScal"
-   Subroutine EXO2Element_TypeScal(exoName,dim,elemType)
+   Subroutine EXO2Element_TypeScal(exoName,dim,elemType,ierr)
       Character(len=*),Intent(IN)                 :: EXOName
       PetscInt,Intent(IN)                         :: dim
       Type(Element_Type),Intent(OUT)              :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
 
+      ierr = 0
       Select Case(trim(exoName))
          Case("TETRA","TETRA4")
             elemType = MEF90_P1_Lagrange_3D_Scal
@@ -417,16 +417,19 @@ Contains
             elemType = MEF90_P2_Lagrange_2DBoundary_Scal
          Case default
             Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
+            ierr = PETSC_ERR_ARG_UNKNOWN_TYPE
       End Select
    End Subroutine EXO2Element_TypeScal
 
 #undef __FUNCT__
 #define __FUNCT__ "EXO2Element_TypeVect"
-   Subroutine EXO2Element_TypeVect(exoName,dim,elemType)
+   Subroutine EXO2Element_TypeVect(exoName,dim,elemType,ierr)
       Character(len=*),Intent(IN)                 :: EXOName
       PetscInt,Intent(IN)                         :: dim
       Type(Element_Type),Intent(OUT)              :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
 
+      ierr = 0
       Select Case(trim(exoName))
          Case("TETRA","TETRA4")
             elemType = MEF90_P1_Lagrange_3D_Vect
@@ -462,16 +465,19 @@ Contains
             elemType = MEF90_P2_Lagrange_2DBoundary_Vect
          Case default
             Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
+            ierr = PETSC_ERR_ARG_UNKNOWN_TYPE
       End Select
    End Subroutine EXO2Element_TypeVect
 
 #undef __FUNCT__
 #define __FUNCT__ "EXO2Element_TypeElast"
-   Subroutine EXO2Element_TypeElast(exoName,dim,elemType)
+   Subroutine EXO2Element_TypeElast(exoName,dim,elemType,ierr)
       Character(len=*),Intent(IN)                 :: EXOName
       PetscInt,Intent(IN)                         :: dim
       Type(Element_Type),Intent(OUT)              :: elemType
+      PetscErrorCode,Intent(OUT)                  :: ierr
 
+      ierr = 0
       Select Case(trim(exoName))
          Case("TETRA","TETRA4")
             elemType = MEF90_P1_Lagrange_3D_Elast
@@ -507,6 +513,7 @@ Contains
             elemType = MEF90_P2_Lagrange_2DBoundary_Elast
          Case default
             Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
+            ierr = PETSC_ERR_ARG_UNKNOWN_TYPE
       End Select
    End Subroutine EXO2Element_TypeElast
 

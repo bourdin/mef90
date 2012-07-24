@@ -6,23 +6,24 @@ Module M_POISSON_TYPES
    Implicit none
    Private  
    Public :: MEF90Ctx_Type
+   Public :: PoissonGlobalProperties_Type
    Public :: PoissonCellSetProperties_Type
    Public :: PoissonVertexSetProperties_Type
    
    Type MEF90Ctx_Type
-      !Type(IS)                                        :: CellSetGlobalIS,VertexSetGlobalIS
-      !Type(IS)                                        :: CellSetLocalIS,VertexSetLocalIS
       PetscBag                                        :: GlobalPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: VertexSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: MaterialPropertiesBag
    End Type MEF90Ctx_Type
 
+   Type PoissonGlobalProperties_Type   
+      PetscInt                                        :: verbose
+      PetscBool                                       :: splitIO ! make enum?
+   End Type PoissonGlobalProperties_Type   
+
    Type PoissonCellSetProperties_Type   
       PetscInt                                        :: ElemTypeShortID
-      !!! Maybe this plus handling of short name + gauss quadrature order 
-      !!! should be part of a ElementBag and handled in m_MEF_Elements?
-      !PetscInt                                        :: ElemTypeShortIDEnum
       PetscReal                                       :: Force
    End Type PoissonCellSetProperties_Type   
    
@@ -32,7 +33,34 @@ Module M_POISSON_TYPES
    End Type PoissonVertexSetProperties_Type   
 End Module M_POISSON_TYPES
 
-Module M_POISSONCELLSETPROPERTY_INTERFACE   
+Module m_PoissonGlobalProperties_Interface   
+#include "finclude/petscdef.h"
+#include "finclude/petscbagdef.h"
+   Use m_MEF90
+   Use M_POISSON_TYPES
+   Implicit None
+   Private
+   Public :: PetscBagGetDataPoissonGlobalProperties
+
+   Interface PetscBagGetData
+      Subroutine PetscBagGetData(bag,data,ierr)
+         Use M_POISSON_TYPES
+         PetscBag                                     :: bag
+         Type(PoissonGlobalProperties_Type),pointer   :: data
+         PetscErrorCode                               :: ierr
+      End subroutine PetscBagGetData
+   End interface
+Contains
+   Subroutine PetscBagGetDataPoissonGlobalProperties(bag,data,ierr)
+      PetscBag                                        :: bag
+      Type(PoissonGlobalProperties_Type),pointer      :: data
+      PetscErrorCode                                  :: ierr
+      
+      Call PetscBagGetData(bag,data,ierr)
+   End Subroutine PetscBagGetDataPoissonGlobalProperties
+End Module m_PoissonGlobalProperties_Interface   
+
+Module M_POISSONCELLSETPROPERTIES_INTERFACE   
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use m_MEF90
@@ -57,10 +85,10 @@ Contains
       
       Call PetscBagGetData(bag,data,ierr)
    End Subroutine PetscBagGetDataPoissonCellSetProperties
-End Module M_POISSONCELLSETPROPERTY_INTERFACE   
+End Module M_POISSONCELLSETPROPERTIES_INTERFACE   
 
 
-Module M_POISSONVERTEXSETPROPERTY_INTERFACE   
+Module M_POISSONVERTEXSETPROPERTIES_INTERFACE   
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use m_MEF90
@@ -85,7 +113,7 @@ Contains
       
       Call PetscBagGetData(bag,data,ierr)
    End Subroutine PetscBagGetDataPoissonVertexSetProperties
-End Module M_POISSONVERTEXSETPROPERTY_INTERFACE   
+End Module M_POISSONVERTEXSETPROPERTIES_INTERFACE   
 !!!
 !!!   
    
@@ -93,8 +121,9 @@ Module M_POISSON
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use M_POISSON_TYPES
-   Use M_POISSONCELLSETPROPERTY_INTERFACE
-   Use M_POISSONVERTEXSETPROPERTY_INTERFACE
+   Use m_PoissonGlobalProperties_Interface
+   Use M_POISSONCELLSETPROPERTIES_INTERFACE
+   Use M_POISSONVERTEXSETPROPERTIES_INTERFACE
    Use m_MEF90
    Implicit NONE
    Private
@@ -102,20 +131,26 @@ Module M_POISSON
    Public :: MEF90Ctx_Type
     
    Public :: m_Poisson_Initialize
+   Public :: PetscBagRegisterPoissonGlobalProperties
+   Public :: PetscBagGetDataPoissonGlobalProperties
    Public :: PetscBagRegisterPoissonCellSetProperties
    Public :: PetscBagGetDataPoissonCellSetProperties
    Public :: PetscBagRegisterPoissonVertexSetProperties
    Public :: PetscBagGetDataPoissonVertexSetProperties
    Public :: PoissonCtxCreate
+   Public :: MEF90CtxPoissonGlobalPropertiesCreate
+   Public :: MEF90CtxPoissonCellSetPropertiesCreate
+   Public :: MEF90CtxPoissonVertexSetPropertiesCreate
    Public :: PoissonCtxDestroy
    Public :: SimplePoissonBilinearForm
    Public :: SimplePoissonOperator
    Public :: SimplePoissonEnergies
    Public :: SimplePoissonFormInitialGuess
    
-   PetscSizeT,protected    :: sizeofPoissonCellSetProperties
-   PetscSizeT,protected    :: sizeofPoissonVertexSetProperties
-   PetscSizeT,protected    :: sizeofPoissonCtx
+   PetscSizeT,protected,public    :: sizeofPoissonGlobalProperties
+   PetscSizeT,protected,public    :: sizeofPoissonCellSetProperties
+   PetscSizeT,protected,public    :: sizeofPoissonVertexSetProperties
+   PetscSizeT,protected,public    :: sizeofPoissonCtx
    
 Contains
 #undef __FUNCT__
@@ -123,6 +158,7 @@ Contains
    Subroutine m_Poisson_Initialize(ierr)
       PetscErrorCode,intent(OUT)          :: ierr
 
+      Type(PoissonGlobalProperties_Type),Target    :: GlobalProperties
       Type(PoissonCellSetProperties_Type),Target   :: CellSetProperties
       Type(PoissonVertexSetProperties_Type),Target :: VertexSetProperties
       Type(MEF90Ctx_Type),Target                   :: PoissonCtx
@@ -130,11 +166,30 @@ Contains
       PetscSizeT                                   :: sizeofchar
    
       Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
+      sizeofPoissonGlobalProperties = size(transfer(GlobalProperties,dummychar))*sizeofchar
       sizeofPoissonCellSetProperties = size(transfer(CellSetProperties,dummychar))*sizeofchar
       sizeofPoissonVertexSetProperties = size(transfer(VertexSetProperties,dummychar))*sizeofchar
       sizeofPoissonCtx = size(transfer(PoissonCtx,dummychar))*sizeofchar
    End Subroutine m_Poisson_Initialize
    
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagRegisterPoissonGlobalProperties"
+   Subroutine PetscBagRegisterPoissonGlobalProperties(bag,name,prefix,default,ierr)
+      PetscBag                                        :: bag
+      Character(len=*),intent(IN)                     :: prefix,name
+      type(PoissonGlobalProperties_Type),intent(IN)   :: default
+      PetscErrorCode,intent(OUT)                      :: ierr
+
+      Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties
+      PetscBool                                       :: flg
+
+      Call PetscBagGetDataPoissonGlobalProperties(bag,GlobalProperties,ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"Global properties object",ierr);CHKERRQ(ierr)
+      Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt(bag,GlobalProperties%verbose,default%verbose,'verbose','verbosity level',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,GlobalProperties%splitIO,default%splitio,'splitio','set to true for distributed IO split in multiple exo files',ierr);CHKERRQ(ierr)
+   End Subroutine PetscBagRegisterPoissonGlobalProperties
+
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterPoissonCellSetProperties"
    Subroutine PetscBagRegisterPoissonCellSetProperties(bag,name,prefix,default,ierr)
@@ -173,7 +228,138 @@ Contains
    End Subroutine PetscBagRegisterPoissonVertexSetProperties
    
 
+#undef __FUNCT__
+#define __FUNCT__ "MEF90CtxPoissonGlobalPropertiesCreate"
+!!!
+!!!  
+!!!  MEF90CtxPoissonGlobalPropertiesCreate:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90CtxPoissonGlobalPropertiesCreate(MEF90Ctx,defaultGlobalProperties,ierr)
+      Type(MEF90Ctx_Type),intent(OUT)                 :: MEF90Ctx
+      Type(PoissonGlobalProperties_Type),Intent(IN)   :: defaultGlobalProperties
+      PetscErrorCode,Intent(OUT)                      :: ierr
+   
+      Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonGlobalProperties,MEF90Ctx%GlobalPropertiesBag,ierr)
+      Call PetscBagRegisterPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,"SimplePoissonNG",PETSC_NULL_CHARACTER,defaultGlobalProperties,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90CtxPoissonGlobalPropertiesCreate
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90CtxPoissonCellSetPropertiesCreate"
+!!!
+!!!  
+!!!  MEF90CtxPoissonCellSetPropertiesCreate:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90CtxPoissonCellSetPropertiesCreate(MEF90Ctx,snesTemp,defaultCellSetProperties,defaultElemType,ierr)
+      Type(MEF90Ctx_Type),intent(OUT)                    :: MEF90Ctx
+      Type(SNES),Intent(IN)                              :: snesTemp
+      Type(PoissonCellSetProperties_Type),intent(IN)     :: defaultCellSetProperties
+      Type(Element_Type),Dimension(:),Pointer            :: defaultElemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+   
+      Type(PoissonCellSetProperties_Type)                :: mydefaultCellSetProperties
+      Type(DM)                                           :: mesh
+      Type(PoissonGlobalProperties_Type),pointer         :: GlobalProperties
+      Type(IS)                                           :: CellSetGlobalIS
+      PetscInt,Dimension(:),Pointer                      :: setID
+      PetscInt                                           :: set
+      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer,setName,setprefix
 
+      Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
+
+      Call PetscBagGetDataPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Allocate(MEF90Ctx%CellSetPropertiesBag(size(setID)),stat=ierr)
+      Allocate(MEF90Ctx%MaterialPropertiesBag(size(setID)),stat=ierr)
+            
+      Do set = 1, size(setID)
+         Write(setName,100) setID(set)
+         Write(setprefix,101) setID(set)
+         If (GlobalProperties%verbose > 0) Then
+            Write(IOBuffer,103) setID(set),trim(setprefix)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         End if
+         
+         mydefaultCellSetProperties = defaultCellSetProperties
+         mydefaultCellSetProperties%ElemTypeShortID = defaultElemType(set)%ShortID
+         
+         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonCellSetProperties,MEF90Ctx%CellSetPropertiesBag(set),ierr)
+         Call PetscBagRegisterPoissonCellSetProperties(MEF90Ctx%CellSetPropertiesBag(set),setName,setprefix,mydefaultCellSetProperties,ierr);CHKERRQ(ierr)
+
+         Call PetscBagCreate(PETSC_COMM_WORLD,SIZEOFMATPROP,MEF90Ctx%MaterialPropertiesBag(set),ierr)
+         Call PetscBagRegisterMEF90_MatProp(MEF90Ctx%MaterialPropertiesBag(set),setName,setprefix,DEFAULT_MATERIAL,ierr);CHKERRQ(ierr)
+         if (GlobalProperties%verbose > 0) Then
+            Call PetscBagView(MEF90Ctx%CellSetPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,'\n',ierr);CHKERRQ(ierr)
+            Call PetscBagView(MEF90Ctx%MaterialPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,'\n',ierr);CHKERRQ(ierr)
+         End If
+      End Do
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+100 Format('Cell set ',I4)
+101 Format('cs',I4.4,'_')
+103 Format('Registering cell set ',I4,' prefix: ',A,'\n')
+   End Subroutine MEF90CtxPoissonCellSetPropertiesCreate
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90CtxPoissonVertexSetPropertiesCreate"
+!!!
+!!!  
+!!!  MEF90CtxPoissonVertexSetPropertiesCreate:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90CtxPoissonVertexSetPropertiesCreate(MEF90Ctx,snesTemp,defaultVertexSetProperties,ierr)
+      Type(MEF90Ctx_Type),intent(OUT)                    :: MEF90Ctx
+      Type(SNES),Intent(IN)                              :: snesTemp
+      Type(PoissonVertexSetProperties_Type),intent(IN)   :: defaultVertexSetProperties
+      PetscErrorCode,Intent(OUT)                         :: ierr
+   
+      Type(DM)                                           :: mesh
+      Type(PoissonGlobalProperties_Type),pointer         :: GlobalProperties
+      Type(IS)                                           :: VertexSetGlobalIS
+      PetscInt,Dimension(:),Pointer                      :: setID
+      PetscInt                                           :: set
+      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer,setName,setprefix
+
+      Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
+
+      Call PetscBagGetDataPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)
+      
+      Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Allocate(MEF90Ctx%VertexSetPropertiesBag(size(setID)),stat=ierr)
+
+      Do set = 1, size(setID)
+         Write(setName,200) setID(set)
+         Write(setprefix,201) setID(set)
+         If (GlobalProperties%verbose > 0) Then
+            Write(IOBuffer,203) setID(set),trim(setprefix)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         End if
+         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonVertexSetProperties,MEF90Ctx%VertexSetPropertiesBag(set),ierr)
+         Call PetscBagRegisterPoissonVertexSetProperties(MEF90Ctx%VertexSetPropertiesBag(set),setname,setprefix,defaultVertexSetProperties,ierr);CHKERRQ(ierr)
+         If (GlobalProperties%verbose > 0) Then
+            Call PetscBagView(MEF90Ctx%VertexSetPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+         End If
+      End Do
+      Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+
+200 Format('Vertex set ',I4)
+201 Format('vs',I4.4,'_')
+203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
+   End Subroutine MEF90CtxPoissonVertexSetPropertiesCreate
+
+!!! Split into SimplePoissonSNESCreate and MEF90CtxCreate(ctx,snes,ierr) moved into m_MEF90.F90
 #undef __FUNCT__
 #define __FUNCT__ "PoissonCtxCreate"
    !!!
@@ -197,21 +383,14 @@ Contains
       PetscInt                                     :: set
       Type(Element_Type)                           :: defaultElemType
       Type(PoissonCellSetProperties_Type)          :: defaultCellSetProperties
-      Type(PoissonCellSetProperties_Type),pointer  :: CellSetProperties
       Type(PoissonVertexSetProperties_Type)        :: defaultVertexSetProperties
       Type(IS)                                     :: CellSetGlobalIS,VertexSetGlobalIS
       Type(SectionReal)                            :: Sec
-      
+            
       verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'--verbose',verbose,flg,ierr);CHKERRQ(ierr)
 
       Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
-      
-      !!! Get number of cell, vertices and dimension
-      !Call DMmeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
-      !Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
-      !Call DMMeshGetDimension(mesh,numDim,ierr);CHKERRQ(ierr)
-      
       
       !!!
       !!! Allocate and register cell sets bags: CellSetProperties and MatProp
@@ -221,7 +400,7 @@ Contains
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Allocate(PoissonCtx%CellSetPropertiesBag(size(setID)),stat=ierr)
       Allocate(PoissonCtx%MaterialPropertiesBag(size(setID)),stat=ierr)
-      
+            
       Do set = 1, size(setID)
          Write(setName,100) setID(set)
          Write(setprefix,101) setID(set)
@@ -229,12 +408,13 @@ Contains
             Write(IOBuffer,103) setID(set),trim(setprefix)
             Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          End if
+         
 
          !!! Use a reasonable guess from the EXO file if nothing is given
-         If (MEF90_MyRank == 0) Then
-            Call EXOSetElementType_Load(exoid,setID(set),EXOElemType)
-            Call EXO2Element_TypeScal(EXOElemType,MEF90_DIM,defaultElemType)
-         End If
+         !If (MEF90_MyRank == 0) Then
+            !Call EXOSetElementType_Load(exoid,setID(set),EXOElemType)
+            !Call EXO2Element_TypeScal(EXOElemType,MEF90_DIM,defaultElemType)
+         !End If
          Call MPI_BCast(defaultElemType%ShortID,MXSTLN,MPI_CHARACTER,0,PETSC_COMM_WORLD,ierr)
 
          defaultCellSetProperties = PoissonCellSetProperties_Type(defaultElemType%ShortID,0.0_Kr)

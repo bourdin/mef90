@@ -6,59 +6,57 @@ Program  SimplePoissonNG
 #include <finclude/petscdef.h>
 #include <finclude/petscbagdef.h>
    Use m_MEF90
+   Use M_POISSON_TYPES
    Use M_POISSON
    Use petsc
    Implicit NONE   
 
-   Character(len=MEF90_MXSTRLEN)                :: prefix,filename
-   Type(MEF90Ctx_Type)                          :: MEF90Ctx
-   Type(DM)                                     :: mesh,tmp_mesh
-   PetscErrorCode                               :: iErr
-   PetscInt                                     :: exo_step,exo_field
-   Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-   PetscInt                                     :: numDim
-   PetscInt                                     :: Verbose
-   PetscBool                                    :: splitIO
-   PetscBool                                    :: flg
-   Type(SNES)                                   :: snesTemp
-   Type(KSP)                                    :: kspTemp
-   Type(PC)                                     :: pcTemp
-   Type(Mat)                                    :: matTemp
-   Type(Vec)                                    :: solTemp,resTemp,locTemp
-   !Type(Vec)                                    :: ubTemp,lbTemp
-   Integer                                      :: cpu_ws,io_ws,exoIN=0,exoOUT=0
-   Real                                         :: exo_version
-   Integer                                      :: exoerr
-   MPI_Comm                                     :: IOComm
-   PetscReal,Dimension(:),Pointer               :: energy,work
-   PetscInt,dimension(:),Pointer                :: setID
-   PetscInt                                     :: set
-   Type(MatNullSpace)                           :: nspTemp
-   SNESConvergedReason                          :: reasonTemp
-   PetscInt                                     :: itsTemp
-   Type(SectionReal)                            :: secTemp
-   Type(VecScatter)                             :: ScatterSecToVec
-   Type(IS)                                     :: CellSetGlobalIS
-   
-   PetscInt                                     :: point,numCell,numVertex
+   Type(PoissonGlobalProperties_Type),parameter    :: defaultGlobalProperties    = PoissonGlobalProperties_Type(0,PETSC_FALSE)
+   Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(1,0.0_Kr)
+   Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
+   Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
+   Character(len=MEF90_MXSTRLEN)                   :: prefix,filename
+   Type(MEF90Ctx_Type)                             :: MEF90Ctx
+   Type(DM)                                        :: mesh,tmp_mesh
+   PetscErrorCode                                  :: iErr
+   PetscInt                                        :: exo_step,exo_field
+   Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
+   PetscInt                                        :: numDim
+   PetscBool                                       :: flg
+   Type(SNES)                                      :: snesTemp
+   Type(KSP)                                       :: kspTemp
+   Type(PC)                                        :: pcTemp
+   Type(Mat)                                       :: matTemp
+   Type(Vec)                                       :: solTemp,resTemp,locTemp
+   !Type(Vec)                                       :: ubTemp,lbTemp
+   Integer                                         :: cpu_ws,io_ws,exoIN=0,exoOUT=0
+   Real                                            :: exo_version
+   Integer                                         :: exoerr
+   MPI_Comm                                        :: IOComm
+   PetscReal,Dimension(:),Pointer                  :: energy,work
+   PetscInt,dimension(:),Pointer                   :: setID
+   PetscInt                                        :: set
+   Type(MatNullSpace)                              :: nspTemp
+   SNESConvergedReason                             :: reasonTemp
+   PetscInt                                        :: itsTemp
+   Type(SectionReal)                               :: secTemp
+   Type(VecScatter)                                :: ScatterSecToVec
+   Type(IS)                                        :: CellSetGlobalIS
+   Type(Element_Type),Dimension(:),pointer         :: ElemType
+      
+   PetscInt                                        :: point,numCell,numVertex
 
 
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
 
-   Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'--prefix',prefix,flg,ierr);CHKERRQ(ierr)
+   Call PetscOptionsGetString(trim(prefix),'-prefix',prefix,flg,ierr);CHKERRQ(ierr)
    If (.NOT. flg) Then
-      Call PetscPrintf(PETSC_COMM_WORLD,"No mesh prefix given\n",ierr)
-      Call MEF90_Finalize()
-      STOP
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_NULL,"Missing file prefix\n",ierr);CHKERRQ(ierr)
    End If
 
-   verbose = 0
-   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'--verbose',verbose,flg,ierr);CHKERRQ(ierr)
-   
-   splitIO = PETSC_FALSE
-   Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,'--splitIO',splitIO,flg,ierr);CHKERRQ(ierr)
-
+   Call MEF90CtxPoissonGlobalPropertiesCreate(MEF90Ctx,defaultGlobalProperties,ierr)
+   Call PetscBagGetDataPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)      
    !!!
    !!! Open INPUT mesh
    !!!
@@ -67,7 +65,7 @@ Program  SimplePoissonNG
       io_ws = 8
       filename = Trim(prefix)//'.gen'
       exoIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
-      If (verbose > 0) Then
+      If (GlobalProperties%verbose > 0) Then
          Write(IOBuffer,99) exoERR,exoIN
          Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr)
       End If
@@ -82,7 +80,7 @@ Program  SimplePoissonNG
    !!!
    !!! open OUTPUT mesh
    !!!
-   If (splitIO) Then
+   If (GlobalProperties%splitIO) Then
       IOComm = PETSC_COMM_SELF
       Write(filename,100) trim(prefix),MEF90_MyRank
    Else
@@ -128,8 +126,10 @@ Program  SimplePoissonNG
    !!! 
    !!! Create PoissonCtx
    !!!
-   Call PoissonCtxCreate(MEF90Ctx,snesTemp,exoIN,ierr);CHKERRQ(ierr)
-
+   !Call PoissonCtxCreate(MEF90Ctx,snesTemp,exoIN,ierr);CHKERRQ(ierr)
+   Call MEF90CtxPoissonVertexSetPropertiesCreate(MEF90Ctx,snesTemp,defaultVertexSetProperties,ierr);CHKERRQ(ierr)
+   Call EXOGetCellSetElementType_Scal(PETSC_COMM_WORLD,exoIN,MEF90_DIM,ElemType,ierr)
+   Call MEF90CtxPoissonCellSetPropertiesCreate(MEF90Ctx,snesTemp,defaultCellSetProperties,ElemType,ierr);CHKERRQ(ierr)
    !!!
    !!! Get Matrix for the Jacobian / SNES and unknown vector
    !!!
@@ -222,7 +222,7 @@ Program  SimplePoissonNG
    !!!
    !!! format the output file
    !!!
-   If (splitIO) Then
+   If (GlobalProperties%splitIO) Then
       cpu_ws = 8
       io_ws = 8
       exoOUT = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
@@ -280,7 +280,7 @@ Program  SimplePoissonNG
    DeAllocate(work)
    DeAllocate(energy)
    
-   If (verbose > 0) Then
+   If (GlobalProperties%verbose > 0) Then
       Call PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
    EndIf
    Call MEF90_Finalize()
