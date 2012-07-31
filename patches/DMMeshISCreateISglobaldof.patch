@@ -1,0 +1,66 @@
+diff -r e54b522f767f include/petscdmmesh.h
+--- a/include/petscdmmesh.h	Mon Jul 30 16:31:55 2012 -0700
++++ b/include/petscdmmesh.h	Tue Jul 31 08:03:59 2012 -0500
+@@ -298,5 +298,6 @@ PetscErrorCode DMMeshInterpolationRestor
+ PetscErrorCode DMMeshInterpolationEvaluate(DM dm, SectionReal x, Vec v, DMMeshInterpolationInfo ctx);
+ PetscErrorCode DMMeshInterpolationDestroy(DM dm, DMMeshInterpolationInfo *ctx);
+ 
++PetscErrorCode DMMeshISCreateISglobaldof(DM dm,SectionReal sec,IS isin,int dof,IS *isdof);
+ #endif /* Mesh section */
+ #endif
+diff -r e54b522f767f src/dm/impls/mesh/section.c
+--- a/src/dm/impls/mesh/section.c	Mon Jul 30 16:31:55 2012 -0700
++++ b/src/dm/impls/mesh/section.c	Tue Jul 31 08:03:59 2012 -0500
+@@ -2050,3 +2050,52 @@ PetscErrorCode DMMeshSetupSection(DM dm,
+   }
+   PetscFunctionReturn(0);
+ }
++
++#undef __FUNCT__
++#define __FUNCT__ "DMMeshISCreateISglobaldof"
++/*@
++  
++  DMMeshISCreateISglobaldof - Create the IS for the global indices of a given dof in a section
++  the dof must exist at all points of teh section or the result will be garbage
++  This IS can then be used in MatZeroRowsColumnsIS, for instance
++
++  Collective on comm
++
++  Input Parameters:
+++ dm   - the DMMesh representing the mesh
++. sec  - the SectionReal describing the data layout
++. isin - an is describing point numbers 
++. dof  - the index of the field to extract
++
++  Output Parameters:
++. isdof - the IS in the global numbering
++
++  Level: beginner
++
++.keywords: mesh,Section
++@*/
++extern PetscErrorCode DMMeshISCreateISglobaldof(DM dm,SectionReal sec,IS isin,int dof,IS *isdof){
++  const PetscInt   *idxin;
++  PetscInt         *idxdof,numidxlocal,i;
++  MPI_Comm          comm;
++  PetscErrorCode    ierr;  
++  Obj<PETSC_MESH_TYPE::real_section_type> s;
++  ALE::Obj<PETSC_MESH_TYPE>               m;
++  PetscFunctionBegin;
++  
++  ierr = DMMeshGetMesh(dm, m);CHKERRQ(ierr);
++  ierr = SectionRealGetSection(sec,s);CHKERRQ(ierr);
++  const ALE::Obj<PETSC_MESH_TYPE::order_type>& globalOrder = m->getFactory()->getGlobalOrder(m, s->getName(), s);
++
++  ierr = PetscObjectGetComm((PetscObject) isin,&comm);CHKERRQ(ierr);
++  ierr = ISGetLocalSize(isin,&numidxlocal);CHKERRQ(ierr);
++  ierr = PetscMalloc(numidxlocal*sizeof(PetscInt),&idxdof);CHKERRQ(ierr);
++  ierr = ISGetIndices(isin,&idxin);CHKERRQ(ierr);
++    
++  for (i = 0; i < numidxlocal; i++) {
++    idxdof[i] = globalOrder->getIndex(idxin[i])+dof;
++  }
++  ierr = ISCreateGeneral(comm,numidxlocal,idxdof,PETSC_OWN_POINTER,isdof);CHKERRQ(ierr);
++  ierr = ISRestoreIndices(isin,&idxin);CHKERRQ(ierr);
++  PetscFunctionReturn(0);
++}
