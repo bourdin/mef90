@@ -1,7 +1,7 @@
 -vs0010_tempBC 0 
 -vs0020_tempBC 0
--cs0001_force 0. 
--cs0010_force 1. 
--cs0020_force -1. 
+-cs0001_flux 0. 
+-cs0010_flux 1. 
+-cs0020_flux -1. 
 -temp_snes_type ksponly 
 -temp_KSP_monitor 
