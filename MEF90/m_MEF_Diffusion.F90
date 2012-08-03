@@ -100,7 +100,7 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(MatElem(elemType%numDof,elemType%numDof))
-         Do cell = 1,size(cellID)      
+         Do cell = 1,size(cellID)   
             MatElem = 0.0_Kr
             Do iGauss = 1,size(elem(cell)%Gauss_C)
                Do iDoF1 = 1,elemType%numDof
@@ -113,7 +113,7 @@ Contains
             End Do
             Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do
-         flops = 5 * elemType%numDof**2 * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = 5 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(MatElem)
@@ -165,7 +165,7 @@ Contains
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
       
-         flops = 7 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(Gloc)
@@ -211,7 +211,7 @@ Contains
             Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
       
-         flops = 5 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = 5 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
@@ -250,7 +250,7 @@ Contains
             Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
       
-         flops = 3 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
@@ -295,7 +295,7 @@ Contains
             End Do
          End Do
       
-         flops = (2 * elemType%numDof + 6) * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = (2 * elemType%numDof + 6) * size(elem(1)%Gauss_C) * size(cellID) 
          
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -336,7 +336,7 @@ Contains
             End Do
          End Do
       
-         flops = (2 * elemType%numDof + 3 )* size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = (2 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
@@ -378,7 +378,7 @@ Contains
             End Do
             Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do
-         flops =  5 * elemType%numDof**2 * size(elem(cellID(1)+1)%Gauss_C) * size(cellID)   
+         flops =  5 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID)   
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(MatElem)
@@ -431,7 +431,7 @@ Contains
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
       
-         flops = 7 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(Gloc)
@@ -478,7 +478,7 @@ Contains
             Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
       
-         flops = 5 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = 5 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
@@ -518,7 +518,7 @@ Contains
             Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
       
-         flops = 3 * elemType%numDof * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
@@ -563,7 +563,7 @@ Contains
             End Do
          End Do
       
-         flops = (2 * elemType%numDof + 6) * size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = (2 * elemType%numDof + 6) * size(elem(1)%Gauss_C) * size(cellID) 
          
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -604,7 +604,7 @@ Contains
             End Do
          End Do
       
-         flops = (2 * elemType%numDof + 3 )* size(elem(cellID(1)+1)%Gauss_C) * size(cellID) 
+         flops = (2 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
