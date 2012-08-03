@@ -1353,7 +1353,12 @@ Contains
          Case Default
             Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
-      Allocate(delem%Grad_BF(0,0),stat=ierr)
+      Allocate(delem%Grad_BF(Num_DoF,Num_Gauss),stat=ierr)
+      Do iDof = 1, num_dof
+         Do iG = 1, num_Gauss
+            delem%Grad_BF(iDof,iG) = 0.0_Kr
+         End Do
+      End Do
       DeAllocate(Xi,stat=ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Scal_Init                          
       
@@ -1406,23 +1411,26 @@ Contains
    
       Type(Element2D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 2 
-      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      PetscInt                               :: Num_DoF,Nb_Gauss,iDof,iG
       
       
       Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Allocate(dElem%Der_BF(0,Nb_Gauss),stat=ierr)
-         
       dElem%Gauss_C = Elem_Scal%Gauss_C
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      
-      Do i = 0,Num_DoF-1
-         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
-         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
+
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)      
+      Do idof = 0,Num_DoF-1
+         dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
+         dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
+      End Do
+
+      Allocate(delem%Der_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Do iDof = 1, num_dof * dim
+         Do iG = 1, Nb_Gauss
+            delem%Der_BF(iDof,iG) = 0.0_Kr
+         End Do
       End Do
       Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Vect_Init
@@ -1474,22 +1482,26 @@ Contains
    
       Type(Element2D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 2 
-      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      PetscInt                               :: Num_DoF,Nb_Gauss,iDof,iG
       
       
       Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Allocate(dElem%GradS_BF(0,Nb_Gauss),stat=ierr)
-         
       dElem%Gauss_C = Elem_Scal%Gauss_C
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      Do i = 0,Num_DoF-1
-         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
-         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
+
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)         
+      Do iDof = 0,Num_DoF-1
+         dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
+         dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
+      End Do
+      
+      Allocate(delem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Do iDof = 1, num_dof * dim
+         Do iG = 1, Nb_Gauss
+            delem%GradS_BF(iDof,iG) = 0.0_Kr
+         End Do
       End Do
       Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Elast_Init
@@ -1720,7 +1732,7 @@ Contains
       PetscInt                               :: Num_Dof
       PetscInt                               :: iDoF,iG
 
-      PetscReal,Dimension(:,:),Pointer       :: PhiHat      ! PhiHat(i,k) The value of the ith basis function at the kth integration point
+      !PetscReal,Dimension(:,:),Pointer       :: PhiHat      ! PhiHat(i,k) The value of the ith basis function at the kth integration point
       
       Type(Vect2D),Dimension(:),Pointer      :: Xi ! The quadrature points coordinates in the reference element
       
@@ -1804,30 +1816,32 @@ Contains
       Select Case (dPolynomialOrder)
       Case(1)
          Num_DoF = 3
-         Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
-         PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y
-         PhiHat(2,:) = Xi(:)%X
-         PhiHat(3,:) = Xi(:)%Y
+         Allocate(dElem%BF(Num_DoF,Nb_Gauss),stat=ierr) 
+         dElem%BF(1,:) = 1.0_Kr - Xi%X - Xi%Y
+         dElem%BF(2,:) = Xi(:)%X
+         dElem%BF(3,:) = Xi(:)%Y
       Case(2)
          Num_DoF = 6
-         Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
-         PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)      
-         PhiHat(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
-         PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
-         PhiHat(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
-         PhiHat(5,:) = 4.0_Kr * Xi%X * Xi%Y
-         PhiHat(6,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+         Allocate(dElem%BF(Num_DoF,Nb_Gauss),stat=ierr) 
+         dElem%BF(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)      
+         dElem%BF(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         dElem%BF(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         dElem%BF(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+         dElem%BF(5,:) = 4.0_Kr * Xi%X * Xi%Y
+         dElem%BF(6,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
       Case Default
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
          ierr = PETSC_ERR_SUP
       End Select
       
-      Allocate (dElem%BF(Num_DoF,Nb_Gauss),stat=ierr) 
-      Allocate (dElem%Grad_BF(0,0),stat=ierr)
-      dElem%BF = PhiHat
+      Allocate(delem%Grad_BF(Num_DoF,Nb_Gauss),stat=ierr)
+      Do iDof = 1, num_Dof
+         Do iG = 1, Nb_Gauss
+            delem%Grad_BF(iDof,iG) = 0.0_Kr
+         End Do
+      End Do
      
       DeAllocate(Xi,stat=ierr)
-      DeAllocate(PhiHat,stat=ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Scal_Init
    
 #undef __FUNCT__
@@ -1891,25 +1905,27 @@ Contains
    
       Type(Element3D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 3 
-      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      PetscInt                               :: Num_DoF,Nb_Gauss,iDof,iG
       
       
       Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Allocate(dElem%Der_BF(0,Nb_Gauss),stat=ierr)
-         
       dElem%Gauss_C = Elem_Scal%Gauss_C
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      dElem%BF(:,:)%Z = 0.0_Kr
-      
-      Do i = 0,Num_DoF-1
-         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
-         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
-         dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
+         
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Do iDof = 0,Num_DoF-1
+         dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
+         dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
+         dElem%BF(iDof*dim+3,:)%Z = Elem_Scal%BF(iDof+1,:)
+      End Do
+
+      Allocate(delem%Der_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Do iDof = 1, num_dof * dim
+         Do iG = 1, Nb_Gauss
+            delem%Der_BF(iDof,iG) = 0.0_Kr
+         End Do
       End Do
       Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Vect_Init
@@ -1974,25 +1990,27 @@ Contains
    
       Type(Element3D_Scal)                   :: Elem_Scal
       PetscInt                               :: dim = 3 
-      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      PetscInt                               :: Num_DoF,Nb_Gauss,iDof,iG
       
       
       Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Allocate(dElem%GradS_BF(0,Nb_Gauss),stat=ierr)
-         
+      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)         
       dElem%Gauss_C = Elem_Scal%Gauss_C
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      dElem%BF(:,:)%Z = 0.0_Kr
       
-      Do i = 0,Num_DoF-1
-         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
-         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
-         dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Do iDof = 0,Num_DoF-1
+         dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
+         dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
+         dElem%BF(iDof*dim+3,:)%Z = Elem_Scal%BF(iDof+1,:)
+      End Do
+      
+      Allocate(delem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Do iDof = 1, num_dof * dim
+         Do iG = 1, Nb_Gauss
+            delem%GradS_BF(iDof,iG) = 0.0_Kr
+         End Do
       End Do
       Call MEF90_ElementDestroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Elast_Init
