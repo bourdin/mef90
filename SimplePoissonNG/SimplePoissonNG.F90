@@ -16,7 +16,7 @@ Program  SimplePoissonNG
    Implicit NONE   
 
    Type(PoissonGlobalProperties_Type),parameter    :: defaultGlobalProperties    = PoissonGlobalProperties_Type(0,PETSC_FALSE)
-   Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr)
+   Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr,0.0_Kr,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
    Character(len=MEF90_MXSTRLEN)                   :: prefix,filename
@@ -49,12 +49,14 @@ Program  SimplePoissonNG
    Type(Element_Type),Dimension(:),pointer         :: ElemType
       
    PetscInt                                        :: point,numCell,numVertex
-
+   PetscReal,Dimension(:,:),Pointer                :: Coord
+   PetscReal,Dimension(:),Pointer                  :: Coord2
+   PetscInt                                        :: i,j
 
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
 
-   Call PetscOptionsGetString(trim(prefix),'-prefix',prefix,flg,ierr);CHKERRQ(ierr)
+   Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',prefix,flg,ierr);CHKERRQ(ierr)
    If (.NOT. flg) Then
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_NULL,"Missing file prefix\n",ierr);CHKERRQ(ierr)
    End If
@@ -184,7 +186,17 @@ Program  SimplePoissonNG
    Call KSPGetPC(kspTemp,pcTemp,ierr);CHKERRQ(ierr)
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
    !!! Setup GAMG here (coordinates,in particular)
-   
+   Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+   Allocate(coord2(size(coord)))
+   Do i = 1, size(coord,1)
+      Do j = 1, MEF90_DIM
+         coord2(MEF90_DIM * (i-1) + j) = coord(i,j)
+      End Do
+   End Do
+   Call PCSetCoordinates(pcTemp,MEF90_DIM,size(coord2)/MEF90_DIM,coord,ierr)
+   Call DMMeshRestoreCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+   DeAllocate(coord2)
+
    !!! Solve Poisson Equation
    Call SimplePoissonFormInitialGuess(snesTemp,solTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
    Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
@@ -231,7 +243,7 @@ Program  SimplePoissonNG
       exoOUT = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
       Call DMmeshViewExodusSplit(mesh,exoOUT,ierr)
       Call EXPVP (exoOUT,'g',3,ierr)
-      Call EXPVAN(exoOUT,'g',3,(/'Energy         ','Ext Forces work','Total Energy   '/),ierr)
+      Call EXPVAN(exoOUT,'g',3,(/'Energy         ','Ext Fluxes work','Total Energy   '/),ierr)
       Call EXPVP (exoOUT,'n',1,ierr)
       Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
       !Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
@@ -242,10 +254,10 @@ Program  SimplePoissonNG
          exoOUT = EXCRE(filename,EXCLOB,cpu_ws,io_ws,ierr)
          Call EXCOPY(exoIN,exoOUT,ierr)
          Call EXPVP (exoOUT,'g',3,ierr)
-         Call EXPVAN(exoOUT,'g',3,(/'Elastic Energy ','Ext Forces work','Total Energy   '/),ierr)
+         Call EXPVAN(exoOUT,'g',3,(/'Elastic Energy ','Ext Fluxes work','Total Energy   '/),ierr)
          Call EXPVP (exoOUT,'n',1,ierr)
          Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
-         //Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
+         !Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
       End If
    End If
 
@@ -264,7 +276,9 @@ Program  SimplePoissonNG
    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
 
    Call VecViewExodusVertex(mesh,locTemp,IOComm,exoOUT,1,1,ierr)
-   Call EXPGV(exoOUT,1,3,(/ sum(energy),sum(work),sum(energy)-sum(work) /),ierr)   
+   If ( (GlobalProperties%splitIO) .OR. (MEF90_MyRank == 0)) Then
+      Call EXPGV(exoOUT,1,3,(/ sum(energy),sum(work),sum(energy)-sum(work) /),ierr)   
+   End If
    Call DMrestoreLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
 
    !!!
