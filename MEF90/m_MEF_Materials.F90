@@ -6,21 +6,25 @@ Module m_MEF_Materials_Types
 
    Type MEF90_MatProp2D_Type
       Sequence
-      PetscReal                     :: Density                 ! rho
-      PetscReal                     :: FractureToughness       ! Gc
-      Type(MatS2D)                  :: ThermalDiffusivity      ! 
-      Type(MatS2D)                  :: LinearThermalExpansion  ! 
-      Type(Tens4OS2D)               :: HookesLaw         
+      PetscReal                     :: Density                    ! rho
+      PetscReal                     :: FractureToughness          ! Gc
+      PetscReal                     :: SpecificHeat               ! Cp
+      !PetscReal                     :: SurfaceThermalConductivity ! H
+      Type(MatS2D)                  :: ThermalConductivity        ! K
+      Type(MatS2D)                  :: LinearThermalExpansion     ! alpha
+      Type(Tens4OS2D)               :: HookesLaw                  ! A
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90_MatProp2D_Type
 
    Type MEF90_MatProp3D_Type
       Sequence
-      PetscReal                     :: Density                 ! rho
-      PetscReal                     :: FractureToughness       ! Gc
-      Type(MatS3D)                  :: ThermalDiffusivity      ! 
-      Type(MatS3D)                  :: LinearThermalExpansion  ! 
-      Type(Tens4OS3D)               :: HookesLaw         
+      PetscReal                     :: Density                    ! rho
+      PetscReal                     :: FractureToughness          ! Gc
+      PetscReal                     :: SpecificHeat               ! Cp
+      !!!PetscReal                     :: SurfaceThermalConductivity ! H This is NOT a material property
+      Type(MatS3D)                  :: ThermalConductivity        ! K
+      Type(MatS3D)                  :: LinearThermalExpansion     ! alpha
+      Type(Tens4OS3D)               :: HookesLaw                  ! A
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90_MatProp3D_Type
    
@@ -29,7 +33,9 @@ Module m_MEF_Materials_Types
    Type(MEF90_MatProp2D_Type),Parameter     :: MEF90_Mathium2D = MEF90_MatProp2D_Type ( &
       1.0_Kr,                                          & ! Density
       1.0_Kr,                                          & ! FractureToughness
-      MEF90_MatS2D_Identity,                           & ! ThermalDiffusivity
+      1.0_Kr,                                          & ! SpecificHeat
+      !1.0_Kr,                                          & ! SurfaceThermalConductivity
+      MEF90_MatS2D_Identity,                           & ! ThermalConductivity
       MEF90_MatS2D_Identity,                           & ! LinearThermalExpansion
       MEF90_Tens4OS2D_Identity,                        & ! HookesLaw
       "MEF90_Mathium2D")  
@@ -37,7 +43,9 @@ Module m_MEF_Materials_Types
    Type(MEF90_MatProp3D_Type),Parameter     :: MEF90_Mathium3D = MEF90_MatProp3D_Type ( &
       1.0_Kr,                                          & ! Density
       1.0_Kr,                                          & ! FractureToughness
-      MEF90_MatS3D_Identity,                           & ! ThermalDiffusivity
+      1.0_Kr,                                          & ! SpecificHeat
+      !1.0_Kr,                                          & ! SurfaceThermalConductivity
+      MEF90_MatS3D_Identity,                           & ! ThermalConductivity
       MEF90_MatS3D_Identity,                           & ! LinearThermalExpansion
       MEF90_Tens4OS3D_Identity,                        & ! HookesLaw
       "MEF90_Mathium3D")  
@@ -111,11 +119,8 @@ Module m_MEF_Materials
       Module Procedure PetscBagRegisterMEF90_MatProp2D,PetscBagRegisterMEF90_MatProp3D
    End Interface
    
-   Interface MEF90_MatPropView
-     Module procedure MEF90_MatProp2DView,MEF90_MatProp3DView
-   End Interface
-   
-   PetscSizeT,protected   :: sizeofMEF90_MatProp2D,sizeofMEF90_MatProp3D
+   PetscSizeT,protected   :: sizeofMEF90_MatProp2D
+   PetscSizeT,protected   :: sizeofMEF90_MatProp3D
 
 
 Contains
@@ -147,14 +152,17 @@ Contains
       Call PetscBagGetDataMEF90_MatProp2D(bag,matprop,ierr)
       Call PetscBagSetName(bag,trim(name),"MatProp2D object: material properties",ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
-      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','density (rho)',ierr)
-      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','Fracture toughness (G_c)',ierr)
-      matprop%ThermalDiffusivity = default%ThermalDiffusivity
-      Call PetscBagRegisterRealArray(bag,matprop%ThermalDiffusivity,3,'ThermalDiffusivity','ThermalDiffusivity (kappa)',ierr)
+      
+      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','density (rho) [kg.m^(-3)])=',ierr)
+      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','Fracture toughness (G_c) [N.m^(-1)]',ierr)
+      Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','Specific Heat (Cp) [J.kg^(-1).K^(-1)]',ierr)
+      !!!Call PetscBagRegisterReal(bag,matprop%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','Surface Thermal Conductivity (H) [J.m^(-3).s^(-1).K^(-1)]',ierr)
+      matprop%ThermalConductivity = default%ThermalConductivity
+      Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','ThermalConductivity (K [J.m^(-1).s^(-1).K^(-1)])',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','Linear Thermal Expansion (alpha)',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','Linear Thermal Expansion (alpha) [K^(-1)]',ierr)
       matprop%HookesLaw = default%HookesLaw
-      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','Hooke''s law (A)',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','Hooke''s law (A) [N.m^(-2)]',ierr)
       Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','Material name',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90_MatProp2D
@@ -171,82 +179,21 @@ Contains
       Call PetscBagGetDataMEF90_MatProp3D(bag,matprop,ierr)
       Call PetscBagSetName(bag,trim(name),"MatProp3D object: material properties",ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
-      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','density (rho)',ierr)
-      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','Fracture toughness (G_c)',ierr)
-      matprop%ThermalDiffusivity = default%ThermalDiffusivity
-      Call PetscBagRegisterRealArray(bag,matprop%ThermalDiffusivity,6,'ThermalDiffusivity','ThermalDiffusivity (kappa)',ierr)
+
+      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','density (rho) [kg.m^(-3)])=',ierr)
+      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','Fracture toughness (G_c) [N.m^(-1)]',ierr)
+      Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','Specific Heat (Cp) [J.kg^(-1).K^(-1)]',ierr)
+      !!!Call PetscBagRegisterReal(bag,matprop%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','Surface Thermal Conductivity (H) [J.m^(-3).s^(-1).K^(-1)]',ierr)
+      matprop%ThermalConductivity = default%ThermalConductivity
+      Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','ThermalConductivity (K [J.m^(-1).s^(-1).K^(-1)])',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','Linear Thermal Expansion (alpha)',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','Linear Thermal Expansion (alpha) [K^(-1)]',ierr)
       matprop%HookesLaw = default%HookesLaw
-      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','Hooke''s law (A)',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','Hooke''s law (A) [N.m^(-2)]',ierr)
       Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','Material name',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90_MatProp3D
 
-
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90_MatProp2DView"
-   Subroutine MEF90_MatProp2DView(MatProp,viewer,ierr)
-      Type(MEF90_MatProp2D_Type),Intent(IN) :: MatProp
-      Type(PetscViewer),Intent(IN)          :: viewer
-      PetscErrorCode,Intent(OUT)            :: ierr
-      
-      Character(len=MEF90_MXSTRLEN+100)         :: IOBuffer
-
-      Write(IOBuffer,100) trim(MatProp%Name)
-      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,*) "\n"
-      Call PetscViewerASCIIPrintf(viewer,IOBuffer,ierr);CHKERRQ(ierr)
-
-      Write(IOBuffer,101) MatProp%Density
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,102) MatProp%FractureToughness
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,103) MatProp%ThermalDiffusivity
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,104) MatProp%LinearThermalExpansion
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,105) MatProp%HookesLaw
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      
-100 Format("Name:...................",A)
-101 Format("Density:................",ES12.5)
-102 Format("FractureToughness:......",ES12.5)
-103 Format("ThermalDiffusivity:.....",3(ES12.5,'  '))
-104 Format("LinearThermalExpansion:.",3(ES12.5,'  '))
-105 Format("HookesLaw:..............",6(ES12.5,'  '))
-   End Subroutine MEF90_MatProp2DView  
-   
-#undef __FUNCT__
-#define __FUNCT_ "MEF90_MatProp3DView"
-   Subroutine MEF90_MatProp3DView(MatProp,viewer,ierr)
-      Type(MEF90_MatProp3D_Type),Intent(IN) :: MatProp
-      Type(PetscViewer),Intent(IN)          :: viewer
-      PetscErrorCode,Intent(OUT)            :: ierr
-      
-      Character(len=MEF90_MXSTRLEN)         :: IOBuffer
-      Write(IOBuffer,100) Trim(MatProp%Name)
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,101) MatProp%Density
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,102) MatProp%FractureToughness
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,103) MatProp%ThermalDiffusivity
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,104) MatProp%LinearThermalExpansion
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,105) MatProp%HookesLaw
-      Call PetscViewerASCIIPrintf(IOBuffer,viewer,ierr);CHKERRQ(ierr)
-      
-100 Format("Name:...................",A)
-101 Format("Density:................",ES12.5)
-102 Format("FractureToughness:......",ES12.5)
-103 Format("ThermalDiffusivity:.....",6(ES12.5,'  '))
-104 Format("LinearThermalExpansion:.",6(ES12.5,'  '))
-105 Format("HookesLaw:..............",21(ES12.5,'  '))
-   End Subroutine MEF90_MatProp3DView  
-   
 
 !!! Subroutine generating various types of Hooke's laws 
 #undef __FUNCT__
