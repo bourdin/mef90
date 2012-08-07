@@ -15,11 +15,21 @@ Program  SimplePoissonNG
    Use petsc
    Implicit NONE   
 
-   Type(PoissonGlobalProperties_Type),parameter    :: defaultGlobalProperties    = PoissonGlobalProperties_Type(0,PETSC_FALSE)
+   Type(PoissonGlobalProperties_Type),parameter    :: defaultGlobalProperties = PoissonGlobalProperties_Type( &
+                                                         0,                   & ! verbose
+                                                         Poisson_EXOSingle,   & ! FileFormat
+                                                         Poisson_Replace,     & ! FileMode
+                                                         Poisson_MIL,         & ! LoadingType
+                                                         0.0_Kr,              & ! TimeMin
+                                                         0.0_kr,              & ! TimeMax
+                                                         1,                   & ! numTimeStep
+                                                         1,                   & ! tempOffset
+                                                         2)                     ! fluxoffset
+                                                         
    Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr,0.0_Kr,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
-   Character(len=MEF90_MXSTRLEN)                   :: prefix,filename
+   Character(len=MEF90_MXSTRLEN)                   :: prefix
    Type(MEF90Ctx_Type)                             :: MEF90Ctx
    Type(DM)                                        :: mesh,tmp_mesh
    PetscErrorCode                                  :: iErr
@@ -33,9 +43,7 @@ Program  SimplePoissonNG
    Type(Mat)                                       :: matTemp
    Type(Vec)                                       :: solTemp,resTemp,locTemp
    !Type(Vec)                                       :: ubTemp,lbTemp
-   Integer                                         :: cpu_ws,io_ws,exoIN=0,exoOUT=0
-   Real                                            :: exo_version
-   Integer                                         :: exoerr
+   Integer                                         :: exoIN=0,exoOUT=0
    MPI_Comm                                        :: IOComm
    PetscReal,Dimension(:),Pointer                  :: energy,work
    PetscInt,dimension(:),Pointer                   :: setID
@@ -62,40 +70,8 @@ Program  SimplePoissonNG
    End If
 
    Call MEF90CtxPoissonGlobalPropertiesCreate(MEF90Ctx,defaultGlobalProperties,ierr)
-   Call PetscBagGetDataPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)      
-   !!!
-   !!! Open INPUT mesh
-   !!!
-   If (MEF90_MyRank == 0) Then
-      cpu_ws = 8
-      io_ws = 8
-      filename = Trim(prefix)//'.gen'
-      exoIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
-      If (GlobalProperties%verbose > 0) Then
-         Write(IOBuffer,99) exoERR,exoIN
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr)
-      End If
-99 Format('EXOPEN status: ',I4,' exoIN: ',I4,'\n')         
-      If (exoerr < 0) Then
-         Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
-         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr);
-         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
-      EndIf
-   End If
-   
-   !!!
-   !!! open OUTPUT mesh
-   !!!
-   If (GlobalProperties%splitIO) Then
-      IOComm = PETSC_COMM_SELF
-      Write(filename,100) trim(prefix),MEF90_MyRank
-   Else
-      IOComm = PETSC_COMM_WORLD
-      Write(filename,101) trim(prefix)
-   End If
-100 Format(A,'-',I4.4,'.gen')
-101 Format(A,'_out.gen')
-
+   Call PetscBagGetDataPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)  
+   Call PoissonEXOOpenInputFile(prefix,exoIN,ierr);CHKERRQ(ierr)
    !!!
    !!! Read DMMesh from exoIN
    !!!
@@ -108,6 +84,9 @@ Program  SimplePoissonNG
       Call DMDestroy(Tmp_mesh,ierr);CHKERRQ(ierr)
    End If
 
+   !!! Prepare output file
+   Call PoissonPrepareOutput(mesh,prefix,exoIN,exoOUT,IOComm,MEF90Ctx,ierr);CHKERRQ(ierr)
+   
    !!! 
    !!! Create SNES and associate mesh
    !!!
@@ -235,32 +214,7 @@ Program  SimplePoissonNG
 
    !!! Save results
    !!!
-   !!! format the output file
-   !!!
-   If (GlobalProperties%splitIO) Then
-      cpu_ws = 8
-      io_ws = 8
-      exoOUT = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
-      Call DMmeshViewExodusSplit(mesh,exoOUT,ierr)
-      Call EXPVP (exoOUT,'g',3,ierr)
-      Call EXPVAN(exoOUT,'g',3,(/'Energy         ','Ext Fluxes work','Total Energy   '/),ierr)
-      Call EXPVP (exoOUT,'n',1,ierr)
-      Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
-      !Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
-   Else
-      If (MEF90_MyRank == 0) Then
-         cpu_ws = 8
-         io_ws = 8
-         exoOUT = EXCRE(filename,EXCLOB,cpu_ws,io_ws,ierr)
-         Call EXCOPY(exoIN,exoOUT,ierr)
-         Call EXPVP (exoOUT,'g',3,ierr)
-         Call EXPVAN(exoOUT,'g',3,(/'Elastic Energy ','Ext Fluxes work','Total Energy   '/),ierr)
-         Call EXPVP (exoOUT,'n',1,ierr)
-         Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
-         !Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
-      End If
-   End If
-
+   
    !!! 
    !!! Write in exo file
    !!!
@@ -276,7 +230,7 @@ Program  SimplePoissonNG
    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
 
    Call VecViewExodusVertex(mesh,locTemp,IOComm,exoOUT,1,1,ierr)
-   If ( (GlobalProperties%splitIO) .OR. (MEF90_MyRank == 0)) Then
+   If ( (GlobalProperties%FileFormat == Poisson_EXOSplit) .OR. (MEF90_MyRank == 0)) Then
       Call EXPGV(exoOUT,1,3,(/ sum(energy),sum(work),sum(energy)-sum(work) /),ierr)   
    End If
    Call DMrestoreLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
