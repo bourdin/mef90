@@ -153,17 +153,17 @@ Contains
       Call PetscBagSetName(bag,trim(name),"MatProp2D object: material properties",ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
       
-      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','density (rho) [kg.m^(-3)])=',ierr)
-      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','Fracture toughness (G_c) [N.m^(-1)]',ierr)
-      Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','Specific Heat (Cp) [J.kg^(-1).K^(-1)]',ierr)
+      Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
+      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr)
+      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
+      Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
       !!!Call PetscBagRegisterReal(bag,matprop%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','Surface Thermal Conductivity (H) [J.m^(-3).s^(-1).K^(-1)]',ierr)
       matprop%ThermalConductivity = default%ThermalConductivity
-      Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','ThermalConductivity (K [J.m^(-1).s^(-1).K^(-1)])',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','Linear Thermal Expansion (alpha) [K^(-1)]',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
       matprop%HookesLaw = default%HookesLaw
-      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','Hooke''s law (A) [N.m^(-2)]',ierr)
-      Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','Material name',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90_MatProp2D
 
@@ -180,17 +180,17 @@ Contains
       Call PetscBagSetName(bag,trim(name),"MatProp3D object: material properties",ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
 
-      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','density (rho) [kg.m^(-3)])=',ierr)
-      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','Fracture toughness (G_c) [N.m^(-1)]',ierr)
-      Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','Specific Heat (Cp) [J.kg^(-1).K^(-1)]',ierr)
+      Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
+      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr)
+      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
+      Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
       !!!Call PetscBagRegisterReal(bag,matprop%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','Surface Thermal Conductivity (H) [J.m^(-3).s^(-1).K^(-1)]',ierr)
       matprop%ThermalConductivity = default%ThermalConductivity
-      Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','ThermalConductivity (K [J.m^(-1).s^(-1).K^(-1)])',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','Linear Thermal Expansion (alpha) [K^(-1)]',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
       matprop%HookesLaw = default%HookesLaw
-      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','Hooke''s law (A) [N.m^(-2)]',ierr)
-      Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','Material name',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90_MatProp3D
 
