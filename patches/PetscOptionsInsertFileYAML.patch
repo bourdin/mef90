@@ -1,53 +1,19 @@
-diff -r 93f374d090c4 src/sys/examples/tutorials/ex79.c
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/sys/examples/tutorials/ex79.c	Mon Jul 30 15:35:58 2012 -0500
-@@ -0,0 +1,19 @@
-+static char help[] = "Example for PetscOptionInsertFile_YAML\n";
-+#include <petscsys.h>
-+
-+int main(int argc,char **argv)
-+{
-+  PetscErrorCode  ierr;
-+  char            filename[PETSC_MAX_PATH_LEN];
-+  PetscBool       flg;
-+
-+  PetscInitialize(&argc,&argv,(char *)0,help);
-+  ierr = PetscOptionsGetString(PETSC_NULL,"-f",filename,sizeof filename,&flg);
-+  if (flg) {
-+    ierr = PetscOptionsInsertFile_YAML(PETSC_COMM_WORLD,filename,PETSC_TRUE);CHKERRQ(ierr);
-+  }
-+  ierr = PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-+  ierr = PetscFinalize();
-+  return(0);
-+}
-+
-diff -r 93f374d090c4 src/sys/examples/tutorials/ex79f90.F90
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/sys/examples/tutorials/ex79f90.F90	Mon Jul 30 15:35:58 2012 -0500
-@@ -0,0 +1,19 @@
-+      program ex79f90
-+#include "finclude/petscdef.h"
-+      use petsc
-+      implicit none
-+   
-+      PetscErrorCode                            :: ierr
-+      Character(len=256)                        :: filename
-+      PetscBool                                 :: flg
-+      
-+      Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-+      call PetscOptionsGetString(PETSC_NULL_CHARACTER,"-f",filename,flg,ierr)
-+      if (flg) then
-+         call PetscOptionsInsertFile_YAML(PETSC_COMM_WORLD,filename,PETSC_TRUE,ierr);
-+      end if
-+      call PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD,ierr)
-+      Call PetscFinalize(ierr)
-+      end program ex79f90
-+
-+
-diff -r 93f374d090c4 src/sys/examples/tutorials/makefile
---- a/src/sys/examples/tutorials/makefile	Sat Jul 28 11:35:56 2012 -0500
-+++ b/src/sys/examples/tutorials/makefile	Mon Jul 30 15:35:58 2012 -0500
-@@ -61,6 +61,15 @@ ex7: ex7.o   chkopts
+diff --git a/include/petscoptions.h b/include/petscoptions.h
+--- a/include/petscoptions.h
++++ b/include/petscoptions.h
+@@ -32,7 +32,7 @@
+ PETSC_EXTERN PetscErrorCode PetscOptionsInsert(int*,char ***,const char[]);
+ PETSC_EXTERN PetscErrorCode PetscOptionsInsertFile(MPI_Comm,const char[],PetscBool );
+ #if defined(PETSC_HAVE_YAML)
+-PETSC_EXTERN PetscErrorCode PetscOptionsInsertFile_YAML(MPI_Comm,const char[],PetscBool);
++PETSC_EXTERN PetscErrorCode PetscOptionsInsertFileYAML(MPI_Comm,const char[],PetscBool);
+ #endif
+ PETSC_EXTERN PetscErrorCode PetscOptionsInsertString(const char[]);
+ PETSC_EXTERN PetscErrorCode PetscOptionsDestroy(void);
+diff --git a/src/sys/examples/tutorials/makefile b/src/sys/examples/tutorials/makefile
+--- a/src/sys/examples/tutorials/makefile
++++ b/src/sys/examples/tutorials/makefile
+@@ -61,6 +61,15 @@
  ex8f90: ex8f90.o  chkopts
  	-${FLINKER} -o ex8f90 ex8f90.o ${PETSC_SYS_LIB}
  	${RM} ex8f90.o
@@ -63,166 +29,22 @@ diff -r 93f374d090c4 src/sys/examples/tutorials/makefile
  #
  # ------------------------------------------------------------------------
  #
-@@ -112,6 +121,12 @@ runex5f90:
- 	   else echo ${PWD} ; echo "Possible problem with with ex5f90_1, diffs above \n========================================="; fi; \
- 	   ${RM} -f ex5f90_1.tmp 
+@@ -121,6 +130,12 @@
+ 	   else echo ${PWD} ; echo "Possible problem with with ex8f90_1, diffs above \n========================================="; fi; \
+ 	   ${RM} -f ex8f90_1.tmp 
  
 +runex79:
 +	-@${MPIEXEC} -n 1 ./ex79 -f petsc.yaml > ex79_1.tmp 5>&1; \
 +	   if (${DIFF} output/ex79_1.out ex79_1.tmp) then true; \
-+	   else echo ${PWD} ; echo "Possible problem with with ex5_1, diffs above \n========================================="; fi; \
++	   else echo ${PWD} ; echo "Possible problem with with ex79_1, diffs above \n========================================="; fi; \
 +	   ${RM} -f ex79_1.tmp 
 +
- runex6:
- 	-@${MPIEXEC} -n 1 ./ex6 
- 
-diff -r 93f374d090c4 src/sys/examples/tutorials/output/ex79_1.out
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/sys/examples/tutorials/output/ex79_1.out	Mon Jul 30 15:35:58 2012 -0500
-@@ -0,0 +1,47 @@
-+#PETSc Option Table entries:
-+-a0img_url /finex/html/img/
-+-a0title Finex
-+-a1img_url /finex/html/img/
-+-a1title Finex
-+-blabla 1
-+-cs0001_force 0.
-+-cs0010_force 0.
-+-cs0010_hookeslaw 1,2,3,4,5,6
-+-cs0020_force 0.
-+-f petsc.yaml
-+-oula oulala
-+-prefix ../TestMeshes/SquareNG-tri3
-+-temp_KSP_monitor
-+-temp_KSP_type cg
-+-temp_snes_type ksponly
-+-verbose 1
-+-vs0010_temp 0.
-+-vs0010_tempBC 1
-+-vs0020_temp 1.
-+-vs0020_tempBC 1
-+-vs0030_temp 1.
-+-vs0030_tempBC 1
-+#End of PETSc Option Table entries
-+WARNING! There are options you set that were not used!
-+WARNING! could be spelling mistake, etc!
-+Option left: name:-a0img_url value: /finex/html/img/
-+Option left: name:-a0title value: Finex
-+Option left: name:-a1img_url value: /finex/html/img/
-+Option left: name:-a1title value: Finex
-+Option left: name:-blabla value: 1
-+Option left: name:-cs0001_force value: 0.
-+Option left: name:-cs0010_force value: 0.
-+Option left: name:-cs0010_hookeslaw value: 1,2,3,4,5,6
-+Option left: name:-cs0020_force value: 0.
-+Option left: name:-oula value: oulala
-+Option left: name:-prefix value: ../TestMeshes/SquareNG-tri3
-+Option left: name:-temp_KSP_monitor no value 
-+Option left: name:-temp_KSP_type value: cg
-+Option left: name:-temp_snes_type value: ksponly
-+Option left: name:-verbose value: 1
-+Option left: name:-vs0010_temp value: 0.
-+Option left: name:-vs0010_tempBC value: 1
-+Option left: name:-vs0020_temp value: 1.
-+Option left: name:-vs0020_tempBC value: 1
-+Option left: name:-vs0030_temp value: 1.
-+Option left: name:-vs0030_tempBC value: 1
-diff -r 93f374d090c4 src/sys/examples/tutorials/petsc.yaml
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/sys/examples/tutorials/petsc.yaml	Mon Jul 30 15:35:58 2012 -0500
-@@ -0,0 +1,39 @@
-+oula: oulala
-+blabla: 1
-+prefix: ../TestMeshes/SquareNG-tri3
-+verbose: 1
-+a1title   : Finex 2011
-+a1img_url : /finex/html/img/
-+
-+vs0010: &clamped {tempBC: 1, temp:   0. }
-+
-+a0title   : Finex 2011
-+a0img_url : /finex/html/img/
-+
-+vs0020:
-+    tempBC: 1
-+    temp:   1.
-+#vs0040: *clamped
-+cs0001:
-+    force:  0.
-+cs0010:
-+    force:  0.
-+    hookeslaw: 1,2,3,4,5,6
-+cs0020:
-+    force:  0.
-+    #hookeslaw:
-+    #  - 1
-+    #  - 2
-+    #  - 3
-+    #  - 4
-+    #  - 5
-+    #  - 6
-+temp:
-+    snes:
-+        type: ksponly
-+    KSP:
-+        type: cg
-+        monitor:
-+vs0030:
-+    tempBC: 1
-+    temp:   1.
-diff -r 93f374d090c4 src/sys/yaml/ftn-custom/makefile
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/sys/yaml/ftn-custom/makefile	Mon Jul 30 15:35:58 2012 -0500
-@@ -0,0 +1,16 @@
-+
-+#requiresdefine   'PETSC_HAVE_FORTRAN'
-+ALL: lib
-+CFLAGS   =
-+FFLAGS   =
-+SOURCEC  = zyamlimplsf.c
-+OBJSC    = ${SOURCEC:.c=.o}
-+SOURCEF  =
-+SOURCEH  =
-+DIRS     =
-+LIBBASE  = libpetscsys
-+LOCDIR   = src/sys/yaml/ftn-custom/
-+
-+include ${PETSC_DIR}/conf/variables
-+include ${PETSC_DIR}/conf/rules
-+include ${PETSC_DIR}/conf/test
-diff -r 93f374d090c4 src/sys/yaml/ftn-custom/zyamlimplsf.c
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/sys/yaml/ftn-custom/zyamlimplsf.c	Mon Jul 30 15:35:58 2012 -0500
-@@ -0,0 +1,26 @@
-+/*
-+  This file contains Fortran stubs for Options routines. 
-+  These are not generated automatically since they require passing strings
-+  between Fortran and C.
-+*/
-+
-+#include <petsc-private/fortranimpl.h> 
-+
-+#ifdef PETSC_HAVE_FORTRAN_CAPS
-+#define petscoptionsinsertfile_yaml_            PETSCOPTIONSINSERTFILE_YAML
-+#elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE)
-+#define petscoptionsinsertfile_yaml_            petscoptionsinsertfile_yaml
-+#endif
-+
-+EXTERN_C_BEGIN
-+
-+void PETSC_STDCALL petscoptionsinsertfile_yaml_(MPI_Fint *comm,CHAR file PETSC_MIXED_LEN(len),PetscBool  *require,PetscErrorCode *ierr PETSC_END_LEN(len))
-+{
-+  char *c1;
-+
-+  FIXCHAR(file,len,c1);
-+  *ierr = PetscOptionsInsertFile_YAML(MPI_Comm_f2c(*comm),c1,*require);
-+  FREECHAR(file,c1);
-+}
-+
-+EXTERN_C_END
-diff -r 93f374d090c4 src/sys/yaml/makefile
---- a/src/sys/yaml/makefile	Sat Jul 28 11:35:56 2012 -0500
-+++ b/src/sys/yaml/makefile	Mon Jul 30 15:35:58 2012 -0500
+ TESTEXAMPLES_C		  = ex1.PETSc runex1 ex1.rm ex2.PETSc runex2 ex2.rm \
+                             ex3.PETSc runex3 ex3.rm ex4.PETSc runex4 ex4.rm ex6.PETSc runex6 ex6.rm 
+ TESTEXAMPLES_C_NOCOMPLEX  = ex5.PETSc runex5 ex5.rm
+diff --git a/src/sys/yaml/makefile b/src/sys/yaml/makefile
+--- a/src/sys/yaml/makefile
++++ b/src/sys/yaml/makefile
 @@ -2,7 +2,7 @@
  #requirespackage 'PETSC_HAVE_YAML'
  
@@ -232,10 +54,10 @@ diff -r 93f374d090c4 src/sys/yaml/makefile
  SOURCEC   = yamlimpls.c
  OBJSC     = yamlimpls.o
  DIRS      =
-diff -r 93f374d090c4 src/sys/yaml/yamlimpls.c
---- a/src/sys/yaml/yamlimpls.c	Sat Jul 28 11:35:56 2012 -0500
-+++ b/src/sys/yaml/yamlimpls.c	Mon Jul 30 15:35:58 2012 -0500
-@@ -1,780 +1,131 @@
+diff --git a/src/sys/yaml/yamlimpls.c b/src/sys/yaml/yamlimpls.c
+--- a/src/sys/yaml/yamlimpls.c
++++ b/src/sys/yaml/yamlimpls.c
+@@ -1,780 +1,129 @@
 -#include "yamlimpls.h"
 +#include <petscsys.h>        /*I  "petscsys.h"   I*/
 +#include <yaml.h>
@@ -256,7 +78,6 @@ diff -r 93f374d090c4 src/sys/yaml/yamlimpls.c
 +  yaml_event_t    event;
 +  int             storage = VAR; /* mapping cannot start with VAL definition w/o VAR key */
 +  char            key[PETSC_MAX_PATH_LEN],option[PETSC_MAX_PATH_LEN],prefix[PETSC_MAX_PATH_LEN];
-+  PetscBool       down = PETSC_FALSE;
 +  PetscErrorCode  ierr;
 +
 +  PetscFunctionBegin;
@@ -989,11 +810,12 @@ diff -r 93f374d090c4 src/sys/yaml/yamlimpls.c
  }
  
  #undef __FUNCT__
- #define __FUNCT__ "PetscOptionsInsertFile_YAML"
+-#define __FUNCT__ "PetscOptionsInsertFile_YAML"
 -PetscErrorCode PetscOptionsInsertFile_YAML(MPI_Comm comm, const char file[], PetscBool require)
++#define __FUNCT__ "PetscOptionsInsertFileYAML"
 +/*C
 +  
-+  PetscOptionsInsertFile_YAML - Insert a YAML-formatted file in the option database
++  PetscOptionsInsertFileYAML - Insert a YAML-formatted file in the option database
 +  
 +  Collective on MPI_Comm
 +  
@@ -1020,7 +842,7 @@ diff -r 93f374d090c4 src/sys/yaml/yamlimpls.c
 +          PetscOptionsBoolGroupBegin(), PetscOptionsBoolGroup(), PetscOptionsBoolGroupEnd(),
 +          PetscOptionsList(), PetscOptionsEList(), PetscOptionsInsertFile()
 +C*/
-+extern PetscErrorCode PetscOptionsInsertFile_YAML(MPI_Comm comm,const char file[],PetscBool require)
++extern PetscErrorCode PetscOptionsInsertFileYAML(MPI_Comm comm,const char file[],PetscBool require)
  {
 -  PetscErrorCode ierr, ierr_file;
 -  options_list_t options_list;
@@ -1037,7 +859,6 @@ diff -r 93f374d090c4 src/sys/yaml/yamlimpls.c
 +  yaml_parser_t  parser;
 +  int            lvl=0;
 +  FILE          *source;
-+  PetscViewer    viewer;
 +  PetscInt       offset = 0;
 +  int            stat   = 1;
 +  
@@ -1126,148 +947,3 @@ diff -r 93f374d090c4 src/sys/yaml/yamlimpls.c
 -  ierr = PetscFree(vstring);CHKERRQ(ierr);
    PetscFunctionReturn(0);
  }
-diff -r 93f374d090c4 src/sys/yaml/yamlimpls.h
---- a/src/sys/yaml/yamlimpls.h	Sat Jul 28 11:35:56 2012 -0500
-+++ /dev/null	Thu Jan 01 00:00:00 1970 +0000
-@@ -1,141 +0,0 @@
--#include <petscsys.h>
--#include <yaml.h>
--
--/* The option structure */
--typedef struct option_s {
--  /* The option name */
--  char *name;
--  /* The group the option is in. Defaults to default */
--  char *group;
--  struct {
--    /* The array of strings containing the arguments */
--    char **args;
--    /* The number of arguments in the list */
--    int count;
--  } arguments;
--} option_t;
--
--/* The options_list structure */
--typedef struct options_list_s {
--  /* The array containing the options */
--  option_t *options;
--  /* The length of the options list */
--  int count;
--} options_list_t;
--
--/**
-- * This is a generic function to call on the proper function to populate an options list.
-- *
-- * The application is responsible for freeing any buffers associated with the produced
-- * options_list object using the options_list_delete function.
-- *
-- * @param[in]   filename       A string containing the filename
-- * @param[out]  options_list   An empty options_list_t object.
-- *
-- * returns 1 if the function succeeded, 0 on error.
-- */
--int
--options_list_populate(char *filename, options_list_t *options_list);
--
--/**
-- * Reads a YAML file from a string and produces an options_list.
-- *
-- * The application is responsible for freeing any buffers assiciated with the produced
-- * options_list object using the options_list_delete function.
-- *
-- * @param[in]   str            A string containing the YAML file. 
-- * @param[out]  options_list   An empty options_list object.
-- *
-- * returns 1 if the function succeeded, 0 on error.
-- */
--int
--options_list_populate_yaml(char *str, options_list_t *options_list);
--
--/**
-- * Destroy an options_list
-- *
-- * @param[in,out]  options_list  An options_list object.
-- */
--void
--options_list_delete(options_list_t *options_list);
--
--/**
-- * Reads data from a file and copies it to a string.
-- *
-- * The application is responsible for freeing the str buffer.
-- *
-- * @param[in]    filename    The name of the file to be read to string.
-- * @param[out]   str         The address of a NULL char* object.
-- *
-- * returns 1 on success, 0 on error.
-- */
--PetscErrorCode
--file_to_string(char *filename, char **str);
--
--/* The grouping_stack_group structure */
--typedef struct grouping_stack_group_s {
--  /* The name of the group */
--  char *name;
--  /* The event index the group starts at */
--  int start;
--  /* The event index the group ends at */
--  int end;
--} grouping_stack_group_t;
--
--/* The grouping_stack structure */
--typedef struct grouping_stack_s {
--  /* The array of groups in the stack */
--  grouping_stack_group_t *groups;
--  /* The number of elements in the string array */
--  int count;
--} grouping_stack_t;
--
--/* The alias_key_value structure */
--typedef struct alias_key_value_s {
--  /* The string containing the alias name */
--  char *alias;
--  /* The YAML event corresponding with the name */
--  yaml_event_t event;
--} alias_key_value_t;
--
--/* The alias_list structure */
--typedef struct alias_list_s {
--  /* The length of the list */
--  int count;
--  /* The list itself */
--  alias_key_value_t *list;
--} alias_list_t;
--
--/**
-- * Generic copy constructor for a YAML event.
-- *
-- * @param[out]  out  An uninitialized yaml_event_t object.
-- * @param[in]   in   The yaml_event_t object to copy.
-- *
-- * returns 1 if the function succeeded, 0 on error.
-- */
--int
--yaml_event_initialize(yaml_event_t *out, yaml_event_t *in);
--
--/**
-- * Populates a list of alias information from parsing a yaml file.
-- * This is only called on by the options_list_populate_yaml function.
-- *
-- * The application is responsible for freeing any buffers associated
-- * with the alias_list_t object by use of the alias_list_delete() function.
-- *
-- * @param[in]   str        A string containing the YAML document to be read.
-- * @param[out]  list       An empty alias_list_t object.
-- *
-- * returns 1 on success.
-- */
--int
--alias_list_populate_yaml(char *str, alias_list_t *list);
--
--/**
-- * Destroy an alias_list_t object.
-- *
-- * @param[in,out]   list   An alias_list_t object.
-- */
--void
--alias_list_delete(alias_list_t *list);
