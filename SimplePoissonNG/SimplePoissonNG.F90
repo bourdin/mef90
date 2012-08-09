@@ -41,7 +41,7 @@ Program  SimplePoissonNG
    Type(KSP)                                       :: kspTemp
    Type(PC)                                        :: pcTemp
    Type(Mat)                                       :: matTemp
-   Type(Vec)                                       :: solTemp,resTemp,locTemp
+   Type(Vec)                                       :: solTemp,resTemp,locTemp,RHSTemp
    !Type(Vec)                                       :: ubTemp,lbTemp
    Integer                                         :: exoIN=0,exoOUT=0
    MPI_Comm                                        :: IOComm
@@ -127,6 +127,7 @@ Program  SimplePoissonNG
    Call DMMeshCreateVector(mesh,secTemp,solTemp,ierr);CHKERRQ(ierr)
 
    Call VecDuplicate(solTemp,resTemp,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(solTemp,RHSTemp,ierr);CHKERRQ(ierr)
       
    !!! Adding a null space when some boundary conditions are prescribes breaks everything...
    !!! Need to add a flag and make adding the null space optional
@@ -178,7 +179,8 @@ Program  SimplePoissonNG
 
    !!! Solve Poisson Equation
    Call SimplePoissonFormInitialGuess(snesTemp,solTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
-   Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
+   Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,1.0_Kr,MEF90Ctx,ierr)
+   Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
 
    !!! Check SNES / KSP convergence
    Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
@@ -245,6 +247,7 @@ Program  SimplePoissonNG
    Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(locTemp,ierr);CHKERRQ(ierr)
+   Call VecDestroy(RHSTemp,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(secTemp,ierr);CHKERRQ(ierr)
    Call DMDestroy(mesh,ierr);CHKERRQ(ierr);
 
