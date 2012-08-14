@@ -41,6 +41,7 @@ Program  SimplePoissonNG
    Type(SNES)                                      :: snesTemp
    Type(KSP)                                       :: kspTemp
    Type(PC)                                        :: pcTemp
+   SNESLineSearch                                  :: linesearchTemp
    Type(Mat)                                       :: matTemp
    Type(Vec)                                       :: solTemp,resTemp,locTemp,RHSTemp
    Integer                                         :: exoIN=0,exoOUT=0
@@ -55,13 +56,16 @@ Program  SimplePoissonNG
    Type(IS)                                        :: CellSetGlobalIS
    Type(Element_Type),Dimension(:),pointer         :: ElemType
       
-   PetscInt                                        :: point,numCell,numVertex
+   PetscInt                                        :: point,numCell,numVertex,numCellSet
    PetscReal,Dimension(:,:),Pointer                :: Coord
    PetscReal,Dimension(:),Pointer                  :: Coord2
    PetscInt                                        :: i,j
    PetscInt                                        :: TimeStepNum=1
    PetscReal,Dimension(:),Pointer                  :: Time
-
+   
+   PetscReal                                       :: rtol,atol,dtol
+   PetscInt                                        :: maxits
+   
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
 
@@ -86,28 +90,12 @@ Program  SimplePoissonNG
    End If
    Call SimplePoissonGetTime(time,exoIN,MEF90Ctx,ierr);CHKERRQ(ierr)
 
-   !!! Prepare output file
-   Call SimplePoissonPrepareOutputEXO(mesh,prefix,exoIN,exoOUT,MEF90Ctx,ierr);CHKERRQ(ierr)
    !!! 
-   !!! Create SNES and associate mesh
+   !!! Create SNES
    !!!
    Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
    Call SNESSetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
    Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
-
-
-   !!! 
-   !!! Create a Section consistent with the element choice
-   !!! The section is named 'default' so that it can be picked as the default
-   !!! layout for all DM vector creation routines
-   !!!
-   Call DMmeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
-   Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
-   Call DMMeshGetSectionReal(mesh,'default',SecTemp,ierr);CHKERRQ(ierr)
-   Do point = numCell,numCell+numVertex-1
-      Call SectionRealSetFiberDimension(SecTemp,point,1,ierr);CHKERRQ(ierr)
-   End Do
-   Call SectionRealAllocate(SecTemp,ierr);CHKERRQ(ierr)
 
    !!! 
    !!! Create PoissonCtx
@@ -115,6 +103,36 @@ Program  SimplePoissonNG
    Call MEF90CtxPoissonVertexSetPropertiesCreate(MEF90Ctx,snesTemp,defaultVertexSetProperties,ierr);CHKERRQ(ierr)
    Call EXOGetCellSetElementType_Scal(PETSC_COMM_WORLD,exoIN,MEF90_DIM,ElemType,ierr)
    Call MEF90CtxPoissonCellSetPropertiesCreate(MEF90Ctx,snesTemp,defaultCellSetProperties,ElemType,ierr);CHKERRQ(ierr)
+
+
+   !!! Stop here if -help is passed
+   !!!
+   !Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,"-help",flg,flg,ierr);CHKERRQ(ierr)
+   !If (flg) Then
+   !   Call MEF90_Finalize()
+   !   STOP
+   !End If
+   
+   !!! 
+   !!! Create a Section consistent with the element choice
+   !!! The section is named 'default' so that it can be picked as the default
+   !!! layout for all DM vector creation routines
+   !!!
+   Call DMmeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
+   Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+   Call DMMeshGetLabelSize(mesh,'Cell Sets',numCellSet,ierr);CHKERRQ(ierr)
+   
+   Call DMMeshGetSectionReal(mesh,'default',SecTemp,ierr);CHKERRQ(ierr)
+   Do point = numCell,numCell+numVertex-1
+      Call SectionRealSetFiberDimension(SecTemp,point,1,ierr);CHKERRQ(ierr)
+   End Do
+   Call SectionRealAllocate(SecTemp,ierr);CHKERRQ(ierr)
+
+   
+
+   !!! Prepare output file
+   Call SimplePoissonPrepareOutputEXO(mesh,prefix,exoIN,exoOUT,MEF90Ctx,ierr);CHKERRQ(ierr)
+
    !!!
    !!! Get Matrix for the Jacobian / SNES and unknown vector
    !!!
@@ -156,11 +174,18 @@ Program  SimplePoissonNG
    If (GlobalProperties%addNullSpace) Then
       Call KSPSetNullSpace(kspTemp,nspTemp,ierr);CHKERRQ(ierr)
    End If
+   Call KSPGetTolerances(kspTemp,rtol,atol,dtol,maxits,ierr);CHKERRQ(ierr)
+   rtol = 1.0D-8
+   Call KSPSetTolerances(kspTemp,rtol,atol,dtol,maxits,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
 
    Call KSPGetPC(kspTemp,pcTemp,ierr);CHKERRQ(ierr)
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
-
+   
+   Call SNESGetSNESLineSearch(snesTemp,linesearchTemp,ierr);CHKERRQ(ierr)
+   Call SNESLineSearchSetType(linesearchTemp,"l2",ierr);CHKERRQ(ierr)
+   Call SNESLineSearchSetFromOptions(linesearchTemp,ierr);CHKERRQ(ierr)
+   
    !!! Add coordinates to the PC (mostly for GAMG)
    Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
    Allocate(coord2(size(coord)))
@@ -173,33 +198,37 @@ Program  SimplePoissonNG
    Call DMMeshRestoreCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
    DeAllocate(coord2)
 
+   !!!
+   !!! Allocate arrays for the energies in each block
+   Allocate(energy(numCellSet),stat=ierr)
+   Allocate(work(numCellSet),stat=ierr)
+   
    !!! Solve Poisson Equation
    Do TimeStepNum = 1, size(time)
       Write(IOBuffer,200) TimeStepNum,time(TimeStepNum)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 200   Format('Solving time step ',I4,': t=',ES12.5,'\n')
 
+      Call VecSet(solTemp,0.0_Kr,ierr);CHKERRQ(ierr)
       Call SimplePoissonFormInitialGuess(snesTemp,solTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
-      Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
+
+      Call VecSet(rhsTemp,0.0_Kr,ierr);CHKERRQ(ierr)
+      !Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
+      Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,1.0_Kr,MEF90Ctx,ierr)
+      !Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
       Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
-
-
       !!! Check SNES / KSP convergence
       Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
       Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
-
       Write(IOBuffer,110) itsTemp,reasonTemp
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 110   Format('SNESTemp converged in in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
    
       !!! Compute energy and work
-      !!! This is one of the few looks that need to be synchronized across processors!
       !!!
       Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Allocate(energy(size(setID)),stat=ierr)
-      Allocate(work(size(setID)),stat=ierr)
    
       Call SimplePoissonEnergies(snesTemp,solTemp,MEF90Ctx,energy,work,ierr)
       Write(IOBuffer,*) '\n'

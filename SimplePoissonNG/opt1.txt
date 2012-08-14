@@ -5,5 +5,5 @@
 -cs0001_flux 0. 
 -cs0010_flux 0. 
 -cs0020_flux 0. 
--temp_snes_type ksponly 
--temp_KSP_monitor 
+#-temp_snes_type ksponly 
+#-temp_KSP_monitor 
