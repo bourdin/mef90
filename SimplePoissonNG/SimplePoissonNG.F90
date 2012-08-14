@@ -19,12 +19,13 @@ Program  SimplePoissonNG
                                                          0,                   & ! verbose
                                                          Poisson_EXOSingle,   & ! FileFormat
                                                          Poisson_Replace,     & ! FileMode
-                                                         Poisson_MIL,         & ! LoadingType
+                                                         Poisson_CST,         & ! LoadingType
                                                          0.0_Kr,              & ! TimeMin
                                                          0.0_kr,              & ! TimeMax
                                                          1,                   & ! numTimeStep
                                                          1,                   & ! tempOffset
-                                                         2)                     ! fluxoffset
+                                                         2,                   & ! fluxoffset
+                                                         PETSC_FALSE)           ! addNullSpace
                                                          
    Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr,0.0_Kr,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
@@ -42,9 +43,7 @@ Program  SimplePoissonNG
    Type(PC)                                        :: pcTemp
    Type(Mat)                                       :: matTemp
    Type(Vec)                                       :: solTemp,resTemp,locTemp,RHSTemp
-   !Type(Vec)                                       :: ubTemp,lbTemp
    Integer                                         :: exoIN=0,exoOUT=0
-   MPI_Comm                                        :: IOComm
    PetscReal,Dimension(:),Pointer                  :: energy,work
    PetscInt,dimension(:),Pointer                   :: setID
    PetscInt                                        :: set
@@ -60,6 +59,8 @@ Program  SimplePoissonNG
    PetscReal,Dimension(:,:),Pointer                :: Coord
    PetscReal,Dimension(:),Pointer                  :: Coord2
    PetscInt                                        :: i,j
+   PetscInt                                        :: TimeStepNum=1
+   PetscReal,Dimension(:),Pointer                  :: Time
 
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
@@ -71,7 +72,7 @@ Program  SimplePoissonNG
 
    Call MEF90CtxPoissonGlobalPropertiesCreate(MEF90Ctx,defaultGlobalProperties,ierr)
    Call PetscBagGetDataPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)  
-   Call PoissonEXOOpenInputFile(prefix,exoIN,ierr);CHKERRQ(ierr)
+   Call SimplePoissonEXOOpenInputFile(prefix,exoIN,ierr);CHKERRQ(ierr)
    !!!
    !!! Read DMMesh from exoIN
    !!!
@@ -83,10 +84,10 @@ Program  SimplePoissonNG
       Call DMmeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
       Call DMDestroy(Tmp_mesh,ierr);CHKERRQ(ierr)
    End If
+   Call SimplePoissonGetTime(time,exoIN,MEF90Ctx,ierr);CHKERRQ(ierr)
 
    !!! Prepare output file
-   Call PoissonPrepareOutput(mesh,prefix,exoIN,exoOUT,IOComm,MEF90Ctx,ierr);CHKERRQ(ierr)
-   
+   Call SimplePoissonPrepareOutputEXO(mesh,prefix,exoIN,exoOUT,MEF90Ctx,ierr);CHKERRQ(ierr)
    !!! 
    !!! Create SNES and associate mesh
    !!!
@@ -131,8 +132,10 @@ Program  SimplePoissonNG
       
    !!! Adding a null space when some boundary conditions are prescribes breaks everything...
    !!! Need to add a flag and make adding the null space optional
-   !Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
-   !Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
+   If (GlobalProperties%addNullSpace) Then
+      Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
+      Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
+   End If
 
    !!! Not sure if this is still needed when using MatZeroRowsColumnsIS for BC handling
    Call MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
@@ -145,27 +148,20 @@ Program  SimplePoissonNG
    !!!
    Call SNESSetFunction(snesTemp,resTemp,SimplePoissonOperator,MEF90Ctx,ierr);CHKERRQ(ierr)
    Call SNESSetJacobian(snesTemp,matTemp,matTemp,SimplePoissonBilinearForm,MEF90Ctx,ierr);CHKERRQ(ierr)
-
-   !!!
-   !!! Testing SNESVI: does not look ready for prime time...
-   !!!
-   !Call VecDuplicate(solTemp,lbTemp,ierr);CHKERRQ(ierr)
-   !Call VecSet(lbTemp,-1.0_Kr,ierr);CHKERRQ(ierr)
-   !Call VecDuplicate(solTemp,ubTemp,ierr);CHKERRQ(ierr)
-   !Call VecSet(ubTemp,0.2_Kr,ierr);CHKERRQ(ierr)
-   !Call SNESVISetVariableBounds(snesTemp,lbTemp,ubTemp,ierr);CHKERRQ(ierr)
-
    Call SNESSetFromOptions(snesTemp,ierr);CHKERRQ(ierr)
 
    Call SNESGetKSP(snesTemp,kspTemp,ierr);CHKERRQ(ierr)
    Call KSPSetType(kspTemp,KSPCG,ierr);CHKERRQ(ierr)
    Call KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
-!!!   Call KSPSetNullSpace(kspTemp,nspTemp,ierr);CHKERRQ(ierr)
+   If (GlobalProperties%addNullSpace) Then
+      Call KSPSetNullSpace(kspTemp,nspTemp,ierr);CHKERRQ(ierr)
+   End If
    Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
 
    Call KSPGetPC(kspTemp,pcTemp,ierr);CHKERRQ(ierr)
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
-   !!! Setup GAMG here (coordinates,in particular)
+
+   !!! Add coordinates to the PC (mostly for GAMG)
    Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
    Allocate(coord2(size(coord)))
    Do i = 1, size(coord,1)
@@ -178,65 +174,52 @@ Program  SimplePoissonNG
    DeAllocate(coord2)
 
    !!! Solve Poisson Equation
-   Call SimplePoissonFormInitialGuess(snesTemp,solTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
-   Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,1.0_Kr,MEF90Ctx,ierr)
-   Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
-
-   !!! Check SNES / KSP convergence
-   Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
-   Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
-
-   Write(IOBuffer,110) itsTemp,reasonTemp
-   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-110 Format('SNESTemp converged in in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
-   
-   !!! Compute energy and work
-   !!! This is one of the few looks that need to be synchronized across processors!
-   !!!
-   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
-   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   Allocate(energy(size(setID)),stat=ierr)
-   Allocate(work(size(setID)),stat=ierr)
-
-   Call SimplePoissonEnergies(snesTemp,solTemp,MEF90Ctx,energy,work,ierr)
-   Write(IOBuffer,*) '\n'
-   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-   Do set = 1,size(setID)
-      Write(IOBuffer,102) setID(set),energy(set),work(set)
+   Do TimeStepNum = 1, size(time)
+      Write(IOBuffer,200) TimeStepNum,time(TimeStepNum)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-   End Do
-   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-   Write(IOBuffer,103) sum(energy),sum(work)
-   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-102 Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
-103 Format('=====================================================\n',         &
-           'Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
+200   Format('Solving time step ',I4,': t=',ES12.5,'\n')
 
-   !!! Save results
-   !!!
+      Call SimplePoissonFormInitialGuess(snesTemp,solTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
+      Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
+      Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
+
+
+      !!! Check SNES / KSP convergence
+      Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
+      Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
+
+      Write(IOBuffer,110) itsTemp,reasonTemp
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+110   Format('SNESTemp converged in in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
    
-   !!! 
-   !!! Write in exo file
-   !!!
-   !!! Just as for global vectors, there are two ways to deal with local vectors
-   !!! Obtaining them from the DM, and using DMLocalToGlobalBegin/End
-   !Call DMGetLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
-   !Call DMGlobalToLocalBegin(mesh,solTemp,INSERT_VALUES,locTemp,ierr);CHKERRQ(ierr)
-   !Call DMGlobalToLocalEnd(mesh,solTemp,INSERT_VALUES,locTemp,ierr);CHKERRQ(ierr)
-   !!! Or by from a SectionReal, and using SectionRealToVec to copy from Vec to Section
-   Call DMMeshCreateGlobalScatter(mesh,secTemp,ScatterSecToVec,ierr);CHKERRQ(ierr)
-   Call SectionRealCreateLocalVector(secTemp,locTemp,ierr);CHKERRQ(ierr)   
-   Call SectionRealToVec(secTemp,ScatterSecToVec,SCATTER_REVERSE,solTemp,ierr);CHKERRQ(ierr)
-   Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
-
-   Call VecViewExodusVertex(mesh,locTemp,IOComm,exoOUT,1,1,ierr)
-   If ( (GlobalProperties%FileFormat == Poisson_EXOSplit) .OR. (MEF90_MyRank == 0)) Then
-      Call EXPGV(exoOUT,1,3,(/ sum(energy),sum(work),sum(energy)-sum(work) /),ierr)   
-   End If
-   Call DMrestoreLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
-
+      !!! Compute energy and work
+      !!! This is one of the few looks that need to be synchronized across processors!
+      !!!
+      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Allocate(energy(size(setID)),stat=ierr)
+      Allocate(work(size(setID)),stat=ierr)
+   
+      Call SimplePoissonEnergies(snesTemp,solTemp,MEF90Ctx,energy,work,ierr)
+      Write(IOBuffer,*) '\n'
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Write(IOBuffer,102) setID(set),energy(set),work(set)
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      End Do
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,103) sum(energy),sum(work)
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+102   Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
+103   Format('=====================================================\n',         &
+              'Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
+   
+      !!! Save results
+      !!!
+      Call SimplePoissonSaveEXO(mesh,EXOout,solTemp,TimeStepNum,time(TimeStepNum),sum(energy),sum(work),MEF90Ctx,ierr);CHKERRQ(ierr)
+   End Do
    !!!
    !!! Cleanup
    !!!
