@@ -73,14 +73,14 @@ End Subroutine PoissonCtxDestroy
 
 
 #undef __FUNCT__
-#define __FUNCT__ "PoissonEXOOpenInputFile"
+#define __FUNCT__ "SimplePoissonEXOOpenInputFile"
 !!!
 !!!  
-!!!  PoissonEXOOpenInputFile:
+!!!  SimplePoissonEXOOpenInputFile:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine PoissonEXOOpenInputFile(prefix,exoIN,ierr)
+Subroutine SimplePoissonEXOOpenInputFile(prefix,exoIN,ierr)
    Character(len=*),intent(IN)                     :: prefix
    Integer,intent(OUT)                             :: exoIN
    PetscErrorCode,Intent(OUT)                      :: ierr
@@ -102,52 +102,48 @@ Subroutine PoissonEXOOpenInputFile(prefix,exoIN,ierr)
          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
       EndIf
    End If
-End Subroutine PoissonEXOOpenInputFile
+End Subroutine SimplePoissonEXOOpenInputFile
 
 #undef __FUNCT__
-#define __FUNCT__ "PoissonPrepareOutput"
+#define __FUNCT__ "SimplePoissonPrepareOutputEXO"
 !!!
 !!!  
-!!!  PoissonPrepareOutput:
+!!!  SimplePoissonPrepareOutputEXO:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine PoissonPrepareOutput(mesh,prefix,exoIN,exoOUT,IOComm,Poissonctx,ierr)
+Subroutine SimplePoissonPrepareOutputEXO(mesh,prefix,exoIN,exoOUT,Poissonctx,ierr)
    Type(DM),intent(IN)                             :: mesh
    Character(len=*),intent(IN)                     :: prefix
    Integer,intent(IN)                              :: exoIN
    Integer,intent(OUT)                             :: exoOUT
    Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
-   MPI_Comm, intent(OUT)                           :: IOComm
    PetscErrorCode,Intent(OUT)                      :: ierr
 
+   MPI_Comm                                        :: IOComm
+   Integer                                         :: IORank
    Integer                                         :: cpu_ws,io_ws
    Real                                            :: exo_version
    Integer                                         :: exoerr
    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer,filename
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
-   PetscBool                                       :: IONode != PETSC_FALSE
    
-   IONode = PETSC_FALSE
    Call PetscBagGetDataPoissonGlobalProperties(PoissonCtx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)      
    
    !!! Get name of output file
    If (GlobalProperties%FileFormat == Poisson_EXOSplit) Then
       IOComm = PETSC_COMM_SELF
-      IONode = PETSC_TRUE
       Write(filename,100) trim(prefix),MEF90_MyRank
    Else
       IOComm = PETSC_COMM_WORLD
-      If (MEF90_MyRank == 0) Then
-         IONode = PETSC_TRUE
-      End If
       Write(filename,101) trim(prefix)
    End If
 100 Format(A,'-',I4.4,'.gen')
 101 Format(A,'_out.gen')
+   Call MPI_Comm_Rank(IOComm,IORank,ierr)
 
    !!! Open output file or create it and format it depending on loading type
-   If (IONode) Then
+   If (IORank == 0) Then
       If (GlobalProperties%LoadingType == Poisson_FILE) Then
          !!! We assume that the output file already exists
          cpu_ws = 8
@@ -175,7 +171,81 @@ Subroutine PoissonPrepareOutput(mesh,prefix,exoIN,exoOUT,IOComm,Poissonctx,ierr)
          !Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
       End If
    End If
-End Subroutine PoissonPrepareOutput
+End Subroutine SimplePoissonPrepareOutputEXO
+
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonSaveEXO"
+!!!
+!!!  
+!!!  SimplePoissonSaveEXO:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonSaveEXO(mesh,EXOout,sol,TimeStepNum,t,energy,work,PoissonCtx,ierr)
+   Type(DM),Intent(IN)                             :: mesh
+   Integer,Intent(IN)                              :: EXOout
+   Type(Vec),Intent(IN)                            :: sol
+   PetscInt,Intent(IN)                             :: TimeStepNum
+   PetscReal,Intent(IN)                            :: t
+   PetscReal,Intent(IN)                            :: energy,work
+   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+   
+   MPI_Comm                                        :: IOComm
+   Integer                                         :: IORank
+   Type(Vec)                                       :: locTemp
+   Type(SectionReal)                               :: secTemp
+   Type(VecScatter)                                :: ScatterSecToVec
+   Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
+   Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
+   Integer                                         :: tempOffset
+   
+   Call PetscBagGetDataPoissonGlobalProperties(PoissonCtx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)      
+   If (GlobalProperties%FileFormat == Poisson_EXOSplit) Then
+      IOComm = PETSC_COMM_SELF
+   Else
+      IOComm = PETSC_COMM_WORLD
+   End If
+   Call MPI_Comm_Rank(IOComm,IORank,ierr)
+   
+   !!! Just as for global vectors, there are two ways to deal with local vectors
+   !!! Obtaining them from the DM, and using DMLocalToGlobalBegin/End
+   !Call DMGetLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)
+   !Call DMGlobalToLocalBegin(mesh,solTemp,INSERT_VALUES,locTemp,ierr);CHKERRQ(ierr)
+   !Call DMGlobalToLocalEnd(mesh,solTemp,INSERT_VALUES,locTemp,ierr);CHKERRQ(ierr)
+   !!! Or by from a SectionReal, and using SectionRealToVec to copy from Vec to Section
+   !!! This would require passing the section as argument, or pulling it from the DMMesh
+   Call DMMeshGetSectionReal(mesh,'default',secTemp,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateGlobalScatter(mesh,secTemp,ScatterSecToVec,ierr);CHKERRQ(ierr)
+   Call SectionRealCreateLocalVector(secTemp,locTemp,ierr);CHKERRQ(ierr)   
+   Call SectionRealToVec(secTemp,ScatterSecToVec,SCATTER_REVERSE,sol,ierr);CHKERRQ(ierr)
+   Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+
+
+   If (GlobalProperties%LoadingType == Poisson_FILE) Then
+      tempOffset = GlobalProperties%tempOffset
+   Else
+      tempOffset = 1
+   EndIf
+   
+   Call VecViewExodusVertex(mesh,locTemp,IOComm,exoOUT,TimeStepNum,tempoffset,ierr);CHKERRQ(ierr)
+   If ((GlobalProperties%LoadingType /= Poisson_FILE) .AND. (IORank == 0)) Then
+      Call EXPGV(exoOUT,timeStepNum,3,(/ energy,work,energy-work /),ierr)   
+      If (GlobalProperties%FileMode == Poisson_Replace) Then
+         Call EXPTIM(exoOUT,timeStepNum,t,ierr)
+      End If
+   End If
+   !!!
+   !!! Restore local vector if obtained from the DM, 
+   !Call DMrestoreLocalVector(mesh,locTemp,ierr);CHKERRQ(ierr)   
+   Call SectionRealDestroy(secTemp,ierr);CHKERRQ(ierr)
+   Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+   If (GlobalProperties%verbose > 0) Then
+      Write(IOBuffer,100) tempOffset,TimeStepNum
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   End If
+100 Format('Wrote temperature at offset ',I2,' for time step ',I4,'\n');CHKERRQ(ierr)
+End Subroutine SimplePoissonSaveEXO
 
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonFormInitialGuess"
@@ -212,7 +282,7 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,PoissonCtx,ierr)
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
          Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-         Allocate(BC(size(setIdx)))
+         Allocate(BC(size(setIdx)),stat=ierr)
          BC = vertexSetProperties%BC
          Call VecSetValues(x,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
          DeAllocate(BC)
@@ -227,5 +297,58 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,PoissonCtx,ierr)
    Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
 End Subroutine SimplePoissonFormInitialGuess
 
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonGetTime"
+!!!
+!!!  
+!!!  SimplePoissonGetTime:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonGetTime(time,exoIN,PoissonCtx,ierr)
+   PetscReal,Dimension(:),Pointer                  :: time
+   Integer,Intent(IN)                              :: exoIN
+   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties
+   MPI_Comm                                        :: IOComm
+   Integer                                         :: IORank
+   PetscInt                                        :: NumTimeStep,i
+   Real                                            :: rdumm
+   Character(len=1)                                :: cdumm
+   Integer                                         :: exoerr
+
+   Call PetscBagGetDataPoissonGlobalProperties(PoissonCtx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)      
+   Select Case (GlobalProperties%LoadingType)
+      Case (Poisson_CST)
+         Allocate(Time(1),stat=ierr)
+         time = 1.0_Kr
+      Case (Poisson_MIL)
+         Allocate(time(GlobalProperties%numTimeStep))
+         Do i = 1,GlobalProperties%numTimeStep-1
+            time(i) = GlobalProperties%timeMin + (GlobalProperties%timeMax - GlobalProperties%timeMin) / (GlobalProperties%numTimeStep - 1.0_Kr) * (i-1.0_Kr)
+         End Do
+         time(GlobalProperties%numTimeStep) = GlobalProperties%timeMax
+      Case (Poisson_FILE)
+         If (GlobalProperties%FileFormat == Poisson_EXOSplit) Then
+            Call EXINQ(exoIN,EXTIMS,numTimeStep,rdumm,cdumm,exoerr)
+            Allocate(time(numTimeStep))
+            Call EXGATM(exoIN,time,exoerr)
+         Else
+            If (MEF90_MyRank == 0) Then
+               Call EXINQ(exoIN,EXTIMS,numTimeStep,rdumm,cdumm,exoerr)
+               Call MPI_Bcast(numTimeStep,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+               Allocate(time(numTimeStep))
+               Call EXGATM(exoIN,time,exoerr)
+               Call MPI_Bcast(time,numTimeStep,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+            Else
+               Call MPI_Bcast(numTimeStep,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+               Allocate(time(numTimeStep))
+               Call MPI_Bcast(time,numTimeStep,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+            End If         
+         End If
+   End Select
+End Subroutine SimplePoissonGetTime
 
 End Module m_Poisson

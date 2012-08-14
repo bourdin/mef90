@@ -15,8 +15,9 @@ Module m_PoissonGlobalProperties_Type
       PetscReal      :: TimeMin
       PetscReal      :: TimeMax
       PetscInt       :: numTimeStep
-      PetscInt       :: tempoffset
-      PetscInt       :: fluxoffset
+      PetscInt       :: tempOffset
+      PetscInt       :: fluxOffset
+      PetscBool      :: addNullSpace
    End Type PoissonGlobalProperties_Type   
 End Module m_PoissonGlobalProperties_Type
 
@@ -132,6 +133,7 @@ Contains
       Call PetscBagRegisterEnum(bag,GlobalProperties%FileFormat,Poisson_FileFormatList,default%FileFormat,'file_format','I/O file format.',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,GlobalProperties%FileMode,Poisson_FileModeList,default%FileMode,'file_mode','I/O file mode.',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,GlobalProperties%LoadingType,Poisson_LoadingList,default%LoadingType,'Loading','Loading Type',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,GlobalProperties%addNullSpace,default%addNullSpace,'addNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
       
       Select Case (GlobalProperties%LoadingType)
          Case (Poisson_MIL)
