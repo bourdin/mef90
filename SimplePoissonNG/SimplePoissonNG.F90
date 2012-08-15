@@ -30,8 +30,9 @@ Program  SimplePoissonNG
    Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr,0.0_Kr,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
-   Character(len=MEF90_MXSTRLEN)                   :: prefix,filena,e
-   Type(PetscViewer)                               :: energyViewer,energyViewerCellSet,logViewer
+   Character(len=MEF90_MXSTRLEN)                   :: prefix,filename
+   Type(PetscViewer)                               :: energyViewer,logViewer
+   Type(PetscViewer),Dimension(:),Pointer          :: energyViewerCellSet
    Type(MEF90Ctx_Type)                             :: MEF90Ctx
    Type(DM)                                        :: mesh,tmp_mesh
    PetscErrorCode                                  :: iErr
@@ -42,7 +43,6 @@ Program  SimplePoissonNG
    Type(SNES)                                      :: snesTemp
    Type(KSP)                                       :: kspTemp
    Type(PC)                                        :: pcTemp
-   SNESLineSearch                                  :: linesearchTemp
    Type(Mat)                                       :: matTemp
    Type(Vec)                                       :: solTemp,resTemp,RHSTemp
    Integer                                         :: exoIN=0,exoOUT=0
@@ -66,8 +66,6 @@ Program  SimplePoissonNG
    
    PetscReal                                       :: rtol,atol,dtol
    PetscInt                                        :: maxits
-   
-   Type(Vec) :: tmpvec
    
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
@@ -123,7 +121,6 @@ Program  SimplePoissonNG
    !!!
    Call DMmeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
    Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
-   !Call DMMeshGetLabelSize(mesh,'Cell Sets',numCellSet,ierr);CHKERRQ(ierr)
    Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
    Call ISGetLocalSize(CellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
@@ -139,6 +136,21 @@ Program  SimplePoissonNG
 
    !!! Prepare output file
    Call SimplePoissonPrepareOutputEXO(mesh,prefix,exoIN,exoOUT,MEF90Ctx,ierr);CHKERRQ(ierr)
+   
+   !!! Open energy and log files
+   Write(IOBuffer,*) 'step  time          energy        work          total\n'
+   filename = trim(prefix) // '.log'
+   Call PetscViewerASCIIOpen(PETSC_COMM_WORLD,filename,logViewer,ierr);CHKERRQ(ierr)
+   filename = trim(prefix) // '.ener'
+   Call PetscViewerASCIIOpen(PETSC_COMM_WORLD,filename,energyViewer,ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIPrintf(energyViewer,IOBuffer,ierr);CHKERRQ(ierr)
+   Allocate(energyViewerCellSet(numCellSetGlobal))
+   Do set = 1, numCellSetGlobal
+      Write(filename,300) trim(prefix),CellSetGlobalID(set)
+      Call PetscViewerASCIIOpen(PETSC_COMM_WORLD,filename,energyViewerCellSet(set),ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIPrintf(energyViewerCellSet(set),IOBuffer,ierr);CHKERRQ(ierr)
+   End Do
+300 Format(A,'-blk_',I4.4,'.ener')
 
    !!!
    !!! Get Matrix for the Jacobian / SNES and unknown vector
@@ -177,7 +189,7 @@ Program  SimplePoissonNG
 
    Call SNESGetKSP(snesTemp,kspTemp,ierr);CHKERRQ(ierr)
    Call KSPSetType(kspTemp,KSPCG,ierr);CHKERRQ(ierr)
-   !Call KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+   Call KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
    If (GlobalProperties%addNullSpace) Then
       Call KSPSetNullSpace(kspTemp,nspTemp,ierr);CHKERRQ(ierr)
    End If
@@ -188,10 +200,6 @@ Program  SimplePoissonNG
 
    Call KSPGetPC(kspTemp,pcTemp,ierr);CHKERRQ(ierr)
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
-   
-   !Call SNESGetSNESLineSearch(snesTemp,linesearchTemp,ierr);CHKERRQ(ierr)
-   !Call SNESLineSearchSetType(linesearchTemp,"l2",ierr);CHKERRQ(ierr)
-   !Call SNESLineSearchSetFromOptions(linesearchTemp,ierr);CHKERRQ(ierr)
    
    !!! Add coordinates to the PC (mostly for GAMG)
    Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
@@ -210,25 +218,21 @@ Program  SimplePoissonNG
    Allocate(energy(numCellSetGlobal),stat=ierr)
    Allocate(work(numCellSetGlobal),stat=ierr)
    
-Call VecDuplicate(soltemp,tmpvec,ierr)
-   
    !!! Solve Poisson Equation
    Do TimeStepNum = 1, size(time)
       Write(IOBuffer,200) TimeStepNum,time(TimeStepNum)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 200   Format('Solving time step ',I4,': t=',ES12.5,'\n')
 
-      Call VecSet(solTemp,0.0_Kr,ierr);CHKERRQ(ierr)
-      Call VecSet(rhsTemp,0.0_Kr,ierr);CHKERRQ(ierr)
+      !Call VecSet(solTemp,0.0_Kr,ierr);CHKERRQ(ierr)
+      !Call VecSet(rhsTemp,0.0_Kr,ierr);CHKERRQ(ierr)
       If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
          Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,time(timeStepNum),MEF90Ctx,ierr);CHKERRQ(ierr)
          Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
       Else
          Call PetscPrintf(PETSC_COMM_WORLD,'Poisson_FILE not implemented yet\n',ierr)
       End If
-      call VecCopy(soltemp,tmpvec,ierr)
-!      Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
-      Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
+      Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
       !!! Check SNES / KSP convergence
       Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
       Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
@@ -236,16 +240,6 @@ Call VecDuplicate(soltemp,tmpvec,ierr)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 110   Format('SNESTemp converged in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
    
-      call VecCopy(tmpvec,soltemp,ierr)
-      !Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
-      Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
-      !!! Check SNES / KSP convergence
-      Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
-      Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,110) itsTemp,reasonTemp
-      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-
-
       !!! Compute energy and work
       !!!
       Call SimplePoissonEnergies(snesTemp,solTemp,MEF90Ctx,energy,work,ierr)
@@ -257,16 +251,22 @@ Call VecDuplicate(soltemp,tmpvec,ierr)
       Do set = 1,size(CellSetGlobalID)
          Write(IOBuffer,102) CellSetGlobalID(set),energy(set),work(set)
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,202) timeStepNum,time(timeStepNum),energy(set),work(set),energy(set)-work(set)
+         Call PetscViewerASCIIPrintf(energyViewerCellSet(set),IOBuffer,ierr);CHKERRQ(ierr)
       End Do
       Write(IOBuffer,103) sum(energy),sum(work)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,202) timeStepNum,time(timeStepNum),sum(energy),sum(work),sum(energy) - sum(work)
+      Call PetscViewerASCIIPrintf(energyViewer,IOBuffer,ierr);CHKERRQ(ierr)
 102   Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
+202   Format(I4,'  ',4(ES12.5,'  '),'\n')
 103   Format('=====================================================\n',         &
               'Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
    
       !!! Save results
       !!!
       Call SimplePoissonSaveEXO(mesh,EXOout,solTemp,TimeStepNum,time(TimeStepNum),sum(energy),sum(work),MEF90Ctx,ierr);CHKERRQ(ierr)
+      Call PetscLogView(logviewer,ierr);CHKERRQ(ierr)
    End Do
    !!!
    !!! Cleanup
@@ -286,6 +286,14 @@ Call VecDuplicate(soltemp,tmpvec,ierr)
    DeAllocate(work)
    DeAllocate(energy)
    
+   Call PetscViewerDestroy(energyViewer,ierr);CHKERRQ(ierr)
+   Do set = 1, numCellSetGlobal
+      Call PetscViewerDestroy(energyViewerCellSet(set),ierr);CHKERRQ(ierr)
+   End Do
+   DeAllocate(energyViewerCellSet)
+   Call PetscLogView(logviewer,ierr);CHKERRQ(ierr)
+   Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
+
    If (GlobalProperties%verbose > 0) Then
       Call PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
    EndIf
