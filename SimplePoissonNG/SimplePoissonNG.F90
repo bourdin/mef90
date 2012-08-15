@@ -43,10 +43,10 @@ Program  SimplePoissonNG
    Type(PC)                                        :: pcTemp
    SNESLineSearch                                  :: linesearchTemp
    Type(Mat)                                       :: matTemp
-   Type(Vec)                                       :: solTemp,resTemp,locTemp,RHSTemp
+   Type(Vec)                                       :: solTemp,resTemp,RHSTemp
    Integer                                         :: exoIN=0,exoOUT=0
    PetscReal,Dimension(:),Pointer                  :: energy,work
-   PetscInt,dimension(:),Pointer                   :: setID
+   PetscInt,dimension(:),Pointer                   :: CellSetGlobalID
    PetscInt                                        :: set
    Type(MatNullSpace)                              :: nspTemp
    SNESConvergedReason                             :: reasonTemp
@@ -56,7 +56,7 @@ Program  SimplePoissonNG
    Type(IS)                                        :: CellSetGlobalIS
    Type(Element_Type),Dimension(:),pointer         :: ElemType
       
-   PetscInt                                        :: point,numCell,numVertex,numCellSet
+   PetscInt                                        :: point,numCell,numVertex,numCellSetGlobal
    PetscReal,Dimension(:,:),Pointer                :: Coord
    PetscReal,Dimension(:),Pointer                  :: Coord2
    PetscInt                                        :: i,j
@@ -120,8 +120,12 @@ Program  SimplePoissonNG
    !!!
    Call DMmeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
    Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
-   Call DMMeshGetLabelSize(mesh,'Cell Sets',numCellSet,ierr);CHKERRQ(ierr)
-   
+   !Call DMMeshGetLabelSize(mesh,'Cell Sets',numCellSet,ierr);CHKERRQ(ierr)
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
+   Call ISGetLocalSize(CellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
+   Call ISGetIndicesF90(CellSetGlobalIS,CellSetGlobalID,ierr);CHKERRQ(ierr)
+
    Call DMMeshGetSectionReal(mesh,'default',SecTemp,ierr);CHKERRQ(ierr)
    Do point = numCell,numCell+numVertex-1
       Call SectionRealSetFiberDimension(SecTemp,point,1,ierr);CHKERRQ(ierr)
@@ -200,8 +204,8 @@ Program  SimplePoissonNG
 
    !!!
    !!! Allocate arrays for the energies in each block
-   Allocate(energy(numCellSet),stat=ierr)
-   Allocate(work(numCellSet),stat=ierr)
+   Allocate(energy(numCellSetGlobal),stat=ierr)
+   Allocate(work(numCellSetGlobal),stat=ierr)
    
    !!! Solve Poisson Equation
    Do TimeStepNum = 1, size(time)
@@ -226,19 +230,16 @@ Program  SimplePoissonNG
    
       !!! Compute energy and work
       !!!
-      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
-      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   
       Call SimplePoissonEnergies(snesTemp,solTemp,MEF90Ctx,energy,work,ierr)
+
+      !!! Print and save energy and work
+      !!!
       Write(IOBuffer,*) '\n'
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-      Do set = 1,size(setID)
-         Write(IOBuffer,102) setID(set),energy(set),work(set)
+      Do set = 1,size(CellSetGlobalID)
+         Write(IOBuffer,102) CellSetGlobalID(set),energy(set),work(set)
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
       End Do
-      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Write(IOBuffer,103) sum(energy),sum(work)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 102   Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
@@ -254,11 +255,12 @@ Program  SimplePoissonNG
    !!!
    Call EXCLOS(exoIN,ierr)
    Call EXCLOS(exoOUT,ierr)
+   Call ISRestoreIndicesF90(CellSetGlobalIS,CellSetGlobalID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call PoissonCtxDestroy(MEF90Ctx,snesTemp,ierr);CHKERRQ(ierr)
    Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)
-   Call VecDestroy(locTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(RHSTemp,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(secTemp,ierr);CHKERRQ(ierr)
    Call DMDestroy(mesh,ierr);CHKERRQ(ierr);

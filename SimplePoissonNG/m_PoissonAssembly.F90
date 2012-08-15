@@ -36,6 +36,7 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
    Type(Element_Type)                              :: elemType
    
+   Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
    !!! 
@@ -390,7 +391,6 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
 
    Type(IS)                                        :: CellSetGlobalIS,setIS,setISdof
    PetscInt,dimension(:),Pointer                   :: setID
-   PetscInt,Dimension(:),Pointer                   :: setIdx
    PetscInt                                        :: set,QuadratureOrder
    Type(MEF90_MATPROP),pointer                     :: matpropSet
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
