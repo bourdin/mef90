@@ -24,6 +24,8 @@ Program  SimplePoissonNG
                                                          0.0_kr,              & ! TimeMax
                                                          1,                   & ! numTimeStep
                                                          1,                   & ! tempOffset
+                                                         1,                   & ! refOffset
+                                                         1,                   & ! bcOffset
                                                          2,                   & ! fluxoffset
                                                          PETSC_FALSE)           ! addNullSpace
                                                          
@@ -45,6 +47,7 @@ Program  SimplePoissonNG
    Type(PC)                                        :: pcTemp
    Type(Mat)                                       :: matTemp
    Type(Vec)                                       :: solTemp,resTemp,RHSTemp
+   Type(Vec)                                       :: flux,refTemp,bcTemp
    Integer                                         :: exoIN=0,exoOUT=0
    PetscReal,Dimension(:),Pointer                  :: energy,work
    PetscInt,dimension(:),Pointer                   :: CellSetGlobalID
@@ -166,6 +169,12 @@ Program  SimplePoissonNG
 
    Call VecDuplicate(solTemp,resTemp,ierr);CHKERRQ(ierr)
    Call VecDuplicate(solTemp,RHSTemp,ierr);CHKERRQ(ierr)
+   
+   If (GlobalProperties%LoadingType == Poisson_FILE) Then
+      Call VecDuplicate(solTemp,flux,ierr);CHKERRQ(ierr)
+      Call VecDuplicate(solTemp,refTemp,ierr);CHKERRQ(ierr)
+      Call VecDuplicate(solTemp,bcTemp,ierr);CHKERRQ(ierr)
+   End If
       
    !!! Adding a null space when some boundary conditions are prescribes breaks everything...
    !!! Need to add a flag and make adding the null space optional
@@ -224,13 +233,13 @@ Program  SimplePoissonNG
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 200   Format('Solving time step ',I4,': t=',ES12.5,'\n')
 
-      !Call VecSet(solTemp,0.0_Kr,ierr);CHKERRQ(ierr)
-      !Call VecSet(rhsTemp,0.0_Kr,ierr);CHKERRQ(ierr)
       If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
          Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,time(timeStepNum),MEF90Ctx,ierr);CHKERRQ(ierr)
          Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
       Else
-         Call PetscPrintf(PETSC_COMM_WORLD,'Poisson_FILE not implemented yet\n',ierr)
+         Call SimplePoissonLoadEXO(mesh,EXOin,bctemp,flux,reftemp,TimeStepNum,MEF90Ctx,ierr);CHKERRQ(ierr)
+         Call SimplePoissonFormInitialGuess(snesTemp,solTemp,bcTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
+         Call SimplePoissonRHS(snesTemp,rhsTemp,flux,refTemp,MEF90Ctx,ierr)
       End If
       Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
       !!! Check SNES / KSP convergence
@@ -242,7 +251,11 @@ Program  SimplePoissonNG
    
       !!! Compute energy and work
       !!!
-      Call SimplePoissonEnergies(snesTemp,solTemp,MEF90Ctx,energy,work,ierr)
+      If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
+         Call SimplePoissonEnergies_Cst(snesTemp,solTemp,time(timestepnum),MEF90Ctx,energy,work,ierr)
+      Else
+         Call SimplePoissonEnergies(snesTemp,solTemp,flux,MEF90Ctx,energy,work,ierr)
+      End If
 
       !!! Print and save energy and work
       !!!
@@ -280,6 +293,11 @@ Program  SimplePoissonNG
    Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(RHSTemp,ierr);CHKERRQ(ierr)
+   If (GlobalProperties%LoadingType == Poisson_FILE) Then
+      Call VecDestroy(flux,ierr);CHKERRQ(ierr)
+      Call VecDestroy(refTemp,ierr);CHKERRQ(ierr)
+      Call VecDestroy(bcTemp,ierr);CHKERRQ(ierr)
+   End If
    Call SectionRealDestroy(secTemp,ierr);CHKERRQ(ierr)
    Call DMDestroy(mesh,ierr);CHKERRQ(ierr);
 
