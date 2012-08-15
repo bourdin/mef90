@@ -249,16 +249,17 @@ Subroutine SimplePoissonSaveEXO(mesh,EXOout,sol,TimeStepNum,t,energy,work,Poisso
 End Subroutine SimplePoissonSaveEXO
 
 #undef __FUNCT__
-#define __FUNCT__ "SimplePoissonFormInitialGuess"
+#define __FUNCT__ "SimplePoissonFormInitialGuess_Cst"
 !!!
 !!!  
-!!!  SimplePoissonFormInitialGuess:
+!!!  SimplePoissonFormInitialGuess_Cst:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine SimplePoissonFormInitialGuess(snesTemp,x,PoissonCtx,ierr)
+Subroutine SimplePoissonFormInitialGuess_Cst(snesTemp,x,t,PoissonCtx,ierr)
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: x
+   PetscReal,Intent(IN)                            :: t
    Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
@@ -284,7 +285,7 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,PoissonCtx,ierr)
          Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)),stat=ierr)
-         BC = vertexSetProperties%BC
+         BC = vertexSetProperties%BC * t
          Call VecSetValues(x,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
          DeAllocate(BC)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
@@ -296,7 +297,7 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,PoissonCtx,ierr)
    Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
    Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
-End Subroutine SimplePoissonFormInitialGuess
+End Subroutine SimplePoissonFormInitialGuess_Cst
 
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonGetTime"
