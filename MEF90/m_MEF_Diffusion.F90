@@ -1,8 +1,3 @@
-!!! Change the logic so that the elem array be indexed with respect to the current IS
-!!! This way, we can either reallocate the elem before assembling each block
-!!! or have a 2 dimensional array of elemns in a global ctx
-!!! i.e. all references to elem(cell) should be replaced with elem(cell)
-!!! cellID will only be used in the insertion functions
 Module m_MEF_Diffusion
 #include "finclude/petscdef.h"
    Use m_MEF_LinAlg
@@ -37,7 +32,7 @@ Module m_MEF_Diffusion
    End Interface MEF90_DiffusionEnergySet
 
    Interface MEF90_DiffusionWorkSet
-      Module procedure DiffusionWorkCellCstSet_2D,DiffusionWorkCellCstSet_3D
+      Module procedure DiffusionWorkSet_2D,DiffusionWorkCellCstSet_2D,DiffusionWorkSet_3D,DiffusionWorkCellCstSet_3D
    End Interface MEF90_DiffusionWorkSet
 
 !  Assembles all components required to solve a diffusion equation in the form
@@ -302,6 +297,51 @@ Contains
          DeAllocate(xloc)
       End If
    End Subroutine DiffusionEnergySet_2D
+
+#undef __FUNCT__
+#define __FUNCT__ "DiffusionWorkSet_2D"
+   Subroutine DiffusionWorkSet_2D(work,x,mesh,F,cellIS,elem,elemType,ierr)
+      PetscReal,Intent(OUT)                        :: work
+      Type(SectionReal),Intent(IN)                 :: x
+      Type(DM),Intent(IN)                          :: mesh
+      Type(SectionReal),Intent(IN)                 :: F
+      Type(IS),Intent(IN)                          :: cellIS
+      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                   :: ierr
+
+      PetscReal,Dimension(:),Pointer               :: xloc,floc
+      PetscReal                                    :: xelem,felem
+      PetscInt,Dimension(:),Pointer                :: cellID
+      PetscInt                                     :: cell
+      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscLogDouble                               :: flops
+     
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Allocate(floc(elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(f,mesh,cellID(cell),elemType%numDof,floc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               xelem = 0.0_Kr
+               felem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+                  felem = felem + floc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+               End Do
+               work = work + elem(cell)%Gauss_C(iGauss) * felem * xelem
+            End Do
+         End Do
+      
+         flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(floc)
+      End If
+   End Subroutine DiffusionWorkSet_2D
 
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionWorkCellCstSet_2D"
@@ -570,6 +610,52 @@ Contains
          DeAllocate(xloc)
       End If
    End Subroutine DiffusionEnergySet_3D
+
+#undef __FUNCT__
+#define __FUNCT__ "DiffusionWorkSet_3D"
+   Subroutine DiffusionWorkSet_3D(work,x,mesh,F,cellIS,elem,elemType,ierr)
+      PetscReal,Intent(OUT)                        :: work
+      Type(SectionReal),Intent(IN)                 :: x
+      Type(DM),Intent(IN)                          :: mesh
+      Type(SectionReal),Intent(IN)                 :: F
+      Type(IS),Intent(IN)                          :: cellIS
+      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                   :: ierr
+
+      PetscReal,Dimension(:),Pointer               :: xloc,floc
+      PetscReal                                    :: xelem,felem
+      PetscInt,Dimension(:),Pointer                :: cellID
+      PetscInt                                     :: cell
+      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscLogDouble                               :: flops
+     
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Allocate(floc(elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(f,mesh,cellID(cell),elemType%numDof,floc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               xelem = 0.0_Kr
+               felem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+                  felem = felem + floc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+               End Do
+               work = work + elem(cell)%Gauss_C(iGauss) * felem * xelem
+            End Do
+         End Do
+      
+         flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(floc)
+      End If
+   End Subroutine DiffusionWorkSet_3D
+
 
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionWorkCellCstSet_3D"

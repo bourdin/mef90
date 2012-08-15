@@ -200,10 +200,8 @@ Subroutine SimplePoissonRHS_Cst(snesTemp,rhs,t,PoissonCtx,ierr)
 
    Type(SectionReal)                               :: rhsSec
    Type(IS)                                        :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
-   PetscInt,dimension(:),Pointer                   :: setID
-   PetscInt,Dimension(:),Pointer                   :: setIdx
+   PetscInt,dimension(:),Pointer                   :: setID,setIdx
    PetscInt                                        :: set,QuadratureOrder
-   Type(MEF90_MATPROP),pointer                     :: matpropSet
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
    PetscReal,Dimension(:),Pointer                  :: BC
@@ -226,8 +224,6 @@ Subroutine SimplePoissonRHS_Cst(snesTemp,rhs,t,PoissonCtx,ierr)
    Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-
-      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
       elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
@@ -287,19 +283,18 @@ End Subroutine SimplePoissonRHS_Cst
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine SimplePoissonRHS(snesTemp,rhs,f,PoissonCtx,ierr)
+Subroutine SimplePoissonRHS(snesTemp,rhs,flux,reftemp,PoissonCtx,ierr)
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: rhs
-   Type(Vec),Intent(IN)                            :: f
+   Type(Vec),Intent(IN)                            :: flux
+   Type(Vec),Intent(IN)                            :: refTemp
    Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Type(SectionReal)                               :: rhsSec,fSec
    Type(IS)                                        :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
-   PetscInt,dimension(:),Pointer                   :: setID
-   PetscInt,Dimension(:),Pointer                   :: setIdx
-   PetscInt                                        :: set,QuadratureOrder
-   Type(MEF90_MATPROP),pointer                     :: matpropSet
+   PetscInt,dimension(:),Pointer                   :: setID,SetIdx
+   PetscInt                                        :: set,QuadratureOrder,numCell
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
    PetscReal,Dimension(:),Pointer                  :: BC
@@ -307,6 +302,7 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,f,PoissonCtx,ierr)
    Type(VecScatter)                                :: ScatterSecToVec
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
    Type(Element_Type)                              :: elemType
+   Type(Vec)                                       :: modifiedFlux
 
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
 
@@ -316,20 +312,26 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,f,PoissonCtx,ierr)
 
    Call SectionRealSet(rhsSec,0.0_Kr,ierr);CHKERRQ(ierr)
    Call VecSet(rhs,0.0_Kr,ierr);CHKERRQ(ierr)
-   Call SectionRealToVec(fSec,ScatterSecToVec,SCATTER_REVERSE,f,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(flux,modifiedFLux,ierr);CHKERRQ(ierr)
 
+   Allocate(elem(numCell))
    Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
    Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-
-      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
+      !!! Modified flux is flux + surfaceThermalConductivity * refTemp
+      Call VecCopy(flux,modifiedFlux,ierr);CHKERRQ(ierr)
+      Call VecAXPY(modifiedFlux,cellSetProperties%SurfaceThermalConductivity,refTemp,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(fSec,ScatterSecToVec,SCATTER_REVERSE,modifiedFlux,ierr);CHKERRQ(ierr)
+      
       elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
       QuadratureOrder = elemType%order * 2
       Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
+
+      Call MEF90_DiffusionRHSSet(rhssec,mesh,fsec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
 
       Call MEF90_ElementDestroy(elem,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -340,7 +342,7 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,f,PoissonCtx,ierr)
    Call SectionRealComplete(rhsSec,ierr);CHKERRQ(ierr)
    !!! Scatter back from SectionReal to Vec
    Call SectionRealToVec(rhsSec,ScatterSecToVec,SCATTER_FORWARD,rhs,ierr);CHKERRQ(ierr)
-   
+   Call VecDestroy(modifiedFlux,ierr);CHKERRQ(ierr)
    
    !!!
    !!! Zero-out BC entries in the residual
@@ -375,16 +377,17 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,f,PoissonCtx,ierr)
 End Subroutine SimplePoissonRHS
 
 #undef __FUNCT__
-#define __FUNCT__ "SimplePoissonEnergies"
+#define __FUNCT__ "SimplePoissonEnergies_Cst"
 !!!
 !!!  
-!!!  SimplePoissonEnergies:
+!!!  SimplePoissonEnergies_Cst:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
+Subroutine SimplePoissonEnergies_Cst(snesTemp,x,fluxScaling,PoissonCtx,energy,work,ierr)
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: x
+   PetscReal,Intent(IN)                            :: fluxScaling
    Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
    PetscReal,Dimension(:),Pointer                  :: energy,work
    PetscErrorCode,Intent(OUT)                      :: ierr
@@ -428,8 +431,9 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
          Call MEF90_DiffusionEnergySet(myenergy,xSec,mesh,matpropSet%ThermalConductivity,0.0_Kr,setIS,elem,elemType,ierr)
       End If
       Call MPI_AllReduce(myenergy,energy(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+
       If (cellSetProperties%Flux /= 0.0_Kr) Then
-         Call MEF90_DiffusionWorkSet(mywork,xSec,mesh,cellSetProperties%Flux,setIS,elem,elemType,ierr)
+         Call MEF90_DiffusionWorkSet(mywork,xSec,mesh,fluxScaling*cellSetProperties%Flux,setIS,elem,elemType,ierr)
       End If
       Call MPI_AllReduce(mywork,work(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
       Call MEF90_ElementDestroy(elem,ierr);CHKERRQ(ierr)
@@ -440,6 +444,76 @@ Subroutine SimplePoissonEnergies(snesTemp,x,PoissonCtx,energy,work,ierr)
 
    Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
-End Subroutine SimplePoissonEnergies
+End Subroutine SimplePoissonEnergies_Cst
 
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonEnergies"
+!!!
+!!!  
+!!!  SimplePoissonEnergies:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonEnergies(snesTemp,x,flux,PoissonCtx,energy,work,ierr)
+   Type(SNES),Intent(IN)                           :: snesTemp
+   Type(Vec),Intent(IN)                            :: x
+   Type(Vec),Intent(IN)                            :: flux
+   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   PetscReal,Dimension(:),Pointer                  :: energy,work
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   Type(IS)                                        :: CellSetGlobalIS,setIS,setISdof
+   PetscInt,dimension(:),Pointer                   :: setID
+   PetscInt                                        :: set,QuadratureOrder
+   Type(MEF90_MATPROP),pointer                     :: matpropSet
+   Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
+   PetscReal                                       :: myenergy,mywork
+   Type(DM)                                        :: mesh
+   Type(SectionReal)                               :: xSec,fluxSec
+   Type(VecScatter)                                :: ScatterSecToVec
+   Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+   Type(Element_Type)                              :: elemType
+
+   energy = 0.0_Kr
+   work = 0.0_Kr   
+   Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
+   Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
+   Call DMMeshGetSectionReal(mesh,'default',fluxSec,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateGlobalScatter(mesh,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+   Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)
+   Call SectionRealToVec(fluxSec,ScatterSecToVec,SCATTER_REVERSE,flux,ierr);CHKERRQ(ierr)
+
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
+   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      myenergy = 0.0_Kr
+      mywork   = 0.0_Kr
+      Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+
+      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
+
+      elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
+      QuadratureOrder = elemType%order * 2
+      Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
+      !!! Assembly part of the residual coming from the bilinear form on the blocks of 
+      !!! codimension 0
+      If (MEF90_knownElements(cellSetProperties%ElemTypeShortID)%coDim == 0) Then
+         Call MEF90_DiffusionEnergySet(myenergy,xSec,mesh,matpropSet%ThermalConductivity,0.0_Kr,setIS,elem,elemType,ierr)
+      End If
+      Call MPI_AllReduce(myenergy,energy(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+
+      Call MEF90_DiffusionWorkSet(mywork,xSec,mesh,fluxSec,setIS,elem,elemType,ierr)
+
+      Call MPI_AllReduce(mywork,work(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+      Call MEF90_ElementDestroy(elem,ierr);CHKERRQ(ierr)
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+   End Do     
+   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+
+   Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+End Subroutine SimplePoissonEnergies
 End Module M_POISSONASSEMBLY

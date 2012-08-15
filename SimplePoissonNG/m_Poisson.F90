@@ -249,6 +249,54 @@ Subroutine SimplePoissonSaveEXO(mesh,EXOout,sol,TimeStepNum,t,energy,work,Poisso
 End Subroutine SimplePoissonSaveEXO
 
 #undef __FUNCT__
+#define __FUNCT__ "SimplePoissonLoadEXO"
+!!!
+!!!  
+!!!  SimplePoissonLoadEXO:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonLoadEXO(mesh,EXOIN,bctemp,flux,reftemp,TimeStepNum,PoissonCtx,ierr)
+   Type(DM),Intent(IN)                             :: mesh
+   Integer,Intent(IN)                              :: EXOIN
+   Type(Vec),Intent(IN),optional                   :: bctemp,flux,refTemp
+   PetscInt,Intent(IN)                             :: TimeStepNum
+   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   MPI_Comm                                        :: IOComm
+   Integer                                         :: IORank
+   Type(Vec)                                       :: locVec
+   Type(SectionReal)                               :: IOsec
+   Type(VecScatter)                                :: ScatterSecToVec
+   Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
+   Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
+   
+   Call PetscBagGetDataPoissonGlobalProperties(PoissonCtx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)      
+   If (GlobalProperties%FileFormat == Poisson_EXOSplit) Then
+      IOComm = PETSC_COMM_SELF
+   Else
+      IOComm = PETSC_COMM_WORLD
+   End If
+   Call MPI_Comm_Rank(IOComm,IORank,ierr)
+
+   Call DMMeshGetSectionReal(mesh,'default',IOsec,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateGlobalScatter(mesh,IOsec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+   Call SectionRealCreateLocalVector(IOsec,locVec,ierr);CHKERRQ(ierr)   
+
+   Call VecLoadExodusVertex(mesh,locVec,IOComm,exoIN,TimeStepNum,GlobalProperties%bctempOffset,ierr);CHKERRQ(ierr)
+   Call SectionRealToVec(IOsec,ScatterSecToVec,SCATTER_FORWARD,bctemp,ierr);CHKERRQ(ierr)
+
+   Call VecLoadExodusVertex(mesh,locVec,IOComm,exoIN,TimeStepNum,GlobalProperties%fluxOffset,ierr);CHKERRQ(ierr)
+   Call SectionRealToVec(IOsec,ScatterSecToVec,SCATTER_FORWARD,flux,ierr);CHKERRQ(ierr)
+   
+   Call VecLoadExodusVertex(mesh,locVec,IOComm,exoIN,TimeStepNum,GlobalProperties%refTempOffset,ierr);CHKERRQ(ierr)
+   Call SectionRealToVec(IOsec,ScatterSecToVec,SCATTER_FORWARD,refTemp,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(IOsec,ierr);CHKERRQ(ierr)
+   Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+End Subroutine SimplePoissonLoadEXO
+
+#undef __FUNCT__
 #define __FUNCT__ "SimplePoissonFormInitialGuess_Cst"
 !!!
 !!!  
@@ -298,6 +346,57 @@ Subroutine SimplePoissonFormInitialGuess_Cst(snesTemp,x,t,PoissonCtx,ierr)
    Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
 End Subroutine SimplePoissonFormInitialGuess_Cst
+
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonFormInitialGuess"
+!!!
+!!!  
+!!!  SimplePoissonFormInitialGuess:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonFormInitialGuess(snesTemp,x,xbc,PoissonCtx,ierr)
+   Type(SNES),Intent(IN)                           :: snesTemp
+   Type(Vec),Intent(IN)                            :: x
+   Type(Vec),Intent(IN)                            :: xbc
+   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
+   Type(IS)                                        :: VertexSetGlobalIS,setIS,setISdof
+   PetscInt,dimension(:),Pointer                   :: setID
+   PetscInt,Dimension(:),Pointer                   :: setIdx
+   PetscInt                                        :: set
+   PetscReal,Dimension(:),Pointer                  :: BC
+   Type(DM)                                        :: mesh
+   Type(SectionReal)                               :: xSec
+   
+   Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
+   Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
+
+   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
+      If (vertexSetProperties%Has_BC) Then
+         Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+         Allocate(BC(size(setIdx)),stat=ierr)
+         Call VecGetValues(xbc,size(setIdx),setIdx,BC,ierr);CHKERRQ(ierr)
+         Call VecSetValues(x,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         DeAllocate(BC)
+         Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+      End If
+   End Do
+   Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+
+   Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
+   Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+End Subroutine SimplePoissonFormInitialGuess
 
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonGetTime"

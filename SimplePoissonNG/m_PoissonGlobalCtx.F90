@@ -16,6 +16,8 @@ Module m_PoissonGlobalProperties_Type
       PetscReal      :: TimeMax
       PetscInt       :: numTimeStep
       PetscInt       :: tempOffset
+      PetscInt       :: reftempOffset
+      PetscInt       :: bctempOffset
       PetscInt       :: fluxOffset
       PetscBool      :: addNullSpace
    End Type PoissonGlobalProperties_Type   
@@ -142,6 +144,8 @@ Contains
             Call PetscBagRegisterInt(bag,GlobalProperties%numtimeStep,default%numTimeStep,'mil_numTimeStep','number of time step in MIL',ierr);CHKERRQ(ierr)
          Case (Poisson_File)
             Call PetscBagRegisterInt(bag,GlobalProperties%tempoffset,default%tempoffset,'file_tempoffset','Offset at which temperature is stored in file',ierr);CHKERRQ(ierr)
+            Call PetscBagRegisterInt(bag,GlobalProperties%reftempoffset,default%reftempoffset,'file_reftempoffset','Offset at which the reference temperature (used in inertial term) is stored in file',ierr);CHKERRQ(ierr)
+            Call PetscBagRegisterInt(bag,GlobalProperties%bctempoffset,default%bctempoffset,'file_bctempoffset','Offset at which boundary temperature is stored in file',ierr);CHKERRQ(ierr)
             Call PetscBagRegisterInt(bag,GlobalProperties%fluxoffset,default%fluxoffset,'file_fluxoffset','Offset at which flux is stored in file',ierr);CHKERRQ(ierr)
       End Select
       
