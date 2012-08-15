@@ -30,7 +30,8 @@ Program  SimplePoissonNG
    Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr,0.0_Kr,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
-   Character(len=MEF90_MXSTRLEN)                   :: prefix
+   Character(len=MEF90_MXSTRLEN)                   :: prefix,filena,e
+   Type(PetscViewer)                               :: energyViewer,energyViewerCellSet,logViewer
    Type(MEF90Ctx_Type)                             :: MEF90Ctx
    Type(DM)                                        :: mesh,tmp_mesh
    PetscErrorCode                                  :: iErr
@@ -65,6 +66,8 @@ Program  SimplePoissonNG
    
    PetscReal                                       :: rtol,atol,dtol
    PetscInt                                        :: maxits
+   
+   Type(Vec) :: tmpvec
    
    Call MEF90_Initialize()
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
@@ -174,7 +177,7 @@ Program  SimplePoissonNG
 
    Call SNESGetKSP(snesTemp,kspTemp,ierr);CHKERRQ(ierr)
    Call KSPSetType(kspTemp,KSPCG,ierr);CHKERRQ(ierr)
-   Call KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+   !Call KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
    If (GlobalProperties%addNullSpace) Then
       Call KSPSetNullSpace(kspTemp,nspTemp,ierr);CHKERRQ(ierr)
    End If
@@ -186,9 +189,9 @@ Program  SimplePoissonNG
    Call KSPGetPC(kspTemp,pcTemp,ierr);CHKERRQ(ierr)
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
    
-   Call SNESGetSNESLineSearch(snesTemp,linesearchTemp,ierr);CHKERRQ(ierr)
-   Call SNESLineSearchSetType(linesearchTemp,"l2",ierr);CHKERRQ(ierr)
-   Call SNESLineSearchSetFromOptions(linesearchTemp,ierr);CHKERRQ(ierr)
+   !Call SNESGetSNESLineSearch(snesTemp,linesearchTemp,ierr);CHKERRQ(ierr)
+   !Call SNESLineSearchSetType(linesearchTemp,"l2",ierr);CHKERRQ(ierr)
+   !Call SNESLineSearchSetFromOptions(linesearchTemp,ierr);CHKERRQ(ierr)
    
    !!! Add coordinates to the PC (mostly for GAMG)
    Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
@@ -207,6 +210,8 @@ Program  SimplePoissonNG
    Allocate(energy(numCellSetGlobal),stat=ierr)
    Allocate(work(numCellSetGlobal),stat=ierr)
    
+Call VecDuplicate(soltemp,tmpvec,ierr)
+   
    !!! Solve Poisson Equation
    Do TimeStepNum = 1, size(time)
       Write(IOBuffer,200) TimeStepNum,time(TimeStepNum)
@@ -214,20 +219,33 @@ Program  SimplePoissonNG
 200   Format('Solving time step ',I4,': t=',ES12.5,'\n')
 
       Call VecSet(solTemp,0.0_Kr,ierr);CHKERRQ(ierr)
-      Call SimplePoissonFormInitialGuess(snesTemp,solTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
-
       Call VecSet(rhsTemp,0.0_Kr,ierr);CHKERRQ(ierr)
-      !Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
-      Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,1.0_Kr,MEF90Ctx,ierr)
-      !Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
-      Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
+      If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
+         Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,time(timeStepNum),MEF90Ctx,ierr);CHKERRQ(ierr)
+         Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
+      Else
+         Call PetscPrintf(PETSC_COMM_WORLD,'Poisson_FILE not implemented yet\n',ierr)
+      End If
+      call VecCopy(soltemp,tmpvec,ierr)
+!      Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
+      Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
       !!! Check SNES / KSP convergence
       Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
       Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
       Write(IOBuffer,110) itsTemp,reasonTemp
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-110   Format('SNESTemp converged in in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
+110   Format('SNESTemp converged in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
    
+      call VecCopy(tmpvec,soltemp,ierr)
+      !Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
+      Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,solTemp,ierr);CHKERRQ(ierr)
+      !!! Check SNES / KSP convergence
+      Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
+      Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,110) itsTemp,reasonTemp
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+
+
       !!! Compute energy and work
       !!!
       Call SimplePoissonEnergies(snesTemp,solTemp,MEF90Ctx,energy,work,ierr)
