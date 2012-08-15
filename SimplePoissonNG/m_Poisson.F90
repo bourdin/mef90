@@ -51,6 +51,7 @@ Subroutine PoissonCtxDestroy(PoissonCtx,snesTemp,ierr)
    Call DMmeshGetLabelIdIS(mesh,'Cell Sets',SetIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
    Call ISGetLocalSize(setIS,nset,ierr);CHKERRQ(ierr)
+   
    Do set = 1, nset
       Call PetscBagDestroy(PoissonCtx%CellSetPropertiesBag(set),ierr);CHKERRQ(ierr)
       Call PetscBagDestroy(PoissonCtx%MaterialPropertiesBag(set),ierr);CHKERRQ(ierr)
