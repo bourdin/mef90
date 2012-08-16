@@ -168,7 +168,7 @@ Subroutine SimplePoissonPrepareOutputEXO(mesh,prefix,exoIN,exoOUT,Poissonctx,ier
          Call EXPVP (exoOUT,'g',3,ierr)
          Call EXPVAN(exoOUT,'g',3,(/'Energy      ','Fluxes work ','Total Energy'/),ierr)
          Call EXPVP (exoOUT,'n',1,ierr)
-         Call EXPVAN(exoOUT,'n',1,(/'U'/),ierr)
+         Call EXPVAN(exoOUT,'n',1,(/'Temperature'/),ierr)
          !Call EXPVAN(exoOUT,'e',1,(/'F'/),ierr)
       End If
    End If
@@ -423,7 +423,7 @@ Subroutine SimplePoissonGetTime(time,exoIN,PoissonCtx,ierr)
    Call PetscBagGetDataPoissonGlobalProperties(PoissonCtx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)      
    Select Case (GlobalProperties%LoadingType)
       Case (Poisson_CST)
-         Allocate(Time(1),stat=ierr)
+         Allocate(time(GlobalProperties%numTimeStep))
          time = 1.0_Kr
       Case (Poisson_MIL)
          Allocate(time(GlobalProperties%numTimeStep))
