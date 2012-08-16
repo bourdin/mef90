@@ -107,6 +107,7 @@ Program  SimplePoissonNG
       Call TSCreate(PETSC_COMM_WORLD,tsTemp,ierr);CHKERRQ(ierr)
       Call TSSetDM(tsTemp,mesh,ierr);CHKERRQ(ierr)
       Call TSSetOptionsPrefix(tsTemp,'temp_',ierr);CHKERRQ(ierr)
+      Call TSGetSNES(tsTemp,snesTemp,ierr);CHKERRQ(ierr)
    End If
 
    !!! 
@@ -198,12 +199,22 @@ Program  SimplePoissonNG
    Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
 
    !!!
-   !!! Set Jacobian and Function for the SNES
+   !!! Set Jacobian and Function for the SNES / TS
    !!!
-   Call SNESSetFunction(snesTemp,resTemp,SimplePoissonOperator,MEF90Ctx,ierr);CHKERRQ(ierr)
-   Call SNESSetJacobian(snesTemp,matTemp,matTemp,SimplePoissonBilinearForm,MEF90Ctx,ierr);CHKERRQ(ierr)
-   Call SNESSetFromOptions(snesTemp,ierr);CHKERRQ(ierr)
-
+   If (GlobalProperties%TimeEvolution == Poisson_SteadyState) Then
+      Call SNESSetFunction(snesTemp,resTemp,SimplePoissonOperator,MEF90Ctx,ierr);CHKERRQ(ierr)
+      Call SNESSetJacobian(snesTemp,matTemp,matTemp,SimplePoissonBilinearForm,MEF90Ctx,ierr);CHKERRQ(ierr)
+      Call SNESSetFromOptions(snesTemp,ierr);CHKERRQ(ierr)
+   Else
+      !Call TSSetIFunction
+      !Call TSSetIJacobian
+      !Call TSSetRHSFunction
+      Call TSSetFromOptions(tsTemp,ierr);CHKERRQ(ierr)
+   End If
+   
+   !!! 
+   !!! Set some KSP options
+   !!!
    Call SNESGetKSP(snesTemp,kspTemp,ierr);CHKERRQ(ierr)
    Call KSPSetType(kspTemp,KSPCG,ierr);CHKERRQ(ierr)
    Call KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
@@ -215,10 +226,11 @@ Program  SimplePoissonNG
    Call KSPSetTolerances(kspTemp,rtol,atol,dtol,maxits,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
 
+   !!!
+   !!! Set some PC options
+   !!!
    Call KSPGetPC(kspTemp,pcTemp,ierr);CHKERRQ(ierr)
    Call PCSetFromOptions(pcTemp,ierr);CHKERRQ(ierr)
-   
-   !!! Add coordinates to the PC (mostly for GAMG)
    Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
    Allocate(coord2(size(coord)))
    Do i = 1, size(coord,1)
@@ -232,10 +244,13 @@ Program  SimplePoissonNG
 
    !!!
    !!! Allocate arrays for the energies in each block
+   !!!
    Allocate(energy(numCellSetGlobal),stat=ierr)
    Allocate(work(numCellSetGlobal),stat=ierr)
    
-   !!! Solve Poisson Equation
+   !!!
+   !!! MAIN LOOP: Solve Poisson Equation
+   !!!
    Do TimeStepNum = 1, size(time)
       Write(IOBuffer,200) TimeStepNum,time(TimeStepNum)
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
@@ -301,6 +316,7 @@ Program  SimplePoissonNG
    Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call PoissonCtxDestroy(MEF90Ctx,snesTemp,ierr);CHKERRQ(ierr)
    Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
+   Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(RHSTemp,ierr);CHKERRQ(ierr)
