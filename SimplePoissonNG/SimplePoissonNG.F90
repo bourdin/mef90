@@ -19,6 +19,7 @@ Program  SimplePoissonNG
                                                          0,                   & ! verbose
                                                          Poisson_EXOSingle,   & ! FileFormat
                                                          Poisson_Replace,     & ! FileMode
+                                                         Poisson_SteadyState, & ! EvolutionLaw
                                                          Poisson_CST,         & ! LoadingType
                                                          0.0_Kr,              & ! TimeMin
                                                          0.0_kr,              & ! TimeMax
@@ -43,6 +44,7 @@ Program  SimplePoissonNG
    PetscInt                                        :: numDim
    PetscBool                                       :: flg
    Type(SNES)                                      :: snesTemp
+   Type(TS)                                        :: tsTemp
    Type(KSP)                                       :: kspTemp
    Type(PC)                                        :: pcTemp
    Type(Mat)                                       :: matTemp
@@ -95,11 +97,17 @@ Program  SimplePoissonNG
    Call SimplePoissonGetTime(time,exoIN,MEF90Ctx,ierr);CHKERRQ(ierr)
 
    !!! 
-   !!! Create SNES
+   !!! Create SNES or TS
    !!!
-   Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
-   Call SNESSetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
-   Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
+   If (GlobalProperties%TimeEvolution == Poisson_SteadyState) Then
+      Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
+      Call SNESSetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
+      Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
+   Else
+      Call TSCreate(PETSC_COMM_WORLD,tsTemp,ierr);CHKERRQ(ierr)
+      Call TSSetDM(tsTemp,mesh,ierr);CHKERRQ(ierr)
+      Call TSSetOptionsPrefix(tsTemp,'temp_',ierr);CHKERRQ(ierr)
+   End If
 
    !!! 
    !!! Create PoissonCtx
@@ -241,41 +249,44 @@ Program  SimplePoissonNG
          Call SimplePoissonFormInitialGuess(snesTemp,solTemp,bcTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
          Call SimplePoissonRHS(snesTemp,rhsTemp,flux,refTemp,MEF90Ctx,ierr)
       End If
-      Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
-      !!! Check SNES / KSP convergence
-      Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
-      Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,110) itsTemp,reasonTemp
-      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-110   Format('SNESTemp converged in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
-   
-      !!! Compute energy and work
-      !!!
-      If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
-         Call SimplePoissonEnergies_Cst(snesTemp,solTemp,time(timestepnum),MEF90Ctx,energy,work,ierr)
-      Else
-         Call SimplePoissonEnergies(snesTemp,solTemp,flux,MEF90Ctx,energy,work,ierr)
-      End If
 
-      !!! Print and save energy and work
-      !!!
-      Write(IOBuffer,*) '\n'
-      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-      Do set = 1,size(CellSetGlobalID)
-         Write(IOBuffer,102) CellSetGlobalID(set),energy(set),work(set)
+      !!! No need to solve over and over when doing CST loading
+      If ((GlobalProperties%LoadingType /= Poisson_CST) .OR. (TimeStepNum == 1)) Then
+         Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
+         !!! Check SNES / KSP convergence
+         Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
+         Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,110) itsTemp,reasonTemp
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-         Write(IOBuffer,202) timeStepNum,time(timeStepNum),energy(set),work(set),energy(set)-work(set)
-         Call PetscViewerASCIIPrintf(energyViewerCellSet(set),IOBuffer,ierr);CHKERRQ(ierr)
-      End Do
-      Write(IOBuffer,103) sum(energy),sum(work)
-      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,202) timeStepNum,time(timeStepNum),sum(energy),sum(work),sum(energy) - sum(work)
-      Call PetscViewerASCIIPrintf(energyViewer,IOBuffer,ierr);CHKERRQ(ierr)
-102   Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
-202   Format(I4,'  ',4(ES12.5,'  '),'\n')
-103   Format('=====================================================\n',         &
-              'Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
+110      Format('SNESTemp converged in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
    
+         !!! Compute energy and work
+         !!!
+         If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
+            Call SimplePoissonEnergies_Cst(snesTemp,solTemp,time(timestepnum),MEF90Ctx,energy,work,ierr)
+         Else
+            Call SimplePoissonEnergies(snesTemp,solTemp,flux,MEF90Ctx,energy,work,ierr)
+         End If
+   
+         !!! Print and save energy and work
+         !!!
+         Write(IOBuffer,*) '\n'
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         Do set = 1,size(CellSetGlobalID)
+            Write(IOBuffer,102) CellSetGlobalID(set),energy(set),work(set)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,202) timeStepNum,time(timeStepNum),energy(set),work(set),energy(set)-work(set)
+            Call PetscViewerASCIIPrintf(energyViewerCellSet(set),IOBuffer,ierr);CHKERRQ(ierr)
+         End Do
+         Write(IOBuffer,103) sum(energy),sum(work)
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,202) timeStepNum,time(timeStepNum),sum(energy),sum(work),sum(energy) - sum(work)
+         Call PetscViewerASCIIPrintf(energyViewer,IOBuffer,ierr);CHKERRQ(ierr)
+102      Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
+202      Format(I4,'  ',4(ES12.5,'  '),'\n')
+103      Format('=====================================================\n',         &
+              'Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
+      End If   
       !!! Save results
       !!!
       Call SimplePoissonSaveEXO(mesh,EXOout,solTemp,TimeStepNum,time(TimeStepNum),sum(energy),sum(work),MEF90Ctx,ierr);CHKERRQ(ierr)

@@ -11,6 +11,7 @@ Module m_PoissonGlobalProperties_Type
       PetscInt       :: verbose
       PetscEnum      :: FileFormat
       PetscEnum      :: FileMode
+      PetscEnum      :: TimeEvolution
       PetscEnum      :: LoadingType
       PetscReal      :: TimeMin
       PetscReal      :: TimeMax
@@ -52,6 +53,12 @@ Module m_PoissonGlobalProperties
                      Poisson_FILE
    End Enum
    Character(len = MEF90_MXSTRLEN),dimension(6),protected   :: Poisson_LoadingList
+
+   Enum,bind(c) 
+      Enumerator  :: Poisson_SteadyState = 0,   &   
+                     Poisson_Transient
+   End Enum
+   Character(len = MEF90_MXSTRLEN),dimension(5),protected   :: Poisson_TimeEvolutionList
 
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
@@ -97,6 +104,12 @@ Contains
       Poisson_LoadingList(4) = 'Loading'
       Poisson_LoadingList(5) = '_Poisson_Loading'
       Poisson_LoadingList(6) = ''
+      
+      Poisson_TimeEvolutionList(1) = 'SteadyState'
+      Poisson_TimeEvolutionList(2) = 'Transient'
+      Poisson_TimeEvolutionList(3) = 'EvolutionLaw'
+      Poisson_TimeEvolutionList(4) = '_Evolution_law'
+      Poisson_TimeEvolutionList(5) = ''
 
    End Subroutine PoissonGlobalPropertiesInitialize
 
@@ -135,19 +148,19 @@ Contains
       Call PetscBagRegisterEnum(bag,GlobalProperties%FileFormat,Poisson_FileFormatList,default%FileFormat,'file_format','I/O file format.',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,GlobalProperties%FileMode,Poisson_FileModeList,default%FileMode,'file_mode','I/O file mode.',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,GlobalProperties%LoadingType,Poisson_LoadingList,default%LoadingType,'Loading','Loading Type',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,GlobalProperties%TimeEvolution,Poisson_TimeEvolutionList,default%TimeEvolution,'TimeEvolution','Time evolution type',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,GlobalProperties%addNullSpace,default%addNullSpace,'addNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
       
-      Select Case (GlobalProperties%LoadingType)
-         Case (Poisson_MIL)
-            Call PetscBagRegisterReal(bag,GlobalProperties%timemin,default%timemin,'mil_timemin','Starting time',ierr);CHKERRQ(ierr)
-            Call PetscBagRegisterReal(bag,GlobalProperties%timemax,default%timemax,'mil_timemax','End Time',ierr);CHKERRQ(ierr)
-            Call PetscBagRegisterInt(bag,GlobalProperties%numtimeStep,default%numTimeStep,'mil_numTimeStep','number of time step in MIL',ierr);CHKERRQ(ierr)
-         Case (Poisson_File)
-            Call PetscBagRegisterInt(bag,GlobalProperties%tempoffset,default%tempoffset,'file_tempoffset','Offset at which temperature is stored in file',ierr);CHKERRQ(ierr)
-            Call PetscBagRegisterInt(bag,GlobalProperties%reftempoffset,default%reftempoffset,'file_reftempoffset','Offset at which the reference temperature (used in inertial term) is stored in file',ierr);CHKERRQ(ierr)
-            Call PetscBagRegisterInt(bag,GlobalProperties%bctempoffset,default%bctempoffset,'file_bctempoffset','Offset at which boundary temperature is stored in file',ierr);CHKERRQ(ierr)
-            Call PetscBagRegisterInt(bag,GlobalProperties%fluxoffset,default%fluxoffset,'file_fluxoffset','Offset at which flux is stored in file',ierr);CHKERRQ(ierr)
-      End Select
+      If ( GlobalProperties%LoadingType == Poisson_File) Then
+         Call PetscBagRegisterInt(bag,GlobalProperties%tempoffset,default%tempoffset,'file_tempoffset','Offset at which temperature is stored in file',ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterInt(bag,GlobalProperties%reftempoffset,default%reftempoffset,'file_reftempoffset','Offset at which the reference temperature (used in inertial term) is stored in file',ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterInt(bag,GlobalProperties%bctempoffset,default%bctempoffset,'file_bctempoffset','Offset at which boundary temperature is stored in file',ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterInt(bag,GlobalProperties%fluxoffset,default%fluxoffset,'file_fluxoffset','Offset at which flux is stored in file',ierr);CHKERRQ(ierr)
+      Else
+         Call PetscBagRegisterReal(bag,GlobalProperties%timemin,default%timemin,'timemin','Starting time',ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterReal(bag,GlobalProperties%timemax,default%timemax,'timemax','End Time',ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterInt(bag,GlobalProperties%numtimeStep,default%numTimeStep,'numTimeStep','number of time steps',ierr);CHKERRQ(ierr)
+      End If
       
       If ( (GlobalProperties%FileMode == Poisson_FILE) .AND. (GlobalProperties%FileMode == Poisson_Replace)) Then
          Call PetscPrintf(PETSC_COMM_WORLD,'[WARNING]: input values of temperature will be overwritten with computed ones in EXO file\n',ierr);CHKERRQ(ierr)
