@@ -249,7 +249,7 @@ diff --git a/src/sys/yaml/makefile b/src/sys/yaml/makefile
 diff --git a/src/sys/yaml/yamlimpls.c b/src/sys/yaml/yamlimpls.c
 --- a/src/sys/yaml/yamlimpls.c
 +++ b/src/sys/yaml/yamlimpls.c
-@@ -1,780 +1,131 @@
+@@ -1,780 +1,130 @@
 -#include "yamlimpls.h"
 +#include <petscsys.h>        /*I  "petscsys.h"   I*/
 +#include <yaml.h>
