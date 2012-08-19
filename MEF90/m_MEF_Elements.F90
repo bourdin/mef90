@@ -739,7 +739,7 @@ Contains
       Type(Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc
+      PetscInt                                    :: iELoc
       PetscInt                                    :: i,j,numCell
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
@@ -779,7 +779,7 @@ Contains
       Type(Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc
+      PetscInt                                    :: iELoc
       PetscInt                                    :: i,j,numCell
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
@@ -819,7 +819,7 @@ Contains
       Type(Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc
+      PetscInt                                    :: iELoc
       PetscInt                                    :: i,j,numCell
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
@@ -859,7 +859,7 @@ Contains
       Type(Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc
+      PetscInt                                    :: iELoc
       PetscInt                                    :: i,j,numCell
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
@@ -899,7 +899,7 @@ Contains
       Type(Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc
+      PetscInt                                    :: iELoc
       PetscInt                                    :: i,j,numCell
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
@@ -939,7 +939,7 @@ Contains
       Type(Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                  :: ierr
       
-      PetscInt                                    :: conesize,iELoc
+      PetscInt                                    :: iELoc
       PetscInt                                    :: i,j,numCell
       PetscInt,Dimension(:),Pointer               :: CellID
       PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
@@ -1295,7 +1295,7 @@ Contains
       
       PetscReal, Dimension(:), Pointer       :: Xi
       PetscReal                              :: l
-      PetscInt                               :: i,j,iDoF,iG,Num_Gauss,Num_DoF
+      PetscInt                               :: iDoF,iG,Num_Gauss,Num_DoF
 
       l = sqrt( (dCoord(2,1)-dCoord(1,1))**2 + (dCoord(2,2)-dCoord(1,2))**2)
       Select Case(dQuadratureOrder)

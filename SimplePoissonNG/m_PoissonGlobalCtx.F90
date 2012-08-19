@@ -139,7 +139,6 @@ Contains
       PetscErrorCode,intent(OUT)                      :: ierr
 
       Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties
-      PetscBool                                       :: flg
 
       Call PetscBagGetDataPoissonGlobalProperties(bag,GlobalProperties,ierr);CHKERRQ(ierr)
       Call PetscBagSetName(bag,trim(name),"Global properties object",ierr);CHKERRQ(ierr)

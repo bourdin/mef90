@@ -44,7 +44,7 @@ Subroutine PoissonCtxDestroy(PoissonCtx,snesTemp,ierr)
 
    Type(IS)                                                 :: setIS   
    Type(DM)                                                 :: mesh
-   PetscInt                                                 :: e,set,nset
+   PetscInt                                                 :: set,nset
    
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
 
@@ -270,7 +270,6 @@ Subroutine SimplePoissonLoadEXO(mesh,EXOIN,bctemp,flux,reftemp,TimeStepNum,Poiss
    Type(SectionReal)                               :: IOsec
    Type(VecScatter)                                :: ScatterSecToVec
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
-   Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
    
    Call PetscBagGetDataPoissonGlobalProperties(PoissonCtx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)      
    If (GlobalProperties%FileFormat == Poisson_EXOSplit) Then
@@ -413,8 +412,6 @@ Subroutine SimplePoissonGetTime(time,exoIN,PoissonCtx,ierr)
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties
-   MPI_Comm                                        :: IOComm
-   Integer                                         :: IORank
    PetscInt                                        :: NumTimeStep,i
    Real                                            :: rdumm
    Character(len=1)                                :: cdumm
