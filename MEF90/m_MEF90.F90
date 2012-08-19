@@ -1,17 +1,18 @@
 Module m_MEF90
 #include "finclude/petscdef.h"
    Use petsc
-   Use m_MEF_Parameters
-   Use m_MEF_LinAlg
-   Use m_MEF_Utils
-   Use m_MEF_MPI
-   Use m_MEF_Elements 
-   Use m_MEF_Norm
-   Use m_MEF_EXO  
-   Use m_MEF_Sieve
-   Use m_MEF_Materials
-   Use m_MEF_Diffusion
    Use m_MEF_Ctx
+   Use m_MEF_Diffusion
+   Use m_MEF_Elements 
+   Use m_MEF_EXO  
+   Use m_MEF_LinAlg
+   Use m_MEF_Parameters
+   Use m_MEF_MassMatrix
+   Use m_MEF_Materials
+   Use m_MEF_MPI
+   Use m_MEF_Norm
+   Use m_MEF_Sieve
+   Use m_MEF_Utils
 
    Public :: MEF90_Initialize
    Public :: MEF90_Finalize

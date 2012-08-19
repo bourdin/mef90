@@ -11,6 +11,7 @@ Module m_MEF_Diffusion
    Private   
    Public :: MEF90_DiffusionBilinearFormSet
    Public :: MEF90_DiffusionOperatorSet
+   Public :: MEF90_DiffusionOperatorAddTransientTermSet
    Public :: MEF90_DiffusionRHSSet
    Public :: MEF90_DiffusionEnergySet
    Public :: MEF90_DiffusionWorkSet
@@ -27,6 +28,10 @@ Module m_MEF_Diffusion
       Module procedure DiffusionOperatorSet_2D,DiffusionOperatorSet_3D
    End Interface MEF90_DiffusionOperatorSet
 
+   Interface MEF90_DiffusionOperatorAddTransientTermSet
+      Module procedure DiffusionOperatorAddTransientTermSet_2D,DiffusionOperatorAddTransientTermSet_3D
+   End Interface MEF90_DiffusionOperatorAddTransientTermSet
+   
    Interface MEF90_DiffusionEnergySet
       Module procedure DiffusionEnergySet_2D,DiffusionEnergySet_3D
    End Interface MEF90_DiffusionEnergySet
@@ -34,6 +39,7 @@ Module m_MEF_Diffusion
    Interface MEF90_DiffusionWorkSet
       Module procedure DiffusionWorkSet_2D,DiffusionWorkCellCstSet_2D,DiffusionWorkSet_3D,DiffusionWorkCellCstSet_3D
    End Interface MEF90_DiffusionWorkSet
+   
 
 !  Assembles all components required to solve a diffusion equation in the form
 !
@@ -134,7 +140,7 @@ Contains
       PetscReal,Dimension(:),Pointer               :: Vloc
       PetscReal                                    :: Velem
       Type(Vect2D)                                 :: GradVelem
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -169,6 +175,60 @@ Contains
    End Subroutine DiffusionOperatorSet_2D
 
 #undef __FUNCT__
+#define __FUNCT__ "DiffusionOperatorAddTransientTermSet_2D"
+!!!
+!!!  
+!!!  DiffusionOperatorAddTransientTermSet_2D:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine DiffusionOperatorAddTransientTermSet_2D(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
+      Type(SectionReal),Intent(IN)                 :: G
+      Type(DM),Intent(IN)                          :: mesh
+      Type(SectionReal),Intent(IN)                 :: x
+      Type(IS),Intent(IN)                          :: cellIS
+      PetscReal,Intent(IN)                         :: alpha
+      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                   :: ierr
+
+      PetscInt,Dimension(:),Pointer                :: cellID
+      PetscInt                                     :: cell
+      PetscReal,Dimension(:),Pointer               :: xloc,Gloc
+      PetscReal                                    :: xelem
+      PetscInt                                     :: iDoF1,iGauss
+      PetscLogDouble                               :: flops
+           
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Allocate(Gloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            Gloc = 0.0_Kr
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               xelem     = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+               End Do
+               Do iDoF1 = 1,elemType%numDof
+                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                elem(cell)%BF(iDoF1,iGauss) * xelem
+               End Do
+            End Do
+            Gloc = Gloc * alpha
+            Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+         End Do
+      
+         flops = (5 * elemType%numDof * size(elem(1)%Gauss_C) + 1) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(Gloc)
+      End If
+   End Subroutine DiffusionOperatorAddTransientTermSet_2D
+
+#undef __FUNCT__
 #define __FUNCT__ "DiffusionRHSSet_2D"
    Subroutine DiffusionRHSSet_2D(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                 :: RHS
@@ -183,7 +243,7 @@ Contains
       PetscInt                                     :: cell
       PetscReal,Dimension(:),Pointer               :: Floc,RHSloc
       PetscReal                                    :: Felem
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -228,7 +288,7 @@ Contains
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
       PetscReal,Dimension(:),Pointer               :: RHSloc
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -314,7 +374,7 @@ Contains
       PetscReal                                    :: xelem,felem
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -359,7 +419,7 @@ Contains
       PetscReal                                    :: xelem
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -444,7 +504,7 @@ Contains
       PetscReal,Dimension(:),Pointer               :: Vloc
       PetscReal                                    :: Velem
       Type(Vect3D)                                 :: GradVelem
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
      
       
@@ -480,6 +540,61 @@ Contains
    End Subroutine DiffusionOperatorSet_3D
 
 #undef __FUNCT__
+#define __FUNCT__ "DiffusionOperatorAddTransientTermSet_3D"
+!!!
+!!!  
+!!!  DiffusionOperatorAddTransientTermSet_3D:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine DiffusionOperatorAddTransientTermSet_3D(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
+      Type(SectionReal),Intent(IN)                 :: G
+      Type(DM),Intent(IN)                          :: mesh
+      Type(SectionReal),Intent(IN)                 :: x
+      Type(IS),Intent(IN)                          :: cellIS
+      PetscReal,Intent(IN)                         :: alpha
+      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                   :: ierr
+
+      PetscInt,Dimension(:),Pointer                :: cellID
+      PetscInt                                     :: cell
+      PetscReal,Dimension(:),Pointer               :: xloc,Gloc
+      PetscReal                                    :: xelem
+      PetscInt                                     :: iDoF1,iGauss
+      PetscLogDouble                               :: flops
+           
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Allocate(Gloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            Gloc = 0.0_Kr
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               xelem     = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+               End Do
+               Do iDoF1 = 1,elemType%numDof
+                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                elem(cell)%BF(iDoF1,iGauss) * xelem
+               End Do
+            End Do
+            Gloc = Gloc * alpha
+            Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+         End Do
+      
+         flops = (5 * elemType%numDof * size(elem(1)%Gauss_C) + 1) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(Gloc)
+      End If
+   End Subroutine DiffusionOperatorAddTransientTermSet_3D
+
+
+#undef __FUNCT__
 #define __FUNCT__ "DiffusionRHSSet_3D"
    Subroutine DiffusionRHSSet_3D(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                 :: RHS
@@ -494,7 +609,7 @@ Contains
       PetscInt                                     :: cell
       PetscReal,Dimension(:),Pointer               :: Floc,RHSloc
       PetscReal                                    :: Felem
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
      
       
@@ -540,7 +655,7 @@ Contains
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
       PetscReal,Dimension(:),Pointer               :: RHSloc
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
      
       
@@ -627,7 +742,7 @@ Contains
       PetscReal                                    :: xelem,felem
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -673,7 +788,7 @@ Contains
       PetscReal                                    :: xelem
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
+      PetscInt                                     :: iDoF1,iGauss
       PetscLogDouble                               :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)

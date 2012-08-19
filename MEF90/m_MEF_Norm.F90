@@ -82,7 +82,7 @@ Contains
       PetscInt                                     :: numDof,iDof,numGauss,iGauss
       PetscReal, Dimension(:), Pointer             :: U_loc,V_Loc
       PetscReal                                    :: U_elem,V_elem
-      PetscReal                                    :: myL2DotProduct,L2DotProductloc
+      PetscReal                                    :: myL2DotProduct
       MPI_Comm                                     :: comm
 
       L2DotProduct = 0.0_Kr
@@ -135,7 +135,7 @@ Contains
       PetscInt                                     :: numDof,iDof,numGauss,iGauss
       PetscReal, Dimension(:), Pointer             :: U_loc,V_Loc
       Type(Vect2D)                                 :: U_elem,V_elem
-      PetscReal                                    :: myL2DotProduct,L2DotProductloc
+      PetscReal                                    :: myL2DotProduct
       MPI_Comm                                     :: comm
 
       L2DotProduct = 0.0_Kr
@@ -188,7 +188,7 @@ Contains
       PetscInt                                     :: numDof,iDof,numGauss,iGauss
       PetscReal, Dimension(:), Pointer             :: U_loc,V_Loc
       Type(Vect2D)                                 :: U_elem,V_elem
-      PetscReal                                    :: myL2DotProduct,L2DotProductloc
+      PetscReal                                    :: myL2DotProduct
       MPI_Comm                                     :: comm
 
       L2DotProduct = 0.0_Kr
@@ -241,7 +241,7 @@ Contains
       PetscInt                                     :: numDof,iDof,numGauss,iGauss
       PetscReal, Dimension(:), Pointer             :: U_loc,V_Loc
       PetscReal                                    :: U_elem,V_elem
-      PetscReal                                    :: myL2DotProduct,L2DotProductloc
+      PetscReal                                    :: myL2DotProduct
       MPI_Comm                                     :: comm
 
       L2DotProduct = 0.0_Kr
@@ -294,7 +294,7 @@ Contains
       PetscInt                                     :: numDof,iDof,numGauss,iGauss
       PetscReal, Dimension(:), Pointer             :: U_loc,V_Loc
       Type(Vect3D)                                 :: U_elem,V_elem
-      PetscReal                                    :: myL2DotProduct,L2DotProductloc
+      PetscReal                                    :: myL2DotProduct
       MPI_Comm                                     :: comm
 
       L2DotProduct = 0.0_Kr
@@ -347,7 +347,7 @@ Contains
       PetscInt                                     :: numDof,iDof,numGauss,iGauss
       PetscReal, Dimension(:), Pointer             :: U_loc,V_Loc
       Type(Vect3D)                                 :: U_elem,V_elem
-      PetscReal                                    :: myL2DotProduct,L2DotProductloc
+      PetscReal                                    :: myL2DotProduct
       MPI_Comm                                     :: comm
 
       L2DotProduct = 0.0_Kr
@@ -393,8 +393,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2DotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2DotProductSet
 
@@ -420,8 +420,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2DotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2DotProductSet
 
@@ -447,8 +447,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2DotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2DotProductSet
 
@@ -474,8 +474,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2DotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2DotProductSet
 
@@ -501,8 +501,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2DotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2DotProductSet
 
@@ -528,8 +528,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2DotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2DotProductSet
 
@@ -639,8 +639,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2NormSet
 
@@ -667,8 +667,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2NormSet
 
@@ -695,8 +695,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2NormSet
 
@@ -723,8 +723,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2NormSet
 
@@ -751,8 +751,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2NormSet
 
@@ -779,8 +779,8 @@ Contains
       PetscReal,Intent(OUT)                        :: L2Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: L2NormSet
 
@@ -1125,8 +1125,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiDotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiDotProductSet
 
@@ -1152,8 +1152,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiDotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiDotProductSet
 
@@ -1179,8 +1179,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiDotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiDotProductSet
 
@@ -1206,8 +1206,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiDotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiDotProductSet
 
@@ -1233,8 +1233,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiDotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiDotProductSet
 
@@ -1260,8 +1260,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiDotProduct
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiDotProductSet
 
@@ -1371,8 +1371,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiNorm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiNormSet
 
@@ -1399,8 +1399,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiNorm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiNormSet
 
@@ -1427,8 +1427,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiNorm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiNormSet
 
@@ -1455,8 +1455,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiNorm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiNormSet
 
@@ -1483,8 +1483,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiNorm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiNormSet
 
@@ -1511,8 +1511,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1semiNorm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1semiNormSet
 
@@ -1821,8 +1821,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1NormSet
 
@@ -1849,8 +1849,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1NormSet
 
@@ -1877,8 +1877,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1NormSet
 
@@ -1905,8 +1905,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1NormSet
 
@@ -1933,8 +1933,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1NormSet
 
@@ -1961,8 +1961,8 @@ Contains
       PetscReal,Intent(OUT)                        :: H1Norm
       PetscErrorCode,intent(OUT)                   :: ierr
       
-      Type(IS)                                     :: setIS,elemIS
-      PetscInt,Dimension(:),Pointer                :: setID,elemID
+      Type(IS)                                     :: setIS
+      PetscInt,Dimension(:),Pointer                :: setID
       PetscInt                                     :: set
       PetscReal                                    :: H1NormSet
 

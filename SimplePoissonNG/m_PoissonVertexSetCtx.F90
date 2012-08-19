@@ -86,8 +86,8 @@ Contains
       Call PetscBagGetDataPoissonVertexSetProperties(bag,VertexSetProperties,ierr);CHKERRQ(ierr)
       Call PetscBagSetName(bag,trim(name),"VertexSetProperties object: Vertex Set properties",ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
-      Call PetscBagRegisterBool(bag,VertexSetProperties%Has_BC,PETSC_FALSE,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,VertexSetProperties%BC,0.0_Kr,'Temp','Temperature boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,VertexSetProperties%Has_BC,default%Has_BC,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,VertexSetProperties%BC,default%BC,'Temp','Temperature boundary value',ierr);CHKERRQ(ierr)
       !Call PetscBagSetFromOptions(bag,ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterPoissonVertexSetProperties
 

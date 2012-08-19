@@ -39,9 +39,7 @@ Program  SimplePoissonNG
    Type(MEF90Ctx_Type)                             :: MEF90Ctx
    Type(DM)                                        :: mesh,tmp_mesh
    PetscErrorCode                                  :: iErr
-   PetscInt                                        :: exo_step,exo_field
    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
-   PetscInt                                        :: numDim
    PetscBool                                       :: flg
    Type(SNES)                                      :: snesTemp
    Type(TS)                                        :: tsTemp
@@ -58,7 +56,6 @@ Program  SimplePoissonNG
    SNESConvergedReason                             :: reasonTemp
    PetscInt                                        :: itsTemp
    Type(SectionReal)                               :: secTemp
-   Type(VecScatter)                                :: ScatterSecToVec
    Type(IS)                                        :: CellSetGlobalIS
    Type(Element_Type),Dimension(:),pointer         :: ElemType
       

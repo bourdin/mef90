@@ -9,6 +9,10 @@ Module M_POISSONASSEMBLY
    Implicit NONE
 Contains
 
+
+!!! 
+!!! ============= SNES =============
+!!!
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonBilinearForm"
 !!!
@@ -22,7 +26,7 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    Type(Vec),Intent(IN)                            :: x
    Type(Mat),Intent(INOUT)                         :: A,M
    MatStructure,Intent(INOUT)                      :: flg
-   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr  
    
    Type(IS)                                        :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
@@ -99,7 +103,7 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: x
    Type(Vec),Intent(INOUT)                         :: residual
-   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Type(SectionReal)                               :: xSec,residualSec
@@ -111,7 +115,6 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
    PetscReal,Dimension(:),Pointer                  :: BC
-   PetscReal                                       :: F
    Type(DM)                                        :: mesh
    Type(VecScatter)                                :: ScatterSecToVec
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
@@ -195,7 +198,7 @@ Subroutine SimplePoissonRHS_Cst(snesTemp,rhs,t,PoissonCtx,ierr)
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: rhs
    PetscReal,Intent(IN)                            :: t
-   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Type(SectionReal)                               :: rhsSec
@@ -288,7 +291,7 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,flux,reftemp,PoissonCtx,ierr)
    Type(Vec),Intent(IN)                            :: rhs
    Type(Vec),Intent(IN)                            :: flux
    Type(Vec),Intent(IN)                            :: refTemp
-   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Type(SectionReal)                               :: rhsSec,fSec
@@ -297,6 +300,7 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,flux,reftemp,PoissonCtx,ierr)
    PetscInt                                        :: set,QuadratureOrder,numCell
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
+   Type(MEF90_MATPROP),pointer                     :: matpropSet
    PetscReal,Dimension(:),Pointer                  :: BC
    Type(DM)                                        :: mesh
    Type(VecScatter)                                :: ScatterSecToVec
@@ -320,6 +324,7 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,flux,reftemp,PoissonCtx,ierr)
    Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
       !!! Modified flux is flux + surfaceThermalConductivity * refTemp
@@ -376,6 +381,208 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,flux,reftemp,PoissonCtx,ierr)
    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
 End Subroutine SimplePoissonRHS
 
+!!! 
+!!! ============= SNES =============
+!!!
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonTSIJacobian"
+!!!
+!!!  
+!!!  SimplePoissonTSIJacobian:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonTSIJacobian(snesTemp,x,A,M,flg,PoissonCtx,ierr)
+   Type(SNES),Intent(IN)                           :: snesTemp
+   Type(Vec),Intent(IN)                            :: x
+   Type(Mat),Intent(INOUT)                         :: A,M
+   MatStructure,Intent(INOUT)                      :: flg
+   Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr  
+   
+   Type(IS)                                        :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
+   PetscInt,dimension(:),Pointer                   :: setID
+   PetscInt                                        :: set,QuadratureOrder
+   Type(MEF90_MATPROP),pointer                     :: matpropSet
+   Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
+   Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
+   Type(DM)                                        :: mesh
+   Type(SectionReal)                               :: xSec
+   Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+   Type(Element_Type)                              :: elemType
+
+   Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
+   Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
+   Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
+   !!! 
+   !!! No need to zero out Sec because it is only used as a PetscSection when assembling Mat
+   !!!
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+
+      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
+
+      elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
+
+      QuadratureOrder = 2 * elemType%order
+      Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
+      Call MEF90_DiffusionBilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalConductivity,cellSetProperties%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+      Call MEF90_MassMatrixAssembleSet(A,mesh,xSec,setIS,matpropSet%Density * matpropSet%SpecificHeat,elem,elemType,ierr);CHKERRQ(ierr)   
+
+      Call MEF90_ElementDestroy(elem,ierr)
+
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+   End Do     
+   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
+   Call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
+
+   !!!
+   !!! Boundary conditions
+   !!!
+   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
+      If (vertexSetProperties%Has_BC) Then
+         Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
+      End If
+   End Do
+   Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   
+   flg = SAME_NONZERO_PATTERN
+End Subroutine SimplePoissonTSIJacobian
+
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonTSIFunction"
+!!!
+!!!  
+!!!  SimplePoissonTSIFunction:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonTSIFunction(tempTS,time,x,x_t,F,PoissonCtx,ierr)
+   Type(TS),Intent(IN)                             :: tempTS
+   PetscReal,Intent(IN)                            :: time
+   Type(Vec),Intent(IN)                            :: x,x_t,F
+   Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   Type(SNES)                                      :: tempSNES
+   Type(SectionReal)                               :: xSec,x_tSec,FSec
+   Type(IS)                                        :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
+   PetscInt,dimension(:),Pointer                   :: setID,SetIdx
+   PetscInt                                        :: set,QuadratureOrder
+   Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
+   Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
+   Type(MEF90_MATPROP),pointer                     :: matpropSet
+   PetscReal,Dimension(:),Pointer                  :: BC
+   Type(DM)                                        :: mesh
+   Type(VecScatter)                                :: ScatterSecToVec
+   Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+   Type(Element_Type)                              :: elemType
+
+   Call TSGetSNES(tempTS,tempSNES,ierr);CHKERRQ(ierr)
+   Call SNESGetDM(tempSNES,mesh,ierr);CHKERRQ(ierr)
+
+   Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateGlobalScatter(mesh,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+
+   Call SectionRealDuplicate(xSec,FSec,ierr);CHKERRQ(ierr)
+   Call SectionRealDuplicate(x_tSec,FSec,ierr);CHKERRQ(ierr)
+   Call SectionRealSet(FSec,0.0_Kr,ierr);CHKERRQ(ierr)
+   Call VecSet(F,0.0_Kr,ierr);CHKERRQ(ierr)
+
+   Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)
+
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+
+      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
+
+      elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
+      QuadratureOrder = elemType%order * 2
+      Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
+
+      Call MEF90_DiffusionOperatorSet(FSec,mesh,xSec,setIS,matpropSet%ThermalConductivity,cellSetProperties%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+      Call MEF90_DiffusionOperatorAddTransientTermSet(FSec,mesh,x_tSec,setIS,matpropSet%density * matpropSet%SpecificHeat,elem,elemType,ierr);CHKERRQ(ierr)
+
+      Call MEF90_ElementDestroy(elem,ierr);CHKERRQ(ierr)
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+   End Do     
+   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   !!! "Ghost update" for the residual Section
+   Call SectionRealComplete(FSec,ierr);CHKERRQ(ierr)
+   !!! Scatter back from SectionReal to Vec
+   Call SectionRealToVec(FSec,ScatterSecToVec,SCATTER_FORWARD,F,ierr);CHKERRQ(ierr)
+   
+   
+   !!!
+   !!! Zero-out BC entries in the residual
+   !!!
+   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
+      If (vertexSetProperties%Has_BC) Then
+         Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+         Allocate(BC(size(setIdx)))
+         BC = 0.0_Kr
+         Call VecSetValues(F,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         DeAllocate(BC)
+         Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+      End If
+   End Do
+   Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+
+   Call VecAssemblyBegin(F,ierr)
+   Call VecAssemblyEnd(F,ierr)
+   Call SectionRealDestroy(FSec,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(x_tSec,ierr);CHKERRQ(ierr)
+   Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+End Subroutine SimplePoissonTSIFunction
+
+#undef __FUNCT__
+#define __FUNCT__ "SimplePoissonTSRHS_Cst"
+!!!
+!!!  
+!!!  SimplePoissonTSRHS_Cst:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SimplePoissonTSRHS_Cst(tempTS,time,x,F,PoissonCtx,ierr)
+   Type(TS),Intent(IN)                             :: tempTS
+   PetscReal,Intent(IN)                            :: time
+   Type(Vec),Intent(IN)                            :: x,F
+   Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+   
+   Type(SNES)                                      :: tempSNES
+
+   Call TSGetSNES(tempTS,tempSNES,ierr);CHKERRQ(ierr)
+   Call SimplePoissonRHS_Cst(tempSNES,F,time,PoissonCtx,ierr);CHKERRQ(ierr)
+End Subroutine SimplePoissonTSRHS_Cst
+
 #undef __FUNCT__
 #define __FUNCT__ "SimplePoissonEnergies_Cst"
 !!!
@@ -388,11 +595,11 @@ Subroutine SimplePoissonEnergies_Cst(snesTemp,x,fluxScaling,PoissonCtx,energy,wo
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: x
    PetscReal,Intent(IN)                            :: fluxScaling
-   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
    PetscReal,Dimension(:),Pointer                  :: energy,work
    PetscErrorCode,Intent(OUT)                      :: ierr
 
-   Type(IS)                                        :: CellSetGlobalIS,setIS,setISdof
+   Type(IS)                                        :: CellSetGlobalIS,setIS
    PetscInt,dimension(:),Pointer                   :: setID
    PetscInt                                        :: set,QuadratureOrder
    Type(MEF90_MATPROP),pointer                     :: matpropSet
@@ -425,8 +632,6 @@ Subroutine SimplePoissonEnergies_Cst(snesTemp,x,fluxScaling,PoissonCtx,energy,wo
       elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
       QuadratureOrder = elemType%order * 2
       Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
-      !!! Assembly part of the residual coming from the bilinear form on the blocks of 
-      !!! codimension 0
       If (MEF90_knownElements(cellSetProperties%ElemTypeShortID)%coDim == 0) Then
          Call MEF90_DiffusionEnergySet(myenergy,xSec,mesh,matpropSet%ThermalConductivity,0.0_Kr,setIS,elem,elemType,ierr)
       End If
@@ -458,11 +663,11 @@ Subroutine SimplePoissonEnergies(snesTemp,x,flux,PoissonCtx,energy,work,ierr)
    Type(SNES),Intent(IN)                           :: snesTemp
    Type(Vec),Intent(IN)                            :: x
    Type(Vec),Intent(IN)                            :: flux
-   Type(MEF90Ctx_Type),intent(IN)                  :: PoissonCtx
+   Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
    PetscReal,Dimension(:),Pointer                  :: energy,work
    PetscErrorCode,Intent(OUT)                      :: ierr
 
-   Type(IS)                                        :: CellSetGlobalIS,setIS,setISdof
+   Type(IS)                                        :: CellSetGlobalIS,setIS
    PetscInt,dimension(:),Pointer                   :: setID
    PetscInt                                        :: set,QuadratureOrder
    Type(MEF90_MATPROP),pointer                     :: matpropSet
