@@ -21,6 +21,7 @@ Module m_PoissonGlobalProperties_Type
       PetscInt       :: bctempOffset
       PetscInt       :: fluxOffset
       PetscBool      :: addNullSpace
+      PetscReal      :: initialTemp
    End Type PoissonGlobalProperties_Type   
 End Module m_PoissonGlobalProperties_Type
 
@@ -156,9 +157,10 @@ Contains
          Call PetscBagRegisterInt(bag,GlobalProperties%bctempoffset,default%bctempoffset,'file_bctempoffset','Offset at which boundary temperature is stored in file',ierr);CHKERRQ(ierr)
          Call PetscBagRegisterInt(bag,GlobalProperties%fluxoffset,default%fluxoffset,'file_fluxoffset','Offset at which flux is stored in file',ierr);CHKERRQ(ierr)
       Else
-         Call PetscBagRegisterReal(bag,GlobalProperties%timemin,default%timemin,'timemin','Starting time',ierr);CHKERRQ(ierr)
-         Call PetscBagRegisterReal(bag,GlobalProperties%timemax,default%timemax,'timemax','End Time',ierr);CHKERRQ(ierr)
-         Call PetscBagRegisterInt(bag,GlobalProperties%numtimeStep,default%numTimeStep,'numTimeStep','number of time steps',ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterReal(bag,GlobalProperties%timemin,default%timemin,'time_min','Starting time',ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterReal(bag,GlobalProperties%timemax,default%timemax,'time_max','End Time',ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterInt(bag,GlobalProperties%numtimeStep,default%numTimeStep,'time_numStep','number of time steps',ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterReal(bag,GlobalProperties%initialTemp,default%initialTemp,'temp_initialValue','Initial Value of the temperature',ierr);CHKERRQ(ierr)
       End If
       
       If ( (GlobalProperties%FileMode == Poisson_FILE) .AND. (GlobalProperties%FileMode == Poisson_Replace)) Then
