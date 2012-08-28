@@ -318,7 +318,6 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,flux,reftemp,PoissonCtx,ierr)
    Call VecSet(rhs,0.0_Kr,ierr);CHKERRQ(ierr)
    Call VecDuplicate(flux,modifiedFLux,ierr);CHKERRQ(ierr)
 
-   Allocate(elem(numCell))
    Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
    Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)

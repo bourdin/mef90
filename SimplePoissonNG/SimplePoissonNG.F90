@@ -28,7 +28,8 @@ Program  SimplePoissonNG
                                                          1,                   & ! refOffset
                                                          1,                   & ! bcOffset
                                                          2,                   & ! fluxoffset
-                                                         PETSC_FALSE)           ! addNullSpace
+                                                         PETSC_FALSE,         & ! addNullSpace
+                                                         0.0_Kr)                ! InitialTemp
                                                          
    Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr,0.0_Kr,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
