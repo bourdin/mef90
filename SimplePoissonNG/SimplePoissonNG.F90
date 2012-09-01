@@ -28,7 +28,8 @@ Program  SimplePoissonNG
                                                          1,                   & ! refOffset
                                                          1,                   & ! bcOffset
                                                          2,                   & ! fluxoffset
-                                                         PETSC_FALSE)           ! addNullSpace
+                                                         PETSC_FALSE,         & ! addNullSpace
+                                                         0.0_Kr)                ! initialTemp
                                                          
    Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr,0.0_Kr,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
@@ -84,11 +85,11 @@ Program  SimplePoissonNG
    !!! Read DMMesh from exoIN
    !!!
    If (MEF90_NumProcs == 1) Then
-      Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoIN,mesh,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoIN,mesh,ierr);CHKERRQ(ierr)
    Else
-      Call DMmeshCreateExodusNG(PETSC_COMM_WORLD,exoIN,Tmp_mesh,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoIN,Tmp_mesh,ierr);CHKERRQ(ierr)
    
-      Call DMmeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
+      Call DMMeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
       Call DMDestroy(Tmp_mesh,ierr);CHKERRQ(ierr)
    End If
    Call SimplePoissonGetTime(time,exoIN,MEF90Ctx,ierr);CHKERRQ(ierr)
@@ -128,9 +129,9 @@ Program  SimplePoissonNG
    !!! The section is named 'default' so that it can be picked as the default
    !!! layout for all DM vector creation routines
    !!!
-   Call DMmeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
-   Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
-   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call DMMeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
+   Call DMMeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+   Call DMMeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
    Call ISGetLocalSize(CellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
    Call ISGetIndicesF90(CellSetGlobalIS,CellSetGlobalID,ierr);CHKERRQ(ierr)
