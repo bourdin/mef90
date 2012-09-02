@@ -68,6 +68,10 @@ Program  SimplePoissonNG
    PetscReal,Dimension(:),Pointer                  :: Time
    
    PetscReal                                       :: rtol,atol,dtol
+   PetscReal                                       :: TSinitialTime,TSsolutionTime
+   PetscReal                                       :: TSinitialStep
+   PetscInt                                        :: TSmaxStep=5000
+   PetscInt                                        :: TSmaxTime
    PetscInt                                        :: maxits
    
    Call MEF90_Initialize()
@@ -204,10 +208,21 @@ Program  SimplePoissonNG
       Call SNESSetJacobian(snesTemp,matTemp,matTemp,SimplePoissonBilinearForm,MEF90Ctx,ierr);CHKERRQ(ierr)
       Call SNESSetFromOptions(snesTemp,ierr);CHKERRQ(ierr)
    Else
-      !Call TSSetIFunction
-      !Call TSSetIJacobian
-      !Call TSSetRHSFunction
+      Call TSSetIFunction(tsTemp,resTemp,SimplePoissonTSIFunction,MEF90Ctx,ierr);CHKERRQ(ierr)
+      Call TSSetIJacobian(tsTemp,matTemp,matTemp,SimplePoissonTSIJacobian,MEF90Ctx,ierr);CHKERRQ(ierr)
+      If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
+         Call TSSetRHSFunction(tsTemp,PETSC_NULL_OBJECT,SimplePoissonTSRHS_Cst,MEF90Ctx,ierr);CHKERRQ(ierr)
+      Else
+         !Call TSSetRHSFunction(tsTemp,PETSC_NULL_OBJECT,SimplePoissonTSRHS,MEF90Ctx,ierr);CHKERRQ(ierr)
+      End If
+      Call TSSetType(tsTemp,'rosw',ierr);CHKERRQ(ierr)
+      Call TSRosWSetType(tsTemp,'ra3pw',ierr);CHKERRQ(ierr)
+      TSinitialStep = (time(size(time))-time(0)) / (size(time) + 0.0_Kr) / 10.0_Kr
+      TSinitialStep = 10.0_Kr
+      Call TSSetInitialTimeStep(tsTemp,TSinitialTime,TSinitialStep,ierr);CHKERRQ(ierr)
+      Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
       Call TSSetFromOptions(tsTemp,ierr);CHKERRQ(ierr)
+      TSinitialTime = time(1)
    End If
    
    !!! 
@@ -254,25 +269,78 @@ Program  SimplePoissonNG
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 200   Format('Solving time step ',I4,': t=',ES12.5,'\n')
 
-      If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
-         Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,time(timeStepNum),MEF90Ctx,ierr);CHKERRQ(ierr)
-         Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
-      Else
-         Call SimplePoissonLoadEXO(mesh,EXOin,bctemp,flux,reftemp,TimeStepNum,MEF90Ctx,ierr);CHKERRQ(ierr)
-         Call SimplePoissonFormInitialGuess(snesTemp,solTemp,bcTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
-         Call SimplePoissonRHS(snesTemp,rhsTemp,flux,refTemp,MEF90Ctx,ierr)
-      End If
-
-      !!! No need to solve over and over when doing CST loading
-      If ((GlobalProperties%LoadingType /= Poisson_CST) .OR. (TimeStepNum == 1)) Then
-         Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
-         !!! Check SNES / KSP convergence
-         Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
-         Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
-         Write(IOBuffer,110) itsTemp,reasonTemp
-         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-110      Format('SNESTemp converged in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
+      If ( GlobalProperties%TimeEvolution == Poisson_SteadyState) Then
+         If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
+            Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,time(timeStepNum),MEF90Ctx,ierr);CHKERRQ(ierr)
+            Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
+         Else
+            Call SimplePoissonLoadEXO(mesh,EXOin,bctemp,flux,reftemp,TimeStepNum,MEF90Ctx,ierr);CHKERRQ(ierr)
+            Call SimplePoissonFormInitialGuess(snesTemp,solTemp,bcTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
+            Call SimplePoissonRHS(snesTemp,rhsTemp,flux,refTemp,MEF90Ctx,ierr)
+         End If
    
+         !!! No need to solve over and over when doing CST loading
+         If ((GlobalProperties%LoadingType /= Poisson_CST) .OR. (TimeStepNum == 1)) Then
+            Call SNESSolve(snesTemp,rhsTemp,solTemp,ierr);CHKERRQ(ierr)
+            !!! Check SNES / KSP convergence
+            Call SNESGetConvergedReason(snesTemp,reasonTemp,ierr);CHKERRQ(ierr)
+            Call SNESGetIterationNumber(snesTemp,itsTemp,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,110) itsTemp,reasonTemp
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   110      Format('SNESTemp converged in ',I4,' iterations. SNESConvergedReason is ', I4,'\n')
+      
+            !!! Compute energy and work
+            !!!
+            If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
+               Call SimplePoissonEnergies_Cst(snesTemp,solTemp,time(timestepnum),MEF90Ctx,energy,work,ierr)
+            Else
+               Call SimplePoissonEnergies(snesTemp,solTemp,flux,MEF90Ctx,energy,work,ierr)
+            End If
+      
+            !!! Print and save energy and work
+            !!!
+            Write(IOBuffer,*) '\n'
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            Do set = 1,size(CellSetGlobalID)
+               Write(IOBuffer,102) CellSetGlobalID(set),energy(set),work(set)
+               Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+               Write(IOBuffer,202) timeStepNum,time(timeStepNum),energy(set),work(set),energy(set)-work(set)
+               Call PetscViewerASCIIPrintf(energyViewerCellSet(set),IOBuffer,ierr);CHKERRQ(ierr)
+            End Do
+            Write(IOBuffer,103) sum(energy),sum(work)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,202) timeStepNum,time(timeStepNum),sum(energy),sum(work),sum(energy) - sum(work)
+            Call PetscViewerASCIIPrintf(energyViewer,IOBuffer,ierr);CHKERRQ(ierr)
+   102      Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
+   202      Format(I4,'  ',4(ES12.5,'  '),'\n')
+   103      Format('=====================================================\n',         &
+                 'Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
+         End If   
+         !!! Save results
+         !!!
+         Call SimplePoissonSaveEXO(mesh,EXOout,solTemp,TimeStepNum,time(TimeStepNum),sum(energy),sum(work),MEF90Ctx,ierr);CHKERRQ(ierr)
+         Call PetscLogView(logviewer,ierr);CHKERRQ(ierr)
+      Else
+         Write(IOBuffer,209) time(timeStepNum)
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   209   Format("Timestepping to t=",ES12.5,"\n")
+   
+         If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
+            Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,time(timeStepNum),MEF90Ctx,ierr);CHKERRQ(ierr)
+         Else
+            Call SimplePoissonLoadEXO(mesh,EXOin,bctemp,flux,reftemp,TimeStepNum,MEF90Ctx,ierr);CHKERRQ(ierr)
+            Call SimplePoissonFormInitialGuess(snesTemp,solTemp,bcTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
+         End If
+         
+         Call TSSetDuration(tsTemp,TSmaxStep,time(timeStepNum),ierr);CHKERRQ(ierr)
+         Call TSView(tsTemp,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+         Call TSSolve(tsTemp,solTemp,TSsolutionTime,ierr);CHKERRQ(ierr)
+         Call TSGetTimeStepNumber(tsTemp,itsTemp,ierr);CHKERRQ(ierr)
+         Call TSGetConvergedReason(tsTemp,reasonTemp,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,210) itsTemp,reasonTemp,TSsolutionTime
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   210   Format('TSTemp converged in ',I4,' steps. TSConvergedReason is ', I4,' Analysis time is ',ES12.5,'\n')
+
          !!! Compute energy and work
          !!!
          If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
@@ -295,15 +363,11 @@ Program  SimplePoissonNG
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
          Write(IOBuffer,202) timeStepNum,time(timeStepNum),sum(energy),sum(work),sum(energy) - sum(work)
          Call PetscViewerASCIIPrintf(energyViewer,IOBuffer,ierr);CHKERRQ(ierr)
-102      Format('Cell set ',I4.4,' energy: ',ES12.5,' work: ',ES12.5,'\n')
-202      Format(I4,'  ',4(ES12.5,'  '),'\n')
-103      Format('=====================================================\n',         &
-              'Total:        energy: ',ES12.5,' work: ',ES12.5,'\n')
-      End If   
-      !!! Save results
-      !!!
-      Call SimplePoissonSaveEXO(mesh,EXOout,solTemp,TimeStepNum,time(TimeStepNum),sum(energy),sum(work),MEF90Ctx,ierr);CHKERRQ(ierr)
-      Call PetscLogView(logviewer,ierr);CHKERRQ(ierr)
+         !!! Save results
+         !!!
+         Call SimplePoissonSaveEXO(mesh,EXOout,solTemp,TimeStepNum,TSsolutionTime,sum(energy),sum(work),MEF90Ctx,ierr);CHKERRQ(ierr)
+         Call PetscLogView(logviewer,ierr);CHKERRQ(ierr)
+      End If
    End Do
    !!!
    !!! Cleanup
@@ -313,8 +377,11 @@ Program  SimplePoissonNG
    Call ISRestoreIndicesF90(CellSetGlobalIS,CellSetGlobalID,ierr);CHKERRQ(ierr)
    Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call PoissonCtxDestroy(MEF90Ctx,snesTemp,ierr);CHKERRQ(ierr)
-   Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
-   Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
+   If ( GlobalProperties%TimeEvolution == Poisson_SteadyState) Then
+      Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
+   Else
+      Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
+   End If
    Call VecDestroy(solTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(resTemp,ierr);CHKERRQ(ierr)
    Call VecDestroy(RHSTemp,ierr);CHKERRQ(ierr)
