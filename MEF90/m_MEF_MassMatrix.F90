@@ -39,13 +39,13 @@ Contains
       Allocate(MatElem(elemType%numDof,elemType%numDof),stat=ierr)
 
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
+      Do cell = 1,size(elem)      
          MatElem = 0.0_Kr
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
             Do iDoF1 = 1,elemType%numDof
                Do iDoF2 = 1,elemType%numDof
-                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                                        (elem(cellID(cell)+1)%BF(iDoF1,iGauss) * elem(cellID(cell)+1)%BF(iDoF2,iGauss) )
+                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                        (elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) )
                End Do
             End Do
          End Do

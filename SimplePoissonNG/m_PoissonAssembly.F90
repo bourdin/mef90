@@ -391,9 +391,11 @@ End Subroutine SimplePoissonRHS
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine SimplePoissonTSIJacobian(snesTemp,x,A,M,flg,PoissonCtx,ierr)
-   Type(SNES),Intent(IN)                           :: snesTemp
-   Type(Vec),Intent(IN)                            :: x
+Subroutine SimplePoissonTSIJacobian(tsTemp,t,x,x_t,shift,A,M,flg,PoissonCtx,ierr)
+   Type(TS),Intent(IN)                             :: tsTemp
+   PetscReal,Intent(IN)                            :: t
+   Type(Vec),Intent(IN)                            :: x,x_t
+   PetscReal,Intent(IN)                            :: shift
    Type(Mat),Intent(INOUT)                         :: A,M
    MatStructure,Intent(INOUT)                      :: flg
    Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
@@ -409,8 +411,10 @@ Subroutine SimplePoissonTSIJacobian(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    Type(SectionReal)                               :: xSec
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
    Type(Element_Type)                              :: elemType
+   Type(SNES)                                      :: snesTemp
 
    Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
+   Call TSGetSNES(tsTemp,snesTemp,ierr);CHKERRQ(ierr)
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
    !!! 
@@ -430,7 +434,7 @@ Subroutine SimplePoissonTSIJacobian(snesTemp,x,A,M,flg,PoissonCtx,ierr)
       QuadratureOrder = 2 * elemType%order
       Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
       Call MEF90_DiffusionBilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalConductivity,cellSetProperties%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
-      Call MEF90_MassMatrixAssembleSet(A,mesh,xSec,setIS,matpropSet%Density * matpropSet%SpecificHeat,elem,elemType,ierr);CHKERRQ(ierr)   
+      Call MEF90_MassMatrixAssembleSet(A,mesh,xSec,setIS,shift * matpropSet%Density * matpropSet%SpecificHeat,elem,elemType,ierr);CHKERRQ(ierr)   
 
       Call MEF90_ElementDestroy(elem,ierr)
 
@@ -498,7 +502,7 @@ Subroutine SimplePoissonTSIFunction(tempTS,time,x,x_t,F,PoissonCtx,ierr)
    Call DMMeshCreateGlobalScatter(mesh,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
 
    Call SectionRealDuplicate(xSec,FSec,ierr);CHKERRQ(ierr)
-   Call SectionRealDuplicate(x_tSec,FSec,ierr);CHKERRQ(ierr)
+   Call SectionRealDuplicate(xSec,x_tSec,ierr);CHKERRQ(ierr)
    Call SectionRealSet(FSec,0.0_Kr,ierr);CHKERRQ(ierr)
    Call VecSet(F,0.0_Kr,ierr);CHKERRQ(ierr)
 
