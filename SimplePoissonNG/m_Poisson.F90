@@ -419,10 +419,7 @@ Subroutine SimplePoissonGetTime(time,exoIN,PoissonCtx,ierr)
 
    Call PetscBagGetDataPoissonGlobalProperties(PoissonCtx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)      
    Select Case (GlobalProperties%LoadingType)
-      Case (Poisson_CST)
-         Allocate(time(GlobalProperties%numTimeStep))
-         time = 1.0_Kr
-      Case (Poisson_MIL)
+      Case (Poisson_CST,Poisson_MIL)
          Allocate(time(GlobalProperties%numTimeStep))
          Do i = 1,GlobalProperties%numTimeStep-1
             time(i) = GlobalProperties%timeMin + (GlobalProperties%timeMax - GlobalProperties%timeMin) / (GlobalProperties%numTimeStep - 1.0_Kr) * (i-1.0_Kr)
