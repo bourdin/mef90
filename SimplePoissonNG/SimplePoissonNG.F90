@@ -20,7 +20,7 @@ Program  SimplePoissonNG
                                                          Poisson_EXOSingle,   & ! FileFormat
                                                          Poisson_Replace,     & ! FileMode
                                                          Poisson_SteadyState, & ! EvolutionLaw
-                                                         Poisson_CST,         & ! LoadingType
+                                                         Poisson_MIL,         & ! LoadingType
                                                          0.0_Kr,              & ! TimeMin
                                                          0.0_kr,              & ! TimeMax
                                                          1,                   & ! numTimeStep
@@ -218,11 +218,12 @@ Program  SimplePoissonNG
       Call TSSetType(tsTemp,'rosw',ierr);CHKERRQ(ierr)
       Call TSRosWSetType(tsTemp,'ra3pw',ierr);CHKERRQ(ierr)
       TSinitialStep = (time(size(time))-time(0)) / (size(time) + 0.0_Kr) / 10.0_Kr
-      TSinitialStep = 10.0_Kr
+      TSinitialTime = time(1)
       Call TSSetInitialTimeStep(tsTemp,TSinitialTime,TSinitialStep,ierr);CHKERRQ(ierr)
       Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
+      Call VecSet(solTemp,GlobalProperties%initialTemp,ierr);CHKERRQ(ierr)
+      Call TSSetSolution(tsTemp,solTemp,ierr);CHKERRQ(ierr)
       Call TSSetFromOptions(tsTemp,ierr);CHKERRQ(ierr)
-      TSinitialTime = time(1)
    End If
    
    !!! 
@@ -270,14 +271,18 @@ Program  SimplePoissonNG
 200   Format('Solving time step ',I4,': t=',ES12.5,'\n')
 
       If ( GlobalProperties%TimeEvolution == Poisson_SteadyState) Then
-         If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
+         Select case(GlobalProperties%LoadingType)
+         Case(Poisson_MIL)
             Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,time(timeStepNum),MEF90Ctx,ierr);CHKERRQ(ierr)
             Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
-         Else
+         Case(Poisson_CST)
+            Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,1.0_Kr,MEF90Ctx,ierr);CHKERRQ(ierr)
+            Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,1.0_Kr,MEF90Ctx,ierr)
+         Case(Poisson_FILE)
             Call SimplePoissonLoadEXO(mesh,EXOin,bctemp,flux,reftemp,TimeStepNum,MEF90Ctx,ierr);CHKERRQ(ierr)
             Call SimplePoissonFormInitialGuess(snesTemp,solTemp,bcTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
             Call SimplePoissonRHS(snesTemp,rhsTemp,flux,refTemp,MEF90Ctx,ierr)
-         End If
+         End Select
    
          !!! No need to solve over and over when doing CST loading
          If ((GlobalProperties%LoadingType /= Poisson_CST) .OR. (TimeStepNum == 1)) Then
@@ -325,15 +330,18 @@ Program  SimplePoissonNG
          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    209   Format("Timestepping to t=",ES12.5,"\n")
    
-         If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
+         Select case(GlobalProperties%LoadingType)
+         Case(Poisson_MIL)
             Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,time(timeStepNum),MEF90Ctx,ierr);CHKERRQ(ierr)
-         Else
+         Case(Poisson_CST)
+            Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,1.0_Kr,MEF90Ctx,ierr);CHKERRQ(ierr)
+         Case(Poisson_FILE)
             Call SimplePoissonLoadEXO(mesh,EXOin,bctemp,flux,reftemp,TimeStepNum,MEF90Ctx,ierr);CHKERRQ(ierr)
             Call SimplePoissonFormInitialGuess(snesTemp,solTemp,bcTemp,MEF90Ctx,ierr);CHKERRQ(ierr)
-         End If
+         End Select
          
          Call TSSetDuration(tsTemp,TSmaxStep,time(timeStepNum),ierr);CHKERRQ(ierr)
-         Call TSView(tsTemp,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+         !Call TSView(tsTemp,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
          Call TSSolve(tsTemp,solTemp,TSsolutionTime,ierr);CHKERRQ(ierr)
          Call TSGetTimeStepNumber(tsTemp,itsTemp,ierr);CHKERRQ(ierr)
          Call TSGetConvergedReason(tsTemp,reasonTemp,ierr);CHKERRQ(ierr)

@@ -435,7 +435,6 @@ Subroutine SimplePoissonTSIJacobian(tsTemp,t,x,x_t,shift,A,M,flg,PoissonCtx,ierr
       Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
       Call MEF90_DiffusionBilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalConductivity,cellSetProperties%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
       Call MEF90_MassMatrixAssembleSet(A,mesh,xSec,setIS,shift * matpropSet%Density * matpropSet%SpecificHeat,elem,elemType,ierr);CHKERRQ(ierr)   
-
       Call MEF90_ElementDestroy(elem,ierr)
 
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -536,7 +535,7 @@ Subroutine SimplePoissonTSIFunction(tempTS,time,x,x_t,F,PoissonCtx,ierr)
    
    
    !!!
-   !!! Zero-out BC entries in the residual
+   !!! Set boundary values to x
    !!!
    Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -548,7 +547,7 @@ Subroutine SimplePoissonTSIFunction(tempTS,time,x,x_t,F,PoissonCtx,ierr)
          Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)))
-         BC = 0.0_Kr
+         Call VecGetValues(x,size(setIdx),setIdx,BC,ierr);CHKERRQ(ierr)
          Call VecSetValues(F,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
          DeAllocate(BC)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
@@ -573,17 +572,102 @@ End Subroutine SimplePoissonTSIFunction
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine SimplePoissonTSRHS_Cst(tempTS,time,x,F,PoissonCtx,ierr)
+Subroutine SimplePoissonTSRHS_Cst(tempTS,time,x,rhs,PoissonCtx,ierr)
    Type(TS),Intent(IN)                             :: tempTS
    PetscReal,Intent(IN)                            :: time
-   Type(Vec),Intent(IN)                            :: x,F
+   Type(Vec),Intent(IN)                            :: x,rhs
    Type(MEF90Ctx_Type),Intent(IN)                  :: PoissonCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
    
    Type(SNES)                                      :: tempSNES
 
+   Type(SectionReal)                               :: rhsSec
+   Type(IS)                                        :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
+   PetscInt,dimension(:),Pointer                   :: setID,setIdx
+   PetscInt                                        :: set,QuadratureOrder
+   Type(PoissonGlobalProperties_Type),pointer      :: globalProperties
+   Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
+   Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
+   PetscReal,Dimension(:),Pointer                  :: BC
+   PetscReal                                       :: Flux
+   Type(DM)                                        :: mesh
+   Type(VecScatter)                                :: ScatterSecToVec
+   Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+   Type(Element_Type)                              :: elemType
+   PetscReal                                       :: scaling
+
    Call TSGetSNES(tempTS,tempSNES,ierr);CHKERRQ(ierr)
-   Call SimplePoissonRHS_Cst(tempSNES,F,time,PoissonCtx,ierr);CHKERRQ(ierr)
+   Call SNESGetDM(tempSNES,mesh,ierr);CHKERRQ(ierr)
+
+   Call DMMeshGetSectionReal(mesh,'default',rhsSec,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateGlobalScatter(mesh,rhsSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+
+   Call SectionRealSet(rhsSec,0.0_Kr,ierr);CHKERRQ(ierr)
+   Call VecSet(rhs,0.0_Kr,ierr);CHKERRQ(ierr)
+   
+   Call PetscBagGetDataPoissonGlobalProperties(PoissonCtx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)  
+   If (GlobalProperties%LoadingType == Poisson_MIL) Then
+      Call TSGetTime(tempTS,scaling,ierr);CHKERRQ(ierr)
+   Else
+      scaling = 1.0_Kr
+   End If
+   Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+      Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
+
+      elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
+      QuadratureOrder = elemType%order * 2
+      Call MEF90_ElementCreate(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
+
+      Flux = scaling * (cellSetProperties%Flux + cellSetProperties%SurfaceThermalConductivity * cellSetProperties%referenceTemp) 
+      Call MEF90_DiffusionRHSSet(rhsSec,mesh,Flux,setIS,elem,elemType,ierr);CHKERRQ(ierr)
+
+      Call MEF90_ElementDestroy(elem,ierr);CHKERRQ(ierr)
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+   End Do     
+   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   !!! "Ghost update" for the residual Section
+   Call SectionRealComplete(rhsSec,ierr);CHKERRQ(ierr)
+   !!! Scatter back from SectionReal to Vec
+   Call SectionRealToVec(rhsSec,ScatterSecToVec,SCATTER_FORWARD,rhs,ierr);CHKERRQ(ierr)
+   
+   
+   !!!
+   !!! Zero-out BC entries in the residual
+   !!!
+   Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Do set = 1,size(setID)
+      Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
+      If (vertexSetProperties%Has_BC) Then
+         Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call DMMeshISCreateISglobaldof(mesh,rhsSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+         Allocate(BC(size(setIdx)))
+         BC = vertexSetProperties%BC * scaling
+         Call VecSetValues(rhs,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         DeAllocate(BC)
+         Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+      End If
+   End Do
+   Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+   Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   
+   !!!
+   !!! Cleanup
+   !!!
+   Call VecAssemblyBegin(rhs,ierr)
+   Call VecAssemblyEnd(rhs,ierr)
+   Call SectionRealDestroy(rhsSec,ierr);CHKERRQ(ierr)
+   Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+
+
+   !Call SimplePoissonRHS_Cst(tempSNES,F,time,PoissonCtx,ierr);CHKERRQ(ierr)
 End Subroutine SimplePoissonTSRHS_Cst
 
 #undef __FUNCT__
