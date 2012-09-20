@@ -30,6 +30,7 @@ Contains
       
       !!! Individual modules runtime initialization should be called here
       Call MEF90_MaterialsInitialize(ierr);CHKERRQ(ierr)
+      Call MEF90_CtxInitialize(ierr);CHKERRQ(ierr)
    End Subroutine MEF90_Initialize
    
 #undef __FUNCT__
