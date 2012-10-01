@@ -14,6 +14,6 @@
 -temp_TS_theta_theta 1.
 #-temp_TS_view
 #-temp_TS_dt 5e-3
--time_numstep 51
+-time_numstep 11
 -time_min 0.
 -time_max 1e0

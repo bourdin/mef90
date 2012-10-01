@@ -11,12 +11,9 @@ Module m_MEF_Ctx
    Enum,bind(c)
       Enumerator ::  MEF90Scaling_CST=0,        &
                      MEF90Scaling_Linear,       &  
-                     MEF90Scaling_Quadratic,    &
-                     MEF90Scaling_Logarithmic,  &
-                     MEF90Scaling_txtFile,      &
-                     MEF90Scaling_dataFile
+                     MEF90Scaling_File
    End Enum
-   Character(len=MEF90_MXSTRLEN),dimension(9),protected  :: MEF90ScalingList
+   Character(len=MEF90_MXSTRLEN),dimension(6),protected  :: MEF90ScalingList
    
    Enum,bind(c)
       Enumerator ::  MEF90FileMode_Replace = 0, &
@@ -29,14 +26,37 @@ Module m_MEF_Ctx
                      MEF90EXOMode_Split 
    End Enum
    Character(len=MEF90_MXSTRLEN),dimension(5),protected  :: MEF90EXOModeList
+   
+   Enum,bind(c)
+      Enumerator  :: MEF90TimeInterpolation_linear = 0,  &
+                     MEF90TimeInterpolation_quadratic,   &
+                     MEF90TimeInterpolation_logarithmic, &
+                     MEF90TimeInterpolation_file
+      !!! is file command line, exo data file 
+      !!! -time 0,1 => two steps
+      !!! -time 0,1 -time_dt .1 / -time_numsteps 11
+      !!! -time 0,.1,.2,.3,.4,.5,.6,.7,.8,.9 is easy since it will go in an YAML file
+      !!! -time_exo => read in exodus file
+   End Enum
+   Character(len=MEF90_MXSTRLEN),dimension(7),protected  :: MEF90TimeInterpolationList
 
    Type MEF90Ctx_Type
-      !PetscBag                                        :: MEF90Bag
+      PetscInt                                        :: verbose
+      Character(len=MEF90_MXSTRLEN)                   :: prefix
+      PetscReal,Dimension(:),Pointer                  :: time
+      PetscReal,Target                                :: timeMin,timeMax
+      PetscInt,Target                                 :: timeNumStep
+      PetscEnum,Target                                :: timeInterpolation
+      PetscEnum                                       :: fileFormat
+      PetscEnum                                       :: fileMode
+      Integer                                         :: fileExoUnitIn
+      Integer                                         :: fileExoUnitOut
+
+!!!   Keep for compatibility reasons until MEF90HeatXfer is working
       PetscBag                                        :: GlobalPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: VertexSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: MaterialPropertiesBag
-      Type(C_Ptr)                                     :: AppCtx
    End Type MEF90Ctx_Type
    
 Contains
@@ -53,25 +73,31 @@ Contains
    
       MEF90ScalingList(1) = 'constant'
       MEF90ScalingList(2) = 'linear'
-      MEF90ScalingList(3) = 'quadratic'
-      MEF90ScalingList(4) = 'logarithmic'
-      MEF90ScalingList(5) = 'txtfile'
-      MEF90ScalingList(6) = 'datafile'
-      MEF90ScalingList(7) = 'scaling'
-      MEF90ScalingList(8) = '_MEF90Scaling'
-      MEF90ScalingList(9) = ''
+      MEF90ScalingList(3) = 'file'
+      MEF90ScalingList(4) = 'MEF90scaling'
+      MEF90ScalingList(5) = '_MEF90Scaling'
+      MEF90ScalingList(6) = ''
       
       MEF90FileModeList(1) = 'Replace'
       MEF90FileModeList(2) = 'Append'
-      MEF90FileModeList(3) = 'FileMode'
-      MEF90FileModeList(4) = '_FileMode'
+      MEF90FileModeList(3) = 'MEF90FileMode'
+      MEF90FileModeList(4) = '_MEF90FileMode'
       MEF90FileModeList(5) = ''
 
       MEF90EXOModeList(1) = 'Single'
       MEF90EXOModeList(2) = 'Split'
-      MEF90EXOModeList(3) = 'EXOMode'
-      MEF90EXOModeList(4) = '_EXOMode'
+      MEF90EXOModeList(3) = 'MEF90EXOMode'
+      MEF90EXOModeList(4) = '_MEF90EXOMode'
       MEF90EXOModeList(5) = '' 
+      
+      MEF90TimeInterpolationList(1) = 'linear'
+      MEF90TimeInterpolationList(2) = 'quadratic'
+      MEF90TimeInterpolationList(3) = 'logarithmic'
+      MEF90TimeInterpolationList(4) = 'file'
+      MEF90TimeInterpolationList(5) = 'MEF90TimeInterpolation'
+      MEF90TimeInterpolationList(6) = '_MEF90TimeInterpolation'
+      MEF90TimeInterpolationList(7) = ''
+      
       ierr = 0
    End Subroutine MEF90_CtxInitialize
    

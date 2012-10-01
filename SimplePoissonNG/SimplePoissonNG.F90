@@ -21,8 +21,8 @@ Program  SimplePoissonNG
                                                          Poisson_Replace,     & ! FileMode
                                                          Poisson_SteadyState, & ! EvolutionLaw
                                                          Poisson_MIL,         & ! LoadingType
-                                                         0.0_Kr,              & ! TimeMin
-                                                         0.0_kr,              & ! TimeMax
+                                                         1.0_Kr,              & ! TimeMin
+                                                         1.0_kr,              & ! TimeMax
                                                          1,                   & ! numTimeStep
                                                          1,                   & ! tempOffset
                                                          1,                   & ! refOffset
@@ -35,29 +35,29 @@ Program  SimplePoissonNG
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
    Character(len=MEF90_MXSTRLEN)                   :: prefix,filename
-   Type(PetscViewer)                               :: energyViewer,logViewer
+   Type(PetscViewer),target                        :: energyViewer,logViewer
    Type(PetscViewer),Dimension(:),Pointer          :: energyViewerCellSet
    Type(MEF90Ctx_Type)                             :: MEF90Ctx
-   Type(DM)                                        :: mesh,tmp_mesh
+   Type(DM),target                                        :: mesh,tmp_mesh
    PetscErrorCode                                  :: iErr
    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
    PetscBool                                       :: flg
-   Type(SNES)                                      :: snesTemp
-   Type(TS)                                        :: tsTemp
-   Type(KSP)                                       :: kspTemp
-   Type(PC)                                        :: pcTemp
-   Type(Mat)                                       :: matTemp
-   Type(Vec)                                       :: solTemp,resTemp,RHSTemp
-   Type(Vec)                                       :: flux,refTemp,bcTemp
+   Type(SNES),target                               :: snesTemp
+   Type(TS),target                                 :: tsTemp
+   Type(KSP),target                                :: kspTemp
+   Type(PC),target                                 :: pcTemp
+   Type(Mat),target                                :: matTemp
+   Type(Vec),target                                :: solTemp,resTemp,RHSTemp
+   Type(Vec),target                                :: flux,refTemp,bcTemp
    Integer                                         :: exoIN=0,exoOUT=0
    PetscReal,Dimension(:),Pointer                  :: energy,work
    PetscInt,dimension(:),Pointer                   :: CellSetGlobalID
    PetscInt                                        :: set
-   Type(MatNullSpace)                              :: nspTemp
+   Type(MatNullSpace),target                       :: nspTemp
    SNESConvergedReason                             :: reasonTemp
    PetscInt                                        :: itsTemp
-   Type(SectionReal)                               :: secTemp
-   Type(IS)                                        :: CellSetGlobalIS
+   Type(SectionReal),target                        :: secTemp
+   Type(IS),target                                 :: CellSetGlobalIS
    Type(Element_Type),Dimension(:),pointer         :: ElemType
       
    PetscInt                                        :: point,numCell,numVertex,numCellSetGlobal
@@ -85,6 +85,8 @@ Program  SimplePoissonNG
    Call MEF90CtxPoissonGlobalPropertiesCreate(MEF90Ctx,defaultGlobalProperties,ierr)
    Call PetscBagGetDataPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)  
    Call SimplePoissonEXOOpenInputFile(prefix,exoIN,ierr);CHKERRQ(ierr)
+
+!<<<<<<
    !!!
    !!! Read DMMesh from exoIN
    !!!
@@ -96,8 +98,39 @@ Program  SimplePoissonNG
       Call DMMeshDistribute(Tmp_mesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
       Call DMDestroy(Tmp_mesh,ierr);CHKERRQ(ierr)
    End If
-   Call SimplePoissonGetTime(time,exoIN,MEF90Ctx,ierr);CHKERRQ(ierr)
+   !!! 
+   !!! Create a Section consistent with the element choice
+   !!! The section is named 'default' so that it can be picked as the default
+   !!! layout for all DM vector creation routines
+   !!!
+   Call DMMeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
+   Call DMMeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+   Call DMMeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
+   Call ISGetLocalSize(CellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
+   Call ISGetIndicesF90(CellSetGlobalIS,CellSetGlobalID,ierr);CHKERRQ(ierr)
 
+
+!!! This may go into a separate function since I would need to know the 
+!!! element type in order to allocate anything more complicated than a 
+!!! vertex or cell based section
+   Call DMMeshGetSectionReal(mesh,'default',SecTemp,ierr);CHKERRQ(ierr)
+   Do point = numCell,numCell+numVertex-1
+      Call SectionRealSetFiberDimension(SecTemp,point,1,ierr);CHKERRQ(ierr)
+   End Do
+   Call SectionRealAllocate(SecTemp,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(secTemp,ierr);CHKERRQ(ierr)
+   !!! I can destroy the section because its layout remains somehow cached in the DMMesh
+!
+! THIS NEEDS TO GO BACK INTO MEF90
+!>>>   
+
+
+   Call SimplePoissonGetTime(time,exoIN,MEF90Ctx,ierr);CHKERRQ(ierr)
+   !!! This also needs to go into MEF90
+   !!! I need to think about ways to make the interface generic
+   
+   
    !!! 
    !!! Create SNES or TS
    !!!
@@ -128,25 +161,6 @@ Program  SimplePoissonNG
    !   STOP
    !End If
    
-   !!! 
-   !!! Create a Section consistent with the element choice
-   !!! The section is named 'default' so that it can be picked as the default
-   !!! layout for all DM vector creation routines
-   !!!
-   Call DMMeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
-   Call DMMeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
-   Call DMMeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)   
-   Call ISGetLocalSize(CellSetGlobalIS,numCellSetGlobal,ierr);CHKERRQ(ierr)
-   Call ISGetIndicesF90(CellSetGlobalIS,CellSetGlobalID,ierr);CHKERRQ(ierr)
-
-   Call DMMeshGetSectionReal(mesh,'default',SecTemp,ierr);CHKERRQ(ierr)
-   Do point = numCell,numCell+numVertex-1
-      Call SectionRealSetFiberDimension(SecTemp,point,1,ierr);CHKERRQ(ierr)
-   End Do
-   Call SectionRealAllocate(SecTemp,ierr);CHKERRQ(ierr)
-
-   
 
    !!! Prepare output file
    Call SimplePoissonPrepareOutputEXO(mesh,prefix,exoIN,exoOUT,MEF90Ctx,ierr);CHKERRQ(ierr)
@@ -170,13 +184,16 @@ Program  SimplePoissonNG
    !!! Get Matrix for the Jacobian / SNES and unknown vector
    !!!
    Call DMMeshSetMaxDof(mesh,1,iErr); CHKERRQ(iErr) 
-   Call DMMeshCreateMatrix(mesh,secTemp,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
+   !Call DMMeshCreateMatrix(mesh,secTemp,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
+   Call DMCreateMatrix(mesh,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
+   ! I can use the generic DMCreateMatrix because I decided to associate a single DM with each 
+   ! dof layout (just like DMComplex or DMDA do)
 
    !!! There are two ways to get global and local vectors:
    !!! Through the generic DM interface, which will only pull the layout from the 'default' section
-   !Call DMGetGlobalVector(mesh,solTemp,ierr);CHKERRQ(ierr)
+   Call DMGetGlobalVector(mesh,solTemp,ierr);CHKERRQ(ierr)
    !!! Through DMMeshCreateVector which lets use any layout
-   Call DMMeshCreateVector(mesh,secTemp,solTemp,ierr);CHKERRQ(ierr)
+   !Call DMMeshCreateVector(mesh,secTemp,solTemp,ierr);CHKERRQ(ierr)
 
    Call VecDuplicate(solTemp,resTemp,ierr);CHKERRQ(ierr)
    Call VecDuplicate(solTemp,RHSTemp,ierr);CHKERRQ(ierr)
@@ -273,6 +290,7 @@ Program  SimplePoissonNG
       If ( GlobalProperties%TimeEvolution == Poisson_SteadyState) Then
          Select case(GlobalProperties%LoadingType)
          Case(Poisson_MIL)
+         
             Call SimplePoissonFormInitialGuess_Cst(snesTemp,solTemp,time(timeStepNum),MEF90Ctx,ierr);CHKERRQ(ierr)
             Call SimplePoissonRHS_Cst(snesTemp,rhsTemp,time(TimeStepNum),MEF90Ctx,ierr)
          Case(Poisson_CST)
@@ -398,7 +416,7 @@ Program  SimplePoissonNG
       Call VecDestroy(refTemp,ierr);CHKERRQ(ierr)
       Call VecDestroy(bcTemp,ierr);CHKERRQ(ierr)
    End If
-   Call SectionRealDestroy(secTemp,ierr);CHKERRQ(ierr)
+   !Call SectionRealDestroy(secTemp,ierr);CHKERRQ(ierr)
    Call DMDestroy(mesh,ierr);CHKERRQ(ierr);
 
    DeAllocate(work)

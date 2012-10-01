@@ -8,14 +8,14 @@ Module m_PoissonGlobalProperties_Type
    Public :: PoissonGlobalProperties_Type
 
    Type PoissonGlobalProperties_Type   
-      PetscInt       :: verbose
-      PetscEnum      :: FileFormat
-      PetscEnum      :: FileMode
+      PetscInt       :: verbose           ! to MEF90Ctx
+      PetscEnum      :: FileFormat        ! to MEF90Ctx
+      PetscEnum      :: FileMode          ! to MEF90Ctx
       PetscEnum      :: TimeEvolution
-      PetscEnum      :: LoadingType
-      PetscReal      :: TimeMin
-      PetscReal      :: TimeMax
-      PetscInt       :: numTimeStep
+      PetscEnum      :: LoadingType       ! make specific to each field
+      PetscReal      :: TimeMin           ! to MEF90Ctx
+      PetscReal      :: TimeMax           ! to MEF90Ctx
+      PetscInt       :: numTimeStep       ! to MEF90Ctx
       PetscInt       :: tempOffset
       PetscInt       :: reftempOffset
       PetscInt       :: bctempOffset

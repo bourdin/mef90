@@ -1,0 +1,19 @@
+HeatXfer basic flow
+
+  Create MEF90Ctx
+    Get DM, exo handles, time values and interpolation
+    Values stay in F90 derived type. PetscBag only used for options handling
+  
+  Get MaterialProperties (using bag for options handling only)
+      OR
+      leave Material Properties in each main?
+  Create fields, SNES, TS, KSP etc
+
+  Create MEF90HeatXferCtx:
+    Set Comm
+    Get Cell Set and Vertex Set Properties (Again bags are only used for options handling?)
+    Associate pointer to DM, MEF90Ctx, fields  
+      
+
+  Solve:
+      Pass only MEF90HeatXferCtx to assembly routines.
