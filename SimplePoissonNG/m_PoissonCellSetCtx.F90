@@ -111,7 +111,7 @@ Contains
       Type(MEF90Ctx_Type),intent(OUT)                    :: MEF90Ctx
       Type(SNES),Intent(IN)                              :: snesTemp
       Type(PoissonCellSetProperties_Type),intent(IN)     :: defaultCellSetProperties
-      Type(Element_Type),Dimension(:),Pointer            :: defaultElemType
+      Type(MEF90Element_Type),Dimension(:),Pointer       :: defaultElemType
       PetscErrorCode,Intent(OUT)                         :: ierr
    
       Type(PoissonCellSetProperties_Type)                :: mydefaultCellSetProperties

@@ -574,7 +574,7 @@ Contains
       
       Type(MEF90Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
       Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element2D_Scal_InitSet_ByName
 
@@ -606,7 +606,7 @@ Contains
       
       Type(MEF90Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
       Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element2D_Elast_InitSet_ByName
 
@@ -622,7 +622,7 @@ Contains
       
       Type(MEF90Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
       Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element3D_Scal_InitSet_ByName
 
@@ -638,7 +638,7 @@ Contains
       
       Type(MEF90Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
       Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element3D_Vect_InitSet_ByName
 
@@ -654,7 +654,7 @@ Contains
       
       Type(MEF90Element_Type)                          :: elemType
 
-      Call Element_TypeFindByName(elemName,elemType,ierr)
+      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
       Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
    End Subroutine Element3D_Elast_InitSet_ByName
 
@@ -1399,7 +1399,7 @@ Contains
          dElem%Der_BF(i*dim+2,:)%YX = Elem_Scal%Grad_BF(i+1,:)%X
          dElem%Der_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
-      Call MEF90_ElementDestroy(Elem_Scal,ierr)
+      Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2D_Vect_Init
 
 #undef __FUNCT__
@@ -1433,7 +1433,7 @@ Contains
             delem%Der_BF(iDof,iG) = 0.0_Kr
          End Do
       End Do
-      Call MEF90_ElementDestroy(Elem_Scal,ierr)
+      Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Vect_Init
 
 #undef __FUNCT__
@@ -1470,7 +1470,7 @@ Contains
          dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X / 2.0_Kr
          dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
-      Call MEF90_ElementDestroy(Elem_Scal,ierr)
+      Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2D_Elast_Init
 
 #undef __FUNCT__
@@ -1504,7 +1504,7 @@ Contains
             delem%GradS_BF(iDof,iG) = 0.0_Kr
          End Do
       End Do
-      Call MEF90_ElementDestroy(Elem_Scal,ierr)
+      Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Elast_Init
 
 #undef __FUNCT__
@@ -1893,7 +1893,7 @@ Contains
          dElem%Der_BF(i*dim+3,:)%ZY = Elem_Scal%Grad_BF(i+1,:)%Y
          dElem%Der_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
       End Do
-      Call MEF90_ElementDestroy(Elem_Scal,ierr)
+      Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3D_Vect_Init
 
 #undef __FUNCT__
@@ -1928,7 +1928,7 @@ Contains
             delem%Der_BF(iDof,iG) = 0.0_Kr
          End Do
       End Do
-      Call MEF90_ElementDestroy(Elem_Scal,ierr)
+      Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Vect_Init
 
 #undef __FUNCT__
@@ -1978,7 +1978,7 @@ Contains
          dElem%GradS_BF(i*dim+3,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Y * 0.5_Kr
          dElem%GradS_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
       End Do
-      Call MEF90_ElementDestroy(Elem_Scal,ierr)
+      Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3D_Elast_Init
    
 #undef __FUNCT__
@@ -2013,7 +2013,7 @@ Contains
             delem%GradS_BF(iDof,iG) = 0.0_Kr
          End Do
       End Do
-      Call MEF90_ElementDestroy(Elem_Scal,ierr)
+      Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Elast_Init
 
 #undef __FUNCT__
@@ -2126,7 +2126,7 @@ Contains
       PetscInt                                          :: cell
       
       Do cell = 1, size(dElem)
-         Call MEF90_ElementDestroy(dElem(cell),ierr)
+         Call MEF90Element_Destroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
    End Subroutine Element2D_Scal_DestroySet
@@ -2140,7 +2140,7 @@ Contains
       PetscInt                                          :: cell
       
       Do cell = 1, size(dElem)
-         Call MEF90_ElementDestroy(dElem(cell),ierr)
+         Call MEF90Element_Destroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
    End Subroutine Element2D_Vect_DestroySet
@@ -2154,7 +2154,7 @@ Contains
       PetscInt                                          :: cell
       
       Do cell = 1, size(dElem)
-         Call MEF90_ElementDestroy(dElem(cell),ierr)
+         Call MEF90Element_Destroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
    End Subroutine Element2D_Elast_DestroySet
@@ -2168,7 +2168,7 @@ Contains
       PetscInt                                          :: cell
       
       Do cell = 1, size(dElem)
-         Call MEF90_ElementDestroy(dElem(cell),ierr)
+         Call MEF90Element_Destroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
    End Subroutine Element3D_Scal_DestroySet
@@ -2182,7 +2182,7 @@ Contains
       PetscInt                                          :: cell
         
       Do cell = 1, size(dElem)
-         Call MEF90_ElementDestroy(dElem(cell),ierr)
+         Call MEF90Element_Destroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
    End Subroutine Element3D_Vect_DestroySet
@@ -2196,7 +2196,7 @@ Contains
       PetscInt                                          :: cell
         
       Do cell = 1, size(dElem)
-         Call MEF90_ElementDestroy(dElem(cell),ierr)
+         Call MEF90Element_Destroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
    End Subroutine Element3D_Elast_DestroySet
