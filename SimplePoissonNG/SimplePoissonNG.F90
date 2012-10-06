@@ -58,7 +58,7 @@ Program  SimplePoissonNG
    PetscInt                                        :: itsTemp
    Type(SectionReal),target                        :: secTemp
    Type(IS),target                                 :: CellSetGlobalIS
-   Type(Element_Type),Dimension(:),pointer         :: ElemType
+   Type(MEF90Element_Type),Dimension(:),pointer    :: ElemType
       
    PetscInt                                        :: point,numCell,numVertex,numCellSetGlobal
    PetscReal,Dimension(:,:),Pointer                :: Coord
