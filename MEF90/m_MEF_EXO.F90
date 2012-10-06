@@ -23,7 +23,7 @@ Contains
       MPI_Comm,Intent(IN)                             :: Comm
       Integer,Intent(IN)                              :: exoID
       PetscInt,Intent(IN)                             :: dim
-      Type(Element_Type),Dimension(:),Pointer         :: ElemType
+      Type(MEF90Element_Type),Dimension(:),Pointer    :: ElemType
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       PetscInt                                        :: rank
@@ -50,7 +50,7 @@ Contains
             Call EXGELB(exoID,setID(set),EXOElemType,junk1,junk2,junk3,exoerr)
          EndIf
          Call MPI_Bcast(EXOElemType,MXSTLN,MPI_CHAR,0,comm,ierr)
-         Call EXO2Element_TypeScal(EXOElemType,dim,ElemType(set),ierr)
+         Call EXO2MEF90ElementType_Scal(EXOElemType,dim,ElemType(set),ierr)
       End Do
       DeAllocate(setID)
    End Subroutine EXOGetCellSetElementType_Scal
@@ -61,7 +61,7 @@ Contains
       MPI_Comm,Intent(IN)                             :: Comm
       Integer,Intent(IN)                              :: exoID
       PetscInt,Intent(IN)                             :: dim
-      Type(Element_Type),Dimension(:),Pointer         :: ElemType
+      Type(MEF90Element_Type),Dimension(:),Pointer    :: ElemType
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       PetscInt                                        :: rank
@@ -88,7 +88,7 @@ Contains
             Call EXGELB(exoID,setID(set),EXOElemType,junk1,junk2,junk3,exoerr)
          EndIf
          Call MPI_Bcast(EXOElemType,MXSTLN,MPI_CHAR,0,comm,ierr)
-         Call EXO2Element_TypeVect(EXOElemType,dim,ElemType(set),ierr)
+         Call EXO2MEF90ElementType_Vect(EXOElemType,dim,ElemType(set),ierr)
       End Do
       DeAllocate(setID)
    End Subroutine EXOGetCellSetElementType_Vect
@@ -99,7 +99,7 @@ Contains
       MPI_Comm,Intent(IN)                             :: Comm
       Integer,Intent(IN)                              :: exoID
       PetscInt,Intent(IN)                             :: dim
-      Type(Element_Type),Dimension(:),Pointer         :: ElemType
+      Type(MEF90Element_Type),Dimension(:),Pointer    :: ElemType
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       PetscInt                                        :: rank
@@ -126,7 +126,7 @@ Contains
             Call EXGELB(exoID,setID(set),EXOElemType,junk1,junk2,junk3,exoerr)
          EndIf
          Call MPI_Bcast(EXOElemType,MXSTLN,MPI_CHAR,0,comm,ierr)
-         Call EXO2Element_TypeElast(EXOElemType,dim,ElemType(set),ierr)
+         Call EXO2MEF90ElementType_Elast(EXOElemType,dim,ElemType(set),ierr)
       End Do
       DeAllocate(setID)
    End Subroutine EXOGetCellSetElementType_Elast

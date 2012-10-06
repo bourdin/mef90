@@ -24,13 +24,13 @@ Contains
       PetscInt                      :: ierr
        
       Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
-      Call MEF90_MPIInitialize(ierr);CHKERRQ(ierr)
+      Call MEF90_MPIInitializePrivate(ierr);CHKERRQ(ierr)
 
       Call PetscLogBegin(ierr);CHKERRQ(ierr)
       
       !!! Individual modules runtime initialization should be called here
-      Call MEF90_MaterialsInitialize(ierr);CHKERRQ(ierr)
-      Call MEF90_CtxInitialize(ierr);CHKERRQ(ierr)
+      Call MEF90_MaterialsInitializePrivate(ierr);CHKERRQ(ierr)
+      Call MEF90Ctx_InitializePrivate(ierr);CHKERRQ(ierr)
    End Subroutine MEF90_Initialize
    
 #undef __FUNCT__
@@ -38,7 +38,7 @@ Contains
    Subroutine MEF90_Finalize()
       PetscInt                         :: ierr
       
-      Call MEF90_MPIFinalize(ierr);CHKERRQ(ierr)
+      Call MEF90_MPIFinalizePrivate(ierr);CHKERRQ(ierr)
       Call PetscFinalize(ierr)
    End Subroutine MEF90_Finalize
 End Module m_MEF90

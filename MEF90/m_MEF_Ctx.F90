@@ -6,7 +6,8 @@ Module m_MEF_Ctx
 
    Private  
    Public :: MEF90Ctx_Type
-   Public :: MEF90_CtxInitialize
+   Public :: MEF90Ctx_InitializePrivate
+   Public :: MEF90Ctx_GetTime
       
    Enum,bind(c)
       Enumerator ::  MEF90Scaling_CST=0,        &
@@ -30,28 +31,34 @@ Module m_MEF_Ctx
    Enum,bind(c)
       Enumerator  :: MEF90TimeInterpolation_linear = 0,  &
                      MEF90TimeInterpolation_quadratic,   &
-                     MEF90TimeInterpolation_logarithmic, &
-                     MEF90TimeInterpolation_file
+                     MEF90TimeInterpolation_exo
+                     
+                     
+      !!! 
       !!! is file command line, exo data file 
       !!! -time 0,1 => two steps
-      !!! -time 0,1 -time_dt .1 / -time_numsteps 11
+      !!! -time 0 -time_dt .1 -time_numsteps 11
       !!! -time 0,.1,.2,.3,.4,.5,.6,.7,.8,.9 is easy since it will go in an YAML file
       !!! -time_exo => read in exodus file
+      !!! -time_txt => read in external file
    End Enum
-   Character(len=MEF90_MXSTRLEN),dimension(7),protected  :: MEF90TimeInterpolationList
+   Character(len=MEF90_MXSTRLEN),dimension(6),protected  :: MEF90TimeInterpolationList
 
    Type MEF90Ctx_Type
       PetscInt                                        :: verbose
       Character(len=MEF90_MXSTRLEN)                   :: prefix
-      PetscReal,Dimension(:),Pointer                  :: time
-      PetscReal,Target                                :: timeMin,timeMax
-      PetscInt,Target                                 :: timeNumStep
-      PetscEnum,Target                                :: timeInterpolation
+      PetscEnum                                       :: timeInterpolation
+      PetscReal                                       :: timeMin,timeMax
+      PetscInt                                        :: timeNumStep
       PetscEnum                                       :: fileFormat
       PetscEnum                                       :: fileMode
       Integer                                         :: fileExoUnitIn
       Integer                                         :: fileExoUnitOut
 
+      PetscReal,Dimension(:),Pointer                  :: time !!! This can't be in a bag since the size of the bag needs to be known a priori!
+                                                              !!! It will have to be a global variable in all applications
+                                                              !!! And I will need to implement MEF90GetTimeArray(t,MEF90Ctx)
+      
 !!!   Keep for compatibility reasons until MEF90HeatXfer is working
       PetscBag                                        :: GlobalPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
@@ -61,14 +68,14 @@ Module m_MEF_Ctx
    
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_CtxInitialize"
+#define __FUNCT__ "MEF90Ctx_InitializePrivate"
 !!!
 !!!  
-!!!  MEF90_CtxInitialize:
+!!!  MEF90Ctx_InitializePrivate:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90_CtxInitialize(ierr)
+   Subroutine MEF90Ctx_InitializePrivate(ierr)
       PetscErrorCode,Intent(OUT)                      :: ierr
    
       MEF90ScalingList(1) = 'constant'
@@ -92,17 +99,53 @@ Contains
       
       MEF90TimeInterpolationList(1) = 'linear'
       MEF90TimeInterpolationList(2) = 'quadratic'
-      MEF90TimeInterpolationList(3) = 'logarithmic'
-      MEF90TimeInterpolationList(4) = 'file'
-      MEF90TimeInterpolationList(5) = 'MEF90TimeInterpolation'
-      MEF90TimeInterpolationList(6) = '_MEF90TimeInterpolation'
-      MEF90TimeInterpolationList(7) = ''
+      MEF90TimeInterpolationList(3) = 'exo'
+      MEF90TimeInterpolationList(4) = 'MEF90TimeInterpolation'
+      MEF90TimeInterpolationList(5) = '_MEF90TimeInterpolation'
+      MEF90TimeInterpolationList(6) = ''
       
       ierr = 0
-   End Subroutine MEF90_CtxInitialize
+   End Subroutine MEF90Ctx_InitializePrivate
    
+#undef __FUNCT__
+#define __FUNCT__ "MEF90Ctx_GetTime"
+!!!
+!!!  
+!!!  MEF90Ctx_GetTimeArray:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90Ctx_GetTime(MEF90Ctx,t,ierr)
+      Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
+      PetscReal,Dimension(:),Pointer                  :: t
+      PetscErrorCode,Intent(OUT)                      :: ierr
+      
+      PetscReal                                       :: dt
+      Integer                                         :: i,n
+      Real                                            :: dummyR
+      Character(len=1)                                :: dummyS
+      Integer                                         :: exoerr
+      
+      
+      SelectCase(MEF90Ctx%timeInterpolation)
+      Case (MEF90TimeInterpolation_linear)
+         Allocate(t(MEF90Ctx%timeNumStep))
+         dt = (MEF90Ctx%timeMax - MEF90Ctx%timeMin) / Real(MEF90Ctx%timeNumStep)
+         t = (/ (MEF90Ctx%timeMin + Real(i) * dt, i = 0,MEF90Ctx%timeNumStep-1) /)
+         t(MEF90Ctx%timeNumStep) = MEF90Ctx%timeMax
+      Case (MEF90TimeInterpolation_quadratic)
+         !!! Natural time scale for the heat equation
+         Allocate(t(MEF90Ctx%timeNumStep))
+         dt = (MEF90Ctx%timeMax**2 - MEF90Ctx%timeMin**2) / Real(MEF90Ctx%timeNumStep)
+         t = (/ (sqrt(MEF90Ctx%timeMin**2 + Real(i) * dt), i = 0,MEF90Ctx%timeNumStep-1) /)
+         t(MEF90Ctx%timeNumStep) = MEF90Ctx%timeMax
+      Case (MEF90TimeInterpolation_exo)
+         Call EXINQ(MEF90Ctx%fileExoUnitIn,EXTIMS,MEF90Ctx%timeNumStep,dummyR,dummyS,exoerr)
+         Allocate(t(MEF90Ctx%timeNumStep))
+         Call EXGATIM(MEF90Ctx%fileExoUnitIn,t,exoerr)
+         MEF90Ctx%timeMin = t(1)
+         MEF90Ctx%timeMax = t(MEF90Ctx%timeNumStep)
+      End Select
+      ierr = 0
+   End Subroutine MEF90Ctx_GetTime
 End Module m_MEF_Ctx
-
-!  Shall I move verbose, fileformat, filemode and all other time informations to a MEF90
-!  Bag? This is very likely to be shared between applications
-!  Global, CellSet, VertexSet Properties should be moved into the appctx

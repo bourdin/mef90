@@ -20,14 +20,14 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MassMatrixAssembleSet_2DScal"
    Subroutine MassMatrixAssembleSet_2DScal(M,mesh,U,cellIS,scaling,elem,elemType,ierr)
-      Type(Mat),Intent(IN)                         :: M
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: U
-      Type(IS),Intent(IN)                          :: cellIS
-      PetscReal,Intent(IN),optional                :: scaling
-      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(Mat),Intent(IN)                              :: M
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: U
+      Type(IS),Intent(IN)                               :: cellIS
+      PetscReal,Intent(IN),optional                     :: scaling
+      Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -66,13 +66,13 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "MassMatrixAssembleSet_2DVect"
-   Subroutine MassMatrixAssembleSet_2DVect(M,mesh,U,iBlk,elem,elemType,BC)
+   Subroutine MassMatrixAssembleSet_2DVect(M,mesh,U,iBlk,elem,elemType,BC,ierr)
       Type(Mat),Intent(IN)                         :: M
       Type(DM),Intent(IN)                          :: mesh
       Type(SectionReal),Intent(IN)                 :: U
       PetscInt,Intent(IN)                          :: iBlk
-      Type(Element2D_Vect), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
+      Type(MEF90Element2D_Vect), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
       Type(Flag),Intent(IN),Optional               :: BC
       
       Type(IS)                                     :: cellIS
@@ -126,8 +126,8 @@ Contains
       Type(DM),Intent(IN)                          :: mesh
       Type(SectionReal),Intent(IN)                 :: U
       PetscInt,Intent(IN)                          :: iBlk
-      Type(Element2D_Elast), Dimension(:), Pointer :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
+      Type(MEF90Element2D_Elast), Dimension(:), Pointer :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
       Type(Flag),Intent(IN),Optional               :: BC
       
       Type(IS)                                     :: cellIS
@@ -181,8 +181,8 @@ Contains
       Type(DM),Intent(IN)                          :: mesh
       Type(SectionREal),Intent(IN)                 :: U
       PetscInt,Intent(IN)                          :: iBlk
-      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
+      Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
       Type(Flag),Intent(IN),Optional               :: BC
       
       Type(IS)                                     :: cellIS
@@ -236,8 +236,8 @@ Contains
       Type(DM),Intent(IN)                          :: mesh
       Type(SectionReal),Intent(IN)                 :: U
       PetscInt,Intent(IN)                          :: iBlk
-      Type(Element3D_Vect), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
+      Type(MEF90Element3D_Vect), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
       Type(Flag),Intent(IN),Optional               :: BC
       
       Type(IS)                                     :: cellIS
@@ -291,8 +291,8 @@ Contains
       Type(DM),Intent(IN)                          :: mesh
       Type(SectionReal),Intent(IN)                 :: U
       PetscInt,Intent(IN)                          :: iBlk
-      Type(Element3D_Elast), Dimension(:), Pointer :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
+      Type(MEF90Element3D_Elast), Dimension(:), Pointer :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
       Type(Flag),Intent(IN),Optional               :: BC
       
       Type(IS)                                     :: cellIS
