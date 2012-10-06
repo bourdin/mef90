@@ -125,8 +125,8 @@ Module m_MEF_Materials
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_MaterialsInitialize"
-   Subroutine MEF90_MaterialsInitialize(ierr)
+#define __FUNCT__ "MEF90_MaterialsInitializePrivate"
+   Subroutine MEF90_MaterialsInitializePrivate(ierr)
       PetscErrorCode,intent(OUT)          :: ierr
 
       Type(MEF90_MatProp2D_Type),Target   :: matProp2D
@@ -137,7 +137,7 @@ Contains
       Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
       sizeofMEF90_MatProp2D = size(transfer(matProp2D,dummychar))*sizeofchar
       sizeofMEF90_MatProp3D = size(transfer(matProp3D,dummychar))*sizeofchar
-   End Subroutine MEF90_MaterialsInitialize
+   End Subroutine MEF90_MaterialsInitializePrivate
 
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterMEF90_MatProp2D"

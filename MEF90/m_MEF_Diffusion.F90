@@ -9,36 +9,36 @@ Module m_MEF_Diffusion
    IMPLICIT NONE
 
    Private   
-   Public :: MEF90_DiffusionBilinearFormSet
-   Public :: MEF90_DiffusionOperatorSet
-   Public :: MEF90_DiffusionOperatorAddTransientTermSet
-   Public :: MEF90_DiffusionRHSSet
-   Public :: MEF90_DiffusionEnergySet
-   Public :: MEF90_DiffusionWorkSet
+   Public :: MEF90Diffusion_BilinearFormSet
+   Public :: MEF90Diffusion_OperatorSet
+   Public :: MEF90Diffusion_OperatorAddTransientTermSet
+   Public :: MEF90Diffusion_RHSSet
+   Public :: MEF90Diffusion_EnergySet
+   Public :: MEF90Diffusion_WorkSet
    
-   Interface MEF90_DiffusionBilinearFormSet
+   Interface MEF90Diffusion_BilinearFormSet
       Module Procedure DiffusionBilinearFormSet_2D, DiffusionBilinearFormSet_3D
-   End Interface MEF90_DiffusionBilinearFormSet
+   End Interface MEF90Diffusion_BilinearFormSet
    
-   Interface MEF90_DiffusionRHSSet
+   Interface MEF90Diffusion_RHSSet
       Module procedure DiffusionRHSSet_2D,DiffusionRHSCellCstSet_2D,DiffusionRHSSet_3D,DiffusionRHSCellCstSet_3D
-   End Interface MEF90_DiffusionRHSSet
+   End Interface MEF90Diffusion_RHSSet
 
-   Interface MEF90_DiffusionOperatorSet
+   Interface MEF90Diffusion_OperatorSet
       Module procedure DiffusionOperatorSet_2D,DiffusionOperatorSet_3D
-   End Interface MEF90_DiffusionOperatorSet
+   End Interface MEF90Diffusion_OperatorSet
 
-   Interface MEF90_DiffusionOperatorAddTransientTermSet
+   Interface MEF90Diffusion_OperatorAddTransientTermSet
       Module procedure DiffusionOperatorAddTransientTermSet_2D,DiffusionOperatorAddTransientTermSet_3D
-   End Interface MEF90_DiffusionOperatorAddTransientTermSet
+   End Interface MEF90Diffusion_OperatorAddTransientTermSet
    
-   Interface MEF90_DiffusionEnergySet
+   Interface MEF90Diffusion_EnergySet
       Module procedure DiffusionEnergySet_2D,DiffusionEnergySet_3D
-   End Interface MEF90_DiffusionEnergySet
+   End Interface MEF90Diffusion_EnergySet
 
-   Interface MEF90_DiffusionWorkSet
+   Interface MEF90Diffusion_WorkSet
       Module procedure DiffusionWorkSet_2D,DiffusionWorkCellCstSet_2D,DiffusionWorkSet_3D,DiffusionWorkCellCstSet_3D
-   End Interface MEF90_DiffusionWorkSet
+   End Interface MEF90Diffusion_WorkSet
    
 
 !  Assembles all components required to solve a diffusion equation in the form
@@ -81,16 +81,16 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionBilinearFormSet_2D"
    Subroutine DiffusionBilinearFormSet_2D(K,mesh,U,cellIS,A,lambda,elem,elemType,ierr)
-      Type(Mat),Intent(IN)                         :: K 
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: U        
+      Type(Mat),Intent(IN)                              :: K 
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: U        
       !!! only the layout part if U is used (like a PetscSection)
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(MatS2D),Intent(IN)                      :: A
-      PetscReal,Intent(IN)                         :: lambda
-      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MatS2D),Intent(IN)                           :: A
+      PetscReal,Intent(IN)                              :: lambda
+      Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -124,15 +124,15 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionOperatorSet_2D"   
    Subroutine DiffusionOperatorSet_2D(G,mesh,V,cellIS,A,lambda,elem,elemType,ierr)
-      Type(SectionReal),Intent(IN)                 :: G
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: V
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(MatS2D),Intent(IN)                      :: A
-      PetscReal,Intent(IN)                         :: lambda
-      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(SectionReal),Intent(IN)                      :: G
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: V
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MatS2D),Intent(IN)                           :: A
+      PetscReal,Intent(IN)                              :: lambda
+      Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -183,14 +183,14 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine DiffusionOperatorAddTransientTermSet_2D(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
-      Type(SectionReal),Intent(IN)                 :: G
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: x
-      Type(IS),Intent(IN)                          :: cellIS
-      PetscReal,Intent(IN)                         :: alpha
-      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(SectionReal),Intent(IN)                      :: G
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: x
+      Type(IS),Intent(IN)                               :: cellIS
+      PetscReal,Intent(IN)                              :: alpha
+      Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
 
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -231,13 +231,13 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionRHSSet_2D"
    Subroutine DiffusionRHSSet_2D(RHS,mesh,F,cellIS,elem,elemType,ierr)
-      Type(SectionReal),Intent(IN)                 :: RHS
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: F
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(SectionReal),Intent(IN)                      :: RHS
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: F
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -277,13 +277,13 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionRHSCellCstSet_2D"
    Subroutine DiffusionRHSCellCstSet_2D(RHS,mesh,F,cellIS,elem,elemType,ierr)
-      Type(SectionReal),Intent(IN)                 :: RHS
-      Type(DM),Intent(IN)                          :: mesh
-      PetscReal,Intent(IN)                         :: F
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(SectionReal),Intent(IN)                      :: RHS
+      Type(DM),Intent(IN)                               :: mesh
+      PetscReal,Intent(IN)                              :: F
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -315,15 +315,15 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionEnergySet_2D"
    Subroutine DiffusionEnergySet_2D(energy,x,mesh,A,lambda,cellIS,elem,elemType,ierr)
-      PetscReal,Intent(OUT)                        :: energy
-      Type(SectionReal),Intent(IN)                 :: x
-      Type(DM),Intent(IN)                          :: mesh
-      Type(MatS2D),Intent(IN)                      :: A
-      PetscReal,Intent(IN)                         :: lambda
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      PetscReal,Intent(OUT)                             :: energy
+      Type(SectionReal),Intent(IN)                      :: x
+      Type(DM),Intent(IN)                               :: mesh
+      Type(MatS2D),Intent(IN)                           :: A
+      PetscReal,Intent(IN)                              :: lambda
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
 
       Type(Vect2D)                                 :: stress,strain      
       PetscReal                                    :: xelem
@@ -361,14 +361,14 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionWorkSet_2D"
    Subroutine DiffusionWorkSet_2D(work,x,mesh,F,cellIS,elem,elemType,ierr)
-      PetscReal,Intent(OUT)                        :: work
-      Type(SectionReal),Intent(IN)                 :: x
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: F
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      PetscReal,Intent(OUT)                             :: work
+      Type(SectionReal),Intent(IN)                      :: x
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: F
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
 
       PetscReal,Dimension(:),Pointer               :: xloc,floc
       PetscReal                                    :: xelem,felem
@@ -406,14 +406,14 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionWorkCellCstSet_2D"
    Subroutine DiffusionWorkCellCstSet_2D(work,x,mesh,F,cellIS,elem,elemType,ierr)
-      PetscReal,Intent(OUT)                        :: work
-      Type(SectionReal),Intent(IN)                 :: x
-      Type(DM),Intent(IN)                          :: mesh
-      PetscReal,Intent(IN)                         :: F
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element2D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      PetscReal,Intent(OUT)                             :: work
+      Type(SectionReal),Intent(IN)                      :: x
+      Type(DM),Intent(IN)                               :: mesh
+      PetscReal,Intent(IN)                              :: F
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
 
       PetscReal,Dimension(:),Pointer               :: xloc
       PetscReal                                    :: xelem
@@ -446,15 +446,15 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionBilinearFormSet_3D"
    Subroutine DiffusionBilinearFormSet_3D(K,mesh,U,cellIS,A,lambda,elem,elemType,ierr)
-      Type(Mat),Intent(IN)                         :: K
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: U
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(MatS3D),Intent(IN)                      :: A
-      PetscReal,Intent(IN)                         :: lambda
-      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(Mat),Intent(IN)                              :: K
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: U
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MatS3D),Intent(IN)                           :: A
+      PetscReal,Intent(IN)                              :: lambda
+      Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -488,15 +488,15 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionOperatorSet_3D"   
    Subroutine DiffusionOperatorSet_3D(G,mesh,V,cellIS,A,lambda,elem,elemType,ierr)
-      Type(SectionReal),Intent(IN)                 :: G
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: V
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(MatS3D),Intent(IN)                      :: A
-      PetscReal,Intent(IN)                         :: lambda
-      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(SectionReal),Intent(IN)                      :: G
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: V
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MatS3D),Intent(IN)                           :: A
+      PetscReal,Intent(IN)                              :: lambda
+      Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -548,14 +548,14 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine DiffusionOperatorAddTransientTermSet_3D(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
-      Type(SectionReal),Intent(IN)                 :: G
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: x
-      Type(IS),Intent(IN)                          :: cellIS
-      PetscReal,Intent(IN)                         :: alpha
-      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(SectionReal),Intent(IN)                      :: G
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: x
+      Type(IS),Intent(IN)                               :: cellIS
+      PetscReal,Intent(IN)                              :: alpha
+      Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
 
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -597,13 +597,13 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionRHSSet_3D"
    Subroutine DiffusionRHSSet_3D(RHS,mesh,F,cellIS,elem,elemType,ierr)
-      Type(SectionReal),Intent(IN)                 :: RHS
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: F
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(SectionReal),Intent(IN)                      :: RHS
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: F
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -644,13 +644,13 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionRHSCellCstSet_3D"
    Subroutine DiffusionRHSCellCstSet_3D(RHS,mesh,F,cellIS,elem,elemType,ierr)
-      Type(SectionReal),Intent(IN)                 :: RHS
-      Type(DM),Intent(IN)                          :: mesh
-      PetscReal,Intent(IN)                         :: F
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      Type(SectionReal),Intent(IN)                      :: RHS
+      Type(DM),Intent(IN)                               :: mesh
+      PetscReal,Intent(IN)                              :: F
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt,Dimension(:),Pointer                :: cellID
       PetscInt                                     :: cell
@@ -683,15 +683,15 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionEnergySet_3D"
    Subroutine DiffusionEnergySet_3D(energy,x,mesh,A,lambda,cellIS,elem,elemType,ierr)
-      PetscReal,Intent(OUT)                        :: energy
-      Type(SectionReal),Intent(IN)                 :: x
-      Type(DM),Intent(IN)                          :: mesh
-      Type(MatS3D),Intent(IN)                      :: A
-      PetscReal,Intent(IN)                         :: lambda
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      PetscReal,Intent(OUT)                             :: energy
+      Type(SectionReal),Intent(IN)                      :: x
+      Type(DM),Intent(IN)                               :: mesh
+      Type(MatS3D),Intent(IN)                           :: A
+      PetscReal,Intent(IN)                              :: lambda
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
 
       Type(Vect3D)                                 :: stress,strain      
       PetscReal                                    :: xelem
@@ -729,14 +729,14 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionWorkSet_3D"
    Subroutine DiffusionWorkSet_3D(work,x,mesh,F,cellIS,elem,elemType,ierr)
-      PetscReal,Intent(OUT)                        :: work
-      Type(SectionReal),Intent(IN)                 :: x
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionReal),Intent(IN)                 :: F
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      PetscReal,Intent(OUT)                             :: work
+      Type(SectionReal),Intent(IN)                      :: x
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: F
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
 
       PetscReal,Dimension(:),Pointer               :: xloc,floc
       PetscReal                                    :: xelem,felem
@@ -775,14 +775,14 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionWorkCellCstSet_3D"
    Subroutine DiffusionWorkCellCstSet_3D(work,x,mesh,F,cellIS,elem,elemType,ierr)
-      PetscReal,Intent(OUT)                        :: work
-      Type(SectionReal),Intent(IN)                 :: x
-      Type(DM),Intent(IN)                          :: mesh
-      PetscReal,Intent(IN)                         :: F
-      Type(IS),Intent(IN)                          :: cellIS
-      Type(Element3D_Scal), Dimension(:), Pointer  :: elem
-      Type(Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                   :: ierr
+      PetscReal,Intent(OUT)                             :: work
+      Type(SectionReal),Intent(IN)                      :: x
+      Type(DM),Intent(IN)                               :: mesh
+      PetscReal,Intent(IN)                              :: F
+      Type(IS),Intent(IN)                               :: cellIS
+      Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)                :: elemType
+      PetscErrorCode,Intent(OUT)                        :: ierr
 
       PetscReal,Dimension(:),Pointer               :: xloc
       PetscReal                                    :: xelem
