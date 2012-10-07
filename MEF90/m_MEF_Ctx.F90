@@ -17,7 +17,7 @@ Module m_MEF_Ctx_Type
       Integer                                         :: fileExoUnitIn
       Integer                                         :: fileExoUnitOut
 
-      PetscReal,Dimension(:),Pointer                  :: time !!! This can't be in a bag since the size of the bag needs to be known a priori!
+      !PetscReal,Dimension(:),Pointer                  :: time !!! This can't be in a bag since the size of the bag needs to be known a priori!
                                                               !!! It will have to be a global variable in all applications
                                                               !!! And I will need to implement MEF90GetTimeArray(t,MEF90Ctx)
       
@@ -39,7 +39,9 @@ Module m_MEF_Ctx
    Private  
    Public :: MEF90Ctx_Type
    Public :: MEF90Ctx_InitializePrivate
+   Public :: PetscBagGetDataMEF90Ctx
    Public :: MEF90Ctx_GetTime
+   Public :: sizeofMEF90Ctx
       
    PetscSizeT,protected    :: sizeofMEF90Ctx
 

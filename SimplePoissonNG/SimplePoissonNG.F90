@@ -37,8 +37,9 @@ Program  SimplePoissonNG
    Character(len=MEF90_MXSTRLEN)                   :: prefix,filename
    Type(PetscViewer),target                        :: energyViewer,logViewer
    Type(PetscViewer),Dimension(:),Pointer          :: energyViewerCellSet
-   Type(MEF90Ctx_Type)                             :: MEF90Ctx
-   Type(DM),target                                        :: mesh,tmp_mesh
+   Type(MEF90Ctx_Type),pointer                     :: MEF90Ctx
+   !Type(MEF90Ctx_Type)                     :: MEF90Ctx
+   Type(DM),target                                 :: mesh,tmp_mesh
    PetscErrorCode                                  :: iErr
    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
    PetscBool                                       :: flg
@@ -74,7 +75,7 @@ Program  SimplePoissonNG
    PetscInt                                        :: TSmaxTime
    PetscInt                                        :: maxits
    
-   Call MEF90_Initialize()
+   Call MEF90_Initialize(MEF90Ctx,ierr)
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
 
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',prefix,flg,ierr);CHKERRQ(ierr)
