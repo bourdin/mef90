@@ -8,7 +8,7 @@ Module m_MEF_Ctx_Type
 
    Type MEF90Ctx_Type
       PetscInt                                        :: verbose
-      Character(len=MEF90_MXSTRLEN)                   :: prefix
+      !Character(len=MEF90_MXSTRLEN)                   :: prefix
       PetscEnum                                       :: timeInterpolation
       PetscReal                                       :: timeMin,timeMax
       PetscInt                                        :: timeNumStep
@@ -36,12 +36,16 @@ Module m_MEF_Ctx
    Use m_MEF_Ctx_Type
    Implicit none
 
-   Private  
+   !Private  
    Public :: MEF90Ctx_Type
    Public :: MEF90Ctx_InitializePrivate
    Public :: PetscBagGetDataMEF90Ctx
    Public :: MEF90Ctx_GetTime
    Public :: sizeofMEF90Ctx
+
+   Private :: PetscBagGetData
+   !!! Very important. PetscGetData must remain private to this module or others will not be able to declare their own interface 
+   !!! for other derived type
       
    PetscSizeT,protected    :: sizeofMEF90Ctx
 
@@ -170,7 +174,7 @@ Contains
       Call PetscBagSetName(bag,trim(name),"MEF90 Global properties object",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90Ctx%verbose,default%verbose,'verbose','Verbosity: level',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterString(bag,MEF90Ctx%prefix,MEF90_MXSTRLEN,default%prefix,'prefix','prefix',ierr);CHKERRQ(ierr)
+      !Call PetscBagRegisterString(bag,MEF90Ctx%prefix,MEF90_MXSTRLEN+1,default%prefix,'prefix','prefix',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,MEF90Ctx%timeInterpolation,MEF90TimeInterpolationList,default%timeInterpolation,'time_interpolation','Time: interpolation type',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90Ctx%timeMin,default%timeMin,'time_min','Time: min',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90Ctx%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)

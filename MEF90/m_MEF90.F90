@@ -19,16 +19,17 @@ Module m_MEF90
    Public :: MEF90_Finalize
    Public :: MEF90CtxBag
    
-   PetscBag                                        :: MEF90CtxBag 
+   PetscBag                      :: MEF90CtxBag 
    
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_Initialize"
-   Subroutine MEF90_Initialize(MEF90Ctx,ierr)
-      PetscInt,Intent(OUT)                               :: ierr
-      Type(MEF90Ctx_Type),pointer                        :: MEF90Ctx
+   Subroutine MEF90_Initialize(MEF90Ctx,default,ierr)
+      Type(MEF90Ctx_type),Intent(OUT),pointer   :: MEF90Ctx
+      Type(MEF90Ctx_Type),Intent(IN)            :: default
+      PetscInt,Intent(OUT)                      :: ierr
        
-      Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
+      !Call PetscInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
       Call PetscLogBegin(ierr);CHKERRQ(ierr)
 
       
@@ -38,6 +39,7 @@ Contains
       Call MEF90Ctx_InitializePrivate(ierr);CHKERRQ(ierr)
       
       Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90Ctx,MEF90CtxBag,ierr)
+      Call PetscBagRegisterMEF90Ctx(MEF90CtxBag,"MEF90 Global Context",PETSC_NULL_CHARACTER,default,ierr)
       Call PetscBagGetDataMEF90Ctx(MEF90CtxBag,MEF90Ctx,ierr);CHKERRQ(ierr)  
    End Subroutine MEF90_Initialize
    
@@ -45,11 +47,11 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_Finalize"
    Subroutine MEF90_Finalize()
-      PetscInt                                     :: ierr
+      PetscInt                   :: ierr
       
       Call PetscBagDestroy(MEF90CtxBag,ierr)
       Call MEF90MPI_FinalizePrivate(ierr);CHKERRQ(ierr)
-      Call PetscFinalize(ierr)
+      !Call PetscFinalize(ierr)
    End Subroutine MEF90_Finalize
 End Module m_MEF90
 
