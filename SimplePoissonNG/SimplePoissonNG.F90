@@ -38,7 +38,7 @@ Program  SimplePoissonNG
    Type(PetscViewer),target                        :: energyViewer,logViewer
    Type(PetscViewer),Dimension(:),Pointer          :: energyViewerCellSet
    Type(MEF90Ctx_Type),pointer                     :: MEF90Ctx
-   !Type(MEF90Ctx_Type)                     :: MEF90Ctx
+   Type(MEF90Ctx_Type)                             :: MEF90Ctx_default
    Type(DM),target                                 :: mesh,tmp_mesh
    PetscErrorCode                                  :: iErr
    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
@@ -75,8 +75,22 @@ Program  SimplePoissonNG
    PetscInt                                        :: TSmaxTime
    PetscInt                                        :: maxits
    
-   Call MEF90_Initialize(MEF90Ctx,ierr)
-   Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
+   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+
+   MEF90Ctx_default%verbose           = 0
+   !MEF90Ctx_default%prefix            = 'SquareNG-tri3'
+   MEF90Ctx_default%timeInterpolation = MEF90TimeInterpolation_linear
+   MEF90Ctx_default%timeMin           = 1.0_Kr
+   MEF90Ctx_default%timeMax           = 2.0_Kr
+   MEF90Ctx_default%timeNumStep       = 1
+   MEF90Ctx_default%fileFormat        = MEF90FileFormat_EXOSingle
+   MEF90Ctx_default%fileMode          = MEF90FileMode_Replace   
+   Call MEF90_Initialize(MEF90Ctx,MEF90Ctx_default,ierr)
+
+   !Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
+   Call MEF90_Finalize()
+   Call PetscFinalize()
+   STOP
 
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',prefix,flg,ierr);CHKERRQ(ierr)
    If (.NOT. flg) Then
