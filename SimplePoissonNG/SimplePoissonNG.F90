@@ -78,7 +78,7 @@ Program  SimplePoissonNG
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
 
    MEF90Ctx_default%verbose           = 0
-   !MEF90Ctx_default%prefix            = 'SquareNG-tri3'
+   MEF90Ctx_default%prefix            = 'SquareNG-tri3'
    MEF90Ctx_default%timeInterpolation = MEF90TimeInterpolation_linear
    MEF90Ctx_default%timeMin           = 1.0_Kr
    MEF90Ctx_default%timeMax           = 2.0_Kr
@@ -87,11 +87,9 @@ Program  SimplePoissonNG
    MEF90Ctx_default%fileMode          = MEF90FileMode_Replace   
    Call MEF90_Initialize(MEF90Ctx,MEF90Ctx_default,ierr)
 
-   !Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
-   Call MEF90_Finalize()
-   Call PetscFinalize()
-   STOP
-
+   Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
+   Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
+   
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',prefix,flg,ierr);CHKERRQ(ierr)
    If (.NOT. flg) Then
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_NULL,"Missing file prefix\n",ierr);CHKERRQ(ierr)
