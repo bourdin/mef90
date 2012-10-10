@@ -8,7 +8,7 @@ Module m_MEF_Ctx_Type
 
    Type MEF90Ctx_Type
       PetscInt                                        :: verbose
-      !Character(len=MEF90_MXSTRLEN)                   :: prefix
+      Character(len=MEF90_MXSTRLEN)                   :: prefix
       PetscEnum                                       :: timeInterpolation
       PetscReal                                       :: timeMin,timeMax
       PetscInt                                        :: timeNumStep
@@ -48,6 +48,7 @@ Module m_MEF_Ctx
    !!! for other derived type
       
    PetscSizeT,protected    :: sizeofMEF90Ctx
+   PetscBag                :: MEF90CtxBag 
 
    Enum,bind(c)
       Enumerator ::  MEF90Scaling_CST=0,        &
@@ -74,6 +75,8 @@ Module m_MEF_Ctx
                      MEF90TimeInterpolation_exo
    End Enum
    Character(len=MEF90_MXSTRLEN),dimension(6),protected  :: MEF90TimeInterpolationList
+   
+   
 
    
    Interface PetscBagGetData
@@ -135,7 +138,7 @@ Contains
       MEF90TimeInterpolationList(5) = '_MEF90TimeInterpolation'
       MEF90TimeInterpolationList(6) = ''
       
-      ierr = 0
+      Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90Ctx,MEF90CtxBag,ierr)
    End Subroutine MEF90Ctx_InitializePrivate
    
 #undef __FUNCT__
@@ -174,13 +177,13 @@ Contains
       Call PetscBagSetName(bag,trim(name),"MEF90 Global properties object",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90Ctx%verbose,default%verbose,'verbose','Verbosity: level',ierr);CHKERRQ(ierr)
-      !Call PetscBagRegisterString(bag,MEF90Ctx%prefix,MEF90_MXSTRLEN+1,default%prefix,'prefix','prefix',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterString(bag,MEF90Ctx%prefix,default%prefix,'prefix','prefix',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,MEF90Ctx%timeInterpolation,MEF90TimeInterpolationList,default%timeInterpolation,'time_interpolation','Time: interpolation type',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90Ctx%timeMin,default%timeMin,'time_min','Time: min',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90Ctx%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90Ctx%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,MEF90Ctx%fileFormat,MEF90FileFormatList,default%fileFormat,'file_format','I/O: file format.',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,MEF90Ctx%fileMode,MEF90FileModeList,default%fileMode,'file_mode','I/O: file mode.',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,MEF90Ctx%fileMode,MEF90FileModeList,default%fileMode,'file_mode','I/O: file mode.',ierr);CHKERRQ(ierr)   
    End Subroutine PetscBagRegisterMEF90Ctx
 
 #undef __FUNCT__
@@ -206,15 +209,19 @@ Contains
       SelectCase(MEF90Ctx%timeInterpolation)
       Case (MEF90TimeInterpolation_linear)
          Allocate(t(MEF90Ctx%timeNumStep))
-         dt = (MEF90Ctx%timeMax - MEF90Ctx%timeMin) / Real(MEF90Ctx%timeNumStep)
+         dt = (MEF90Ctx%timeMax - MEF90Ctx%timeMin) / Real(MEF90Ctx%timeNumStep-1.0_Kr)
          t = (/ (MEF90Ctx%timeMin + Real(i) * dt, i = 0,MEF90Ctx%timeNumStep-1) /)
-         t(MEF90Ctx%timeNumStep) = MEF90Ctx%timeMax
+         If (MEF90Ctx%timeNumStep > 1) Then
+            t(MEF90Ctx%timeNumStep) = MEF90Ctx%timeMax
+         End If
       Case (MEF90TimeInterpolation_quadratic)
          !!! Natural time scale for the heat equation
          Allocate(t(MEF90Ctx%timeNumStep))
-         dt = (MEF90Ctx%timeMax**2 - MEF90Ctx%timeMin**2) / Real(MEF90Ctx%timeNumStep)
+         dt = (MEF90Ctx%timeMax**2 - MEF90Ctx%timeMin**2) / Real(MEF90Ctx%timeNumStep-1.0_Kr)
          t = (/ (sqrt(MEF90Ctx%timeMin**2 + Real(i) * dt), i = 0,MEF90Ctx%timeNumStep-1) /)
-         t(MEF90Ctx%timeNumStep) = MEF90Ctx%timeMax
+         If (MEF90Ctx%timeNumStep > 1) Then
+            t(MEF90Ctx%timeNumStep) = MEF90Ctx%timeMax
+         End If
       Case (MEF90TimeInterpolation_exo)
          Call EXINQ(MEF90Ctx%fileExoUnitIn,EXTIMS,MEF90Ctx%timeNumStep,dummyR,dummyS,exoerr)
          Allocate(t(MEF90Ctx%timeNumStep))
@@ -222,6 +229,10 @@ Contains
          MEF90Ctx%timeMin = t(1)
          MEF90Ctx%timeMax = t(MEF90Ctx%timeNumStep)
       End Select
-      ierr = 0
+      If (MEF90Ctx%verbose > 0) Then
+         Call PetscPrintf(PETSC_COMM_WORLD,"Time values array:\n",ierr);CHKERRQ(ierr)  
+         Call PetscRealView(MEF90Ctx%timeNumStep,t,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+         Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)  
+      End If
    End Subroutine MEF90Ctx_GetTime
 End Module m_MEF_Ctx

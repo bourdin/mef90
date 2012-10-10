@@ -19,7 +19,6 @@ Module m_MEF90
    Public :: MEF90_Finalize
    Public :: MEF90CtxBag
    
-   PetscBag                      :: MEF90CtxBag 
    
 Contains
 #undef __FUNCT__
@@ -38,9 +37,12 @@ Contains
       Call MEF90Materials_InitializePrivate(ierr);CHKERRQ(ierr)
       Call MEF90Ctx_InitializePrivate(ierr);CHKERRQ(ierr)
       
-      Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90Ctx,MEF90CtxBag,ierr)
-      Call PetscBagRegisterMEF90Ctx(MEF90CtxBag,"MEF90 Global Context",PETSC_NULL_CHARACTER,default,ierr)
+      Call PetscBagRegisterMEF90Ctx(MEF90CtxBag,"MEF90CtxBag",PETSC_NULL_CHARACTER,default,ierr)
       Call PetscBagGetDataMEF90Ctx(MEF90CtxBag,MEF90Ctx,ierr);CHKERRQ(ierr)  
+      If (MEF90Ctx%verbose >0) Then
+         Call PetscBagView(MEF90CtxBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+         Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)
+      End If
    End Subroutine MEF90_Initialize
    
    
