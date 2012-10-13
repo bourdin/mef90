@@ -30,15 +30,22 @@ Program  SimplePoissonNG
                                                          2,                   & ! fluxoffset
                                                          PETSC_FALSE,         & ! addNullSpace
                                                          0.0_Kr)                ! initialTemp
+   Type(MEF90GlobalOptions_Type),Parameter         :: defaultGlobalOptions = MEF90GlobalOptions_Type( &
+                                                         0,                               & ! verbose
+                                                         MEF90TimeInterpolation_linear,   & ! timeInterpolation
+                                                         0.0_Kr,                          & ! timeMin
+                                                         1.0_kr,                          & ! timeMax
+                                                         11,                              & ! timeNumStep
+                                                         MEF90FileFormat_EXOSingle)         ! fileFormat
                                                          
    Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr,0.0_Kr,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
+   Type(MEF90GlobalOptions_Type),Pointer           :: MEF90GlobalOptions
    Character(len=MEF90_MXSTRLEN)                   :: prefix,filename
    Type(PetscViewer),target                        :: energyViewer,logViewer
    Type(PetscViewer),Dimension(:),Pointer          :: energyViewerCellSet
-   Type(MEF90Ctx_Type),pointer                     :: MEF90Ctx
-   Type(MEF90Ctx_Type)                             :: MEF90Ctx_default
+   Type(MEF90Ctx_Type)                             :: MEF90Ctx
    Type(DM),target                                 :: mesh,tmp_mesh
    PetscErrorCode                                  :: iErr
    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
@@ -78,14 +85,9 @@ Program  SimplePoissonNG
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90_Initialize(ierr)
 
-   MEF90Ctx_default%verbose           = 0
-   MEF90Ctx_default%prefix            = 'SquareNG-tri3'
-   MEF90Ctx_default%timeInterpolation = MEF90TimeInterpolation_linear
-   MEF90Ctx_default%timeMin           = 1.0_Kr
-   MEF90Ctx_default%timeMax           = 2.0_Kr
-   MEF90Ctx_default%timeNumStep       = 1
-   MEF90Ctx_default%fileFormat        = MEF90FileFormat_EXOSingle
-   Call MEF90Ctx_Create(MEF90Ctx,MEF90Ctx_default,ierr)
+   MEF90Ctx%prefix            = 'SquareNG-tri3'
+   Call MEF90_Initialize(ierr)
+   Call MEF90Ctx_Create(PETSC_COMM_WORLD,MEF90Ctx,defaultGlobalOptions,ierr)
 
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
    !Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
