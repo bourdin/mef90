@@ -13,6 +13,7 @@ Module m_MEF_Ctx_Type
       Type(PetscViewer)                               :: logViewer
       !Type(PetscViewer)                               :: stdoutViewer
       Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
+      Integer                                         :: fileExoUnit
       !PetscReal,Dimension(:),Pointer                  :: time !!! This can't be in a bag since the size of the bag needs to be known a priori!
                                                               !!! It will have to be a global variable in all applications
                                                               !!! And I will need to implement MEF90GetTimeArray(t,MEF90Ctx)
@@ -34,7 +35,6 @@ Module m_MEF_Ctx_Type
       PetscReal                                       :: timeMin,timeMax
       PetscInt                                        :: timeNumStep
       PetscEnum                                       :: fileFormat
-      Integer                                         :: fileExoUnit
    End Type MEF90GlobalOptions_Type
 End Module m_MEF_Ctx_Type
 
@@ -280,14 +280,15 @@ End Subroutine MEF90Ctx_Destroy
          Select case(GlobalOptions%FileFormat)
          Case (MEF90FileFormat_EXOSingle)
             If (MEF90Ctx%rank == 0) Then
-               If (GlobalOptions%fileExoUnit /= 0) Then
-                  Call EXINQ(GlobalOptions%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
+               If (MEF90Ctx%fileExoUnit /= 0) Then
+                  Call EXINQ(MEF90Ctx%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
                   Allocate(t(GlobalOptions%timeNumStep))
-                  Call EXGATM(GlobalOptions%fileExoUnit,t,exoerr)
+                  Call EXGATM(MEF90Ctx%fileExoUnit,t,exoerr)
                   Call MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
                   Call MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr)
                Else
-                  SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
+                  Call PetscPrintf(PETSC_COMM_SELF,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
+                  SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr)
                End If
             Else
                Call MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
@@ -297,12 +298,13 @@ End Subroutine MEF90Ctx_Destroy
             GlobalOptions%timeMin = t(1)
             GlobalOptions%timeMax = t(GlobalOptions%timeNumStep)
          Case (MEF90FileFormat_EXOSplit)
-            If (GlobalOptions%fileExoUnit /= 0) Then
-               Call EXINQ(GlobalOptions%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
+            If (MEF90Ctx%fileExoUnit /= 0) Then
+               Call EXINQ(MEF90Ctx%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
                Allocate(t(GlobalOptions%timeNumStep))
-               Call EXGATM(GlobalOptions%fileExoUnit,t,exoerr)
+               Call EXGATM(MEF90Ctx%fileExoUnit,t,exoerr)
             Else
-               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
+               Call PetscPrintf(PETSC_COMM_SELF,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
+               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr)
             End If
          End Select
       End Select
