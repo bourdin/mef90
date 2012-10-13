@@ -65,7 +65,68 @@ Subroutine MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr)
    Call EXCLOS(exoUnit,ierr)
 End Subroutine MEF90Ctx_GetDMMeshEXO
 
-!MEF90Ctx_OpenEXOOUT
+#undef __FUNCT__
+#define __FUNCT__ "MEF90Ctx_OpenEXO"
+!!!
+!!!  
+!!!  MEF90Ctx_OpenEXO:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
+   Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
+   Type(DM), Intent(IN)                            :: Mesh
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   Integer                                         :: exoUnitIN
+   MPI_Comm                                        :: IOComm
+   Integer                                         :: IORank
+   Character(len=MEF90_MXSTRLEN)                   :: IOBuffer,filename
+   Type(MEF90GlobalOptions_Type),pointer           :: GlobalOptions      
+   Integer                                         :: cpu_ws,io_ws
+   Real                                            :: exo_version
+   Integer                                         :: exoerr
+   
+
+   Call PetscBagGetDataMEF90GlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+
+   !!! Get name of output file
+   Select Case (GlobalOptions%FileFormat)
+   Case (MEF90FileFormat_EXOSplit)
+      IOComm = PETSC_COMM_SELF
+      Write(filename,100) trim(MEF90Ctx%prefix),MEF90Ctx%rank
+   Case (MEF90FileFormat_EXOSingle)   
+      IOComm = PETSC_COMM_WORLD
+      Write(filename,101) trim(MEF90Ctx%prefix)
+   End Select
+100 Format(A,'-',I4.4,'.gen')
+101 Format(A,'_out.gen')
+   Call MPI_Comm_Rank(IOComm,IORank,ierr)
+
+   !!! Open output file or create it and format it depending on loading type
+   If (IORank == 0) Then
+      cpu_ws = 8
+      io_ws = 8
+      MEF90Ctx%fileExoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
+      If (exoerr < 0) Then
+            If (GlobalOptions%verbose > 0) Then    
+               Write(IOBuffer,*) 'EXO file ',trim(filename),' does not seem to exist. Creating it.\n'
+               Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+            EndIf
+            MEF90Ctx%fileExoUnit = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
+            Select Case (GlobalOptions%FileFormat)
+            Case (MEF90FileFormat_EXOSplit)
+               Call DMmeshViewExodusSplit(mesh,MEF90Ctx%fileExoUnit,ierr)
+            Case (MEF90FileFormat_EXOSingle)
+               Write(filename,102) trim(MEF90Ctx%prefix)
+               exoUnitIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
+               Call EXCOPY(exoUnitIN,MEF90Ctx%fileExoUnit,ierr)
+               Call EXCLOS(exoUnitIN,ierr)
+            End Select
+      EndIf
+   End If
+102 Format(A,'.gen')
+End Subroutine MEF90Ctx_OpenEXO
 
 #undef __FUNCT__
 #define __FUNCT__ "EXOGetCellSetElementType_Scal"
