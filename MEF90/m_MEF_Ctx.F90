@@ -5,28 +5,37 @@ Module m_MEF_Ctx_Type
    Implicit none
    Private  
    Public :: MEF90Ctx_Type
-
+   Public :: MEF90GlobalOptions_Type
+   
    Type MEF90Ctx_Type
-      PetscInt                                        :: verbose
-      Character(len=MEF90_MXSTRLEN)                   :: prefix
-      PetscEnum                                       :: timeInterpolation
-      PetscReal                                       :: timeMin,timeMax
-      PetscInt                                        :: timeNumStep
-      PetscEnum                                       :: fileFormat
-      PetscEnum                                       :: fileMode
-      Integer                                         :: fileExoUnitIn
-      Integer                                         :: fileExoUnitOut
-
+      MPI_Comm                                        :: comm
+      Integer                                         :: rank
+      Type(PetscViewer)                               :: logViewer
+      !Type(PetscViewer)                               :: stdoutViewer
+      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
       !PetscReal,Dimension(:),Pointer                  :: time !!! This can't be in a bag since the size of the bag needs to be known a priori!
                                                               !!! It will have to be a global variable in all applications
                                                               !!! And I will need to implement MEF90GetTimeArray(t,MEF90Ctx)
-      
+                                                              !!! Not sure if it needs to be in the global ctx either...
+      PetscBag                                        :: GlobalOptionsBag      
 !!!   Keep for compatibility reasons until MEF90HeatXfer is working
       PetscBag                                        :: GlobalPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: VertexSetPropertiesBag
       PetscBag,Dimension(:),Pointer                   :: MaterialPropertiesBag
    End Type MEF90Ctx_Type
+   
+   Type MEF90GlobalOptions_Type
+      PetscInt                                        :: verbose
+      !Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
+      !!! There seems to be an incompatibility between PetscBagRegisterString and intel fortran 13.0
+      !!! Moving prefix to the context itself instead of the bag
+      PetscEnum                                       :: timeInterpolation
+      PetscReal                                       :: timeMin,timeMax
+      PetscInt                                        :: timeNumStep
+      PetscEnum                                       :: fileFormat
+      Integer                                         :: fileExoUnit
+   End Type MEF90GlobalOptions_Type
 End Module m_MEF_Ctx_Type
 
 Module m_MEF_Ctx
@@ -38,17 +47,17 @@ Module m_MEF_Ctx
 
    !Private  
    Public :: MEF90Ctx_Type
+   Public :: MEF90GlobalOptions_Type
    Public :: MEF90Ctx_InitializePrivate
-   Public :: PetscBagGetDataMEF90Ctx
+   Public :: PetscBagGetDataMEF90GlobalOptions
    Public :: MEF90Ctx_GetTime
-   Public :: sizeofMEF90Ctx
+   Public :: sizeofMEF90GlobalOptions
 
    Private :: PetscBagGetData
    !!! Very important. PetscGetData must remain private to this module or others will not be able to declare their own interface 
    !!! for other derived type
       
-   PetscSizeT,protected    :: sizeofMEF90Ctx
-   PetscBag                :: MEF90CtxBag 
+   PetscSizeT,protected    :: sizeofMEF90GlobalOptions
 
    Enum,bind(c)
       Enumerator ::  MEF90Scaling_CST=0,        &
@@ -56,12 +65,6 @@ Module m_MEF_Ctx
                      MEF90Scaling_File
    End Enum
    Character(len=MEF90_MXSTRLEN),dimension(6),protected  :: MEF90ScalingList
-   
-   Enum,bind(c)
-      Enumerator ::  MEF90FileMode_Replace = 0, &
-                     MEF90FileMode_Append
-   End Enum
-   Character(len=MEF90_MXSTRLEN),dimension(5),protected  :: MEF90FileModeList
    
    Enum,bind(c)
       Enumerator  :: MEF90FileFormat_EXOSingle = 0,    &
@@ -83,7 +86,7 @@ Module m_MEF_Ctx
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF_Ctx_Type
          PetscBag                                     :: bag
-         Type(MEF90Ctx_Type),pointer                  :: data
+         Type(MEF90GlobalOptions_Type),pointer        :: data
          PetscErrorCode                               :: ierr
       End subroutine PetscBagGetData
    End interface
@@ -98,14 +101,14 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90Ctx_InitializePrivate(ierr)
-      PetscErrorCode,Intent(OUT)                      :: ierr
+      PetscErrorCode,Intent(OUT)                   :: ierr
    
-      Type(MEF90Ctx_Type),Target                   :: MEF90Ctx
+      Type(MEF90GlobalOptions_Type)                :: MEF90GlobalOptions
       character(len=1),pointer                     :: dummychar(:)
       PetscSizeT                                   :: sizeofchar
    
       Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
-      sizeofMEF90Ctx = size(transfer(MEF90Ctx,dummychar))*sizeofchar
+      sizeofMEF90GlobalOptions = size(transfer(MEF90GlobalOptions,dummychar))*sizeofchar
 
       MEF90ScalingList(1) = 'constant'
       MEF90ScalingList(2) = 'linear'
@@ -119,12 +122,6 @@ Contains
       MEF90FileFormatList(3) = '_MEF90FileFormat'
       MEF90FileFormatList(4) = ''
 
-      MEF90FileModeList(1) = 'Replace'
-      MEF90FileModeList(2) = 'Append'
-      MEF90FileModeList(3) = 'MEF90FileMode'
-      MEF90FileModeList(4) = '_MEF90FileMode'
-      MEF90FileModeList(5) = ''
-
       MEF90FileFormatList(1) = 'EXOSingle'
       MEF90FileFormatList(2) = 'EXOSplit'
       MEF90FileFormatList(3) = 'MEF90FileFormat'
@@ -137,54 +134,108 @@ Contains
       MEF90TimeInterpolationList(4) = 'MEF90TimeInterpolation'
       MEF90TimeInterpolationList(5) = '_MEF90TimeInterpolation'
       MEF90TimeInterpolationList(6) = ''
-      
-      Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90Ctx,MEF90CtxBag,ierr)
    End Subroutine MEF90Ctx_InitializePrivate
    
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagGetDataMEF90Ctx"
+#define __FUNCT__ "PetscBagGetDataMEF90GlobalOptions"
 !!!
 !!!  
-!!!  PetscBagGetDataMEF90Ctx:
+!!!  PetscBagGetDataMEF90GlobalOptions:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine PetscBagGetDataMEF90Ctx(bag,data,ierr)
+   Subroutine PetscBagGetDataMEF90GlobalOptions(bag,data,ierr)
       PetscBag                                        :: bag
-      Type(MEF90Ctx_Type),pointer                     :: data
+      Type(MEF90GlobalOptions_Type),pointer           :: data
       PetscErrorCode                                  :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
-   End Subroutine PetscBagGetDataMEF90Ctx
+   End Subroutine PetscBagGetDataMEF90GlobalOptions
    
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagRegisterMEF90Ctx"
+#define __FUNCT__ "PetscBagRegisterMEF90GlobalOptions"
 !!!
 !!!  
-!!!  PetscBagRegisterMEF90Ctx:
+!!!  PetscBagRegisterMEF90GlobalOptions:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine PetscBagRegisterMEF90Ctx(bag,name,prefix,default,ierr)
+   Subroutine PetscBagRegisterMEF90GlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                        :: bag
       Character(len=*),intent(IN)                     :: prefix,name
-      Type(MEF90Ctx_Type),intent(IN)                  :: default
+      Type(MEF90GlobalOptions_Type),intent(IN)        :: default
       PetscErrorCode,intent(OUT)                      :: ierr
 
-      Type(MEF90Ctx_Type),pointer                     :: MEF90Ctx
+      Type(MEF90GlobalOptions_Type),pointer           :: MEF90GlobalOptions
       
-      Call PetscBagGetDataMEF90Ctx(bag,MEF90Ctx,ierr);CHKERRQ(ierr)
-      Call PetscBagSetName(bag,trim(name),"MEF90 Global properties object",ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90GlobalOptions(bag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"MEF90 Global options object",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,MEF90Ctx%verbose,default%verbose,'verbose','Verbosity: level',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterString(bag,MEF90Ctx%prefix,default%prefix,'prefix','prefix',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,MEF90Ctx%timeInterpolation,MEF90TimeInterpolationList,default%timeInterpolation,'time_interpolation','Time: interpolation type',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,MEF90Ctx%timeMin,default%timeMin,'time_min','Time: min',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,MEF90Ctx%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,MEF90Ctx%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,MEF90Ctx%fileFormat,MEF90FileFormatList,default%fileFormat,'file_format','I/O: file format.',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,MEF90Ctx%fileMode,MEF90FileModeList,default%fileMode,'file_mode','I/O: file mode.',ierr);CHKERRQ(ierr)   
-   End Subroutine PetscBagRegisterMEF90Ctx
+      Call PetscBagRegisterInt (bag,MEF90GlobalOptions%verbose,default%verbose,'verbose','Verbosity: level',ierr);CHKERRQ(ierr)
+      !Call PetscBagRegisterString(bag,MEF90GlobalOptions%prefix,default%prefix,'prefix','file: prefix',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,MEF90GlobalOptions%timeInterpolation,MEF90TimeInterpolationList,default%timeInterpolation,'time_interpolation','Time: interpolation type',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,MEF90GlobalOptions%timeMin,default%timeMin,'time_min','Time: min',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,MEF90GlobalOptions%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,MEF90GlobalOptions%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,MEF90GlobalOptions%fileFormat,MEF90FileFormatList,default%fileFormat,'file_format','I/O: file format.',ierr);CHKERRQ(ierr)
+   End Subroutine PetscBagRegisterMEF90GlobalOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90Ctx_Create"
+!!!
+!!!  
+!!!  MEF90Ctx_Create:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine MEF90Ctx_Create(comm,MEF90Ctx,default,ierr)
+      MPI_Comm,Intent(IN)                       :: comm
+      Type(MEF90Ctx_type),Intent(OUT)           :: MEF90Ctx
+      Type(MEF90GlobalOptions_Type),Intent(IN)  :: default
+      PetscInt,Intent(OUT)                      :: ierr
+       
+      Type(MEF90GlobalOptions_Type),pointer     :: GlobalOptions
+      Character(len=MEF90_MXSTRLEN)             :: IOBuffer
+      PetscBool                                 :: flg
+      
+      MEF90Ctx%comm = comm
+      Call MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr)
+      Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',MEF90Ctx%prefix,flg,ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIOpen(comm,trim(MEF90Ctx%prefix)//'.log',MEF90Ctx%logViewer, ierr);CHKERRQ(ierr)
+
+      Call PetscBagCreate(comm,sizeofMEF90GlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterMEF90GlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr);CHKERRQ(ierr)
+
+      Call PetscBagGetDataMEF90GlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      If (GlobalOptions%verbose > 0) Then
+         Write(IOBuffer,*) 'MEF90 Global Context: \n'
+         Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,100) trim(MEF90Ctx%prefix)
+         Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,102) trim(MEF90Ctx%prefix)//'.log'
+         Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+         Call PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+         Call PetscPrintf(comm,"\n",ierr);CHKERRQ(ierr)
+      End If
+   100 Format('  prefix:       ',(A),'\n')
+   102 Format('  log file:     ',(A),'\n')
+End Subroutine MEF90Ctx_Create
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90Ctx_Destroy"
+!!!
+!!!  
+!!!  MEF90Ctx_Destroy:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine MEF90Ctx_Destroy(MEF90Ctx,ierr)
+   Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   Call PetscViewerDestroy(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
+   Call PetscBagDestroy(MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
+End Subroutine MEF90Ctx_Destroy
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90Ctx_GetTime"
@@ -203,36 +254,62 @@ Contains
       Integer                                         :: i,n
       Real                                            :: dummyR
       Character(len=1)                                :: dummyS
-      Integer                                         :: exoerr
-      
-      
-      SelectCase(MEF90Ctx%timeInterpolation)
+      Integer                                         :: exoerr      
+      Type(MEF90GlobalOptions_Type),pointer           :: GlobalOptions      
+
+      Call PetscBagGetDataMEF90GlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      Select Case(GlobalOptions%timeInterpolation)
       Case (MEF90TimeInterpolation_linear)
-         Allocate(t(MEF90Ctx%timeNumStep))
-         dt = (MEF90Ctx%timeMax - MEF90Ctx%timeMin) / Real(MEF90Ctx%timeNumStep-1.0_Kr)
-         t = (/ (MEF90Ctx%timeMin + Real(i) * dt, i = 0,MEF90Ctx%timeNumStep-1) /)
-         If (MEF90Ctx%timeNumStep > 1) Then
-            t(MEF90Ctx%timeNumStep) = MEF90Ctx%timeMax
+         Allocate(t(GlobalOptions%timeNumStep))
+         dt = 0.0_Kr
+         If (GlobalOptions%timeNumStep > 1) Then
+            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / Real(GlobalOptions%timeNumStep-1.0_Kr)
          End If
+         t = (/ (GlobalOptions%timeMin + Real(i) * dt, i = 0,GlobalOptions%timeNumStep-1) /)
+         t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
       Case (MEF90TimeInterpolation_quadratic)
          !!! Natural time scale for the heat equation
-         Allocate(t(MEF90Ctx%timeNumStep))
-         dt = (MEF90Ctx%timeMax**2 - MEF90Ctx%timeMin**2) / Real(MEF90Ctx%timeNumStep-1.0_Kr)
-         t = (/ (sqrt(MEF90Ctx%timeMin**2 + Real(i) * dt), i = 0,MEF90Ctx%timeNumStep-1) /)
-         If (MEF90Ctx%timeNumStep > 1) Then
-            t(MEF90Ctx%timeNumStep) = MEF90Ctx%timeMax
+         Allocate(t(GlobalOptions%timeNumStep))
+         dt = 0.0_Kr
+         If (GlobalOptions%timeNumStep > 1) Then
+            dt = (sqrt(GlobalOptions%timeMax) - sqrt(GlobalOptions%timeMin)) / Real(GlobalOptions%timeNumStep-1.0_Kr)
          End If
+         t = (/ ((sqrt(GlobalOptions%timeMin) + Real(i) * dt)**2, i = 0,GlobalOptions%timeNumStep-1) /)
+         t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
       Case (MEF90TimeInterpolation_exo)
-         Call EXINQ(MEF90Ctx%fileExoUnitIn,EXTIMS,MEF90Ctx%timeNumStep,dummyR,dummyS,exoerr)
-         Allocate(t(MEF90Ctx%timeNumStep))
-         Call EXGATM(MEF90Ctx%fileExoUnitIn,t,exoerr)
-         MEF90Ctx%timeMin = t(1)
-         MEF90Ctx%timeMax = t(MEF90Ctx%timeNumStep)
+         Select case(GlobalOptions%FileFormat)
+         Case (MEF90FileFormat_EXOSingle)
+            If (MEF90Ctx%rank == 0) Then
+               If (GlobalOptions%fileExoUnit /= 0) Then
+                  Call EXINQ(GlobalOptions%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
+                  Allocate(t(GlobalOptions%timeNumStep))
+                  Call EXGATM(GlobalOptions%fileExoUnit,t,exoerr)
+                  Call MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+                  Call MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr)
+               Else
+                  SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
+               End If
+            Else
+               Call MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+               Allocate(t(GlobalOptions%timeNumStep))
+               Call MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr)
+            End If            
+            GlobalOptions%timeMin = t(1)
+            GlobalOptions%timeMax = t(GlobalOptions%timeNumStep)
+         Case (MEF90FileFormat_EXOSplit)
+            If (GlobalOptions%fileExoUnit /= 0) Then
+               Call EXINQ(GlobalOptions%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
+               Allocate(t(GlobalOptions%timeNumStep))
+               Call EXGATM(GlobalOptions%fileExoUnit,t,exoerr)
+            Else
+               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
+            End If
+         End Select
       End Select
-      If (MEF90Ctx%verbose > 0) Then
+      If (GlobalOptions%verbose > 0) Then
          Call PetscPrintf(PETSC_COMM_WORLD,"Time values array:\n",ierr);CHKERRQ(ierr)  
-         Call PetscRealView(MEF90Ctx%timeNumStep,t,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-         Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)  
+         Call PetscRealView(GlobalOptions%timeNumStep,t,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+         Call PetscPrintf(PETSC_COMM_WORLD,"===\n",ierr);CHKERRQ(ierr)  
       End If
    End Subroutine MEF90Ctx_GetTime
 End Module m_MEF_Ctx

@@ -1,8 +1,10 @@
 Module m_MEF_EXO
 #include "finclude/petscdef.h"
    Use m_MEF_Parameters
+   Use m_MEF_Ctx
    Use m_MEF_Utils
    Use m_MEF_Elements
+   Use m_MEF_Sieve
    Use petsc
    IMPLICIT NONE
 
@@ -11,12 +13,60 @@ Module m_MEF_EXO
    PetscInt,Public                                 :: exo_ver
 
    
+   Public :: MEF90Ctx_GetDMMeshEXO
    Public :: EXOGetCellSetElementType_Scal      
    Public :: EXOGetCellSetElementType_Vect      
    Public :: EXOGetCellSetElementType_Elast      
    Public :: Write_EXO_Case
 
 Contains
+#undef __FUNCT__
+#define __FUNCT__ "MEF90Ctx_GetDMMeshEXO"
+!!!
+!!!  
+!!!  MEF90Ctx_GetDMMeshEXO:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr)
+   Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
+   Type(DM),Intent(OUT)                            :: Mesh
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
+   Character(len=80) ::filename
+   Integer                                         :: cpu_ws,io_ws
+   Real                                            :: exoVersion
+   Integer                                         :: exoErr,exoUnit
+   Type(DM)                                        :: tmpMesh
+   
+      Type(MEF90GlobalOptions_Type),pointer           :: GlobalOptions      
+
+      Call PetscBagGetDataMEF90GlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+   !!! Open input file
+   If (MEF90_MyRank == 0) Then
+      cpu_ws = 8
+      io_ws = 8
+      filename = Trim(MEF90Ctx%prefix)//'.gen'
+      exoUnit = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
+      If (exoerr < 0) Then
+         Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
+         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+         SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
+      EndIf
+   End If
+   If (MEF90_NumProcs == 1) Then
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoUnit,Mesh,ierr);CHKERRQ(ierr)
+   Else
+      Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoUnit,tmpMesh,ierr);CHKERRQ(ierr)   
+      Call DMMeshDistribute(tmpMesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
+      Call DMDestroy(tmpMesh,ierr);CHKERRQ(ierr)
+   End If
+   Call EXCLOS(exoUnit,ierr)
+End Subroutine MEF90Ctx_GetDMMeshEXO
+
+!MEF90Ctx_OpenEXOOUT
+
 #undef __FUNCT__
 #define __FUNCT__ "EXOGetCellSetElementType_Scal"
    Subroutine EXOGetCellSetElementType_Scal(comm,exoID,dim,ElemType,ierr)

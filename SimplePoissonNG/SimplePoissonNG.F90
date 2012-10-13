@@ -76,6 +76,7 @@ Program  SimplePoissonNG
    PetscInt                                        :: maxits
    
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+   Call MEF90_Initialize(ierr)
 
    MEF90Ctx_default%verbose           = 0
    MEF90Ctx_default%prefix            = 'SquareNG-tri3'
@@ -84,11 +85,10 @@ Program  SimplePoissonNG
    MEF90Ctx_default%timeMax           = 2.0_Kr
    MEF90Ctx_default%timeNumStep       = 1
    MEF90Ctx_default%fileFormat        = MEF90FileFormat_EXOSingle
-   MEF90Ctx_default%fileMode          = MEF90FileMode_Replace   
-   Call MEF90_Initialize(MEF90Ctx,MEF90Ctx_default,ierr)
+   Call MEF90Ctx_Create(MEF90Ctx,MEF90Ctx_default,ierr)
 
    Call m_Poisson_Initialize(ierr);CHKERRQ(ierr)
-   Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
+   !Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
    
    Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',prefix,flg,ierr);CHKERRQ(ierr)
    If (.NOT. flg) Then
@@ -446,7 +446,7 @@ Program  SimplePoissonNG
    If (GlobalProperties%verbose > 0) Then
       Call PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
    EndIf
-   Call MEF90_Finalize()
-
+   Call MEF90_Finalize(ierr)
+   Call PetscFinalize()
 
 End Program  SimplePoissonNG

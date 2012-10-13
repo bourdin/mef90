@@ -16,7 +16,8 @@ Program TestMaterials
    PetscErrorCode                      :: ierr
    
 
-   Call MEF90_Initialize()
+   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+   Call MEF90_Initialize(ierr=ierr)
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-n',numMat,flg,ierr);CHKERRQ(ierr);
    
    Allocate(matBag2D(numMat))
@@ -49,13 +50,11 @@ Program TestMaterials
       Call PetscBagGetDataMEF90_MatProp(matBag3D(i),matProp3D,ierr)
 
       matProp3D%Density = -123456.0
-      write(*,*) 'before: ',matProp3D%Density
       Call PetscBagSetFromOptions(matBag3D(i),ierr)
       ! PetscBagSetFromOptions resets only to CL options, not to default options
       ! This could probably be fixed by inserting the options in the registration routine, if desired
       ! Calling PetscBagSetFromOptions means the the help message will be re-displayed
       Call PetscBagGetDataMEF90_MatProp(matBag3D(i),matProp3D,ierr)
-      write(*,*) 'after: ',matProp3D%Density
       Call PetscPrintf(PETSC_COMM_WORLD,'\n',ierr)
    EndDo
 
@@ -66,5 +65,6 @@ Program TestMaterials
 301 format('mat3D',I2.2,'_')
    DeAllocate(matBag2D)
    DeAllocate(matBag3D)
-   Call MEF90_Finalize()
+   Call MEF90_Finalize(ierr)
+   Call PetscFinalize()
 End Program TestMaterials
