@@ -1,41 +1,48 @@
-all: TestMaterials TestMEF90Ctx
+all: TestMaterials TestMEF90Ctx MEF90
+runall: runTestMaterials runTestMEF90Ctx
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
+include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 
+TestMaterials: TestMaterials.o
+	-@echo "      $@"
+	-@${FLINKER} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -o $@ $< ${MEF90_OBJS}
+	-@${RM} $<
 
+TestMaterials.o: TestMaterials.F90 MEF90
+	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
-${PETSC_ARCH}:
-	@mkdir ${PETSC_ARCH}
-	
-TestMaterials:  ${PETSC_ARCH} TestMaterials.o ${PETSC_ARCH}/TestMaterials.o
-	@${FLINKER} -o ${PETSC_ARCH}/TestMaterials ${PETSC_ARCH}/TestMaterials.o ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+TestMEF90Ctx: TestMEF90Ctx.o 
+	-@echo "      $@"
+	-@${FLINKER} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -o $@ $< ${MEF90_OBJS}
+	-@${RM} $<
 
-TestMEF90Ctx:  ${PETSC_ARCH} TestMEF90Ctx.o ${PETSC_ARCH}/TestMEF90Ctx.o
-	@${FLINKER} -o ${PETSC_ARCH}/TestMEF90Ctx ${PETSC_ARCH}/TestMEF90Ctx.o ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+TestMEF90Ctx.o: TestMEF90Ctx.F90 MEF90
+	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
 
 runTestMaterials: TestMaterials
 	@echo "Running " $@
 	-@ARGS='';\
-	echo ${MPIEXEC} -n 2 ${PETSC_ARCH}/$< $${ARGS};\
-	${MPIEXEC} -n 2 ${PETSC_ARCH}/$< $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B results/$@.out $@.out) then true; \
+	${MPIEXEC} -n 2 $< $${ARGS} > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then true; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out
+	-@#echo ${MPIEXEC} -n 2 $< $${ARGS};\
 
 runTestMEF90Ctx: TestMEF90Ctx
 	@echo "Running " $@
 	-@ARGS='-verbose 1';\
-	echo ${MPIEXEC} -n 2 ${PETSC_ARCH}/$< $${ARGS};\
-	${MPIEXEC} -n 2 ${PETSC_ARCH}/$< $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B results/$@.out $@.out) then true; \
+	${MPIEXEC} -n 2 $< $${ARGS} > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then true; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out
+	-@#echo ${MPIEXEC} -n 2 $< $${ARGS};\
 
+MEF90:
+	make -C ${MEF90_DIR} MEF90
+	
 clean::
-	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
-	@rmdir ${PETSC_ARCH}
-
-
-
+	-@rm TestMaterials TestMEF90Ctx
