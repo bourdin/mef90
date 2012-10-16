@@ -33,3 +33,6 @@ clean::
 	@rmdir ${PETSC_ARCH}
 
 
+m_Poisson2D.F90: m_Poisson.F90
+	echo ${FPP}
+	${FPP} ${FCPPFLAGS} m_Poisson.F90 m_Poisson2D.F90

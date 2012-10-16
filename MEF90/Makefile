@@ -1,86 +1,84 @@
-all: m_MEF90.o ${PETSC_ARCH}
+all: m_MEF90.o
 
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
+include ${MEF90_DIR}/MEF90/Makefile.include
 
-ifneq (,$(findstring xlf,$(FC)))
-	FC_MODULE_OUTPUT_FLAG=-qmoddir=
-endif
+m_MEF_Parameters.o:   ../../MEF90/m_MEF_Parameters.F90
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-ifneq (,$(findstring gcc,$(PETSC_ARCH)))
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} ${FC_FLAGS} -ffixed-line-length-none  -ffree-line-length-none -ffree-form -I../MEF90/${PETSC_ARCH}
-else
-	MEF90_FC_FLAGS=${FC_MODULE_OUTPUT_FLAG}${PETSC_ARCH} ${FC_FLAGS} -I../MEF90/${PETSC_ARCH} 
-endif
+m_MEF_Ctx.o:          ../../MEF90/m_MEF_Ctx.F90               \
+                      m_MEF_Parameters.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-.F90.o:
-	${PETSC_MAKE_STOP_ON_ERROR}${FC} -c ${MEF90_FC_FLAGS} ${FCPPFLAGS} -o ${PETSC_ARCH}/$@ $<
+m_MEF_LinAlg.o:       ../../MEF90/m_MEF_LinAlg.F90            \
+                      m_MEF_Parameters.o \
+                      m_MEF_Utils.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-${PETSC_ARCH}:
-	@mkdir ${PETSC_ARCH}
+m_MEF_Utils.o:        ../../MEF90/m_MEF_Utils.F90             \
+                      m_MEF_Parameters.o \
+                      m_MEF_MPI.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-m_MEF_Parameters.o: ${PETSC_ARCH}   
+m_MEF_MPI.o:          ../../MEF90/m_MEF_MPI.F90               \
+                      m_MEF_Parameters.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-m_MEF_LinAlg.o:     m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
-                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
+m_MEF_Elements.o:     ../../MEF90/m_MEF_Elements.F90          \
+                      m_MEF_Parameters.o \
+                      m_MEF_Utils.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-m_MEF_Utils.o:      m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
-                    m_MEF_MPI.o                ${PETSC_ARCH}/m_MEF_MPI.o 
+m_MEF_Norm.o:         ../../MEF90/m_MEF_Norm.F90              \
+                      m_MEF_Parameters.o \
+                      m_MEF_Elements.o   \
+                      m_MEF_Sieve.o      \
+                      m_MEF_Utils.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-m_MEF_MPI.o:        m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o 
+m_MEF_MassMatrix.o:   ../../MEF90/m_MEF_MassMatrix.F90        \
+                      m_MEF_Parameters.o \
+                      m_MEF_Elements.o   \
+                      m_MEF_Utils.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-m_MEF_Elements.o:   m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
-                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
+m_MEF_Diffusion.o:    ../../MEF90/m_MEF_Diffusion.F90         \
+                      m_MEF_Parameters.o \
+                      m_MEF_Elements.o   \
+                      m_MEF_Utils.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-m_MEF_Norm.o:       m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
-                    m_MEF_Elements.o           ${PETSC_ARCH}/m_MEF_Elements.o     \
-                    m_MEF_Sieve.o              ${PETSC_ARCH}/m_MEF_Sieve.o        \
-                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
+m_MEF_Materials.o:    ../../MEF90/m_MEF_Materials.F90          \
+                      m_MEF_Parameters.o \
+                      m_MEF_LinAlg.o     \
+                      m_MEF_Utils.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-m_MEF_MassMatrix.o: m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
-                    m_MEF_Elements.o           ${PETSC_ARCH}/m_MEF_Elements.o     \
-                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
-
-m_MEF_Diffusion.o:  m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
-                    m_MEF_Elements.o           ${PETSC_ARCH}/m_MEF_Elements.o     \
-                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
-
-m_MEF_Materials.o:  m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
-                    m_MEF_LinAlg.o             ${PETSC_ARCH}/m_MEF_LinAlg.o       \
-                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
-
-m_MEF_Sieve.o:      m_MEF_LinAlg.o             ${PETSC_ARCH}/m_MEF_LinAlg.o       \
-                    m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o
+m_MEF_Sieve.o:        ../../MEF90/m_MEF_Sieve.F90             \
+                      m_MEF_LinAlg.o     \
+                      m_MEF_Parameters.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
                     
-m_MEF_EXO.o:        m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
-                    m_MEF_Ctx.o                ${PETSC_ARCH}/m_MEF_Ctx.o          \
-                    m_MEF_Elements.o           ${PETSC_ARCH}/m_MEF_Elements.o     \
-                    m_MEF_Sieve.o              ${PETSC_ARCH}/m_MEF_Sieve.o        \
-                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o
+m_MEF_EXO.o:          ../../MEF90/m_MEF_EXO.F90               \
+                      m_MEF_Parameters.o \
+                      m_MEF_Ctx.o        \
+                      m_MEF_Elements.o   \
+                      m_MEF_Sieve.o      \
+                      m_MEF_Utils.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
-m_MEF90.o:          m_MEF_LinAlg.o             ${PETSC_ARCH}/m_MEF_LinAlg.o       \
-                    m_MEF_Parameters.o         ${PETSC_ARCH}/m_MEF_Parameters.o   \
-                    m_MEF_Utils.o              ${PETSC_ARCH}/m_MEF_Utils.o        \
-                    m_MEF_MPI.o                ${PETSC_ARCH}/m_MEF_MPI.o          \
-                    m_MEF_Elements.o           ${PETSC_ARCH}/m_MEF_Elements.o     \
-                    m_MEF_Norm.o               ${PETSC_ARCH}/m_MEF_Norm.o         \
-                    m_MEF_MassMatrix.o         ${PETSC_ARCH}/m_MEF_MassMatrix.o   \
-                    m_MEF_Materials.o          ${PETSC_ARCH}/m_MEF_Materials.o    \
-                    m_MEF_Diffusion.o          ${PETSC_ARCH}/m_MEF_Diffusion.o    \
-                    m_MEF_EXO.o                ${PETSC_ARCH}/m_MEF_EXO.o          \
-                    m_MEF_Sieve.o              ${PETSC_ARCH}/m_MEF_Sieve.o        \
-                    m_MEF_Ctx.o                ${PETSC_ARCH}/m_MEF_Ctx.o
-
-clean::
-	@rm -Rf ${PETSC_ARCH}/*o ${PETSC_ARCH}/*mod
-	@rmdir ${PETSC_ARCH}
-
-debug::
-	@echo MEF90_FC_FLAGS is ${MEF90_FC_FLAGS}
-	@echo FC is ${FC}
-	@echo FC_FLAGS is ${FC_FLAGS}
-	@echo PETSC_MAKE_STOP_ON_ERROR is ${PETSC_MAKE_STOP_ON_ERROR}
-	@echo FCPPFLAGS is ${FCPPFLAGS}
-	@echo FC_MODULE_FLAG is ${FC_MODULE_FLAG}
-	@echo FC_MODULE_OUTPUT_FLAG is ${FC_MODULE_OUTPUT_FLAG}
-
+m_MEF90.o:            ../../MEF90/m_MEF90.F90                 \
+                      m_MEF_LinAlg.o     \
+                      m_MEF_Parameters.o \
+                      m_MEF_Utils.o      \
+                      m_MEF_MPI.o        \
+                      m_MEF_Elements.o   \
+                      m_MEF_Norm.o       \
+                      m_MEF_MassMatrix.o \
+                      m_MEF_Materials.o  \
+                      m_MEF_Diffusion.o  \
+                      m_MEF_EXO.o        \
+                      m_MEF_Sieve.o      \
+                      m_MEF_Ctx.o
+	${PETSC_MAKE_STOP_ON_ERROR}${FC} ${MEF90_FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
