@@ -1,8 +1,11 @@
-all: m_MEF90.o
+all:
+	-@make -C ${MEF90_DIR} MEF90
 
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 include ${MEF90_DIR}/Makefile.include
+
+MEF90: m_MEF90.o
 
 m_MEF90.o: ${MEF90_DIR}/MEF90/m_MEF90.F90 m_MEF_Ctx.o m_MEF_Diffusion.o m_MEF_Elements.o  \
            m_MEF_EXO.o m_MEF_LinAlg.o m_MEF_MassMatrix.o m_MEF_Materials.o m_MEF_MPI.o m_MEF_Norm.o \
