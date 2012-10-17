@@ -1,4 +1,4 @@
-all: SimplePoissonNG Tests
+all: SimplePoissonNG
 
 SimplePoissonNG: SimplePoissonNG2D SimplePoissonNG3D
 
@@ -8,13 +8,13 @@ MEF90: chkpaths
 
 SimplePoissonNG2D: MEF90 chkpaths
 	-@echo "Building $@"
-	-@make -C objs/${PETSC_ARCH} -f ../../SimplePoissonNG/Makefile SimplePoissonNG2D 
+	-@make -C objs/${PETSC_ARCH} -f ../../SimplePoissonNG/Makefile SimplePoissonNG MEF90_DIM=2
 
 SimplePoissonNG3D: MEF90 chkpaths
 	-@echo "Building $@"
-	-@make -C objs/${PETSC_ARCH} -f ../../SimplePoissonNG/Makefile SimplePoissonNG3D 
+	-@make -C objs/${PETSC_ARCH} -f ../../SimplePoissonNG/Makefile SimplePoissonNG MEF90_DIM=3
 
-Tests: MEF90 chkpaths
+tests: MEF90 chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../Tests/Makefile all
 

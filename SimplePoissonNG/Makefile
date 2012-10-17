@@ -1,7 +1,7 @@
 MEF90_DIM=2
 #all: MEF90 ${MEF90_DIR}/bin/${PETSC_ARCH}/SimplePoissonNG${MEF90_DIM}D# SimplePoissonNG3D
 all:
-	-@make -C ${MEF90_DIR} SimplePoissonNG${MEF90_DIM}D
+	-@make -C ${MEF90_DIR} SimplePoissonNG
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
@@ -9,7 +9,7 @@ include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 BASE_DIR=${MEF90_DIR}/SimplePoissonNG
 
-SimplePoissonNG${MEF90_DIM}D:${MEF90_DIR}/bin/${PETSC_ARCH}/SimplePoissonNG${MEF90_DIM}D
+SimplePoissonNG:${MEF90_DIR}/bin/${PETSC_ARCH}/SimplePoissonNG${MEF90_DIM}D
 	-@echo "      $@"
 
 ${MEF90_DIR}/bin/${PETSC_ARCH}/SimplePoissonNG${MEF90_DIM}D: SimplePoissonNG${MEF90_DIM}D.o
