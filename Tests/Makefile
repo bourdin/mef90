@@ -1,4 +1,4 @@
-all: TestMaterials TestMEF90Ctx MEF90
+all: TestMaterials TestMEF90Ctx
 runall: runTestMaterials runTestMEF90Ctx
 
 include ${PETSC_DIR}/conf/rules
@@ -11,7 +11,7 @@ TestMaterials: TestMaterials.o
 	-@${FLINKER} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -o $@ $< ${MEF90_OBJS}
 	-@${RM} $<
 
-TestMaterials.o: TestMaterials.F90 MEF90
+TestMaterials.o: ${MEF90_DIR}/Tests/TestMaterials.F90 MEF90
 	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 TestMEF90Ctx: TestMEF90Ctx.o 
@@ -19,7 +19,7 @@ TestMEF90Ctx: TestMEF90Ctx.o
 	-@${FLINKER} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -o $@ $< ${MEF90_OBJS}
 	-@${RM} $<
 
-TestMEF90Ctx.o: TestMEF90Ctx.F90 MEF90
+TestMEF90Ctx.o: ${MEF90_DIR}/Tests/TestMEF90Ctx.F90 MEF90
 	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 
