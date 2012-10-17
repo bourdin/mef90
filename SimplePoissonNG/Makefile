@@ -14,7 +14,7 @@ SimplePoissonNG:${MEF90_DIR}/bin/${PETSC_ARCH}/SimplePoissonNG${MEF90_DIM}D
 
 ${MEF90_DIR}/bin/${PETSC_ARCH}/SimplePoissonNG${MEF90_DIM}D: SimplePoissonNG${MEF90_DIM}D.o
 	-@echo "      $@"
-	-@${FLINKER} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -o $@ $< ${MEF90_OBJS} m_Poisson${MEF90_DIM}D.o m_PoissonGlobalCtx${MEF90_DIM}D.o m_PoissonCellSetCtx${MEF90_DIM}D.o m_PoissonVertexSetCtx${MEF90_DIM}D.o m_PoissonAssembly${MEF90_DIM}D.o
+	-@${FLINKER} -o $@ SimplePoissonNG${MEF90_DIM}D.o m_Poisson${MEF90_DIM}D.o m_PoissonGlobalCtx${MEF90_DIM}D.o m_PoissonCellSetCtx${MEF90_DIM}D.o m_PoissonVertexSetCtx${MEF90_DIM}D.o m_PoissonAssembly${MEF90_DIM}D.o ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
 SimplePoissonNG${MEF90_DIM}D.o: ${BASE_DIR}/SimplePoissonNG.F90 m_Poisson${MEF90_DIM}D.o m_PoissonGlobalCtx${MEF90_DIM}D.o m_PoissonCellSetCtx${MEF90_DIM}D.o m_PoissonVertexSetCtx${MEF90_DIM}D.o m_PoissonAssembly${MEF90_DIM}D.o
 	@echo "      $<"
@@ -42,4 +42,4 @@ m_Poisson${MEF90_DIM}D.o: ${BASE_DIR}/m_Poisson.F90 m_PoissonGlobalCtx${MEF90_DI
 
 MEF90:
 	make -C ${MEF90_DIR} MEF90
-	
+

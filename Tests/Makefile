@@ -8,7 +8,7 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 
 TestMaterials: TestMaterials.o
 	-@echo "      $@"
-	-@${FLINKER} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -o $@ $< ${MEF90_OBJS}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
 TestMaterials.o: ${MEF90_DIR}/Tests/TestMaterials.F90 MEF90
@@ -16,7 +16,7 @@ TestMaterials.o: ${MEF90_DIR}/Tests/TestMaterials.F90 MEF90
 
 TestMEF90Ctx: TestMEF90Ctx.o 
 	-@echo "      $@"
-	-@${FLINKER} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -o $@ $< ${MEF90_OBJS}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
 TestMEF90Ctx.o: ${MEF90_DIR}/Tests/TestMEF90Ctx.F90 MEF90
@@ -43,6 +43,6 @@ runTestMEF90Ctx: TestMEF90Ctx
 
 MEF90:
 	make -C ${MEF90_DIR} MEF90
-	
+
 clean::
 	-@rm TestMaterials TestMEF90Ctx
