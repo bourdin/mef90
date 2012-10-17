@@ -24,7 +24,7 @@ Contains
       Type(DM),Intent(IN)                               :: mesh
       Type(SectionReal),Intent(IN)                      :: U
       Type(IS),Intent(IN)                               :: cellIS
-      PetscReal,Intent(IN),optional                     :: scaling
+      PetscReal,Intent(IN)                              :: scaling
       Type(MEF90Element2D_Scal), Dimension(:), Pointer  :: elem
       Type(MEF90Element_Type),Intent(IN)                :: elemType
       PetscErrorCode,Intent(OUT)                        :: ierr
@@ -49,17 +49,11 @@ Contains
                End Do
             End Do
          End Do
-         If (present(scaling)) Then
-            MatElem = MatElem * scaling
-         End If
+         MatElem = MatElem * scaling
          Call DMmeshAssembleMatrix(M,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
       End Do
-      flops = 3 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
+      flops = elemType%numDof**2 * (3 * size(elem(1)%Gauss_C) + 1) * size(cellID)
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      If (present(scaling)) Then
-         flops = size(cellID) * elemType%numDof**2
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       DeAllocate(MatElem,stat=ierr)
    End Subroutine MassMatrixAssembleSet_2DScal
@@ -176,57 +170,43 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "MassMatrixAssembleSet_3DScal"
-   Subroutine MassMatrixAssembleSet_3DScal(M,mesh,U,iBlk,elem,elemType,BC)
-      Type(Mat),Intent(IN)                         :: M
-      Type(DM),Intent(IN)                          :: mesh
-      Type(SectionREal),Intent(IN)                 :: U
-      PetscInt,Intent(IN)                          :: iBlk
+   Subroutine MassMatrixAssembleSet_3DScal(M,mesh,U,cellIS,scaling,elem,elemType,ierr)
+      Type(Mat),Intent(IN)                              :: M
+      Type(DM),Intent(IN)                               :: mesh
+      Type(SectionReal),Intent(IN)                      :: U
+      Type(IS),Intent(IN)                               :: cellIS
+      PetscReal,Intent(IN)                              :: scaling
       Type(MEF90Element3D_Scal), Dimension(:), Pointer  :: elem
       Type(MEF90Element_Type),Intent(IN)                :: elemType
-      Type(Flag),Intent(IN),Optional               :: BC
+      PetscErrorCode,Intent(OUT)                        :: ierr
       
-      Type(IS)                                     :: cellIS
-      PetscInt,Dimension(:),Pointer                :: cellID
-      PetscInt                                     :: cell
-      PetscInt                                     :: numDof
-      PetscInt                                     :: ierr
-      PetscReal,Dimension(:,:),Pointer             :: MatElem
-      PetscInt,Dimension(:),Pointer                :: BCFlag
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
-      PetscLogDouble                               :: flops = 0
+      PetscInt,Dimension(:),Pointer                     :: cellID
+      PetscInt                                          :: cell
+      PetscReal,Dimension(:,:),Pointer                  :: MatElem
+      PetscInt                                          :: iDoF1,iDoF2,iGauss
+      PetscLogDouble                                    :: flops
      
-      numDof = elemType%numDof
-      Allocate(MatElem(numDof,numDof))
-      Allocate(BCFlag(numDof))
-      BCFlag = 0
+      flops = 0
+      Allocate(MatElem(elemType%numDof,elemType%numDof),stat=ierr)
 
-      Call DMmeshGetStratumIS(mesh,'Cell Sets',iBlk,cellIS,ierr); CHKERRQ(ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(cellID)      
+      Do cell = 1,size(elem)      
          MatElem = 0.0_Kr
-         BCFlag = 0
-         If (present(BC)) Then
-            Call SectionIntRestrictClosure(BC%Sec,mesh,cellID(cell),numDof,BCFlag,ierr);CHKERRQ(ierr)
-         End If
-         Do iGauss = 1,size(elem(cellID(cell)+1)%Gauss_C)
-            Do iDoF1 = 1,numDof
-               If (BCFlag(iDoF1) == 0) Then
-                  Do iDoF2 = 1,numDof
-                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cellID(cell)+1)%Gauss_C(iGauss) * &
-                                           (elem(cellID(cell)+1)%BF(iDoF1,iGauss) * elem(cellID(cell)+1)%BF(iDoF2,iGauss) )
-                  End Do
-                  flops = flops + 3 * numDof
-               End If
+         Do iGauss = 1,size(elem(cell)%Gauss_C)
+            Do iDoF1 = 1,elemType%numDof
+               Do iDoF2 = 1,elemType%numDof
+                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                        (elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) )
+               End Do
             End Do
          End Do
+         MatElem = MatElem * scaling
          Call DMmeshAssembleMatrix(M,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
       End Do
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
-   
+      flops = elemType%numDof**2 * (3 * size(elem(1)%Gauss_C) + 1) * size(cellID)
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      DeAllocate(BCFlag)
-      DeAllocate(MatElem)
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      DeAllocate(MatElem,stat=ierr)
    End Subroutine MassMatrixAssembleSet_3DScal
    
 #undef __FUNCT__
