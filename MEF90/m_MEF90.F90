@@ -7,7 +7,7 @@ Module m_MEF90
    Use m_MEF_EXO  
    Use m_MEF_LinAlg
    Use m_MEF_Parameters
-   Use m_MEF_MassMatrix
+   Use m_MEF_MassMatrixInterface
    Use m_MEF_Materials
    Use m_MEF_MPI
    Use m_MEF_Norm
