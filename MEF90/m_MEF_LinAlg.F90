@@ -143,7 +143,8 @@ Module m_MEF_LinAlg
          MatXVect2D,MatXVect3D,MatXVect2DS,MatXVect3DS,                &
          DbleXTens4OS2D,Tens4OS2DXDble,Tens4OS2DXMatS2D,               &
          DbleXTens4OS3D,Tens4OS3DXDble,Tens4OS3DXMatS3D,               &
-         Mat2DXMat2D,MatS2DXMatS2D,Mat3DXMat3D,MatS3DXMatS3D
+         Mat2DXMat2D,MatS2DXMatS2D,Mat3DXMat3D,MatS3DXMatS3D,          &
+         DotP2D,DotP3D
    End Interface
 
    Interface Operator (/)
