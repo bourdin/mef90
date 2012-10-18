@@ -2,7 +2,7 @@ Module m_MEF90
 #include "finclude/petscdef.h"
    Use petsc
    Use m_MEF_Ctx
-   Use m_MEF_Diffusion
+   Use m_MEF_DiffusionInterface
    Use m_MEF_Elements 
    Use m_MEF_EXO  
    Use m_MEF_LinAlg

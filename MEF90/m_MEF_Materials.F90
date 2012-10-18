@@ -9,7 +9,6 @@ Module m_MEF_Materials_Types
       PetscReal                     :: Density                    ! rho
       PetscReal                     :: FractureToughness          ! Gc
       PetscReal                     :: SpecificHeat               ! Cp
-      !PetscReal                     :: SurfaceThermalConductivity ! H
       Type(MatS2D)                  :: ThermalConductivity        ! K
       Type(MatS2D)                  :: LinearThermalExpansion     ! alpha
       Type(Tens4OS2D)               :: HookesLaw                  ! A
@@ -21,7 +20,6 @@ Module m_MEF_Materials_Types
       PetscReal                     :: Density                    ! rho
       PetscReal                     :: FractureToughness          ! Gc
       PetscReal                     :: SpecificHeat               ! Cp
-      !!!PetscReal                     :: SurfaceThermalConductivity ! H This is NOT a material property
       Type(MatS3D)                  :: ThermalConductivity        ! K
       Type(MatS3D)                  :: LinearThermalExpansion     ! alpha
       Type(Tens4OS3D)               :: HookesLaw                  ! A
@@ -34,7 +32,6 @@ Module m_MEF_Materials_Types
       1.0_Kr,                                          & ! Density
       1.0_Kr,                                          & ! FractureToughness
       1.0_Kr,                                          & ! SpecificHeat
-      !1.0_Kr,                                          & ! SurfaceThermalConductivity
       MEF90_MatS2D_Identity,                           & ! ThermalConductivity
       MEF90_MatS2D_Identity,                           & ! LinearThermalExpansion
       MEF90_Tens4OS2D_Identity,                        & ! HookesLaw
@@ -44,7 +41,6 @@ Module m_MEF_Materials_Types
       1.0_Kr,                                          & ! Density
       1.0_Kr,                                          & ! FractureToughness
       1.0_Kr,                                          & ! SpecificHeat
-      !1.0_Kr,                                          & ! SurfaceThermalConductivity
       MEF90_MatS3D_Identity,                           & ! ThermalConductivity
       MEF90_MatS3D_Identity,                           & ! LinearThermalExpansion
       MEF90_Tens4OS3D_Identity,                        & ! HookesLaw
@@ -157,7 +153,6 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr)
       Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
       Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
-      !!!Call PetscBagRegisterReal(bag,matprop%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','Surface Thermal Conductivity (H) [J.m^(-3).s^(-1).K^(-1)]',ierr)
       matprop%ThermalConductivity = default%ThermalConductivity
       Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
@@ -184,7 +179,6 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr)
       Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
       Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
-      !!!Call PetscBagRegisterReal(bag,matprop%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','Surface Thermal Conductivity (H) [J.m^(-3).s^(-1).K^(-1)]',ierr)
       matprop%ThermalConductivity = default%ThermalConductivity
       Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion

@@ -1,19 +1,21 @@
-MEF90_OBJS = ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90.o          \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Ctx.o        \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Diffusion.o  \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Elements.o   \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_EXO.o        \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_LinAlg.o     \
+MEF90_OBJS = ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Ctx.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_DiffusionImplementation_2D.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_DiffusionImplementation_3D.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_DiffusionInterface.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Elements.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_EXO.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_LinAlg.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_MassMatrixImplementation_MEF90Element2D_Scal.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_MassMatrixImplementation_MEF90Element2D_Vect.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_MassMatrixImplementation_MEF90Element2D_Elast.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_MassMatrixImplementation_MEF90Element3D_Scal.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_MassMatrixImplementation_MEF90Element3D_Vect.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_MassMatrixImplementation_MEF90Element3D_Elast.o \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Materials.o  \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_MPI.o        \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Norm.o       \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Materials.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_MPI.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Norm.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Parameters.o \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Sieve.o      \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Sieve.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Utils.o
 
