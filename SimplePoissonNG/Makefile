@@ -42,4 +42,5 @@ m_Poisson${MEF90_DIM}D.o: ${BASE_DIR}/m_Poisson.F90 m_PoissonGlobalCtx${MEF90_DI
 
 MEF90:
 	make -C ${MEF90_DIR} MEF90
-
+allclean:
+	make -C ${MEF90_DIR} clean

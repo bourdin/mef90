@@ -4,7 +4,7 @@ Module M_POISSONASSEMBLY
 #include "finclude/petscbagdef.h"
    Use m_MEF90
    Use m_PoissonGlobalProperties
-   Use M_POISSONCELLSETPROPERTIES
+   Use m_PoissonCellSetProperties
    Use m_PoissonVertexSetProperties
    Implicit NONE
 Contains

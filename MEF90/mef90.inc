@@ -1,3 +1,6 @@
+#define PASS(s) s
+#define MEF90_APPEND(a,b)       PASS(a)b
+
 #if MEF90_DIM == 3
 #define MEF90_ELEMENT_SCAL  MEF90Element3D_Scal
 #define MEF90_ELEMENT_VECT  MEF90Element3D_Vect
