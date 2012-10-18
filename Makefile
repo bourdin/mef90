@@ -6,6 +6,10 @@ MEF90: chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../MEF90/Makefile MEF90
 
+m_HeatXfer: MEF90 chkpaths
+	-@echo "Building $@"
+	-@make -C objs/${PETSC_ARCH} -f ../../m_HeatXfer/Makefile m_HeatXfer
+
 SimplePoissonNG2D: MEF90 chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../SimplePoissonNG/Makefile SimplePoissonNG MEF90_DIM=2

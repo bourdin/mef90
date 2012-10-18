@@ -7,7 +7,7 @@ Program  SimplePoissonNG
 #include <finclude/petscbagdef.h>
    Use m_MEF90
    Use m_PoissonGlobalProperties
-   Use M_POISSONCELLSETPROPERTIES
+   Use m_PoissonCellSetProperties
    Use m_PoissonVertexSetProperties
    Use M_POISSONASSEMBLY
    Use m_Poisson

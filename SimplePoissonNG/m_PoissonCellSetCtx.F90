@@ -14,7 +14,7 @@ Module m_PoissonCellSetProperties_Type
    End Type PoissonCellSetProperties_Type   
 End Module m_PoissonCellSetProperties_Type
 
-Module M_POISSONCELLSETPROPERTIES   
+Module m_PoissonCellSetProperties   
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use m_MEF90
@@ -159,5 +159,5 @@ Contains
 101 Format('cs',I4.4,'_')
 103 Format('Registering cell set ',I4,' prefix: ',A,'\n')
    End Subroutine MEF90CtxPoissonCellSetPropertiesCreate
-End Module M_POISSONCELLSETPROPERTIES   
+End Module m_PoissonCellSetProperties   
 
