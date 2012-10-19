@@ -8,7 +8,7 @@ Program  TestMEF90Ctx
    PetscErrorCode                      :: ierr
    PetscReal,Dimension(:),Pointer      :: time
    Type(MEF90Ctx_Type)                 :: MEF90Ctx
-   Type(MEF90GlobalOptions_Type)       :: MEF90GlobalOptions_default
+   Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
    Type(DM)                            :: Mesh
    PetscBool                           :: flg
 

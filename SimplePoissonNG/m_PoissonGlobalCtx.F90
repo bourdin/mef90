@@ -184,7 +184,7 @@ Contains
    
       Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties
       
-      Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonGlobalProperties,MEF90Ctx%GlobalPropertiesBag,ierr)
+      Call PetscBagCreate(PETSC_COMM_WORLD,sizeofPoissonGlobalProperties,MEF90Ctx%GlobalPropertiesBag,ierr);CHKERRQ(ierr)
       Call PetscBagRegisterPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,"SimplePoissonNG",PETSC_NULL_CHARACTER,defaultGlobalProperties,ierr);CHKERRQ(ierr)
 
       Call PetscBagGetDataPoissonGlobalProperties(MEF90Ctx%GlobalPropertiesBag,GlobalProperties,ierr);CHKERRQ(ierr)
