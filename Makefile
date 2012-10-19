@@ -22,7 +22,7 @@ tests: MEF90 chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../Tests/Makefile all
 
-runTests: MEF90 chkpaths
+runtests: MEF90 chkpaths
 	-@make -C objs/${PETSC_ARCH} -f ../../Tests/Makefile runall
 
 chkpaths: objs/${PETSC_ARCH} bin/${PETSC_ARCH}

@@ -34,15 +34,15 @@ Subroutine MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr)
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
-   Character(len=80) ::filename
+   Character(len=MEF90_MXSTRLEN)                   ::filename
    Integer                                         :: cpu_ws,io_ws
    Real                                            :: exoVersion
    Integer                                         :: exoErr,exoUnit
    Type(DM)                                        :: tmpMesh
    
-      Type(MEF90GlobalOptions_Type),pointer           :: GlobalOptions      
+      Type(MEF90CtxGlobalOptions_Type),pointer     :: GlobalOptions      
 
-      Call PetscBagGetDataMEF90GlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
    !!! Open input file
    If (MEF90_MyRank == 0) Then
       cpu_ws = 8
@@ -82,13 +82,13 @@ Subroutine MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
    MPI_Comm                                        :: IOComm
    Integer                                         :: IORank
    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer,filename
-   Type(MEF90GlobalOptions_Type),pointer           :: GlobalOptions      
+   Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
    Integer                                         :: cpu_ws,io_ws
    Real                                            :: exo_version
    Integer                                         :: exoerr
    
 
-   Call PetscBagGetDataMEF90GlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+   Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
 
    !!! Get name of output file
    Select Case (GlobalOptions%FileFormat)

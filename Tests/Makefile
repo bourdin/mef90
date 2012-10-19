@@ -1,5 +1,5 @@
-all: TestMaterials TestMEF90Ctx
-runall: runTestMaterials runTestMEF90Ctx
+all: TestMaterials TestMEF90Ctx testHeatXfer
+runall: runTestMaterials runTestMEF90Ctx 
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
@@ -34,22 +34,20 @@ TestMEF90Ctx.o: ${MEF90_DIR}/Tests/TestMEF90Ctx.F90 MEF90
 
 
 runTestMaterials: TestMaterials
-	@echo "Running " $@
+	@echo "         Running " $@
 	-@ARGS='';\
 	${MPIEXEC} -n 2 $< $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then true; \
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out
-	-@#echo ${MPIEXEC} -n 2 $< $${ARGS};\
 
 runTestMEF90Ctx: TestMEF90Ctx
-	@echo "Running " $@
-	-@ARGS='-verbose 1';\
-	${MPIEXEC} -n 2 $< $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then true; \
+	@echo "         Running " $@
+	-@ARGS='-verbose 1 -prefix ${MEF90_DIR}/TestMeshes/SquareNG-tri3';\
+	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out
-	-@#echo ${MPIEXEC} -n 2 $< $${ARGS};\
 
 MEF90:
 	make -C ${MEF90_DIR} MEF90

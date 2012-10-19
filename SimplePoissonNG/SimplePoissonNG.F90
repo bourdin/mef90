@@ -30,7 +30,7 @@ Program  SimplePoissonNG
                                                          2,                   & ! fluxoffset
                                                          PETSC_FALSE,         & ! addNullSpace
                                                          0.0_Kr)                ! initialTemp
-   Type(MEF90GlobalOptions_Type),Parameter         :: defaultGlobalOptions = MEF90GlobalOptions_Type( &
+   Type(MEF90CtxGlobalOptions_Type),Parameter      :: defaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
                                                          0,                               & ! verbose
                                                          MEF90TimeInterpolation_linear,   & ! timeInterpolation
                                                          0.0_Kr,                          & ! timeMin
@@ -41,7 +41,7 @@ Program  SimplePoissonNG
    Type(PoissonCellSetProperties_Type)             :: defaultCellSetProperties   = PoissonCellSetProperties_Type(DEFAULT_ELEMENT_SHORTID,0.0_Kr,0.0_Kr,0.0_Kr)
    Type(PoissonVertexSetProperties_Type),parameter :: defaultVertexSetProperties = PoissonVertexSetProperties_Type(PETSC_TRUE,0)
    Type(PoissonGlobalProperties_Type),pointer      :: GlobalProperties 
-   Type(MEF90GlobalOptions_Type),Pointer           :: MEF90GlobalOptions
+   Type(MEF90CtxGlobalOptions_Type),Pointer        :: MEF90GlobalOptions
    Character(len=MEF90_MXSTRLEN)                   :: prefix,filename
    Type(PetscViewer),target                        :: energyViewer,logViewer
    Type(PetscViewer),Dimension(:),Pointer          :: energyViewerCellSet
