@@ -11,7 +11,7 @@ Program  TestMEF90Ctx
    Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
    Type(DM)                            :: Mesh
    PetscBool                           :: flg
-
+   Character(len=MEF90_MXSTRLEN)       :: IOBuffer
 
    MEF90GlobalOptions_default%verbose           = 1
    !MEF90GlobalOptions_default%prefix            = '../TestMeshes/SquareNG-tri3'
@@ -32,6 +32,21 @@ Program  TestMEF90Ctx
    Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
 
    Call MEF90Ctx_Destroy(MEF90Ctx,ierr);CHKERRQ(ierr)
+   
+   Call PetscOptionsHasName(PETSC_NULL_CHARACTER,"-verbose",flg,ierr);CHKERRQ(ierr)
+   If (flg) Then
+      Write(IOBuffer,*) "\nverbose is set\n"
+   Else
+      Write(IOBuffer,*) "\nverbose is NOT set\n"
+   End If
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   Call PetscOptionsHasName(PETSC_NULL_CHARACTER,"-time_min",flg,ierr);CHKERRQ(ierr)
+   If (flg) Then
+      Write(IOBuffer,*) "\nverbose is set\n"
+   Else
+      Write(IOBuffer,*) "\nverbose is NOT set\n"
+   End If
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    Call MEF90_Finalize(ierr)
    Call PetscFinalize()
 End Program  TestMEF90Ctx
