@@ -34,8 +34,11 @@ Module m_MEF90_HeatXferCtx_Type
       PetscInt                         :: mode
       PetscBool                        :: addNullSpace
       PetscInt                         :: tempOffset
+      PetscBool                        :: boundaryTempCst
       PetscInt                         :: boundaryTempOffset
+      PetscBool                        :: externalTempCst
       PetscInt                         :: externalTempOffset
+      PetscBool                        :: fluxCst
       PetscInt                         :: fluxOffset
    End Type MEF90HeatXferGlobalOptions_Type
 
@@ -66,7 +69,7 @@ Module m_MEF90HeatXferGlobalOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_HeatXferCtx_Type
          PetscBag                                           :: bag
-         Type(MEF90HeatXferGlobalOptions_Type),pointer   :: data
+         Type(MEF90HeatXferGlobalOptions_Type),pointer      :: data
          PetscErrorCode                                     :: ierr
       End subroutine PetscBagGetData
    End interface
@@ -228,6 +231,7 @@ Contains
       HeatXferCtx%MEF90Ctx => MEF90Ctx
       
       Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferGlobalOptions,HeatXferCtx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
+      
       Call DMmeshGetLabelSize(Mesh,'Cell Sets',numSet,ierr);CHKERRQ(ierr)
       Allocate(HeatXferCtx%CellSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -314,8 +318,14 @@ Contains
       Call PetscBagRegisterEnum(bag,HeatXferGlobalOptions%mode,MEF90HeatXFer_ModeList,default%mode,'heatxfer_mode','Type of heat transfer computation',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%addNullSpace,default%addNullSpace,'addNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,HeatXferGlobalOptions%tempOffset,default%tempOffset,'temp_Offset','Position of temperature field in EXO file',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%boundaryTempCST,default%boundaryTempCST,'boundaryTemp_CST','Piecewise constant boundary temperature',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,HeatXferGlobalOptions%boundaryTempOffset,default%boundaryTempOffset,'boundaryTemp_Offset','Position of boundary temperature field in EXO file',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%externalTempCST,default%externalTempCST,'externalTemp_CST','Piecewise constant external temperature',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,HeatXferGlobalOptions%externalTempOffset,default%externalTempOffset,'externalTemp_Offset','Position of external temperature field in EXO file',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%fluxCST,default%fluxCST,'flux_CST','Piecewise constant heat flux',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,HeatXferGlobalOptions%fluxOffset,default%fluxOffset,'flux_Offset','Position of heat flux field in EXO file',ierr);CHKERRQ(ierr)      
    End Subroutine PetscBagRegisterMEF90HeatXferGlobalOptions
 
@@ -366,5 +376,4 @@ Contains
       Call PetscBagRegisterBool(bag,HeatXferVertexSetOptions%Has_BC,default%Has_BC,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,HeatXferVertexSetOptions%boundaryTemp,default%boundaryTemp,'boundaryTemp','Temperature boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90HeatXferVertexSetOptions
-
 End Module m_MEF90_HeatXferCtx

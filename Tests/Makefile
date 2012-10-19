@@ -55,7 +55,7 @@ m_HeatXfer:
 	make -C ${MEF90_DIR} m_HeatXfer
 	
 clean::
-	-@rm TestMaterials TestMEF90Ctx
+	-@rm TestMaterials TestMEF90Ctx testHeatXfer
 allclean:
 	make -C ${MEF90_DIR} clean
 	
