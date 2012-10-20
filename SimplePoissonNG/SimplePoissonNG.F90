@@ -164,7 +164,7 @@ Program  SimplePoissonNG
    !!! Create PoissonCtx
    !!!
    Call MEF90CtxPoissonVertexSetPropertiesCreate(MEF90Ctx,snesTemp,defaultVertexSetProperties,ierr);CHKERRQ(ierr)
-   Call EXOGetCellSetElementType_Scal(PETSC_COMM_WORLD,exoIN,MEF90_DIM,ElemType,ierr)
+   Call EXOGetCellSetElementType_Scal(PETSC_COMM_WORLD,exoIN,ElemType,ierr)
    Call MEF90CtxPoissonCellSetPropertiesCreate(MEF90Ctx,snesTemp,defaultCellSetProperties,ElemType,ierr);CHKERRQ(ierr)
 
 

@@ -224,6 +224,7 @@ Contains
       Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
       Type(MEF90HeatXferCellSetOptions_Type),pointer     :: MEF90HeatXferCellSetOptions
       Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: MEF90HeatXferVertexSetOptions
+      Type(IS)                                           :: setIS
       PetscInt                                           :: set,numSet
 
       Call MEF90HeatXferCtx_InitializePrivate(ierr)
@@ -232,17 +233,27 @@ Contains
 
       Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferGlobalOptions,HeatXferCtx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
       
-      Call DMmeshGetLabelSize(Mesh,'Cell Sets',numSet,ierr);CHKERRQ(ierr)
+      !!! Call DMmeshGetLabelSize(Mesh,'Cell Sets',numSet,ierr);CHKERRQ(ierr)
+      !!! NO: I need to allocate for the overall number of sets, not the local one
+
+      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetSize(setIS,numSet,ierr);CHKERRQ(ierr)
+
       Allocate(HeatXferCtx%CellSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
          Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferCellSetOptions,HeatXferCtx%CellSetOptionsBag(set),ierr);CHKERRQ(ierr)
       End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
-      Call DMmeshGetLabelSize(Mesh,'Vertex Sets',numSet,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Allocate(HeatXferCtx%VertexSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
          Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferVertexSetOptions,HeatXferCtx%VertexSetOptionsBag(set),ierr);CHKERRQ(ierr)
       End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       
       Nullify(HeatXferCtx%fluxPrevious)
       Nullify(HeatXferCtx%fluxTarget)
@@ -376,4 +387,97 @@ Contains
       Call PetscBagRegisterBool(bag,HeatXferVertexSetOptions%Has_BC,default%Has_BC,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,HeatXferVertexSetOptions%boundaryTemp,default%boundaryTemp,'boundaryTemp','Temperature boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90HeatXferVertexSetOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferCtx_SetFromOptions"
+!!!
+!!!  
+!!!  MEF90HeatXferCtx_SetFromOptions:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferCtx_SetFromOptions(heatXferCtx,prefix,Mesh,MEF90Ctx,defaultGlobalOptions, &
+                                              defaultCellSetOptions,defaultVertexSetOptions,ierr)
+      Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: heatXferCtx
+      Character(len=*),Intent(IN)                           :: prefix
+      Type(DM),Intent(IN)                                   :: Mesh
+      Type(MEF90Ctx_Type),Intent(IN)                        :: MEF90Ctx
+      Type(MEF90HeatXferGlobalOptions_Type),Intent(IN)      :: defaultGlobalOptions
+      Type(MEF90HeatXferCellSetOptions_Type),Intent(IN)     :: defaultCellSetOptions
+      Type(MEF90HeatXferVertexSetOptions_Type),Intent(IN)   :: defaultVertexSetOptions
+      PetscErrorCode,Intent(OUT)                            :: ierr
+   
+      Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions
+      Type(MEF90HeatXferCellSetOptions_Type)                :: myDefaultCellSetOptions
+      Type(MEF90Element_Type),Dimension(:),Pointer          :: ElemType
+      Type(IS)                                              :: setIS
+      PetscInt,Dimension(:),Pointer                         :: setID
+      PetscInt                                              :: set
+      Character(len=MEF90_MXSTRLEN)                         :: IOBuffer,setName,setprefix
+
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr);CHKERRQ(ierr)
+      !!!
+      !!! Registering Global Context
+      !!!
+      Call PetscBagRegisterMEF90HeatXferGlobalOptions(heatXferCtx%GlobalOptionsBag,MEF90Ctx%prefix,prefix,defaultGlobalOptions,ierr);CHKERRQ(ierr)
+
+      If (MEF90CtxGlobalOptions%verbose > 0) Then
+         Call PetscBagView(heatXferCtx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+      End If
+
+      !!!
+      !!! Registering Cell Set Context
+      !!! We override the default element type with that detected from the exodus file
+      !!!
+      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      
+      Call EXOGetCellSetElementType_Scal(MEF90Ctx,ElemType,ierr)
+
+      Do set = 1, size(setID)
+         Write(setName,100) setID(set)
+         Write(setprefix,101) setID(set)
+         mydefaultCellSetOptions = defaultCellSetOptions
+         mydefaultCellSetOptions%ElemTypeShortID = ElemType(set)%ShortID
+         Call PetscBagRegisterMEF90HeatXferCellSetOptions(heatXferCtx%CellSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr)
+         If (MEF90CtxGlobalOptions%verbose > 0) Then
+            Write(IOBuffer,103) setID(set),trim(setprefix)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscBagView(heatXferCtx%CellSetOptionsBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)
+         End if
+      End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      DeAllocate(ElemType)
+      
+      !!!
+      !!! Registering Vertex Set Context
+      !!! We override the default element type with that detected from the exodus file
+      !!!
+      Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      
+      Do set = 1, size(setID)
+         Write(setName,200) setID(set)
+         Write(setprefix,201) setID(set)
+         Call PetscBagRegisterMEF90HeatXferVertexSetOptions(heatXferCtx%VertexSetOptionsBag(set),setName,setPrefix,defaultVertexSetOptions,ierr)
+         If (MEF90CtxGlobalOptions%verbose > 0) Then
+            Write(IOBuffer,203) setID(set),trim(setprefix)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscBagView(heatXferCtx%VertexSetOptionsBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)
+         End if
+      End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+
+100 Format('Cell set ',I4)
+101 Format('cs',I4.4,'_')
+103 Format('Registering cell set ',I4,' prefix: ',A,'\n')
+200 Format('Vertex set ',I4)
+201 Format('vs',I4.4,'_')
+203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
+   End Subroutine MEF90HeatXferCtx_SetFromOptions
+
 End Module m_MEF90_HeatXferCtx
