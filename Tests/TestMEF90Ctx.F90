@@ -7,9 +7,9 @@ Program  TestMEF90Ctx
 
    PetscErrorCode                      :: ierr
    PetscReal,Dimension(:),Pointer      :: time
-   Type(MEF90Ctx_Type)                 :: MEF90Ctx
+   Type(MEF90Ctx_Type),target          :: MEF90Ctx
    Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
-   Type(DM)                            :: Mesh
+   Type(DM),target                     :: Mesh
    PetscBool                           :: flg
    Character(len=MEF90_MXSTRLEN)       :: IOBuffer
 
@@ -35,16 +35,16 @@ Program  TestMEF90Ctx
    
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER,"-verbose",flg,ierr);CHKERRQ(ierr)
    If (flg) Then
-      Write(IOBuffer,*) "\nverbose is set\n"
+      Write(IOBuffer,*) "verbose is set\n"
    Else
-      Write(IOBuffer,*) "\nverbose is NOT set\n"
+      Write(IOBuffer,*) "verbose is NOT set\n"
    End If
    Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER,"-time_min",flg,ierr);CHKERRQ(ierr)
    If (flg) Then
-      Write(IOBuffer,*) "\nverbose is set\n"
+      Write(IOBuffer,*) "time_min is set\n"
    Else
-      Write(IOBuffer,*) "\nverbose is NOT set\n"
+      Write(IOBuffer,*) "time_min is NOT set\n"
    End If
    Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
    Call MEF90_Finalize(ierr)

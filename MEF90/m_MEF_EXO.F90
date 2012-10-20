@@ -62,7 +62,7 @@ Contains
          Call DMMeshDistribute(tmpMesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
          Call DMDestroy(tmpMesh,ierr);CHKERRQ(ierr)
       End If
-      Call EXCLOS(exoUnit,ierr)
+      Call EXCLOS(exoUnit,exoErr)
    End Subroutine MEF90Ctx_GetDMMeshEXO
 
 #undef __FUNCT__
@@ -120,8 +120,8 @@ Contains
                Case (MEF90FileFormat_EXOSingle)
                   Write(filename,102) trim(MEF90Ctx%prefix)
                   exoUnitIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
-                  Call EXCOPY(exoUnitIN,MEF90Ctx%fileExoUnit,ierr)
-                  Call EXCLOS(exoUnitIN,ierr)
+                  Call EXCOPY(exoUnitIN,MEF90Ctx%fileExoUnit,exoErr)
+                  Call EXCLOS(exoUnitIN,exoErr)
                End Select
          EndIf
       End If
@@ -140,14 +140,13 @@ Contains
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
       PetscErrorCode,Intent(OUT)                      :: ierr
    
-      Integer                                         :: exoUnitIN
+      Integer                                         :: exoUnitIN,exoErr
       MPI_Comm                                        :: IOComm
       Integer                                         :: IORank
       Character(len=MEF90_MXSTRLEN)                   :: IOBuffer,filename
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
       Integer                                         :: cpu_ws,io_ws
       Real                                            :: exo_version
-      Integer                                         :: exoerr
       
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
@@ -167,7 +166,7 @@ Contains
    
       !!! Open output file or create it and format it depending on loading type
       If (IORank == 0) Then
-         Call EXCLOS(MEF90Ctx%fileExoUnit,ierr)
+         Call EXCLOS(MEF90Ctx%fileExoUnit,exoErr)
          MEF90Ctx%fileExoUnit = 0
       End If
    102 Format(A,'.gen')
@@ -201,7 +200,8 @@ Contains
          If (exoerr < 0) Then
             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
-            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
+            STOP
+            !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
          EndIf
          Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk3,exoerr)
          !Call EXINQ(exoID,EXELBL,numSet,dummyR,dummyS,exoerr)
@@ -224,7 +224,7 @@ Contains
       End Do
       DeAllocate(setID)
       If (MEF90Ctx%rank == 0) Then
-         Call EXCLOS(exoid,ierr)
+         Call EXCLOS(exoid,exoErr)
       End If
    End Subroutine EXOGetCellSetElementType_Scal
       
