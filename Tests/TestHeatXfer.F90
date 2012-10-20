@@ -43,10 +43,13 @@ Program TestHeatXfer
    MEF90GlobalOptions_default%timeNumStep       = 11
    MEF90GlobalOptions_default%fileFormat        = MEF90FileFormat_EXOSingle
    
-   MEF90Ctx%fileexoUnit = -1
+   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+   Call MEF90_Initialize(ierr)
+
    Call MEF90Ctx_Create(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr);CHKERRQ(ierr)
    Call MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
-   Write(*,*) 'MEF90Ctx%fileexoUnit ',MEF90Ctx%fileexoUnit
+   Call DMView(Mesh,PETSC_VIEWER_STDOUT_WORLD,ierr)
+   
    Call MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
 
    Call MEF90HeatXferCtx_Create(MEF90HeatXferCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
