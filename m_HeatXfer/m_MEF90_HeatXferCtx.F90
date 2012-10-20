@@ -166,9 +166,9 @@ Module m_MEF90_HeatXferCtx
    Use m_MEF90HeatXferVertexSetOptions_Private
    Implicit none
 
-   PetscInt,protected   :: sizeofMEF90HeatXferGlobalOptions
-   PetscInt,protected   :: sizeofMEF90HeatXferCellSetOptions
-   PetscInt,protected   :: sizeofMEF90HeatXferVertexSetOptions
+   PetscSizeT,protected   :: sizeofMEF90HeatXferGlobalOptions
+   PetscSizeT,protected   :: sizeofMEF90HeatXferCellSetOptions
+   PetscSizeT,protected   :: sizeofMEF90HeatXferVertexSetOptions
    
    Enum,bind(c)
       enumerator  :: MEF90HeatXFer_ModeSteadyState = 0, &
@@ -229,7 +229,7 @@ Contains
       Call MEF90HeatXferCtx_InitializePrivate(ierr)
       HeatXferCtx%DM => Mesh
       HeatXferCtx%MEF90Ctx => MEF90Ctx
-      
+
       Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferGlobalOptions,HeatXferCtx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
       
       Call DMmeshGetLabelSize(Mesh,'Cell Sets',numSet,ierr);CHKERRQ(ierr)
