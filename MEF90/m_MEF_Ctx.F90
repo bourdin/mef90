@@ -32,7 +32,8 @@ Module m_MEF_Ctx_Type
       !!! There seems to be an incompatibility between PetscBagRegisterString and intel fortran 13.0
       !!! Moving prefix to the context itself instead of the bag
       PetscEnum                                       :: timeInterpolation
-      PetscReal                                       :: timeMin,timeMax
+      PetscReal                                       :: timeMin
+      PetscReal                                       :: timeMax
       PetscInt                                        :: timeNumStep
       PetscEnum                                       :: fileFormat
    End Type MEF90CtxGlobalOptions_Type
@@ -314,10 +315,10 @@ End Subroutine MEF90Ctx_Destroy
             End If
          End Select
       End Select
-      If (GlobalOptions%verbose > 0) Then
-         Call PetscPrintf(PETSC_COMM_WORLD,"Time values array:\n",ierr);CHKERRQ(ierr)  
-         Call PetscRealView(GlobalOptions%timeNumStep,t,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-         Call PetscPrintf(PETSC_COMM_WORLD,"===\n",ierr);CHKERRQ(ierr)  
+      If ((GlobalOptions%verbose > 0) .AND. (MEF90Ctx%rank == 0)) Then
+         Call PetscPrintf(PETSC_COMM_SELF,"Time values array:\n",ierr);CHKERRQ(ierr)  
+         Call PetscRealView(GlobalOptions%timeNumStep,t,PETSC_VIEWER_STDOUT_SELF,ierr);CHKERRQ(ierr)
+         Call PetscPrintf(PETSC_COMM_SELF,"===\n",ierr);CHKERRQ(ierr)  
       End If
    End Subroutine MEF90Ctx_GetTime
 End Module m_MEF_Ctx

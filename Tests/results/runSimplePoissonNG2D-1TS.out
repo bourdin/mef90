@@ -1,0 +1,310 @@
+ MEF90 Global Context:  
+  prefix:       SquareNG-tri3 
+  log file:     SquareNG-tri3.log 
+PetscBag Object:  MEF90Ctx MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0 ; Time: min
+  time_max = 1 ; Time: max
+  time_numstep = 11 ; Time: number of time steps
+  file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
+ 
+PetscBag Object:  SimplePoissonNG Global properties object
+  verbose = 1 ; verbosity level
+  file_format = EXOSingle; (FileFormat) I/O file format.
+  file_mode = Replace; (FileMode) I/O file mode.
+  Loading = CST; (Loading) Loading Type
+  TimeEvolution = Transient; (EvolutionLaw) Time evolution type
+  addNullSpace = FALSE; Add null space to SNES
+  time_min = 0 ; Starting time
+  time_max = 1 ; End Time
+  time_numStep = 11 ; number of time steps
+  temp_initialValue = 0 ; Initial Value of the temperature
+ 
+Registering vertex set   10 prefix: vs0010_ 
+PetscBag Object:  Vertex set   10 VertexSetProperties object: Vertex Set properties
+  TempBC = FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  Temp = 0 ; Temperature boundary value
+ 
+Registering vertex set   20 prefix: vs0020_ 
+PetscBag Object:  Vertex set   20 VertexSetProperties object: Vertex Set properties
+  TempBC = TRUE; Temperature has Dirichlet boundary Condition (Y/N)
+  Temp = 1 ; Temperature boundary value
+ 
+Registering cell set    1 prefix: cs0001_ 
+PetscBag Object:  Cell set    1 CellSetProperties object: Cell Set properties
+  ShortID = 1 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity
+  ReferenceTemp = 0 ; Reference temperature T [K]
+PetscBag Object:  Cell set    1 MatProp2D object: material properties
+  Name = MEF90_Mathium2D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  HookesLaw = 1 0 0 1 0 1 ; [N.m^(-2)] (A) Hooke's law
+ 
+Registering cell set   10 prefix: cs0010_ 
+PetscBag Object:  Cell set   10 CellSetProperties object: Cell Set properties
+  ShortID = 7 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity
+  ReferenceTemp = 0 ; Reference temperature T [K]
+PetscBag Object:  Cell set   10 MatProp2D object: material properties
+  Name = MEF90_Mathium2D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  HookesLaw = 1 0 0 1 0 1 ; [N.m^(-2)] (A) Hooke's law
+ 
+Registering cell set   20 prefix: cs0020_ 
+PetscBag Object:  Cell set   20 CellSetProperties object: Cell Set properties
+  ShortID = 7 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity
+  ReferenceTemp = 0 ; Reference temperature T [K]
+PetscBag Object:  Cell set   20 MatProp2D object: material properties
+  Name = MEF90_Mathium2D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  HookesLaw = 1 0 0 1 0 1 ; [N.m^(-2)] (A) Hooke's law
+ 
+Solving time step    1: t= 0.00000E+00 
+Timestepping to t= 0.00000E+00 
+0 TS dt 0.00909091 time 0
+TSTemp converged in    0 steps. TSConvergedReason is    1 Analysis time is  0.00000E+00 
+  
+Cell set 0001 energy:  5.35193E+00 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  5.35193E+00 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    1 
+Solving time step    2: t= 1.00000E-01 
+Timestepping to t= 1.00000E-01 
+0 TS dt 0.00909091 time 0
+1 TS dt 0.00909091 time 0.00909091
+2 TS dt 0.00909091 time 0.0181818
+3 TS dt 0.00909091 time 0.0272727
+4 TS dt 0.00909091 time 0.0363636
+5 TS dt 0.00909091 time 0.0454545
+6 TS dt 0.00909091 time 0.0545455
+7 TS dt 0.00909091 time 0.0636364
+8 TS dt 0.00909091 time 0.0727273
+9 TS dt 0.00909091 time 0.0818182
+10 TS dt 0.00909091 time 0.0909091
+11 TS dt 0.00909091 time 0.1
+TSTemp converged in   11 steps. TSConvergedReason is    1 Analysis time is  1.00000E-01 
+  
+Cell set 0001 energy:  6.42410E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  6.42410E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    2 
+Solving time step    3: t= 2.00000E-01 
+Timestepping to t= 2.00000E-01 
+0 TS dt 0.00909091 time 0.1
+1 TS dt 0.00909091 time 0.109091
+2 TS dt 0.00909091 time 0.118182
+3 TS dt 0.00909091 time 0.127273
+4 TS dt 0.00909091 time 0.136364
+5 TS dt 0.00909091 time 0.145455
+6 TS dt 0.00909091 time 0.154545
+7 TS dt 0.00909091 time 0.163636
+8 TS dt 0.00909091 time 0.172727
+9 TS dt 0.00909091 time 0.181818
+10 TS dt 0.00909091 time 0.190909
+11 TS dt 0.00909091 time 0.2
+TSTemp converged in   11 steps. TSConvergedReason is    1 Analysis time is  2.00000E-01 
+  
+Cell set 0001 energy:  4.81699E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  4.81699E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    3 
+Solving time step    4: t= 3.00000E-01 
+Timestepping to t= 3.00000E-01 
+0 TS dt 0.00909091 time 0.2
+1 TS dt 0.00909091 time 0.209091
+2 TS dt 0.00909091 time 0.218182
+3 TS dt 0.00909091 time 0.227273
+4 TS dt 0.00909091 time 0.236364
+5 TS dt 0.00909091 time 0.245455
+6 TS dt 0.00909091 time 0.254545
+7 TS dt 0.00909091 time 0.263636
+8 TS dt 0.00909091 time 0.272727
+9 TS dt 0.00909091 time 0.281818
+10 TS dt 0.00909091 time 0.290909
+11 TS dt 0.00909091 time 0.3
+TSTemp converged in   11 steps. TSConvergedReason is    1 Analysis time is  3.00000E-01 
+  
+Cell set 0001 energy:  4.08018E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  4.08018E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    4 
+Solving time step    5: t= 4.00000E-01 
+Timestepping to t= 4.00000E-01 
+0 TS dt 0.00909091 time 0.3
+1 TS dt 0.00909091 time 0.309091
+2 TS dt 0.00909091 time 0.318182
+3 TS dt 0.00909091 time 0.327273
+4 TS dt 0.00909091 time 0.336364
+5 TS dt 0.00909091 time 0.345455
+6 TS dt 0.00909091 time 0.354545
+7 TS dt 0.00909091 time 0.363636
+8 TS dt 0.00909091 time 0.372727
+9 TS dt 0.00909091 time 0.381818
+10 TS dt 0.00909091 time 0.390909
+11 TS dt 0.00909091 time 0.4
+TSTemp converged in   11 steps. TSConvergedReason is    1 Analysis time is  4.00000E-01 
+  
+Cell set 0001 energy:  3.51239E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  3.51239E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    5 
+Solving time step    6: t= 5.00000E-01 
+Timestepping to t= 5.00000E-01 
+0 TS dt 0.00909091 time 0.4
+1 TS dt 0.00909091 time 0.409091
+2 TS dt 0.00909091 time 0.418182
+3 TS dt 0.00909091 time 0.427273
+4 TS dt 0.00909091 time 0.436364
+5 TS dt 0.00909091 time 0.445455
+6 TS dt 0.00909091 time 0.454545
+7 TS dt 0.00909091 time 0.463636
+8 TS dt 0.00909091 time 0.472727
+9 TS dt 0.00909091 time 0.481818
+10 TS dt 0.00909091 time 0.490909
+11 TS dt 0.00909091 time 0.5
+TSTemp converged in   11 steps. TSConvergedReason is    1 Analysis time is  5.00000E-01 
+  
+Cell set 0001 energy:  3.02967E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  3.02967E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    6 
+Solving time step    7: t= 6.00000E-01 
+Timestepping to t= 6.00000E-01 
+0 TS dt 0.00909091 time 0.5
+1 TS dt 0.00909091 time 0.509091
+2 TS dt 0.00909091 time 0.518182
+3 TS dt 0.00909091 time 0.527273
+4 TS dt 0.00909091 time 0.536364
+5 TS dt 0.00909091 time 0.545455
+6 TS dt 0.00909091 time 0.554545
+7 TS dt 0.00909091 time 0.563636
+8 TS dt 0.00909091 time 0.572727
+9 TS dt 0.00909091 time 0.581818
+10 TS dt 0.00909091 time 0.590909
+11 TS dt 0.00909091 time 0.6
+12 TS dt 0.00909091 time 0.609091
+TSTemp converged in   12 steps. TSConvergedReason is    1 Analysis time is  6.09091E-01 
+  
+Cell set 0001 energy:  2.57909E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  2.57909E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    7 
+Solving time step    8: t= 7.00000E-01 
+Timestepping to t= 7.00000E-01 
+0 TS dt 0.00909091 time 0.609091
+1 TS dt 0.00909091 time 0.618182
+2 TS dt 0.00909091 time 0.627273
+3 TS dt 0.00909091 time 0.636364
+4 TS dt 0.00909091 time 0.645455
+5 TS dt 0.00909091 time 0.654545
+6 TS dt 0.00909091 time 0.663636
+7 TS dt 0.00909091 time 0.672727
+8 TS dt 0.00909091 time 0.681818
+9 TS dt 0.00909091 time 0.690909
+10 TS dt 0.00909091 time 0.7
+11 TS dt 0.00909091 time 0.709091
+TSTemp converged in   11 steps. TSConvergedReason is    1 Analysis time is  7.09091E-01 
+  
+Cell set 0001 energy:  2.22524E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  2.22524E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    8 
+Solving time step    9: t= 8.00000E-01 
+Timestepping to t= 8.00000E-01 
+0 TS dt 0.00909091 time 0.709091
+1 TS dt 0.00909091 time 0.718182
+2 TS dt 0.00909091 time 0.727273
+3 TS dt 0.00909091 time 0.736364
+4 TS dt 0.00909091 time 0.745455
+5 TS dt 0.00909091 time 0.754545
+6 TS dt 0.00909091 time 0.763636
+7 TS dt 0.00909091 time 0.772727
+8 TS dt 0.00909091 time 0.781818
+9 TS dt 0.00909091 time 0.790909
+10 TS dt 0.00909091 time 0.8
+11 TS dt 0.00909091 time 0.809091
+TSTemp converged in   11 steps. TSConvergedReason is    1 Analysis time is  8.09091E-01 
+  
+Cell set 0001 energy:  1.91995E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  1.91995E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    9 
+Solving time step   10: t= 9.00000E-01 
+Timestepping to t= 9.00000E-01 
+0 TS dt 0.00909091 time 0.809091
+1 TS dt 0.00909091 time 0.818182
+2 TS dt 0.00909091 time 0.827273
+3 TS dt 0.00909091 time 0.836364
+4 TS dt 0.00909091 time 0.845455
+5 TS dt 0.00909091 time 0.854545
+6 TS dt 0.00909091 time 0.863636
+7 TS dt 0.00909091 time 0.872727
+8 TS dt 0.00909091 time 0.881818
+9 TS dt 0.00909091 time 0.890909
+10 TS dt 0.00909091 time 0.9
+11 TS dt 0.00909091 time 0.909091
+TSTemp converged in   11 steps. TSConvergedReason is    1 Analysis time is  9.09091E-01 
+  
+Cell set 0001 energy:  1.65654E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  1.65654E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step   10 
+Solving time step   11: t= 1.00000E+00 
+Timestepping to t= 1.00000E+00 
+0 TS dt 0.00909091 time 0.909091
+1 TS dt 0.00909091 time 0.918182
+2 TS dt 0.00909091 time 0.927273
+3 TS dt 0.00909091 time 0.936364
+4 TS dt 0.00909091 time 0.945455
+5 TS dt 0.00909091 time 0.954545
+6 TS dt 0.00909091 time 0.963636
+7 TS dt 0.00909091 time 0.972727
+8 TS dt 0.00909091 time 0.981818
+9 TS dt 0.00909091 time 0.990909
+10 TS dt 0.00909091 time 1
+11 TS dt 0.00909091 time 1.00909
+TSTemp converged in   11 steps. TSConvergedReason is    1 Analysis time is  1.00909E+00 
+  
+Cell set 0001 energy:  1.42928E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  1.42928E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step   11 

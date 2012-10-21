@@ -1,10 +1,11 @@
 Module m_MEF_Materials_Types
 #include "finclude/petscdef.h"
    Use m_MEF_LinAlg
+   Use m_MEF_Ctx
    Use petsc
    IMPLICIT NONE
 
-   Type MEF90_MatProp2D_Type
+   Type MEF90MatProp2D_Type
       Sequence
       PetscReal                     :: Density                    ! rho
       PetscReal                     :: FractureToughness          ! Gc
@@ -13,9 +14,9 @@ Module m_MEF_Materials_Types
       Type(MatS2D)                  :: LinearThermalExpansion     ! alpha
       Type(Tens4OS2D)               :: HookesLaw                  ! A
       Character(len=MEF90_MXSTRLEN) :: Name
-   End Type MEF90_MatProp2D_Type
+   End Type MEF90MatProp2D_Type
 
-   Type MEF90_MatProp3D_Type
+   Type MEF90MatProp3D_Type
       Sequence
       PetscReal                     :: Density                    ! rho
       PetscReal                     :: FractureToughness          ! Gc
@@ -24,11 +25,11 @@ Module m_MEF_Materials_Types
       Type(MatS3D)                  :: LinearThermalExpansion     ! alpha
       Type(Tens4OS3D)               :: HookesLaw                  ! A
       Character(len=MEF90_MXSTRLEN) :: Name
-   End Type MEF90_MatProp3D_Type
+   End Type MEF90MatProp3D_Type
    
    !!! The Mathium is a bogus isotropic material whose material properties are all 1 
    !!! except for a Poisson Ratio of 0
-   Type(MEF90_MatProp2D_Type),Parameter     :: MEF90_Mathium2D = MEF90_MatProp2D_Type ( &
+   Type(MEF90MatProp2D_Type),Parameter     :: MEF90_Mathium2D = MEF90MatProp2D_Type ( &
       1.0_Kr,                                          & ! Density
       1.0_Kr,                                          & ! FractureToughness
       1.0_Kr,                                          & ! SpecificHeat
@@ -37,7 +38,7 @@ Module m_MEF_Materials_Types
       MEF90_Tens4OS2D_Identity,                        & ! HookesLaw
       "MEF90_Mathium2D")  
 
-   Type(MEF90_MatProp3D_Type),Parameter     :: MEF90_Mathium3D = MEF90_MatProp3D_Type ( &
+   Type(MEF90MatProp3D_Type),Parameter     :: MEF90_Mathium3D = MEF90MatProp3D_Type ( &
       1.0_Kr,                                          & ! Density
       1.0_Kr,                                          & ! FractureToughness
       1.0_Kr,                                          & ! SpecificHeat
@@ -54,24 +55,24 @@ Module m_MEF_Materials_Interface2D
    Use m_MEF_Materials_Types
    Implicit NONE
    Private
-   Public :: PetscBagGetDataMEF90_MatProp2D
+   Public :: PetscBagGetDataMEF90MatProp2D
 
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF_Materials_Types
          PetscBag                             :: bag
-         type(MEF90_MatProp2D_Type),pointer   :: data
+         type(MEF90MatProp2D_Type),pointer   :: data
          PetscErrorCode                       :: ierr
       End subroutine PetscBagGetData
    End interface
 Contains
-   Subroutine PetscBagGetDataMEF90_MatProp2D(bag,data,ierr)
+   Subroutine PetscBagGetDataMEF90MatProp2D(bag,data,ierr)
       PetscBag                              :: bag
-      type(MEF90_MatProp2D_Type),pointer    :: data
+      type(MEF90MatProp2D_Type),pointer    :: data
       PetscErrorCode                        :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
-   End Subroutine PetscBagGetDataMEF90_MatProp2D
+   End Subroutine PetscBagGetDataMEF90MatProp2D
 End Module m_MEF_Materials_Interface2D
 
 Module m_MEF_Materials_Interface3D
@@ -81,24 +82,24 @@ Module m_MEF_Materials_Interface3D
    Use m_MEF_Materials_Types
    Implicit NONE
    Private
-   Public :: PetscBagGetDataMEF90_MatProp3D
+   Public :: PetscBagGetDataMEF90MatProp3D
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF_Materials_Types
          PetscBag                             :: bag
-         type(MEF90_MatProp3D_Type),pointer   :: data
+         type(MEF90MatProp3D_Type),pointer   :: data
          PetscErrorCode                       :: ierr
       End subroutine PetscBagGetData
    End interface
 Contains
-   Subroutine PetscBagGetDataMEF90_MatProp3D(bag,data,ierr)
+   Subroutine PetscBagGetDataMEF90MatProp3D(bag,data,ierr)
       PetscBag                              :: bag
-      type(MEF90_MatProp3D_Type),pointer    :: data
+      type(MEF90MatProp3D_Type),pointer    :: data
       PetscErrorCode                        :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
-   End Subroutine PetscBagGetDataMEF90_MatProp3D
+   End Subroutine PetscBagGetDataMEF90MatProp3D
 End Module m_MEF_Materials_Interface3D
 
 Module m_MEF_Materials
@@ -107,45 +108,49 @@ Module m_MEF_Materials
    Use m_MEF_Materials_Interface3D
    Implicit NONE
    
-   Interface PetscBagGetDataMEF90_MatProp
-      Module Procedure PetscBagGetDataMEF90_MatProp2D,PetscBagGetDataMEF90_MatProp3D
+   Interface PetscBagGetDataMEF90MatProp
+      Module Procedure PetscBagGetDataMEF90MatProp2D,PetscBagGetDataMEF90MatProp3D
    End Interface 
    
-   Interface PetscBagRegisterMEF90_MatProp
-      Module Procedure PetscBagRegisterMEF90_MatProp2D,PetscBagRegisterMEF90_MatProp3D
+   Interface PetscBagRegisterMEF90MatProp
+      Module Procedure PetscBagRegisterMEF90MatProp2D,PetscBagRegisterMEF90MatProp3D
    End Interface
    
-   PetscSizeT,protected   :: sizeofMEF90_MatProp2D
-   PetscSizeT,protected   :: sizeofMEF90_MatProp3D
+   Interface MEF90MatPropBag_SetFromOptions
+      Module Procedure MEF90MatPropBag_SetFromOptions2D,MEF90MatPropBag_SetFromOptions3D
+   End Interface
+   
+   PetscSizeT,protected   :: sizeofMEF90MatProp2D
+   PetscSizeT,protected   :: sizeofMEF90MatProp3D
 
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_MaterialsInitializePrivate"
+#define __FUNCT__ "MEF90Materials_InitializePrivate"
    Subroutine MEF90Materials_InitializePrivate(ierr)
       PetscErrorCode,intent(OUT)          :: ierr
 
-      Type(MEF90_MatProp2D_Type),Target   :: matProp2D
-      Type(MEF90_MatProp3D_Type),Target   :: matProp3D
+      Type(MEF90MatProp2D_Type),Target   :: matProp2D
+      Type(MEF90MatProp3D_Type),Target   :: matProp3D
       character(len=1),pointer            :: dummychar(:)
       PetscSizeT                          :: sizeofchar
    
       Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
-      sizeofMEF90_MatProp2D = size(transfer(matProp2D,dummychar))*sizeofchar
-      sizeofMEF90_MatProp3D = size(transfer(matProp3D,dummychar))*sizeofchar
+      sizeofMEF90MatProp2D = size(transfer(matProp2D,dummychar))*sizeofchar
+      sizeofMEF90MatProp3D = size(transfer(matProp3D,dummychar))*sizeofchar
    End Subroutine MEF90Materials_InitializePrivate
 
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagRegisterMEF90_MatProp2D"
-   Subroutine PetscBagRegisterMEF90_MatProp2D(bag,name,prefix,default,ierr)
+#define __FUNCT__ "PetscBagRegisterMEF90MatProp2D"
+   Subroutine PetscBagRegisterMEF90MatProp2D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
-      type(MEF90_MatProp2D_Type),intent(IN)  :: default
+      type(MEF90MatProp2D_Type),intent(IN)  :: default
       PetscErrorCode,intent(OUT)             :: ierr
 
-      Type(MEF90_MatProp2D_Type),pointer     :: matprop
+      Type(MEF90MatProp2D_Type),pointer     :: matprop
       
-      Call PetscBagGetDataMEF90_MatProp2D(bag,matprop,ierr)
+      Call PetscBagGetDataMEF90MatProp2D(bag,matprop,ierr)
       Call PetscBagSetName(bag,trim(name),"MatProp2D object: material properties",ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
       
@@ -160,18 +165,18 @@ Contains
       matprop%HookesLaw = default%HookesLaw
       Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
-   End Subroutine PetscBagRegisterMEF90_MatProp2D
+   End Subroutine PetscBagRegisterMEF90MatProp2D
 
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagRegisterMEF90_MatProp3D"
-   Subroutine PetscBagRegisterMEF90_MatProp3D(bag,name,prefix,default,ierr)
+#define __FUNCT__ "PetscBagRegisterMEF90MatProp3D"
+   Subroutine PetscBagRegisterMEF90MatProp3D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
-      type(MEF90_MatProp3D_Type),intent(IN)  :: default
+      type(MEF90MatProp3D_Type),intent(IN)   :: default
       PetscErrorCode,intent(OUT)             :: ierr
 
-      Type(MEF90_MatProp3D_Type),pointer     :: matprop
-      Call PetscBagGetDataMEF90_MatProp3D(bag,matprop,ierr)
+      Type(MEF90MatProp3D_Type),pointer     :: matprop
+      Call PetscBagGetDataMEF90MatProp3D(bag,matprop,ierr)
       Call PetscBagSetName(bag,trim(name),"MatProp3D object: material properties",ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
 
@@ -186,7 +191,104 @@ Contains
       matprop%HookesLaw = default%HookesLaw
       Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
-   End Subroutine PetscBagRegisterMEF90_MatProp3D
+   End Subroutine PetscBagRegisterMEF90MatProp3D
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90MatPropBag_SetFromOptions2D"
+!!!
+!!!  
+!!!  MEF90MatPropBag_SetFromOptions2D:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90MatPropBag_SetFromOptions2D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
+      Type(PetscBag),Dimension(:),Pointer             :: MEF90MatPropBag
+      Type(DM),Intent(IN)                             :: Mesh
+      Type(MEF90MatProp2D_Type),intent(IN)            :: defaultMaterial
+      PetscErrorCode,Intent(OUT)                      :: ierr
+      Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
+      
+      Type(IS)                                        :: setIS
+      PetscInt,Dimension(:),Pointer                   :: setID
+      PetscInt                                        :: numSet,set
+      Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions   
+      
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      Allocate(MEF90MatPropBag(numSet))
+      Do set = 1,numSet
+         Write(setName,100) setID(set)
+         Write(setprefix,101) setID(set)
+         If (MEF90GlobalOptions%verbose > 0) Then
+            Write(IOBuffer,102) setID(set),trim(setprefix)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         End If
+         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp2D,MEF90MatPropBag(set),ierr)
+         Call PetscBagRegisterMEF90MatProp(MEF90MatPropBag(set),setName,setprefix,defaultMaterial,ierr);CHKERRQ(ierr)
+         If (MEF90GlobalOptions%verbose > 0) Then
+            Call PetscBagView(MEF90MatPropBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)
+         End If
+      End Do
+      Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+100 Format('Cell set ',I4)
+101 Format('cs',I4.4,'_')
+102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
+   End Subroutine MEF90MatPropBag_SetFromOptions2D
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90MatPropBag_SetFromOptions3D"
+!!!
+!!!  
+!!!  MEF90MatPropBag_SetFromOptions3D:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90MatPropBag_SetFromOptions3D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
+      Type(PetscBag),Dimension(:),Pointer             :: MEF90MatPropBag
+      Type(DM),Intent(IN)                             :: Mesh
+      Type(MEF90MatProp3D_Type),intent(IN)            :: defaultMaterial
+      PetscErrorCode,Intent(OUT)                      :: ierr
+      Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
+      
+      Type(IS)                                        :: setIS
+      PetscInt,Dimension(:),Pointer                   :: setID
+      PetscInt                                        :: numSet,set
+      Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions   
+      
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      Allocate(MEF90MatPropBag(numSet))
+      Do set = 1,numSet
+         Write(setName,100) setID(set)
+         Write(setprefix,101) setID(set)
+         If (MEF90GlobalOptions%verbose > 0) Then
+            Write(IOBuffer,102) setID(set),trim(setprefix)
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         End If
+         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp3D,MEF90MatPropBag(set),ierr)
+         Call PetscBagRegisterMEF90MatProp(MEF90MatPropBag(set),setName,setprefix,defaultMaterial,ierr);CHKERRQ(ierr)
+         If (MEF90GlobalOptions%verbose > 0) Then
+            Call PetscBagView(MEF90MatPropBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)
+         End If
+      End Do
+      Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+100 Format('Cell set ',I4)
+101 Format('cs',I4.4,'_')
+102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
+   End Subroutine MEF90MatPropBag_SetFromOptions3D
 
 
 !!! Subroutine generating various types of Hooke's laws 

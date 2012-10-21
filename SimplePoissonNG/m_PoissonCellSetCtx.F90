@@ -103,7 +103,7 @@ Contains
 !!!
 !!!  
 !!!  MEF90CtxPoissonCellSetPropertiesCreate - Call PetscBagRegisterPoissonCellSetProperties for the CellSet properties
-!!!                                           of a MEF90Ctx_Type and PetscBagRegisterMEF90_MatProp for its material properties
+!!!                                           of a MEF90Ctx_Type and PetscBagRegisterMEF90MatProp for its material properties
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -146,7 +146,7 @@ Contains
          Call PetscBagRegisterPoissonCellSetProperties(MEF90Ctx%CellSetPropertiesBag(set),setName,setprefix,mydefaultCellSetProperties,ierr);CHKERRQ(ierr)
 
          Call PetscBagCreate(PETSC_COMM_WORLD,SIZEOFMATPROP,MEF90Ctx%MaterialPropertiesBag(set),ierr)
-         Call PetscBagRegisterMEF90_MatProp(MEF90Ctx%MaterialPropertiesBag(set),setName,setprefix,DEFAULT_MATERIAL,ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterMEF90MatProp(MEF90Ctx%MaterialPropertiesBag(set),setName,setprefix,DEFAULT_MATERIAL,ierr);CHKERRQ(ierr)
          if (GlobalProperties%verbose > 0) Then
             Call PetscBagView(MEF90Ctx%CellSetPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
             Call PetscBagView(MEF90Ctx%MaterialPropertiesBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)

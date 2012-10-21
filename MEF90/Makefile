@@ -156,6 +156,7 @@ m_MEF_Parameters.o: ${MEF90_DIR}/MEF90/m_MEF_Parameters.F90
 	-@${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 m_MEF_Sieve.o: ${MEF90_DIR}/MEF90/m_MEF_Sieve.F90 \
+        m_MEF_Elements.o \
         m_MEF_LinAlg.o \
         m_MEF_Parameters.o
 	@echo "      $<"
