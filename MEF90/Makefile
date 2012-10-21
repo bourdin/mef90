@@ -132,6 +132,7 @@ m_MEF_MassMatrixInterface.o: ${MEF90_DIR}/MEF90/m_MEF_MassMatrixInterface.F90 m_
 	-@${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 m_MEF_Materials.o: ${MEF90_DIR}/MEF90/m_MEF_Materials.F90 \
+        m_MEF_Ctx.o \
         m_MEF_LinAlg.o \
         m_MEF_Parameters.o \
         m_MEF_Utils.o
