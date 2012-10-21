@@ -26,6 +26,7 @@ Module m_MEF90_HeatXferCtx_Type
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
       PetscBag,Dimension(:),Pointer    :: VertexSetOptionsBag
+      PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
       Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
       Type(DM),pointer                 :: DM
    End Type MEF90HeatXferCtx_Type
@@ -63,7 +64,7 @@ Module m_MEF90HeatXferGlobalOptions_Private
    Implicit None
 
    Private
-   Public :: PetscBagGetDataMEF90HeatXferGlobalOptions
+   Public :: PetscBagGetDataMEF90HeatXferCtxGlobalOptions
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
@@ -76,17 +77,17 @@ Module m_MEF90HeatXferGlobalOptions_Private
 Contains
 
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagGetDataMEF90HeatXferGlobalOptions"
+#define __FUNCT__ "PetscBagGetDataMEF90HeatXferCtxGlobalOptions"
 !!!
-!!!  PetscBagGetDataMEF90HeatXferGlobalOptions - Custom interface to PetscGetData
+!!!  PetscBagGetDataMEF90HeatXferCtxGlobalOptions - Custom interface to PetscGetData
 !!!
-   Subroutine PetscBagGetDataMEF90HeatXferGlobalOptions(bag,data,ierr)
+   Subroutine PetscBagGetDataMEF90HeatXferCtxGlobalOptions(bag,data,ierr)
       PetscBag                                        :: bag
-      Type(MEF90HeatXferGlobalOptions_Type),pointer     :: data
+      Type(MEF90HeatXferGlobalOptions_Type),pointer   :: data
       PetscErrorCode                                  :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
-   End Subroutine PetscBagGetDataMEF90HeatXferGlobalOptions
+   End Subroutine PetscBagGetDataMEF90HeatXferCtxGlobalOptions
 End Module m_MEF90HeatXferGlobalOptions_Private
 
 Module m_MEF90HeatXferCellSetOptions_Private
@@ -97,30 +98,30 @@ Module m_MEF90HeatXferCellSetOptions_Private
    Implicit None
 
    Private
-   Public :: PetscBagGetDataMEF90HeatXferCellSetOptions
+   Public :: PetscBagGetDataMEF90HeatXferCtxCellSetOptions
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_HeatXferCtx_Type
          PetscBag                                           :: bag
-         Type(MEF90HeatXferCellSetOptions_Type),pointer   :: data
+         Type(MEF90HeatXferCellSetOptions_Type),pointer     :: data
          PetscErrorCode                                     :: ierr
       End subroutine PetscBagGetData
    End interface
 Contains
 
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagGetDataMEF90HeatXferCellSetOptions"
+#define __FUNCT__ "PetscBagGetDataMEF90HeatXferCtxCellSetOptions"
 !!!
-!!!  PetscBagGetDataMEF90HeatXferCellSetOptions - Custom interface to PetscGetData
+!!!  PetscBagGetDataMEF90HeatXferCtxCellSetOptions - Custom interface to PetscGetData
 !!!
-   Subroutine PetscBagGetDataMEF90HeatXferCellSetOptions(bag,data,ierr)
+   Subroutine PetscBagGetDataMEF90HeatXferCtxCellSetOptions(bag,data,ierr)
       PetscBag                                        :: bag
-      Type(MEF90HeatXferCellSetOptions_Type),pointer     :: data
+      Type(MEF90HeatXferCellSetOptions_Type),pointer  :: data
       PetscErrorCode                                  :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
-   End Subroutine PetscBagGetDataMEF90HeatXferCellSetOptions
+   End Subroutine PetscBagGetDataMEF90HeatXferCtxCellSetOptions
 End Module m_MEF90HeatXferCellSetOptions_Private
 
 Module m_MEF90HeatXferVertexSetOptions_Private
@@ -131,7 +132,7 @@ Module m_MEF90HeatXferVertexSetOptions_Private
    Implicit None
 
    Private
-   Public :: PetscBagGetDataMEF90HeatXferVertexSetOptions
+   Public :: PetscBagGetDataMEF90HeatXferCtxVertexSetOptions
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
@@ -144,17 +145,17 @@ Module m_MEF90HeatXferVertexSetOptions_Private
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagGetDataMEF90HeatXferVertexSetOptions"
+#define __FUNCT__ "PetscBagGetDataMEF90HeatXferCtxVertexSetOptions"
 !!!
-!!!  PetscBagGetDataMEF90HeatXferVertexSetOptions - Custom interface to PetscGetData
+!!!  PetscBagGetDataMEF90HeatXferCtxVertexSetOptions - Custom interface to PetscGetData
 !!!
-   Subroutine PetscBagGetDataMEF90HeatXferVertexSetOptions(bag,data,ierr)
-      PetscBag                                        :: bag
-      Type(MEF90HeatXferVertexSetOptions_Type),pointer     :: data
-      PetscErrorCode                                  :: ierr
+   Subroutine PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(bag,data,ierr)
+      PetscBag                                           :: bag
+      Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: data
+      PetscErrorCode                                     :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
-   End Subroutine PetscBagGetDataMEF90HeatXferVertexSetOptions
+   End Subroutine PetscBagGetDataMEF90HeatXferCtxVertexSetOptions
 End Module m_MEF90HeatXferVertexSetOptions_Private
 
 Module m_MEF90_HeatXferCtx
@@ -308,21 +309,21 @@ Contains
    End Subroutine MEF90HeatXferCtx_Destroy
 
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagRegisterMEF90HeatXferGlobalOptions"
+#define __FUNCT__ "PetscBagRegisterMEF90HeatXferCtxGlobalOptions"
 !!!
 !!!  
-!!!  PetscBagRegisterMEF90HeatXferGlobalOptions:
+!!!  PetscBagRegisterMEF90HeatXferCtxGlobalOptions:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine PetscBagRegisterMEF90HeatXferGlobalOptions(bag,name,prefix,default,ierr)
+   Subroutine PetscBagRegisterMEF90HeatXferCtxGlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90HeatXferGlobalOptions_Type),Intent(IN)   :: default
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(MEF90HeatXferGlobalOptions_Type),pointer      :: HeatXferGlobalOptions
-      Call PetscBagGetDataMEF90HeatXferGlobalOptions(bag,HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(bag,HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
       Call PetscBagSetName(bag,trim(name),"HeatXferGlobalOptions MEF90 Heat transfer global options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
@@ -338,24 +339,24 @@ Contains
 
       Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%fluxCST,default%fluxCST,'flux_CST','Piecewise constant heat flux',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,HeatXferGlobalOptions%fluxOffset,default%fluxOffset,'flux_Offset','Position of heat flux field in EXO file',ierr);CHKERRQ(ierr)      
-   End Subroutine PetscBagRegisterMEF90HeatXferGlobalOptions
+   End Subroutine PetscBagRegisterMEF90HeatXferCtxGlobalOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagRegisterMEF90HeatXferCellSetOptions"
+#define __FUNCT__ "PetscBagRegisterMEF90HeatXferCtxCellSetOptions"
 !!!
 !!!  
-!!!  PetscBagRegisterMEF90HeatXferCellSetOptions:
+!!!  PetscBagRegisterMEF90HeatXferCtxCellSetOptions:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine PetscBagRegisterMEF90HeatXferCellSetOptions(bag,name,prefix,default,ierr)
+   Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90HeatXferCellSetOptions_Type),Intent(IN)  :: default
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(MEF90HeatXferCellSetOptions_Type),pointer      :: HeatXferCellSetOptions
-      Call PetscBagGetDataMEF90HeatXferCellSetOptions(bag,HeatXferCellSetOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(bag,HeatXferCellSetOptions,ierr);CHKERRQ(ierr)
       Call PetscBagSetName(bag,trim(name),"HeatXferCellSetOptions MEF90 Heat transfer Cell Set options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
@@ -363,30 +364,30 @@ Contains
       Call PetscBagRegisterReal(bag,HeatXferCellSetOptions%Flux,default%Flux,'Flux','[J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,HeatXferCellSetOptions%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','[J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity',ierr)
       Call PetscBagRegisterReal(bag,HeatXferCellSetOptions%externalTemp,default%externalTemp,'externalTemp','Reference temperature T [K]',ierr)
-   End Subroutine PetscBagRegisterMEF90HeatXferCellSetOptions
+   End Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "PetscBagRegisterMEF90HeatXferVertexSetOptions"
+#define __FUNCT__ "PetscBagRegisterMEF90HeatXferCtxVertexSetOptions"
 !!!
 !!!  
-!!!  PetscBagRegisterMEF90HeatXferVertexSetOptions:
+!!!  PetscBagRegisterMEF90HeatXferCtxVertexSetOptions:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine PetscBagRegisterMEF90HeatXferVertexSetOptions(bag,name,prefix,default,ierr)
+   Subroutine PetscBagRegisterMEF90HeatXferCtxVertexSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                              :: bag
       Character(len=*),Intent(IN)                           :: prefix,name
       Type(MEF90HeatXferVertexSetOptions_Type),Intent(IN)   :: default
       PetscErrorCode,Intent(OUT)                            :: ierr
 
       Type(MEF90HeatXferVertexSetOptions_Type),pointer      :: HeatXferVertexSetOptions
-      Call PetscBagGetDataMEF90HeatXferVertexSetOptions(bag,HeatXferVertexSetOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(bag,HeatXferVertexSetOptions,ierr);CHKERRQ(ierr)
       Call PetscBagSetName(bag,trim(name),"HeatXferVertexSetOptions MEF90 Heat transfer Vertex Set options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterBool(bag,HeatXferVertexSetOptions%Has_BC,default%Has_BC,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,HeatXferVertexSetOptions%boundaryTemp,default%boundaryTemp,'boundaryTemp','Temperature boundary value',ierr);CHKERRQ(ierr)
-   End Subroutine PetscBagRegisterMEF90HeatXferVertexSetOptions
+   End Subroutine PetscBagRegisterMEF90HeatXferCtxVertexSetOptions
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferCtx_SetFromOptions"
@@ -419,7 +420,7 @@ Contains
       !!!
       !!! Registering Global Context
       !!!
-      Call PetscBagRegisterMEF90HeatXferGlobalOptions(heatXferCtx%GlobalOptionsBag,MEF90Ctx%prefix,prefix,defaultGlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterMEF90HeatXferCtxGlobalOptions(heatXferCtx%GlobalOptionsBag,MEF90Ctx%prefix,prefix,defaultGlobalOptions,ierr);CHKERRQ(ierr)
 
       If (MEF90CtxGlobalOptions%verbose > 0) Then
          Call PetscBagView(heatXferCtx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
@@ -440,7 +441,7 @@ Contains
          Write(setprefix,101) setID(set)
          mydefaultCellSetOptions = defaultCellSetOptions
          mydefaultCellSetOptions%ElemTypeShortID = ElemType(set)%ShortID
-         Call PetscBagRegisterMEF90HeatXferCellSetOptions(heatXferCtx%CellSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr)
+         Call PetscBagRegisterMEF90HeatXferCtxCellSetOptions(heatXferCtx%CellSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr)
          If (MEF90CtxGlobalOptions%verbose > 0) Then
             Write(IOBuffer,103) setID(set),trim(setprefix)
             Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
@@ -462,7 +463,7 @@ Contains
       Do set = 1, size(setID)
          Write(setName,200) setID(set)
          Write(setprefix,201) setID(set)
-         Call PetscBagRegisterMEF90HeatXferVertexSetOptions(heatXferCtx%VertexSetOptionsBag(set),setName,setPrefix,defaultVertexSetOptions,ierr)
+         Call PetscBagRegisterMEF90HeatXferCtxVertexSetOptions(heatXferCtx%VertexSetOptionsBag(set),setName,setPrefix,defaultVertexSetOptions,ierr)
          If (MEF90CtxGlobalOptions%verbose > 0) Then
             Write(IOBuffer,203) setID(set),trim(setprefix)
             Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)

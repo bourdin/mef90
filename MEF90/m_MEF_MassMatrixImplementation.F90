@@ -17,20 +17,20 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_MassMatrixAssembleSet"
    Subroutine MEF90_MassMatrixAssembleSet(M,mesh,U,cellIS,scaling,elem,elemType,ierr)
-      Type(Mat),Intent(IN)                              :: M
-      Type(DM),Intent(IN)                               :: mesh
-      Type(SectionReal),Intent(IN)                      :: U
-      Type(IS),Intent(IN)                               :: cellIS
-      PetscReal,Intent(IN)                              :: scaling
-      Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer    :: elem
-      Type(MEF90Element_Type),Intent(IN)                :: elemType
-      PetscErrorCode,Intent(OUT)                        :: ierr
+      Type(Mat),Intent(IN)                            :: M
+      Type(DM),Intent(IN)                             :: mesh
+      Type(SectionReal),Intent(IN)                    :: U
+      Type(IS),Intent(IN)                             :: cellIS
+      PetscReal,Intent(IN)                            :: scaling
+      Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer  :: elem
+      Type(MEF90Element_Type),Intent(IN)              :: elemType
+      PetscErrorCode,Intent(OUT)                      :: ierr
       
-      PetscInt,Dimension(:),Pointer                :: cellID
-      PetscInt                                     :: cell
-      PetscReal,Dimension(:,:),Pointer             :: MatElem
-      PetscInt                                     :: iDoF1,iDoF2,iGauss
-      PetscLogDouble                               :: flops
+      PetscInt,Dimension(:),Pointer                   :: cellID
+      PetscInt                                        :: cell
+      PetscReal,Dimension(:,:),Pointer                :: MatElem
+      PetscInt                                        :: iDoF1,iDoF2,iGauss
+      PetscLogDouble                                  :: flops
      
       flops = 0
       Allocate(MatElem(elemType%numDof,elemType%numDof),stat=ierr)

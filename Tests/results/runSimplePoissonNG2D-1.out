@@ -1,0 +1,108 @@
+ MEF90 Global Context:  
+  prefix:       SquareNG-tri3 
+  log file:     SquareNG-tri3.log 
+PetscBag Object:  MEF90Ctx MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0 ; Time: min
+  time_max = 1 ; Time: max
+  time_numstep = 11 ; Time: number of time steps
+  file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
+ 
+PetscBag Object:  SimplePoissonNG Global properties object
+  verbose = 1 ; verbosity level
+  file_format = EXOSingle; (FileFormat) I/O file format.
+  file_mode = Replace; (FileMode) I/O file mode.
+  Loading = MIL; (Loading) Loading Type
+  TimeEvolution = SteadyState; (EvolutionLaw) Time evolution type
+  addNullSpace = FALSE; Add null space to SNES
+  time_min = 1 ; Starting time
+  time_max = 1 ; End Time
+  time_numStep = 1 ; number of time steps
+  temp_initialValue = 0 ; Initial Value of the temperature
+ 
+Registering vertex set   10 prefix: vs0010_ 
+PetscBag Object:  Vertex set   10 VertexSetProperties object: Vertex Set properties
+  TempBC = TRUE; Temperature has Dirichlet boundary Condition (Y/N)
+  Temp = 0 ; Temperature boundary value
+ 
+Registering vertex set   20 prefix: vs0020_ 
+PetscBag Object:  Vertex set   20 VertexSetProperties object: Vertex Set properties
+  TempBC = TRUE; Temperature has Dirichlet boundary Condition (Y/N)
+  Temp = 1 ; Temperature boundary value
+ 
+Registering cell set    1 prefix: cs0001_ 
+PetscBag Object:  Cell set    1 CellSetProperties object: Cell Set properties
+  ShortID = 1 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity
+  ReferenceTemp = 0 ; Reference temperature T [K]
+PetscBag Object:  Cell set    1 MatProp2D object: material properties
+  Name = MEF90_Mathium2D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  HookesLaw = 1 0 0 1 0 1 ; [N.m^(-2)] (A) Hooke's law
+ 
+Registering cell set   10 prefix: cs0010_ 
+PetscBag Object:  Cell set   10 CellSetProperties object: Cell Set properties
+  ShortID = 7 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity
+  ReferenceTemp = 0 ; Reference temperature T [K]
+PetscBag Object:  Cell set   10 MatProp2D object: material properties
+  Name = MEF90_Mathium2D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  HookesLaw = 1 0 0 1 0 1 ; [N.m^(-2)] (A) Hooke's law
+ 
+Registering cell set   20 prefix: cs0020_ 
+PetscBag Object:  Cell set   20 CellSetProperties object: Cell Set properties
+  ShortID = 7 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity
+  ReferenceTemp = 0 ; Reference temperature T [K]
+PetscBag Object:  Cell set   20 MatProp2D object: material properties
+  Name = MEF90_Mathium2D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  HookesLaw = 1 0 0 1 0 1 ; [N.m^(-2)] (A) Hooke's law
+ 
+Solving time step    1: t= 1.00000E+00 
+    Residual norms for temp_ solve.
+    0 KSP Residual norm 2.352092519474e+00 
+    1 KSP Residual norm 6.731731961982e-01 
+    2 KSP Residual norm 2.974346700483e-01 
+    3 KSP Residual norm 2.749088353952e-01 
+    4 KSP Residual norm 2.127616754868e-01 
+    5 KSP Residual norm 8.437181555453e-02 
+    6 KSP Residual norm 1.758385412500e-02 
+    7 KSP Residual norm 6.102810658792e-03 
+    8 KSP Residual norm 3.067201051121e-03 
+    9 KSP Residual norm 1.526679360489e-03 
+   10 KSP Residual norm 1.243765118066e-03 
+   11 KSP Residual norm 4.088953965716e-04 
+   12 KSP Residual norm 8.478421413864e-05 
+   13 KSP Residual norm 1.832618133432e-05 
+   14 KSP Residual norm 5.165206652359e-06 
+   15 KSP Residual norm 2.213553874919e-06 
+   16 KSP Residual norm 7.399835826584e-07 
+   17 KSP Residual norm 1.847523218838e-07 
+   18 KSP Residual norm 4.786495199473e-08 
+   19 KSP Residual norm 9.397379725743e-09 
+SNESTemp converged in    1 iterations. SNESConvergedReason is    5 
+  
+Cell set 0001 energy:  5.00000E-01 work:  0.00000E+00 
+Cell set 0010 energy:  0.00000E+00 work:  0.00000E+00 
+Cell set 0020 energy:  0.00000E+00 work:  0.00000E+00 
+===================================================== 
+Total:        energy:  5.00000E-01 work:  0.00000E+00 
+Wrote temperature at offset  1 for time step    1 

@@ -52,7 +52,7 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
 
-      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
       elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
@@ -137,7 +137,7 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
 
-      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
       elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
@@ -323,7 +323,7 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,flux,reftemp,PoissonCtx,ierr)
    Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
       !!! Modified flux is flux + surfaceThermalConductivity * refTemp
@@ -426,7 +426,7 @@ Subroutine SimplePoissonTSIJacobian(tsTemp,t,x,x_t,shift,A,M,flg,PoissonCtx,ierr
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
 
-      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
       elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
@@ -513,7 +513,7 @@ Subroutine SimplePoissonTSIFunction(tempTS,time,x,x_t,F,PoissonCtx,ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
 
-      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
       elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
@@ -713,7 +713,7 @@ Subroutine SimplePoissonEnergies_Cst(snesTemp,x,fluxScaling,PoissonCtx,energy,wo
       mywork   = 0.0_Kr
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
 
-      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
       elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)
@@ -783,7 +783,7 @@ Subroutine SimplePoissonEnergies(snesTemp,x,flux,PoissonCtx,energy,work,ierr)
       mywork   = 0.0_Kr
       Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
 
-      Call PetscBagGetDataMEF90_MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90MatProp(PoissonCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataPoissonCellSetProperties(PoissonCtx%CellSetPropertiesBag(set),cellSetProperties,ierr);CHKERRQ(ierr)
 
       elemType = MEF90_knownElements(cellSetProperties%ElemTypeShortID)

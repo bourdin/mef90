@@ -2,11 +2,13 @@ Module m_MEF_Sieve
 #include "finclude/petscdef.h"
 
    Use m_MEF_LinAlg
+   Use m_MEF_Elements
    Use petsc
          
    IMPLICIT NONE
    Private
    
+   Public :: SectionRealSetFiberDimensionSet
    Public :: Field
    Public :: Flag
    Public :: FieldCreateVertex
@@ -41,7 +43,33 @@ Module m_MEF_Sieve
 Contains
 
 #undef __FUNCT__
-#define __FUNCT__ "SectionRealSetFibrationCellSetdof"
+#define __FUNCT__ "SectionRealSetFiberDimensionSet"
+!!!
+!!!  
+!!!  SectionRealSetFiberDimensionSet:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine SectionRealSetFiberDimensionSet(Mesh,section,setIS,numDoF,ierr)
+   Type(DM),Intent(IN)                             :: Mesh
+   Type(SectionReal),Intent(IN)                    :: section
+   Type(IS),Intent(IN)                             :: setIS
+   PetscInt,Intent(IN)                             :: numDoF
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   PetscInt                                        :: cell,point
+   PetscInt,Dimension(:),Pointer                   :: cellID,cone
+   
+   Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+   Do cell = 1, size(cellID)
+      Call DMMeshGetConeF90(mesh,cellID(cell),Cone,ierr);CHKERRQ(ierr)
+      Do point = 1, size(cone)
+         Call SectionRealSetFiberDimension(section,Cone(point),numDof,ierr);CHKERRQ(ierr)
+      End Do
+      Call DMMeshRestoreConeF90(mesh,cellID(cell),Cone,ierr);CHKERRQ(ierr)
+   End Do
+   Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+End Subroutine SectionRealSetFiberDimensionSet
 !!!
 !!! Replace with an IS version
 !!!
