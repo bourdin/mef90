@@ -224,6 +224,7 @@ Subroutine MEF90Ctx_Create(comm,MEF90Ctx,default,ierr)
          Call PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
          Call PetscPrintf(comm,"\n",ierr);CHKERRQ(ierr)
       End If
+      MEF90Ctx%fileexounit = 0
    100 Format('  prefix:       ',(A),'\n')
    102 Format('  log file:     ',(A),'\n')
 End Subroutine MEF90Ctx_Create
