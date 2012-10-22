@@ -61,6 +61,8 @@ Program TestHeatXfer
    PetscBool                                          :: flg
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
    Character(len=MEF90_MXSTRLEN)                      :: setName,setprefix
+   Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameC,nameV
+   Integer                                            :: numfield
    
    PetscInt :: point,numCell,numVertex
 
@@ -196,8 +198,23 @@ Program TestHeatXfer
    Call KSPSetTolerances(kspTemp,rtol,atol,dtol,maxits,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
 
-   
-   
+   Allocate(nameG(2))
+   nameG(1) = "Energy"
+   nameG(2) = "work"
+
+   numfield = max(MEF90HeatXferGlobalOptions%tempOffset, &
+                  MEF90HeatXferGlobalOptions%boundaryTempOffset, &
+                  MEF90HeatXferGlobalOptions%externalTempOffset, &
+                  MEF90HeatXferGlobalOptions%fluxOffset)
+   Allocate(nameV(numfield))
+   nameV = "empty"
+   nameV(MEF90HeatXferGlobalOptions%tempOffset) = "temperature"
+   nameV(MEF90HeatXferGlobalOptions%boundaryTempOffset) = "boundary temperature"
+   nameV(MEF90HeatXferGlobalOptions%externalTempOffset) = "external temperature"
+   nameV(MEF90HeatXferGlobalOptions%fluxOffset) = "heat flux"
+
+   Allocate(nameC(0))
+   Call MEF90EXOFormat(MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
 
    !!! Clean up and exit nicely
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then

@@ -10,6 +10,7 @@ Module m_MEF_EXO
 
    !Integer,Parameter,Public                        :: exo_cpu_ws = 8
    !Integer,Parameter,Public                        :: exo_io_ws = 8
+   Private 
    PetscInt,Public                                 :: exo_ver
 
    
@@ -18,6 +19,9 @@ Module m_MEF_EXO
    Public :: EXOGetCellSetElementType_Vect      
    Public :: EXOGetCellSetElementType_Elast      
    Public :: Write_EXO_Case
+   Public :: MEF90Ctx_OpenEXO
+   Public :: MEF90Ctx_CloseEXO
+   Public :: MEF90EXOFormat
 
 Contains
 #undef __FUNCT__
@@ -174,7 +178,6 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "EXOGetCellSetElementType_Scal"
-   !Subroutine EXOGetCellSetElementType_Scal(comm,exoID,dim,elemType,ierr)
    Subroutine EXOGetCellSetElementType_Scal(MEF90Ctx,elemType,ierr)
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       Type(MEF90Element_Type),Dimension(:),Pointer    :: elemType
@@ -204,7 +207,6 @@ Contains
             !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
          EndIf
          Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk3,exoerr)
-         !Call EXINQ(exoID,EXELBL,numSet,dummyR,dummyS,exoerr)
       End If
       Call MPI_Bcast(numSet,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
       Call MPI_Bcast(numDim,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
@@ -230,78 +232,110 @@ Contains
       
 #undef __FUNCT__
 #define __FUNCT__ "EXOGetCellSetElementType_Vect"
-   Subroutine EXOGetCellSetElementType_Vect(comm,exoID,dim,elemType,ierr)
-      MPI_Comm,Intent(IN)                             :: Comm
-      Integer,Intent(IN)                              :: exoID
-      PetscInt,Intent(IN)                             :: dim
+   Subroutine EXOGetCellSetElementType_Vect(MEF90Ctx,elemType,ierr)
+      Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       Type(MEF90Element_Type),Dimension(:),Pointer    :: elemType
       PetscErrorCode,Intent(OUT)                      :: ierr
       
-      PetscInt                                        :: rank
+      Character(len=MEF90_MXSTRLEN)                   :: filename,IOBuffer
       Character(len=MXSTLN)                           :: EXOelemType
-      Integer                                         :: junk1,junk2,junk3,exoerr
+      Integer                                         :: cpu_ws,io_ws,exoID
+      Real                                            :: exoVersion
+      Integer                                         :: junk1,junk2,junk3,junk4,exoerr
       Real                                            :: dummyR
-      Character(len=1)                                :: dummyS
-      PetscInt                                        :: numSet,set
+      Character(len=MXLNLN)                           :: dummyS
+      Integer                                         :: numSet,set,numDim
       PetscInt,Dimension(:),Pointer                   :: setID
-      
-      Call MPI_Comm_rank(comm,rank,ierr)
-      If (rank == 0) Then
-         Call EXINQ(exoID,EXELBL,numSet,dummyR,dummyS,exoerr)
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+   
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      If (MEF90Ctx%rank == 0) Then
+         cpu_ws = 8
+         io_ws = 8
+         filename = Trim(MEF90Ctx%prefix)//'.gen'
+         exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
+         If (exoerr < 0) Then
+            Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
+            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+            STOP
+            !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
+         EndIf
+         Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk3,exoerr)
       End If
-      Call MPI_Bcast(numSet,1,MPIU_INTEGER,0,comm,ierr)
+      Call MPI_Bcast(numSet,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+      Call MPI_Bcast(numDim,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+
       Allocate(elemType(numSet))
       Allocate(setID(numSet))
-      If (rank == 0) Then       
+      If (MEF90Ctx%rank == 0) Then       
          Call EXGEBI(exoID,setID,exoerr)
       End If
-      Call MPI_Bcast(setID,numSet,MPIU_INTEGER,0,comm,ierr)
+      Call MPI_Bcast(setID,numSet,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
       Do set = 1, numSet
-         If (rank == 0) Then
+         If (MEF90Ctx%rank == 0) Then
             Call EXGELB(exoID,setID(set),EXOelemType,junk1,junk2,junk3,exoerr)
          EndIf
-         Call MPI_Bcast(EXOelemType,MXSTLN,MPI_CHAR,0,comm,ierr)
-         Call EXO2MEF90ElementType_Vect(EXOelemType,dim,elemType(set),ierr)
+         Call MPI_Bcast(EXOelemType,MXSTLN,MPI_CHAR,0,MEF90Ctx%comm,ierr)
+         Call EXO2MEF90ElementType_Vect(EXOelemType,numDim,elemType(set),ierr)
       End Do
       DeAllocate(setID)
+      If (MEF90Ctx%rank == 0) Then
+         Call EXCLOS(exoid,exoErr)
+      End If
    End Subroutine EXOGetCellSetElementType_Vect
       
 #undef __FUNCT__
 #define __FUNCT__ "EXOGetCellSetElementType_Elast"
-   Subroutine EXOGetCellSetElementType_Elast(comm,exoID,dim,elemType,ierr)
-      MPI_Comm,Intent(IN)                             :: Comm
-      Integer,Intent(IN)                              :: exoID
-      PetscInt,Intent(IN)                             :: dim
+   Subroutine EXOGetCellSetElementType_Elast(MEF90Ctx,elemType,ierr)
+      Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       Type(MEF90Element_Type),Dimension(:),Pointer    :: elemType
       PetscErrorCode,Intent(OUT)                      :: ierr
       
-      PetscInt                                        :: rank
+      Character(len=MEF90_MXSTRLEN)                   :: filename,IOBuffer
       Character(len=MXSTLN)                           :: EXOelemType
-      Integer                                         :: junk1,junk2,junk3,exoerr
+      Integer                                         :: cpu_ws,io_ws,exoID
+      Real                                            :: exoVersion
+      Integer                                         :: junk1,junk2,junk3,junk4,exoerr
       Real                                            :: dummyR
-      Character(len=1)                                :: dummyS
-      PetscInt                                        :: numSet,set
+      Character(len=MXLNLN)                           :: dummyS
+      Integer                                         :: numSet,set,numDim
       PetscInt,Dimension(:),Pointer                   :: setID
-      
-      Call MPI_Comm_rank(comm,rank,ierr)
-      If (rank == 0) Then
-         Call EXINQ(exoID,EXELBL,numSet,dummyR,dummyS,exoerr)
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+   
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      If (MEF90Ctx%rank == 0) Then
+         cpu_ws = 8
+         io_ws = 8
+         filename = Trim(MEF90Ctx%prefix)//'.gen'
+         exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
+         If (exoerr < 0) Then
+            Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
+            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+            STOP
+            !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
+         EndIf
+         Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk3,exoerr)
       End If
-      Call MPI_Bcast(numSet,1,MPIU_INTEGER,0,comm,ierr)
+      Call MPI_Bcast(numSet,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+      Call MPI_Bcast(numDim,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+
       Allocate(elemType(numSet))
       Allocate(setID(numSet))
-      If (rank == 0) Then       
+      If (MEF90Ctx%rank == 0) Then       
          Call EXGEBI(exoID,setID,exoerr)
       End If
-      Call MPI_Bcast(setID,numSet,MPIU_INTEGER,0,comm,ierr)
+      Call MPI_Bcast(setID,numSet,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
       Do set = 1, numSet
-         If (rank == 0) Then
+         If (MEF90Ctx%rank == 0) Then
             Call EXGELB(exoID,setID(set),EXOelemType,junk1,junk2,junk3,exoerr)
          EndIf
-         Call MPI_Bcast(EXOelemType,MXSTLN,MPI_CHAR,0,comm,ierr)
-         Call EXO2MEF90ElementType_Elast(EXOelemType,dim,elemType(set),ierr)
+         Call MPI_Bcast(EXOelemType,MXSTLN,MPI_CHAR,0,MEF90Ctx%comm,ierr)
+         Call EXO2MEF90ElementType_Elast(EXOelemType,numDim,elemType(set),ierr)
       End Do
       DeAllocate(setID)
+      If (MEF90Ctx%rank == 0) Then
+         Call EXCLOS(exoid,exoErr)
+      End If
    End Subroutine EXOGetCellSetElementType_Elast
       
 #undef __FUNCT__
@@ -326,6 +360,34 @@ Contains
 102 Format('TIMESET_TEMPLATE "',A,'-',A,'.gen"')
    End Subroutine Write_EXO_Case
    
-
+#undef __FUNCT__
+#define __FUNCT__ "MEF90EXOFormat"
+!!!
+!!!  
+!!!  MEF90EXOFormat:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine MEF90EXOFormat(exoid,NameG,NameC,NameV,ierr)
+   Integer,Intent(IN)                                 :: exoid
+   Character(len=*),Dimension(:),Pointer,Intent(IN)   :: nameG,nameC,nameV
+   PetscErrorCode,Intent(OUT)                         :: ierr
+   
+   Integer                                            :: exoerr
+   If (exoID > 0) Then
+      If (size(nameG) > 0) Then
+         Call EXPVP (exoid,'g',size(nameG),ierr)
+         Call EXPVAN(exoid,'g',size(nameG),NameG,ierr)
+      End If
+      If (size(nameC) > 0) Then
+         Call EXPVP (exoid,'e',size(nameC),ierr)
+         Call EXPVAN(exoid,'e',size(nameC),NameC,ierr)
+      End If
+      If (size(nameV) > 0) Then
+         Call EXPVP (exoid,'n',size(nameV),ierr)
+         Call EXPVAN(exoid,'n',size(nameV),nameV,ierr)
+      End If
+   End If
+End Subroutine MEF90EXOFormat
 End Module m_MEF_EXO
 
