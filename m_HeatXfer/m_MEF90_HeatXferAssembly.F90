@@ -4,6 +4,7 @@ Module MEF90_APPEND(m_MEF90_HeatXferAssembly,MEF90_DIM)D
 #include "finclude/petscbagdef.h"
    Use m_MEF90
    Use m_MEF90_HeatXferCtx
+   Implicit none
 
 Contains
 #undef __FUNCT__
@@ -182,7 +183,7 @@ End Subroutine MEF90HeatXferBilinearForm
 #define __FUNCT__ "MEF90HeatXferRHS"
 !!!
 !!!  
-!!!  MEF90HeatXferRHS_Cst: Build the time dependent RHS for the SNES with CST fluxes scaled by time
+!!!  MEF90HeatXferRHS: Build the time dependent RHS for the SNES
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -232,12 +233,12 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,MEF90HeatXferCtx,ierr)
       Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
 
       !!! Modified flux is flux + surfaceThermalConductivity * refTemp
-      If (MEF90HeatXferGlobalOptions%fluxCst) Then
+      If (MEF90HeatXferGlobalOptions%fluxScaling /= MEF90Scaling_File) Then
          Call VecSet(flux,cellSetOptions%flux,ierr);CHKERRQ(ierr)
       Else
          Call VecCopy(MEF90HeatXferCtx%flux,flux,ierr);CHKERRQ(ierr)
       End If
-      If (MEF90HeatXferGlobalOptions%externalTempCst) Then
+      If (MEF90HeatXferGlobalOptions%externalTempScaling /= MEF90Scaling_File) Then
          Call VecSet(modifiedFlux,cellSetOptions%SurfaceThermalConductivity*cellSetOptions%externalTemp,ierr);CHKERRQ(ierr)
          Call VecAXPY(modifiedFlux,1.0_Kr,flux,ierr);CHKERRQ(ierr)
       Else
