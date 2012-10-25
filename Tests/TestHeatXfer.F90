@@ -11,14 +11,14 @@ Program TestHeatXfer
    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
                                                          MEF90HeatXFer_ModeSteadyState, & ! mode
-                                                         PETSC_FALSE,   & ! addNullSpace
-                                                         1,             & ! tempOffset
-                                                         PETSC_FALSE,   & ! boundaryTempCst
-                                                         2,             & ! boundaryTempOffset
-                                                         PETSC_TRUE,    & ! externalTempCst
-                                                         3,             & ! externalTempOffset
-                                                         PETSC_TRUE,    & ! fluxCst
-                                                         4)               ! fluxOffset
+                                                         PETSC_FALSE,         & ! addNullSpace
+                                                         1,                   & ! tempOffset
+                                                         MEF90Scaling_Linear, & ! boundaryTempScaling
+                                                         2,                   & ! boundaryTempOffset
+                                                         MEF90Scaling_Linear, & ! externalTempScaling
+                                                         3,                   & ! externalTempOffset
+                                                         MEF90Scaling_Linear, & ! fluxScaling
+                                                         4)                     ! fluxOffset
    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                          -1,            & ! elemTypeShortID will be overriden
                                                          0.0_Kr,        & ! flux
@@ -45,7 +45,10 @@ Program TestHeatXfer
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
    Type(SectionReal)                                  :: defaultSection
-   Type(Vec),target                                   :: temperature,flux,boundaryTemperature,externalTemperature
+   Type(Vec),target                                   :: temperature
+   Type(Vec),target                                   :: fluxPrevious,fluxTarget,flux
+   Type(Vec),target                                   :: boundaryTemperaturePrevious,boundaryTemperatureTarget,boundaryTemperature
+   Type(Vec),target                                   :: externalTemperaturePrevious,externalTemperatureTarget,externalTemperature
    Type(Vec)                                          :: residual,RHS
    PetscReal,Dimension(:),Pointer                     :: time
 
@@ -118,20 +121,53 @@ Program TestHeatXfer
    Call DMCreateGlobalVector(Mesh,RHS,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(RHS,"RHS",ierr);CHKERRQ(ierr)
 
-   If (.NOT. MEF90HeatXferGlobalOptions%boundaryTempCst) Then 
+   If (MEF90HeatXferGlobalOptions%boundaryTempScaling == MEF90Scaling_File) Then 
       Call DMCreateGlobalVector(Mesh,boundaryTemperature,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(boundaryTemperature,"boundary Temperature",ierr);CHKERRQ(ierr)
-      MEF90HeatXferCtx%boundaryValue => boundaryTemperature
+      MEF90HeatXferCtx%boundaryTemperature => boundaryTemperature
+      If (MEF90DefaultGlobalOptions%timeInterpolation /= MEF90TimeInterpolation_exo) Then
+         MEF90HeatXferCtx%boundaryTemperaturePrevious => boundaryTemperature
+         MEF90HeatXferCtx%boundaryTemperatureTarget => boundaryTemperature
+      Else
+         Call DMCreateGlobalVector(Mesh,boundaryTemperaturePrevious,ierr);CHKERRQ(ierr)
+         Call PetscObjectSetName(boundaryTemperaturePrevious,"boundary Temperature Previous",ierr);CHKERRQ(ierr)
+         MEF90HeatXferCtx%boundaryTemperaturePrevious => boundaryTemperaturePrevious
+         Call DMCreateGlobalVector(Mesh,boundaryTemperatureTarget,ierr);CHKERRQ(ierr)
+         Call PetscObjectSetName(boundaryTemperatureTarget,"boundary Temperature Target",ierr);CHKERRQ(ierr)
+         MEF90HeatXferCtx%boundaryTemperatureTarget => boundaryTemperatureTarget
+      End If
    End If
-   If (.NOT. MEF90HeatXferGlobalOptions%fluxCst) Then 
+   If (MEF90HeatXferGlobalOptions%fluxScaling == MEF90Scaling_File) Then 
       Call DMCreateGlobalVector(Mesh,flux,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(flux,"Heat flux",ierr);CHKERRQ(ierr)
       MEF90HeatXferCtx%flux => flux
+      If (MEF90DefaultGlobalOptions%timeInterpolation /= MEF90TimeInterpolation_exo) Then
+         MEF90HeatXferCtx%fluxPrevious => flux
+         MEF90HeatXferCtx%fluxTarget => flux
+      Else
+         Call DMCreateGlobalVector(Mesh,fluxPrevious,ierr);CHKERRQ(ierr)
+         Call PetscObjectSetName(fluxPrevious,"boundary Temperature Previous",ierr);CHKERRQ(ierr)
+         MEF90HeatXferCtx%fluxPrevious => fluxPrevious
+         Call DMCreateGlobalVector(Mesh,fluxTarget,ierr);CHKERRQ(ierr)
+         Call PetscObjectSetName(fluxTarget,"boundary Temperature Target",ierr);CHKERRQ(ierr)
+         MEF90HeatXferCtx%fluxTarget => fluxTarget
+      End If
    End If
-   If (.NOT. MEF90HeatXferGlobalOptions%externalTempCst) Then 
+   If (MEF90HeatXferGlobalOptions%externalTempScaling == MEF90Scaling_File) Then 
       Call DMCreateGlobalVector(Mesh,externalTemperature,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(externalTemperature,"external Temperature",ierr);CHKERRQ(ierr)
-      MEF90HeatXferCtx%externalValue => externalTemperature
+      MEF90HeatXferCtx%externalTemperature => externalTemperature
+      If (MEF90DefaultGlobalOptions%timeInterpolation /= MEF90TimeInterpolation_exo) Then
+         MEF90HeatXferCtx%externalTemperaturePrevious => externalTemperature
+         MEF90HeatXferCtx%externalTemperatureTarget => externalTemperature
+      Else
+         Call DMCreateGlobalVector(Mesh,externalTemperaturePrevious,ierr);CHKERRQ(ierr)
+         Call PetscObjectSetName(externalTemperaturePrevious,"external Temperature Previous",ierr);CHKERRQ(ierr)
+         MEF90HeatXferCtx%externalTemperaturePrevious => externalTemperaturePrevious
+         Call DMCreateGlobalVector(Mesh,externalTemperatureTarget,ierr);CHKERRQ(ierr)
+         Call PetscObjectSetName(externalTemperatureTarget,"external Temperature Target",ierr);CHKERRQ(ierr)
+         MEF90HeatXferCtx%externalTemperatureTarget => externalTemperatureTarget
+      End If
    End If
    
    !!! 
@@ -148,7 +184,7 @@ Program TestHeatXfer
       Call SNESSetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
       Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
 
-      !Call SNESSetFunction(snesTemp,resTemp,MEF90HeatXferOperator,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+      Call SNESSetFunction(snesTemp,temperature,MEF90HeatXferOperator,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
       Call SNESSetJacobian(snesTemp,matTemp,matTemp,MEF90HeatXferBilinearForm,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
       Call SNESSetFromOptions(snesTemp,ierr);CHKERRQ(ierr)
       If (MEF90GlobalOptions%verbose > 0) Then
@@ -197,25 +233,39 @@ Program TestHeatXfer
    rtol = 1.0D-8
    Call KSPSetTolerances(kspTemp,rtol,atol,dtol,maxits,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
+   
+   
 
-   Allocate(nameG(2))
-   nameG(1) = "Energy"
-   nameG(2) = "work"
 
-   numfield = max(MEF90HeatXferGlobalOptions%tempOffset, &
-                  MEF90HeatXferGlobalOptions%boundaryTempOffset, &
-                  MEF90HeatXferGlobalOptions%externalTempOffset, &
-                  MEF90HeatXferGlobalOptions%fluxOffset)
-   Allocate(nameV(numfield))
-   nameV = "empty"
-   nameV(MEF90HeatXferGlobalOptions%tempOffset) = "temperature"
-   nameV(MEF90HeatXferGlobalOptions%boundaryTempOffset) = "boundary temperature"
-   nameV(MEF90HeatXferGlobalOptions%externalTempOffset) = "external temperature"
-   nameV(MEF90HeatXferGlobalOptions%fluxOffset) = "heat flux"
+   !!!
+   !!! Try to figure out of the file was formatted
+   !!!
+   If (MEF90Ctx%rank == 0) Then
+      Call EXGVP(MEF90Ctx%fileExoUnit,"N",numfield,ierr)
+   End If
+   Call MPI_Bcast(numfield,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
 
-   Allocate(nameC(0))
-   Call MEF90EXOFormat(MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
-
+   If (numfield > 0) Then
+      Allocate(nameG(2))
+      nameG(1) = "Energy"
+      nameG(2) = "work"
+   
+      numfield = max(MEF90HeatXferGlobalOptions%tempOffset, &
+                     MEF90HeatXferGlobalOptions%boundaryTempOffset, &
+                     MEF90HeatXferGlobalOptions%externalTempOffset, &
+                     MEF90HeatXferGlobalOptions%fluxOffset)
+      Allocate(nameV(numfield))
+      nameV = "empty"
+      nameV(MEF90HeatXferGlobalOptions%tempOffset) = "temperature"
+      nameV(MEF90HeatXferGlobalOptions%boundaryTempOffset) = "boundary temperature"
+      nameV(MEF90HeatXferGlobalOptions%externalTempOffset) = "external temperature"
+      nameV(MEF90HeatXferGlobalOptions%fluxOffset) = "heat flux"
+   
+      Allocate(nameC(0))
+      Call MEF90EXOFormat(MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
+   End If
+   
+   
    !!! Clean up and exit nicely
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
@@ -226,14 +276,43 @@ Program TestHeatXfer
    Call VecDestroy(Temperature,ierr);CHKERRQ(ierr)
    Call VecDestroy(residual,ierr);CHKERRQ(ierr)
    Call VecDestroy(RHS,ierr);CHKERRQ(ierr)
-   If (.NOT. MEF90HeatXferGlobalOptions%boundaryTempCst) Then 
-      Call VecDestroy(boundaryTemperature,ierr);CHKERRQ(ierr)
+   If (Associated(MEF90HeatXferCtx%boundaryTemperaturePrevious)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%boundaryTemperaturePrevious,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%boundaryTemperaturePrevious)
    End If
-   If (.NOT. MEF90HeatXferGlobalOptions%fluxCst) Then 
-      Call VecDestroy(flux,ierr);CHKERRQ(ierr)
+   If (Associated(MEF90HeatXferCtx%boundaryTemperatureTarget)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%boundaryTemperatureTarget,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%boundaryTemperatureTarget)
    End If
-   If (.NOT. MEF90HeatXferGlobalOptions%externalTempCst) Then 
-      Call VecDestroy(externalTemperature,ierr);CHKERRQ(ierr)
+   If (Associated(MEF90HeatXferCtx%boundaryTemperature)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%boundaryTemperature)
+   End If
+   
+   If (Associated(MEF90HeatXferCtx%externalTemperaturePrevious)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%externalTemperaturePrevious,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%externalTemperaturePrevious)
+   End If
+   If (Associated(MEF90HeatXferCtx%externalTemperatureTarget)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%externalTemperatureTarget,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%externalTemperatureTarget)
+   End If
+   If (Associated(MEF90HeatXferCtx%externalTemperature)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%externalTemperature,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%externalTemperature)
+   End If
+
+   If (Associated(MEF90HeatXferCtx%fluxPrevious)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%fluxPrevious,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%fluxPrevious)
+   End If
+   If (Associated(MEF90HeatXferCtx%fluxTarget)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%fluxTarget,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%fluxTarget)
+   End If
+   If (Associated(MEF90HeatXferCtx%flux)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%flux,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%flux)
    End If
 
    DeAllocate(time)

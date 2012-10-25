@@ -5,7 +5,87 @@ Module m_MEF_Utils
    Use petsc
    Implicit None
 
+   Interface MEF90FindIndexOrdered
+      Module Procedure MEF90FindIndexOrderedPetscInt,MEF90FindIndexOrderedPetscReal
+   End Interface MEF90FindIndexOrdered
+   
 Contains
+#undef __FUNCT__
+#define __FUNCT__ "MEF90FindIndexOrderedPetscReal"
+   Subroutine MEF90FindIndexOrderedPetscReal(x,array,pos)
+      PetscReal,Intent(IN)                :: x
+      PetscReal,Dimension(:),Pointer      :: array
+      Integer,intent(OUT)                 :: pos
+      
+      Integer                             :: i1,i2,i
+      
+      i1 = lbound(array,1)
+      i2 = ubound(array,1)
+      
+      If (array(i1) > x) Then
+         pos = 0
+      Else If (array(i1) == x) Then
+         pos = i1
+      Else If (array(i2) < x) Then
+         pos = i2
+      Else
+         Do
+            i = (i1+i2)/2
+            If (array(i) == x) Then
+               pos = i
+               EXIT
+            Else If (array(i) < x) Then
+               i1 = i
+            Else 
+               i2 = i
+            End If
+   
+            If (i2 == i1+1) Then
+               pos = i1
+               EXIT
+            End If  
+         End Do
+      End If
+   End Subroutine MEF90FindIndexOrderedPetscReal
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90FindIndexOrderedPetscInt"
+   Subroutine MEF90FindIndexOrderedPetscInt(x,array,pos)
+      PetscInt,Intent(IN)                 :: x
+      PetscInt,Dimension(:),Pointer       :: array
+      Integer,intent(OUT)                 :: pos
+      
+      Integer                             :: i1,i2,i
+      
+      i1 = lbound(array,1)
+      i2 = ubound(array,1)
+      
+      If (array(i1) > x) Then
+         pos = 0
+      Else If (array(i1) == x) Then
+         pos = i1
+      Else If (array(i2) < x) Then
+         pos = i2
+      Else
+         Do
+            i = (i1+i2)/2
+            If (array(i) == x) Then
+               pos = i
+               EXIT
+            Else If (array(i) < x) Then
+               i1 = i
+            Else 
+               i2 = i
+            End If
+   
+            If (i2 == i1+1) Then
+               pos = i1
+               EXIT
+            End If  
+         End Do
+      End If
+   End Subroutine MEF90FindIndexOrderedPetscInt
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_ISAllGatherMerge"
    !!! Merge all values of an IS, deleting duplicates
