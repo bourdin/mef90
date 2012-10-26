@@ -100,33 +100,37 @@ Program TestHeatXfer
    Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
 
    !!! Create default section matching element type
-   Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',defaultSection,ierr);CHKERRQ(ierr)
-   Call DMMeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-   Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
-   Do set = 1, size(setID)
-      Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),cellIS,ierr);CHKERRQ(iErr)
-      Call SectionRealSetVertexFiberDimensionSet(MEF90HeatXferCtx%DM,defaultSection,cellIS,1,ierr)
-      Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
-   End Do
-   Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-   Call SectionRealAllocate(defaultSection,ierr);CHKERRQ(ierr)
+!   Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',defaultSection,ierr);CHKERRQ(ierr)
+!   Call DMMeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+!   Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+!   Do set = 1, size(setID)
+!      Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),cellIS,ierr);CHKERRQ(iErr)
+!      Call SectionRealSetVertexFiberDimensionSet(MEF90HeatXferCtx%DM,defaultSection,cellIS,1,ierr)
+!      Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
+!   End Do
+!   Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+!   Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+!   Call SectionRealAllocate(defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshGetVertexSectionReal(MEF90HeatXferCtx%DM,"default",1,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(MEF90HeatXferCtx%DM,"default",defaultSection,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
 
-   Call DMMeshGetSectionReal(MEF90HeatXferCtx%cellDM,'default',defaultSection,ierr);CHKERRQ(ierr)
-   Call DMMeshGetLabelIdIS(MEF90HeatXferCtx%cellDM,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-   Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
-   Do set = 1, size(setID)
-      Call SectionRealSetCellFiberDimensionSet(MEF90HeatXferCtx%cellDM,defaultSection,cellIS,1,ierr)
-      Call SectionRealSetVertexFiberDimensionSet(MEF90HeatXferCtx%cellDM,defaultSection,cellIS,1,ierr)
-      Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
-   End Do
-   Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-   Call SectionRealAllocate(defaultSection,ierr);CHKERRQ(ierr)
-   Call SectionRealView(defaultSection,PETSC_VIEWER_STDOUT_WORLD,ierr)
+   !Call DMMeshGetSectionReal(MEF90HeatXferCtx%cellDM,'default',defaultSection,ierr);CHKERRQ(ierr)
+   !Call DMMeshGetLabelIdIS(MEF90HeatXferCtx%cellDM,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+   !Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+   !Do set = 1, size(setID)
+   !   Call SectionRealSetCellFiberDimensionSet(MEF90HeatXferCtx%cellDM,defaultSection,setIS,1,ierr)
+   !   Call SectionRealSetVertexFiberDimensionSet(MEF90HeatXferCtx%cellDM,defaultSection,setIS,1,ierr)
+   !End Do
+   !Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+   !Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+   !Call SectionRealAllocate(defaultSection,ierr);CHKERRQ(ierr)
+   !Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   !@@@
+   Call DMMeshGetCellSectionReal(MEF90HeatXferCtx%cellDM,"default",1,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(MEF90HeatXferCtx%cellDM,"default",defaultSection,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-
+   !@@@
       
    Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,temperature,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(temperature,"temperature",ierr);CHKERRQ(ierr)
@@ -141,7 +145,7 @@ Program TestHeatXfer
    Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,boundaryTemperaturePrevious,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(boundaryTemperaturePrevious,"boundary Temperature (previous time step)",ierr);CHKERRQ(ierr)
    MEF90HeatXferCtx%boundaryTemperaturePrevious => boundaryTemperaturePrevious
-
+   
    Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,externalTemperatureTarget,ierr);CHKERRQ(ierr)
    !Call PetscObjectSetName(externalTemperatureTarget,"external Temperature",ierr);CHKERRQ(ierr)
    !MEF90HeatXferCtx%externalTemperatureTarget => externalTemperatureTarget
