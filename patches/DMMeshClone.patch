@@ -9,13 +9,6 @@ diff --git a/include/petscdmmesh.h b/include/petscdmmesh.h
  PETSC_EXTERN PetscErrorCode DMMeshGetMesh(DM, ALE::Obj<PETSC_MESH_TYPE>&);
  PETSC_EXTERN PetscErrorCode DMMeshSetMesh(DM, const ALE::Obj<PETSC_MESH_TYPE>&);
  PETSC_EXTERN PetscErrorCode DMMeshGetGlobalScatter(DM, VecScatter *);
-@@ -298,5 +299,6 @@ PetscErrorCode DMMeshInterpolationRestor
- PetscErrorCode DMMeshInterpolationEvaluate(DM dm, SectionReal x, Vec v, DMMeshInterpolationInfo ctx);
- PetscErrorCode DMMeshInterpolationDestroy(DM dm, DMMeshInterpolationInfo *ctx);
- 
-+PetscErrorCode DMMeshISCreateISglobaldof(DM dm,SectionReal sec,IS isin,int dof,IS *isdof);
- #endif /* Mesh section */
- #endif
 diff --git a/include/sieve/Mesh.hh b/include/sieve/Mesh.hh
 --- a/include/sieve/Mesh.hh
 +++ b/include/sieve/Mesh.hh
