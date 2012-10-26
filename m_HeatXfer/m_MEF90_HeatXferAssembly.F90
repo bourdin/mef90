@@ -15,10 +15,11 @@ Contains
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
+Subroutine MEF90HeatXferOperator(snesTemp,x,residual,t,MEF90HeatXferCtx,ierr)
    Type(SNES),Intent(IN)                              :: snesTemp
    Type(Vec),Intent(IN)                               :: x
    Type(Vec),Intent(INOUT)                            :: residual
+   PetscReal,Intent(IN)                               :: t
    Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
    PetscErrorCode,Intent(OUT)                         :: ierr
 
@@ -30,7 +31,7 @@ Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
    Type(MEF90_MATPROP),pointer                        :: matpropSet
    Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions
    Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
-   PetscReal,Dimension(:),Pointer                     :: BC
+   PetscReal,Dimension(:),Pointer                     :: BCPtr,BCPreviousPtr,BCTargetPtr,xPtr
    Type(DM)                                           :: mesh
    Type(VecScatter)                                   :: ScatterSecToVec
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
@@ -85,10 +86,19 @@ Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
          Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-         Allocate(BC(size(setIdx)))
-         BC = 0.0_Kr
-         Call VecSetValues(residual,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
-         DeAllocate(BC)
+         Allocate(BCPtr(size(setIdx)))
+         Allocate(BCPreviousPtr(size(setIdx)))
+         Allocate(BCTargetPtr(size(setIdx)))
+         Allocate(xPtr(size(setIdx)))
+         Call VecGetValues(MEF90HeatXferCtx%boundaryTemperaturePrevious,size(setIdx),setIdx,BCPreviousPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         Call VecGetValues(MEF90HeatXferCtx%boundaryTemperatureTarget,size(setIdx),setIdx,BCTargetPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         Call VecGetValues(x,size(setIdx),setIdx,xPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         BCPtr = xPtr - BCPreviousPtr - (t-MEF90HeatXferCtx%timePrevious) / (MEF90HeatXferCtx%timeTarget - MEF90HeatXferCtx%timePrevious) * (BCTargetPtr - BCPreviousPtr)
+         Call VecSetValues(residual,size(setIdx),setIdx,BCPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         DeAllocate(BCPtr)
+         DeAllocate(BCPreviousPtr)
+         DeAllocate(BCTargetPtr)
+         DeAllocate(xPtr)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
       End If
    End Do
@@ -148,7 +158,7 @@ Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
 
       QuadratureOrder = 2 * elemType%order
       Call MEF90Element_Create(mesh,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
-      Call MEF90Diffusion_BilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+      Call MEF90Diffusion_BilinearFormSet(A,mesh,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
       Call MEF90Element_Destroy(elem,ierr)
 
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -187,26 +197,28 @@ End Subroutine MEF90HeatXferBilinearForm
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine MEF90HeatXferRHS(snesTemp,rhs,MEF90HeatXferCtx,ierr)
+Subroutine MEF90HeatXferRHS(snesTemp,rhs,t,MEF90HeatXferCtx,ierr)
    Type(SNES),Intent(IN)                              :: snesTemp
    Type(Vec),Intent(IN)                               :: rhs
+   PetscReal,Intent(IN)                               :: t
    Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
    PetscErrorCode,Intent(OUT)                         :: ierr
    
-   Type(SectionReal)                                  :: rhsSec,fSec
+   Type(SectionReal)                                  :: rhsSec,modifiedFluxSec
    Type(IS)                                           :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
    PetscInt,dimension(:),Pointer                      :: setID,SetIdx
    PetscInt                                           :: set,QuadratureOrder,numCell
    Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions
    Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
    Type(MEF90_MATPROP),pointer                        :: matpropSet
-   PetscReal,Dimension(:),Pointer                     :: BC
+   PetscReal,Dimension(:),Pointer                     :: modifiedFluxPtr,fluxPreviousPtr,fluxTargetPtr
+   PetscReal,Dimension(:),Pointer                     :: externalTemperaturePreviousPtr,externalTemperatureTargetPtr,BCPtr
    Type(DM)                                           :: mesh
    Type(VecScatter)                                   :: ScatterSecToVec
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
    Type(MEF90Element_Type)                            :: elemType
    Type(Vec)                                          :: flux
-   Type(Vec)                                          :: modifiedFlux
+   Type(Vec)                                          :: modifiedFluxVec
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
    Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
 
@@ -216,13 +228,12 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,MEF90HeatXferCtx,ierr)
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
 
    Call DMMeshGetSectionReal(mesh,'default',rhsSec,ierr);CHKERRQ(ierr)
-   Call DMMeshGetSectionReal(mesh,'default',fSec,ierr);CHKERRQ(ierr)
+   Call DMMeshGetSectionReal(mesh,'default',modifiedFluxSec,ierr);CHKERRQ(ierr)
    Call DMMeshCreateGlobalScatter(mesh,rhsSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
 
    Call SectionRealSet(rhsSec,0.0_Kr,ierr);CHKERRQ(ierr)
    Call VecSet(rhs,0.0_Kr,ierr);CHKERRQ(ierr)
-   Call DMGetGlobalVector(flux,ierr);CHKERRQ(ierr)
-   Call DMGetGlobalVector(modifiedFlux,ierr);CHKERRQ(ierr)
+   Call DMGetGlobalVector(modifiedFluxVec,ierr);CHKERRQ(ierr)
 
    Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -232,25 +243,36 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,MEF90HeatXferCtx,ierr)
       Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
 
-      !!! Modified flux is flux + surfaceThermalConductivity * refTemp
-      If (MEF90HeatXferGlobalOptions%fluxScaling /= MEF90Scaling_File) Then
-         Call VecSet(flux,cellSetOptions%flux,ierr);CHKERRQ(ierr)
-      Else
-         !Call VecCopy(MEF90HeatXferCtx%flux,flux,ierr);CHKERRQ(ierr)
-      End If
-      If (MEF90HeatXferGlobalOptions%externalTempScaling /= MEF90Scaling_File) Then
-         Call VecSet(modifiedFlux,cellSetOptions%SurfaceThermalConductivity*cellSetOptions%externalTemp,ierr);CHKERRQ(ierr)
-         Call VecAXPY(modifiedFlux,1.0_Kr,flux,ierr);CHKERRQ(ierr)
-      Else
-         Call VecAXPY(modifiedFlux,cellSetOptions%SurfaceThermalConductivity,flux,ierr);CHKERRQ(ierr)
-      End If
-      Call SectionRealToVec(fSec,ScatterSecToVec,SCATTER_REVERSE,modifiedFlux,ierr);CHKERRQ(ierr)
+      !!! Modified flux is flux + surfaceThermalConductivity * refTemp      
+      Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+      Allocate(modifiedFluxPtr(size(setIdx)))
+      Allocate(fluxPreviousPtr(size(setIdx)))
+      Allocate(fluxTargetPtr(size(setIdx)))
+      Allocate(externalTemperaturePreviousPtr(size(setIdx)))
+      Allocate(externalTemperatureTargetPtr(size(setIdx)))
+
+      Call VecGetValues(MEF90HeatXferCtx%fluxPrevious,size(setIdx),setIdx,fluxPreviousPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+      Call VecGetValues(MEF90HeatXferCtx%fluxTarget,size(setIdx),setIdx,fluxTargetPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+      Call VecGetValues(MEF90HeatXferCtx%externalTemperaturePrevious,size(setIdx),setIdx,externalTemperaturePreviousPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+      Call VecGetValues(MEF90HeatXferCtx%externalTemperatureTarget,size(setIdx),setIdx,externalTemperatureTargetPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+      modifiedFluxPtr =  (FluxPreviousPtr + cellSetOptions%SurfaceThermalConductivity * externalTemperaturePreviousPtr)   &
+                      + (t-MEF90HeatXferCtx%timePrevious) / (MEF90HeatXferCtx%timeTarget - MEF90HeatXferCtx%timePrevious) &
+                       * (fluxTargetPtr - fluxPreviousPtr + cellSetOptions%SurfaceThermalConductivity * (externalTemperatureTargetPtr - externalTemperaturePreviousPtr))
+      Call VecSetValues(modifiedFluxVec,size(setIdx),setIdx,modifiedFluxPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+      DeAllocate(modifiedFluxPtr)
+      DeAllocate(fluxPreviousPtr)
+      DeAllocate(fluxTargetPtr)
+      DeAllocate(externalTemperaturePreviousPtr)
+      DeAllocate(externalTemperatureTargetPtr)
+      Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+
+      Call SectionRealToVec(modifiedFluxSec,ScatterSecToVec,SCATTER_REVERSE,modifiedFluxVec,ierr);CHKERRQ(ierr)
       
       elemType = MEF90_knownElements(cellSetOptions%ElemTypeShortID)
       QuadratureOrder = elemType%order * 2
       Call MEF90Element_Create(mesh,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
 
-      Call MEF90Diffusion_RHSSet(rhssec,mesh,fsec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
+      Call MEF90Diffusion_RHSSetCell(rhssec,mesh,modifiedFluxSec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
 
       Call MEF90Element_Destroy(elem,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -261,10 +283,10 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,MEF90HeatXferCtx,ierr)
    Call SectionRealComplete(rhsSec,ierr);CHKERRQ(ierr)
    !!! Scatter back from SectionReal to Vec
    Call SectionRealToVec(rhsSec,ScatterSecToVec,SCATTER_FORWARD,rhs,ierr);CHKERRQ(ierr)
-   Call VecDestroy(modifiedFlux,ierr);CHKERRQ(ierr)
+   Call VecDestroy(modifiedFluxVec,ierr);CHKERRQ(ierr)
    
    !!!
-   !!! Zero-out BC entries in the residual
+   !!! Zero-out BC entries in the RHS
    !!!
    Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -275,10 +297,10 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,MEF90HeatXferCtx,ierr)
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
          Call DMMeshISCreateISglobaldof(mesh,rhsSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-         Allocate(BC(size(setIdx)))
-         BC = 0.0_Kr
-         Call VecSetValues(rhs,size(setIdx),setIdx,BC,INSERT_VALUES,ierr);CHKERRQ(ierr)
-         DeAllocate(BC)
+         Allocate(BCPtr(size(setIdx)))
+         BCPtr = 0.0_Kr
+         Call VecSetValues(rhs,size(setIdx),setIdx,BCPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         DeAllocate(BCPtr)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
       End If
    End Do
@@ -290,10 +312,8 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,MEF90HeatXferCtx,ierr)
    !!!
    Call VecAssemblyBegin(rhs,ierr)
    Call VecAssemblyEnd(rhs,ierr)
-   Call DMRestoreGlobalVector(Flux,ierr);CHKERRQ(ierr)
-   Call DMRestoreGlobalVector(modifiedFlux,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(rhsSec,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(fSec,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(modifiedFluxSec,ierr);CHKERRQ(ierr)
    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
 End Subroutine MEF90HeatXferRHS
 End Module MEF90_APPEND(m_MEF90_HeatXferAssembly,MEF90_DIM)D
