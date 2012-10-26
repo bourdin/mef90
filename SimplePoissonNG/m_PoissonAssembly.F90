@@ -59,7 +59,7 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
 
       QuadratureOrder = 2 * elemType%order
       Call MEF90Element_Create(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
-      Call MEF90Diffusion_BilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalConductivity,cellSetProperties%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+      Call MEF90Diffusion_BilinearFormSet(A,mesh,setIS,matpropSet%ThermalConductivity,cellSetProperties%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
       Call MEF90Element_Destroy(elem,ierr)
 
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -234,7 +234,7 @@ Subroutine SimplePoissonRHS_Cst(snesTemp,rhs,t,PoissonCtx,ierr)
       Call MEF90Element_Create(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
 
       F = t * (cellSetProperties%Flux + cellSetProperties%SurfaceThermalConductivity * cellSetProperties%referenceTemp) 
-      Call MEF90Diffusion_RHSSet(rhsSec,mesh,F,setIS,elem,elemType,ierr);CHKERRQ(ierr)
+      Call MEF90Diffusion_RHSSetCst(rhsSec,mesh,F,setIS,elem,elemType,ierr);CHKERRQ(ierr)
 
       Call MEF90Element_Destroy(elem,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -335,7 +335,7 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,flux,reftemp,PoissonCtx,ierr)
       QuadratureOrder = elemType%order * 2
       Call MEF90Element_Create(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
 
-      Call MEF90Diffusion_RHSSet(rhssec,mesh,fsec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
+      Call MEF90Diffusion_RHSSetVertex(rhssec,mesh,fsec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
 
       Call MEF90Element_Destroy(elem,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -433,7 +433,7 @@ Subroutine SimplePoissonTSIJacobian(tsTemp,t,x,x_t,shift,A,M,flg,PoissonCtx,ierr
 
       QuadratureOrder = 2 * elemType%order
       Call MEF90Element_Create(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
-      Call MEF90Diffusion_BilinearFormSet(A,mesh,xSec,setIS,matpropSet%ThermalConductivity,cellSetProperties%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+      Call MEF90Diffusion_BilinearFormSet(A,mesh,setIS,matpropSet%ThermalConductivity,cellSetProperties%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
       Call MEF90_MassMatrixAssembleSet(A,mesh,xSec,setIS,shift * matpropSet%Density * matpropSet%SpecificHeat,elem,elemType,ierr);CHKERRQ(ierr)   
       Call MEF90Element_Destroy(elem,ierr)
 
@@ -623,7 +623,7 @@ Subroutine SimplePoissonTSRHS_Cst(tempTS,time,x,rhs,PoissonCtx,ierr)
       Call MEF90Element_Create(mesh,setIS,elem,QuadratureOrder,CellSetProperties%ElemTypeShortID,ierr);CHKERRQ(ierr)
 
       Flux = scaling * (cellSetProperties%Flux + cellSetProperties%SurfaceThermalConductivity * cellSetProperties%referenceTemp) 
-      Call MEF90Diffusion_RHSSet(rhsSec,mesh,Flux,setIS,elem,elemType,ierr);CHKERRQ(ierr)
+      Call MEF90Diffusion_RHSSetCst(rhsSec,mesh,Flux,setIS,elem,elemType,ierr);CHKERRQ(ierr)
 
       Call MEF90Element_Destroy(elem,ierr);CHKERRQ(ierr)
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -725,7 +725,7 @@ Subroutine SimplePoissonEnergies_Cst(snesTemp,x,fluxScaling,PoissonCtx,energy,wo
       Call MPI_AllReduce(myenergy,energy(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
 
       If (cellSetProperties%Flux /= 0.0_Kr) Then
-         Call MEF90Diffusion_WorkSet(mywork,xSec,mesh,fluxScaling*cellSetProperties%Flux,setIS,elem,elemType,ierr)
+         Call MEF90Diffusion_WorkSetCst(mywork,xSec,mesh,fluxScaling*cellSetProperties%Flux,setIS,elem,elemType,ierr)
       End If
       Call MPI_AllReduce(mywork,work(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
       Call MEF90Element_Destroy(elem,ierr);CHKERRQ(ierr)
@@ -796,7 +796,7 @@ Subroutine SimplePoissonEnergies(snesTemp,x,flux,PoissonCtx,energy,work,ierr)
       End If
       Call MPI_AllReduce(myenergy,energy(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
 
-      Call MEF90Diffusion_WorkSet(mywork,xSec,mesh,fluxSec,setIS,elem,elemType,ierr)
+      Call MEF90Diffusion_WorkSetVertex(mywork,xSec,mesh,fluxSec,setIS,elem,elemType,ierr)
 
       Call MPI_AllReduce(mywork,work(set),1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
       Call MEF90Element_Destroy(elem,ierr);CHKERRQ(ierr)
