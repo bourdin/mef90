@@ -8,7 +8,7 @@ Module m_MEF_Sieve
    IMPLICIT NONE
    Private
    
-   Public :: SectionRealSetFiberDimensionSet
+   Public :: SectionRealSetVertexFiberDimensionSet,SectionRealSetCellFiberDimensionSet
    Public :: Field
    Public :: Flag
    Public :: FieldCreateVertex
@@ -41,16 +41,15 @@ Module m_MEF_Sieve
    End Type Flag
 
 Contains
-
 #undef __FUNCT__
-#define __FUNCT__ "SectionRealSetFiberDimensionSet"
+#define __FUNCT__ "SectionRealSetVertexFiberDimensionSet"
 !!!
 !!!  
-!!!  SectionRealSetFiberDimensionSet:
+!!!  SectionRealSetVertexFiberDimensionSet:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine SectionRealSetFiberDimensionSet(Mesh,section,setIS,numDoF,ierr)
+Subroutine SectionRealSetVertexFiberDimensionSet(Mesh,section,setIS,numDoF,ierr)
    Type(DM),Intent(IN)                             :: Mesh
    Type(SectionReal),Intent(IN)                    :: section
    Type(IS),Intent(IN)                             :: setIS
@@ -69,10 +68,33 @@ Subroutine SectionRealSetFiberDimensionSet(Mesh,section,setIS,numDoF,ierr)
       Call DMMeshRestoreConeF90(mesh,cellID(cell),Cone,ierr);CHKERRQ(ierr)
    End Do
    Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
-End Subroutine SectionRealSetFiberDimensionSet
+End Subroutine SectionRealSetVertexFiberDimensionSet
+
+#undef __FUNCT__
+#define __FUNCT__ "SectionRealSetCellFiberDimensionSet"
 !!!
-!!! Replace with an IS version
+!!!  
+!!!  SectionRealSetCellFiberDimensionSet:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
+Subroutine SectionRealSetCellFiberDimensionSet(Mesh,section,setIS,numDoF,ierr)
+   Type(DM),Intent(IN)                             :: Mesh
+   Type(SectionReal),Intent(IN)                    :: section
+   Type(IS),Intent(IN)                             :: setIS
+   PetscInt,Intent(IN)                             :: numDoF
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   PetscInt                                        :: cell
+   PetscInt,Dimension(:),Pointer                   :: cellID
+   
+   Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+   Do cell = 1, size(cellID)
+      Call SectionRealSetFiberDimension(section,cellID(cell),numDof,ierr);CHKERRQ(ierr)
+   End Do
+   Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+End Subroutine SectionRealSetCellFiberDimensionSet
+
 #undef __FUNCT__
 #define __FUNCT__ "FieldCreateVertex"
    Subroutine FieldCreateVertex(F,Fname,mesh,component_size)

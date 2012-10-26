@@ -103,6 +103,9 @@ Contains
 End Module m_MEF_Materials_Interface3D
 
 Module m_MEF_Materials
+#include "finclude/petscdef.h"
+#include "finclude/petscbagdef.h"
+   Use petsc
    Use m_MEF_Materials_Types
    Use m_MEF_Materials_Interface2D
    Use m_MEF_Materials_Interface3D
@@ -130,8 +133,8 @@ Contains
    Subroutine MEF90Materials_InitializePrivate(ierr)
       PetscErrorCode,intent(OUT)          :: ierr
 
-      Type(MEF90MatProp2D_Type),Target   :: matProp2D
-      Type(MEF90MatProp3D_Type),Target   :: matProp3D
+      Type(MEF90MatProp2D_Type),Target    :: matProp2D
+      Type(MEF90MatProp3D_Type),Target    :: matProp3D
       character(len=1),pointer            :: dummychar(:)
       PetscSizeT                          :: sizeofchar
    
@@ -203,7 +206,7 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90MatPropBag_SetFromOptions2D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
-      Type(PetscBag),Dimension(:),Pointer             :: MEF90MatPropBag
+      PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
       Type(DM),Intent(IN)                             :: Mesh
       Type(MEF90MatProp2D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -251,7 +254,7 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90MatPropBag_SetFromOptions3D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
-      Type(PetscBag),Dimension(:),Pointer             :: MEF90MatPropBag
+      PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
       Type(DM),Intent(IN)                             :: Mesh
       Type(MEF90MatProp3D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
