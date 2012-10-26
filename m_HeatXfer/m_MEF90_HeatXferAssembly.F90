@@ -236,7 +236,7 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,MEF90HeatXferCtx,ierr)
       If (MEF90HeatXferGlobalOptions%fluxScaling /= MEF90Scaling_File) Then
          Call VecSet(flux,cellSetOptions%flux,ierr);CHKERRQ(ierr)
       Else
-         Call VecCopy(MEF90HeatXferCtx%flux,flux,ierr);CHKERRQ(ierr)
+         !Call VecCopy(MEF90HeatXferCtx%flux,flux,ierr);CHKERRQ(ierr)
       End If
       If (MEF90HeatXferGlobalOptions%externalTempScaling /= MEF90Scaling_File) Then
          Call VecSet(modifiedFlux,cellSetOptions%SurfaceThermalConductivity*cellSetOptions%externalTemp,ierr);CHKERRQ(ierr)

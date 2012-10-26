@@ -27,7 +27,7 @@ Contains
    
       Type(MEF90HeatXferGlobalOptions_Type),pointer         :: MEF90HeatXferGlobalOptions
       Type(MEF90HeatXferVertexSetOptions_Type),pointer      :: vertexSetOptions
-      Type(MEF90HeatXferCellSetOptions_Type),pointer        :: vertexSetOptions
+      Type(MEF90HeatXferCellSetOptions_Type),pointer        :: cellSetOptions
       Type(IS)                                              :: VertexSetGlobalIS,cellSetGlobalIS,setIS,setISdof
       PetscInt,dimension(:),Pointer                         :: setID
       PetscInt,Dimension(:),Pointer                         :: setIdx
@@ -38,8 +38,8 @@ Contains
       Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
 
-      !!! BoundaryTemperature is define at vertex sets
-      Call VecSet(MEF90HeatXferCtx%BoundaryTemperature,0.0_Kr,ierr);CHKERRQ(ierr)
+      !!! BoundaryTemperature is defined at vertex sets
+      !Call VecSet(MEF90HeatXferCtx%BoundaryTemperature,0.0_Kr,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -57,17 +57,17 @@ Contains
                   val = vertexSetOptions%boundaryTemp * time
                Case(MEF90Scaling_File)
                   !!! Interpolate boundary displacement
-                  Call VecGetValues(MEF90HeatXferCtx%boundaryTemperature,size(setIdx),setIdx,val,ierr);CHKERRQ(ierr)
+                  !Call VecGetValues(MEF90HeatXferCtx%boundaryTemperature,size(setIdx),setIdx,val,ierr);CHKERRQ(ierr)
             End Select
-            Call VecSetValues(MEF90HeatXferCtx%BoundaryTemperature,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
+            !Call VecSetValues(MEF90HeatXferCtx%BoundaryTemperature,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
             DeAllocate(val)
             Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          End If !vertexSetOptions%Has_BC
       End Do
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call VecAssemblyBegin(MEF90HeatXferCtx%BoundaryTemperature,ierr);CHKERRQ(ierr)
-      Call VecAssemblyEnd(MEF90HeatXferCtx%BoundaryTemperature,ierr);CHKERRQ(ierr)
+      !Call VecAssemblyBegin(MEF90HeatXferCtx%BoundaryTemperature,ierr);CHKERRQ(ierr)
+      !Call VecAssemblyEnd(MEF90HeatXferCtx%BoundaryTemperature,ierr);CHKERRQ(ierr)
       
       !!! Flux and external temperature are constant on each cell set
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
@@ -109,7 +109,7 @@ Contains
             Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
             Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
             Allocate(val(size(setIdx)),stat=ierr)
-            Call VecGetValues(MEF90HeatXferCtx%boundaryTemperature,size(setIdx),setIdx,val,ierr);CHKERRQ(ierr)
+            !Call VecGetValues(MEF90HeatXferCtx%boundaryTemperature,size(setIdx),setIdx,val,ierr);CHKERRQ(ierr)
             Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
             DeAllocate(val)
             Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)

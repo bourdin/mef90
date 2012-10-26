@@ -16,9 +16,9 @@ Module m_MEF90_HeatXferCtx_Type
    Type MEF90HeatXferCtx_Type
       PetscReal                        :: timePrevious,timeTarget
 
-      Type(Vec),pointer                :: fluxPrevious,fluxTarget,flux
-      Type(Vec),pointer                :: boundaryTemperaturePrevious,boundaryTemperatureTarget,boundaryTemperature
-      Type(Vec),pointer                :: externalTemperaturePrevious,externalTemperatureTarget,externalTemperature
+      Type(Vec),pointer                :: fluxPrevious,fluxTarget!,flux
+      Type(Vec),pointer                :: boundaryTemperaturePrevious,boundaryTemperatureTarget!,boundaryTemperature
+      Type(Vec),pointer                :: externalTemperaturePrevious,externalTemperatureTarget!,externalTemperature
       !!! XXXPrevious     represents a field at the previous time step
       !!! XXXTarget  represents a field at the time step currently being computed
       !!! XXX        represents a field at current time, interpolated from XXXPrevious and XXXTarget
@@ -29,6 +29,7 @@ Module m_MEF90_HeatXferCtx_Type
       PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
       Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
       Type(DM),pointer                 :: DM
+      Type(DM)                         :: cellDM
    End Type MEF90HeatXferCtx_Type
    
    Type MEF90HeatXferGlobalOptions_Type
@@ -234,6 +235,8 @@ Contains
       Call MEF90HeatXferCtx_InitializePrivate(ierr)
       HeatXferCtx%DM => Mesh
       HeatXferCtx%MEF90Ctx => MEF90Ctx
+      Call DMMeshClone(HeatXferCtx%DM,HeatXferCtx%cellDM,ierr);CHKERRQ(ierr)
+      Call DMMeshSetMaxDof(HeatXferCtx%cellDM,1,ierr);CHKERRQ(ierr) 
 
       Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferGlobalOptions,HeatXferCtx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
       
@@ -261,15 +264,10 @@ Contains
       
       Nullify(HeatXferCtx%fluxPrevious)
       Nullify(HeatXferCtx%fluxTarget)
-      Nullify(HeatXferCtx%flux)
       Nullify(HeatXferCtx%boundaryTemperaturePrevious)
       Nullify(HeatXferCtx%boundaryTemperatureTarget)
-      Nullify(HeatXferCtx%boundaryTemperature)
       Nullify(HeatXferCtx%externalTemperaturePrevious)
       Nullify(HeatXferCtx%externalTemperatureTarget)
-      Nullify(HeatXferCtx%externalTemperature)
-      Nullify(HeatXferCtx%DM)
-      Nullify(HeatXferCtx%DM)
    End Subroutine MEF90HeatXferCtx_Create
    
 #undef __FUNCT__
@@ -300,15 +298,12 @@ Contains
       Nullify(HeatXferCtx%MEF90Ctx)
       Nullify(HeatXferCtx%fluxPrevious)
       Nullify(HeatXferCtx%fluxTarget)
-      Nullify(HeatXferCtx%flux)
       Nullify(HeatXferCtx%boundaryTemperaturePrevious)
       Nullify(HeatXferCtx%boundaryTemperatureTarget)
-      Nullify(HeatXferCtx%boundaryTemperature)
       Nullify(HeatXferCtx%externalTemperaturePrevious)
       Nullify(HeatXferCtx%externalTemperatureTarget)
-      Nullify(HeatXferCtx%externalTemperature)
       Nullify(HeatXferCtx%DM)
-      Nullify(HeatXferCtx%DM)
+      Call DMDestroy(HeatXferCtx%cellDM,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferCtx_Destroy
 
 #undef __FUNCT__
@@ -403,12 +398,10 @@ Contains
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferCtx_SetFromOptions(heatXferCtx,prefix,Mesh,MEF90Ctx,defaultGlobalOptions, &
+   Subroutine MEF90HeatXferCtx_SetFromOptions(heatXferCtx,prefix,defaultGlobalOptions, &
                                               defaultCellSetOptions,defaultVertexSetOptions,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: heatXferCtx
       Character(len=*),Intent(IN)                           :: prefix
-      Type(DM),Intent(IN)                                   :: Mesh
-      Type(MEF90Ctx_Type),Intent(IN)                        :: MEF90Ctx
       Type(MEF90HeatXferGlobalOptions_Type),Intent(IN)      :: defaultGlobalOptions
       Type(MEF90HeatXferCellSetOptions_Type),Intent(IN)     :: defaultCellSetOptions
       Type(MEF90HeatXferVertexSetOptions_Type),Intent(IN)   :: defaultVertexSetOptions
@@ -422,11 +415,12 @@ Contains
       PetscInt                                              :: set
       Character(len=MEF90_MXSTRLEN)                         :: IOBuffer,setName,setprefix
 
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90CtxGlobalOptions(heatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr);CHKERRQ(ierr)
       !!!
       !!! Registering Global Context
       !!!
-      Call PetscBagRegisterMEF90HeatXferCtxGlobalOptions(heatXferCtx%GlobalOptionsBag,MEF90Ctx%prefix,prefix,defaultGlobalOptions,ierr);CHKERRQ(ierr)
+      !Call PetscBagRegisterMEF90HeatXferCtxGlobalOptions(heatXferCtx%GlobalOptionsBag,heatXferCtx%MEF90Ctx%prefix,prefix,defaultGlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterMEF90HeatXferCtxGlobalOptions(heatXferCtx%GlobalOptionsBag,"MEF90HeatXfer Global Ctx",prefix,defaultGlobalOptions,ierr);CHKERRQ(ierr)
 
       If (MEF90CtxGlobalOptions%verbose > 0) Then
          Call PetscBagView(heatXferCtx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
@@ -436,12 +430,11 @@ Contains
       !!! Registering Cell Set Context
       !!! We override the default element type with that detected from the exodus file
       !!!
-      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call DMmeshGetLabelIdIS(heatXferCtx%DM,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(heatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       
-      Call EXOGetCellSetElementType_Scal(MEF90Ctx,ElemType,ierr)
-
+      Call EXOGetCellSetElementType_Scal(heatXferCtx%MEF90Ctx,ElemType,ierr)
       Do set = 1, size(setID)
          Write(setName,100) setID(set)
          Write(setprefix,101) setID(set)
@@ -450,9 +443,9 @@ Contains
          Call PetscBagRegisterMEF90HeatXferCtxCellSetOptions(heatXferCtx%CellSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr)
          If (MEF90CtxGlobalOptions%verbose > 0) Then
             Write(IOBuffer,103) setID(set),trim(setprefix)
-            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(heatXferCtx%MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
             Call PetscBagView(heatXferCtx%CellSetOptionsBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-            Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)
+            Call PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr);CHKERRQ(ierr)
          End if
       End Do
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -462,7 +455,7 @@ Contains
       !!! Registering Vertex Set Context
       !!! We override the default element type with that detected from the exodus file
       !!!
-      Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(heatXferCtx%DM,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       
@@ -472,9 +465,9 @@ Contains
          Call PetscBagRegisterMEF90HeatXferCtxVertexSetOptions(heatXferCtx%VertexSetOptionsBag(set),setName,setPrefix,defaultVertexSetOptions,ierr)
          If (MEF90CtxGlobalOptions%verbose > 0) Then
             Write(IOBuffer,203) setID(set),trim(setprefix)
-            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(heatXferCtx%MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
             Call PetscBagView(heatXferCtx%VertexSetOptionsBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-            Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)
+            Call PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr);CHKERRQ(ierr)
          End if
       End Do
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
