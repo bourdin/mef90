@@ -14,10 +14,12 @@ Module MEF90_APPEND(m_MEF_DiffusionImplementation_,MEF90_DIM)D
    Public :: DiffusionEnergySet
    Public :: DiffusionOperatorAddTransientTermSet
    Public :: DiffusionOperatorSet
-   Public :: DiffusionRHSSet
-   Public :: DiffusionRHSCellCstSet
-   Public :: DiffusionWorkSet
-   Public :: DiffusionWorkCellCstSet
+   Public :: DiffusionRHSSetVertex
+   Public :: DiffusionRHSSetCell
+   Public :: DiffusionRHSSetCst
+   Public :: DiffusionWorkSetVertex
+   Public :: DiffusionWorkSetCell
+   Public :: DiffusionWorkSetCst
 
    
 
@@ -60,11 +62,9 @@ Module MEF90_APPEND(m_MEF_DiffusionImplementation_,MEF90_DIM)D
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionBilinearFormSet"
-   Subroutine DiffusionBilinearFormSet(K,mesh,U,cellIS,A,lambda,elem,elemType,ierr)
+   Subroutine DiffusionBilinearFormSet(K,mesh,cellIS,A,lambda,elem,elemType,ierr)
       Type(Mat),Intent(IN)                               :: K 
       Type(DM),Intent(IN)                                :: mesh
-      Type(SectionReal),Intent(IN)                       :: U        
-      !!! only the layout part if U is used (like a PetscSection)
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_MATS),Intent(IN)                        :: A
       PetscReal,Intent(IN)                               :: lambda
@@ -76,8 +76,10 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:,:),Pointer                   :: MatElem
       PetscInt                                           :: iDoF1,iDoF2,iGauss
+      Type(SectionReal)                                  :: defaultSection
       PetscLogDouble                                     :: flops
      
+      Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(MatElem(elemType%numDof,elemType%numDof))
@@ -92,7 +94,7 @@ Contains
                   End Do
                End Do
             End Do
-            Call DMmeshAssembleMatrix(K,mesh,U,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+            Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do
          flops = 5 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
@@ -209,8 +211,8 @@ Contains
    End Subroutine DiffusionOperatorAddTransientTermSet
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionRHSSet"
-   Subroutine DiffusionRHSSet(RHS,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "DiffusionRHSSetVertex"
+   Subroutine DiffusionRHSSetVertex(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
       Type(SectionReal),Intent(IN)                       :: F
@@ -252,11 +254,53 @@ Contains
          DeAllocate(RHSloc)
          DeAllocate(Floc)
       End If
-   End Subroutine DiffusionRHSSet
+   End Subroutine DiffusionRHSSetVertex
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionRHSCellCstSet"
-   Subroutine DiffusionRHSCellCstSet(RHS,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "DiffusionRHSSetCell"
+   Subroutine DiffusionRHSSetCell(RHS,mesh,F,cellIS,elem,elemType,ierr)
+      Type(SectionReal),Intent(IN)                       :: RHS
+      Type(DM),Intent(IN)                                :: mesh
+      Type(SectionReal),Intent(IN)                       :: F
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer     :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscReal,Dimension(:),Pointer                     :: Floc,RHSloc
+      PetscReal                                          :: Felem
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+           
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(Floc(1))
+         Allocate(RHSloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            RHSloc = 0.0_Kr
+            Call SectionRealRestrict(F,cellID(cell),Floc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  RHSloc(iDoF1) = RHSloc(iDoF1) + (elem(cell)%Gauss_C(iGauss) * &
+                                 elem(cell)%BF(iDoF1,iGauss) * Floc(1))
+               End Do
+            End Do
+            Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+         End Do
+      
+         flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(RHSloc)
+         DeAllocate(Floc)
+      End If
+   End Subroutine DiffusionRHSSetCell
+
+#undef __FUNCT__
+#define __FUNCT__ "DiffusionRHSSetCst"
+   Subroutine DiffusionRHSSetCst(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
       PetscReal,Intent(IN)                               :: F
@@ -290,7 +334,7 @@ Contains
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
-   End Subroutine DiffusionRHSCellCstSet
+   End Subroutine DiffusionRHSSetCst
 
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionEnergySet"
@@ -339,8 +383,8 @@ Contains
    End Subroutine DiffusionEnergySet
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionWorkSet"
-   Subroutine DiffusionWorkSet(work,x,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "DiffusionWorkSetVertex"
+   Subroutine DiffusionWorkSetVertex(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
       Type(DM),Intent(IN)                                :: mesh
@@ -381,11 +425,54 @@ Contains
          DeAllocate(xloc)
          DeAllocate(floc)
       End If
-   End Subroutine DiffusionWorkSet
+   End Subroutine DiffusionWorkSetVertex
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionWorkCellCstSet"
-   Subroutine DiffusionWorkCellCstSet(work,x,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "DiffusionWorkSetCell"
+   Subroutine DiffusionWorkSetCell(work,x,mesh,F,cellIS,elem,elemType,ierr)
+      PetscReal,Intent(OUT)                              :: work
+      Type(SectionReal),Intent(IN)                       :: x
+      Type(DM),Intent(IN)                                :: mesh
+      Type(SectionReal),Intent(IN)                       :: F
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer     :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: xloc,floc
+      PetscReal                                          :: xelem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+     
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Allocate(floc(1))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrict(f,cellID(cell),floc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               xelem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+               End Do
+               work = work + elem(cell)%Gauss_C(iGauss) * xelem * Floc(1)
+            End Do
+         End Do
+      
+         flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(floc)
+      End If
+   End Subroutine DiffusionWorkSetCell
+
+#undef __FUNCT__
+#define __FUNCT__ "DiffusionWorkSetCst"
+   Subroutine DiffusionWorkSetCst(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
       Type(DM),Intent(IN)                                :: mesh
@@ -421,6 +508,6 @@ Contains
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
-   End Subroutine DiffusionWorkCellCstSet
+   End Subroutine DiffusionWorkSetCst
 
 End Module MEF90_APPEND(m_MEF_DiffusionImplementation_,MEF90_DIM)D
