@@ -9,6 +9,7 @@ Module m_MEF_Ctx_Type
    
    Type MEF90Ctx_Type
       MPI_Comm                                        :: comm
+      MPI_Comm                                        :: IOcomm
       Integer                                         :: rank
       Type(PetscViewer)                               :: logViewer
       !Type(PetscViewer)                               :: stdoutViewer
@@ -173,7 +174,6 @@ Contains
       Call PetscBagSetName(bag,trim(name),"MEF90 Global options object",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%verbose,default%verbose,'verbose','Verbosity: level',ierr);CHKERRQ(ierr)
-      !Call PetscBagRegisterString(bag,MEF90CtxGlobalOptions%prefix,default%prefix,'prefix','file: prefix',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%timeInterpolation,MEF90TimeInterpolationList,default%timeInterpolation,'time_interpolation','Time: interpolation type',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMin,default%timeMin,'time_min','Time: min',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
@@ -224,6 +224,11 @@ Subroutine MEF90Ctx_Create(comm,MEF90Ctx,default,ierr)
          Call PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
          Call PetscPrintf(comm,"\n",ierr);CHKERRQ(ierr)
       End If
+      If (GlobalOptions%fileformat == MEF90FileFormat_EXOSingle) Then
+         MEF90Ctx%IOComm = PETSC_COMM_SELF
+      Else
+         MEF90Ctx%IOComm = MEF90Ctx%comm
+      End If   
       MEF90Ctx%fileexounit = 0
    100 Format('  prefix:       ',(A),'\n')
    102 Format('  log file:     ',(A),'\n')
