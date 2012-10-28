@@ -67,8 +67,8 @@ Program TestHeatXfer
    Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameC,nameV
    Integer                                            :: numfield
    
-   PetscInt :: point,numCell,numVertex
-
+   Integer                                            :: step
+   
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90_Initialize(ierr)
 
@@ -204,7 +204,7 @@ Program TestHeatXfer
 
 
    !!!
-   !!! Try to figure out of the file was formatted
+   !!! Try to figure out if the file was formatted
    !!!
    If (MEF90Ctx%rank == 0) Then
       Call EXGVP(MEF90Ctx%fileExoUnit,"N",numfield,ierr)
@@ -233,7 +233,35 @@ Program TestHeatXfer
       Call MEF90EXOFormat(MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
    End If
    
-   
+   !!!
+   !!! Actual computations / time stepping
+   !!!
+   If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
+      Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,1,time(1),ierr)
+      Do step = 1,MEF90GlobalOptions%timeNumStep
+         Write(IOBuffer,100) step,time(step)
+         Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
+         !!! Update fields
+         Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,step,time(step),ierr)
+         
+         !!! Solve SNES
+         
+         !!! Compute energies
+         
+         
+         !!! Save results
+         Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
+         Call VecViewExodusVertex(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                  MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
+         Call VecViewExodusVertex(MEF90HeatXferCtx%cellDM,temperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                  MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%tempOffset,ierr);CHKERRQ(ierr)
+      End Do
+   !Else
+   End If
+100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
    !!! Clean up and exit nicely
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)

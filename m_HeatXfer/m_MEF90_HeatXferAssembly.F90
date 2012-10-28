@@ -211,8 +211,9 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,t,MEF90HeatXferCtx,ierr)
    Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions
    Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
    Type(MEF90_MATPROP),pointer                        :: matpropSet
-   PetscReal,Dimension(:),Pointer                     :: modifiedFluxPtr,fluxPreviousPtr,fluxTargetPtr
-   PetscReal,Dimension(:),Pointer                     :: externalTemperaturePreviousPtr,externalTemperatureTargetPtr,BCPtr
+   PetscReal,Dimension(:),Pointer                     :: modifiedFluxPtr
+   PetscReal,Dimension(:),Pointer                     :: tmpPtr1,tmpPtr2
+   PetscReal                                          :: scaling
    Type(DM)                                           :: mesh
    Type(VecScatter)                                   :: ScatterSecToVec
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
@@ -245,25 +246,40 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,t,MEF90HeatXferCtx,ierr)
 
       !!! Modified flux is flux + surfaceThermalConductivity * refTemp      
       Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+      
       Allocate(modifiedFluxPtr(size(setIdx)))
-      Allocate(fluxPreviousPtr(size(setIdx)))
-      Allocate(fluxTargetPtr(size(setIdx)))
-      Allocate(externalTemperaturePreviousPtr(size(setIdx)))
-      Allocate(externalTemperatureTargetPtr(size(setIdx)))
-
-      Call VecGetValues(MEF90HeatXferCtx%fluxPrevious,size(setIdx),setIdx,fluxPreviousPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
-      Call VecGetValues(MEF90HeatXferCtx%fluxTarget,size(setIdx),setIdx,fluxTargetPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
-      Call VecGetValues(MEF90HeatXferCtx%externalTemperaturePrevious,size(setIdx),setIdx,externalTemperaturePreviousPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
-      Call VecGetValues(MEF90HeatXferCtx%externalTemperatureTarget,size(setIdx),setIdx,externalTemperatureTargetPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
-      modifiedFluxPtr =  (FluxPreviousPtr + cellSetOptions%SurfaceThermalConductivity * externalTemperaturePreviousPtr)   &
-                      + (t-MEF90HeatXferCtx%timePrevious) / (MEF90HeatXferCtx%timeTarget - MEF90HeatXferCtx%timePrevious) &
-                       * (fluxTargetPtr - fluxPreviousPtr + cellSetOptions%SurfaceThermalConductivity * (externalTemperatureTargetPtr - externalTemperaturePreviousPtr))
+      modifiedFluxPtr = 0.0_Kr
+      If (t == MEF90HeatXferCtx%timePrevious) Then
+         Allocate(tmpPtr1(size(setIdx)))
+         Call VecGetValues(MEF90HeatXferCtx%fluxPrevious,size(setIdx),setIdx,modifiedFluxPtr,ierr);CHKERRQ(ierr)
+         Call VecGetValues(MEF90HeatXferCtx%externalTemperaturePrevious,size(setIdx),setIdx,tmpPtr1,ierr);CHKERRQ(ierr)
+         modifiedFluxPtr =  modifiedFluxPtr + cellSetOptions%SurfaceThermalConductivity * tmpPtr1
+         DeAllocate(tmpPtr1)
+      Else If (t == MEF90HeatXferCtx%timeTarget) Then
+         Allocate(tmpPtr1(size(setIdx)))
+         Call VecGetValues(MEF90HeatXferCtx%fluxTarget,size(setIdx),setIdx,modifiedFluxPtr,ierr);CHKERRQ(ierr)
+         Call VecGetValues(MEF90HeatXferCtx%externalTemperatureTarget,size(setIdx),setIdx,tmpPtr1,ierr);CHKERRQ(ierr)
+         modifiedFluxPtr =  modifiedFluxPtr + cellSetOptions%SurfaceThermalConductivity * tmpPtr1
+         DeAllocate(tmpPtr1)
+      Else  !!! tmpPtr1 between the steps
+         Allocate(tmpPtr1(size(setIdx)))
+         Allocate(tmpPtr2(size(setIdx)))
+         Call VecGetValues(MEF90HeatXferCtx%fluxPrevious,size(setIdx),setIdx,modifiedFluxPtr,ierr);CHKERRQ(ierr)
+         Call VecGetValues(MEF90HeatXferCtx%externalTemperaturePrevious,size(setIdx),setIdx,tmpPtr1,ierr);CHKERRQ(ierr)
+         modifiedFluxPtr = modifiedFluxPtr + cellSetOptions%SurfaceThermalConductivity * tmpPtr1
+         scaling = (MEF90HeatXferCtx%timeTarget - t) / (MEF90HeatXferCtx%timeTarget - MEF90HeatXferCtx%timePrevious)
+         modifiedFluxPtr = modifiedFluxPtr * scaling
+         
+         Call VecGetValues(MEF90HeatXferCtx%fluxTarget,size(setIdx),setIdx,tmpPtr2,ierr);CHKERRQ(ierr)
+         Call VecGetValues(MEF90HeatXferCtx%externalTemperatureTarget,size(setIdx),setIdx,tmpPtr1,ierr);CHKERRQ(ierr)
+         tmpPtr2 = tmpPtr2 + cellSetOptions%SurfaceThermalConductivity * tmpPtr1
+         scaling = (t - MEF90HeatXferCtx%timePrevious) / (MEF90HeatXferCtx%timeTarget - MEF90HeatXferCtx%timePrevious)
+         modifiedFluxPtr = modifiedFluxPtr + tmpPtr2 * scaling
+         DeAllocate(tmpPtr1)
+         DeAllocate(tmpPtr2)
+      End If
       Call VecSetValues(modifiedFluxVec,size(setIdx),setIdx,modifiedFluxPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
       DeAllocate(modifiedFluxPtr)
-      DeAllocate(fluxPreviousPtr)
-      DeAllocate(fluxTargetPtr)
-      DeAllocate(externalTemperaturePreviousPtr)
-      DeAllocate(externalTemperatureTargetPtr)
       Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
 
       Call SectionRealToVec(modifiedFluxSec,ScatterSecToVec,SCATTER_REVERSE,modifiedFluxVec,ierr);CHKERRQ(ierr)
@@ -297,10 +313,10 @@ Subroutine MEF90HeatXferRHS(snesTemp,rhs,t,MEF90HeatXferCtx,ierr)
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
          Call DMMeshISCreateISglobaldof(mesh,rhsSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-         Allocate(BCPtr(size(setIdx)))
-         BCPtr = 0.0_Kr
-         Call VecSetValues(rhs,size(setIdx),setIdx,BCPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
-         DeAllocate(BCPtr)
+         Allocate(tmpPtr1(size(setIdx)))
+         tmpPtr1 = 0.0_Kr
+         Call VecSetValues(rhs,size(setIdx),setIdx,tmpPtr1,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         DeAllocate(tmpPtr1)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
       End If
    End Do
