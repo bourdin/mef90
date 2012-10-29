@@ -225,9 +225,9 @@ Subroutine MEF90Ctx_Create(comm,MEF90Ctx,default,ierr)
          Call PetscPrintf(comm,"\n",ierr);CHKERRQ(ierr)
       End If
       If (GlobalOptions%fileformat == MEF90FileFormat_EXOSingle) Then
-         MEF90Ctx%IOComm = PETSC_COMM_SELF
-      Else
          MEF90Ctx%IOComm = MEF90Ctx%comm
+      Else
+         MEF90Ctx%IOComm = PETSC_COMM_SELF
       End If   
       MEF90Ctx%fileexounit = 0
    100 Format('  prefix:       ',(A),'\n')

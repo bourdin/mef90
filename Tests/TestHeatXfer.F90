@@ -17,7 +17,7 @@ Program TestHeatXfer
                                                          2,                   & ! boundaryTempOffset
                                                          MEF90Scaling_Linear, & ! externalTempScaling
                                                          1,                   & ! externalTempOffset
-                                                         MEF90Scaling_Linear, & ! fluxScaling
+                                                         MEF90Scaling_CST, & ! fluxScaling
                                                          2)                     ! fluxOffset
    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                          -1,            & ! elemTypeShortID will be overriden
@@ -68,6 +68,7 @@ Program TestHeatXfer
    Integer                                            :: numfield
    
    Integer                                            :: step
+   Type(Vec)                                          :: localVec
    
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90_Initialize(ierr)
@@ -237,27 +238,48 @@ Program TestHeatXfer
    !!! Actual computations / time stepping
    !!!
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
-      Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,1,time(1),ierr)
+      !Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,1,time(1),ierr)
       Do step = 1,MEF90GlobalOptions%timeNumStep
          Write(IOBuffer,100) step,time(step)
          Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
          !!! Update fields
          Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,step,time(step),ierr)
-         
+         !Call VecSet(MEF90HeatXferCtx%fluxTarget,time(step),ierr);CHKERRQ(ierr)
+         !Call VecSet(temperature,time(step),ierr);CHKERRQ(ierr)
+         !Call VecView(MEF90HeatXferCtx%fluxTarget,PETSC_VIEWER_STDOUT_WORLD,ierr)
+         !Call VecView(MEF90HeatXferCtx%boundaryTemperatureTarget,PETSC_VIEWER_STDOUT_WORLD,ierr)
          !!! Solve SNES
          
          !!! Compute energies
          
          
          !!! Save results
-         Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+         Call DMGetLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%fluxTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%fluxTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                 MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-                                MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-                                  MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90HeatXferCtx%cellDM,temperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+         !Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+         !                       MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
+         !Call VecViewExodusVertex(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+         !                         MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
+         !Call VecViewExodusVertex(MEF90HeatXferCtx%DM,temperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+         !                         MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%tempOffset,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
+
+         Call DMGetLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
+
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                   MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%tempOffset,ierr);CHKERRQ(ierr)
+
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperatureTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperatureTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+!Call VecView(localVec,PETSC_VIEWER_STDOUT_WORLD,ierr)
+         Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                  MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
       End Do
    !Else
    End If
