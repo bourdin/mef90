@@ -46,6 +46,8 @@ Contains
          Case (MEF90Scaling_Linear)
             Call MEF90HeatXferGetfluxCst(MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx,ierr)
             Call VecScale(MEF90HeatXferCtx%fluxTarget,time,ierr);CHKERRQ(ierr)
+         Case (MEF90Scaling_CST)
+            Call MEF90HeatXferGetfluxCst(MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx,ierr)
       End Select
       Select case (MEF90HeatXferGlobalOptions%externalTempScaling)
          Case (MEF90Scaling_File)
@@ -54,6 +56,8 @@ Contains
          Case (MEF90Scaling_Linear)
             Call MEF90HeatXferGetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx,ierr)
             Call VecScale(MEF90HeatXferCtx%externalTemperatureTarget,time,ierr);CHKERRQ(ierr)
+         Case (MEF90Scaling_CST)
+            Call MEF90HeatXferGetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx,ierr)
       End Select
       Select case (MEF90HeatXferGlobalOptions%boundaryTempScaling)
          Case (MEF90Scaling_File)
@@ -62,6 +66,8 @@ Contains
          Case (MEF90Scaling_Linear)
             Call MEF90HeatXferGetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx,ierr)
             Call VecScale(MEF90HeatXferCtx%boundaryTemperatureTarget,time,ierr);CHKERRQ(ierr)
+         Case (MEF90Scaling_CST)
+            Call MEF90HeatXferGetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx,ierr)
       End Select
       If (step == 1) Then
          Call VecCopy(MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx%fluxPrevious,ierr);CHKERRQ(ierr)
@@ -104,8 +110,8 @@ Contains
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshGetStratumIS(MEF90HeatXferCtx%cellDM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%cellDM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(val(size(setIdx)),stat=ierr)
          val = cellSetOptions%flux
@@ -153,8 +159,8 @@ Contains
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshGetStratumIS(MEF90HeatXferCtx%cellDM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%cellDM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(val(size(setIdx)),stat=ierr)
          val = cellSetOptions%externalTemp
