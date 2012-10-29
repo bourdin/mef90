@@ -12,7 +12,7 @@ diff --git a/include/petscdmmesh.h b/include/petscdmmesh.h
 diff --git a/include/sieve/Mesh.hh b/include/sieve/Mesh.hh
 --- a/include/sieve/Mesh.hh
 +++ b/include/sieve/Mesh.hh
-@@ -1699,6 +1699,21 @@
+@@ -1699,6 +1699,22 @@
      };
      int getMaxDof() const {return this->_maxDof;};
      void setMaxDof(const int maxDof) {this->_maxDof = maxDof;};
@@ -21,6 +21,7 @@ diff --git a/include/sieve/Mesh.hh b/include/sieve/Mesh.hh
 +      this->_calculatedOverlap = m->_calculatedOverlap;
 +      this->_sendOverlap       = m->_sendOverlap;
 +      this->_recvOverlap       = m->_recvOverlap;
++      this->_renumbering        = m->_renumbering;
 +      const labels_type& labels = m->getLabels();
 +
 +      for(typename labels_type::const_iterator l_iter = labels.begin(); l_iter != labels.end(); ++l_iter) {
