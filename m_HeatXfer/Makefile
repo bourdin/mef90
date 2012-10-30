@@ -12,19 +12,19 @@ m_HeatXfer:m_MEF90_HeatXfer.o
 
 m_MEF90_HeatXfer.o: ${BASE_DIR}/m_MEF90_HeatXfer.F90 m_MEF90_HeatXferAssembly2D.o  m_MEF90_HeatXferAssembly3D.o m_MEF90_HeatXferCtx.o
 	@echo "      $<"
-	-@${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 m_MEF90_HeatXferAssembly2D.o: ${BASE_DIR}/m_MEF90_HeatXferAssembly.F90 m_MEF90_HeatXferCtx.o
 	@echo "      $< MEF90_DIM=2"
-	-@${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
 m_MEF90_HeatXferAssembly3D.o: ${BASE_DIR}/m_MEF90_HeatXferAssembly.F90 m_MEF90_HeatXferCtx.o
 	@echo "      $< MEF90_DIM=3"
-	-@${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
 m_MEF90_HeatXferCtx.o: ${BASE_DIR}/m_MEF90_HeatXferCtx.F90
 	@echo "      $<"
-	-@${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 MEF90:
 	make -C ${MEF90_DIR} MEF90

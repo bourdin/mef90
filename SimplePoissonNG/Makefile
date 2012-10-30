@@ -18,27 +18,27 @@ ${MEF90_DIR}/bin/${PETSC_ARCH}/SimplePoissonNG${MEF90_DIM}D: SimplePoissonNG${ME
 
 SimplePoissonNG${MEF90_DIM}D.o: ${BASE_DIR}/SimplePoissonNG.F90 m_Poisson${MEF90_DIM}D.o m_PoissonGlobalCtx${MEF90_DIM}D.o m_PoissonCellSetCtx${MEF90_DIM}D.o m_PoissonVertexSetCtx${MEF90_DIM}D.o m_PoissonAssembly${MEF90_DIM}D.o
 	@echo "      $<"
-	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
+	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
 
 m_PoissonGlobalCtx${MEF90_DIM}D.o: ${BASE_DIR}/m_PoissonGlobalCtx.F90
 	@echo "      $<"
-	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
+	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
 
 m_PoissonCellSetCtx${MEF90_DIM}D.o: ${BASE_DIR}/m_PoissonCellSetCtx.F90
 	@echo "      $<"
-	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
+	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
 
 m_PoissonVertexSetCtx${MEF90_DIM}D.o: ${BASE_DIR}/m_PoissonVertexSetCtx.F90
 	@echo "      $<"
-	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
+	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
 
 m_PoissonAssembly${MEF90_DIM}D.o: ${BASE_DIR}/m_PoissonAssembly.F90 m_PoissonGlobalCtx${MEF90_DIM}D.o m_PoissonCellSetCtx${MEF90_DIM}D.o m_PoissonVertexSetCtx${MEF90_DIM}D.o
 	@echo "      $<"
-	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
+	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
 
 m_Poisson${MEF90_DIM}D.o: ${BASE_DIR}/m_Poisson.F90 m_PoissonGlobalCtx${MEF90_DIM}D.o m_PoissonCellSetCtx${MEF90_DIM}D.o m_PoissonVertexSetCtx${MEF90_DIM}D.o m_PoissonAssembly${MEF90_DIM}D.o
 	@echo "      $<"
-	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
+	-@${PETSC_MAKE_STOP_ON_ERROR}${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=${MEF90_DIM} -c -o $@ $<
 
 MEF90:
 	make -C ${MEF90_DIR} MEF90
