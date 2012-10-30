@@ -14,15 +14,15 @@ TestHeatXfer: TestHeatXfer.o
 
 TestHeatXfer.o: TestHeatXfer.F90 ${MEF90_HEATXFER_OBJS} MEF90 m_HeatXfer
 	@echo "      $<"
-	-@${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 TestMaterials: TestMaterials.o
 	-@echo "      $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
 TestMaterials.o: ${MEF90_DIR}/Tests/TestMaterials.F90 MEF90
-	-@${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
+	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
 TestMEF90Ctx: TestMEF90Ctx.o 
 	-@echo "      $@"
@@ -30,7 +30,7 @@ TestMEF90Ctx: TestMEF90Ctx.o
 	-@${RM} $<
 
 TestMEF90Ctx.o: ${MEF90_DIR}/Tests/TestMEF90Ctx.F90 MEF90
-	-@${FC} ${FCFLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 
 runTestMaterials: TestMaterials
@@ -111,4 +111,9 @@ clean::
 allclean:
 	make -C ${MEF90_DIR} clean
 	
-
+debug::
+	@echo FFLAGS ${FFLAGS} 
+	@echo FC_FLAGS ${FC_FLAGS}
+	@echo FCFLAGS ${FCFLAGS}
+	@echo FCPPFLAGS ${FCPPFLAGS}
+	@echo FCPP_FLAGS ${FCPP_FLAGS}

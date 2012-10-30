@@ -1,5 +1,5 @@
 ifneq (,${findstring gcc,${PETSC_ARCH}})
-   FCFLAGS+= -ffree-line-length-none -ffixed-line-length-none -ffree-form
+   FC_FLAGS+= -ffree-line-length-none -ffixed-line-length-none -ffree-form
 endif
 MEF90_INCLUDE=${MEF90_DIR}/objs/${PETSC_ARCH}
 

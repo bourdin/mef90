@@ -35,4 +35,3 @@ clean:
 	-@rm -Rf objs/${PETSC_ARCH}
 	-@rm -Rf bin/${PETSC_ARCH}
 
-
