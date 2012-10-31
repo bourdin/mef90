@@ -17,7 +17,7 @@ Program TestHeatXfer
                                                          2,                   & ! boundaryTempOffset
                                                          MEF90Scaling_Linear, & ! externalTempScaling
                                                          1,                   & ! externalTempOffset
-                                                         MEF90Scaling_CST, & ! fluxScaling
+                                                         MEF90Scaling_CST,    & ! fluxScaling
                                                          2)                     ! fluxOffset
    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                          -1,            & ! elemTypeShortID will be overriden
@@ -70,6 +70,8 @@ Program TestHeatXfer
    Integer                                            :: step
    Type(Vec)                                          :: localVec
    
+PetscReal  ::  tmin,tmax
+   
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90_Initialize(ierr)
 
@@ -88,6 +90,7 @@ Program TestHeatXfer
    !!! Open output file
    Call MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
 
+   
    !!! Create HeatXfer context, get all HeatXfer options
    Call MEF90HeatXferCtx_Create(MEF90HeatXferCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtx_SetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions, &
@@ -148,8 +151,11 @@ Program TestHeatXfer
    Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
 
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
+      !Call DMSetApplicationContext(MEF90HeatXferCtx%DM,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
       Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
-      Call SNESSetDM(snesTemp,MEF90HeatXferCtx%DM,ierr);CHKERRQ(ierr)
+      Call SNESSetApplicationContext(snesTemp,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+      !Call SNESSetDM(snesTemp,MEF90HeatXferCtx%DM,ierr);CHKERRQ(ierr)
+      Call SNESSetDM(snesTemp,Mesh,ierr);CHKERRQ(ierr)
       Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
 
       Call SNESSetFunction(snesTemp,residual,MEF90HeatXferOperator,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
@@ -249,6 +255,9 @@ Program TestHeatXfer
          Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
+Call VecMin(temperature,PETSC_NULL_INTEGER,tmin,ierr);CHKERRQ(ierr)
+Call VecMax(temperature,PETSC_NULL_INTEGER,tmax,ierr);CHKERRQ(ierr)
+Write(*,*) 'Tmin/max: ', tmin,tmax
          
          
          !!! Save results
@@ -262,8 +271,8 @@ Program TestHeatXfer
          Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperatureTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                 MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
-         Call DMGetLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
 
+         Call DMGetLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &

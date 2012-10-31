@@ -173,7 +173,6 @@ Contains
          Call EXCLOS(MEF90Ctx%fileExoUnit,exoErr)
          MEF90Ctx%fileExoUnit = 0
       End If
-   102 Format(A,'.gen')
    End Subroutine MEF90Ctx_CloseEXO
 
 #undef __FUNCT__
