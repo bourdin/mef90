@@ -276,7 +276,7 @@ Contains
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
-         Allocate(Floc(1))
+         !Allocate(Floc(1))
          Allocate(RHSloc(elemType%numDof))
          Do cell = 1,size(cellID)      
             RHSloc = 0.0_Kr
@@ -288,13 +288,13 @@ Contains
                End Do
             End Do
             Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+            Call SectionRealRestore(F,cellID(cell),Floc,ierr);CHKERRQ(ierr)
          End Do
       
          flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
-         DeAllocate(Floc)
       End If
    End Subroutine DiffusionRHSSetCell
 
