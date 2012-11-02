@@ -118,7 +118,7 @@ PetscReal  ::  tmin,tmax
    Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,residual,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residual,"residual",ierr);CHKERRQ(ierr)
    Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,RHS,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(MEF90HeatXferCtx%DM,"RHS",ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(RHS,"RHS",ierr);CHKERRQ(ierr)
 
    Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,boundaryTemperatureTarget,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(boundaryTemperatureTarget,"boundary Temperature",ierr);CHKERRQ(ierr)
@@ -252,7 +252,8 @@ PetscReal  ::  tmin,tmax
          Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,step,time(step),ierr)
 
          !!! Solve SNES
-         Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,temperature,ierr);CHKERRQ(ierr)
+         Call MEF90HeatXferRHS(rhs,time(step),MEF90HeatXferCtx,ierr)
+         Call SNESSolve(snesTemp,rhs,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
 Call VecMin(temperature,PETSC_NULL_INTEGER,tmin,ierr);CHKERRQ(ierr)
