@@ -36,13 +36,13 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
    Type(PoissonCellSetProperties_Type),pointer     :: cellSetProperties
    Type(PoissonVertexSetProperties_Type),pointer   :: vertexSetProperties
    Type(DM)                                        :: mesh
-   Type(SectionReal)                               :: xSec
+   !Type(SectionReal)                               :: xSec
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
    Type(MEF90Element_Type)                         :: elemType
    
    Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
-   Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
+   !Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
    !!! 
    !!! No need to zero out Sec because it is only used as a PetscSection when assembling Mat
    !!!
@@ -79,13 +79,13 @@ Subroutine SimplePoissonBilinearForm(snesTemp,x,A,M,flg,PoissonCtx,ierr)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
       End If
    End Do
    Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   !Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    
    flg = SAME_NONZERO_PATTERN
 End Subroutine SimplePoissonBilinearForm
@@ -167,7 +167,7 @@ Subroutine SimplePoissonOperator(snesTemp,x,residual,PoissonCtx,ierr)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)))
          BC = 0.0_Kr
@@ -257,7 +257,7 @@ Subroutine SimplePoissonRHS_Cst(snesTemp,rhs,t,PoissonCtx,ierr)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,rhsSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)))
          BC = 0.0_Kr
@@ -358,7 +358,7 @@ Subroutine SimplePoissonRHS(snesTemp,rhs,flux,reftemp,PoissonCtx,ierr)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,rhsSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)))
          BC = 0.0_Kr
@@ -454,7 +454,7 @@ Subroutine SimplePoissonTSIJacobian(tsTemp,t,x,x_t,shift,A,M,flg,PoissonCtx,ierr
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
       End If
    End Do
@@ -544,7 +544,7 @@ Subroutine SimplePoissonTSIFunction(tempTS,time,x,x_t,F,PoissonCtx,ierr)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)))
          Call VecGetValues(x,size(setIdx),setIdx,BC,ierr);CHKERRQ(ierr)
@@ -646,7 +646,7 @@ Subroutine SimplePoissonTSRHS_Cst(tempTS,time,x,rhs,PoissonCtx,ierr)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,rhsSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)))
          BC = vertexSetProperties%BC * scaling

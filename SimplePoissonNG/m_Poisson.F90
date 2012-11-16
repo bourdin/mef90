@@ -317,10 +317,10 @@ Subroutine SimplePoissonFormInitialGuess_Cst(snesTemp,x,t,PoissonCtx,ierr)
    PetscInt                                        :: set
    PetscReal,Dimension(:),Pointer                  :: BC
    Type(DM)                                        :: mesh
-   Type(SectionReal)                               :: xSec
+   !Type(SectionReal)                               :: xSec
    
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
-   Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
+   !Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
 
    Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -329,7 +329,7 @@ Subroutine SimplePoissonFormInitialGuess_Cst(snesTemp,x,t,PoissonCtx,ierr)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)),stat=ierr)
          BC = vertexSetProperties%BC * t
@@ -343,7 +343,7 @@ Subroutine SimplePoissonFormInitialGuess_Cst(snesTemp,x,t,PoissonCtx,ierr)
 
    Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
    Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   !Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
 End Subroutine SimplePoissonFormInitialGuess_Cst
 
 #undef __FUNCT__
@@ -368,10 +368,10 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,xbc,PoissonCtx,ierr)
    PetscInt                                        :: set
    PetscReal,Dimension(:),Pointer                  :: BC
    Type(DM)                                        :: mesh
-   Type(SectionReal)                               :: xSec
+   !Type(SectionReal)                               :: xSec
    
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
-   Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
+   !Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
 
    Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -380,7 +380,7 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,xbc,PoissonCtx,ierr)
       Call PetscBagGetDataPoissonVertexSetProperties(PoissonCtx%VertexSetPropertiesBag(set),vertexSetProperties,ierr);CHKERRQ(ierr)
       If (vertexSetProperties%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BC(size(setIdx)),stat=ierr)
          Call VecGetValues(xbc,size(setIdx),setIdx,BC,ierr);CHKERRQ(ierr)
@@ -394,7 +394,7 @@ Subroutine SimplePoissonFormInitialGuess(snesTemp,x,xbc,PoissonCtx,ierr)
 
    Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
    Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   !Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
 End Subroutine SimplePoissonFormInitialGuess
 
 #undef __FUNCT__
