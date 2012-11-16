@@ -14,14 +14,13 @@ Module m_MEF90_HeatXferCtx_Type
    !Public :: MEF90HeatXferVertexSetOptions_Type
    
    Type MEF90HeatXferCtx_Type
-      PetscReal                        :: timePrevious,timeTarget
+      PetscReal                        :: timePrevious,timeTarget,time
 
-      Type(Vec),pointer                :: fluxPrevious,fluxTarget!,flux
-      Type(Vec),pointer                :: boundaryTemperaturePrevious,boundaryTemperatureTarget!,boundaryTemperature
-      Type(Vec),pointer                :: externalTemperaturePrevious,externalTemperatureTarget!,externalTemperature
+      Type(Vec),pointer                :: fluxPrevious,fluxTarget
+      Type(Vec),pointer                :: boundaryTemperaturePrevious,boundaryTemperatureTarget
+      Type(Vec),pointer                :: externalTemperaturePrevious,externalTemperatureTarget
       !!! XXXPrevious     represents a field at the previous time step
       !!! XXXTarget  represents a field at the time step currently being computed
-      !!! XXX        represents a field at current time, interpolated from XXXPrevious and XXXTarget
       
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag

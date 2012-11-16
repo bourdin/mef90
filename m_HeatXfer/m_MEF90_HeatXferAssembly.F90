@@ -84,7 +84,7 @@ Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
       Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
       If (vertexSetOptions%Has_BC) Then
          Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(BCPtr(size(setIdx)))
          Allocate(BCTargetPtr(size(setIdx)))
@@ -132,13 +132,13 @@ Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
    Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions
    Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
    Type(DM)                                           :: mesh
-   Type(SectionReal)                                  :: xSec
+   !Type(SectionReal)                                  :: xSec
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
    Type(MEF90Element_Type)                            :: elemType
    
    Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
    Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
-   Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
+   !Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
    !!! 
    !!! No need to zero out Sec because it is only used as a PetscSection when assembling Mat
    !!!
@@ -175,13 +175,13 @@ Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
       Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
       If (vertexSetOptions%Has_BC) Then
          Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(mesh,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
       End If
    End Do
    Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   !Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    
    flg = SAME_NONZERO_PATTERN
 End Subroutine MEF90HeatXferBilinearForm
@@ -236,8 +236,8 @@ Subroutine MEF90HeatXferRHS(rhs,t,MEF90HeatXferCtx,ierr)
    Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%cellDM,modifiedFluxSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
-Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+      Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%cellDM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
 
@@ -307,7 +307,7 @@ Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
       If (vertexSetOptions%Has_BC) Then
          Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,rhsSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(tmpPtr1(size(setIdx)))
          tmpPtr1 = 0.0_Kr
