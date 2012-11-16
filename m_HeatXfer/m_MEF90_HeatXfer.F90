@@ -98,11 +98,9 @@ Contains
       PetscInt,Dimension(:),Pointer                   :: setIdx
       PetscInt                                        :: set
       PetscReal,Dimension(:),Pointer                  :: val
-      Type(SectionReal)                               :: xSec
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
       
       !!! flux is cell-centered
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -111,7 +109,7 @@ Contains
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90HeatXferCtx%cellDM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%cellDM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%cellDM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(val(size(setIdx)),stat=ierr)
          val = cellSetOptions%flux
@@ -123,7 +121,6 @@ Contains
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferGetFluxCst
 
 #undef __FUNCT__
@@ -147,11 +144,11 @@ Contains
       PetscInt,Dimension(:),Pointer                   :: setIdx
       PetscInt                                        :: set
       PetscReal,Dimension(:),Pointer                  :: val
-      Type(SectionReal)                               :: xSec
+      !Type(SectionReal)                               :: xSec
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
+      !Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
       
       !!! externalTemperature is cell-centered
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -160,7 +157,7 @@ Contains
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90HeatXferCtx%cellDM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%cellDM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%cellDM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(val(size(setIdx)),stat=ierr)
          val = cellSetOptions%externalTemp
@@ -172,7 +169,7 @@ Contains
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      !Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferGetexternalTemperatureCst
 
 #undef __FUNCT__
@@ -196,11 +193,11 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: setIdx
       PetscInt                                           :: set
       PetscReal,Dimension(:),Pointer                     :: val
-      Type(SectionReal)                                  :: xSec
+      !Type(SectionReal)                                  :: xSec
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
+      !Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
       
       !!! boundaryTemperature is Vertex-centered
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -209,7 +206,7 @@ Contains
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),VertexSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+         Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
          Allocate(val(size(setIdx)),stat=ierr)
          val = VertexSetOptions%boundaryTemp
@@ -221,7 +218,7 @@ Contains
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      !Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferGetboundaryTemperatureCst
 
 #undef __FUNCT__
@@ -246,10 +243,10 @@ Contains
       PetscInt                                           :: set
       PetscReal,Dimension(:),Pointer                     :: val,val2
       PetscReal                                          :: scaling
-      Type(SectionReal)                                  :: xSec
+      !Type(SectionReal)                                  :: xSec
       
       Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
+      !Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
    
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -258,7 +255,7 @@ Contains
          Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
          If (vertexSetOptions%Has_BC) Then
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,xSec,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+            Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
             Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
             Allocate(val(size(setIdx)),stat=ierr)
             If (t == MEF90HeatXferCtx%timePrevious) Then
@@ -288,6 +285,6 @@ Contains
    
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      !Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferSetBoundaryTemperature
 End Module m_MEF90_HeatXfer
