@@ -1,17 +1,17 @@
-diff -r e54b522f767f include/petscdmmesh.h
---- a/include/petscdmmesh.h	Mon Jul 30 16:31:55 2012 -0700
-+++ b/include/petscdmmesh.h	Tue Jul 31 08:03:59 2012 -0500
-@@ -298,5 +298,6 @@ PetscErrorCode DMMeshInterpolationRestor
+diff -r 858c70e12fc9 include/petscdmmesh.h
+--- a/include/petscdmmesh.h	Thu Nov 15 17:15:10 2012 -0600
++++ b/include/petscdmmesh.h	Fri Nov 16 08:52:16 2012 -0600
+@@ -299,5 +299,6 @@ PetscErrorCode DMMeshInterpolationRestor
  PetscErrorCode DMMeshInterpolationEvaluate(DM dm, SectionReal x, Vec v, DMMeshInterpolationInfo ctx);
  PetscErrorCode DMMeshInterpolationDestroy(DM dm, DMMeshInterpolationInfo *ctx);
  
-+PetscErrorCode DMMeshISCreateISglobaldof(DM dm,SectionReal sec,IS isin,int dof,IS *isdof);
++PetscErrorCode DMMeshISCreateISglobaldof(DM dm,IS isin,int dof,IS *isdof);
  #endif /* Mesh section */
  #endif
-diff -r e54b522f767f src/dm/impls/mesh/section.c
---- a/src/dm/impls/mesh/section.c	Mon Jul 30 16:31:55 2012 -0700
-+++ b/src/dm/impls/mesh/section.c	Tue Jul 31 08:03:59 2012 -0500
-@@ -2050,3 +2050,52 @@ PetscErrorCode DMMeshSetupSection(DM dm,
+diff -r 858c70e12fc9 src/dm/impls/mesh/section.c
+--- a/src/dm/impls/mesh/section.c	Thu Nov 15 17:15:10 2012 -0600
++++ b/src/dm/impls/mesh/section.c	Fri Nov 16 08:52:16 2012 -0600
+@@ -2050,3 +2050,55 @@ PetscErrorCode DMMeshSetupSection(DM dm,
    }
    PetscFunctionReturn(0);
  }
@@ -20,15 +20,14 @@ diff -r e54b522f767f src/dm/impls/mesh/section.c
 +#define __FUNCT__ "DMMeshISCreateISglobaldof"
 +/*@
 +  
-+  DMMeshISCreateISglobaldof - Create the IS for the global indices of a given dof in a section
-+  the dof must exist at all points of teh section or the result will be garbage
++  DMMeshISCreateISglobaldof - Create the IS for the global indices of a given dof 
++  the dof must exist at all points of the default section or the result will be garbage
 +  This IS can then be used in MatZeroRowsColumnsIS, for instance
 +
 +  Collective on comm
 +
 +  Input Parameters:
 ++ dm   - the DMMesh representing the mesh
-+. sec  - the SectionReal describing the data layout
 +. isin - an is describing point numbers 
 +. dof  - the index of the field to extract
 +
@@ -39,16 +38,19 @@ diff -r e54b522f767f src/dm/impls/mesh/section.c
 +
 +.keywords: mesh,Section
 +@*/
-+extern PetscErrorCode DMMeshISCreateISglobaldof(DM dm,SectionReal sec,IS isin,int dof,IS *isdof){
++PetscErrorCode DMMeshISCreateISglobaldof(DM dm,IS isin,int dof,IS *isdof){
 +  const PetscInt   *idxin;
 +  PetscInt         *idxdof,numidxlocal,i;
 +  MPI_Comm          comm;
 +  PetscErrorCode    ierr;  
 +  Obj<PETSC_MESH_TYPE::real_section_type> s;
 +  ALE::Obj<PETSC_MESH_TYPE>               m;
++  
++  SectionReal       sec;
 +  PetscFunctionBegin;
 +  
 +  ierr = DMMeshGetMesh(dm, m);CHKERRQ(ierr);
++  ierr = DMMeshGetSectionReal(dm,"default",&sec);CHKERRQ(ierr);
 +  ierr = SectionRealGetSection(sec,s);CHKERRQ(ierr);
 +  const ALE::Obj<PETSC_MESH_TYPE::order_type>& globalOrder = m->getFactory()->getGlobalOrder(m, s->getName(), s);
 +
@@ -62,5 +64,6 @@ diff -r e54b522f767f src/dm/impls/mesh/section.c
 +  }
 +  ierr = ISCreateGeneral(comm,numidxlocal,idxdof,PETSC_OWN_POINTER,isdof);CHKERRQ(ierr);
 +  ierr = ISRestoreIndices(isin,&idxin);CHKERRQ(ierr);
++  ierr = SectionRealDestroy(&sec);CHKERRQ(ierr);
 +  PetscFunctionReturn(0);
 +}
