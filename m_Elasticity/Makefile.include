@@ -1,0 +1,4 @@
+MEF90_ELASTICITY_OBJS = ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_Elasticity.o              \
+                        ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_ElasticityAssembly2D.o    \
+                        ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_ElasticityAssembly3D.o    \
+                        ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_ElasticityCtx.o

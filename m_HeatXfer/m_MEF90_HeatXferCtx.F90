@@ -1,6 +1,3 @@
-!!!
-!!! What do I do with initial temperature?
-!!!
 #include "../MEF90/mef90.inc"
 Module m_MEF90_HeatXferCtx_Type
 #include "finclude/petscdef.h"
