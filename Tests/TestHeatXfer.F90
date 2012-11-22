@@ -70,8 +70,6 @@ Program TestHeatXfer
    Integer                                            :: step
    Type(Vec)                                          :: localVec
    
-PetscReal  ::  tmin,tmax
-   
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90_Initialize(ierr)
 
@@ -256,9 +254,6 @@ PetscReal  ::  tmin,tmax
          Call SNESSolve(snesTemp,rhs,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
-Call VecMin(temperature,PETSC_NULL_INTEGER,tmin,ierr);CHKERRQ(ierr)
-Call VecMax(temperature,PETSC_NULL_INTEGER,tmax,ierr);CHKERRQ(ierr)
-Write(*,*) 'Tmin/max: ', tmin,tmax
          
          
          !!! Save results
