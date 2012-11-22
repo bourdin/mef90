@@ -11,6 +11,9 @@ m_MEF90.o: ${MEF90_DIR}/MEF90/m_MEF90.F90 m_MEF_Ctx.o \
            m_MEF_DiffusionImplementation_2D.o \
            m_MEF_DiffusionImplementation_3D.o \
            m_MEF_DiffusionInterface.o \
+           m_MEF_ElasticityImplementation_2D.o \
+           m_MEF_ElasticityImplementation_3D.o \
+           m_MEF_ElasticityInterface.o \
            m_MEF_Elements.o \
            m_MEF_EXO.o \
            m_MEF_LinAlg.o \
@@ -54,6 +57,32 @@ m_MEF_DiffusionImplementation_3D.o: ${MEF90_DIR}/MEF90/m_MEF_DiffusionImplementa
 m_MEF_DiffusionInterface.o: ${MEF90_DIR}/MEF90/m_MEF_DiffusionInterface.F90 \
         m_MEF_DiffusionImplementation_2D.o \
         m_MEF_DiffusionImplementation_3D.o \
+        m_MEF_Elements.o \
+        m_MEF_Parameters.o \
+        m_MEF_Sieve.o \
+        m_MEF_Utils.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF_ElasticityImplementation_2D.o: ${MEF90_DIR}/MEF90/m_MEF_ElasticityImplementation.F90 \
+        m_MEF_Elements.o \
+        m_MEF_Parameters.o \
+        m_MEF_Sieve.o \
+        m_MEF_Utils.o
+	@echo "      $< 2D / MEF90Element3D_Scal"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element2D_Elast -DMEF90_DIM=2 -c -o $@ $<
+
+m_MEF_ElasticityImplementation_3D.o: ${MEF90_DIR}/MEF90/m_MEF_ElasticityImplementation.F90 \
+        m_MEF_Elements.o \
+        m_MEF_Parameters.o \
+        m_MEF_Sieve.o \
+        m_MEF_Utils.o
+	@echo "      $< 3D / MEF90Element3D_Scal"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Elast -DMEF90_DIM=3 -c -o $@ $<
+
+m_MEF_ElasticityInterface.o: ${MEF90_DIR}/MEF90/m_MEF_ElasticityInterface.F90 \
+        m_MEF_ElasticityImplementation_2D.o \
+        m_MEF_ElasticityImplementation_3D.o \
         m_MEF_Elements.o \
         m_MEF_Parameters.o \
         m_MEF_Sieve.o \
