@@ -338,9 +338,9 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DiffusionEnergySet"
-   Subroutine DiffusionEnergySet(energy,x,mesh,A,lambda,cellIS,elem,elemType,ierr)
+   Subroutine DiffusionEnergySet(energy,x,x0,mesh,A,lambda,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: energy
-      Type(SectionReal),Intent(IN)                       :: x
+      Type(SectionReal),Intent(IN)                       :: x,x0
       Type(DM),Intent(IN)                                :: mesh
       Type(MEF90_MATS),Intent(IN)                        :: A
       PetscReal,Intent(IN)                               :: lambda
@@ -351,7 +351,7 @@ Contains
 
       Type(MEF90_VECT)                                   :: stress,strain      
       PetscReal                                          :: xelem
-      PetscReal,Dimension(:),Pointer                     :: xloc
+      PetscReal,Dimension(:),Pointer                     :: xloc,x0loc
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
@@ -362,20 +362,20 @@ Contains
          Allocate(xloc(elemType%numDof))
          Do cell = 1,size(cellID)   
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(x0,mesh,cellID(cell),elemType%numDof,x0loc,ierr);CHKERRQ(ierr)
             Do iGauss = 1,size(elem(cell)%Gauss_C)
                strain = 0.0_Kr   
                xelem  = 0.0_Kr
                Do iDoF1 = 1,elemType%numDof
                   strain = strain + elem(cell)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
-                  xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * xloc(iDoF1)
+                  xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * (xloc(iDoF1)-x0loc(iDof1))
                End Do
                stress = A * strain
                energy = energy + elem(cell)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
             End Do
-         End Do
-      
-         flops = (2 * elemType%numDof + 6) * size(elem(1)%Gauss_C) * size(cellID) 
+         End Do      
          
+         !flops = (2 * elemType%numDof + 6) * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
