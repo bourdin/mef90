@@ -1,6 +1,3 @@
-!!!
-!!! What do I do with initial temperature?
-!!!
 #include "../MEF90/mef90.inc"
 Module m_MEF90_HeatXferCtx_Type
 #include "finclude/petscdef.h"
@@ -35,13 +32,10 @@ Module m_MEF90_HeatXferCtx_Type
       PetscInt                         :: mode
       PetscBool                        :: addNullSpace
       PetscInt                         :: tempOffset
-      !PetscBool                        :: boundaryTempCst
       PetscInt                         :: boundaryTempScaling
       PetscInt                         :: boundaryTempOffset
-      !PetscBool                        :: externalTempCst
       PetscInt                         :: externalTempScaling
       PetscInt                         :: externalTempOffset
-      !PetscBool                        :: fluxCst
       PetscInt                         :: fluxScaling
       PetscInt                         :: fluxOffset
    End Type MEF90HeatXferGlobalOptions_Type
@@ -418,7 +412,6 @@ Contains
       !!!
       !!! Registering Global Context
       !!!
-      !Call PetscBagRegisterMEF90HeatXferCtxGlobalOptions(heatXferCtx%GlobalOptionsBag,heatXferCtx%MEF90Ctx%prefix,prefix,defaultGlobalOptions,ierr);CHKERRQ(ierr)
       Call PetscBagRegisterMEF90HeatXferCtxGlobalOptions(heatXferCtx%GlobalOptionsBag,"MEF90HeatXfer Global Ctx",prefix,defaultGlobalOptions,ierr);CHKERRQ(ierr)
 
       If (MEF90CtxGlobalOptions%verbose > 0) Then

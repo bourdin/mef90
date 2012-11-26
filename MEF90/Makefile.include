@@ -3,6 +3,9 @@ MEF90_OBJS = ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_DiffusionImplementation_2D.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_DiffusionImplementation_3D.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_DiffusionInterface.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_ElasticityImplementation_2D.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_ElasticityImplementation_3D.o \
+             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_ElasticityInterface.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Elements.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_EXO.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_LinAlg.o \

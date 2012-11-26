@@ -50,7 +50,7 @@ Program TestHeatXfer
    Type(Vec),target                                   :: boundaryTemperaturePrevious,boundaryTemperatureTarget,boundaryTemperature
    Type(Vec),target                                   :: externalTemperaturePrevious,externalTemperatureTarget,externalTemperature
    Type(Vec)                                          :: residual,RHS
-   PetscReal,Dimension(:),Pointer                     :: time
+   PetscReal,Dimension(:),Pointer                     :: time,energy,work
 
    Type(SNES)                                         :: snesTemp
    Type(TS)                                           :: tsTemp
@@ -69,8 +69,6 @@ Program TestHeatXfer
    
    Integer                                            :: step
    Type(Vec)                                          :: localVec
-   
-PetscReal  ::  tmin,tmax
    
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90_Initialize(ierr)
@@ -208,7 +206,11 @@ PetscReal  ::  tmin,tmax
    Call KSPSetTolerances(kspTemp,rtol,atol,dtol,maxits,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
    
-
+   !!! 
+   !!! Allocate array of works and energies
+   !!!
+   Allocate(energy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
+   Allocate(work(size(MEF90HeatXferCtx%CellSetOptionsBag)))
 
    !!!
    !!! Try to figure out if the file was formatted
@@ -256,10 +258,10 @@ PetscReal  ::  tmin,tmax
          Call SNESSolve(snesTemp,rhs,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
-Call VecMin(temperature,PETSC_NULL_INTEGER,tmin,ierr);CHKERRQ(ierr)
-Call VecMax(temperature,PETSC_NULL_INTEGER,tmax,ierr);CHKERRQ(ierr)
-Write(*,*) 'Tmin/max: ', tmin,tmax
-         
+         !!! Allocate energies before
+         Call MEF90HeatXFerEnergy(temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
+         !!! Loop over cell sets, print energy and work on a single line    
+     
          
          !!! Save results
          Call DMGetLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
@@ -327,6 +329,8 @@ Write(*,*) 'Tmin/max: ', tmin,tmax
    End If
 
    DeAllocate(time)
+   DeAllocate(energy)
+   DeAllocate(work)
    Call MEF90HeatXferCtx_Destroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90Ctx_CloseEXO(MEF90Ctx,ierr)
    Call MEF90_Finalize(ierr)
