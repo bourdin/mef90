@@ -15,10 +15,6 @@ Module m_MEF_Ctx_Type
       !Type(PetscViewer)                               :: stdoutViewer
       Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
       Integer                                         :: fileExoUnit
-      !PetscReal,Dimension(:),Pointer                  :: time !!! This can't be in a bag since the size of the bag needs to be known a priori!
-                                                              !!! It will have to be a global variable in all applications
-                                                              !!! And I will need to implement MEF90GetTimeArray(t,MEF90Ctx)
-                                                              !!! Not sure if it needs to be in the global ctx either...
       PetscBag                                        :: GlobalOptionsBag      
 !!!   Keep for compatibility reasons until MEF90HeatXfer is working
       PetscBag                                        :: GlobalPropertiesBag
