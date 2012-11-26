@@ -38,7 +38,7 @@ Contains
       PetscErrorCode,Intent(OUT)                      :: ierr
    
       Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
-      Character(len=MEF90_MXSTRLEN)                   ::filename
+      Character(len=MEF90_MXSTRLEN)                   :: filename
       Integer                                         :: cpu_ws,io_ws
       Real                                            :: exoVersion
       Integer                                         :: exoErr,exoUnit
