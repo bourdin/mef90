@@ -238,8 +238,7 @@ Contains
 
       Call DMmeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
-      Call ISGetSize(setIS,numSet,ierr);CHKERRQ(ierr)
-
+      Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Allocate(HeatXferCtx%CellSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
          Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferCellSetOptions,HeatXferCtx%CellSetOptionsBag(set),ierr);CHKERRQ(ierr)
@@ -248,7 +247,7 @@ Contains
 
       Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
-      Call ISGetSize(setIS,numSet,ierr);CHKERRQ(ierr)
+      Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Allocate(HeatXferCtx%VertexSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
          Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferVertexSetOptions,HeatXferCtx%VertexSetOptionsBag(set),ierr);CHKERRQ(ierr)
