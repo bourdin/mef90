@@ -32,54 +32,54 @@ Module m_MEF_ElasticityInterface
    IMPLICIT NONE
 
    Private   
-   Public :: MEF90Elasticity_BilinearFormSet
-   Public :: MEF90Elasticity_EnergySet
-   Public :: MEF90Elasticity_OperatorAddTransientTermSet
-   Public :: MEF90Elasticity_OperatorSet
-   Public :: MEF90Elasticity_RHSSetVertex
-   Public :: MEF90Elasticity_RHSSetCell
-   Public :: MEF90Elasticity_RHSSetCst
-   Public :: MEF90Elasticity_WorkSetVertex
-   Public :: MEF90Elasticity_WorkSetCell
-   Public :: MEF90Elasticity_WorkSetCst
+   Public :: MEF90ElasticityBilinearFormSet
+   Public :: MEF90ElasticityEnergySet
+   Public :: MEF90ElasticityOperatorAddTransientTermSet
+   Public :: MEF90ElasticityOperatorSet
+   Public :: MEF90ElasticityRHSSetVertex
+   Public :: MEF90ElasticityRHSSetCell
+   Public :: MEF90ElasticityRHSSetCst
+   Public :: MEF90ElasticityWorkSetVertex
+   Public :: MEF90ElasticityWorkSetCell
+   Public :: MEF90ElasticityWorkSetCst
    
-   Interface MEF90Elasticity_BilinearFormSet
+   Interface MEF90ElasticityBilinearFormSet
       Module Procedure ElasticityBilinearFormSet_2D, ElasticityBilinearFormSet_3D
-   End Interface MEF90Elasticity_BilinearFormSet
+   End Interface MEF90ElasticityBilinearFormSet
    
-   Interface MEF90Elasticity_EnergySet
+   Interface MEF90ElasticityEnergySet
       Module procedure ElasticityEnergySet_2D,ElasticityEnergySet_3D
-   End Interface MEF90Elasticity_EnergySet
+   End Interface MEF90ElasticityEnergySet
 
-   Interface MEF90Elasticity_OperatorAddTransientTermSet
+   Interface MEF90ElasticityOperatorAddTransientTermSet
       Module procedure ElasticityOperatorAddTransientTermSet_2D,ElasticityOperatorAddTransientTermSet_3D
-   End Interface MEF90Elasticity_OperatorAddTransientTermSet
+   End Interface MEF90ElasticityOperatorAddTransientTermSet
    
-   Interface MEF90Elasticity_OperatorSet
+   Interface MEF90ElasticityOperatorSet
       Module procedure ElasticityOperatorSet_2D,ElasticityOperatorSet_3D
-   End Interface MEF90Elasticity_OperatorSet
+   End Interface MEF90ElasticityOperatorSet
    
-   Interface MEF90Elasticity_RHSSetVertex
+   Interface MEF90ElasticityRHSSetVertex
       Module Procedure ElasticityRHSSetVertex_2D,ElasticityRHSSetVertex_3D
-   End Interface MEF90Elasticity_RHSSetVertex
+   End Interface MEF90ElasticityRHSSetVertex
 
-   Interface MEF90Elasticity_RHSSetCell
+   Interface MEF90ElasticityRHSSetCell
       Module Procedure ElasticityRHSSetCell_2D,ElasticityRHSSetCell_3D
-   End Interface MEF90Elasticity_RHSSetCell
+   End Interface MEF90ElasticityRHSSetCell
 
-   Interface MEF90Elasticity_RHSSetCst
+   Interface MEF90ElasticityRHSSetCst
       Module Procedure ElasticityRHSSetCst_2D,ElasticityRHSSetCst_3D
-   End Interface MEF90Elasticity_RHSSetCst
+   End Interface MEF90ElasticityRHSSetCst
 
-   Interface MEF90Elasticity_WorkSetVertex
+   Interface MEF90ElasticityWorkSetVertex
       Module Procedure ElasticityWorkSetVertex_2D,ElasticityWorkSetVertex_3D
-   End Interface MEF90Elasticity_WorkSetVertex
+   End Interface MEF90ElasticityWorkSetVertex
 
-   Interface MEF90Elasticity_WorkSetCell
+   Interface MEF90ElasticityWorkSetCell
       Module Procedure ElasticityWorkSetCell_2D,ElasticityWorkSetCell_3D
-   End Interface MEF90Elasticity_WorkSetCell
+   End Interface MEF90ElasticityWorkSetCell
 
-   Interface MEF90Elasticity_WorkSetCst
+   Interface MEF90ElasticityWorkSetCst
       Module Procedure ElasticityWorkSetCst_2D,ElasticityWorkSetCst_3D
-   End Interface MEF90Elasticity_WorkSetCst
+   End Interface MEF90ElasticityWorkSetCst
 End Module m_MEF_ElasticityInterface

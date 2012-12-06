@@ -251,6 +251,7 @@ Program TestHeatXfer
          Write(IOBuffer,100) step,time(step)
          Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
          !!! Update fields
+         Call VecCopy(MEF90HeatXferCtx%BoundaryTemperaturePrevious,temperature,ierr);CHKERRQ(ierr)
          Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,step,time(step),ierr)
 
          !!! Solve SNES
@@ -260,7 +261,12 @@ Program TestHeatXfer
          !!! Compute energies
          !!! Allocate energies before
          Call MEF90HeatXFerEnergy(temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
-         !!! Loop over cell sets, print energy and work on a single line    
+         Do set = 1, size(energy)
+            Write(IOBuffer,101) set,energy(set),work(set)
+            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+         End Do
+         Write(IOBuffer,102) sum(energy),sum(work)
+         Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
      
          
          !!! Save results
@@ -290,6 +296,8 @@ Program TestHeatXfer
    !Else
    End If
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
+101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5,"\n")
+102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5,"\n")
    !!! Clean up and exit nicely
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)

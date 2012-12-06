@@ -360,16 +360,18 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
+         Allocate(x0loc(1))
          Do cell = 1,size(cellID)   
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-            Call SectionRealRestrictClosure(x0,mesh,cellID(cell),elemType%numDof,x0loc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrict(x0,cellID(cell),x0loc,ierr);CHKERRQ(ierr)
             Do iGauss = 1,size(elem(cell)%Gauss_C)
                strain = 0.0_Kr   
                xelem  = 0.0_Kr
                Do iDoF1 = 1,elemType%numDof
                   strain = strain + elem(cell)%Grad_BF(iDoF1,iGauss) * xloc(iDoF1)
-                  xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * (xloc(iDoF1)-x0loc(iDof1))
+                  xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * xloc(iDoF1)
                End Do
+               xelem = xelem - x0loc(1)
                stress = A * strain
                energy = energy + elem(cell)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
             End Do
