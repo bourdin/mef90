@@ -32,54 +32,54 @@ Module m_MEF_DiffusionInterface
    IMPLICIT NONE
 
    Private   
-   Public :: MEF90Diffusion_BilinearFormSet
-   Public :: MEF90Diffusion_EnergySet
-   Public :: MEF90Diffusion_OperatorAddTransientTermSet
-   Public :: MEF90Diffusion_OperatorSet
-   Public :: MEF90Diffusion_RHSSetVertex
-   Public :: MEF90Diffusion_RHSSetCell
-   Public :: MEF90Diffusion_RHSSetCst
-   Public :: MEF90Diffusion_WorkSetVertex
-   Public :: MEF90Diffusion_WorkSetCell
-   Public :: MEF90Diffusion_WorkSetCst
+   Public :: MEF90DiffusionBilinearFormSet
+   Public :: MEF90DiffusionEnergySet
+   Public :: MEF90DiffusionOperatorAddTransientTermSet
+   Public :: MEF90DiffusionOperatorSet
+   Public :: MEF90DiffusionRHSSetVertex
+   Public :: MEF90DiffusionRHSSetCell
+   Public :: MEF90DiffusionRHSSetCst
+   Public :: MEF90DiffusionWorkSetVertex
+   Public :: MEF90DiffusionWorkSetCell
+   Public :: MEF90DiffusionWorkSetCst
    
-   Interface MEF90Diffusion_BilinearFormSet
+   Interface MEF90DiffusionBilinearFormSet
       Module Procedure DiffusionBilinearFormSet_2D, DiffusionBilinearFormSet_3D
-   End Interface MEF90Diffusion_BilinearFormSet
+   End Interface MEF90DiffusionBilinearFormSet
    
-   Interface MEF90Diffusion_EnergySet
+   Interface MEF90DiffusionEnergySet
       Module procedure DiffusionEnergySet_2D,DiffusionEnergySet_3D
-   End Interface MEF90Diffusion_EnergySet
+   End Interface MEF90DiffusionEnergySet
 
-   Interface MEF90Diffusion_OperatorAddTransientTermSet
+   Interface MEF90DiffusionOperatorAddTransientTermSet
       Module procedure DiffusionOperatorAddTransientTermSet_2D,DiffusionOperatorAddTransientTermSet_3D
-   End Interface MEF90Diffusion_OperatorAddTransientTermSet
+   End Interface MEF90DiffusionOperatorAddTransientTermSet
    
-   Interface MEF90Diffusion_OperatorSet
+   Interface MEF90DiffusionOperatorSet
       Module procedure DiffusionOperatorSet_2D,DiffusionOperatorSet_3D
-   End Interface MEF90Diffusion_OperatorSet
+   End Interface MEF90DiffusionOperatorSet
    
-   Interface MEF90Diffusion_RHSSetVertex
+   Interface MEF90DiffusionRHSSetVertex
       Module Procedure DiffusionRHSSetVertex_2D,DiffusionRHSSetVertex_3D
-   End Interface MEF90Diffusion_RHSSetVertex
+   End Interface MEF90DiffusionRHSSetVertex
 
-   Interface MEF90Diffusion_RHSSetCell
+   Interface MEF90DiffusionRHSSetCell
       Module Procedure DiffusionRHSSetCell_2D,DiffusionRHSSetCell_3D
-   End Interface MEF90Diffusion_RHSSetCell
+   End Interface MEF90DiffusionRHSSetCell
 
-   Interface MEF90Diffusion_RHSSetCst
+   Interface MEF90DiffusionRHSSetCst
       Module Procedure DiffusionRHSSetCst_2D,DiffusionRHSSetCst_3D
-   End Interface MEF90Diffusion_RHSSetCst
+   End Interface MEF90DiffusionRHSSetCst
 
-   Interface MEF90Diffusion_WorkSetVertex
+   Interface MEF90DiffusionWorkSetVertex
       Module Procedure DiffusionWorkSetVertex_2D,DiffusionWorkSetVertex_3D
-   End Interface MEF90Diffusion_WorkSetVertex
+   End Interface MEF90DiffusionWorkSetVertex
 
-   Interface MEF90Diffusion_WorkSetCell
+   Interface MEF90DiffusionWorkSetCell
       Module Procedure DiffusionWorkSetCell_2D,DiffusionWorkSetCell_3D
-   End Interface MEF90Diffusion_WorkSetCell
+   End Interface MEF90DiffusionWorkSetCell
 
-   Interface MEF90Diffusion_WorkSetCst
+   Interface MEF90DiffusionWorkSetCst
       Module Procedure DiffusionWorkSetCst_2D,DiffusionWorkSetCst_3D
-   End Interface MEF90Diffusion_WorkSetCst
+   End Interface MEF90DiffusionWorkSetCst
 End Module m_MEF_DiffusionInterface
