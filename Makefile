@@ -1,4 +1,4 @@
-all: SimplePoissonNG
+all: MEF90 m_HeatXfer #m_Elasticity
 
 SimplePoissonNG: SimplePoissonNG2D SimplePoissonNG3D
 
