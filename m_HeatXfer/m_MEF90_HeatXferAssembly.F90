@@ -38,8 +38,8 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: boundaryTemperaturePtr,residualPtr,xPtr
       
       Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
-      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',residualSec,ierr);CHKERRQ(ierr)
-      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',boundaryTemperatureSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(xSec,residualSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(xSec,boundaryTemperatureSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%DM,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
    
       Call SectionRealSet(residualSec,0.0_Kr,ierr);CHKERRQ(ierr)
@@ -71,16 +71,12 @@ Contains
       !!! "Ghost update" for the residual Section
       Call SectionRealComplete(residualSec,ierr);CHKERRQ(ierr)
       !!! Scatter back from SectionReal to Vec
-!!!      Call SectionRealToVec(residualSec,ScatterSecToVec,SCATTER_FORWARD,residual,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(residualSec,ScatterSecToVec,SCATTER_FORWARD,residual,ierr);CHKERRQ(ierr)
       
       
       !!!
       !!! Account for BC entries in the residual
       !!!
-      !Allocate(boundaryTemperaturePtr(1))
-      !Allocate(xPtr(1))
-      Allocate(residualPtr(1))
-
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -91,20 +87,18 @@ Contains
             Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
             Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
             Call ISGetIndicesF90(setISdof,setdofIdx,ierr);CHKERRQ(ierr)
-            !Allocate(residualPtr(size(setIdx)))
+            Allocate(residualPtr(size(setIdx)))
             Do dof = 1, size(setIdx)
-               Call SectionRealRestrict(boundaryTemperatureSec,setIdx(set),boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
-               Call SectionRealRestrict(xSec,setIdx(set),xPtr,ierr);CHKERRQ(ierr)
+               Call SectionRealRestrict(boundaryTemperatureSec,setIdx(dof),boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
+               Call SectionRealRestrict(xSec,setIdx(dof),xPtr,ierr);CHKERRQ(ierr)
                !!! At this point, I have two choices:
                !!! I can use SectionRealUpdate (but NOT complete, since this would add values)
                !!! or I can do a VecSetValues, provided that I have build  setISdof using DMMeshISCreateISglobaldof
                !!! going for the later               
-               !residualPtr(dof) = xPtr(1) - boundaryTemperaturePtr(1)
-               residualPtr = xPtr - boundaryTemperaturePtr
-               Call SectionRealUpdate(residualSec,setIdx(set),residualPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+               residualPtr(dof) = xPtr(1) - boundaryTemperaturePtr(1)
             End Do
-            !Call VecSetValues(residual,size(setIdx),setdofIdx,residualPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
-            !DeAllocate(residualPtr)
+            Call VecSetValues(residual,size(setIdx),setdofIdx,residualPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+            DeAllocate(residualPtr)
             Call ISRestoreIndicesF90(setISdof,setdofIdx,ierr);CHKERRQ(ierr)
             Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
             Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
@@ -114,14 +108,9 @@ Contains
 
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      !DeAllocate(boundaryTemperaturePtr)
-      !DeAllocate(xPtr)
-      DeAllocate(residualPtr)
    
       Call VecAssemblyBegin(residual,ierr)
       Call VecAssemblyEnd(residual,ierr)
-Call SectionRealToVec(residualSec,ScatterSecToVec,SCATTER_FORWARD,residual,ierr);CHKERRQ(ierr)
-Call VecView(residual,PETSC_VIEWER_STDOUT_WORLD,ierr)
       Call SectionRealDestroy(residualSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(boundaryTemperatureSec,ierr);CHKERRQ(ierr)

@@ -66,7 +66,9 @@ Contains
          Call DMMeshDistribute(tmpMesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
          Call DMDestroy(tmpMesh,ierr);CHKERRQ(ierr)
       End If
-      Call EXCLOS(exoUnit,exoErr)
+      If (MEF90_MyRank == 0) Then
+         Call EXCLOS(exoUnit,exoErr)
+      End If
    End Subroutine MEF90Ctx_GetDMMeshEXO
 
 #undef __FUNCT__
