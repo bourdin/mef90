@@ -250,16 +250,16 @@ Program TestHeatXfer
       Do step = 1,MEF90GlobalOptions%timeNumStep
          Write(IOBuffer,100) step,time(step)
          Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
+
          !!! Update fields
-         Call VecCopy(MEF90HeatXferCtx%BoundaryTemperaturePrevious,temperature,ierr);CHKERRQ(ierr)
          Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,step,time(step),ierr)
+         Call MEF90HeatXferSetBoundaryTemperature(temperature,time(step),MEF90HeatXferCtx,ierr)
 
          !!! Solve SNES
          Call MEF90HeatXferRHS(rhs,time(step),MEF90HeatXferCtx,ierr)
          Call SNESSolve(snesTemp,rhs,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
-         !!! Allocate energies before
          Call MEF90HeatXFerEnergy(temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
          Do set = 1, size(energy)
             Write(IOBuffer,101) set,energy(set),work(set)

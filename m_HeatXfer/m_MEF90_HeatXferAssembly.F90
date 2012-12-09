@@ -30,7 +30,6 @@ Contains
       Type(MEF90_MATPROP),pointer                        :: matpropSet
       Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions
       Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
-      !PetscReal,Dimension(:),Pointer                     :: BCPtr,BCTargetPtr,xPtr
       Type(VecScatter)                                   :: ScatterSecToVec
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
       Type(MEF90Element_Type)                            :: elemType
