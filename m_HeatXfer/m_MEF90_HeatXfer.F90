@@ -232,51 +232,74 @@ Contains
    
       Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
       Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
-      Type(IS)                                           :: VertexSetGlobalIS,setIS,setISdof
+      Type(IS)                                           :: VertexSetGlobalIS,setIS
       PetscInt,dimension(:),Pointer                      :: setID
       PetscInt,Dimension(:),Pointer                      :: setIdx
       PetscInt                                           :: set
-      PetscReal,Dimension(:),Pointer                     :: val,val2
       PetscReal                                          :: scaling
+      Type(SectionReal)                                  :: boundaryTemperaturePreviousSec,boundaryTemperatureTargetSec,xSec
+      PetscReal,Dimension(:),Pointer                     :: boundaryTemperaturePreviousPtr,boundaryTemperatureTargetPtr,xPtr
+      Type(VecScatter)                                   :: ScatterSecToVec
+      PetscInt                                           :: dof
       
       Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
-   
+      
+      !!! Get Sections and VecScatter
+      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(xSec,boundaryTemperaturePreviousSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(xSec,boundaryTemperatureTargetSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%DM,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+
+      !!! Scatter from the Vecs to the sections
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(boundaryTemperaturePreviousSec,ScatterSecToVec,SCATTER_REVERSE,MEF90HeatXferCtx%boundaryTemperaturePrevious,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(boundaryTemperatureTargetSec,ScatterSecToVec,SCATTER_REVERSE,MEF90HeatXferCtx%boundaryTemperatureTarget,ierr);CHKERRQ(ierr)
+
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
          If (vertexSetOptions%Has_BC) Then
+            Allocate(xPtr(1))
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
-            Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-            Allocate(val(size(setIdx)),stat=ierr)
+            Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
             If (t == MEF90HeatXferCtx%timePrevious) Then
-               Call VecGetValues(MEF90HeatXferCtx%boundaryTemperaturePrevious,size(setIdx),setIdx,val,ierr);CHKERRQ(ierr)
-               Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
+               Do dof = 1, size(setIdx)
+                  Call SectionRealRestrict(boundaryTemperaturePreviousSec,setIdx(dof),boundaryTemperaturePreviousPtr,ierr);CHKERRQ(ierr)
+                  xPtr = boundaryTemperaturePreviousPtr
+                  Call SectionRealUpdate(xSec,setIdx(dof),xPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestore(boundaryTemperaturePreviousSec,setIdx(dof),boundaryTemperaturePreviousPtr,ierr);CHKERRQ(ierr)                  
+               End Do
             Else If (t == MEF90HeatXferCtx%timeTarget) Then
-               Call VecGetValues(MEF90HeatXferCtx%boundaryTemperatureTarget,size(setIdx),setIdx,val,ierr);CHKERRQ(ierr)
-               Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
+               Do dof = 1, size(setIdx)
+                  Call SectionRealRestrict(boundaryTemperatureTargetSec,setIdx(dof),boundaryTemperatureTargetPtr,ierr);CHKERRQ(ierr)
+                  xPtr = boundaryTemperatureTargetPtr
+                  Call SectionRealUpdate(xSec,setIdx(dof),xPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestore(boundaryTemperatureTargetSec,setIdx(dof),boundaryTemperatureTargetPtr,ierr);CHKERRQ(ierr)                  
+               End Do
             Else
-               Allocate(val2(size(setIdx)),stat=ierr)
-               Call VecGetValues(MEF90HeatXferCtx%boundaryTemperaturePrevious,size(setIdx),setIdx,val,ierr);CHKERRQ(ierr)
-               Call VecGetValues(MEF90HeatXferCtx%boundaryTemperatureTarget,size(setIdx),setIdx,val2,ierr);CHKERRQ(ierr)
-               !!! Do linear interpolation here
-               scaling = (MEF90HeatXferCtx%timeTarget - t) / (MEF90HeatXferCtx%timeTarget - MEF90HeatXferCtx%timePrevious)
-               val = val * scaling
-               scaling = (t - MEF90HeatXferCtx%timePrevious) / (MEF90HeatXferCtx%timeTarget - MEF90HeatXferCtx%timePrevious)
-               val = val + val2 * scaling
-               Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
-               DeAllocate(val2)
+               Do dof = 1, size(setIdx)
+                  Call SectionRealRestrict(boundaryTemperaturePreviousSec,setIdx(dof),boundaryTemperaturePreviousPtr,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestrict(boundaryTemperatureTargetSec,setIdx(dof),boundaryTemperatureTargetPtr,ierr);CHKERRQ(ierr)
+                  xPtr = (boundaryTemperaturePreviousPtr * (MEF90HeatXferCtx%timeTarget - t) +                                      &
+                          boundaryTemperatureTargetPtr * (MEF90HeatXferCtx%timePrevious - t)) /                                     &
+                         (MEF90HeatXferCtx%timeTarget - MEF90HeatXferCtx%timePrevious)
+                  Call SectionRealUpdate(xSec,setIdx(dof),xPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestore(boundaryTemperatureTargetSec,setIdx(dof),boundaryTemperatureTargetPtr,ierr);CHKERRQ(ierr)                  
+                  Call SectionRealRestore(boundaryTemperaturePreviousSec,setIdx(dof),boundaryTemperaturePreviousPtr,ierr);CHKERRQ(ierr)
+               End Do
             End If
-            DeAllocate(val)
-            Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+            Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+            DeAllocate(xPtr)
          End If !vertexSetOptions%Has_BC
       End Do
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-   
-      Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
-      Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(boundaryTemperatureTargetSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(boundaryTemperaturePreviousSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferSetBoundaryTemperature
 End Module m_MEF90_HeatXfer
