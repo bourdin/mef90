@@ -257,6 +257,7 @@ Program TestHeatXfer
 
          !!! Solve SNES
          Call MEF90HeatXferRHS(rhs,time(step),MEF90HeatXferCtx,ierr)
+!Call VecView(rhs,PETSC_VIEWER_STDOUT_WORLD,ierr)
          Call SNESSolve(snesTemp,rhs,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
