@@ -224,6 +224,7 @@ Contains
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
+!!! FOLLOW THE LINES OF MEF90HeatXferOperator and use VecSetValues instead of SectionRealUpdate + Scatter
    Subroutine MEF90HeatXferSetBoundaryTemperature(x,t,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
       PetscReal,Intent(IN)                               :: t
@@ -258,10 +259,10 @@ Contains
 
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Allocate(xPtr(1))
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
          If (vertexSetOptions%Has_BC) Then
-            Allocate(xPtr(1))
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
             If (t == MEF90HeatXferCtx%timePrevious) Then
@@ -292,9 +293,9 @@ Contains
             End If
             Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-            DeAllocate(xPtr)
          End If !vertexSetOptions%Has_BC
       End Do
+      DeAllocate(xPtr)
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr)
