@@ -470,5 +470,4 @@ Contains
 201 Format('vs',I4.4,'_')
 203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
    End Subroutine MEF90HeatXferCtx_SetFromOptions
-
 End Module m_MEF90_HeatXferCtx
