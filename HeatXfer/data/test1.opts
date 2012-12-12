@@ -1,11 +1,11 @@
--cs0001_flux 0.
+-cs0001_flux -1.
 -cs0010_flux 0.
 -cs0020_flux 0.
 -temp_snes_monitor
 -temp_KSP_monitor
-#-temp_snes_type ksponly
 -vs0010_boundaryTemp 0.
 -vs0010_tempBC 1
 -vs0020_boundaryTemp 1.
 -vs0020_tempBC 1
--verbose 1
+-verbose 0
+-time_numstep 3
