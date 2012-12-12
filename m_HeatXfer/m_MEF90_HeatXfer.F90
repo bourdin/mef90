@@ -4,8 +4,10 @@ Module m_MEF90_HeatXfer
 #include "finclude/petscbagdef.h"
    Use m_MEF90
    Use m_MEF90_HeatXferCtx
+   Use m_MEF90_HeatXferAssembly2D
+   Use m_MEF90_HeatXferAssembly3D
    Implicit none
-   Private
+   !Private
    Public MEF90HeatXferGetTransients
    Public MEF90HeatXferSetBoundaryTemperature
    
@@ -303,4 +305,100 @@ Contains
       Call SectionRealDestroy(boundaryTemperatureTargetSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(boundaryTemperaturePreviousSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferSetBoundaryTemperature
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferOperator"
+!!!
+!!!  
+!!!  MEF90HeatXferOperator:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
+      Type(SNES),Intent(IN)                              :: snesTemp
+      Type(Vec),Intent(IN)                               :: x
+      Type(Vec),Intent(INOUT)                            :: residual
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90HeatXferCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90HeatXferOperator2D(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
+      Else If (dim == 3) Then
+         Call MEF90HeatXferOperator3D(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
+      End If      
+   End Subroutine MEF90HeatXferOperator
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferBilinearForm"
+!!!
+!!!  
+!!!  MEF90HeatXferBilinearForm:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
+      Type(SNES),Intent(IN)                              :: snesTemp
+      Type(Vec),Intent(IN)                               :: x
+      Type(Mat),Intent(INOUT)                            :: A,M
+      MatStructure,Intent(INOUT)                         :: flg
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr  
+
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90HeatXferCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90HeatXferBilinearForm2D(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
+      Else If (dim == 3) Then
+         Call MEF90HeatXferBilinearForm3D(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
+      End If      
+   End Subroutine MEF90HeatXferBilinearForm
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferRHS"
+!!!
+!!!  
+!!!  MEF90HeatXferRHS: Build the time dependent RHS for the SNES
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferRHS(rhs,t,MEF90HeatXferCtx,ierr)
+      Type(Vec),Intent(IN)                               :: rhs
+      PetscReal,Intent(IN)                               :: t
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90HeatXferCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90HeatXferRHS2D(rhs,t,MEF90HeatXferCtx,ierr)
+      Else If (dim == 3) Then
+         Call MEF90HeatXferRHS3D(rhs,t,MEF90HeatXferCtx,ierr)
+      End If      
+   End Subroutine MEF90HeatXferRHS
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXFerEnergy"
+!!!
+!!!  
+!!!  MEF90HeatXFerEnergy:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
+      Type(Vec),Intent(IN)                            :: temperatureVec
+      PetscReal,Intent(IN)                            :: t
+      Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
+      PetscReal,Dimension(:),Pointer                  :: energy,work
+      PetscErrorCode,Intent(OUT)                      :: ierr
+
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90HeatXferCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90HeatXFerEnergy2D(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
+      Else If (dim == 3) Then
+         Call MEF90HeatXFerEnergy3D(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
+      End If      
+   End Subroutine MEF90HeatXFerEnergy
 End Module m_MEF90_HeatXfer
