@@ -1,0 +1,9 @@
+  
+ 
+Error opening EXO file data/CubeNG_Y-tetra10.gen 
+ 
+application called MPI_Abort(MPI_COMM_WORLD, 65) - process 0
+[cli_0]: aborting job:
+application called MPI_Abort(MPI_COMM_WORLD, 65) - process 0
+[0]0:Return code = 65
+[0]1:Return code = 0, signaled with Interrupt: 2
