@@ -1,0 +1,73 @@
+Solving steady state step    1, t= 0.00000E+00 
+  0 SNES Function norm 8.450731634766e-02 
+    Residual norms for temp_ solve.
+    0 KSP Residual norm 1.220329061031e-01 
+    1 KSP Residual norm 8.389394284254e-02 
+    2 KSP Residual norm 6.973251899239e-02 
+    3 KSP Residual norm 4.273467778155e-02 
+    4 KSP Residual norm 2.211629612621e-02 
+    5 KSP Residual norm 9.804995730356e-03 
+    6 KSP Residual norm 5.012660930599e-03 
+    7 KSP Residual norm 3.012646645185e-03 
+    8 KSP Residual norm 1.113249221383e-03 
+    9 KSP Residual norm 5.913378986810e-04 
+   10 KSP Residual norm 1.666194717392e-04 
+   11 KSP Residual norm 4.376671076872e-05 
+   12 KSP Residual norm 1.824539141395e-05 
+   13 KSP Residual norm 9.692986580949e-06 
+   14 KSP Residual norm 4.615437298271e-06 
+   15 KSP Residual norm 1.786248424261e-06 
+   16 KSP Residual norm 6.798187679478e-07 
+   17 KSP Residual norm 2.037772735875e-07 
+   18 KSP Residual norm 7.245269418270e-08 
+   19 KSP Residual norm 1.965251697642e-08 
+   20 KSP Residual norm 4.637255738684e-09 
+   21 KSP Residual norm 9.160527280972e-10 
+  1 SNES Function norm 2.351257767923e-09 
+    Residual norms for temp_ solve.
+    0 KSP Residual norm 1.220329060861e-01 
+cell set    1 thermal energy:  4.13667E-02 fluxes work:  0.00000E+00 
+cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+======= Total thermal energy:  4.13667E-02 fluxes work:  0.00000E+00 
+Solving steady state step    2, t= 5.00000E-01 
+  0 SNES Function norm 2.091875555996e+00 
+    Residual norms for temp_ solve.
+    0 KSP Residual norm 1.197423981847e+00 
+    1 KSP Residual norm 5.001859523416e-01 
+    2 KSP Residual norm 3.098460441484e-01 
+    3 KSP Residual norm 2.405781834976e-01 
+    4 KSP Residual norm 1.859311183288e-01 
+    5 KSP Residual norm 1.177578686471e-01 
+    6 KSP Residual norm 5.647460127673e-02 
+    7 KSP Residual norm 3.786205853710e-02 
+    8 KSP Residual norm 1.605208890514e-02 
+    9 KSP Residual norm 8.422895462594e-03 
+   10 KSP Residual norm 4.114663965961e-03 
+   11 KSP Residual norm 2.185410220670e-03 
+   12 KSP Residual norm 1.002111228278e-03 
+   13 KSP Residual norm 3.798222806921e-04 
+   14 KSP Residual norm 1.462083309723e-04 
+   15 KSP Residual norm 6.310016510009e-05 
+   16 KSP Residual norm 1.736003142131e-05 
+   17 KSP Residual norm 5.389222736502e-06 
+   18 KSP Residual norm 1.743031787357e-06 
+   19 KSP Residual norm 5.191771673044e-07 
+   20 KSP Residual norm 1.559079522290e-07 
+   21 KSP Residual norm 3.329105015558e-08 
+   22 KSP Residual norm 7.287523482571e-09 
+  1 SNES Function norm 1.345558259799e-08 
+cell set    1 thermal energy:  1.66367E-01 fluxes work:  0.00000E+00 
+cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+======= Total thermal energy:  1.66367E-01 fluxes work:  0.00000E+00 
+Solving steady state step    3, t= 1.00000E+00 
+  0 SNES Function norm 2.091875555632e+00 
+    Residual norms for temp_ solve.
+    0 KSP Residual norm 1.448853831061e-08 
+    1 KSP Residual norm 5.184745849945e-09 
+  1 SNES Function norm 8.049505988437e-09 
+cell set    1 thermal energy:  5.41367E-01 fluxes work:  0.00000E+00 
+cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+======= Total thermal energy:  5.41367E-01 fluxes work:  0.00000E+00 
