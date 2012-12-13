@@ -1,9 +1,27 @@
-  
- 
-Error opening EXO file data/CubeNG_Y-tetra10.gen 
- 
-application called MPI_Abort(MPI_COMM_WORLD, 65) - process 0
-[cli_0]: aborting job:
-application called MPI_Abort(MPI_COMM_WORLD, 65) - process 0
-[0]0:Return code = 65
-[0]1:Return code = 0, signaled with Interrupt: 2
+Solving steady state step    1, t= 0.00000E+00 
+  0 SNES Function norm 3.611655090700e-02 
+    Residual norms for temp_ solve.
+    0 KSP Residual norm 1.055053058477e+02 
+    1 KSP Residual norm 2.351622766578e+02 
+cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+Solving steady state step    2, t= 5.00000E-01 
+  0 SNES Function norm 9.250816860001e-01 
+    Residual norms for temp_ solve.
+    0 KSP Residual norm 4.992040111037e+03 
+    1 KSP Residual norm 6.584103628347e+03 
+cell set    1 thermal energy:  1.90307E+00 fluxes work:  0.00000E+00 
+cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+======= Total thermal energy:  1.90307E+00 fluxes work:  0.00000E+00 
+Solving steady state step    3, t= 1.00000E+00 
+  0 SNES Function norm 1.860207198306e+00 
+    Residual norms for temp_ solve.
+    0 KSP Residual norm 5.203103817202e+03 
+    1 KSP Residual norm 4.325631261090e+03 
+cell set    1 thermal energy:  7.61226E+00 fluxes work:  0.00000E+00 
+cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+======= Total thermal energy:  7.61226E+00 fluxes work:  0.00000E+00 
