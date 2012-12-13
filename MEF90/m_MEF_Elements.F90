@@ -1298,6 +1298,8 @@ Contains
       PetscReal                              :: l
       PetscInt                               :: iDoF,iG,Num_Gauss,Num_DoF
 
+      num_Dof = 0
+      num_Gauss = 0
       l = sqrt( (dCoord(2,1)-dCoord(1,1))**2 + (dCoord(2,2)-dCoord(1,2))**2)
       Select Case(dQuadratureOrder)
       Case(0,1)
@@ -1738,6 +1740,9 @@ Contains
       Type(Vect2D),Dimension(:),Pointer      :: Xi ! The quadrature points coordinates in the reference element
       
       PetscReal                              :: p,l1,l2,l3,area
+      
+      num_Dof = 0
+      nb_Gauss = 0
 
       !!! Get the triangle area using Heron's formula
       !!! It would probably be much smarter to use the std formula for the 

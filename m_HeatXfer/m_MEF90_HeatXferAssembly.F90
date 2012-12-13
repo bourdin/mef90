@@ -137,16 +137,12 @@ Contains
       Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions
       Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
       Type(DM)                                           :: mesh
-      !Type(SectionReal)                                  :: xSec
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
       Type(MEF90Element_Type)                            :: elemType
       
       Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
       Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
-      !Call DMMeshGetSectionReal(mesh,'default',xSec,ierr);CHKERRQ(ierr)
-      !!! 
-      !!! No need to zero out Sec because it is only used as a PetscSection when assembling Mat
-      !!!
+
       Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -155,7 +151,6 @@ Contains
    
          Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-   
          elemType = MEF90_knownElements(cellSetOptions%ElemTypeShortID)
    
          QuadratureOrder = 2 * elemType%order
@@ -182,12 +177,10 @@ Contains
             Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
             Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
-            !Call MatZeroRowsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
          End If
       End Do
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      !Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       
       flg = SAME_NONZERO_PATTERN
    End Subroutine MEF90_APPEND(MEF90HeatXferBilinearForm,MEF90_DIM)D

@@ -16,7 +16,7 @@ Program TestHeatXfer
                                                          2,                   & ! boundaryTempOffset
                                                          MEF90Scaling_Linear, & ! externalTempScaling
                                                          1,                   & ! externalTempOffset
-                                                         MEF90Scaling_CST,    & ! fluxScaling
+                                                         MEF90Scaling_Linear, & ! fluxScaling
                                                          2)                     ! fluxOffset
    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                          -1,            & ! elemTypeShortID will be overriden
@@ -68,7 +68,8 @@ Program TestHeatXfer
    
    Integer                                            :: step
    Type(Vec)                                          :: localVec
-   
+   PetscInt                                           :: dim
+      
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90_Initialize(ierr)
 
@@ -95,7 +96,12 @@ Program TestHeatXfer
    Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
 
    !!! Get material properties bags
-   Call MEF90MatPropBag_SetFromOptions(MEF90MatPropBag,MEF90HeatXferCtx%DM,MEF90_Mathium2D,MEF90Ctx,ierr)
+   Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
+   If (dim == 2) Then
+      Call MEF90MatPropBag_SetFromOptions(MEF90MatPropBag,MEF90HeatXferCtx%DM,MEF90_Mathium2D,MEF90Ctx,ierr)
+   Else
+      Call MEF90MatPropBag_SetFromOptions(MEF90MatPropBag,MEF90HeatXferCtx%DM,MEF90_Mathium3D,MEF90Ctx,ierr)
+   End If   
    MEF90HeatXferCtx%MaterialPropertiesBag => MEF90MatPropBag
 
    Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
@@ -142,17 +148,16 @@ Program TestHeatXfer
    !!! Create SNES or TS, Mat and set KSP default options
    !!!
    Call DMCreateMatrix(MEF90HeatXferCtx%DM,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
+   Call MatSetOptionsPrefix(matTemp,"temp_",ierr);CHKERRQ(ierr)
    Call MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
 
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
-      !Call DMSetApplicationContext(MEF90HeatXferCtx%DM,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
       Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
       Call SNESSetApplicationContext(snesTemp,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
-      !Call SNESSetDM(snesTemp,MEF90HeatXferCtx%DM,ierr);CHKERRQ(ierr)
-      Call SNESSetDM(snesTemp,Mesh,ierr);CHKERRQ(ierr)
+      Call SNESSetDM(snesTemp,MEF90HeatXferCtx%DM,ierr);CHKERRQ(ierr)
       Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
 
       Call SNESSetFunction(snesTemp,residual,MEF90HeatXferOperator,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
@@ -256,7 +261,6 @@ Program TestHeatXfer
 
          !!! Solve SNES
          Call MEF90HeatXferRHS(rhs,time(step),MEF90HeatXferCtx,ierr)
-!Call VecView(rhs,PETSC_VIEWER_STDOUT_WORLD,ierr)
          Call SNESSolve(snesTemp,rhs,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
@@ -339,6 +343,7 @@ Program TestHeatXfer
    DeAllocate(time)
    DeAllocate(energy)
    DeAllocate(work)
+   Call PetscLogView(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtx_Destroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90Ctx_CloseEXO(MEF90Ctx,ierr)
    Call MEF90_Finalize(ierr)
