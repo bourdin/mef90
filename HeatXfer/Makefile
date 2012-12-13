@@ -1,7 +1,8 @@
 all:
 	-@make -C ${MEF90_DIR} HeatXfer
-test: runTestHeatXfer2D1 runTestHeatXfer2D2 runTestHeatXfer2D3 runTestHeatXfer2D4 \
-         runTestHeatXfer3D1 runTestHeatXfer3D2 runTestHeatXfer3D3 runTestHeatXfer3D4
+test: runTestHeatXfer2D runTestHeatXfer3D
+runTestHeatXfer2D: runTestHeatXfer2D1 runTestHeatXfer2D2 runTestHeatXfer2D3 runTestHeatXfer2D4
+runTestHeatXfer3D: runTestHeatXfer3D1 runTestHeatXfer3D2 runTestHeatXfer3D3 runTestHeatXfer3D4 runTestHeatXfer3D5 runTestHeatXfer3D6
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
@@ -63,7 +64,7 @@ runTestHeatXfer3D1: HeatXfer
 
 runTestHeatXfer3D2: HeatXfer
 	@echo "         Running " $@
-	-@ARGS='-prefix data/CubeNG_X-tetra4 -options_file data/test1.opts';\
+	-@ARGS='-prefix data/CubeNG_Y-tetra4 -options_file data/test1.opts';\
 	${MPIEXEC} -n 2 ${MEF90_DIR}/bin/${PETSC_ARCH}/$< $${ARGS} > $@.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
@@ -71,7 +72,7 @@ runTestHeatXfer3D2: HeatXfer
 	
 runTestHeatXfer3D3: HeatXfer
 	@echo "         Running " $@
-	-@ARGS='-prefix data/CubeNG_X-tetra10 -options_file data/test1.opts';\
+	-@ARGS='-prefix data/CubeNG_Z-tetra4 -options_file data/test1.opts';\
 	${MPIEXEC} -n 2 ${MEF90_DIR}/bin/${PETSC_ARCH}/$< $${ARGS} > $@.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
@@ -79,7 +80,23 @@ runTestHeatXfer3D3: HeatXfer
 	
 runTestHeatXfer3D4: HeatXfer
 	@echo "         Running " $@
+	-@ARGS='-prefix data/CubeNG_X-tetra10 -options_file data/test1.opts';\
+	${MPIEXEC} -n 2 ${MEF90_DIR}/bin/${PETSC_ARCH}/$< $${ARGS} > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/$@.out $@.out) then echo "         ... passed"; \
+	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
+	${RM} $@.out
+	
+runTestHeatXfer3D5: HeatXfer
+	@echo "         Running " $@
 	-@ARGS='-prefix data/CubeNG_Y-tetra10 -options_file data/test1.opts';\
+	${MPIEXEC} -n 2 ${MEF90_DIR}/bin/${PETSC_ARCH}/$< $${ARGS} > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/$@.out $@.out) then echo "         ... passed"; \
+	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
+	${RM} $@.out
+	
+runTestHeatXfer3D6: HeatXfer
+	@echo "         Running " $@
+	-@ARGS='-prefix data/CubeNG_Z-tetra10 -options_file data/test1.opts';\
 	${MPIEXEC} -n 2 ${MEF90_DIR}/bin/${PETSC_ARCH}/$< $${ARGS} > $@.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
