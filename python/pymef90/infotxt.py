@@ -17,8 +17,7 @@ def DictwriteJSON(D,filename,overwrite=True):
         else:
             jsonfile = open(filename,'a')
 
-        jsonfile.write(json.encoder.JSONEncoder().encode(D))
-        jsonfile.flush()
+        json.dump(D,jsonfile, sort_keys = True, indent = 4)
         jsonfile.close()
     except ImportError:
         print 'JSON module not available, skipping DictJSONwrite'
