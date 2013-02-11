@@ -1157,13 +1157,14 @@ Contains
 
       Allocate(BCFlag_Loc(NumDoFScal))
       Allocate(RHS_Loc(NumDoFScal))
+      Allocate(Vold_Loc(NumDoFScal))
 
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          RHS_Loc = 0.0_Kr
          Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%Vold%Sec,      AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Vold_Loc,      iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%Vold%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Vold_Loc,      iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
             Vold_Elem = 0.0_Kr
             Do iDoF = 1, NumDoFScal
@@ -1183,6 +1184,7 @@ Contains
 
       DeAllocate(BCFlag_Loc)
       DeAllocate(RHS_Loc)
+      DeAllocate(Vold_Loc)
 
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSV_AssemblyBlk_GradientFlow
