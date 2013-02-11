@@ -142,6 +142,9 @@ Module m_VarFrac_Struct
       PetscInt                                     :: IrrevType
       PetscReal                                    :: IrrevTol
       
+      PetscBool                                    :: DoGradientFlow
+      PetscReal                                    :: GradientFlowStep 
+
       PetscBool                                    :: DoBT
       PetscInt                                     :: BTType
       PetscReal                                    :: BTTol
@@ -390,6 +393,10 @@ Module m_VarFrac_Struct
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-bt ', L1, A)")                  dSchemeParam%DoBT, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-gradientflow ', L1, A)")        dSchemeParam%DoGradientFlow, '\n' 
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
+      Write(IOBuffer, "('-gradientflowstep ', ES12.5, A)") dSchemeParam%GradientFlowStep, '\n'
+      Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-bttype ', I5, A)")              dSchemeParam%BTType, '\n' 
       Call PetscViewerASCIIPrintf(viewer, IOBuffer, iErr); CHKERRQ(iErr)
       Write(IOBuffer, "('-bttol ', ES12.5, A)")           dSchemeParam%BTTol, '\n'
@@ -442,6 +449,8 @@ Module m_VarFrac_Struct
       dSchemeParam%AltMinTol        = 1.0D-4
       dSchemeParam%AltMinSaveInt    = 25
       dSchemeParam%DoBT             = PETSC_FALSE
+      dSchemeParam%DoGradientFlow   = PETSC_FALSE
+      dSchemeParam%GradientFlowStep = .1
       dSchemeParam%BTType           = VarFrac_BTType_MIL
       dSchemeParam%BTTol            = 1.0D-2
       dSchemeParam%BTInt            = dSchemeParam%AltMinMaxIter
@@ -468,28 +477,30 @@ Module m_VarFrac_Struct
       Else
          dSchemeParam%IrrevTol = 1.0_Kr
       End If
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',       dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-bt',             dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-bttype',         dSchemeParam%BTType, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-bttol',          dSchemeParam%BTTol, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',          dSchemeParam%BTInt, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btscope',        dSchemeParam%BTScope, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-unilateral',     dSchemeParam%Unilateral, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',          dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',       dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-InitVLength',    dSchemeParam%InitVLength, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminmaxiter',  dSchemeParam%AltMinMaxIter, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-altmintol',      dSchemeParam%AltMinTol, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminsaveint',  dSchemeParam%AltMinSaveInt, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',        dSchemeParam%Epsilon, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',       dSchemeParam%KEpsilon, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',          dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',     dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-saveblk',        dSchemeParam%SaveBlk, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestress',     dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-savestrain',     dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-u_tao',          dSchemeParam%U_UseTao, flag, iErr); CHKERRQ(iErr) 
-      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER, '-v_tao',          dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-irrevtol',        dSchemeParam%IrrevTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-gradientflow',    dSchemeParam%DoGradientFlow, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-gradientflowstep',dSchemeParam%gradientflowstep, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-bt',              dSchemeParam%DoBT, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-bttype',          dSchemeParam%BTType, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-bttol',           dSchemeParam%BTTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btint',           dSchemeParam%BTInt, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-btscope',         dSchemeParam%BTScope, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-unilateral',      dSchemeParam%Unilateral, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-initv',           dSchemeParam%InitV, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-nbcracks',        dSchemeParam%NbCracks, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-InitVLength',     dSchemeParam%InitVLength, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminmaxiter',   dSchemeParam%AltMinMaxIter, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-altmintol',       dSchemeParam%AltMinTol, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-altminsaveint',   dSchemeParam%AltMinSaveInt, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-epsilon',         dSchemeParam%Epsilon, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,  '-kepsilon',        dSchemeParam%KEpsilon, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-atnum',           dSchemeParam%ATNum, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,   '-integorder',      dSchemeParam%IntegOrder, flag, iErr); CHKERRQ(iErr)
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-saveblk',         dSchemeParam%SaveBlk, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestress',      dSchemeParam%SaveStress, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-savestrain',      dSchemeParam%SaveStrain, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-u_tao',           dSchemeParam%U_UseTao, flag, iErr); CHKERRQ(iErr) 
+      Call PetscOptionsGetBool(PETSC_NULL_CHARACTER,  '-v_tao',           dSchemeParam%V_UseTao, flag, iErr); CHKERRQ(iErr) 
       
       Select Case(dSchemeParam%ATNum)
       !!! Braides 2008 p. 48

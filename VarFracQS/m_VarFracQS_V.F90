@@ -34,6 +34,9 @@ Module m_VarFracQS_V3D
 Contains
 
 #if defined WITH_TAO
+
+#undef __FUNCT__
+#define __FUNCT__ "InitTaoBoundsV"
    Subroutine InitTaoBoundsV(TaoApp, LowerBoundV_Vec, UpperBoundV_Vec, AppCtx, iErr)
       !!! Called by TAO: initializes bounds vectors from VIrrev Section
       TAO_APPLICATION                              :: taoapp
@@ -87,6 +90,8 @@ Contains
    End Subroutine InitTaoBoundsV
 #endif
 
+#undef __FUNCT__
+#define __FUNCT__ "Init_TS_V"
    Subroutine Init_TS_V(AppCtx)
       !!! Set the initial value of V at the beginning of each alternate minimizatins iterations
       Type(AppCtx_Type)                            :: AppCtx
@@ -182,6 +187,8 @@ Contains
       End Select
    End Subroutine Init_TS_V
    
+#undef __FUNCT__
+#define __FUNCT__ "Update_Irrev"
    Subroutine Update_Irrev(AppCtx)
       !!! Updates the VIrrev vector used in InitTaoBoundsV
       Type(AppCtx_Type)                            :: AppCtx
@@ -313,6 +320,8 @@ Contains
 !!! Global assembly functions
 !!!
    
+#undef __FUNCT__
+#define __FUNCT__ "MatV_Assembly"
    Subroutine MatV_Assembly(K, AppCtx)
    !!! Global dispatch routine for the FE matrix of the V-problem when using KSP
       Type(Mat)                                    :: K
@@ -348,7 +357,9 @@ Contains
                End Select
             End If
             Call MatV_AssemblyBlk_SurfaceAT2(K, iBlk, .TRUE., AppCtx)
-            Call MatV_AssemblyBlk_GradientFlow(K, iBlk, .TRUE., AppCtx)
+            If (AppCtx%VarFracSchemeParam%DoGradientFlow) Then
+               Call MatV_AssemblyBlk_GradientFlow(K, iBlk, .TRUE., AppCtx)
+            End If
          Case Default
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
       End Select
@@ -363,6 +374,8 @@ Contains
    End Subroutine MatV_Assembly
 
 #if defined WITH_TAO
+#undef __FUNCT__
+#define __FUNCT__ "HessianV_Assembly"
    Subroutine HessianV_Assembly(tao, X, H, Hpre, flg, AppCtx, iErr)
    !!! Global dispatch routine for Hessian of the V-problem when using TAO
       TAO_SOLVER         :: tao
@@ -421,6 +434,8 @@ Contains
 #endif
 
 #if defined WITH_TAO
+#undef __FUNCT__
+#define __FUNCT__ "FormFunctionAndGradientV"
    Subroutine FormFunctionAndGradientV(tao, V_Vec, ObjFunc, GradientV_Vec, AppCtx, iErr)
    !!! Global dispatch routine for Gradient and objectiove function of the V-problem when using TAO
       TAO_SOLVER                                   :: tao
@@ -499,6 +514,8 @@ Contains
    End Subroutine FormFunctionAndGradientV
 #endif
 
+#undef __FUNCT__
+#define __FUNCT__ "RHSV_Assembly"
    Subroutine RHSV_Assembly(RHSV_Vec, AppCtx)
    !!! Global dispatch routine for RHS of the V-problem when using KSP
       Type(AppCtx_Type)                            :: AppCtx
@@ -515,7 +532,9 @@ Contains
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(2)
             Call RHSV_AssemblyBlk_AT2(AppCtx%RHSV%Sec, iBlk, AppCtx)
-            Call RHSV_AssemblyBlk_GradientFlow(RHS_Sec, iBlk, AppCtx)
+            If (AppCtx%VarFracSchemeParam%DoGradientFlow) Then
+               Call RHSV_AssemblyBlk_GradientFlow(AppCtx%RHSV%Sec, iBlk, AppCtx)
+            End If
          Case Default
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT2 is implemented with KSP\n', iErr)
       End Select
@@ -538,6 +557,8 @@ Contains
       Call PetscLogStagePop(iErr); CHKERRQ(iErr)
    End Subroutine RHSV_Assembly
    
+#undef __FUNCT__
+#define __FUNCT__ "MatV_AssemblyBlk_ElastBrittle"
    Subroutine MatV_AssemblyBlk_ElastBrittle(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -642,6 +663,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_ElastBrittle
 
+#undef __FUNCT__
+#define __FUNCT__ "MatV_AssemblyBlk_ElastBrittleUnilateralFull"
    Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralFull(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -755,6 +778,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralFull
 
+#undef __FUNCT__
+#define __FUNCT__ "MatV_AssemblyBlk_ElastBrittleUnilateralShear"
    Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralShear(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -862,6 +887,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_ElastBrittleUnilateralShear
 
+#undef __FUNCT__
+#define __FUNCT__ "MatV_AssemblyBlk_SurfaceAT2"
    Subroutine MatV_AssemblyBlk_SurfaceAT2(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -927,9 +954,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_SurfaceAT2
 
-
-
-
+#undef __FUNCT__
+#define __FUNCT__ "MatV_AssemblyBlk_GradientFlow"
    Subroutine MatV_AssemblyBlk_GradientFlow(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -945,10 +971,7 @@ Contains
       PetscInt, Dimension(:), Pointer              :: BCFlag, IrrevFlag
       PetscInt                                     :: iDoF1, iDoF2, iGauss
 
-      PetscReal                                    :: C2_V, C2_GradV, C2_GradFlow
       PetscLogDouble, Parameter                    :: oneflop = 1.0
-
-      PetscReal           :: delta_t     
 
       Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
 
@@ -961,9 +984,6 @@ Contains
       Allocate(IrrevFlag(NumDoFScal))
       IrrevFlag = VarFrac_BC_Type_NONE
       Allocate(MatElem(NumDoFScal, NumDoFScal))
-
-      C2_GradFlow = 1.0/delta_t;                  
-      Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
 
       Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
@@ -980,12 +1000,13 @@ Contains
                If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
                   Do iDoF2 = 1, NumDoFScal
                   !! Terms in V^2
-                     MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradFlow * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
-                     Call PetscLogFlops(7*oneflop, iErr); CHKERRQ(iErr)
+                     MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
+                     !Call PetscLogFlops(7*oneflop, iErr); CHKERRQ(iErr)
                   End Do
                End If
             End Do
          End Do
+         MatElem = MatElem / AppCtx%VarFracSchemeParam%GradientFlowStep
          Call DMMeshAssembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_Elem_iE
       DeAllocate(MatElem)
@@ -994,9 +1015,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_GradientFlow
 
-
-
-
+#undef __FUNCT__
+#define __FUNCT__ "MatV_AssemblyBlk_SurfaceAT1"
    Subroutine MatV_AssemblyBlk_SurfaceAT1(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -1058,6 +1078,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_SurfaceAT1
 
+#undef __FUNCT__
+#define __FUNCT__ "RHSV_AssemblyBlk_AT2"
    Subroutine RHSV_AssemblyBlk_AT2(RHSV_Sec, iBlk, AppCtx)
       Type(SectionReal)                            :: RHSV_Sec
       PetscInt                                     :: iBlk
@@ -1111,9 +1133,8 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSV_AssemblyBlk_AT2
 
-
-
-
+#undef __FUNCT__
+#define __FUNCT__ "RHSV_AssemblyBlk_GradientFlow"
    Subroutine RHSV_AssemblyBlk_GradientFlow(RHS_Sec, iBlk, AppCtx)
       PetscInt                                     :: iBlk
       Type(SectionReal)                            :: RHS_Sec
@@ -1121,46 +1142,42 @@ Contains
 
       !!!   _Loc are restriction of fields to local patch (the element)
       !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
-      PetscReal, Dimension(:), Pointer             :: F_Loc, RHS_Loc
+      PetscReal, Dimension(:), Pointer             :: Vold_Loc, RHS_Loc
       PetscInt, Dimension(:), Pointer              :: BCFlag_Loc
-#if defined PB_2D
-      Type (Vect2D)                                :: F_Elem
-#elif defined PB_3D  
-      Type (Vect3D)                                :: F_Elem
-#endif
+      PetscReal                                   :: Vold_Elem
+
       PetscInt                                     :: iE, iEloc, iBlkId, iErr
-      PetscInt                                     :: NumDoFVect
+      PetscInt                                     :: NumDoFScal
       PetscInt                                     :: iDoF, iGauss
       PetscLogDouble, Parameter                    :: oneflop = 1.0
 
-      PetscInt            :: iDoF2, iDoF1
-      PetscReal           :: C2_GradFlow    
-      PetscReal           :: delta_t         
-
-      C2_GradFlow = 1.0/delta_t
-
       Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
 
-      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
 
-      Allocate(BCFlag_Loc(NumDoFVect))
-      Allocate(RHS_Loc(NumDoFVect))
+      Allocate(BCFlag_Loc(NumDoFScal))
+      Allocate(RHS_Loc(NumDoFScal))
 
       iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
       Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
          iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
          RHS_Loc = 0.0_Kr
-         Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
-         Call SectionRealRestrictClosure(AppCtx%F%Sec,      AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F_Loc,      iErr); CHKERRQ(ierr)
+         Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%Vold%Sec,      AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, Vold_Loc,      iErr); CHKERRQ(ierr)
          Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
-            Do iDoF = 1, NumDoFVect
+            Vold_Elem = 0.0_Kr
+            Do iDoF = 1, NumDoFScal
+               Vold_Elem = Vold_Elem + AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Vold_Loc(iDoF)
+            End Do
+            Do iDoF = 1, NumDoFScal
                If (BCFlag_Loc(iDoF) == 0) Then
                   ! RHS terms due to gradient flow
-                   RHS_Loc(iDoF) = RHS_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradFlow * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
-                  Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
+                  RHS_Loc(iDoF) = RHS_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * AppCtx%ElemScal(iE)%BF(iDoF, iGauss) * Vold_Elem
+                  !Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
                End If
             End Do
          End Do Do_iGauss
+         RHS_Loc = RHS_Loc / AppCtx%VarFracSchemeParam%GradientFlowStep
          Call SectionRealUpdateClosure(RHS_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
       End Do Do_iEloc
 
@@ -1170,11 +1187,9 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSV_AssemblyBlk_GradientFlow
 
-
-
-
-   
 #if defined WITH_TAO   
+#undef __FUNCT__
+#define __FUNCT__ "GradientV_AssemblyBlk_ElastBrittle"
    Subroutine GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
@@ -1258,6 +1273,8 @@ Contains
    End Subroutine GradientV_AssemblyBlk_ElastBrittle
    
 #if defined WITH_TAO   
+#undef __FUNCT__
+#define __FUNCT__ "GradientV_AssemblyBlk_ElastBrittleUnilateralFull"
    Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateralFull(GradientV_Sec, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
@@ -1351,6 +1368,8 @@ Contains
 #endif
    
 #if defined WITH_TAO   
+#undef __FUNCT__
+#define __FUNCT__ "GradientV_AssemblyBlk_ElastBrittleUnilateralShear"
    Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateralShear(GradientV_Sec, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
@@ -1439,6 +1458,8 @@ Contains
    End Subroutine GradientV_AssemblyBlk_ElastBrittleUnilateralShear
 #endif
 
+#undef __FUNCT__
+#define __FUNCT__ "GradientV_AssemblyBlk_SurfaceAT1"
    Subroutine GradientV_AssemblyBlk_SurfaceAT1(GradientV_Sec, iBlk, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
@@ -1487,6 +1508,8 @@ Contains
       DeAllocate(GradientV_Loc)
    End Subroutine GradientV_AssemblyBlk_SurfaceAT1
 
+#undef __FUNCT__
+#define __FUNCT__ "GradientV_AssemblyBlk_SurfaceAT2"
    Subroutine GradientV_AssemblyBlk_SurfaceAT2(GradientV_Sec, iBlk, V_Sec, AppCtx)
       Type(SectionReal)                            :: GradientV_Sec
       PetscInt                                     :: iBlk
@@ -1561,7 +1584,8 @@ Contains
       If (AppCtx%VarFracSchemeParam%V_UseTao) Then
 #if defined WITH_TAO
          Call TaoAppGetSolutionVec(AppCtx%taoappV, AppCtx%V%Vec, iErr); CHKERRQ(iErr)
-         Call VecCopy(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
+         Call VecCopy(AppCtx%V%Vec, AppCtx%VOld%Vec, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%Vold%Sec, AppCtx%Vold%Scatter, SCATTER_REVERSE, AppCtx%Vold%Vec, iErr); CHKERRQ(ierr)
          
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Calling TaoSolveApplication\n'
@@ -1590,7 +1614,8 @@ Contains
 #endif      
       Else
          Call SectionRealToVec(AppCtx%V%Sec, AppCtx%V%Scatter, SCATTER_FORWARD, AppCtx%V%Vec, iErr); CHKERRQ(ierr)
-         Call VecCopy(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
+         Call VecCopy(AppCtx%V%Vec, AppCtx%VOld%Vec, iErr); CHKERRQ(iErr)
+         Call SectionRealToVec(AppCtx%Vold%Sec, AppCtx%Vold%Scatter, SCATTER_REVERSE, AppCtx%Vold%Vec, iErr); CHKERRQ(ierr)
          
          If (AppCtx%AppParam%verbose > 0) Then
             Write(IOBuffer, *) 'Assembling the Matrix and RHS for the V-subproblem \n' 
@@ -1628,8 +1653,8 @@ Contains
       Write(IOBuffer, 700) VMin, VMax
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
 
-       Call VecAxPy(AppCtx%V_Old, -1.0_Kr, AppCtx%V%Vec, iErr)
-       Call VecNorm(AppCtx%V_Old, NORM_INFINITY, AppCtx%ErrV, iErr)
+       Call VecAxPy(AppCtx%VOld%Vec, -1.0_Kr, AppCtx%V%Vec, iErr)
+       Call VecNorm(AppCtx%VOld%Vec, NORM_INFINITY, AppCtx%ErrV, iErr)
 
       Write(IOBuffer, 800) AppCtx%ErrV
       Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
@@ -1645,8 +1670,6 @@ Contains
 700 Format('     VMin / Max:   ', T24, 2(ES12.5, '  '), '\n')
 800 Format('     Max change V: ', T24, ES12.5, '\n')
    End Subroutine Step_V
-
-   
    
 #if defined PB_2D
 End Module m_VarFracQS_V2D

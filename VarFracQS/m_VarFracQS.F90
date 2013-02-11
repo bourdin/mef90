@@ -197,6 +197,7 @@ Contains
       Call FieldCreateVertex(AppCtx%V,      'V',      AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%VBC,    'VBC',    AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%VIrrev, 'VIrrev', AppCtx%MeshTopology, SizeScal)
+      Call FieldCreateVertex(AppCtx%Vold,   'Vold',   AppCtx%MeshTopology, SizeScal)
       Call FieldCreateVertex(AppCtx%Theta,  'Theta',  AppCtx%MeshTopology, SizeScal)
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
          Call FieldCreateVertex(AppCtx%GradientU,   'GradientU',   AppCtx%MeshTopology, SizeVect)
@@ -217,7 +218,7 @@ Contains
       Call FlagCreateVertex(AppCtx%IrrevFlag, 'IrrevFlag', AppCtx%MeshTopology, SizeScal)
       DeAllocate(SizeVect)
       DeAllocate(SizeScal)
-      Call VecDuplicate(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
+      !Call VecDuplicate(AppCtx%V%Vec, AppCtx%V_Old, iErr); CHKERRQ(iErr)
 
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          NumComponents = AppCtx%MeshTopology%Num_Dim * (AppCtx%MeshTopology%Num_Dim + 1) / 2
@@ -612,6 +613,7 @@ Contains
       Call FieldDestroy(AppCtx%V);      CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%VBC);    CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%VIrrev); CHKERRQ(iErr)
+      Call FieldDestroy(AppCtx%VOld);   CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%F);      CHKERRQ(iErr)
       Call FieldDestroy(AppCtx%Theta);  CHKERRQ(iErr)
       If (AppCtx%VarFracSchemeParam%U_UseTao) Then
@@ -628,7 +630,6 @@ Contains
       Else
          Call FieldDestroy(AppCtx%RHSV); CHKERRQ(iErr)
       End If
-      Call VecDestroy(AppCtx%V_Old, iErr); CHKERRQ(iErr)
 
       If ( (AppCtx%VarFracSchemeParam%SaveStress) .OR. (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
          Call SectionRealDestroy(AppCtx%StrainU, iErr); CHKERRQ(iErr)
