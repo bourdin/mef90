@@ -73,8 +73,8 @@ Contains
 
       If (dMeshTopology%Num_Elem_blks > 0) Then
          Do iBlk = 1, dMeshTopology%Num_Elem_Blks
-	    dMeshTopology%elem_blk(iBlk)%elem_type = -1
-	    dMeshTopology%elem_blk(iBlk)%dof_location = -1
+            dMeshTopology%elem_blk(iBlk)%elem_type = -1
+            dMeshTopology%elem_blk(iBlk)%dof_location = -1
             blkId = blkIds(iBlk)
             dMeshTopology%Elem_blk(iBlk)%ID = blkId
             Call DMMeshGetStratumSize(dMeshTopology%mesh, CharBuffer, blkId, dMeshTopology%elem_blk(iBlk)%Num_Elems, ierr); CHKERRQ(iErr)
