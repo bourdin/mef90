@@ -140,6 +140,21 @@ Program  VarFracQS
             End If BTFound1
          End If TestBT1
 
+            Call ComputeEnergies(AppCtx)
+
+         If (AppCtx%VarFracSchemeParam%DoGradientFlow) Then
+            Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            Write(IOBuffer, 102) AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
+            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+         End If
+         
          !------------------------------------------------------------------- 
          ! Check the exit condition: tolerance on the error in V 
          !------------------------------------------------------------------- 
@@ -159,16 +174,18 @@ Program  VarFracQS
             End If
             Call ComputeEnergies(AppCtx)
 
-            Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 102) AppCtx%SurfaceEnergy(AppCtx%TimeStep)
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
-            Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
-            Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            If (.NOT. AppCtx%VarFracSchemeParam%DoGradientFlow) Then
+               Write(IOBuffer, 104) AppCtx%Load(AppCtx%TimeStep)
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+               Write(IOBuffer, 100) AppCtx%ElasticEnergy(AppCtx%TimeStep)
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+               Write(IOBuffer, 101) AppCtx%ExtForcesWork(AppCtx%TimeStep)
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+               Write(IOBuffer, 102) AppCtx%SurfaceEnergy(AppCtx%TimeStep)
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+               Write(IOBuffer, 103) AppCtx%TotalEnergy(AppCtx%TimeStep)
+               Call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr); CHKERRQ(iErr)
+            End If
 
             If ((AppCtx%VarFracSchemeParam%SaveStress) .OR.                                        &
                 (AppCtx%VarFracSchemeParam%SaveStrain) ) Then
