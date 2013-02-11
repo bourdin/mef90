@@ -76,6 +76,7 @@ Module m_VarFracQS_Types3D
       Type(SectionReal)                            :: StrainU
       PetscInt                                     :: NumTimeSteps
       PetscInt                                     :: TimeStep
+      PetscReal                                    :: delta_t
       PetscReal, Dimension(:), Pointer             :: Load                 ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: SurfaceEnergy        ! All Time Steps
       PetscReal, Dimension(:), Pointer             :: ElasticEnergy        ! All Time Steps

@@ -348,6 +348,7 @@ Contains
                End Select
             End If
             Call MatV_AssemblyBlk_SurfaceAT2(K, iBlk, .TRUE., AppCtx)
+            Call MatV_AssemblyBlk_GradientFlow(K, iBlk, .TRUE., AppCtx)
          Case Default
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT1 and AT2 are implemented\n', iErr)
       End Select
@@ -502,6 +503,7 @@ Contains
    !!! Global dispatch routine for RHS of the V-problem when using KSP
       Type(AppCtx_Type)                            :: AppCtx
       Type(Vec)                                    :: RHSV_Vec
+      Type(SectionReal)                            :: RHS_Sec
 
       PetscInt                                     :: iErr
       PetscInt                                     :: iBlk
@@ -513,6 +515,7 @@ Contains
          Select Case (AppCtx%VarFracSchemeParam%AtNum)
          Case(2)
             Call RHSV_AssemblyBlk_AT2(AppCtx%RHSV%Sec, iBlk, AppCtx)
+            Call RHSV_AssemblyBlk_GradientFlow(RHS_Sec, iBlk, AppCtx)
          Case Default
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP, 'Only AT2 is implemented with KSP\n', iErr)
       End Select
@@ -924,6 +927,76 @@ Contains
       Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine MatV_AssemblyBlk_SurfaceAT2
 
+
+
+
+   Subroutine MatV_AssemblyBlk_GradientFlow(H, iBlk, DoBC, AppCtx)
+      Type(Mat)                                    :: H
+      PetscInt                                     :: iBlk
+      PetscBool                                    :: DoBC
+      Type(AppCtx_Type)                            :: AppCtx
+
+      PetscInt                                     :: iBlkID
+      PetscReal, Dimension(:,:), Pointer           :: MatElem
+      PetscInt                                     :: iELoc, iE
+
+      PetscInt                                     :: iErr
+      PetscInt                                     :: NumDoFScal, NumDoFVect
+      PetscInt, Dimension(:), Pointer              :: BCFlag, IrrevFlag
+      PetscInt                                     :: iDoF1, iDoF2, iGauss
+
+      PetscReal                                    :: C2_V, C2_GradV, C2_GradFlow
+      PetscLogDouble, Parameter                    :: oneflop = 1.0
+
+      PetscReal           :: delta_t     
+
+      Call PetscLogEventBegin(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+      NumDoFScal = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+
+      Allocate(BCFlag(NumDoFScal))
+      BCFlag = VarFrac_BC_Type_NONE
+      Allocate(IrrevFlag(NumDoFScal))
+      IrrevFlag = VarFrac_BC_Type_NONE
+      Allocate(MatElem(NumDoFScal, NumDoFScal))
+
+      C2_GradFlow = 1.0/delta_t;                  
+      Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
+
+      Do_Elem_iE: Do iELoc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         MatElem  = 0.0_Kr
+         !! Get the local nodal values of BC sections if necessary
+         If (DoBC) Then
+            Call SectionIntRestrictClosure(AppCtx%BCVFlag%Sec,   AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, BCFlag,    iErr); CHKERRQ(ierr)
+            Call SectionIntRestrictClosure(AppCtx%IrrevFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFScal, IrrevFlag, iErr); CHKERRQ(ierr)
+         End If
+
+         Do iGauss = 1, Size(AppCtx%ElemScal(iE)%Gauss_C)
+            !! Assemble the element stiffness
+            Do iDoF1 = 1, NumDoFScal
+               If ( (BCFlag(iDoF1) == VarFrac_BC_Type_NONE) .AND. (IrrevFlag(iDoF1) == VarFrac_BC_Type_NONE) ) Then
+                  Do iDoF2 = 1, NumDoFScal
+                  !! Terms in V^2
+                     MatElem(iDoF2, iDoF1) =  MatElem(iDoF2, iDoF1) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradFlow * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
+                     Call PetscLogFlops(7*oneflop, iErr); CHKERRQ(iErr)
+                  End Do
+               End If
+            End Do
+         End Do
+         Call DMMeshAssembleMatrix(H, AppCtx%MeshTopology%mesh, AppCtx%V%Sec, iE-1, MatElem, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_Elem_iE
+      DeAllocate(MatElem)
+      DeAllocate(BCFlag)
+      DeAllocate(IrrevFlag)
+      Call PetscLogEventEnd(AppCtx%LogInfo%MatAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
+   End Subroutine MatV_AssemblyBlk_GradientFlow
+
+
+
+
    Subroutine MatV_AssemblyBlk_SurfaceAT1(H, iBlk, DoBC, AppCtx)
       Type(Mat)                                    :: H
       PetscInt                                     :: iBlk
@@ -1037,6 +1110,69 @@ Contains
       DeAllocate(RHS_Loc)
       Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalV_Event, iErr); CHKERRQ(iErr)
    End Subroutine RHSV_AssemblyBlk_AT2
+
+
+
+
+   Subroutine RHSV_AssemblyBlk_GradientFlow(RHS_Sec, iBlk, AppCtx)
+      PetscInt                                     :: iBlk
+      Type(SectionReal)                            :: RHS_Sec
+      Type(AppCtx_Type)                            :: AppCtx
+
+      !!!   _Loc are restriction of fields to local patch (the element)
+      !!!   _Elem are local contribution over the element (u_ELem = \sum_i U_Loc(i) BF(i))
+      PetscReal, Dimension(:), Pointer             :: F_Loc, RHS_Loc
+      PetscInt, Dimension(:), Pointer              :: BCFlag_Loc
+#if defined PB_2D
+      Type (Vect2D)                                :: F_Elem
+#elif defined PB_3D  
+      Type (Vect3D)                                :: F_Elem
+#endif
+      PetscInt                                     :: iE, iEloc, iBlkId, iErr
+      PetscInt                                     :: NumDoFVect
+      PetscInt                                     :: iDoF, iGauss
+      PetscLogDouble, Parameter                    :: oneflop = 1.0
+
+      PetscInt            :: iDoF2, iDoF1
+      PetscReal           :: C2_GradFlow    
+      PetscReal           :: delta_t         
+
+      C2_GradFlow = 1.0/delta_t
+
+      Call PetscLogEventBegin(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+
+      NumDoFVect = AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_DoF * AppCtx%MeshTopology%Num_Dim
+
+      Allocate(BCFlag_Loc(NumDoFVect))
+      Allocate(RHS_Loc(NumDoFVect))
+
+      iBlkID = AppCtx%MeshTopology%Elem_Blk(iBlk)%ID
+      Do_iEloc: Do iEloc = 1, AppCtx%MeshTopology%Elem_Blk(iBlk)%Num_Elems
+         iE = AppCtx%MeshTopology%Elem_Blk(iBlk)%Elem_ID(iELoc)
+         RHS_Loc = 0.0_Kr
+         Call SectionIntRestrictClosure(AppCtx%BCUFlag%Sec, AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, BCFlag_Loc, iErr); CHKERRQ(ierr)
+         Call SectionRealRestrictClosure(AppCtx%F%Sec,      AppCtx%MeshTopology%mesh, iE-1, NumDoFVect, F_Loc,      iErr); CHKERRQ(ierr)
+         Do_iGauss: Do iGauss = 1, size(AppCtx%ElemVect(iE)%Gauss_C)
+            Do iDoF = 1, NumDoFVect
+               If (BCFlag_Loc(iDoF) == 0) Then
+                  ! RHS terms due to gradient flow
+                   RHS_Loc(iDoF) = RHS_Loc(iDoF) + AppCtx%ElemScal(iE)%Gauss_C(iGauss) * C2_GradFlow * AppCtx%ElemScal(iE)%BF(iDoF1, iGauss) * AppCtx%ElemScal(iE)%BF(iDoF2, iGauss)
+                  Call PetscLogFlops(2*oneflop, iErr); CHKERRQ(iErr)
+               End If
+            End Do
+         End Do Do_iGauss
+         Call SectionRealUpdateClosure(RHS_Sec, AppCtx%MeshTopology%Mesh, iE-1, RHS_Loc, ADD_VALUES, iErr); CHKERRQ(iErr)
+      End Do Do_iEloc
+
+      DeAllocate(BCFlag_Loc)
+      DeAllocate(RHS_Loc)
+
+      Call PetscLogEventEnd(AppCtx%LogInfo%RHSAssemblyLocalU_Event, iErr); CHKERRQ(iErr)
+   End Subroutine RHSV_AssemblyBlk_GradientFlow
+
+
+
+
    
 #if defined WITH_TAO   
    Subroutine GradientV_AssemblyBlk_ElastBrittle(GradientV_Sec, iBlk, U_Sec, Theta_Sec, V_Sec, AppCtx)

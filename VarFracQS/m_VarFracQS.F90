@@ -66,7 +66,10 @@ Contains
       TAO_Default_gttol = 0.
       TAO_Default_catol = 0.
       TAO_Default_crtol = 0.
-      
+
+      AppCtx%delta_t = 1.0
+      Call PetscOptionsGetReal(PETSC_NULL_CHARACTER, '-verbose', AppCtx%delta_t, flag, iErr); CHKERRQ(iErr)
+
       AppCtx%AppParam%Verbose = 0
       Call PetscOptionsGetInt(PETSC_NULL_CHARACTER, '-verbose', AppCtx%AppParam%Verbose, flag, iErr); CHKERRQ(iErr)
       Call InitFileNames(AppCtx)    

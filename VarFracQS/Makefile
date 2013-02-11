@@ -8,7 +8,7 @@ MEF90OBJS = $(MEF90DIR)/m_MEF_Parameters.o $(MEF90DIR)/m_MEF_LinAlg.o    \
 M_VARFRACSTRUCTDIR  = ../m_VarFrac_Struct/${PETSC_ARCH}
 M_VARFRACSTRUCTOBJS = ${M_VARFRACSTRUCTDIR}/m_VarFrac_Struct.o
 
-all: VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
+all: VarFracGF${DIM} VarFracQS${DIM} VarFracQSRecomputeEnergy${DIM}
 
 #include ${PETSC_DIR}/conf/rules
 #include ${PETSC_DIR}/conf/variables
@@ -32,6 +32,20 @@ endif
 
 ${PETSC_ARCH}:
 	@mkdir ${PETSC_ARCH}
+
+VarFracGF${DIM}: ${PETSC_ARCH} VarFracGF.o   ${PETSC_ARCH}/${DIM}VarFracGF.o \
+                                      m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o \
+                                      m_VarFracQS_U.o ${PETSC_ARCH}/${DIM}m_VarFracQS_U.o \
+                                      m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o \
+                                      m_VarFracQS.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o \
+                                      m_VarFracQS_Post.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o
+	${FLINKER} -o ${PETSC_ARCH}/VarFracGF${DIM} ${PETSC_ARCH}/${DIM}VarFracGF.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_U.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o  ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o ${MEF90OBJS} ${M_VARFRACSTRUCTOBJS} ${TAO_FORTRAN_LIB} ${TAO_LIB} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+
+VarFracGF.o:   ${PETSC_ARCH} m_VarFracQS.o ${PETSC_ARCH}/${DIM}m_VarFracQS.o \
+                                      m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o \
+                                      m_VarFracQS_U.o ${PETSC_ARCH}/${DIM}m_VarFracQS_U.o \
+                                      m_VarFracQS_V.o ${PETSC_ARCH}/${DIM}m_VarFracQS_V.o \
+                                      m_VarFracQS_Post.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Post.o
 
 VarFracQS${DIM}: ${PETSC_ARCH} VarFracQS.o   ${PETSC_ARCH}/${DIM}VarFracQS.o \
                                       m_VarFracQS_Types.o ${PETSC_ARCH}/${DIM}m_VarFracQS_Types.o \
