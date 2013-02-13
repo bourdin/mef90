@@ -1260,7 +1260,7 @@ Contains
          PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
          PhiHat(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
          PhiHat(5,:) = 4.0_Kr * Xi%X * Xi%Y
-         PhiHat(6,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+         PhiHat(6,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
          
          GradPhiHat(1,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr;     GradPhiHat(1,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr
          GradPhiHat(2,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                    GradPhiHat(2,:)%Y = 0.0_Kr
@@ -1743,7 +1743,7 @@ Contains
       
       num_Dof = 0
       nb_Gauss = 0
-
+      
       !!! Get the triangle area using Heron's formula
       !!! It would probably be much smarter to use the std formula for the 
       !!! area of a planar polygon in space. Roundoff error may be huge with Heron's formula
@@ -1834,7 +1834,7 @@ Contains
          dElem%BF(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
          dElem%BF(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
          dElem%BF(5,:) = 4.0_Kr * Xi%X * Xi%Y
-         dElem%BF(6,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+         dElem%BF(6,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
       Case Default
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
          ierr = PETSC_ERR_SUP

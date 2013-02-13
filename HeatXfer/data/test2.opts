@@ -1,11 +1,11 @@
 -cs0001_flux 0.
--cs0010_flux 1.
--cs0020_flux 0.
+-cs0010_flux 0.
+-cs0020_flux 1.
 -temp_snes_monitor
 -vs0010_boundaryTemp 0.
--vs0010_tempBC 0
+-vs0010_tempBC 1
 -vs0020_boundaryTemp 0.
--vs0020_tempBC 1
+-vs0020_tempBC 0
 -verbose 0
 -time_numstep 3
 -temp_ksp_converged_reason
