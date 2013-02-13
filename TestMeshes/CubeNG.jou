@@ -1,11 +1,14 @@
 reset
 journal off
 create brick x 1
-surface all size .25 scheme tridelaunay
+surface all size .125 scheme tridelaunay
+volume 1 scheme tetmesh
 Tridelaunay point placement gq
+
 mesh surface all
 smooth surface all
 smooth surface all
+
 mesh volume all
 smooth volume all
 smooth volume all
@@ -52,3 +55,4 @@ export mesh "CubeNG_Z-tetra4.gen" dimension 3 block all overwrite
 block 1 element type tetra10
 block 10 20 element type tri6
 export mesh "CubeNG_Z-tetra10.gen" dimension 3 block all overwrite
+
