@@ -16,11 +16,6 @@ Module m_MEF_Ctx_Type
       Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
       Integer                                         :: fileExoUnit
       PetscBag                                        :: GlobalOptionsBag      
-!!!   Keep for compatibility reasons until MEF90HeatXfer is working
-      PetscBag                                        :: GlobalPropertiesBag
-      PetscBag,Dimension(:),Pointer                   :: CellSetPropertiesBag
-      PetscBag,Dimension(:),Pointer                   :: VertexSetPropertiesBag
-      PetscBag,Dimension(:),Pointer                   :: MaterialPropertiesBag
    End Type MEF90Ctx_Type
    
    Type MEF90CtxGlobalOptions_Type
