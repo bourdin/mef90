@@ -1211,12 +1211,12 @@ Contains
          dElem%Gauss_C(5) = detBinv / 40.0_Kr
          dElem%Gauss_C(6) = detBinv / 15.0_Kr
          dElem%Gauss_C(7) = detBinv * 9.0_Kr / 40.0_Kr
-         Xi(1) = (/ 0.0_Kr         ,0.0_Kr          /)
-         Xi(2) = (/ 1.0_Kr / 2.0_Kr,0.0_Kr          /)
-         Xi(3) = (/ 1.0_Kr         ,0.0_Kr          /)
-         Xi(4) = (/ 1.0_Kr / 2.0_Kr,1.0_Kr / 2.0_Kr /)
-         Xi(5) = (/ 0.0_Kr         ,1.0_Kr          /)
-         Xi(6) = (/ 0.0_Kr         ,1.0_Kr / 2.0_Kr /)
+         Xi(1) = (/ 0.0_Kr,0.0_Kr /)
+         Xi(2) = (/ 0.5_Kr,0.0_Kr /)
+         Xi(3) = (/ 1.0_Kr,0.0_Kr /)
+         Xi(4) = (/ 0.5_Kr,0.5_Kr /)
+         Xi(5) = (/ 0.0_Kr,1.0_Kr /)
+         Xi(6) = (/ 0.0_Kr,0.5_Kr /)
          Xi(7) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
       Case(6)
          Nb_Gauss = 9
@@ -1786,17 +1786,17 @@ Contains
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
          dElem%Gauss_C(1) = area / 20.0_Kr
          dElem%Gauss_C(2) = area * 2.0_Kr / 15.0_Kr
-         dElem%Gauss_C(3) = area / 10.0_Kr
+         dElem%Gauss_C(3) = area / 20.0_Kr
          dElem%Gauss_C(4) = area * 2.0_Kr / 15.0_Kr
          dElem%Gauss_C(5) = area / 20.0_Kr
          dElem%Gauss_C(6) = area * 2.0_Kr / 15.0_Kr
          dElem%Gauss_C(7) = area * 9.0_Kr / 20.0_Kr
-         Xi(1) = (/ 0.0_Kr         ,0.0_Kr          /)
-         Xi(2) = (/ 1.0_Kr / 2.0_Kr,0.0_Kr          /)
-         Xi(3) = (/ 1.0_Kr         ,0.0_Kr          /)
-         Xi(4) = (/ 1.0_Kr / 2.0_Kr,1.0_Kr / 2.0_Kr /)
-         Xi(5) = (/ 0.0_Kr         ,1.0_Kr          /)
-         Xi(6) = (/ 0.0_Kr         ,1.0_Kr / 2.0_Kr /)
+         Xi(1) = (/ 0.0_Kr,0.0_Kr /)
+         Xi(2) = (/ 0.5_Kr,0.0_Kr /)
+         Xi(3) = (/ 1.0_Kr,0.0_Kr /)
+         Xi(4) = (/ 0.5_Kr,0.5_Kr /)
+         Xi(5) = (/ 0.0_Kr,1.0_Kr /)
+         Xi(6) = (/ 0.0_Kr,0.5_Kr /)
          Xi(7) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
       Case(6)
          Nb_Gauss = 9
