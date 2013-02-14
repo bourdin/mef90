@@ -62,7 +62,7 @@ Module m_MEF90ElasticityGlobalOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_ElasticityCtx_Type
          PetscBag                                           :: bag
-         Type(MEF90ElasticityGlobalOptions_Type),pointer      :: data
+         Type(MEF90ElasticityGlobalOptions_Type),pointer    :: data
          PetscErrorCode                                     :: ierr
       End subroutine PetscBagGetData
    End interface
@@ -75,7 +75,7 @@ Contains
 !!!
    Subroutine PetscBagGetDataMEF90ElasticityCtxGlobalOptions(bag,data,ierr)
       PetscBag                                        :: bag
-      Type(MEF90ElasticityGlobalOptions_Type),pointer   :: data
+      Type(MEF90ElasticityGlobalOptions_Type),pointer :: data
       PetscErrorCode                                  :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
@@ -96,7 +96,7 @@ Module m_MEF90ElasticityCellSetOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_ElasticityCtx_Type
          PetscBag                                           :: bag
-         Type(MEF90ElasticityCellSetOptions_Type),pointer     :: data
+         Type(MEF90ElasticityCellSetOptions_Type),pointer   :: data
          PetscErrorCode                                     :: ierr
       End subroutine PetscBagGetData
    End interface
@@ -108,9 +108,9 @@ Contains
 !!!  PetscBagGetDataMEF90ElasticityCtxCellSetOptions - Custom interface to PetscGetData
 !!!
    Subroutine PetscBagGetDataMEF90ElasticityCtxCellSetOptions(bag,data,ierr)
-      PetscBag                                        :: bag
+      PetscBag                                          :: bag
       Type(MEF90ElasticityCellSetOptions_Type),pointer  :: data
-      PetscErrorCode                                  :: ierr
+      PetscErrorCode                                    :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
    End Subroutine PetscBagGetDataMEF90ElasticityCtxCellSetOptions
@@ -130,7 +130,7 @@ Module m_MEF90ElasticityVertexSetOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_ElasticityCtx_Type
          PetscBag                                           :: bag
-         Type(MEF90ElasticityVertexSetOptions_Type),pointer   :: data
+         Type(MEF90ElasticityVertexSetOptions_Type),pointer :: data
          PetscErrorCode                                     :: ierr
       End subroutine PetscBagGetData
    End interface
@@ -143,7 +143,7 @@ Contains
 !!!
    Subroutine PetscBagGetDataMEF90ElasticityCtxVertexSetOptions(bag,data,ierr)
       PetscBag                                           :: bag
-      Type(MEF90ElasticityVertexSetOptions_Type),pointer   :: data
+      Type(MEF90ElasticityVertexSetOptions_Type),pointer :: data
       PetscErrorCode                                     :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
@@ -181,9 +181,9 @@ Contains
    Subroutine MEF90ElasticityCtx_InitializePrivate(ierr)
       PetscErrorCode,Intent(OUT)                      :: ierr
    
-      Type(MEF90ElasticityGlobalOptions_Type)           :: ElasticityGlobalOptions
-      Type(MEF90ElasticityCellSetOptions_Type)          :: ElasticityCellSetOptions
-      Type(MEF90ElasticityVertexSetOptions_Type)        :: ElasticityVertexSetOptions
+      Type(MEF90ElasticityGlobalOptions_Type)         :: ElasticityGlobalOptions
+      Type(MEF90ElasticityCellSetOptions_Type)        :: ElasticityCellSetOptions
+      Type(MEF90ElasticityVertexSetOptions_Type)      :: ElasticityVertexSetOptions
       character(len=1),pointer                        :: dummychar(:)
       PetscSizeT                                      :: sizeofchar
       
@@ -208,15 +208,15 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90ElasticityCtx_Create(ElasticityCtx,Mesh,MEF90Ctx,ierr)
-      Type(MEF90ElasticityCtx_Type),Intent(OUT)            :: ElasticityCtx
+      Type(MEF90ElasticityCtx_Type),Intent(OUT)          :: ElasticityCtx
       Type(DM),target,Intent(IN)                         :: Mesh
       Type(MEF90Ctx_Type),target,Intent(IN)              :: MEF90Ctx
       PetscErrorCode,Intent(OUT)                         :: ierr
    
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
-      Type(MEF90ElasticityGlobalOptions_Type),pointer      :: MEF90ElasticityGlobalOptions
-      Type(MEF90ElasticityCellSetOptions_Type),pointer     :: MEF90ElasticityCellSetOptions
-      Type(MEF90ElasticityVertexSetOptions_Type),pointer   :: MEF90ElasticityVertexSetOptions
+      Type(MEF90ElasticityGlobalOptions_Type),pointer    :: MEF90ElasticityGlobalOptions
+      Type(MEF90ElasticityCellSetOptions_Type),pointer   :: MEF90ElasticityCellSetOptions
+      Type(MEF90ElasticityVertexSetOptions_Type),pointer :: MEF90ElasticityVertexSetOptions
       Type(IS)                                           :: setIS
       PetscInt                                           :: set,numSet
 
@@ -265,7 +265,7 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90ElasticityCtx_Destroy(ElasticityCtx,ierr)
-      Type(MEF90ElasticityCtx_Type),Intent(OUT)         :: ElasticityCtx
+      Type(MEF90ElasticityCtx_Type),Intent(OUT)       :: ElasticityCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       PetscInt                                        :: set
@@ -301,7 +301,7 @@ Contains
    Subroutine PetscBagRegisterMEF90ElasticityCtxGlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
-      Type(MEF90ElasticityGlobalOptions_Type),Intent(IN)   :: default
+      Type(MEF90ElasticityGlobalOptions_Type),Intent(IN) :: default
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(MEF90ElasticityGlobalOptions_Type),pointer      :: ElasticityGlobalOptions
@@ -329,10 +329,10 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90ElasticityCtxCellSetOptions(bag,name,prefix,default,ierr)
-      PetscBag                                           :: bag
-      Character(len=*),Intent(IN)                        :: prefix,name
+      PetscBag                                             :: bag
+      Character(len=*),Intent(IN)                          :: prefix,name
       Type(MEF90ElasticityCellSetOptions_Type),Intent(IN)  :: default
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(OUT)                           :: ierr
 
       Type(MEF90ElasticityCellSetOptions_Type),pointer      :: ElasticityCellSetOptions
       Call PetscBagGetDataMEF90ElasticityCtxCellSetOptions(bag,ElasticityCellSetOptions,ierr);CHKERRQ(ierr)
@@ -354,7 +354,7 @@ Contains
    Subroutine PetscBagRegisterMEF90ElasticityCtxVertexSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                              :: bag
       Character(len=*),Intent(IN)                           :: prefix,name
-      Type(MEF90ElasticityVertexSetOptions_Type),Intent(IN)   :: default
+      Type(MEF90ElasticityVertexSetOptions_Type),Intent(IN) :: default
       PetscErrorCode,Intent(OUT)                            :: ierr
 
       Type(MEF90ElasticityVertexSetOptions_Type),pointer      :: ElasticityVertexSetOptions

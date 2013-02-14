@@ -4,7 +4,6 @@ Module m_MEF_EXO
    Use m_MEF_Ctx
    Use m_MEF_Utils
    Use m_MEF_Elements
-   Use m_MEF_Sieve
    Use petsc
    IMPLICIT NONE
 
