@@ -40,7 +40,7 @@ Program TestHeatXfer
    PetscBag,dimension(:),pointer                      :: MEF90MatPropBag
 
    Type(DM),target                                    :: Mesh
-   Type(IS)                                           :: setIS,cellIS
+   Type(IS)                                           :: setIS,cellIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
    Type(SectionReal)                                  :: defaultSection
@@ -265,10 +265,15 @@ Program TestHeatXfer
          
          !!! Compute energies
          Call MEF90HeatXFerEnergy(temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
-         Do set = 1, size(energy)
-            Write(IOBuffer,101) set,energy(set),work(set)
+         Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+         Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+         Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+         Do set = 1, size(setID)
+            Write(IOBuffer,101) setID(set),energy(set),work(set)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
          End Do
+         Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+         Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
          Write(IOBuffer,102) sum(energy),sum(work)
          Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
      

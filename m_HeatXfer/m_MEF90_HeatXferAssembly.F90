@@ -462,7 +462,7 @@ Contains
          Call MEF90DiffusionEnergySet(myenergy,temperatureSec,externalTemperatureSec,MEF90HeatXferCtx%DM,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,setIS,elem,elemType,ierr);CHKERRQ(ierr)
          Call MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
          
-         !Call DiffusionWorkSetCell()
+         Call MEF90DiffusionWorkSetCell(mywork,temperatureSec,MEF90HeatXferCtx%DM,fluxSec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
          Call MPI_AllReduce(myWork,work(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
          Call MEF90Element_Destroy(elem,ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)

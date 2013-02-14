@@ -1452,7 +1452,7 @@ Contains
       
       
       Call Element_P_Lagrange_2D_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
-      Num_DoF   = Size(Elem_Scal%BF,1) 
+      Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
       Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
