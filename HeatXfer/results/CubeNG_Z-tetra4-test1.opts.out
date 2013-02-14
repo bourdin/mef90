@@ -1,25 +1,22 @@
-Exodus Library Error: [ex_open]
-	Error: failed to open data/CubeNG_Z-tetra4_out.gen write only
-    exerrval = 2
 Solving steady state step    1, t= 0.00000E+00 
   0 SNES Function norm 0.000000000000e+00 
 cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
 ======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
 Solving steady state step    2, t= 5.00000E-01 
   0 SNES Function norm 7.026806337198e-01 
   Linear solve converged due to CONVERGED_RTOL iterations 18
-  1 SNES Function norm 4.179588994079e-09 
+  1 SNES Function norm 4.179589000075e-09 
 cell set    1 thermal energy:  1.25000E-01 fluxes work:  0.00000E+00 
-cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
 ======= Total thermal energy:  1.25000E-01 fluxes work:  0.00000E+00 
 Solving steady state step    3, t= 1.00000E+00 
   0 SNES Function norm 7.026806336341e-01 
   Linear solve converged due to CONVERGED_RTOL iterations 1
-  1 SNES Function norm 2.319429262770e-09 
+  1 SNES Function norm 2.319429254460e-09 
 cell set    1 thermal energy:  5.00000E-01 fluxes work:  0.00000E+00 
-cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
 ======= Total thermal energy:  5.00000E-01 fluxes work:  0.00000E+00 
