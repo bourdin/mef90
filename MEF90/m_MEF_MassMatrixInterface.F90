@@ -3,7 +3,6 @@ Module m_MEF_MassMatrixInterface
    Use m_MEF_LinAlg
    Use m_MEF_Parameters
    Use m_MEF_Elements
-   Use m_MEF_Sieve
    Use m_MEF_Utils
    Use m_MEF_MassMatrixImplementation_MEF90Element2D_Scal, MassMatrixAssembleSet_2DScal => MEF90_MassMatrixAssembleSet
    Use m_MEF_MassMatrixImplementation_MEF90Element2D_Vect, MassMatrixAssembleSet_2DVect => MEF90_MassMatrixAssembleSet

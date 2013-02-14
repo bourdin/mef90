@@ -11,7 +11,6 @@ Module m_MEF90
    Use m_MEF_Materials
    Use m_MEF_MPI
    Use m_MEF_Norm
-   Use m_MEF_Sieve
    Use m_MEF_Utils
 
    Implicit NONE

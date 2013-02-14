@@ -3,7 +3,6 @@ Module m_MEF_DiffusionInterface
    Use m_MEF_LinAlg
    Use m_MEF_Parameters
    Use m_MEF_Elements
-   Use m_MEF_Sieve
    Use m_MEF_Utils
    Use m_MEF_DiffusionImplementation_2D, &
          DiffusionBilinearFormSet_2D => DiffusionBilinearFormSet, &

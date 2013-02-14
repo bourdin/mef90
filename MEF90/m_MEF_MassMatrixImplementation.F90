@@ -4,7 +4,6 @@ Module MEF90_APPEND(m_MEF_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
    Use m_MEF_LinAlg
    Use m_MEF_Parameters
    Use m_MEF_Elements
-   Use m_MEF_Sieve
    Use m_MEF_Utils
    Use petsc
    IMPLICIT NONE

@@ -19,6 +19,5 @@ MEF90_OBJS = ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_MPI.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Norm.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Parameters.o \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Sieve.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF_Utils.o
 
