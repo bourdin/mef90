@@ -1,23 +1,23 @@
 Solving steady state step    1, t= 0.00000E+00 
   0 SNES Function norm 0.000000000000e+00 
 cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
 ======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
 Solving steady state step    2, t= 5.00000E-01 
   0 SNES Function norm 3.389768239025e-02 
   Linear solve converged due to CONVERGED_RTOL iterations 22
-  1 SNES Function norm 3.323076128275e-10 
-cell set    1 thermal energy:  4.12879E-02 fluxes work:  0.00000E+00 
-cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-======= Total thermal energy:  4.12879E-02 fluxes work:  0.00000E+00 
+  1 SNES Function norm 3.323076001086e-10 
+cell set    1 thermal energy:  4.12879E-02 fluxes work:  8.25757E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+======= Total thermal energy:  4.12879E-02 fluxes work:  8.25757E-02 
 Solving steady state step    3, t= 1.00000E+00 
   0 SNES Function norm 3.389768237615e-02 
   Linear solve converged due to CONVERGED_RTOL iterations 0
-  1 SNES Function norm 6.646152256551e-10 
+  1 SNES Function norm 6.646152002173e-10 
   Linear solve did not converge due to DIVERGED_DTOL iterations 0
-cell set    1 thermal energy:  1.65151E-01 fluxes work:  0.00000E+00 
-cell set    2 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set    3 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-======= Total thermal energy:  1.65151E-01 fluxes work:  0.00000E+00 
+cell set    1 thermal energy:  1.65151E-01 fluxes work:  3.30303E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+======= Total thermal energy:  1.65151E-01 fluxes work:  3.30303E-01 
