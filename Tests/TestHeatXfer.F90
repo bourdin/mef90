@@ -246,7 +246,7 @@ Program TestHeatXfer
          Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,step,time(step),ierr)
 
          !!! Solve SNES
-         !Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,temperature,ierr);CHKERRQ(ierr)
+         Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
          
