@@ -1,17 +1,9 @@
 #!/usr/bin/env python
-import infotxt
+import pymef90
 import sys
 import os
 
-def getlaststep(fname):
-  ### open file
-  f=open(fname)
-  ### Read last line in a string
-  lastline = f.readlines()[-1]
-  laststep = lastline.rsplit()[0] 
-  return(int(laststep))
-
-def SavePNG(prefix,geometry=[1920,1080]):
+def SavePNG(prefix,geometry=[2046,1536]):
     SaveWindowAtts = SaveWindowAttributes()
     SaveWindowAtts.outputToCurrentDirectory = 1
     SaveWindowAtts.fileName = prefix
@@ -49,23 +41,41 @@ def SetAnnotations3D():
     AnnotationAtts.axes3D.visible = 0
     SetAnnotationAttributes(AnnotationAtts)
     
+#AddOperator("Isovolume", 0)
+#IsovolumeAtts = IsovolumeAttributes()
+#IsovolumeAtts.lbound = -1e+37
+#IsovolumeAtts.ubound = 0.1
+#IsovolumeAtts.variable = "Fracture"
+#SetOperatorOptions(IsovolumeAtts, 0)
+
 def main():
     import os.path
     import shutil
     if os.path.exists('00_INFO.txt'):
-        Param = infotxt.Dictreadtxt('00_INFO.txt')
+        Param = pymef90.Dictreadtxt('00_INFO.txt')
+        prefix = str(Param['prefix'])
+        enerfile = prefix+'.ener'
+        laststep = pymef90.energies.getlaststep(enerfile)
     
         ##  
         ## Open the database
         ##
-        MyDatabase = str(Param['JOBID'])+'.xmf'
+        if os.path.exists(prefix+'-0001.gen'):
+          MyDatabase = prefix+'-*.gen database'
+        else:
+          MyDatabase = prefix+'-0000.gen'
+
         status = OpenDatabase(MyDatabase,0)
+        print MyDatabase, status
+        
         if not status:
-            MyDatabase = str(Param['JOBID'])+'.*.xmf database'
-            status = OpenDatabase(MyDatabase,0)
-            if not status:
-                print "Cannot open database, exiting"
-                return 0
+            print "unable to open database %s"%MyDatabase
+            return -1        
+
+        dim = GetMetaData(MyDatabase).GetMeshes(0).spatialDimension
+        laststep = TimeSliderGetNStates()-1
+        SetTimeSliderState(laststep-1)
+
         ##
         ## Add pseudocolor plot of fracture field
         ##
@@ -96,47 +106,11 @@ def main():
         p.max=1.0
         p.legendFlag=0
         
-        
-        
-        laststep = TimeSliderGetNStates()-1
-        SetTimeSliderState(laststep-1)
         SetPlotOptions(p)
     
 
-        if Param['NY'] == 2:
-            dim = 2
-        else:
-            dim = 3
-
         if dim == 2:
-            SetAnnotations()
-            View3DAtts = View3DAttributes()
-            View3DAtts.viewNormal = (0,-1.,0.)
-            View3DAtts.focus = (4, 0.005, 4)
-            View3DAtts.viewUp = (0,0,1)
-            View3DAtts.viewAngle = 30
-            View3DAtts.parallelScale = 5.65686
-            View3DAtts.nearPlane = -11.3137
-            View3DAtts.farPlane = 11.3137
-            View3DAtts.imagePan = (0, 0)
-            View3DAtts.imageZoom = 1
-            View3DAtts.perspective = 1
-            View3DAtts.eyeAngle = 2
-            View3DAtts.centerOfRotationSet = 0
-            View3DAtts.centerOfRotation = (4, 0.005, 4)
-            View3DAtts.axis3DScaleFlag = 0
-            View3DAtts.axis3DScales = (1, 1, 1)
-            View3DAtts.shear = (0, 0, 1)
-            SetView3D(View3DAtts)
-        
-        
-            geometry = [0,0]
-            if Param['NX'] > Param['NZ']:
-                geometry[0] = 2000;
-                geometry[1] = int(2000 * Param['NZ'] / Param['NX'])
-            else:
-                geometry[0] = int(2000 * Param['NX'] / Param['NZ'])
-                geometry[1] = 2000;
+            pass
         else:
             SetAnnotations3D()
             View3DAtts = View3DAttributes()
@@ -163,25 +137,19 @@ def main():
             ViewAxisArrayAtts.viewportCoords = (0.15, 0.9, 0.1, 0.85)
             SetViewAxisArray(ViewAxisArrayAtts)
 
-            AddOperator("Isosurface", 1)
             SetActivePlots(0)
-            IsosurfaceAtts = IsosurfaceAttributes()
-            IsosurfaceAtts.contourNLevels = 10
-            IsosurfaceAtts.contourValue = (0.1)
-            IsosurfaceAtts.contourPercent = ()
-            IsosurfaceAtts.contourMethod = IsosurfaceAtts.Value  # Level, Value, Percent
-            IsosurfaceAtts.minFlag = 0
-            IsosurfaceAtts.min = 0
-            IsosurfaceAtts.maxFlag = 0
-            IsosurfaceAtts.max = 1
-            IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
-            IsosurfaceAtts.variable = "Fracture"
-            SetOperatorOptions(IsosurfaceAtts, 1)
+            AddOperator("Isovolume", 0)
+            IsovolumeAtts = IsovolumeAttributes()
+            IsovolumeAtts.lbound = -1e+37
+            IsovolumeAtts.ubound = 0.1
+            IsovolumeAtts.variable = "Fracture"
+            SetOperatorOptions(IsovolumeAtts, 0)
+
 
         InvertBackgroundColor()        
         DrawPlots()
-        pngname = SavePNG(str(Param['JOBID']))
-        shutil.move(pngname,Param['JOBID']+'.png')
+        pngname = SavePNG(prefix)
+        shutil.move(pngname,prefix+'.png')
 
 
 import sys  
