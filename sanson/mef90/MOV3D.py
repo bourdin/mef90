@@ -47,30 +47,37 @@ def main():
     import os.path
     import shutil
     import math
-    import tempfile
-    
     if os.path.exists('00_INFO.txt'):
-        Param = pymef90.infotxt.Dictreadtxt('00_INFO.txt')
-        prefix = Param['prefix']
-            ##  
-            ## Open the database
-            ##
+        Param = pymef90.Dictreadtxt('00_INFO.txt')
+        prefix = str(Param['prefix'])
+        enerfile = prefix+'.ener'
+        laststep = pymef90.energies.getlaststep(enerfile)
+    
+        ##  
+        ## Open the database
+        ##
         if os.path.exists(prefix+'-0001.gen'):
-            MyDatabase= prefix+'-*.gen database'
+          MyDatabase = prefix+'-*.gen database'
         else:
-            MyDatabase= prefix+'-0000.gen'
-        status = OpenDatabase(MyDatabase,0)
-        if not status:
-            print "Cannot open database, exiting"
-            return 0
+          MyDatabase = prefix+'-0000.gen'
 
-        laststep = pymef90.getlaststep(prefix+'.ener')   
-            ##
-            ## Add pseudocolor plot of fracture field
-            ##
+        status = OpenDatabase(MyDatabase,0)
+        print MyDatabase, status
+        
+        if not status:
+            print "unable to open database %s"%MyDatabase
+            return -1        
+
+        dim = GetMetaData(MyDatabase).GetMeshes(0).spatialDimension
+        laststep = TimeSliderGetNStates()-1
+        SetTimeSliderState(laststep-1)
+
+        ##
+        ## Add pseudocolor plot of fracture field
+        ##
         AddPlot('Pseudocolor', 'Fracture')
         p = PseudocolorAttributes()
-        
+    
         p.lightingFlag = 1
         p.centering = p.Natural  # Natural, Nodal, Zonal
         p.scaling = p.Linear  # Linear, Log, Skew
@@ -88,54 +95,29 @@ def main():
         p.lineStyle = p.SOLID  # SOLID, DASH, DOT, DOTDASH
         p.lineWidth = 0
         p.opacityType = p.Explicit  # Explicit, ColorTable
-            # Set the min/max values
+        # Set the min/max values
         p.minFlag = 1
         p.maxFlag = 1
         p.min=0.0
         p.max=1.0
         p.legendFlag=0
-        SetPlotOptions(p)    
-        SetAnnotations3D()
         
-        View3DAtts = View3DAttributes()
-        View3DAtts.viewNormal = (0.657417, 0.711041, 0.249448)
-        View3DAtts.focus = (4, 4, 4)
-        View3DAtts.viewUp = (-0.166863, -0.18545, 0.968383)
-        View3DAtts.viewAngle = 15
-        View3DAtts.parallelScale = 6.9282
-        View3DAtts.nearPlane = -13.8564
-        View3DAtts.farPlane = 13.8564
-        View3DAtts.imagePan = (0, 0)
-        View3DAtts.imageZoom = 1
-        View3DAtts.perspective = 1
-        View3DAtts.eyeAngle = 2
-        View3DAtts.centerOfRotationSet = 0
-        View3DAtts.centerOfRotation = (4, 4, 4)
-        View3DAtts.axis3DScaleFlag = 0
-        View3DAtts.axis3DScales = (1, 1, 1)
-        View3DAtts.shear = (0, 0, 1)
-        SetView3D(View3DAtts)
-        ViewAxisArrayAtts = ViewAxisArrayAttributes()
-        ViewAxisArrayAtts.domainCoords = (0, 1)
-        ViewAxisArrayAtts.rangeCoords = (0, 1)
-        ViewAxisArrayAtts.viewportCoords = (0.15, 0.9, 0.1, 0.85)
-        SetViewAxisArray(ViewAxisArrayAtts)
+        SetPlotOptions(p)
+    
+        bb = GetBB(0)
         
-        AddOperator("Isosurface", 1)
         SetActivePlots(0)
-        IsosurfaceAtts = IsosurfaceAttributes()
-        IsosurfaceAtts.contourNLevels = 10
-        IsosurfaceAtts.contourValue = (0.1)
-        IsosurfaceAtts.contourPercent = ()
-        IsosurfaceAtts.contourMethod = IsosurfaceAtts.Value  # Level, Value, Percent
-        IsosurfaceAtts.minFlag = 0
-        IsosurfaceAtts.min = 0
-        IsosurfaceAtts.maxFlag = 0
-        IsosurfaceAtts.max = 1
-        IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
-        IsosurfaceAtts.variable = "Fracture"
-        SetOperatorOptions(IsosurfaceAtts, 1)
-        
+        AddOperator("Isovolume", 0)
+        IsovolumeAtts = IsovolumeAttributes()
+        IsovolumeAtts.lbound = -1e+37
+        IsovolumeAtts.ubound = 0.1
+        IsovolumeAtts.variable = "Fracture"
+        SetOperatorOptions(IsovolumeAtts, 0)
+        SetAnnotations3D()
+
+
+
+
         InvertBackgroundColor()        
         
         tmpdir = tempfile.mkdtemp()
@@ -143,35 +125,43 @@ def main():
         
             ### generate individual frames
         step = 180
-        for theta in range(360/step+1):
-            v = (math.cos(math.radians(theta*step)),-math.sin(math.radians(theta*step)),0)
+        for thetadeg in range(360/step+1):
+            phi = math.radians(20)
+            theta = math.radians(thetadeg)
             View3DAtts = View3DAttributes()
-            View3DAtts.viewNormal = v
-            #View3DAtts.focus = (Param['LX']/2., Param['LY']/2., Param['LZ']/2.)
-            View3DAtts.viewUp = (0, 0, 1)
-            View3DAtts.viewAngle = 30
-            View3DAtts.parallelScale = 6.9282
-            View3DAtts.nearPlane = -13.8564
-            View3DAtts.farPlane = 13.8564
+            View3DAtts.viewNormal = (math.cos(theta)*math.cos(phi),math.sin(theta)*math.cos(phi),math.sin(phi))
+            # use View3DAtts.viewNormal = (math.cos(theta)*math.cos(phi),math.sin(phi),math.sin(theta)*math.cos(phi))
+            # for Brick Y-up computations
+            View3DAtts.focus = ((bb[0]+bb[1])/2.,(bb[2]+bb[3])/2.,(bb[4]+bb[5])/2.)
+            View3DAtts.viewUp = (0,0,1)
+
+            View3DAtts.viewAngle = 39 #horizontal angle of view for a 50mm 24x36 camera
+            View3DAtts.parallelScale = 1
+            View3DAtts.nearPlane = -1.5*math.sqrt(bb[0]*bb[0] + bb[2]*bb[2] + bb[4]*bb[4])
+            View3DAtts.farPlane = 1.5*math.sqrt(bb[1]*bb[1] + bb[3]*bb[3] + bb[5]*bb[5])
             View3DAtts.imagePan = (0, 0)
-            View3DAtts.imageZoom = 1.21
+            View3DAtts.imageZoom = 1
             View3DAtts.perspective = 1
             View3DAtts.eyeAngle = 2
-            #View3DAtts.centerOfRotationSet = 0
-            #View3DAtts.centerOfRotation = (Param['LX']/2., Param['LY']/2., Param['LZ']/2.)
+            View3DAtts.centerOfRotationSet = 0
+            View3DAtts.centerOfRotation = ((bb[0]+bb[1])/2.,(bb[2]+bb[3])/2.,(bb[4]+bb[5])/2.)
             View3DAtts.axis3DScaleFlag = 0
             View3DAtts.axis3DScales = (1, 1, 1)
             View3DAtts.shear = (0, 0, 1)
             SetView3D(View3DAtts)
-            DrawPlots()
+            ViewAxisArrayAtts = ViewAxisArrayAttributes()
+            ViewAxisArrayAtts.domainCoords = (0, 1)
+            ViewAxisArrayAtts.rangeCoords = (0, 1)
+            SetViewAxisArray(ViewAxisArrayAtts)
+
             pngname = SavePNG(os.path.join(tmpdir,prefix)+"-",[1024,768])
             
-            ### use ffmpeg to generate animation
-            pattern = os.path.join(tmpdir,prefix)+"-%04d.png"
-            cmd = "ffmpeg -y -i %s -vcodec mjpeg -qscale 0 %s-3D.avi"%(pattern,prefix)
-            print "Now running %s"%cmd
-            #os.system(cmd)
-            #shutil.rmtree(tmpdir)
+        ### use ffmpeg to generate animation
+        pattern = os.path.join(tmpdir,prefix)+"-%04d.png"
+        cmd = "ffmpeg -y -i %s -vcodec mjpeg -qscale 0 %s-3D.avi"%(pattern,prefix)
+        print "Now running %s"%cmd
+        os.system(cmd)
+        shutil.rmtree(tmpdir)
 
 
 import sys  

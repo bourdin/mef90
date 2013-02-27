@@ -3,7 +3,7 @@ import pymef90
 import sys
 import os
 
-def SavePNG(prefix,geometry=[2046,1536]):
+def SavePNG(prefix,geometry=[1024,768]):
     SaveWindowAtts = SaveWindowAttributes()
     SaveWindowAtts.outputToCurrentDirectory = 1
     SaveWindowAtts.fileName = prefix
@@ -41,6 +41,11 @@ def SetAnnotations3D():
     AnnotationAtts.axes3D.visible = 0
     SetAnnotationAttributes(AnnotationAtts)
     
+def GetBB(plot):
+    SetActivePlots(plot)
+    Query("SpatialExtents")
+    return GetQueryOutputValue()
+
 #AddOperator("Isovolume", 0)
 #IsovolumeAtts = IsovolumeAttributes()
 #IsovolumeAtts.lbound = -1e+37
@@ -51,6 +56,7 @@ def SetAnnotations3D():
 def main():
     import os.path
     import shutil
+    import math
     if os.path.exists('00_INFO.txt'):
         Param = pymef90.Dictreadtxt('00_INFO.txt')
         prefix = str(Param['prefix'])
@@ -108,35 +114,12 @@ def main():
         
         SetPlotOptions(p)
     
-
+        bb = GetBB(0)
+        
         if dim == 2:
             pass
         else:
             SetAnnotations3D()
-            View3DAtts = View3DAttributes()
-            View3DAtts.viewNormal = (0.657417, 0.711041, 0.249448)
-            View3DAtts.focus = (4, 4, 4)
-            View3DAtts.viewUp = (-0.166863, -0.18545, 0.968383)
-            View3DAtts.viewAngle = 15
-            View3DAtts.parallelScale = 6.9282
-            View3DAtts.nearPlane = -13.8564
-            View3DAtts.farPlane = 13.8564
-            View3DAtts.imagePan = (0, 0)
-            View3DAtts.imageZoom = 1
-            View3DAtts.perspective = 1
-            View3DAtts.eyeAngle = 2
-            View3DAtts.centerOfRotationSet = 0
-            View3DAtts.centerOfRotation = (4, 4, 4)
-            View3DAtts.axis3DScaleFlag = 0
-            View3DAtts.axis3DScales = (1, 1, 1)
-            View3DAtts.shear = (0, 0, 1)
-            SetView3D(View3DAtts)
-            ViewAxisArrayAtts = ViewAxisArrayAttributes()
-            ViewAxisArrayAtts.domainCoords = (0, 1)
-            ViewAxisArrayAtts.rangeCoords = (0, 1)
-            ViewAxisArrayAtts.viewportCoords = (0.15, 0.9, 0.1, 0.85)
-            SetViewAxisArray(ViewAxisArrayAtts)
-
             SetActivePlots(0)
             AddOperator("Isovolume", 0)
             IsovolumeAtts = IsovolumeAttributes()
@@ -145,10 +128,38 @@ def main():
             IsovolumeAtts.variable = "Fracture"
             SetOperatorOptions(IsovolumeAtts, 0)
 
+            phi = math.radians(20)
+            theta = math.radians(30)
+            View3DAtts = View3DAttributes()
+            View3DAtts.viewNormal = (math.cos(theta)*math.cos(phi),math.sin(theta)*math.cos(phi),math.sin(phi))
+            # use View3DAtts.viewNormal = (math.cos(theta)*math.cos(phi),math.sin(phi),math.sin(theta)*math.cos(phi))
+            # for Brick Y-up computations
+            View3DAtts.focus = ((bb[0]+bb[1])/2.,(bb[2]+bb[3])/2.,(bb[4]+bb[5])/2.)
+            View3DAtts.viewUp = (0,0,1)
+
+            View3DAtts.viewAngle = 39 #horizontal angle of view for a 50mm 24x36 camera
+            View3DAtts.parallelScale = 1
+            View3DAtts.nearPlane = -1.5*math.sqrt(bb[0]*bb[0] + bb[2]*bb[2] + bb[4]*bb[4])
+            View3DAtts.farPlane = 1.5*math.sqrt(bb[1]*bb[1] + bb[3]*bb[3] + bb[5]*bb[5])
+            View3DAtts.imagePan = (0, 0)
+            View3DAtts.imageZoom = 1
+            View3DAtts.perspective = 1
+            View3DAtts.eyeAngle = 2
+            View3DAtts.centerOfRotationSet = 0
+            View3DAtts.centerOfRotation = ((bb[0]+bb[1])/2.,(bb[2]+bb[3])/2.,(bb[4]+bb[5])/2.)
+            View3DAtts.axis3DScaleFlag = 0
+            View3DAtts.axis3DScales = (1, 1, 1)
+            View3DAtts.shear = (0, 0, 1)
+            SetView3D(View3DAtts)
+            ViewAxisArrayAtts = ViewAxisArrayAttributes()
+            ViewAxisArrayAtts.domainCoords = (0, 1)
+            ViewAxisArrayAtts.rangeCoords = (0, 1)
+            SetViewAxisArray(ViewAxisArrayAtts)
 
         InvertBackgroundColor()        
         DrawPlots()
-        pngname = SavePNG(prefix)
+        geometry = [2046,1536]
+        pngname = SavePNG(prefix,geometry)
         shutil.move(pngname,prefix+'.png')
 
 
