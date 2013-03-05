@@ -7,7 +7,7 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00
 Solving steady state step    2, t= 5.00000E-01 
   0 SNES Function norm 2.526470812264e-02 
   Linear solve converged due to CONVERGED_RTOL iterations 54
-  1 SNES Function norm 2.725335305932e-10 
+  1 SNES Function norm 2.725336834720e-10 
   Linear solve did not converge due to DIVERGED_DTOL iterations 0
 cell set    1 thermal energy:  4.16667E-02 fluxes work:  8.33333E-02 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
@@ -16,7 +16,7 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00
 Solving steady state step    3, t= 1.00000E+00 
   0 SNES Function norm 2.526470811474e-02 
   Linear solve converged due to CONVERGED_RTOL iterations 0
-  1 SNES Function norm 5.450670611865e-10 
+  1 SNES Function norm 5.450673669440e-10 
   Linear solve did not converge due to DIVERGED_DTOL iterations 0
 cell set    1 thermal energy:  1.66667E-01 fluxes work:  3.33333E-01 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
