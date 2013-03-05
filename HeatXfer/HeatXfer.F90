@@ -262,7 +262,7 @@ Program TestHeatXfer
          !!! Solve SNES
          !!! Note after weird merge: does RHS need to be recomputed at each
          !!! step?
-         Call MEF90HeatXferRHS(rhs,time(step),MEF90HeatXferCtx,ierr)
+         Call MEF90HeatXferRHS(rhs,time(step),MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
          Call SNESSolve(snesTemp,rhs,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
