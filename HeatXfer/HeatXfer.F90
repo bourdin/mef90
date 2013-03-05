@@ -257,13 +257,9 @@ Program TestHeatXfer
 
          !!! Update fields
          Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,step,time(step),ierr)
-         Call MEF90HeatXferSetBoundaryTemperature(temperature,time(step),MEF90HeatXferCtx,ierr)
 
          !!! Solve SNES
-         !!! Note after weird merge: does RHS need to be recomputed at each
-         !!! step?
-         Call MEF90HeatXferRHS(rhs,time(step),MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
-         Call SNESSolve(snesTemp,rhs,temperature,ierr);CHKERRQ(ierr)
+         Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
          Call MEF90HeatXFerEnergy(temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
