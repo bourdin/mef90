@@ -1,6 +1,3 @@
-Exodus Library Error: [ex_open]
-	Error: failed to open data/SquareNG_X-tri6_out.gen write only
-    exerrval = 2
 Solving steady state step    1, t= 0.00000E+00 
   0 SNES Function norm 0.000000000000e+00 
 cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
