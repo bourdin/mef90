@@ -42,7 +42,7 @@ testHeatXfer:
 	@ARGS="-prefix data/$${PREFIX} -options_file data/$${OPTIONSFILE}";\
 	${MPIEXEC} -n 2 ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer $${ARGS} > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "         ... passed";\
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi
+	else echo "Possible problem. Diffs above \n========================================="; fi
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 
 	
 MEF90:
