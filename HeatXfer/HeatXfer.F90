@@ -45,9 +45,9 @@ Program TestHeatXfer
    PetscInt                                           :: numset,set
    Type(SectionReal)                                  :: defaultSection
    Type(Vec),target                                   :: temperature
-   Type(Vec),target                                   :: fluxPrevious,fluxTarget,flux
-   Type(Vec),target                                   :: boundaryTemperaturePrevious,boundaryTemperatureTarget,boundaryTemperature
-   Type(Vec),target                                   :: externalTemperaturePrevious,externalTemperatureTarget,externalTemperature
+   Type(Vec),target                                   :: flux
+   Type(Vec),target                                   :: boundaryTemperature
+   Type(Vec),target                                   :: externalTemperature
    Type(Vec)                                          :: residual,RHS
    PetscReal,Dimension(:),Pointer                     :: time,energy,work
 
@@ -123,26 +123,17 @@ Program TestHeatXfer
    Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,RHS,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(RHS,"RHS",ierr);CHKERRQ(ierr)
 
-   Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,boundaryTemperatureTarget,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(boundaryTemperatureTarget,"boundary Temperature",ierr);CHKERRQ(ierr)
-   MEF90HeatXferCtx%boundaryTemperatureTarget => boundaryTemperatureTarget
-   Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,boundaryTemperaturePrevious,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(boundaryTemperaturePrevious,"boundary Temperature (previous time step)",ierr);CHKERRQ(ierr)
-   MEF90HeatXferCtx%boundaryTemperaturePrevious => boundaryTemperaturePrevious
+   Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,boundaryTemperature,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(boundaryTemperature,"boundary Temperature",ierr);CHKERRQ(ierr)
+   MEF90HeatXferCtx%boundaryTemperature => boundaryTemperature
    
-   Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,externalTemperatureTarget,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(externalTemperatureTarget,"external Temperature",ierr);CHKERRQ(ierr)
-   MEF90HeatXferCtx%externalTemperatureTarget => externalTemperatureTarget
-   Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,externalTemperaturePrevious,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(externalTemperaturePrevious,"external Temperature (previous time step)",ierr);CHKERRQ(ierr)
-   MEF90HeatXferCtx%externalTemperaturePrevious => externalTemperaturePrevious
+   Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,externalTemperature,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(externalTemperature,"external Temperature",ierr);CHKERRQ(ierr)
+   MEF90HeatXferCtx%externalTemperature => externalTemperature
 
-   Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,fluxTarget,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(fluxTarget,"Flux",ierr);CHKERRQ(ierr)
-   MEF90HeatXferCtx%fluxTarget => fluxTarget
-   Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,fluxPrevious,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(fluxPrevious,"Flux (previous time step)",ierr);CHKERRQ(ierr)
-   MEF90HeatXferCtx%fluxPrevious => fluxPrevious
+   Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,flux,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(flux,"Flux",ierr);CHKERRQ(ierr)
+   MEF90HeatXferCtx%flux => flux
 
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
@@ -278,13 +269,13 @@ Program TestHeatXfer
          
          !!! Save results
          Call DMGetLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%fluxTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%fluxTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                 MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr);CHKERRQ(ierr)
 
-         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperatureTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperatureTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                 MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
 
@@ -294,8 +285,8 @@ Program TestHeatXfer
          Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                   MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%tempOffset,ierr);CHKERRQ(ierr)
 
-         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperatureTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperatureTarget,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                   MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
          Call DMRestoreLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
@@ -316,31 +307,19 @@ Program TestHeatXfer
    Call VecDestroy(residual,ierr);CHKERRQ(ierr)
    Call VecDestroy(RHS,ierr);CHKERRQ(ierr)
    
-   If (Associated(MEF90HeatXferCtx%boundaryTemperaturePrevious)) Then 
-      Call VecDestroy(MEF90HeatXferCtx%boundaryTemperaturePrevious,ierr);CHKERRQ(ierr)
-      Nullify(MEF90HeatXferCtx%boundaryTemperaturePrevious)
-   End If
-   If (Associated(MEF90HeatXferCtx%boundaryTemperatureTarget)) Then 
-      Call VecDestroy(MEF90HeatXferCtx%boundaryTemperatureTarget,ierr);CHKERRQ(ierr)
-      Nullify(MEF90HeatXferCtx%boundaryTemperatureTarget)
+   If (Associated(MEF90HeatXferCtx%boundaryTemperature)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%boundaryTemperature)
    End If
    
-   If (Associated(MEF90HeatXferCtx%externalTemperaturePrevious)) Then 
-      Call VecDestroy(MEF90HeatXferCtx%externalTemperaturePrevious,ierr);CHKERRQ(ierr)
-      Nullify(MEF90HeatXferCtx%externalTemperaturePrevious)
-   End If
-   If (Associated(MEF90HeatXferCtx%externalTemperatureTarget)) Then 
-      Call VecDestroy(MEF90HeatXferCtx%externalTemperatureTarget,ierr);CHKERRQ(ierr)
-      Nullify(MEF90HeatXferCtx%externalTemperatureTarget)
+   If (Associated(MEF90HeatXferCtx%externalTemperature)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%externalTemperature,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%externalTemperature)
    End If
 
-   If (Associated(MEF90HeatXferCtx%fluxPrevious)) Then 
-      Call VecDestroy(MEF90HeatXferCtx%fluxPrevious,ierr);CHKERRQ(ierr)
-      Nullify(MEF90HeatXferCtx%fluxPrevious)
-   End If
-   If (Associated(MEF90HeatXferCtx%fluxTarget)) Then 
-      Call VecDestroy(MEF90HeatXferCtx%fluxTarget,ierr);CHKERRQ(ierr)
-      Nullify(MEF90HeatXferCtx%fluxTarget)
+   If (Associated(MEF90HeatXferCtx%flux)) Then 
+      Call VecDestroy(MEF90HeatXferCtx%flux,ierr);CHKERRQ(ierr)
+      Nullify(MEF90HeatXferCtx%flux)
    End If
 
    DeAllocate(time)

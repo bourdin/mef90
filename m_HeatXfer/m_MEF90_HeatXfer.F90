@@ -44,51 +44,36 @@ Contains
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
 
-      If (step > 1) Then
-         !!! This copy is not necessary if the scaling of each field is CST... 
-         Call VecCopy(MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx%fluxPrevious,ierr);CHKERRQ(ierr)
-         Call VecCopy(MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx%externalTemperaturePrevious,ierr);CHKERRQ(ierr)
-         Call VecCopy(MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx%boundaryTemperaturePrevious,ierr);CHKERRQ(ierr)
-         MEF90HeatXferCtx%timePrevious = MEF90HeatXferCtx%timeTarget
-      End If
-      MEF90HeatXferCtx%timeTarget = time
-      
       Select case (MEF90HeatXferGlobalOptions%fluxScaling)
          Case (MEF90Scaling_File)
-            Call VecLoadExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+            Call VecLoadExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                    MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_Linear)
-            Call MEF90HeatXferGetfluxCst(MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx,ierr)
-            Call VecScale(MEF90HeatXferCtx%fluxTarget,time,ierr);CHKERRQ(ierr)
+            Call MEF90HeatXferGetfluxCst(MEF90HeatXferCtx%flux,MEF90HeatXferCtx,ierr)
+            Call VecScale(MEF90HeatXferCtx%flux,time,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_CST)
-            Call MEF90HeatXferGetfluxCst(MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx,ierr)
+            Call MEF90HeatXferGetfluxCst(MEF90HeatXferCtx%flux,MEF90HeatXferCtx,ierr)
       End Select
       Select case (MEF90HeatXferGlobalOptions%externalTempScaling)
          Case (MEF90Scaling_File)
-            Call VecLoadExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+            Call VecLoadExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                    MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_Linear)
-            Call MEF90HeatXferGetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx,ierr)
-            Call VecScale(MEF90HeatXferCtx%externalTemperatureTarget,time,ierr);CHKERRQ(ierr)
+            Call MEF90HeatXferGetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx,ierr)
+            Call VecScale(MEF90HeatXferCtx%externalTemperature,time,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_CST)
-            Call MEF90HeatXferGetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx,ierr)
+            Call MEF90HeatXferGetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx,ierr)
       End Select
       Select case (MEF90HeatXferGlobalOptions%boundaryTempScaling)
          Case (MEF90Scaling_File)
-            Call VecLoadExodusVertex(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+            Call VecLoadExodusVertex(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%boundaryTemperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                      MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_Linear)
-            Call MEF90HeatXferGetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx,ierr)
-            Call VecScale(MEF90HeatXferCtx%boundaryTemperatureTarget,time,ierr);CHKERRQ(ierr)
+            Call MEF90HeatXferGetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperature,MEF90HeatXferCtx,ierr)
+            Call VecScale(MEF90HeatXferCtx%boundaryTemperature,time,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_CST)
-            Call MEF90HeatXferGetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx,ierr)
+            Call MEF90HeatXferGetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperature,MEF90HeatXferCtx,ierr)
       End Select
-      If (step == 1) Then
-         Call VecCopy(MEF90HeatXferCtx%fluxTarget,MEF90HeatXferCtx%fluxPrevious,ierr);CHKERRQ(ierr)
-         Call VecCopy(MEF90HeatXferCtx%externalTemperatureTarget,MEF90HeatXferCtx%externalTemperaturePrevious,ierr);CHKERRQ(ierr)
-         Call VecCopy(MEF90HeatXferCtx%boundaryTemperatureTarget,MEF90HeatXferCtx%boundaryTemperaturePrevious,ierr);CHKERRQ(ierr)
-         MEF90HeatXferCtx%timePrevious = MEF90HeatXferCtx%timeTarget
-      End If
    End Subroutine MEF90HeatXferGetTransients
    
 #undef __FUNCT__

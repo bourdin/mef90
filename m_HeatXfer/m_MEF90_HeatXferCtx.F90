@@ -11,14 +11,10 @@ Module m_MEF90_HeatXferCtx_Type
    !Public :: MEF90HeatXferVertexSetOptions_Type
    
    Type MEF90HeatXferCtx_Type
-      PetscReal                        :: timePrevious,timeTarget,time
+      Type(Vec),pointer                :: flux
+      Type(Vec),pointer                :: boundaryTemperature
+      Type(Vec),pointer                :: externalTemperature
 
-      Type(Vec),pointer                :: fluxPrevious,fluxTarget
-      Type(Vec),pointer                :: boundaryTemperaturePrevious,boundaryTemperatureTarget
-      Type(Vec),pointer                :: externalTemperaturePrevious,externalTemperatureTarget
-      !!! XXXPrevious     represents a field at the previous time step
-      !!! XXXTarget  represents a field at the time step currently being computed
-      
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
       PetscBag,Dimension(:),Pointer    :: VertexSetOptionsBag
@@ -256,12 +252,9 @@ Contains
       End Do
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       
-      Nullify(HeatXferCtx%fluxPrevious)
-      Nullify(HeatXferCtx%fluxTarget)
-      Nullify(HeatXferCtx%boundaryTemperaturePrevious)
-      Nullify(HeatXferCtx%boundaryTemperatureTarget)
-      Nullify(HeatXferCtx%externalTemperaturePrevious)
-      Nullify(HeatXferCtx%externalTemperatureTarget)
+      Nullify(HeatXferCtx%flux)
+      Nullify(HeatXferCtx%boundaryTemperature)
+      Nullify(HeatXferCtx%externalTemperature)
    End Subroutine MEF90HeatXferCtx_Create
    
 #undef __FUNCT__
@@ -290,12 +283,9 @@ Contains
       
       Nullify(HeatXferCtx%DM)
       Nullify(HeatXferCtx%MEF90Ctx)
-      Nullify(HeatXferCtx%fluxPrevious)
-      Nullify(HeatXferCtx%fluxTarget)
-      Nullify(HeatXferCtx%boundaryTemperaturePrevious)
-      Nullify(HeatXferCtx%boundaryTemperatureTarget)
-      Nullify(HeatXferCtx%externalTemperaturePrevious)
-      Nullify(HeatXferCtx%externalTemperatureTarget)
+      Nullify(HeatXferCtx%flux)
+      Nullify(HeatXferCtx%boundaryTemperature)
+      Nullify(HeatXferCtx%externalTemperature)
       Nullify(HeatXferCtx%DM)
       Call DMDestroy(HeatXferCtx%cellDM,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferCtx_Destroy
