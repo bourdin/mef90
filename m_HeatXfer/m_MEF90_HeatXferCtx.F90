@@ -38,6 +38,8 @@ Module m_MEF90_HeatXferCtx_Type
       PetscInt                         :: externalTempOffset
       PetscInt                         :: fluxScaling
       PetscInt                         :: fluxOffset
+      !!! offset  = position in data file (required for exodus)
+      !!! scaling = time (step) scaling law currently CST, Linear, or File
    End Type MEF90HeatXferGlobalOptions_Type
 
    Type MEF90HeatXferCellSetOptions_Type
