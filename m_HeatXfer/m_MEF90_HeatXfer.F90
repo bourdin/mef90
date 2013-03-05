@@ -4,14 +4,15 @@ Module m_MEF90_HeatXfer
 #include "finclude/petscbagdef.h"
    Use m_MEF90
    Use m_MEF90_HeatXferCtx
-   Use m_MEF90_HeatXferAssembly2D, &
-      MEF90HeatXferOperator2D => MEF90HeatXferOperator, &
-      MEF90HeatXferBilinearForm2D => MEF90HeatXferBilinearForm, &
-      MEF90HeatXferEnergy2D => MEF90HeatXferEnergy
-   Use m_MEF90_HeatXferAssembly3D, &
-      MEF90HeatXferOperator3D => MEF90HeatXferOperator, &
-      MEF90HeatXferBilinearForm3D => MEF90HeatXferBilinearForm, &
-      MEF90HeatXferEnergy3D => MEF90HeatXferEnergy
+   Use m_MEF90_HeatXferAssembly2D
+      !MEF90HeatXferEnergy2D => MEF90HeatXferEnergy
+      !MEF90HeatXferOperator2D => MEF90HeatXferOperator, &
+      !MEF90HeatXferBilinearForm2D => MEF90HeatXferBilinearForm, &
+      !!! For some reason, this trick seems to confuse intel 13.0...
+   Use m_MEF90_HeatXferAssembly3D
+      !MEF90HeatXferEnergy3D => MEF90HeatXFerEnergy
+      !MEF90HeatXferOperator3D => MEF90HeatXferOperator, &
+      !MEF90HeatXferBilinearForm3D => MEF90HeatXferBilinearForm, &
    Implicit none
 
    !Private
