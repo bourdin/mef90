@@ -65,7 +65,6 @@ def SavePNG(prefix,geometry=[1024,768]):
     SetSaveWindowAttributes(SaveWindowAtts)
     pngname = SaveWindow()
     if os.path.exists(pngname):
-        print pngname, prefix+'.png'
         shutil.move(pngname,prefix+'.png')
         return 0
     else:
