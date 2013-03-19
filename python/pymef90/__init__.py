@@ -3,4 +3,4 @@ from cubmef90 import *
 from infotxt import *
 from jobs import *
 from pymef90 import *
-import visit
+import visitmef90
