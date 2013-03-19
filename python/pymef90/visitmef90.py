@@ -1,5 +1,7 @@
+from visit import *
+
 def SetAnnotations():
-    AnnotationAtts = AnnotationAttributes()
+    AnnotationAtts = visit.GetAnnotationAttributes()
     AnnotationAtts.axes3D.xAxis.label.visible = 0
     AnnotationAtts.axes3D.yAxis.label.visible = 0
     AnnotationAtts.axes3D.zAxis.label.visible = 0
@@ -11,7 +13,7 @@ def SetAnnotations():
     AnnotationAtts.axes3D.visible = 0
     AnnotationAtts.backgroundColor = (0, 0, 0, 255)
     AnnotationAtts.foregroundColor = (255, 255, 255, 255)
-    SetAnnotationAttributes(AnnotationAtts)
+    visit.SetAnnotationAttributes(AnnotationAtts)
     return 0
 
 def setView3DXup(thetadeg = 30,phideg = 45):
@@ -62,7 +64,8 @@ def SavePNG(prefix,geometry=[1024,768]):
     SaveWindowAtts.forceMerge = 1
     SetSaveWindowAttributes(SaveWindowAtts)
     pngname = SaveWindow()
-    if os.path.exist(pngname):
+    if os.path.exists(pngname):
+        print pngname, prefix+'.png'
         shutil.move(pngname,prefix+'.png')
         return 0
     else:
