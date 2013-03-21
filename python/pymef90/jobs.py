@@ -9,6 +9,8 @@ def PrepareJob(Geometry,Parameters,debug=False):
         Parameters['jobid'] = os.getenv('PBS_JOBID')
     elif os.getenv('JOB_ID'):
         Parameters['jobid'] = os.getenv('JOB_ID')
+    elif os.getenv('SLURM_JOB_ID'):
+        Parameters['jobid'] = os.getenv('SLURM_JOB_ID')
     else:
         Parameters['jobid'] = '0000'
      
@@ -31,6 +33,9 @@ def PrepareJob(Geometry,Parameters,debug=False):
     elif os.getenv('SGE_O_WORKDIR'):
         # We are running inside a SGE job
         submitdir = os.getenv('SGE_O_WORKDIR')
+    elif os.getenv('SLURM_SUBMIT_DIR'):
+        # We are running inside a SLURM/SBATCH job
+        submitdir = os.getenv('SLURM_SUBMIT_DIR')
     else:
         # We are running in interactive mode
         submitdir = os.getcwd()
@@ -51,6 +56,9 @@ def PrepareJob(Geometry,Parameters,debug=False):
         elif os.getenv('SGE_O_WORKDIR'):
             # We are running inside a SGE job
             Parameters['workdir'] = os.path.join(os.getenv('SGE_O_WORKDIR'),Parameters['jobid'])
+        elif os.getenv('SLURM_SUBMIT_DIR'):
+            # We are running inside a SBATCH / SRUN job
+            Parameters['workdir'] = os.path.join(os.getenv('SLURM_SUBMIT_DIR'),Parameters['jobid'])
         else:
             # We are running in interactive mode
             Parameters['workdir'] = os.path.join(os.getcwd(),Parameters['jobid'])
