@@ -1,0 +1,531 @@
+#include "../MEF90/mef90.inc"
+Module m_MEF90_DefMechCtx_Type
+#include "finclude/petscdef.h"
+   Use m_MEF90
+   Use,Intrinsic :: iso_c_binding
+   Implicit none
+   !Private  
+   !Public :: MEF90DefMechCtx_Type
+   !Public :: MEF90DefMechGlobalOptions_Type
+   !Public :: MEF90DefMechCellSetOptions_Type
+   !Public :: MEF90DefMechVertexSetOptions_Type
+   
+   Type MEF90DefMechCtx_Type
+      Type(Vec),pointer                :: displacement,damage
+      Type(Vec),pointer                :: force
+      Type(Vec),pointer                :: pressureForce
+      Type(Vec),pointer                :: boundaryDisplacement
+      Type(Vec),pointer                :: boundaryDamage
+      Type(Vec),Pointer                :: plasticStrain
+      Type(Vec),Pointer                :: temperature
+
+      PetscBag                         :: GlobalOptionsBag
+      PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
+      PetscBag,Dimension(:),Pointer    :: VertexSetOptionsBag
+      PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
+      Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
+      Type(DM),pointer                 :: DMScal,DMVect
+      Type(DM)                         :: cellDMScal,cellDMVect,cellDMMatS
+   End Type MEF90DefMechCtx_Type
+   
+   Type MEF90DefMechGlobalOptions_Type
+      PetscInt                         :: mode
+      PetscBool                        :: addDisplacementNullSpace
+      PetscInt                         :: displacementOffset
+      PetscInt                         :: damageOffset
+      PetscInt                         :: stressOffset
+      PetscInt                         :: plasticStrainOffset
+      PetscInt                         :: forceScaling
+      PetscInt                         :: forceOffset
+      PetscInt                         :: pressureForceScaling
+      PetscInt                         :: pressureForceOffset
+      PetscInt                         :: boundaryDisplacementScaling
+      PetscInt                         :: boundaryDisplacementOffset
+      PetscInt                         :: boundaryDamageOffset
+      !!! offset  = position in data file (required for exodus)
+      !!! scaling = time (step) scaling law currently CST, Linear, or File
+   End Type MEF90DefMechGlobalOptions_Type
+
+   Type MEF90DefMechCellSetOptions_Type
+      PetscInt                         :: elemTypeShortID
+      PetscReal                        :: force
+      PetscReal                        :: pressureForce
+      PetscEnum                        :: defectLaw
+   End Type MEF90DefMechCellSetOptions_Type
+
+   Type MEF90DefMechVertexSetOptions_Type
+      PetscBool                        :: Has_displacementBC
+      PetscBool                        :: Has_damageBC
+      PetscReal                        :: boundaryDisplacement
+      PetscReal                        :: boundaryDamage
+   End Type MEF90DefMechVertexSetOptions_Type 
+End Module m_MEF90_DefMechCtx_Type
+
+Module m_MEF90DefMechGlobalOptions_Private
+#include "finclude/petscdef.h"
+#include "finclude/petscbagdef.h"
+   Use m_MEF90
+   Use m_MEF90_DefMechCtx_Type
+   Implicit None
+
+   Private
+   Public :: PetscBagGetDataMEF90DefMechCtxGlobalOptions
+   
+   Interface PetscBagGetData
+      Subroutine PetscBagGetData(bag,data,ierr)
+         Use m_MEF90_DefMechCtx_Type
+         PetscBag                                              :: bag
+         Type(MEF90DefMechGlobalOptions_Type),pointer  :: data
+         PetscErrorCode                                        :: ierr
+      End subroutine PetscBagGetData
+   End interface
+Contains
+
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagGetDataMEF90DefMechCtxGlobalOptions"
+!!!
+!!!  PetscBagGetDataMEF90DefMechCtxGlobalOptions - Custom interface to PetscGetData
+!!!
+   Subroutine PetscBagGetDataMEF90DefMechCtxGlobalOptions(bag,data,ierr)
+      PetscBag                                              :: bag
+      Type(MEF90DefMechGlobalOptions_Type),pointer  :: data
+      PetscErrorCode                                        :: ierr
+      
+      Call PetscBagGetData(bag,data,ierr)
+   End Subroutine PetscBagGetDataMEF90DefMechCtxGlobalOptions
+End Module m_MEF90DefMechGlobalOptions_Private
+
+Module m_MEF90DefMechCellSetOptions_Private
+#include "finclude/petscdef.h"
+#include "finclude/petscbagdef.h"
+   Use m_MEF90
+   Use m_MEF90_DefMechCtx_Type
+   Implicit None
+
+   Private
+   Public :: PetscBagGetDataMEF90DefMechCtxCellSetOptions
+   
+   Interface PetscBagGetData
+      Subroutine PetscBagGetData(bag,data,ierr)
+         Use m_MEF90_DefMechCtx_Type
+         PetscBag                                              :: bag
+         Type(MEF90DefMechCellSetOptions_Type),pointer :: data
+         PetscErrorCode                                        :: ierr
+      End subroutine PetscBagGetData
+   End interface
+Contains
+
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagGetDataMEF90DefMechCtxCellSetOptions"
+!!!
+!!!  PetscBagGetDataMEF90DefMechCtxCellSetOptions - Custom interface to PetscGetData
+!!!
+   Subroutine PetscBagGetDataMEF90DefMechCtxCellSetOptions(bag,data,ierr)
+      PetscBag                                              :: bag
+      Type(MEF90DefMechCellSetOptions_Type),pointer :: data
+      PetscErrorCode                                        :: ierr
+      
+      Call PetscBagGetData(bag,data,ierr)
+   End Subroutine PetscBagGetDataMEF90DefMechCtxCellSetOptions
+End Module m_MEF90DefMechCellSetOptions_Private
+
+Module m_MEF90DefMechVertexSetOptions_Private
+#include "finclude/petscdef.h"
+#include "finclude/petscbagdef.h"
+   Use m_MEF90
+   Use m_MEF90_DefMechCtx_Type
+   Implicit None
+
+   Private
+   Public :: PetscBagGetDataMEF90DefMechCtxVertexSetOptions
+   
+   Interface PetscBagGetData
+      Subroutine PetscBagGetData(bag,data,ierr)
+         Use m_MEF90_DefMechCtx_Type
+         PetscBag                                                 :: bag
+         Type(MEF90DefMechVertexSetOptions_Type),pointer  :: data
+         PetscErrorCode                                           :: ierr
+      End subroutine PetscBagGetData
+   End interface
+
+Contains
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagGetDataMEF90DefMechCtxVertexSetOptions"
+!!!
+!!!  PetscBagGetDataMEF90DefMechCtxVertexSetOptions - Custom interface to PetscGetData
+!!!
+   Subroutine PetscBagGetDataMEF90DefMechCtxVertexSetOptions(bag,data,ierr)
+      PetscBag                                                 :: bag
+      Type(MEF90DefMechVertexSetOptions_Type),pointer  :: data
+      PetscErrorCode                                           :: ierr
+      
+      Call PetscBagGetData(bag,data,ierr)
+   End Subroutine PetscBagGetDataMEF90DefMechCtxVertexSetOptions
+End Module m_MEF90DefMechVertexSetOptions_Private
+
+Module m_MEF90_DefMechCtx
+#include "finclude/petscdef.h"
+   Use m_MEF90
+   Use m_MEF90_DefMechCtx_Type
+   Use m_MEF90DefMechGlobalOptions_Private
+   Use m_MEF90DefMechCellSetOptions_Private
+   Use m_MEF90DefMechVertexSetOptions_Private
+   Implicit none
+
+   PetscSizeT,protected   :: sizeofMEF90DefMechGlobalOptions
+   PetscSizeT,protected   :: sizeofMEF90DefMechCellSetOptions
+   PetscSizeT,protected   :: sizeofMEF90DefMechVertexSetOptions
+   
+   Enum,bind(c)
+      enumerator  :: MEF90DefMech_ModeQuasiStatic = 0, &
+                     MEF90DefMech_ModeSteadyGradientFlow
+   End Enum
+   Character(len = MEF90_MXSTRLEN),dimension(5),protected   :: MEF90DefMech_ModeList
+   
+   Enum,bind(c)
+      enumerator  :: MEF90DefMech_defectLawElasticity = 0, &
+                     MEF90DefMech_defectLawBrittleFracture, &
+                     MEF90DefMech_defectLawPlasticity
+   End Enum
+   Character(len = MEF90_MXSTRLEN),dimension(5),protected   :: MEF90DefMech_defectLawList
+   
+   Enum,bind(c)
+      enumerator  :: MEF90DefMech_defectLawBrittleFractureAT1 = 0, &
+                     MEF90DefMech_defectLawBrittleFractureAT2
+   End Enum
+   Character(len = MEF90_MXSTRLEN),dimension(4),protected   :: MEF90DefMech_defectLawBrittleFractureList
+
+   Enum,bind(c)
+      enumerator  :: MEF90DefMech_defectLawPlasticityTresca = 0, &
+                     MEF90DefMech_defectLawPlasticityVonMises
+   End Enum
+   Character(len = MEF90_MXSTRLEN),dimension(4),protected   :: MEF90DefMech_defectLawPlasticityList
+Contains
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCtx_InitializePrivate"
+!!!
+!!!  
+!!!  MEF90DefMechCtx_InitializePrivate:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechCtx_InitializePrivate(ierr)
+      PetscErrorCode,Intent(OUT)                         :: ierr
+   
+      Type(MEF90DefMechGlobalOptions_Type)       :: DefMechGlobalOptions
+      Type(MEF90DefMechCellSetOptions_Type)      :: DefMechCellSetOptions
+      Type(MEF90DefMechVertexSetOptions_Type)    :: DefMechVertexSetOptions
+      character(len=1),pointer                           :: dummychar(:)
+      PetscSizeT                                         :: sizeofchar
+      
+      Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
+      sizeofMEF90DefMechGlobalOptions = size(transfer(DefMechGlobalOptions,dummychar))*sizeofchar
+      sizeofMEF90DefMechCellSetOptions = size(transfer(DefMechCellSetOptions,dummychar))*sizeofchar
+      sizeofMEF90DefMechVertexSetOptions = size(transfer(DefMechVertexSetOptions,dummychar))*sizeofchar
+
+      MEF90DefMech_ModeList(1) = 'QuasiStatic'
+      MEF90DefMech_ModeList(2) = 'GradientFlow'
+      MEF90DefMech_ModeList(3) = 'MEF90_DefMech_Mode'
+      MEF90DefMech_ModeList(4) = '_MEF90_DefMech_Mode'
+      MEF90DefMech_ModeList(5) = ''
+      
+      MEF90DefMech_defectLawList(1) = 'Elasticity'
+      MEF90DefMech_defectLawList(2) = 'BrittleFracture'
+      MEF90DefMech_defectLawList(3) = 'Plasticity'
+      MEF90DefMech_defectLawList(4) = 'MEF90DefMech_defectLaw'
+      MEF90DefMech_defectLawList(5) = ''
+
+      MEF90DefMech_defectLawBrittleFractureList(1) = 'AT1'
+      MEF90DefMech_defectLawBrittleFractureList(2) = 'AT2'
+      MEF90DefMech_defectLawBrittleFractureList(3) = 'MEF90DefMech_defectLawBrittleFracture'
+      MEF90DefMech_defectLawBrittleFractureList(4) = ''
+      
+      MEF90DefMech_defectLawPlasticityList(1) = 'Tresca'
+      MEF90DefMech_defectLawPlasticityList(2) = 'VonMises'
+      MEF90DefMech_defectLawPlasticityList(3) = 'MEF90DefMech_defectLawPlasticity'
+      MEF90DefMech_defectLawPlasticityList(4) = ''
+   End Subroutine MEF90DefMechCtx_InitializePrivate
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCtx_Create"
+!!!
+!!!  
+!!!  MEF90DefMechCtx_Create:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechCtx_Create(DefMechCtx,Mesh,MEF90Ctx,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(OUT)           :: DefMechCtx
+      Type(DM),target,Intent(IN)                               :: Mesh
+      Type(MEF90Ctx_Type),target,Intent(IN)                    :: MEF90Ctx
+      PetscErrorCode,Intent(OUT)                               :: ierr
+   
+      Type(MEF90CtxGlobalOptions_Type),pointer                 :: MEF90CtxGlobalOptions
+      Type(MEF90DefMechGlobalOptions_Type),pointer     :: MEF90DefMechGlobalOptions
+      Type(MEF90DefMechCellSetOptions_Type),pointer    :: MEF90DefMechCellSetOptions
+      Type(MEF90DefMechVertexSetOptions_Type),pointer  :: MEF90DefMechVertexSetOptions
+      Type(IS)                                                 :: setIS
+      PetscInt                                                 :: set,numSet
+      PetscInt                                                 :: dim
+
+      Call MEF90DefMechCtx_InitializePrivate(ierr)
+      Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
+      DefMechCtx%DMScal => Mesh
+      DefMechCtx%MEF90Ctx => MEF90Ctx
+      Call DMMeshClone(Mesh,DefMechCtx%cellDMScal,ierr);CHKERRQ(ierr)
+      Call DMMeshSetMaxDof(DefMechCtx%cellDMScal,1,ierr);CHKERRQ(ierr) 
+
+      Call DMMeshClone(Mesh,DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
+      Call DMMeshSetMaxDof(DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr) 
+
+      Call DMMeshClone(Mesh,DefMechCtx%cellDMMatS,ierr);CHKERRQ(ierr)
+      Call DMMeshSetMaxDof(DefMechCtx%cellDMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr) 
+
+      Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90DefMechGlobalOptions,DefMechCtx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
+      
+      !!! Call DMmeshGetLabelSize(Mesh,'Cell Sets',numSet,ierr);CHKERRQ(ierr)
+      !!! NO: I need to allocate for the overall number of sets, not the local one
+
+      Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
+      Allocate(DefMechCtx%CellSetOptionsBag(numSet),stat=ierr)
+      Do set = 1, numSet
+         Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90DefMechCellSetOptions,DefMechCtx%CellSetOptionsBag(set),ierr);CHKERRQ(ierr)
+      End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+
+      Call DMmeshGetLabelIdIS(Mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
+      Allocate(DefMechCtx%VertexSetOptionsBag(numSet),stat=ierr)
+      Do set = 1, numSet
+         Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90DefMechVertexSetOptions,DefMechCtx%VertexSetOptionsBag(set),ierr);CHKERRQ(ierr)
+      End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      
+      Nullify(DefMechCtx%force)
+      Nullify(DefMechCtx%pressureforce)
+      Nullify(DefMechCtx%boundaryDisplacement)
+      Nullify(DefMechCtx%boundaryDamage)
+      Nullify(DefMechCtx%Displacement)
+      Nullify(DefMechCtx%Damage)
+      Nullify(DefMechCtx%PlasticStrain)
+      Nullify(DefMechCtx%temperature)
+   End Subroutine MEF90DefMechCtx_Create
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCtx_Destroy"
+!!!
+!!!  
+!!!  MEF90DefMechCtx_Destroy:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechCtx_Destroy(DefMechCtx,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(OUT)  :: DefMechCtx
+      PetscErrorCode,Intent(OUT)                      :: ierr
+      
+      PetscInt                                        :: set
+   
+      Call PetscBagDestroy(DefMechCtx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
+      Do set = 1, size(DefMechCtx%CellSetOptionsBag)
+         Call PetscBagDestroy(DefMechCtx%CellSetOptionsBag(set),ierr);CHKERRQ(ierr)
+      End Do
+      DeAllocate(DefMechCtx%CellSetOptionsBag)
+      Do set = 1, size(DefMechCtx%VertexSetOptionsBag)
+         Call PetscBagDestroy(DefMechCtx%VertexSetOptionsBag(set),ierr);CHKERRQ(ierr)
+      End Do
+      DeAllocate(DefMechCtx%VertexSetOptionsBag)
+      
+      Nullify(DefMechCtx%force)
+      Nullify(DefMechCtx%pressureforce)
+      Nullify(DefMechCtx%boundaryDisplacement)
+      Nullify(DefMechCtx%boundaryDamage)
+      Nullify(DefMechCtx%Displacement)
+      Nullify(DefMechCtx%Damage)
+      Nullify(DefMechCtx%PlasticStrain)
+      Nullify(DefMechCtx%temperature)
+      Call DMDestroy(DefMechCtx%cellDMScal,ierr);CHKERRQ(ierr)
+      Call DMDestroy(DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
+      Call DMDestroy(DefMechCtx%cellDMVect,ierr);CHKERRQ(ierr)
+      Call DMDestroy(DefMechCtx%cellDMMatS,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechCtx_Destroy
+
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagRegisterMEF90DefMechCtxGlobalOptions"
+!!!
+!!!  
+!!!  PetscBagRegisterMEF90DefMechCtxGlobalOptions:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions(bag,name,prefix,default,ierr)
+      PetscBag                                                 :: bag
+      Character(len=*),Intent(IN)                              :: prefix,name
+      Type(MEF90DefMechGlobalOptions_Type),Intent(IN)  :: default
+      PetscErrorCode,Intent(OUT)                               :: ierr
+
+      Type(MEF90DefMechGlobalOptions_Type),pointer      :: DefMechGlobalOptions
+
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(bag,DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"DefMechGlobalOptions MEF90 Heat transfer global options",ierr);CHKERRQ(ierr)
+      Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%mode,MEF90DefMech_ModeList,default%mode,'DefMech_mode','Type of heat transfer computation',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'addDisplacementNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%displacementOffset,default%displacementOffset,'displacement_Offset','Position of displacement field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%damageOffset,default%damageOffset,'damage_Offset','Position of damage field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%stressOffset,default%stressOffset,'stress_Offset','Position of stress field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%plasticStrainOffset,default%plasticStrainOffset,'plasticStrain_Offset','Position of plasticStrain field in EXO file',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDisplacementOffset,default%boundaryDisplacementOffset,'boundaryDisplacement_Offset','Position of boundary displacement field in EXO file',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%forceScaling,MEF90ScalingList,default%forceScaling,'force_scaling','Force scaling',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%forceOffset,default%forceOffset,'force_Offset','Position of force field in EXO file',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%pressureForceScaling,MEF90ScalingList,default%pressureforceScaling,'pressureForce_scaling','Pressure force scaling',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%pressureForceOffset,default%pressureForceOffset,'pressureForce_Offset','Position of pressure force field in EXO file',ierr);CHKERRQ(ierr)
+   End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagRegisterMEF90DefMechCtxCellSetOptions"
+!!!
+!!!  
+!!!  PetscBagRegisterMEF90DefMechCtxCellSetOptions:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions(bag,name,prefix,default,ierr)
+      PetscBag                                           :: bag
+      Character(len=*),Intent(IN)                        :: prefix,name
+      Type(MEF90DefMechCellSetOptions_Type),Intent(IN)  :: default
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      Type(MEF90DefMechCellSetOptions_Type),pointer      :: DefMechCellSetOptions
+      Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(bag,DefMechCellSetOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"DefMechCellSetOptions MEF90 Heat transfer Cell Set options",ierr);CHKERRQ(ierr)
+      Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortID,default%ElemTypeShortID,'ShortID','Element type ShortID',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechCellSetOptions%force,default%force,'Force','[N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechCellSetOptions%pressureForce,default%pressureForce,'pressureForce','[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%defectLaw,MEF90DefMech_defectLawList,default%defectLaw,"damage law",ierr);CHKERRQ(ierr)
+   End Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagRegisterMEF90DefMechCtxVertexSetOptions"
+!!!
+!!!  
+!!!  PetscBagRegisterMEF90DefMechCtxVertexSetOptions:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions(bag,name,prefix,default,ierr)
+      PetscBag                                              :: bag
+      Character(len=*),Intent(IN)                           :: prefix,name
+      Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)   :: default
+      PetscErrorCode,Intent(OUT)                            :: ierr
+
+      Type(MEF90DefMechVertexSetOptions_Type),pointer      :: DefMechVertexSetOptions
+      Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(bag,DefMechVertexSetOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"DefMechVertexSetOptions MEF90 Heat transfer Vertex Set options",ierr);CHKERRQ(ierr)
+      Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterBool(bag,DefMechVertexSetOptions%Has_displacementBC,default%Has_displacementBC,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechVertexSetOptions%boundaryDisplacement,default%boundaryDisplacement,'boundaryDisplacement','Displacement boundary value',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterBool(bag,DefMechVertexSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechVertexSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','Damage boundary value',ierr);CHKERRQ(ierr)
+   End Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCtx_SetFromOptions"
+!!!
+!!!  
+!!!  MEF90DefMechCtx_SetFromOptions:
+!!!  
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechCtx_SetFromOptions(DefMechCtx,prefix,defaultGlobalOptions, &
+                                              defaultCellSetOptions,defaultVertexSetOptions,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(OUT)               :: DefMechCtx
+      Character(len=*),Intent(IN)                           :: prefix
+      Type(MEF90DefMechGlobalOptions_Type),Intent(IN)      :: defaultGlobalOptions
+      Type(MEF90DefMechCellSetOptions_Type),Intent(IN)     :: defaultCellSetOptions
+      Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)   :: defaultVertexSetOptions
+      PetscErrorCode,Intent(OUT)                            :: ierr
+   
+      Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions
+      Type(MEF90DefMechCellSetOptions_Type)                :: myDefaultCellSetOptions
+      Type(MEF90Element_Type),Dimension(:),Pointer          :: ElemType
+      Type(IS)                                              :: setIS
+      PetscInt,Dimension(:),Pointer                         :: setID
+      PetscInt                                              :: set
+      Character(len=MEF90_MXSTRLEN)                         :: IOBuffer,setName,setprefix
+
+      Call PetscBagGetDataMEF90CtxGlobalOptions(DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr);CHKERRQ(ierr)
+      !!!
+      !!! Registering Global Context
+      !!!
+      Call PetscBagRegisterMEF90DefMechCtxGlobalOptions(DefMechCtx%GlobalOptionsBag,"MEF90DefMech Global Ctx",prefix,defaultGlobalOptions,ierr);CHKERRQ(ierr)
+
+      If (MEF90CtxGlobalOptions%verbose > 0) Then
+         Call PetscBagView(DefMechCtx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+      End If
+
+      !!!
+      !!! Registering Cell Set Context
+      !!! We override the default element type with that detected from the exodus file
+      !!!
+      Call DMmeshGetLabelIdIS(DefMechCtx%DMVect,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      
+      Call EXOGetCellSetElementType_Scal(DefMechCtx%MEF90Ctx,ElemType,ierr)
+      Do set = 1, size(setID)
+         Write(setName,100) setID(set)
+         Write(setprefix,101) setID(set)
+         mydefaultCellSetOptions = defaultCellSetOptions
+         mydefaultCellSetOptions%ElemTypeShortID = ElemType(set)%ShortID
+         Call PetscBagRegisterMEF90DefMechCtxCellSetOptions(DefMechCtx%CellSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr)
+         If (MEF90CtxGlobalOptions%verbose > 0) Then
+            Write(IOBuffer,103) setID(set),trim(setprefix)
+            Call PetscPrintf(DefMechCtx%MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscBagView(DefMechCtx%CellSetOptionsBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(DefMechCtx%MEF90Ctx%comm,"\n",ierr);CHKERRQ(ierr)
+         End if
+      End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      DeAllocate(ElemType)
+      
+      !!!
+      !!! Registering Vertex Set Context
+      !!! We override the default element type with that detected from the exodus file
+      !!!
+      Call DMmeshGetLabelIdIS(DefMechCtx%DMVect,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      
+      Do set = 1, size(setID)
+         Write(setName,200) setID(set)
+         Write(setprefix,201) setID(set)
+         Call PetscBagRegisterMEF90DefMechCtxVertexSetOptions(DefMechCtx%VertexSetOptionsBag(set),setName,setPrefix,defaultVertexSetOptions,ierr)
+         If (MEF90CtxGlobalOptions%verbose > 0) Then
+            Write(IOBuffer,203) setID(set),trim(setprefix)
+            Call PetscPrintf(DefMechCtx%MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscBagView(DefMechCtx%VertexSetOptionsBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(DefMechCtx%MEF90Ctx%comm,"\n",ierr);CHKERRQ(ierr)
+         End if
+      End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+
+100 Format('Cell set ',I4)
+101 Format('cs',I4.4,'_')
+103 Format('Registering cell set ',I4,' prefix: ',A,'\n')
+200 Format('Vertex set ',I4)
+201 Format('vs',I4.4,'_')
+203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
+   End Subroutine MEF90DefMechCtx_SetFromOptions
+End Module m_MEF90_DefMechCtx
