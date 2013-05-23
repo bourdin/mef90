@@ -25,7 +25,7 @@ Module m_MEF90_HeatXferCtx_Type
    End Type MEF90HeatXferCtx_Type
    
    Type MEF90HeatXferGlobalOptions_Type
-      PetscInt                         :: mode
+      PetscEnum                        :: mode
       PetscBool                        :: addNullSpace
       PetscInt                         :: tempOffset
       PetscInt                         :: boundaryTempScaling

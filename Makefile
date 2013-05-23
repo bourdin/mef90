@@ -1,6 +1,4 @@
-all: MEF90 m_HeatXfer #m_Elasticity
-
-SimplePoissonNG: SimplePoissonNG2D SimplePoissonNG3D
+all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity
 
 MEF90: chkpaths
 	-@echo "Building $@"
@@ -10,21 +8,17 @@ m_HeatXfer: MEF90 chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../m_HeatXfer/Makefile m_HeatXfer
 
-m_Elasticity: MEF90 chkpaths
-	-@echo "Building $@"
-	-@make -C objs/${PETSC_ARCH} -f ../../m_Elasticity/Makefile m_Elasticity
-
 HeatXfer: MEF90 m_HeatXfer chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../HeatXfer/Makefile HeatXfer
 
-SimplePoissonNG2D: MEF90 chkpaths
+m_DefMech: MEF90 chkpaths
 	-@echo "Building $@"
-	-@make -C objs/${PETSC_ARCH} -f ../../SimplePoissonNG/Makefile SimplePoissonNG MEF90_DIM=2
+	-@make -C objs/${PETSC_ARCH} -f ../../m_DefMech/Makefile m_DefMech
 
-SimplePoissonNG3D: MEF90 chkpaths
+ThermoElasticity: MEF90 m_DefMech chkpaths
 	-@echo "Building $@"
-	-@make -C objs/${PETSC_ARCH} -f ../../SimplePoissonNG/Makefile SimplePoissonNG MEF90_DIM=3
+	-@make -C objs/${PETSC_ARCH} -f ../../ThermoElasticity/Makefile ThermoElasticity
 
 tests: MEF90 chkpaths
 	-@echo "Building $@"

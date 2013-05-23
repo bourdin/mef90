@@ -57,8 +57,7 @@ Program TestHeatXfer
    Type(PC)                                           :: pcTemp
    Type(Mat)                                          :: matTemp
    Type(MatNullSpace)                                 :: nspTemp
-   PetscReal                                          :: rtol,atol,dtol
-   PetscInt                                           :: maxits
+   PetscReal                                          :: rtol
           
    PetscBool                                          :: flg
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
@@ -196,9 +195,8 @@ Program TestHeatXfer
    If (MEF90HeatXferGlobalOptions%addNullSpace) Then
       Call KSPSetNullSpace(kspTemp,nspTemp,ierr);CHKERRQ(ierr)
    End If
-   Call KSPGetTolerances(kspTemp,rtol,atol,dtol,maxits,ierr);CHKERRQ(ierr)
    rtol = 1.0D-8
-   Call KSPSetTolerances(kspTemp,rtol,atol,dtol,maxits,ierr);CHKERRQ(ierr)
+   Call KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
    
    !!! 
