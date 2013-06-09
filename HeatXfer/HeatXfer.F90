@@ -239,15 +239,16 @@ Program TestHeatXfer
    !!! Actual computations / time stepping
    !!!
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
-      Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,1,time(1),ierr)
+      Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,1,time(1),ierr)
       Do step = 1,MEF90GlobalOptions%timeNumStep
          Write(IOBuffer,100) step,time(step)
          Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
 
          !!! Update fields
-         Call MEF90HeatXferGetTransients(MEF90HeatXferCtx,step,time(step),ierr)
+         Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
 
          !!! Solve SNES
+         Call MEF90HeatXferUpdateboundaryTemperature(temperature,MEF90HeatXferCtx,ierr);
          Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,temperature,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
