@@ -14,7 +14,7 @@ Module m_MEF90_HeatXfer
       !MEF90HeatXferBilinearForm3D => MEF90HeatXferBilinearForm_private
       !!! For some reason, this trick seems to confuse intel 13.0...
    !Private
-   !Public MEF90HeatXferGetTransients
+   !Public MEF90HeatXferSetTransients
    !Public MEF90HeatXferOperator
    !Public MEF90HeatXferBilinearForm
    !Public MEF90HeatXferEnergy
@@ -25,14 +25,14 @@ Module m_MEF90_HeatXfer
    Implicit none
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferGetTransients"
+#define __FUNCT__ "MEF90HeatXferSetTransients"
 !!!
 !!!  
-!!!  MEF90HeatXferGetTransients:
+!!!  MEF90HeatXferSetTransients:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferGetTransients(MEF90HeatXferCtx,step,time,ierr)
+   Subroutine MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(INOUT)       :: MEF90HeatXferCtx
       PetscInt,Intent(IN)                             :: step
       PetscReal,Intent(IN)                            :: time
@@ -49,42 +49,42 @@ Contains
             Call VecLoadExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                    MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_Linear)
-            Call MEF90HeatXferGetfluxCst(MEF90HeatXferCtx%flux,MEF90HeatXferCtx,ierr)
+            Call MEF90HeatXferSetfluxCst(MEF90HeatXferCtx%flux,MEF90HeatXferCtx,ierr)
             Call VecScale(MEF90HeatXferCtx%flux,time,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_CST)
-            Call MEF90HeatXferGetfluxCst(MEF90HeatXferCtx%flux,MEF90HeatXferCtx,ierr)
+            Call MEF90HeatXferSetfluxCst(MEF90HeatXferCtx%flux,MEF90HeatXferCtx,ierr)
       End Select
       Select case (MEF90HeatXferGlobalOptions%externalTempScaling)
          Case (MEF90Scaling_File)
             Call VecLoadExodusCell(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                    MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_Linear)
-            Call MEF90HeatXferGetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx,ierr)
+            Call MEF90HeatXferSetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx,ierr)
             Call VecScale(MEF90HeatXferCtx%externalTemperature,time,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_CST)
-            Call MEF90HeatXferGetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx,ierr)
+            Call MEF90HeatXferSetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx,ierr)
       End Select
       Select case (MEF90HeatXferGlobalOptions%boundaryTempScaling)
          Case (MEF90Scaling_File)
             Call VecLoadExodusVertex(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%boundaryTemperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                      MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_Linear)
-            Call MEF90HeatXferGetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperature,MEF90HeatXferCtx,ierr)
+            Call MEF90HeatXferSetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperature,MEF90HeatXferCtx,ierr)
             Call VecScale(MEF90HeatXferCtx%boundaryTemperature,time,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_CST)
-            Call MEF90HeatXferGetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperature,MEF90HeatXferCtx,ierr)
+            Call MEF90HeatXferSetboundaryTemperatureCst(MEF90HeatXferCtx%boundaryTemperature,MEF90HeatXferCtx,ierr)
       End Select
-   End Subroutine MEF90HeatXferGetTransients
+   End Subroutine MEF90HeatXferSetTransients
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferGetFluxCst"
+#define __FUNCT__ "MEF90HeatXferSetFluxCst"
 !!!
 !!!  
-!!!  MEF90HeatXferGetFluxCst:
+!!!  MEF90HeatXferSetFluxCst:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferGetFluxCst(x,MEF90HeatXferCtx,ierr)
+   Subroutine MEF90HeatXferSetFluxCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
       Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -120,17 +120,17 @@ Contains
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90HeatXferGetFluxCst
+   End Subroutine MEF90HeatXferSetFluxCst
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferGetexternalTemperatureCst"
+#define __FUNCT__ "MEF90HeatXferSetexternalTemperatureCst"
 !!!
 !!!  
-!!!  MEF90HeatXferGetexternalTemperatureCst:
+!!!  MEF90HeatXferSetexternalTemperatureCst:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferGetexternalTemperatureCst(x,MEF90HeatXferCtx,ierr)
+   Subroutine MEF90HeatXferSetexternalTemperatureCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
       Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -167,17 +167,17 @@ Contains
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90HeatXferGetexternalTemperatureCst
+   End Subroutine MEF90HeatXferSetexternalTemperatureCst
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferGetboundaryTemperatureCst"
+#define __FUNCT__ "MEF90HeatXferSetboundaryTemperatureCst"
 !!!
 !!!  
-!!!  MEF90HeatXferGetboundaryTemperatureCst:
+!!!  MEF90HeatXferSetboundaryTemperatureCst:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferGetboundaryTemperatureCst(x,MEF90HeatXferCtx,ierr)
+   Subroutine MEF90HeatXferSetboundaryTemperatureCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                         :: ierr
@@ -213,7 +213,72 @@ Contains
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90HeatXferGetboundaryTemperatureCst
+   End Subroutine MEF90HeatXferSetboundaryTemperatureCst
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferUpdateboundaryTemperature"
+!!!
+!!!  
+!!!  MEF90HeatXferUpdateboundaryTemperature:
+!!!  
+!!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferUpdateboundaryTemperature(x,MEF90HeatXferCtx,ierr)
+      Type(Vec),Intent(IN)                               :: x
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+   
+      Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
+      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
+      Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
+      Type(IS)                                           :: VertexSetGlobalIS,setIS,setISdof
+      PetscInt,Dimension(:),Pointer                      :: setID
+      PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
+      PetscInt                                           :: set,dof
+      PetscReal,Dimension(:),Pointer                     :: boundaryTemperaturePtr,xPtr
+      Type(SectionReal)                                  :: boundaryTemperatureSec
+      Type(VecScatter)                                   :: ScatterSecToVec
+      
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
+      
+      !!! boundaryTemperature is Vertex-centered
+      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',boundaryTemperatureSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%DM,boundaryTemperatureSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(boundaryTemperatureSec,ScatterSecToVec,SCATTER_REVERSE,MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
+
+      Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
+         If (vertexSetOptions%Has_BC) Then
+            Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+            Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+            Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+            Call ISGetIndicesF90(setISdof,setdofIdx,ierr);CHKERRQ(ierr)
+            Allocate(xPtr(size(setIdx)))
+            Do dof = 1, size(setIdx)
+               Call SectionRealRestrict(boundaryTemperatureSec,setIdx(dof),boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
+               xPtr(dof) = boundaryTemperaturePtr(1)
+               Call SectionRealRestore(boundaryTemperatureSec,setIdx(dof),boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
+            End Do
+            Call VecSetValues(x,size(setIdx),setdofIdx,xPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+            DeAllocate(xPtr)
+            Call ISRestoreIndicesF90(setISdof,setdofIdx,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
+            Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+         End If
+      End Do
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(boundaryTemperatureSec,ierr);CHKERRQ(ierr)      
+      Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
+      Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
+End Subroutine MEF90HeatXferUpdateboundaryTemperature
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferOperator"
