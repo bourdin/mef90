@@ -43,6 +43,8 @@ Module m_MEF90_HeatXferCtx_Type
       PetscReal                        :: flux
       PetscReal                        :: surfaceThermalConductivity
       PetscReal                        :: externalTemp
+      PetscBool                        :: Has_BC
+      PetscReal                        :: boundaryTemp
    End Type MEF90HeatXferCellSetOptions_Type
 
    Type MEF90HeatXferVertexSetOptions_Type
@@ -349,6 +351,8 @@ Contains
       Call PetscBagRegisterReal(bag,HeatXferCellSetOptions%Flux,default%Flux,'Flux','[J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,HeatXferCellSetOptions%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','[J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity',ierr)
       Call PetscBagRegisterReal(bag,HeatXferCellSetOptions%externalTemp,default%externalTemp,'externalTemp','Reference temperature T [K]',ierr)
+      Call PetscBagRegisterBool(bag,HeatXferCellSetOptions%Has_BC,default%Has_BC,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,HeatXferCellSetOptions%boundaryTemp,default%boundaryTemp,'boundaryTemp','Temperature boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions
 
 #undef __FUNCT__

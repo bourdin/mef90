@@ -22,7 +22,10 @@ Program TestHeatXfer
                                                          -1,            & ! elemTypeShortID will be overriden
                                                          0.0_Kr,        & ! flux
                                                          0.0_Kr,        & ! surfaceThermalConductivity
-                                                         0.0_Kr)          ! externalTemp
+                                                         0.0_Kr,        & ! externalTemp
+                                                         PETSC_FALSE,   & ! Has BC
+                                                         0.0_Kr)          ! boundaryTemp
+                                                         
    Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: MEF90HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
                                                          PETSC_TRUE,    & ! Has BC
                                                          0.0_Kr)          ! boundaryTemp

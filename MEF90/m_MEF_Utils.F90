@@ -109,6 +109,46 @@ Contains
    End Subroutine MEF90_ISAllGatherMerge
    
 #undef __FUNCT__
+#define __FUNCT__ "MEF90_ISCreateCelltoVertex"
+!!!
+!!!  
+!!!  MEF90_ISCreateCelltoVertex: Create an IS indexing all vertices associated with a cell set
+!!!                              Assume that the cone of an elements is made only of vertices
+!!!                              i.e. non  interpolated mesh
+!!!  
+!!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90_ISCreateCelltoVertex(mesh,comm,cellSetIS,vertexSetIS,ierr)
+      Type(DM),Intent(IN)                             :: mesh
+      MPI_Comm,Intent(IN)                             :: Comm
+      Type(IS),Intent(INOUT)                          :: cellSetIS,vertexSetIS
+      PetscErrorCode,Intent(OUT)                      :: ierr
+      
+      PetscInt,Dimension(:),Pointer                   :: cellSetIdx,vertexSetIdx,cone
+      PetscInt                                        :: numVertices,cell,v,coneSize
+      
+      Call ISGetIndicesF90(cellSetIS,cellSetIdx,ierr);CHKERRQ(ierr)
+      numVertices = 0
+      Do cell = 1,size(cellSetIdx)
+         Call DMMeshGetConeSize(mesh,cellSetIdx(cell),coneSize,ierr);CHKERRQ(ierr)
+         numVertices = numVertices + coneSize
+      End Do ! cell
+      Allocate(vertexSetIdx(numVertices))
+      Do cell = 1,size(cellSetIdx)
+         Call DMMeshGetConeSize(mesh,cellSetIdx(cell),coneSize,ierr);CHKERRQ(ierr)
+         Call DMMeshGetConeF90(mesh,cellSetIdx(cell),Cone,ierr);CHKERRQ(ierr)
+         Do v = 1,coneSize
+            vertexSetIdx((cell-1)*coneSize+v) = Cone(v)
+         End Do ! v
+         Call DMMeshRestoreConeF90(mesh,cellSetIdx(cell),Cone,ierr);CHKERRQ(ierr)
+      End Do ! cell
+      Call PetscSortRemoveDupsInt(numVertices,vertexSetIdx,ierr);CHKERRQ(ierr)
+      Call ISCreateGeneral(Comm,numVertices,vertexSetIdx,PETSC_COPY_VALUES,vertexSetIS,ierr);CHKERRQ(ierr)
+      DeAllocate(vertexSetIdx)
+      Call ISRestoreIndicesF90(cellSetIS,cellSetIdx,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90_ISCreateCelltoVertex
+   
+#undef __FUNCT__
 #define __FUNCT__ "MEF90_AskInt"
    Subroutine MEF90_AskInt(val,msg,ArgUnit,IsBatch)
       PetscInt                                  :: Val
@@ -118,6 +158,7 @@ Contains
 
       Character(len=MEF90_MXSTRLEN)             :: IOBuffer   
       PetscInt                                  :: ierr   
+      
       If (IsBatch) Then
          If (MEF90_MyRank == 0) Then
             Read(ArgUnit,*) Val
