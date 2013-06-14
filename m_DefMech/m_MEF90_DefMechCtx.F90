@@ -11,7 +11,8 @@ Module m_MEF90_DefMechCtx_Type
    !Public :: MEF90DefMechVertexSetOptions_Type
    
    Type MEF90DefMechCtx_Type
-      Type(Vec),pointer                :: displacement,damage
+      Type(Vec),pointer                :: displacement
+      Type(Vec),pointer                :: damage
       Type(Vec),pointer                :: force
       Type(Vec),pointer                :: pressureForce
       Type(Vec),pointer                :: boundaryDisplacement
@@ -24,7 +25,8 @@ Module m_MEF90_DefMechCtx_Type
       PetscBag,Dimension(:),Pointer    :: VertexSetOptionsBag
       PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
       Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
-      Type(DM),pointer                 :: DMScal,DMVect
+      Type(DM),pointer                 :: DM
+      Type(DM)                         :: DMScal,DMVect
       Type(DM)                         :: cellDMScal,cellDMVect,cellDMMatS
    End Type MEF90DefMechCtx_Type
    
@@ -51,12 +53,16 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                        :: force
       PetscReal                        :: pressureForce
       PetscEnum                        :: defectLaw
+      PetscBool,Dimension(3)           :: Has_displacementBC
+      PetscReal,Dimension(3)           :: boundaryDisplacement
+      PetscBool                        :: Has_damageBC
+      PetscReal                        :: boundaryDamage
    End Type MEF90DefMechCellSetOptions_Type
 
    Type MEF90DefMechVertexSetOptions_Type
-      PetscBool                        :: Has_displacementBC
+      PetscBool,Dimension(3)           :: Has_displacementBC
+      PetscReal,Dimension(3)           :: boundaryDisplacement
       PetscBool                        :: Has_damageBC
-      PetscReal                        :: boundaryDisplacement
       PetscReal                        :: boundaryDamage
    End Type MEF90DefMechVertexSetOptions_Type 
 End Module m_MEF90_DefMechCtx_Type
@@ -122,7 +128,7 @@ Contains
 !!!
    Subroutine PetscBagGetDataMEF90DefMechCtxCellSetOptions(bag,data,ierr)
       PetscBag                                              :: bag
-      Type(MEF90DefMechCellSetOptions_Type),pointer :: data
+      Type(MEF90DefMechCellSetOptions_Type),pointer         :: data
       PetscErrorCode                                        :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
@@ -143,7 +149,7 @@ Module m_MEF90DefMechVertexSetOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_DefMechCtx_Type
          PetscBag                                                 :: bag
-         Type(MEF90DefMechVertexSetOptions_Type),pointer  :: data
+         Type(MEF90DefMechVertexSetOptions_Type),pointer          :: data
          PetscErrorCode                                           :: ierr
       End subroutine PetscBagGetData
    End interface
@@ -156,7 +162,7 @@ Contains
 !!!
    Subroutine PetscBagGetDataMEF90DefMechCtxVertexSetOptions(bag,data,ierr)
       PetscBag                                                 :: bag
-      Type(MEF90DefMechVertexSetOptions_Type),pointer  :: data
+      Type(MEF90DefMechVertexSetOptions_Type),pointer          :: data
       PetscErrorCode                                           :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
@@ -178,7 +184,7 @@ Module m_MEF90_DefMechCtx
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_ModeQuasiStatic = 0, &
-                     MEF90DefMech_ModeSteadyGradientFlow
+                     MEF90DefMech_ModeGradientFlow
    End Enum
    Character(len = MEF90_MXSTRLEN),dimension(5),protected   :: MEF90DefMech_ModeList
    
@@ -187,19 +193,19 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_defectLawBrittleFracture, &
                      MEF90DefMech_defectLawPlasticity
    End Enum
-   Character(len = MEF90_MXSTRLEN),dimension(5),protected   :: MEF90DefMech_defectLawList
+   Character(len = MEF90_MXSTRLEN),dimension(6),protected   :: MEF90DefMech_defectLawList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_defectLawBrittleFractureAT1 = 0, &
                      MEF90DefMech_defectLawBrittleFractureAT2
    End Enum
-   Character(len = MEF90_MXSTRLEN),dimension(4),protected   :: MEF90DefMech_defectLawBrittleFractureList
+   Character(len = MEF90_MXSTRLEN),dimension(5),protected   :: MEF90DefMech_defectLawBrittleFractureList
 
    Enum,bind(c)
       enumerator  :: MEF90DefMech_defectLawPlasticityTresca = 0, &
                      MEF90DefMech_defectLawPlasticityVonMises
    End Enum
-   Character(len = MEF90_MXSTRLEN),dimension(4),protected   :: MEF90DefMech_defectLawPlasticityList
+   Character(len = MEF90_MXSTRLEN),dimension(5),protected   :: MEF90DefMech_defectLawPlasticityList
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtx_InitializePrivate"
@@ -212,9 +218,9 @@ Contains
    Subroutine MEF90DefMechCtx_InitializePrivate(ierr)
       PetscErrorCode,Intent(OUT)                         :: ierr
    
-      Type(MEF90DefMechGlobalOptions_Type)       :: DefMechGlobalOptions
-      Type(MEF90DefMechCellSetOptions_Type)      :: DefMechCellSetOptions
-      Type(MEF90DefMechVertexSetOptions_Type)    :: DefMechVertexSetOptions
+      Type(MEF90DefMechGlobalOptions_Type)               :: DefMechGlobalOptions
+      Type(MEF90DefMechCellSetOptions_Type)              :: DefMechCellSetOptions
+      Type(MEF90DefMechVertexSetOptions_Type)            :: DefMechVertexSetOptions
       character(len=1),pointer                           :: dummychar(:)
       PetscSizeT                                         :: sizeofchar
       
@@ -233,17 +239,20 @@ Contains
       MEF90DefMech_defectLawList(2) = 'BrittleFracture'
       MEF90DefMech_defectLawList(3) = 'Plasticity'
       MEF90DefMech_defectLawList(4) = 'MEF90DefMech_defectLaw'
-      MEF90DefMech_defectLawList(5) = ''
+      MEF90DefMech_defectLawList(5) = '_MEF90DefMech_defectLaw'
+      MEF90DefMech_defectLawList(6) = ''
 
       MEF90DefMech_defectLawBrittleFractureList(1) = 'AT1'
       MEF90DefMech_defectLawBrittleFractureList(2) = 'AT2'
       MEF90DefMech_defectLawBrittleFractureList(3) = 'MEF90DefMech_defectLawBrittleFracture'
-      MEF90DefMech_defectLawBrittleFractureList(4) = ''
+      MEF90DefMech_defectLawBrittleFractureList(4) = '_MEF90DefMech_defectLawBrittleFracture'
+      MEF90DefMech_defectLawBrittleFractureList(5) = ''
       
       MEF90DefMech_defectLawPlasticityList(1) = 'Tresca'
       MEF90DefMech_defectLawPlasticityList(2) = 'VonMises'
       MEF90DefMech_defectLawPlasticityList(3) = 'MEF90DefMech_defectLawPlasticity'
-      MEF90DefMech_defectLawPlasticityList(4) = ''
+      MEF90DefMech_defectLawPlasticityList(4) = 'MEF90DefMech_defectLawPlasticity'
+      MEF90DefMech_defectLawPlasticityList(5) = ''
    End Subroutine MEF90DefMechCtx_InitializePrivate
    
 #undef __FUNCT__
@@ -255,29 +264,29 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechCtx_Create(DefMechCtx,Mesh,MEF90Ctx,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(OUT)           :: DefMechCtx
+      Type(MEF90DefMechCtx_Type),Intent(OUT)                   :: DefMechCtx
       Type(DM),target,Intent(IN)                               :: Mesh
       Type(MEF90Ctx_Type),target,Intent(IN)                    :: MEF90Ctx
       PetscErrorCode,Intent(OUT)                               :: ierr
    
       Type(MEF90CtxGlobalOptions_Type),pointer                 :: MEF90CtxGlobalOptions
-      Type(MEF90DefMechGlobalOptions_Type),pointer     :: MEF90DefMechGlobalOptions
-      Type(MEF90DefMechCellSetOptions_Type),pointer    :: MEF90DefMechCellSetOptions
-      Type(MEF90DefMechVertexSetOptions_Type),pointer  :: MEF90DefMechVertexSetOptions
+      Type(MEF90DefMechGlobalOptions_Type),pointer             :: MEF90DefMechGlobalOptions
+      Type(MEF90DefMechCellSetOptions_Type),pointer            :: MEF90DefMechCellSetOptions
+      Type(MEF90DefMechVertexSetOptions_Type),pointer          :: MEF90DefMechVertexSetOptions
       Type(IS)                                                 :: setIS
       PetscInt                                                 :: set,numSet
       PetscInt                                                 :: dim
 
       Call MEF90DefMechCtx_InitializePrivate(ierr)
       Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
-      DefMechCtx%DMScal => Mesh
+      DefMechCtx%DM => Mesh
       DefMechCtx%MEF90Ctx => MEF90Ctx
+      Call DMMeshClone(Mesh,DefMechCtx%cellDMVect,ierr);CHKERRQ(ierr)
+      Call DMMeshSetMaxDof(DefMechCtx%cellDMVect,dim,ierr);CHKERRQ(ierr) 
       Call DMMeshClone(Mesh,DefMechCtx%cellDMScal,ierr);CHKERRQ(ierr)
       Call DMMeshSetMaxDof(DefMechCtx%cellDMScal,1,ierr);CHKERRQ(ierr) 
-
       Call DMMeshClone(Mesh,DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
       Call DMMeshSetMaxDof(DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr) 
-
       Call DMMeshClone(Mesh,DefMechCtx%cellDMMatS,ierr);CHKERRQ(ierr)
       Call DMMeshSetMaxDof(DefMechCtx%cellDMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr) 
 
@@ -400,18 +409,27 @@ Contains
    Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
-      Type(MEF90DefMechCellSetOptions_Type),Intent(IN)  :: default
+      Type(MEF90DefMechCellSetOptions_Type),Intent(IN)   :: default
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(MEF90DefMechCellSetOptions_Type),pointer      :: DefMechCellSetOptions
+      
       Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(bag,DefMechCellSetOptions,ierr);CHKERRQ(ierr)
       Call PetscBagSetName(bag,trim(name),"DefMechCellSetOptions MEF90 Heat transfer Cell Set options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
+      
+      DefMechCellSetOptions%force = default%Force
+      DefMechCellSetOptions%Has_displacementBC   = default%Has_displacementBC
+      DefMechCellSetOptions%boundaryDisplacement = default%boundaryDisplacement
 
       Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortID,default%ElemTypeShortID,'ShortID','Element type ShortID',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,DefMechCellSetOptions%force,default%force,'Force','[N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%force,3,'Force','[N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%pressureForce,default%pressureForce,'pressureForce','[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%defectLaw,MEF90DefMech_defectLawList,default%defectLaw,"damage law",ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%defectLaw,MEF90DefMech_defectLawList,default%defectLaw,'damageLaw','damage law',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','Displacement boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechCellSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','Damage boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions
 
 #undef __FUNCT__
@@ -425,7 +443,7 @@ Contains
    Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                              :: bag
       Character(len=*),Intent(IN)                           :: prefix,name
-      Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)   :: default
+      Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)    :: default
       PetscErrorCode,Intent(OUT)                            :: ierr
 
       Type(MEF90DefMechVertexSetOptions_Type),pointer      :: DefMechVertexSetOptions
@@ -433,9 +451,10 @@ Contains
       Call PetscBagSetName(bag,trim(name),"DefMechVertexSetOptions MEF90 Heat transfer Vertex Set options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
-      Call PetscBagRegisterBool(bag,DefMechVertexSetOptions%Has_displacementBC,default%Has_displacementBC,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,DefMechVertexSetOptions%boundaryDisplacement,default%boundaryDisplacement,'boundaryDisplacement','Displacement boundary value',ierr);CHKERRQ(ierr)
-
+      DefMechVertexSetOptions%Has_displacementBC   = default%Has_displacementBC
+      DefMechVertexSetOptions%boundaryDisplacement = default%boundaryDisplacement
+      Call PetscBagRegisterBoolArray(bag,DefMechVertexSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%boundaryDisplacement,3,'boundaryDisplacement','Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechVertexSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechVertexSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','Damage boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions
@@ -450,15 +469,15 @@ Contains
 !!!
    Subroutine MEF90DefMechCtx_SetFromOptions(DefMechCtx,prefix,defaultGlobalOptions, &
                                               defaultCellSetOptions,defaultVertexSetOptions,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(OUT)               :: DefMechCtx
+      Type(MEF90DefMechCtx_Type),Intent(OUT)                :: DefMechCtx
       Character(len=*),Intent(IN)                           :: prefix
-      Type(MEF90DefMechGlobalOptions_Type),Intent(IN)      :: defaultGlobalOptions
-      Type(MEF90DefMechCellSetOptions_Type),Intent(IN)     :: defaultCellSetOptions
-      Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)   :: defaultVertexSetOptions
+      Type(MEF90DefMechGlobalOptions_Type),Intent(IN)       :: defaultGlobalOptions
+      Type(MEF90DefMechCellSetOptions_Type),Intent(IN)      :: defaultCellSetOptions
+      Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)    :: defaultVertexSetOptions
       PetscErrorCode,Intent(OUT)                            :: ierr
    
       Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions
-      Type(MEF90DefMechCellSetOptions_Type)                :: myDefaultCellSetOptions
+      Type(MEF90DefMechCellSetOptions_Type)                 :: myDefaultCellSetOptions
       Type(MEF90Element_Type),Dimension(:),Pointer          :: ElemType
       Type(IS)                                              :: setIS
       PetscInt,Dimension(:),Pointer                         :: setID
