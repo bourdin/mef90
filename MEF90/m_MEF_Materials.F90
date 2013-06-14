@@ -148,10 +148,10 @@ Contains
    Subroutine PetscBagRegisterMEF90MatProp2D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
-      type(MEF90MatProp2D_Type),intent(IN)  :: default
+      type(MEF90MatProp2D_Type),intent(IN)   :: default
       PetscErrorCode,intent(OUT)             :: ierr
 
-      Type(MEF90MatProp2D_Type),pointer     :: matprop
+      Type(MEF90MatProp2D_Type),pointer      :: matprop
       
       Call PetscBagGetDataMEF90MatProp2D(bag,matprop,ierr)
       Call PetscBagSetName(bag,trim(name),"MatProp2D object: material properties",ierr)

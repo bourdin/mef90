@@ -37,15 +37,19 @@ Program ThermoElasticity
                                                          13,                  & ! boundaryDisplacementOffset
                                                          14)                    ! boundaryDamageOffset
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
-                                                         -1,                                       & ! elemTypeShortID will be overriden
-                                                         0.0_Kr,                                   & ! force
-                                                         0.0_Kr,                                   & ! pressureForce
-                                                         MEF90DefMech_defectLawElasticity)   ! defectLaw
+                                                         -1,                                 & ! elemTypeShortID will be overriden
+                                                         0.0_Kr,                             & ! force
+                                                         0.0_Kr,                             & ! pressureForce
+                                                         MEF90DefMech_defectLawElasticity,   & ! defect law
+                                                         (/PETSC_TRUE,PETSC_TRUE,PETSC_TRUE/),                          & ! Has Displacement BC
+                                                         0.0_Kr,                             & ! boundary Displacement
+                                                         PETSC_FALSE,                        & ! Has Damage BC
+                                                         0.0_Kr)                               ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
-                                                         PETSC_TRUE,    & ! Has Displacement BC
-                                                         PETSC_FALSE,   & ! Has Damage BC
+                                                         (/PETSC_TRUE,PETSC_TRUE,PETSC_TRUE/),     & ! Has Displacement BC
                                                          0.0_Kr,        & ! boundary Displacement
-                                                         1.0_Kr)          ! boundary Damage
+                                                         PETSC_FALSE,   & ! Has Damage BC
+                                                         0.0_Kr)          ! boundary Damage
    Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
                                                          
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
@@ -102,11 +106,10 @@ Program ThermoElasticity
    !!! Get DM from mesh
    Call MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
-   Call DMMeshSetMaxDof(mesh,1,ierr);CHKERRQ(ierr) 
+   Call DMMeshSetMaxDof(mesh,dim,ierr);CHKERRQ(ierr) 
    
    !!! Open output file
    Call MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
-
    
    !!! Create DefMech context, get all DefMech options
    Call MEF90DefMechCtx_Create(MEF90DefMechCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
@@ -257,13 +260,13 @@ Program ThermoElasticity
    !!! Actual computations / time stepping
    !!!
    If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
-      Call MEF90DefMechGetTransients(MEF90DefMechCtx,1,time(1),ierr)
+      Call MEF90DefMechSetTransients(MEF90DefMechCtx,1,time(1),ierr)
       Do step = 1,MEF90GlobalOptions%timeNumStep
          Write(IOBuffer,100) step,time(step)
          Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
 
          !!! Update fields
-         Call MEF90DefMechGetTransients(MEF90DefMechCtx,step,time(step),ierr)
+         Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
 
          !!! Solve SNES
          Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,Displacement,ierr);CHKERRQ(ierr)
@@ -287,7 +290,7 @@ Program ThermoElasticity
          Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodus(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+         Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
                                 MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%displacementOffset,ierr);CHKERRQ(ierr)
       End Do
    End If

@@ -10,7 +10,7 @@ BASE_DIR=${MEF90_DIR}/m_DefMech
 
 m_DefMech:m_MEF90_DefMech.o m_MEF90_DefMechCtx.o
 
-m_MEF90_DefMech.o: ${BASE_DIR}/m_MEF90_DefMech.F90# m_MEF90_DefMechAssembly2D.o  m_MEF90_DefMechAssembly3D.o m_MEF90_DefMechCtx.o
+m_MEF90_DefMech.o: ${BASE_DIR}/m_MEF90_DefMech.F90 m_MEF90_DefMechCtx.o# m_MEF90_DefMechAssembly2D.o  m_MEF90_DefMechAssembly3D.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
