@@ -116,6 +116,8 @@ Contains
          Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
          DeAllocate(val)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -163,6 +165,8 @@ Contains
          Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
          DeAllocate(val)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -247,9 +251,11 @@ Contains
          Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
          DeAllocate(val)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferSetboundaryTemperatureCst
