@@ -42,6 +42,7 @@ Contains
       Real                                            :: exoVersion
       Integer                                         :: exoErr,exoUnit
       Type(DM)                                        :: tmpMesh
+      Character(len=MXSTLN),DImension(:),Pointer      :: cellSetName
       
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
    
@@ -374,6 +375,7 @@ Subroutine MEF90EXOFormat(exoid,NameG,NameC,NameV,ierr)
    PetscErrorCode,Intent(OUT)                         :: ierr
    
    Integer                                            :: exoerr
+   
    If (exoID > 0) Then
       If (size(nameG) > 0) Then
          Call EXPVP (exoid,'g',size(nameG),ierr)
