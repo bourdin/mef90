@@ -5,7 +5,7 @@ Program ThermoElasticity
    Use m_MEF90_DefMech
    Use petsc
    Implicit NONE   
-
+PetscInt n1,n2
    PetscErrorCode                                     :: ierr
    Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
@@ -145,11 +145,11 @@ Program ThermoElasticity
    Call DMMeshSetSectionReal(MEF90DefMechCtx%DMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
 
-   Call DMMeshGetVertexSectionReal(MEF90DefMechCtx%cellDMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshGetCellSectionReal(MEF90DefMechCtx%cellDMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
    Call DMMeshSetSectionReal(MEF90DefMechCtx%cellDMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
 
-   Call DMMeshGetVertexSectionReal(MEF90DefMechCtx%cellDMMatS,"default",(dim*(dim+1))/2,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshGetCellSectionReal(MEF90DefMechCtx%cellDMMatS,"default",(dim*(dim+1))/2,defaultSection,ierr);CHKERRQ(ierr)
    Call DMMeshSetSectionReal(MEF90DefMechCtx%cellDMMatS,"default",defaultSection,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
 
@@ -166,7 +166,7 @@ Program ThermoElasticity
    Call PetscObjectSetName(force,"Force",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%Force => Force
 
-   Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMVect,pressureForce,ierr);CHKERRQ(ierr)
+   Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMScal,pressureForce,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(pressureForce,"Pressure Force",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%pressureForce => pressureForce
 
@@ -338,12 +338,23 @@ Program ThermoElasticity
                                 MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
          Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
 
-         !Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
-         !Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         !Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+Call VecGetSize(localvec,n1, ierr)
+Call VecGetBlockSize(localvec,n2, ierr)
+Write(*,*) "localvec size: ", n1,n2
+Call VecGetSize(MEF90DefMechCtx%pressureForce,n1, ierr)
+Call VecGetBlockSize(MEF90DefMechCtx%pressureForce,n2, ierr)
+Write(*,*) "MEF90DefMechCtx%pressureForce size: ", n1,n2
+Call DMGetBlockSize(MEF90DefMechCtx%cellDMScal,n1,ierr)
+Write(*,*) "MEF90DefMechCtx%cellDMScal size: ", n1
+
+Call DMView(MEF90DefMechCtx%cellDMScal,PETSC_VIEWER_STDOUT_WORLD,ierr)
+
+!         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+!         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          !Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
          !                       MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
-         !Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
       End Do
    End If
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
