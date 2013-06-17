@@ -128,7 +128,6 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferSetexternalTemperatureCst"
 !!!
-!!!  
 !!!  MEF90HeatXferSetexternalTemperatureCst:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
@@ -177,7 +176,6 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferSetboundaryTemperatureCst"
 !!!
-!!!  
 !!!  MEF90HeatXferSetboundaryTemperatureCst:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu

@@ -101,6 +101,7 @@ Contains
             Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
             Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
          End Do
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -134,7 +135,7 @@ Contains
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       
       !!! pressureForce is cell-centered
-      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMScal,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%cellDMScal,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
@@ -147,6 +148,8 @@ Contains
          Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
          DeAllocate(val)
          Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
