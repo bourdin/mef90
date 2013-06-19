@@ -1,0 +1,223 @@
+changeset:   23703:73cc1dcdbe03
+tag:         tip
+user:        Blaise Bourdin <bourdin@lsu.edu>
+date:        Sun Jun 16 10:17:39 2013 +0200
+summary:     Added PetscBagRegisterBoolArray
+
+diff -r d5abf2c2536c -r 73cc1dcdbe03 include/petscbag.h
+--- a/include/petscbag.h	Sun Jun 16 10:16:52 2013 +0200
++++ b/include/petscbag.h	Sun Jun 16 10:17:39 2013 +0200
+@@ -43,6 +43,7 @@
+ PETSC_EXTERN PetscErrorCode PetscBagRegisterIntArray(PetscBag,void*,PetscInt,const  char*,const  char*);
+ PETSC_EXTERN PetscErrorCode PetscBagRegisterEnum(PetscBag,void*,const char*const*,PetscEnum,const char*,const  char*);
+ PETSC_EXTERN PetscErrorCode PetscBagRegisterBool(PetscBag,void*,PetscBool ,const  char*,const  char*);
++PETSC_EXTERN PetscErrorCode PetscBagRegisterBoolArray(PetscBag,void*,PetscInt,const  char*,const  char*);
+ 
+ PETSC_EXTERN PetscErrorCode PetscBagSetFromOptions(PetscBag);
+ PETSC_EXTERN PetscErrorCode PetscBagGetName(PetscBag, char **);
+diff -r d5abf2c2536c -r 73cc1dcdbe03 src/sys/bag/bag.c
+--- a/src/sys/bag/bag.c	Sun Jun 16 10:16:52 2013 +0200
++++ b/src/sys/bag/bag.c	Sun Jun 16 10:17:39 2013 +0200
+@@ -191,6 +191,60 @@
+ }
+ 
+ #undef __FUNCT__  
++#define __FUNCT__ "PetscBagRegisterBoolArray"
++/*@C
++   PetscBagRegisterBoolArray - add a n logical values to the bag
++
++   Logically Collective on PetscBag
++
++   Input Parameter:
+++  bag - the bag of values
++.  addr - location of boolean array in struct
++.  msize - number of entries in array
++.  name - name of the boolean array
++-  help - longer string with more information about the value
++
++   Level: beginner
++
++.seealso: PetscBag, PetscBagSetName(), PetscBagView(), PetscBagLoad(), PetscBagGetData()
++           PetscBagRegisterInt(), PetscBagRegisterBool(), PetscBagRegisterScalar()
++           PetscBagSetFromOptions(), PetscBagCreate(), PetscBagGetName(), PetscBagRegisterEnum()
++
++@*/
++PetscErrorCode PetscBagRegisterBoolArray(PetscBag bag,void *addr,PetscInt msize, const char* name, const char* help)
++{
++  PetscErrorCode ierr;
++  PetscBagItem   item;
++  char           nname[PETSC_BAG_NAME_LENGTH+1];
++  PetscBool      printhelp;
++  PetscInt       i,tmp = msize;
++
++  PetscFunctionBegin;
++  /* ierr = PetscMemzero(addr,msize*sizeof(PetscInt));CHKERRQ(ierr);*/
++  nname[0] = '-';
++  nname[1] = 0;
++  ierr     = PetscStrncat(nname,name,PETSC_BAG_NAME_LENGTH-1);CHKERRQ(ierr);
++  ierr     = PetscOptionsHasName(PETSC_NULL,"-help",&printhelp);CHKERRQ(ierr);
++  if (printhelp) {
++    ierr     = (*PetscHelpPrintf)(bag->bagcomm,"  -%s%s <",bag->bagprefix?bag->bagprefix:"",name);CHKERRQ(ierr);
++    for (i=0; i<msize; i++) {
++      ierr     = (*PetscHelpPrintf)(bag->bagcomm,"%D ",*((PetscInt*)addr)+i);CHKERRQ(ierr);
++  }
++    ierr     = (*PetscHelpPrintf)(bag->bagcomm,">: %s \n",help);CHKERRQ(ierr);
++  }
++  ierr     = PetscOptionsGetBoolArray(bag->bagprefix,nname,(PetscBool*)addr,&tmp,PETSC_NULL);CHKERRQ(ierr);
++
++  ierr = PetscNew(struct _n_PetscBagItem,&item);CHKERRQ(ierr);
++  item->dtype  = PETSC_BOOL;
++  item->offset = ((char*)addr) - ((char*)bag);
++  if (item->offset > bag->bagsize) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Registered item %s %s is not in bag memory space",name,help);
++  item->next   = 0;
++  item->msize  = msize;
++  ierr = PetscBagRegister_Private(bag,item,name,help);CHKERRQ(ierr);
++  PetscFunctionReturn(0);
++}
++
++#undef __FUNCT__  
+ #define __FUNCT__ "PetscBagRegisterInt"
+ /*@C
+    PetscBagRegisterInt - add an integer value to the bag
+@@ -542,7 +596,12 @@
+         ierr = PetscOptionsEnum(name,nitem->help,nitem->list[i-3],(const char*const*)nitem->list,*value,value,PETSC_NULL);CHKERRQ(ierr);
+       } else if (nitem->dtype == PETSC_BOOL) {
+         PetscBool  *value = (PetscBool*)(((char*)bag) + nitem->offset);
+-        ierr = PetscOptionsBool(name,nitem->help,"",*value,value,PETSC_NULL);CHKERRQ(ierr);
++        if (nitem->msize == 1) {
++          ierr = PetscOptionsBool(name,nitem->help,"",*value,value,PETSC_NULL);CHKERRQ(ierr);
++        } else {
++          n = nitem->msize;
++          ierr = PetscOptionsBoolArray(name,nitem->help,"",value,&n,PETSC_NULL);CHKERRQ(ierr);
++        }
+       }
+       nitem = nitem->next;
+     }
+@@ -613,12 +672,17 @@
+         }
+         ierr = PetscViewerASCIIPrintf(view,"; %s\n",nitem->help);CHKERRQ(ierr);
+       } else if (nitem->dtype == PETSC_BOOL) {
+-        PetscBool  value = *(PetscBool*)(((char*)bag) + nitem->offset);
++        PetscBool  *value = (PetscBool*)(((char*)bag) + nitem->offset);
++        PetscInt  i;
+         /* some Fortran compilers use -1 as boolean */
+-        if (((int) value) == -1) value = PETSC_TRUE;
+-        /* the checks here with != PETSC_FALSE and PETSC_TRUE is a special case; here we truly demand that the value be 0 or 1 */
+-        if (value != PETSC_FALSE && value != PETSC_TRUE) SETERRQ3(PETSC_COMM_SELF,PETSC_ERR_PLIB,"Boolean value for %s %s is corrupt; integer value %d",nitem->name,nitem->help,value);
+-        ierr = PetscViewerASCIIPrintf(view,"  %s = %s; %s\n",nitem->name,PetscBools[value],nitem->help);CHKERRQ(ierr);
++        ierr = PetscViewerASCIIPrintf(view,"  %s = ",nitem->name);CHKERRQ(ierr);
++        for (i=0; i<nitem->msize; i++) {
++          if (((int) value[i]) == -1) value[i] = PETSC_TRUE;
++          /* the checks here with != PETSC_FALSE and PETSC_TRUE is a special case; here we truly demand that the value be 0 or 1 */
++          if (value[i] != PETSC_FALSE && value[i] != PETSC_TRUE) SETERRQ3(PETSC_COMM_SELF,PETSC_ERR_PLIB,"Boolean value for %s %s is corrupt; integer value %d",nitem->name,nitem->help,value);
++          ierr = PetscViewerASCIIPrintf(view," %s",PetscBools[value[i]]);CHKERRQ(ierr);
++        }
++        ierr = PetscViewerASCIIPrintf(view,"; %s\n",nitem->help);CHKERRQ(ierr);
+       } else if (nitem->dtype == PETSC_ENUM) {
+         PetscEnum value = *(PetscEnum*)(((char*)bag) + nitem->offset);
+         PetscInt  i = 0;
+@@ -719,7 +783,7 @@
+     } else if (dtype == (PetscInt) PETSC_INT) {
+       ierr = PetscViewerBinaryRead(view,((char*)bag)+nitem->offset,msize,PETSC_INT);CHKERRQ(ierr);
+     } else if (dtype == (PetscInt) PETSC_BOOL) {
+-      ierr = PetscViewerBinaryRead(view,((char*)bag)+nitem->offset,1,PETSC_BOOL);CHKERRQ(ierr);
++      ierr = PetscViewerBinaryRead(view,((char*)bag)+nitem->offset,msize,PETSC_BOOL);CHKERRQ(ierr);
+     } else if (dtype == (PetscInt) PETSC_ENUM) {
+       ierr = PetscViewerBinaryRead(view,((char*)bag)+nitem->offset,1,PETSC_ENUM);CHKERRQ(ierr);
+       ierr = PetscViewerBinaryReadStringArray(view,&list);CHKERRQ(ierr);
+diff -r d5abf2c2536c -r 73cc1dcdbe03 src/sys/bag/f90-custom/zbagf90.c
+--- a/src/sys/bag/f90-custom/zbagf90.c	Sun Jun 16 10:16:52 2013 +0200
++++ b/src/sys/bag/f90-custom/zbagf90.c	Sun Jun 16 10:17:39 2013 +0200
+@@ -15,6 +15,7 @@
+ #define petscbagregisterreal_ PETSCBAGREGISTERREAL
+ #define petscbagregisterrealarray_ PETSCBAGREGISTERREALARRAY
+ #define petscbagregisterbool_ PETSCBAGREGISTERBOOL
++#define petscbagregisterboolarray_ PETSCBAGREGISTERBOOLARRAY
+ #define petscbagsetname_ PETSCBAGSETNAME
+ #define petscbagsetoptionsprefix_ PETSCBAGSETOPTIONSPREFIX
+ #elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE)
+@@ -29,6 +30,7 @@
+ #define petscbagregisterreal_ petscbagregisterreal
+ #define petscbagregisterrealarray_ petscbagregisterrealarray
+ #define petscbagregisterbool_ petscbagregisterbool
++#define petscbagregisterboolarray_ PETSCBAGREGISTERBOOLARRAY
+ #define petscbagsetname_ petscbagsetname
+ #define petscbagsetoptionsprefix_ petscbagsetoptionsprefix
+ #endif
+@@ -125,6 +127,21 @@
+   FREECHAR(s2,t2);
+ }
+ 
++void PETSC_STDCALL petscbagregisterboolarray_(PetscBag *bag,void *ptr,PetscInt *msize,CHAR s1 PETSC_MIXED_LEN(l1),
++					CHAR s2 PETSC_MIXED_LEN(l2),PetscErrorCode *ierr PETSC_END_LEN(l1) PETSC_END_LEN(l2))
++{
++  char       *t1,*t2;
++  PetscBool  flg = PETSC_FALSE;
++
++  /* some Fortran compilers use -1 as boolean */
++  //if (*def) flg = PETSC_TRUE;
++  FIXCHAR(s1,l1,t1);
++  FIXCHAR(s2,l2,t2);
++  *ierr = PetscBagRegisterBoolArray(*bag,ptr,*msize,t1,t2);
++  FREECHAR(s1,t1);
++  FREECHAR(s2,t2);
++}
++
+ void PETSC_STDCALL petscbagregisterstring_(PetscBag *bag,CHAR p PETSC_MIXED_LEN(pl),CHAR cs1 PETSC_MIXED_LEN(cl1),CHAR s1 PETSC_MIXED_LEN(l1),
+ 					   CHAR s2 PETSC_MIXED_LEN(l2),PetscErrorCode *ierr PETSC_END_LEN(pl) PETSC_END_LEN(cl1) PETSC_END_LEN(l1) PETSC_END_LEN(l2))
+ {
+diff -r d5abf2c2536c -r 73cc1dcdbe03 src/sys/examples/tutorials/ex5.c
+--- a/src/sys/examples/tutorials/ex5.c	Sun Jun 16 10:16:52 2013 +0200
++++ b/src/sys/examples/tutorials/ex5.c	Sun Jun 16 10:17:39 2013 +0200
+@@ -38,6 +38,7 @@
+   PetscInt      iarray[3];
+   PetscReal     rarray[2];
+   PetscBool     T;
++  PetscBool     Tarray[3];
+   PetscDataType dt;
+   char          filename[PETSC_MAX_PATH_LEN];
+   YourChoice    which;
+@@ -85,6 +86,7 @@
+   params->rarray[1] = -2.0;
+   ierr = PetscBagRegisterRealArray(bag,&params->rarray, 2,"real_array","Real array with 2 locations");CHKERRQ(ierr);
+   ierr = PetscBagRegisterBool (bag,&params->T,  PETSC_FALSE,"do_output","Write output file (yes/no)");CHKERRQ(ierr);
++  ierr = PetscBagRegisterBoolArray(bag,&params->Tarray, 3,"bool_array","Bool array with 3 locations");CHKERRQ(ierr);
+   ierr = PetscBagRegisterEnum  (bag,&params->dt, PetscDataTypes,(PetscEnum)PETSC_INT,"dt","meaningless datatype");CHKERRQ(ierr);
+   ierr = PetscBagRegisterReal  (bag,&params->pos.x1,1.0,"x1","x position");CHKERRQ(ierr);
+   ierr = PetscBagRegisterReal  (bag,&params->pos.x2,1.9,"x2","y position");CHKERRQ(ierr);
+diff -r d5abf2c2536c -r 73cc1dcdbe03 src/sys/examples/tutorials/ex5f90.F90
+--- a/src/sys/examples/tutorials/ex5f90.F90	Sun Jun 16 10:16:52 2013 +0200
++++ b/src/sys/examples/tutorials/ex5f90.F90	Sun Jun 16 10:17:39 2013 +0200
+@@ -17,6 +17,7 @@
+          PetscInt  :: nxc
+          PetscReal :: rarray(3)
+          PetscBool  :: t
++         PetscBool  :: tarray(3)
+          PetscEnum :: enum
+          character*(80) :: c
+          type(tuple) :: pos
+@@ -87,12 +88,14 @@
+ ! register the data within the bag, grabbing values from the options database
+       call PetscBagRegisterInt(bag,data%nxc ,56,'nxc',                   &
+      &      'nxc_variable help message',ierr)
+-      call PetscBagRegisterRealArray(bag,data%rarray ,3,'rarray',        &
++      call PetscBagRegisterRealArray(bag,data%rarray,3,'rarray',         &
+      &      'rarray help message',ierr)
+       call PetscBagRegisterScalar(bag,data%x ,103.2d0,'x',               &
+      &      'x variable help message',ierr)
+       call PetscBagRegisterBool(bag,data%t ,PETSC_TRUE,'t',              &
+      &      't boolean help message',ierr)
++      call PetscBagRegisterBoolArray(bag,data%tarray,3,'tarray',         &
++     &      'tarray help message',ierr)
+       call PetscBagRegisterString(bag,data%c,'hello','c',                &
+      &      'string help message',ierr)
+       call PetscBagRegisterReal(bag,data%y ,-11.0d0,'y',                 &
+@@ -112,6 +115,7 @@
+       data%x   = 155.4
+       data%c   = 'a whole new string'
+       data%t   = PETSC_TRUE
++      data%tarray   = (/PETSC_TRUE,PETSC_FALSE,PETSC_TRUE/)
+       call PetscBagView(bag,PETSC_VIEWER_BINARY_WORLD,ierr)
+ 
+       call PetscViewerBinaryOpen(PETSC_COMM_WORLD,'binaryoutput',        &
+
