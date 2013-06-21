@@ -1,7 +1,7 @@
 from visit import *
 
 def SetAnnotations():
-    AnnotationAtts = visit.GetAnnotationAttributes()
+    AnnotationAtts = GetAnnotationAttributes()
     AnnotationAtts.axes3D.xAxis.label.visible = 0
     AnnotationAtts.axes3D.yAxis.label.visible = 0
     AnnotationAtts.axes3D.zAxis.label.visible = 0
@@ -13,7 +13,7 @@ def SetAnnotations():
     AnnotationAtts.axes3D.visible = 0
     AnnotationAtts.backgroundColor = (0, 0, 0, 255)
     AnnotationAtts.foregroundColor = (255, 255, 255, 255)
-    visit.SetAnnotationAttributes(AnnotationAtts)
+    SetAnnotationAttributes(AnnotationAtts)
     return 0
 
 def setView3DXup(thetadeg = 30,phideg = 45):
