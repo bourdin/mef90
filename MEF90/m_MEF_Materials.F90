@@ -61,14 +61,14 @@ Module m_MEF_Materials_Interface2D
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF_Materials_Types
          PetscBag                             :: bag
-         type(MEF90MatProp2D_Type),pointer   :: data
+         type(MEF90MatProp2D_Type),pointer    :: data
          PetscErrorCode                       :: ierr
       End subroutine PetscBagGetData
    End interface
 Contains
    Subroutine PetscBagGetDataMEF90MatProp2D(bag,data,ierr)
       PetscBag                              :: bag
-      type(MEF90MatProp2D_Type),pointer    :: data
+      type(MEF90MatProp2D_Type),pointer     :: data
       PetscErrorCode                        :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
@@ -88,14 +88,14 @@ Module m_MEF_Materials_Interface3D
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF_Materials_Types
          PetscBag                             :: bag
-         type(MEF90MatProp3D_Type),pointer   :: data
+         type(MEF90MatProp3D_Type),pointer    :: data
          PetscErrorCode                       :: ierr
       End subroutine PetscBagGetData
    End interface
 Contains
    Subroutine PetscBagGetDataMEF90MatProp3D(bag,data,ierr)
       PetscBag                              :: bag
-      type(MEF90MatProp3D_Type),pointer    :: data
+      type(MEF90MatProp3D_Type),pointer     :: data
       PetscErrorCode                        :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
@@ -178,7 +178,7 @@ Contains
       type(MEF90MatProp3D_Type),intent(IN)   :: default
       PetscErrorCode,intent(OUT)             :: ierr
 
-      Type(MEF90MatProp3D_Type),pointer     :: matprop
+      Type(MEF90MatProp3D_Type),pointer      :: matprop
       Call PetscBagGetDataMEF90MatProp3D(bag,matprop,ierr)
       Call PetscBagSetName(bag,trim(name),"MatProp3D object: material properties",ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
@@ -298,8 +298,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_HookeLawIsoLambdaMu_2D"
    Subroutine MEF90_HookeLawIsoLambdaMu_2D(A,lambda,mu) 
-      Type(Tens4OS2D),Intent(OUT)        :: A
-      PetscReal,Intent(IN)               :: lambda,mu
+      Type(Tens4OS2D),Intent(OUT)         :: A
+      PetscReal,Intent(IN)                :: lambda,mu
       A = 0.0_Kr
       
       A%XXXX = lambda + 2.0_Kr * mu
@@ -311,8 +311,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_HookeLawIsoEnu_2DPlaneStress"
    Subroutine MEF90_HookeLawIsoEnu_2DPlaneStress(A,E,nu) 
-      PetscReal,Intent(IN)               :: E,nu
-      Type(Tens4OS2D),Intent(OUT)        :: A
+      PetscReal,Intent(IN)                :: E,nu
+      Type(Tens4OS2D),Intent(OUT)         :: A
       
       PetscReal                           :: Lambda,mu
       
@@ -328,8 +328,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_HookeLawIsoEnu_2DPlaneStrain"
    Subroutine MEF90_HookeLawIsoEnu_2DPlaneStrain(A,E,nu) 
-      PetscReal,Intent(IN)               :: E,nu
-      Type(Tens4OS2D),Intent(OUT)        :: A
+      PetscReal,Intent(IN)                :: E,nu
+      Type(Tens4OS2D),Intent(OUT)         :: A
       
       PetscReal                           :: Lambda,mu
       
@@ -345,8 +345,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_HookeLawIsoLambdaMu_3D"
    Subroutine MEF90_HookeLawIsoLambdaMu_3D(A,lambda,mu)
-      PetscReal,Intent(IN)               :: lambda,mu
-      Type(Tens4OS3D),Intent(OUT)        :: A
+      PetscReal,Intent(IN)                :: lambda,mu
+      Type(Tens4OS3D),Intent(OUT)         :: A
    
       A = 0.0_Kr
       A%XXXX = lambda + mu * 2.0_Kr
@@ -368,8 +368,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_HookeLawIsoENu_3D"
    Subroutine MEF90_HookeLawIsoENu_3D(A,E,nu)
-      PetscReal,Intent(IN)               :: E,nu
-      Type(Tens4OS3D),Intent(OUT)        :: A
+      PetscReal,Intent(IN)                :: E,nu
+      Type(Tens4OS3D),Intent(OUT)         :: A
       
       Real(Kind = Kr)                     :: Lambda,mu
    

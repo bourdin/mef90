@@ -365,9 +365,6 @@ Call DMView(MEF90DefMechCtx%cellDMScal,PETSC_VIEWER_STDOUT_WORLD,ierr)
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
    End If
 
-   Call VecDestroy(Displacement,ierr);CHKERRQ(ierr)
-   Call VecDestroy(residualDisplacement,ierr);CHKERRQ(ierr)
-   
    If (Associated(MEF90DefMechCtx%boundaryDisplacement)) Then 
       Call VecDestroy(MEF90DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
       Nullify(MEF90DefMechCtx%boundaryDisplacement)
@@ -386,6 +383,13 @@ Call DMView(MEF90DefMechCtx%cellDMScal,PETSC_VIEWER_STDOUT_WORLD,ierr)
       Nullify(MEF90DefMechCtx%pressureForce)
    End If
 
+   Call VecDestroy(Displacement,ierr);CHKERRQ(ierr)
+   Call VecDestroy(boundaryDisplacement,ierr);CHKERRQ(ierr)
+   Call VecDestroy(Damage,ierr);CHKERRQ(ierr)
+   Call VecDestroy(residualDisplacement,ierr);CHKERRQ(ierr)   
+   Call VecDestroy(force,ierr);CHKERRQ(ierr)   
+   Call VecDestroy(pressureForce,ierr);CHKERRQ(ierr)   
+   Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
    DeAllocate(time)
    DeAllocate(energy)
    DeAllocate(work)
