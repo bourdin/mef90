@@ -3,6 +3,9 @@
 ###
 def WebcutTool(body_list_in, tool_ID, delete=False):
     import cubit
+    print "&&&&&&&&&&&&&&&&&"
+    print "body_list_in: ", body_list_in
+    print "tool_ID: ", tool_ID
     ### delete group 'webcut_group' if it exists
     cubit.delete_group(cubit.get_id_from_name('webcut_group'))
     ### webcut 
@@ -23,6 +26,8 @@ def WebcutTool(body_list_in, tool_ID, delete=False):
     tool_list_out = tmp_list # just so that I can make a call with tool_ID = tool_list_out
     ### remove tool_list_out and tool_ID from ovlp
     body_list_out = [vol_id for vol_id in webcut_group_IDs if vol_id not in ovlp]
+    print "body_list_out: ",body_list_out
+    print "&&&&&&&&&&&&&&&&&"
     ### delete the tool of requested
     if delete:
         cubit.cmd('delete volume %i' % tool_ID)
@@ -619,41 +624,71 @@ def PacmanCoinLayeredCreate(R, lx, ly, lz, alpha, theta1, theta2, thetacrack, xc
     ###
     ### return LAYER1_3D and LAYER2_3D
     ###
+
+def SPacmanCoinLayeredCreate(LX, LY, lx, ly, lz, alpha, theta1, theta2, thetacrack, xc=0):
+    import cubit
+    import numpy as np
     ###
-    ### Generate the pacman geometry
+    ### Create Main body
     ###
-    (OUTSIDE_3D, CYL_3D) = PacmanCoinCreate(R, r, r, lz, thetac, xc)
+    OUTSIDE_3D=[]
+    cubit.cmd ("Create brick X %f Y %f Z %f" % (LX,LY,lz)) 
+    OUTSIDE_3D.append(cubit.get_last_id("volume"))
     ###
-    ### Create grains geometry
+    ### Create wedge
     ###
-    circle = [0., 0., r]
-    BB = [-R, R, -R, R]
-    sites=SitesGenCircle2D(ngrains, circle, BB)
-    (vertices, cells) = VoronoiGen(sites)
-    realcells = VoronoiRemoveInfiniteCells(cells)
-    newsites=SitesSmootherSphere(sites, vertices, cells, circle)
-    (newvertices, newcells) = VoronoiGen(newsites)
-    newrealcells = VoronoiRemoveInfiniteCells(newcells)
+    w_ID=[]
+    cubit.cmd("create vertex X %f Y 0 Z %f" % ( xc, -lz))
+    w_ID.append(cubit.get_last_id("vertex"))
+    X = 1.1 * LX/2. * np.cos(np.radians(thetacrack/2.))
+    Y = 1.1 * LX/2. * np.sin(np.radians(thetacrack/2.))
+    cubit.cmd("create vertex X %f Y %f Z %f" % (-X, Y, -lz))
+    w_ID.append(cubit.get_last_id("vertex"))
+    cubit.cmd("create vertex X %f Y %f Z %f" % (-X,  -Y, -lz))
+    w_ID.append(cubit.get_last_id("vertex"))
+    cubit.cmd("create surface vertex %i %i %i" % (w_ID[0], w_ID[1], w_ID[2]))
+    cubit.cmd("sweep surface %i perpendicular distance %f" % (cubit.get_last_id("surface"), 2*lz))
+    WEDGE=cubit.get_last_id("volume")
     ###
-    if debug:
-        print('\nregularized sites:')
-        for site in newsites:
-            print(site)
-        print('\ncells:')
-        for cell in newrealcells:
-            print(cell)
-        print('\nvertices:')
-        for vertex in newvertices:
-            print(vertex)
-    ###      
-    ### Create grains bodies
-    ### 
-    Grain_3D=[]
-    for i in range(ngrains):
-        tmpgrain=GrainCreate(newvertices[newrealcells[i],:], lz)
-        Grain_3D.append([])
-        (CYL_3D, Grain_3D[i]) = WebcutTool(CYL_3D, tmpgrain, delete=True)
-        GroupAddVolList("Grain%i"%i, Grain_3D[i])
+    ### remove crack
+    ###
+    cubit.cmd("subtract volume %i from volume %i" % (WEDGE, OUTSIDE_3D[0]))
+    print "1**********************************************"
+    print WEDGE,OUTSIDE_3D
+    print "1**********************************************"
+    ###
+    ### Create center coin
+    ###
+    cubit.cmd ("Create brick X %f Y %f Z %f" % (lx, ly, lz)) 
+    PM = cubit.get_last_id("volume")
+    (OUTSIDE_3D, PM_ID) = WebcutTool(OUTSIDE_3D, PM, delete=True)
+    print "2**********************************************"
+    print OUTSIDE_3D, PM_ID
+    print "2**********************************************"
+    ###
+    ### create layers
+    ###
+    bb=[-1.1*lx/2., 1.1*lx/2., -1.1*ly/2., 1.1*ly/2., -2.*lz, 2.*lz]
+    print('PM_ID, bb, alpha, theta1, theta2', PM_ID, bb, alpha, theta1, theta2)
+    (LAYER1_3D, LAYER2_3D) = Layer(PM_ID, bb, alpha, theta1, theta2, 0.)
+    print "3**********************************************"
+    print LAYER1_3D, LAYER2_3D
+    print "3**********************************************"
+    ###
+    ### imprint and merge
+    ###
+    cubit.cmd("imprint all")
+    cubit.cmd("merge all")
+    ###
+    ### groups
+    ###
+    GroupAddVolList("LAYER1_3D",  LAYER1_3D)
+    GroupAddVolList("LAYER2_3D",  LAYER2_3D)
+    GroupAddVolList("OUTSIDE_3D", OUTSIDE_3D)
+    ###
+    ### return LAYER1_3D and LAYER2_3D
+    ###
+    return OUTSIDE_3D, LAYER1_3D, LAYER2_3D
 
 def PacmanCoinCreate(R, lx, ly, lz, thetacrack, xc=0.):
     import cubit
