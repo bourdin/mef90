@@ -55,9 +55,10 @@ Module m_MEF_Ctx
    Enum,bind(c)
       Enumerator ::  MEF90Scaling_CST=0,        &
                      MEF90Scaling_Linear,       &  
+                     MEF90Scaling_Null,       &  
                      MEF90Scaling_File
    End Enum
-   Character(len=MEF90_MXSTRLEN),dimension(6),protected  :: MEF90ScalingList
+   Character(len=MEF90_MXSTRLEN),dimension(7),protected  :: MEF90ScalingList
    
    Enum,bind(c)
       Enumerator  :: MEF90FileFormat_EXOSingle = 0,    &
@@ -106,9 +107,10 @@ Contains
       MEF90ScalingList(1) = 'constant'
       MEF90ScalingList(2) = 'linear'
       MEF90ScalingList(3) = 'file'
-      MEF90ScalingList(4) = 'MEF90scaling'
-      MEF90ScalingList(5) = '_MEF90Scaling'
-      MEF90ScalingList(6) = ''
+      MEF90ScalingList(4) = 'null'
+      MEF90ScalingList(5) = 'MEF90scaling'
+      MEF90ScalingList(6) = '_MEF90Scaling'
+      MEF90ScalingList(7) = ''
       
       MEF90FileFormatList(1) = 'Replace'
       MEF90FileFormatList(2) = 'MEF90FileFormat'
