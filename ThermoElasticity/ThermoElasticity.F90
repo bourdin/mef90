@@ -37,14 +37,14 @@ PetscInt n1,n2
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
-                                                         -1,                                 & ! elemTypeShortID will be overriden
-                                                         0.0_Kr,                             & ! force
-                                                         0.0_Kr,                             & ! pressureForce
-                                                         MEF90DefMech_defectLawElasticity,   & ! defect law
-                                                         (/PETSC_TRUE,PETSC_TRUE,PETSC_TRUE/),                          & ! Has Displacement BC
-                                                         0.0_Kr,                             & ! boundary Displacement
-                                                         PETSC_FALSE,                        & ! Has Damage BC
-                                                         0.0_Kr)                               ! Boundary Damage
+                                                         -1,                                   & ! elemTypeShortID will be overriden
+                                                         (/0.0_Kr,0.0_Kr,0.0_Kr/),             & ! force
+                                                         0.0_Kr,                               & ! pressureForce
+                                                         MEF90DefMech_defectLawElasticity,     & ! defect law
+                                                         (/PETSC_TRUE,PETSC_TRUE,PETSC_TRUE/), & ! Has Displacement BC
+                                                         0.0_Kr,                               & ! boundary Displacement
+                                                         PETSC_FALSE,                          & ! Has Damage BC
+                                                         0.0_Kr)                                 ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          (/PETSC_TRUE,PETSC_TRUE,PETSC_TRUE/),     & ! Has Displacement BC
                                                          0.0_Kr,        & ! boundary Displacement
@@ -59,7 +59,7 @@ PetscInt n1,n2
                                                          0.0_Kr,                        & ! timeMin
                                                          1.0_Kr,                        & ! timeMax
                                                          11,                            & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle) ! fileFormat
+                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
    PetscBag,dimension(:),pointer                      :: MEF90MatPropBag
 

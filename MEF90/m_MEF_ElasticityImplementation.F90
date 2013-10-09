@@ -24,13 +24,13 @@ Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
 
 !  Assembles all components required to solve a Elasticity equation in the form
 !
-!       { -div[A\e(v)] = f   in \Omega
-!  (1)  {            v = v_0 on \partial \Omega_d
-!       {         Av.n = g   on \partial \Omega_n
+!       { -div[A\e(v)-\e_0] = f   in \Omega
+!  (1)  {                 v = v_0 on \partial \Omega_d
+!       {       A(v-\e_0).n = g   on \partial \Omega_n
 !
 !  or equivalently to minimize
 !
-!  (2) E(v) := 1/2 \int A\e(v):\e(v) \, dx - \int_\Omega fv\, dx - \int_{\partial \Omega_n} gv\, dS
+!  (2) E(v) := 1/2 \int A(\e(v)-\e_0):(\e(v)-\e_0) \, dx - \int_\Omega fv\, dx - \int_{\partial \Omega_n} gv\, dS
 
 !  Nomenclature:
 !     the "Bilinear Form" is K such that 
@@ -38,7 +38,7 @@ Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
 !     the "Operator" is v -> G(v)  where  
 !        <G(v),w> := \int A\e(v):\e(w)\, dx
 !     the "RHS" is F, where
-!        <F,w> := \int_\Omega fw\, dx + \int_{\partial \Omega_n} gw\, dS
+!        <F,w> := \int_\Omega A\e_0:\e(w)\, dx + \int_\Omega fw\, dx + \int_{\partial \Omega_n} gw\, dS
 !     the "Energy" is E
 !
 !     when using a SNES to solve (1),
@@ -57,6 +57,12 @@ Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
 !        the "Gradient" is G-F (operator - RHS)
 !        the "Hessian" is K (bilinear form)
 !
+! an extra layer of complexity comes from the fact that \e_0 can be either
+!  - a symmetric matrix defined in each block (ElasticityXXXSetCST)
+!  - a symmetric matrix defined in each cell of a block (ElasticityXXXSetCell)
+!  - f\E_0, where f is a scalar defined on each cell and K_0 is a symmetric matrix defined given in each block (ElasticityXXXSetCell)
+!  - f\E_0, where f is a scalar defined on the finite element space and K_0 is a symmetric matrix defined given in each block (ElasticityXXXSetVertex)
+
 
 Contains
 #undef __FUNCT__
@@ -207,19 +213,20 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityRHSSetVertex"
-   Subroutine ElasticityRHSSetVertex(RHS,mesh,F,cellIS,elem,elemType,ierr)
+   Subroutine ElasticityRHSSetVertex(RHS,mesh,F,meshScal,E0,K0,cellIS,elem,elemType,elemScal,elemTypeScal,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
-      Type(DM),Intent(IN)                                :: mesh
-      Type(SectionReal),Intent(IN)                       :: F
+      Type(DM),Intent(IN)                                :: mesh,meshScal
+      Type(SectionReal),Intent(IN)                       :: F,E0           ! force and scaling of the inelastic strain
+      Type(MEF90_MATS),Intent(IN)                        :: K0             ! The inelastic strain is E0.K0
       Type(IS),Intent(IN)                                :: cellIS
-      Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer     :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer     :: elem,elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType,elemTypeScal
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
-      PetscReal,Dimension(:),Pointer                     :: Floc,RHSloc
-      Type(MEF90_VECT)                                   :: Felem
+      PetscReal,Dimension(:),Pointer                     :: Floc,RHSloc,E0loc
+      Type(MEF90_VECT)                                   :: Felem,E0elem
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
