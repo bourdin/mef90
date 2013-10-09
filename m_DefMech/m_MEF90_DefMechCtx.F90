@@ -84,7 +84,7 @@ Module m_MEF90DefMechGlobalOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_DefMechCtx_Type
          PetscBag                                              :: bag
-         Type(MEF90DefMechGlobalOptions_Type),pointer  :: data
+         Type(MEF90DefMechGlobalOptions_Type),pointer          :: data
          PetscErrorCode                                        :: ierr
       End subroutine PetscBagGetData
    End interface
@@ -97,7 +97,7 @@ Contains
 !!!
    Subroutine PetscBagGetDataMEF90DefMechCtxGlobalOptions(bag,data,ierr)
       PetscBag                                              :: bag
-      Type(MEF90DefMechGlobalOptions_Type),pointer  :: data
+      Type(MEF90DefMechGlobalOptions_Type),pointer          :: data
       PetscErrorCode                                        :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
@@ -118,7 +118,7 @@ Module m_MEF90DefMechCellSetOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_DefMechCtx_Type
          PetscBag                                              :: bag
-         Type(MEF90DefMechCellSetOptions_Type),pointer :: data
+         Type(MEF90DefMechCellSetOptions_Type),pointer         :: data
          PetscErrorCode                                        :: ierr
       End subroutine PetscBagGetData
    End interface
@@ -346,7 +346,7 @@ Contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechCtx_Destroy(DefMechCtx,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(OUT)  :: DefMechCtx
+      Type(MEF90DefMechCtx_Type),Intent(OUT)          :: DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       PetscInt                                        :: set
@@ -387,7 +387,7 @@ Contains
    Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                                 :: bag
       Character(len=*),Intent(IN)                              :: prefix,name
-      Type(MEF90DefMechGlobalOptions_Type),Intent(IN)  :: default
+      Type(MEF90DefMechGlobalOptions_Type),Intent(IN)          :: default
       PetscErrorCode,Intent(OUT)                               :: ierr
 
       Type(MEF90DefMechGlobalOptions_Type),pointer      :: DefMechGlobalOptions

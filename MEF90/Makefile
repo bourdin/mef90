@@ -64,14 +64,14 @@ m_MEF_ElasticityImplementation_2D.o: ${MEF90_DIR}/MEF90/m_MEF_ElasticityImplemen
         m_MEF_Elements.o \
         m_MEF_Parameters.o \
         m_MEF_Utils.o
-	@echo "      $< 2D / MEF90Element3D_Scal"
+	@echo "      $< 2D"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element2D_Elast -DMEF90_DIM=2 -c -o $@ $<
 
 m_MEF_ElasticityImplementation_3D.o: ${MEF90_DIR}/MEF90/m_MEF_ElasticityImplementation.F90 \
         m_MEF_Elements.o \
         m_MEF_Parameters.o \
         m_MEF_Utils.o
-	@echo "      $< 3D / MEF90Element3D_Scal"
+	@echo "      $< 3D"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Elast -DMEF90_DIM=3 -c -o $@ $<
 
 m_MEF_ElasticityInterface.o: ${MEF90_DIR}/MEF90/m_MEF_ElasticityInterface.F90 \
