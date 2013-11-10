@@ -24,6 +24,7 @@ include ${PETSC_DIR}/conf/variables
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
+include ${MEF90_DIR}/m_Elasticity/Makefile.include
 BASE_DIR=${MEF90_DIR}/ThermoElasticity
 
 ThermoElasticity:${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
@@ -31,9 +32,9 @@ ThermoElasticity:${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
 
 ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity: ThermoElasticity.o
 	-@echo "      $@"
-	-@${FLINKER} -o $@ ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	-@${FLINKER} -o $@ ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_ELASTICITY_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
-ThermoElasticity.o: ${BASE_DIR}/ThermoElasticity.F90 ${MEF90_DEFMECH_OBJS}
+ThermoElasticity.o: ${BASE_DIR}/ThermoElasticity.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_ELASTICITY_OBJS}
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 

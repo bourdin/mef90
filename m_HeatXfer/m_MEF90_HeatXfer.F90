@@ -4,25 +4,27 @@ Module m_MEF90_HeatXfer
 #include "finclude/petscbagdef.h"
    Use m_MEF90
    Use m_MEF90_HeatXferCtx
-   Use m_MEF90_HeatXferAssembly2D!, &
-      !MEF90HeatXferEnergy2D => MEF90HeatXferEnergy, &
-      !MEF90HeatXferOperator2D => MEF90HeatXferOperator, &
-      !MEF90HeatXferBilinearForm2D => MEF90HeatXferBilinearForm_private
-   Use m_MEF90_HeatXferAssembly3D!, &
-      !MEF90HeatXferEnergy3D => MEF90HeatXFerEnergy, &
-      !MEF90HeatXferOperator3D => MEF90HeatXferOperator, &
-      !MEF90HeatXferBilinearForm3D => MEF90HeatXferBilinearForm_private
-      !!! For some reason, this trick seems to confuse intel 13.0...
+   Use m_MEF90_HeatXferAssembly2D, &
+      MEF90HeatXferEnergy2D => MEF90HeatXferEnergy, &
+      MEF90HeatXferOperator2D => MEF90HeatXferOperator, &
+      MEF90HeatXferBilinearForm2D => MEF90HeatXferBilinearForm
+   Use m_MEF90_HeatXferAssembly3D, &
+      MEF90HeatXferEnergy3D => MEF90HeatXFerEnergy, &
+      MEF90HeatXferOperator3D => MEF90HeatXferOperator, &
+      MEF90HeatXferBilinearForm3D => MEF90HeatXferBilinearForm
+
+   Implicit none
+
    !Private
    !Public MEF90HeatXferSetTransients
    !Public MEF90HeatXferOperator
    !Public MEF90HeatXferBilinearForm
    !Public MEF90HeatXferEnergy
-   !Public :: MEF90HeatXferCtx_Type
-   !Public :: MEF90HeatXferGlobalOptions_Type
-   !Public :: MEF90HeatXferCellSetOptions_Type
-   !Public :: MEF90HeatXferVertexSetOptions_Type
-   Implicit none
+   !Public MEF90HeatXferCtx_Type
+   !Public MEF90HeatXferGlobalOptions_Type
+   !Public MEF90HeatXferCellSetOptions_Type
+   !Public MEF90HeatXferVertexSetOptions_Type
+   !Public MEF90HeatXFer_ModeSteadyState, MEF90HeatXFer_ModeTransient
 Contains
 
 #undef __FUNCT__

@@ -170,7 +170,7 @@ Module m_MEF90_HeatXferCtx
    
    Enum,bind(c)
       enumerator  :: MEF90HeatXFer_ModeSteadyState = 0, &
-                     MEF90HeatXFer_ModeSteadyTransient
+                     MEF90HeatXFer_ModeTransient
    End Enum
    Character(len = MEF90_MXSTRLEN),dimension(5),protected   :: MEF90HeatXFer_ModeList
    

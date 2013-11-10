@@ -1,6 +1,20 @@
 ###
 ### geometry tools
 ###
+def WebcutTool2(body_list_in, tool_ID, delete=False):
+    import cubit
+    print "&&&&&&&&&&&&&&&&&"
+    print "body_list_in: ", body_list_in
+    print "tool_ID: ", tool_ID
+    ### delete group 'webcut_group' if it exists
+    cubit.delete_group(cubit.get_id_from_name('webcut_group'))
+    ### webcut 
+    cmd='webcut volume '
+    for i in body_list_in:
+        cmd += '%i ' % i
+    cmd += 'tool volume %i group_results' % tool_ID
+    cubit.cmd(cmd)
+
 def WebcutTool(body_list_in, tool_ID, delete=False):
     import cubit
     print "&&&&&&&&&&&&&&&&&"
@@ -372,7 +386,7 @@ def Layer(Body_IDs, BB, Alpha, Theta1, Theta2, Xoffset=.5):
             cubit.cmd('rotate volume %i about vertex %i vertex %i angle %f' % (tmp_ID, v1_ID, v2_ID, Alpha))
             cubit.cmd('delete vertex %i' % v1_ID)
             cubit.cmd('delete vertex %i' % v2_ID)
-        (LAYER1_IDs, tmp_layer) = WebcutTool(LAYER1_IDs, tmp_ID, delete=True)
+        (LAYER1_IDs, tmp_layer) = WebcutTool2(LAYER1_IDs, tmp_ID, delete=True)
         for l in tmp_layer:
             LAYER2_IDs.append(l)
     return (LAYER1_IDs, LAYER2_IDs)

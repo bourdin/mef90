@@ -16,6 +16,10 @@ m_DefMech: MEF90 chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../m_DefMech/Makefile m_DefMech
 
+m_Elasticity: MEF90 chkpaths
+	-@echo "Building $@"
+	-@make -C objs/${PETSC_ARCH} -f ../../m_Elasticity/Makefile m_Elasticity
+
 ThermoElasticity: MEF90 m_DefMech chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../ThermoElasticity/Makefile ThermoElasticity
