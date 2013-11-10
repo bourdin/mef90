@@ -25,7 +25,7 @@ Module MEF90_APPEND(m_MEF_DiffusionImplementation_,MEF90_DIM)D
 !  Assembles all components required to solve a diffusion equation in the form
 !
 !       { -div[A\nabla v] + \lambda v = f in \Omega
-!  (1)  {                           v = 0 on \partial \Omega_d
+!  (1)  {                           v = V on \partial \Omega_d
 !       {                        Av.n = g on \partial \Omega_n
 !
 !  or equivalently to minimize

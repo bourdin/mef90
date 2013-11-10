@@ -5,6 +5,11 @@ Module MEF90_APPEND(m_MEF90_HeatXferAssembly,MEF90_DIM)D
    Use m_MEF90
    Use m_MEF90_HeatXferCtx
    Implicit none
+   
+   Private
+   Public MEF90HeatXferOperator, &
+          MEF90HeatXferBilinearForm, &
+          MEF90HeatXFerEnergy
 
 Contains
 #undef __FUNCT__
@@ -16,8 +21,8 @@ Contains
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   !Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
-   Subroutine MEF90_APPEND(MEF90HeatXferOperator,MEF90_DIM)D(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
+   Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
+   !Subroutine MEF90_APPEND(MEF90HeatXferOperator,MEF90_DIM)D(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
       Type(Vec),Intent(IN)                               :: x
       Type(Vec),Intent(INOUT)                            :: residual
@@ -191,8 +196,8 @@ Contains
       Call SectionRealDestroy(boundaryTemperatureSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)      
-   End Subroutine MEF90_APPEND(MEF90HeatXferOperator,MEF90_DIM)D
-   !End Subroutine MEF90HeatXferOperator
+   !End Subroutine MEF90_APPEND(MEF90HeatXferOperator,MEF90_DIM)D
+   End Subroutine MEF90HeatXferOperator
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferBilinearForm"
@@ -202,8 +207,8 @@ Contains
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   !Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
-   Subroutine MEF90_APPEND(MEF90HeatXferBilinearForm,MEF90_DIM)D(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
+   Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
+   !Subroutine MEF90_APPEND(MEF90HeatXferBilinearForm,MEF90_DIM)D(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
       Type(Vec),Intent(IN)                               :: x
       Type(Mat),Intent(INOUT)                            :: A,M
@@ -283,8 +288,8 @@ Contains
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       
       flg = SAME_NONZERO_PATTERN
-   !End Subroutine MEF90HeatXferBilinearForm
-   End Subroutine MEF90_APPEND(MEF90HeatXferBilinearForm,MEF90_DIM)D
+   End Subroutine MEF90HeatXferBilinearForm
+   !End Subroutine MEF90_APPEND(MEF90HeatXferBilinearForm,MEF90_DIM)D
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXFerEnergy"
@@ -294,8 +299,8 @@ Contains
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   !Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
-   Subroutine MEF90_APPEND(MEF90HeatXFerEnergy,MEF90_DIM)D(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
+   Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
+   !Subroutine MEF90_APPEND(MEF90HeatXFerEnergy,MEF90_DIM)D(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
       Type(Vec),Intent(IN)                            :: temperatureVec
       PetscReal,Intent(IN)                            :: t
       Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
@@ -364,6 +369,6 @@ Contains
       Call SectionRealDestroy(fluxSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)
-   !End Subroutine MEF90HeatXFerEnergy
-   End Subroutine MEF90_APPEND(MEF90HeatXFerEnergy,MEF90_DIM)D
+   End Subroutine MEF90HeatXFerEnergy
+   !End Subroutine MEF90_APPEND(MEF90HeatXFerEnergy,MEF90_DIM)D
 End Module MEF90_APPEND(m_MEF90_HeatXferAssembly,MEF90_DIM)D
