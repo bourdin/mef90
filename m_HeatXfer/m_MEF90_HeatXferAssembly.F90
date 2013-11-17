@@ -19,7 +19,7 @@ Contains
 !!!  MEF90HeatXferOperator: Build the operator. When called in SNES, the solution time should always match the target time, 
 !!!                         so there is no need for interpolation of the fluxes, external, and boundary values
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
    !Subroutine MEF90_APPEND(MEF90HeatXferOperator,MEF90_DIM)D(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
@@ -77,7 +77,7 @@ Contains
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 
       !!!
-      !!! We loop over all element twice. The first tim in order to assembly all not BC cell sets
+      !!! We loop over all element twice. The first time in order to assembly all not BC cell sets
       !!! In the second pass, we only update the BC where necessary
       !!! vertex cet BC are updated last, so that they override cell set BC
       !!!
@@ -133,7 +133,6 @@ Contains
             Do cell = 1,size(setIdx)
                Call SectionRealRestrictClosure(boundaryTemperatureSec,mesh,setIdx(cell),elemType%numDof,boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
                Call SectionRealRestrictClosure(xSec,mesh,setIdx(cell),elemType%numDof,xPtr,ierr);CHKERRQ(ierr)
-         !write(*,*) 'BoundaryTemperaturePtr ', cell, BoundaryTemperaturePtr
                residualPtr = xPtr - BoundaryTemperaturePtr
                Call SectionRealUpdateClosure(residualSec,mesh,setIdx(cell),boundaryTemperaturePtr,INSERT_VALUES,ierr);CHKERRQ(iErr)
             End Do
@@ -205,7 +204,7 @@ Contains
 !!!  
 !!!  MEF90HeatXferBilinearForm:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
    !Subroutine MEF90_APPEND(MEF90HeatXferBilinearForm,MEF90_DIM)D(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
@@ -297,7 +296,7 @@ Contains
 !!!  
 !!!  MEF90HeatXFerEnergy:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
    !Subroutine MEF90_APPEND(MEF90HeatXFerEnergy,MEF90_DIM)D(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)

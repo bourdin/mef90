@@ -33,7 +33,7 @@ Contains
 !!!  
 !!!  MEF90HeatXferSetTransients:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(INOUT)       :: MEF90HeatXferCtx
@@ -85,7 +85,7 @@ Contains
 !!!  
 !!!  MEF90HeatXferSetFluxCst:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferSetFluxCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
@@ -132,7 +132,7 @@ Contains
 !!!
 !!!  MEF90HeatXferSetexternalTemperatureCst:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferSetexternalTemperatureCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
@@ -180,7 +180,7 @@ Contains
 !!!
 !!!  MEF90HeatXferSetboundaryTemperatureCst:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferSetboundaryTemperatureCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
@@ -364,7 +364,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  MEF90HeatXferOperator:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
@@ -388,7 +388,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  MEF90HeatXferBilinearForm:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
@@ -413,7 +413,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  MEF90HeatXFerEnergy:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
       Type(Vec),Intent(IN)                            :: temperatureVec
