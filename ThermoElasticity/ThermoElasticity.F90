@@ -385,7 +385,6 @@ Call DMView(MEF90DefMechCtx%cellDMScal,PETSC_VIEWER_STDOUT_WORLD,ierr)
 
    Call VecDestroy(Displacement,ierr);CHKERRQ(ierr)
    Call VecDestroy(boundaryDisplacement,ierr);CHKERRQ(ierr)
-   Call VecDestroy(Damage,ierr);CHKERRQ(ierr)
    Call VecDestroy(residualDisplacement,ierr);CHKERRQ(ierr)   
    Call VecDestroy(force,ierr);CHKERRQ(ierr)   
    Call VecDestroy(pressureForce,ierr);CHKERRQ(ierr)   
