@@ -12,7 +12,7 @@ Contains
 !!!  
 !!!  MEF90DefMechSetTransients:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechSetTransients(MEF90DefMechCtx,step,time,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: MEF90DefMechCtx
@@ -64,7 +64,7 @@ Contains
 !!!  
 !!!  MEF90DefMechSetForceCst:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechSetForceCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
@@ -115,7 +115,7 @@ Contains
 !!!  
 !!!  MEF90DefMechSetPressureForceCst:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechSetPressureForceCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
@@ -163,7 +163,7 @@ Contains
 !!!  
 !!!  MEF90DefMechSetBoundaryDisplacementCst:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechSetBoundaryDisplacementCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                               :: x

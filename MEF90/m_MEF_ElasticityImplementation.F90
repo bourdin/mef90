@@ -39,6 +39,8 @@ Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
 !        <G(v),w> := \int A\e(v):\e(w)\, dx
 !     the "RHS" is F, where
 !        <F,w> := \int_\Omega A\e_0:\e(w)\, dx + \int_\Omega fw\, dx + \int_{\partial \Omega_n} gw\, dS
+!                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+!                      "InelasticStrainRHS"            "WorkRHS"                    "WorkRHS"
 !     the "Energy" is E
 !
 !     when using a SNES to solve (1),
@@ -163,7 +165,7 @@ Contains
 !!!  
 !!!  ElasticityOperatorAddTransientTermSet:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine ElasticityOperatorAddTransientTermSet(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: G

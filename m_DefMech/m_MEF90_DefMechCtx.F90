@@ -52,7 +52,8 @@ Module m_MEF90_DefMechCtx_Type
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
-      PetscInt                         :: elemTypeShortID
+      PetscInt                         :: elemTypeShortIDDisplacement
+      PetscInt                         :: elemTypeShortIDDamage
       PetscReal,Dimension(3)           :: force
       PetscReal                        :: pressureForce
       PetscEnum                        :: defectLaw
@@ -216,7 +217,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtx_InitializePrivate:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechCtx_InitializePrivate(ierr)
       PetscErrorCode,Intent(OUT)                         :: ierr
@@ -264,7 +265,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtx_Create:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechCtx_Create(DefMechCtx,Mesh,MEF90Ctx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(OUT)                   :: DefMechCtx
@@ -343,7 +344,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtx_Destroy:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechCtx_Destroy(DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(OUT)          :: DefMechCtx
@@ -382,7 +383,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90DefMechCtxGlobalOptions:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                                 :: bag
@@ -419,7 +420,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90DefMechCtxCellSetOptions:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
@@ -437,7 +438,8 @@ Contains
       DefMechCellSetOptions%Has_displacementBC   = default%Has_displacementBC
       DefMechCellSetOptions%boundaryDisplacement = default%boundaryDisplacement
 
-      Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortID,default%ElemTypeShortID,'ShortID','Element type ShortID',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortIDDisplacement,default%ElemTypeShortIDDisplacement,'ShortIDDisplacement','Displacement element type ShortID',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortIDDamage,default%ElemTypeShortIDDamage,'ShortIDDamage','Damage field element type ShortID',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%force,3,'Force','[N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%pressureForce,default%pressureForce,'pressureForce','[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%defectLaw,MEF90DefMech_defectLawList,default%defectLaw,'damageLaw','damage law',ierr);CHKERRQ(ierr)
@@ -453,7 +455,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90DefMechCtxVertexSetOptions:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                              :: bag
@@ -480,7 +482,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtx_SetFromOptions:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
 !   Subroutine MEF90DefMechCtx_SetFromOptions(DefMechCtx,prefix,defaultGlobalOptions, &
 !                                              defaultCellSetOptions,cellSetNames,    &
@@ -499,7 +501,7 @@ Contains
    
       Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions
       Type(MEF90DefMechCellSetOptions_Type)                 :: myDefaultCellSetOptions
-      Type(MEF90Element_Type),Dimension(:),Pointer          :: ElemType
+      Type(MEF90Element_Type),Dimension(:),Pointer          :: ElemTypeScal,ElemTypeElast
       Type(IS)                                              :: setIS
       PetscInt,Dimension(:),Pointer                         :: setID
       PetscInt                                              :: set
@@ -523,12 +525,14 @@ Contains
       Call MEF90_ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       
-      Call EXOGetCellSetElementType_Scal(DefMechCtx%MEF90Ctx,ElemType,ierr)
+      Call EXOGetCellSetElementType_Scal(DefMechCtx%MEF90Ctx,ElemTypeScal,ierr)
+      Call EXOGetCellSetElementType_Elast(DefMechCtx%MEF90Ctx,ElemTypeElast,ierr)
       Do set = 1, size(setID)
          Write(setName,100) setID(set)
          Write(setprefix,101) setID(set)
          mydefaultCellSetOptions = defaultCellSetOptions
-         mydefaultCellSetOptions%ElemTypeShortID = ElemType(set)%ShortID
+         mydefaultCellSetOptions%ElemTypeShortIDDisplacement = ElemTypeElast(set)%ShortID
+         mydefaultCellSetOptions%ElemTypeShortIDDamage = ElemTypeScal(set)%ShortID
          Call PetscBagRegisterMEF90DefMechCtxCellSetOptions(DefMechCtx%CellSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr)
          If (MEF90CtxGlobalOptions%verbose > 0) Then
             Write(IOBuffer,103) setID(set),trim(setprefix)
@@ -538,7 +542,8 @@ Contains
          End if
       End Do
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-      DeAllocate(ElemType)
+      DeAllocate(ElemTypeScal)
+      DeAllocate(ElemTypeElast)
       
       !!!
       !!! Registering Vertex Set Context

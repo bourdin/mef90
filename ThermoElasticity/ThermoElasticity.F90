@@ -5,7 +5,6 @@ Program ThermoElasticity
    Use m_MEF90_DefMech
    Use petsc
    Implicit NONE   
-PetscInt n1,n2
    PetscErrorCode                                     :: ierr
    Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
@@ -37,7 +36,8 @@ PetscInt n1,n2
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
-                                                         -1,                                   & ! elemTypeShortID will be overriden
+                                                         -1,                                   & ! elemTypeShortIDDispl will be overriden
+                                                         -1,                                   & ! elemTypeShortIDDama will be overriden
                                                          (/0.0_Kr,0.0_Kr,0.0_Kr/),             & ! force
                                                          0.0_Kr,                               & ! pressureForce
                                                          MEF90DefMech_defectLawElasticity,     & ! defect law
@@ -237,17 +237,17 @@ PetscInt n1,n2
                      MEF90DefMechGlobalOptions%boundaryDamageOffset)-1
       Allocate(nameV(numfield))
       nameV = "empty"
-      nameV(MEF90DefMechGlobalOptions%displacementOffset+0)         = "Displacement X"
-      nameV(MEF90DefMechGlobalOptions%displacementOffset+1)         = "Displacement Y"
-      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0) = "Boundary Displacement X"
-      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1) = "Boundary Displacement Y"
+      nameV(MEF90DefMechGlobalOptions%displacementOffset+0)         = "Displacement_X"
+      nameV(MEF90DefMechGlobalOptions%displacementOffset+1)         = "Displacement_Y"
+      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0) = "Boundary_Displacement_X"
+      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1) = "Boundary_Displacement_Y"
       If (dim == 3) Then
-         nameV(MEF90DefMechGlobalOptions%displacementOffset+2)         = "Displacement Z"
-         nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+2) = "Boundary Displacement Z"
+         nameV(MEF90DefMechGlobalOptions%displacementOffset+2)         = "Displacement_Z"
+         nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+2) = "Boundary_Displacement_Z"
       End If
       
       nameV(MEF90DefMechGlobalOptions%damageOffset)                    = "Damage"
-      nameV(MEF90DefMechGlobalOptions%boundaryDamageOffset)            = "Boundary Damage"
+      nameV(MEF90DefMechGlobalOptions%boundaryDamageOffset)            = "Boundary_Damage"
                      
       numfield = max(MEF90DefMechGlobalOptions%forceOffset+dim,&
                      MEF90DefMechGlobalOptions%pressureForceOffset,&
@@ -255,33 +255,33 @@ PetscInt n1,n2
                      MEF90DefMechGlobalOptions%plasticStrainOffset+dim*(dim+1)/2)-1
       Allocate(nameC(numfield))
       nameC = "empty"
-      nameC(MEF90DefMechGlobalOptions%forceOffset+0)                 = "Force X"
-      nameC(MEF90DefMechGlobalOptions%forceOffset+1)                 = "Force Y"
+      nameC(MEF90DefMechGlobalOptions%forceOffset+0)                 = "Force_X"
+      nameC(MEF90DefMechGlobalOptions%forceOffset+1)                 = "Force_Y"
       If (dim == 3) Then
-         nameC(MEF90DefMechGlobalOptions%forceOffset+2)              = "Force Z"
+         nameC(MEF90DefMechGlobalOptions%forceOffset+2)              = "Force_Z"
       End If
 
-      nameC(MEF90DefMechGlobalOptions%pressureForceOffset)           = "Pressure Force"
+      nameC(MEF90DefMechGlobalOptions%pressureForceOffset)           = "Pressure_Force"
       If (dim == 2) Then
-         nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress XX"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress YY"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress XY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plastic Strain XX"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plastic Strain YY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plastic Strain XY"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_XY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "Plastic_Strain_XX"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "Plastic_Strain_YY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "Plastic_Strain_XY"
       Else
-         nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress XX"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress YY"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress ZZ"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+3)             = "Stress YZ"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+4)             = "Stress XZ"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+5)             = "Stress XY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plastic Strain XX"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plastic Strain YY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plastic Strain ZZ"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+3)      = "plastic Strain YZ"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+4)      = "plastic Strain XZ"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+5)      = "plastic Strain XY"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_ZZ"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+3)             = "Stress_YZ"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+4)             = "Stress_XZ"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+5)             = "Stress_XY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "Plastic_Strain_XX"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "Plastic_Strain_YY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "Plastic_Strain_ZZ"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+3)      = "Plastic_Strain_YZ"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+4)      = "Plastic_Strain_XZ"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+5)      = "Plastic_Strain_XY"
       End If
       Call MEF90EXOFormat(MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
    End If
@@ -339,21 +339,10 @@ PetscInt n1,n2
          Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
 
          Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
-Call VecGetSize(localvec,n1, ierr)
-Call VecGetBlockSize(localvec,n2, ierr)
-Write(*,*) "localvec size: ", n1,n2
-Call VecGetSize(MEF90DefMechCtx%pressureForce,n1, ierr)
-Call VecGetBlockSize(MEF90DefMechCtx%pressureForce,n2, ierr)
-Write(*,*) "MEF90DefMechCtx%pressureForce size: ", n1,n2
-Call DMGetBlockSize(MEF90DefMechCtx%cellDMScal,n1,ierr)
-Write(*,*) "MEF90DefMechCtx%cellDMScal size: ", n1
-
-Call DMView(MEF90DefMechCtx%cellDMScal,PETSC_VIEWER_STDOUT_WORLD,ierr)
-
-!         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-!         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         !Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-         !                       MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
          Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
       End Do
    End If
