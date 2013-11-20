@@ -39,12 +39,15 @@ Module m_MEF90_ElasticityCtx_Type
 
    Type MEF90ElasticityCellSetOptions_Type
       PetscInt                         :: elemTypeShortID
-      PetscReal                        :: Force
+      PetscBool,Dimension(3)           :: Has_displacementBC
+      PetscReal,Dimension(3)           :: boundaryDisplacement
+      PetscReal,Dimension(3)           :: Force
+      PetscReal                        :: pressureForce
    End Type MEF90ElasticityCellSetOptions_Type
 
    Type MEF90ElasticityVertexSetOptions_Type
-      PetscBool                        :: Has_BC
-      PetscReal                        :: boundaryDisplacement
+      PetscBool,Dimension(3)           :: Has_displacementBC
+      PetscReal,Dimension(3)           :: boundaryDisplacement
    End Type MEF90ElasticityVertexSetOptions_Type 
 End Module m_MEF90_ElasticityCtx_Type
 
@@ -340,7 +343,10 @@ Contains
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterInt(bag,ElasticityCellSetOptions%ElemTypeShortID,default%ElemTypeShortID,'ShortID','Element type ShortID',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,ElasticityCellSetOptions%Force,default%Force,'Force','[(f): Body / surface Force',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,ElasticityCellSetOptions%force,3,'Force','[N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,ElasticityCellSetOptions%pressureForce,default%pressureForce,'pressureForce','[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBoolArray(bag,ElasticityCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,ElasticityCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','Displacement boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90ElasticityCtxCellSetOptions
 
 #undef __FUNCT__
@@ -362,8 +368,8 @@ Contains
       Call PetscBagSetName(bag,trim(name),"ElasticityVertexSetOptions MEF90 Heat transfer Vertex Set options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
-      Call PetscBagRegisterBool(bag,ElasticityVertexSetOptions%Has_BC,default%Has_BC,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,ElasticityVertexSetOptions%boundaryDisplacement,default%boundaryDisplacement,'boundaryDisplacement','Displacement boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBoolArray(bag,ElasticityVertexSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,ElasticityVertexSetOptions%boundaryDisplacement,3,'boundaryDisplacement','Displacement boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90ElasticityCtxVertexSetOptions
 
 #undef __FUNCT__

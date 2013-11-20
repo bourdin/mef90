@@ -5,16 +5,16 @@ Module m_MEF90_Elasticity
    Use m_MEF90
    Use m_MEF90_ElasticityCtx
    Use m_MEF90_ElasticityAssembly2D, &
-      TestOvld2D => TestOvld
+      MEF90ElasticityBilinearForm2D => MEF90ElasticityBilinearForm
    Use m_MEF90_ElasticityAssembly3D, &
-      TestOvld3D => TestOvld
+      MEF90ElasticityBilinearForm3D => MEF90ElasticityBilinearForm
 
    Implicit none
    Private
-   Public TestOvld
+   Public MEF90ElasticityBilinearForm
    
-   Interface TestOvld
-      Module Procedure TestOvld2D, TestOvld3D
+   Interface MEF90ElasticityBilinearForm
+      Module Procedure MEF90ElasticityBilinearForm2D,MEF90ElasticityBilinearForm3D
    End Interface
    !Public MEF90ElasticityGetTransients
    !Public MEF90ElasticitySetBoundaryTemperature
