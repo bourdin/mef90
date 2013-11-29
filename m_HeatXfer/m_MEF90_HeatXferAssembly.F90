@@ -58,7 +58,6 @@ Contains
       Call SectionRealDuplicate(modifiedFluxSec,fluxSec,ierr);CHKERRQ(ierr)
    
       Call SectionRealDuplicate(modifiedFluxSec,externalTemperatureSec,ierr);CHKERRQ(ierr)
-      Call SectionRealSet(modifiedFluxSec,0.0_Kr,ierr);CHKERRQ(ierr)
    
       !!! Scatter data from Vec to Sec, or initialize
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)

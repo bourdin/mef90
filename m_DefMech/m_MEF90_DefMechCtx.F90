@@ -16,11 +16,12 @@ Module m_MEF90_DefMechCtx_Type
       Type(Vec),pointer                :: damage
       Type(Vec),pointer                :: boundaryDisplacement
       Type(Vec),pointer                :: boundaryDamage
-      Type(Vec),Pointer                :: temperature
+      Type(Vec),Pointer                :: inelasticStrain
+
       !!! cell based vec
       Type(Vec),pointer                :: force
       Type(Vec),pointer                :: pressureForce
-      Type(Vec),Pointer                :: plasticStrain
+      Type(Vec),Pointer                :: inelasticStrainCell
 
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
@@ -29,7 +30,8 @@ Module m_MEF90_DefMechCtx_Type
       Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
       Type(DM),pointer                 :: DM
       Type(DM)                         :: DMScal,DMVect
-      Type(DM)                         :: cellDMScal,cellDMVect,cellDMMatS
+      Type(DM)                         :: cellDMScal,cellDMVect
+      Type(DM)                         :: DMMatS,cellDMMatS
    End Type MEF90DefMechCtx_Type
    
    Type MEF90DefMechGlobalOptions_Type
@@ -40,10 +42,11 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                         :: damageOffset
       PetscInt                         :: boundaryDisplacementOffset
       PetscInt                         :: boundaryDamageOffset
+      PetscInt                         :: inelasticStrainOffset
       !!! Position of cell-based vecs in exo files
       PetscInt                         :: forceOffset
       PetscInt                         :: pressureForceOffset
-      PetscInt                         :: plasticStrainOffset
+      PetscInt                         :: inelasticStrainCellOffset
       PetscInt                         :: stressOffset
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscInt                         :: boundaryDisplacementScaling
@@ -255,7 +258,7 @@ Contains
       MEF90DefMech_defectLawPlasticityList(1) = 'Tresca'
       MEF90DefMech_defectLawPlasticityList(2) = 'VonMises'
       MEF90DefMech_defectLawPlasticityList(3) = 'MEF90DefMech_defectLawPlasticity'
-      MEF90DefMech_defectLawPlasticityList(4) = 'MEF90DefMech_defectLawPlasticity'
+      MEF90DefMech_defectLawPlasticityList(4) = '_MEF90DefMech_defectLawPlasticity'
       MEF90DefMech_defectLawPlasticityList(5) = ''
    End Subroutine MEF90DefMechCtx_InitializePrivate
    
@@ -301,6 +304,10 @@ Contains
       Call DMMeshSetMaxDof(DefMechCtx%DMScal,1,ierr);CHKERRQ(ierr) 
       Call DMSetBlockSize(DefMechCtx%DMScal,1,ierr);CHKERRQ(ierr)
 
+      Call DMMeshClone(Mesh,DefMechCtx%DMMatS,ierr);CHKERRQ(ierr)
+      Call DMMeshSetMaxDof(DefMechCtx%DMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr) 
+      Call DMSetBlockSize(DefMechCtx%DMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr)
+
       Call DMMeshClone(Mesh,DefMechCtx%cellDMMatS,ierr);CHKERRQ(ierr)
       Call DMMeshSetMaxDof(DefMechCtx%cellDMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr) 
       Call DMSetBlockSize(DefMechCtx%cellDMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr)
@@ -334,8 +341,8 @@ Contains
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
       Nullify(DefMechCtx%Damage)
-      Nullify(DefMechCtx%PlasticStrain)
-      Nullify(DefMechCtx%temperature)
+      Nullify(DefMechCtx%inelasticStrain)
+      Nullify(DefMechCtx%inelasticStrainCell)
    End Subroutine MEF90DefMechCtx_Create
    
 #undef __FUNCT__
@@ -368,12 +375,13 @@ Contains
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
       Nullify(DefMechCtx%Damage)
-      Nullify(DefMechCtx%PlasticStrain)
-      Nullify(DefMechCtx%temperature)
+      Nullify(DefMechCtx%inelasticStrain)
+      Nullify(DefMechCtx%inelasticStrainCell)
       Call DMDestroy(DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMVect,ierr);CHKERRQ(ierr)
+      Call DMDestroy(DefMechCtx%DMMatS,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMMatS,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechCtx_Destroy
 
@@ -402,7 +410,8 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%displacementOffset,default%displacementOffset,'displacement_Offset','Position of displacement field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%damageOffset,default%damageOffset,'damage_Offset','Position of damage field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%stressOffset,default%stressOffset,'stress_Offset','Position of stress field in EXO file',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%plasticStrainOffset,default%plasticStrainOffset,'plasticStrain_Offset','Position of plasticStrain field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%inelasticStrainCellOffset,default%inelasticStrainCellOffset,'inelasticStrain_CellOffset','Position of cell-based inelasticStrain field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%inelasticStrainOffset,default%inelasticStrainOffset,'inelasticStrain_Offset','Position of vertex-based inelasticStrain field in EXO file',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDisplacementOffset,default%boundaryDisplacementOffset,'boundaryDisplacement_Offset','Position of boundary displacement field in EXO file',ierr);CHKERRQ(ierr)
