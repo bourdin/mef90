@@ -11,12 +11,12 @@ Module m_MEF90_ElasticityCtx_Type
    !Public :: MEF90ElasticityVertexSetOptions_Type
    
    Type MEF90ElasticityCtx_Type
-      PetscReal                        :: timePrevious,timeTarget,time
+      PetscReal                        :: time
 
-      Type(Vec),pointer                :: ForcePrevious,ForceTarget
-      Type(Vec),pointer                :: boundaryDisplacementPrevious,boundaryDisplacementTarget
-      !!! XXXPrevious     represents a field at the previous time step
-      !!! XXXTarget  represents a field at the time step currently being computed
+      Type(Vec),pointer                :: force
+      Type(Vec),pointer                :: boundaryDisplacement
+      Type(Vec),pointer                :: pressureForce
+      Type(Vec),pointer                :: temperature      
       
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
