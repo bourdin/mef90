@@ -37,7 +37,7 @@ Program ThermoElasticity
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                   & ! elemTypeShortIDDispl will be overriden
-                                                         -1,                                   & ! elemTypeShortIDDama will be overriden
+                                                         -1,                                   & ! elemTypeShortIDDamage will be overriden
                                                          (/0.0_Kr,0.0_Kr,0.0_Kr/),             & ! force
                                                          0.0_Kr,                               & ! pressureForce
                                                          MEF90DefMech_defectLawElasticity,     & ! defect law
