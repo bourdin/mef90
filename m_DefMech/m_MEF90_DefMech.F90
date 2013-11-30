@@ -1,10 +1,19 @@
 #include "../MEF90/mef90.inc"
-Module m_MEF90_DefMEch
+Module m_MEF90_DefMech
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use m_MEF90
    Use m_MEF90_DefMechCtx
 
+   Use m_MEF90_DefMechAssembly2D, &
+      MEF90DefMechOperator2D     => MEF90DefMechOperator, &
+      MEF90DefMechBilinearForm2D => MEF90DefMechBilinearForm      
+   Use m_MEF90_DefMechAssembly3D, &
+      MEF90DefMechOperator3D     => MEF90DefMechOperator, &
+      MEF90DefMechBilinearForm3D => MEF90DefMechBilinearForm
+
+   Implicit none
+   
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSetTransients"
@@ -243,6 +252,78 @@ Contains
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSetBoundaryDisplacementCst
 
+!#undef __FUNCT__
+!#define __FUNCT__ "MEF90DefMechOperator"
+!!!!
+!!!!  
+!!!!  MEF90DefMechOperator:
+!!!!  
+!!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!!
+!   Subroutine MEF90DefMechOperator(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+!      Type(SNES),Intent(IN)                              :: snesTemp
+!      Type(Vec),Intent(IN)                               :: x
+!      Type(Vec),Intent(INOUT)                            :: residual
+!      Type(MEF90DefMechCtx_Type),Intent(IN)             :: MEF90DefMechCtx
+!      PetscErrorCode,Intent(OUT)                         :: ierr
+!      
+!      PetscInt                                           :: dim      
+!      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+!      If (dim == 2) Then
+!         Call MEF90DefMechOperator2D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+!      Else If (dim == 3) Then
+!         Call MEF90DefMechOperator3D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+!      End If      
+!   End Subroutine MEF90DefMechOperator
+!   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechBilinearForm"
+!!!
+!!!  
+!!!  MEF90DefMechBilinearForm:
+!!!  
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechBilinearForm(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+      Type(SNES),Intent(IN)                              :: snesDispl
+      Type(Vec),Intent(IN)                               :: x
+      Type(Mat),Intent(INOUT)                            :: A,M
+      MatStructure,Intent(INOUT)                         :: flg
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr  
+
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90DefMechBilinearForm2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+      Else If (dim == 3) Then
+         Call MEF90DefMechBilinearForm3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+      End If      
+   End Subroutine MEF90DefMechBilinearForm
+
+!#undef __FUNCT__
+!#define __FUNCT__ "MEF90DefMechEnergy"
+!!!!
+!!!!  
+!!!!  MEF90DefMechEnergy:
+!!!!  
+!!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!!
+!   Subroutine MEF90DefMechEnergy(temperatureVec,t,MEF90DefMechCtx,energy,work,ierr)
+!      Type(Vec),Intent(IN)                            :: temperatureVec
+!      PetscReal,Intent(IN)                            :: t
+!      Type(MEF90DefMechCtx_Type),Intent(IN)          :: MEF90DefMechCtx
+!      PetscReal,Dimension(:),Pointer                  :: energy,work
+!      PetscErrorCode,Intent(OUT)                      :: ierr
+!
+!      PetscInt                                           :: dim      
+!      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+!      If (dim == 2) Then
+!         Call MEF90DefMechEnergy2D(temperatureVec,t,MEF90DefMechCtx,energy,work,ierr)
+!      Else If (dim == 3) Then
+!         Call MEF90DefMechEnergy3D(temperatureVec,t,MEF90DefMechCtx,energy,work,ierr)
+!      End If      
+!   End Subroutine MEF90DefMechEnergy
 
 
 End Module m_MEF90_DefMech

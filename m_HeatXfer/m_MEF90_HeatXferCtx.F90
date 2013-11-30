@@ -4,11 +4,11 @@ Module m_MEF90_HeatXferCtx_Type
    Use m_MEF90
    Use,Intrinsic :: iso_c_binding
    Implicit none
-   !Private  
-   !Public :: MEF90HeatXferCtx_Type
-   !Public :: MEF90HeatXferGlobalOptions_Type
-   !Public :: MEF90HeatXferCellSetOptions_Type
-   !Public :: MEF90HeatXferVertexSetOptions_Type
+   Private  
+   Public :: MEF90HeatXferCtx_Type
+   Public :: MEF90HeatXferGlobalOptions_Type
+   Public :: MEF90HeatXferCellSetOptions_Type
+   Public :: MEF90HeatXferVertexSetOptions_Type
    
    Type MEF90HeatXferCtx_Type
       Type(Vec),pointer                :: flux

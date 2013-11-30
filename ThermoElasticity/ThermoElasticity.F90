@@ -2,6 +2,7 @@
 Program ThermoElasticity
 #include <finclude/petscdef.h>
    Use m_MEF90
+   Use m_MEF90_DefMechCtx
    Use m_MEF90_DefMech
    Use petsc
    Implicit NONE   
@@ -14,10 +15,11 @@ Program ThermoElasticity
                                                          3,                   & ! DamageOffset
                                                          4,                   & ! boundaryDisplacementOffset
                                                          5,                   & ! boundaryDamageOffset
+                                                         6,                   & ! inelasticStrainOffset
                                                          1,                   & ! ForceOffset
                                                          3,                   & ! pressureForceOffset
-                                                         4,                   & ! plasticStrainOffset
-                                                         7,                   & ! StressOffset
+                                                         4,                   & ! inelasticStrainCellOffset
+                                                         8,                   & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
@@ -28,13 +30,15 @@ Program ThermoElasticity
                                                          4,                   & ! DamageOffset
                                                          5,                   & ! boundaryDisplacementOffset
                                                          8,                   & ! boundaryDamageOffset
+                                                         9,                   & ! inelasticStrainOffset
                                                          1,                   & ! ForceOffset
-                                                         4,                   & ! pressureForceOffset
-                                                         5,                   & ! plasticStrainOffset
+                                                         3,                   & ! pressureForceOffset
+                                                         4,                   & ! inelasticStrainCellOffset
                                                          11,                  & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
+
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                   & ! elemTypeShortIDDispl will be overriden
                                                          -1,                                   & ! elemTypeShortIDDamage will be overriden
@@ -251,8 +255,8 @@ Program ThermoElasticity
                      
       numfield = max(MEF90DefMechGlobalOptions%forceOffset+dim,&
                      MEF90DefMechGlobalOptions%pressureForceOffset,&
-                     MEF90DefMechGlobalOptions%StressOffset+dim*(dim+1)/2,&
-                     MEF90DefMechGlobalOptions%plasticStrainOffset+dim*(dim+1)/2)-1
+                     MEF90DefMechGlobalOptions%StressOffset+(dim*(dim+1))/2,&
+                     MEF90DefMechGlobalOptions%inelasticStrainOffset+(dim*(dim+1))/2)-1
       Allocate(nameC(numfield))
       nameC = "empty"
       nameC(MEF90DefMechGlobalOptions%forceOffset+0)                 = "Force_X"
@@ -266,9 +270,9 @@ Program ThermoElasticity
          nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
          nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
          nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_XY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "Plastic_Strain_XX"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "Plastic_Strain_YY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "Plastic_Strain_XY"
+         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+0)    = "inelastic_Strain_XX"
+         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+1)    = "inelastic_Strain_YY"
+         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+2)    = "inelastic_Strain_XY"
       Else
          nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
          nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
@@ -276,12 +280,12 @@ Program ThermoElasticity
          nameC(MEF90DefMechGlobalOptions%stressOffset+3)             = "Stress_YZ"
          nameC(MEF90DefMechGlobalOptions%stressOffset+4)             = "Stress_XZ"
          nameC(MEF90DefMechGlobalOptions%stressOffset+5)             = "Stress_XY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "Plastic_Strain_XX"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "Plastic_Strain_YY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "Plastic_Strain_ZZ"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+3)      = "Plastic_Strain_YZ"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+4)      = "Plastic_Strain_XZ"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+5)      = "Plastic_Strain_XY"
+         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+0)    = "inelastic_Strain_XX"
+         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+1)    = "inelastic_Strain_YY"
+         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+2)    = "inelastic_Strain_ZZ"
+         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+3)    = "inelastic_Strain_YZ"
+         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+4)    = "inelastic_Strain_XZ"
+         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+5)    = "inelastic_Strain_XY"
       End If
       Call MEF90EXOFormat(MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
    End If

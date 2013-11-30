@@ -192,7 +192,8 @@ Module m_MEF_LinAlg
          Vect2D_Get_VectR,Vect3D_Get_VectR,                          &
          Vect2DEQ,Vect3DEQ,Mat2D_Get_Real,Mat3D_Get_Real,            &
          Mat2DEQ,Mat3DEQ,MatS2D_Get_Real,MatS3D_Get_Real,            &
-         MatS2DEQ,MatS3DEQ,Tens4OS2D_Get_Real,Tens4OS2DEQ,           &
+         MatS2DEQ,MatS3DEQ,MatS2D_Get_VectR,MatS3D_Get_VectR,        &
+         Tens4OS2D_Get_Real,Tens4OS2DEQ,                             &
          Tens4OS3D_Get_Real,Tens4OS3DEQ   
    End Interface
   
@@ -1513,6 +1514,27 @@ Contains
       M1%XX = M2%XX  ; M1%YY = M2%YY  ; M1%ZZ = M2%ZZ
       M1%YZ = M2%YZ  ; M1%XZ = M2%XZ  ; M1%XY = M2%XY
    End Subroutine MatS3DEQ
+   
+   Subroutine MatS2D_Get_VectR(M1,R1)
+      Type(MatS2D),Intent(OUT)                    :: M1
+      PetscReal,Dimension(3),Intent(IN)           :: R1
+
+      M1%XX = R1(1)
+      M1%YY = R1(2)
+      M1%XY = R1(3)
+   End Subroutine MatS2D_Get_VectR
+   
+   Subroutine MatS3D_Get_VectR(M1,R1)
+      Type(MatS3D),Intent(OUT)                    :: M1
+      PetscReal,Dimension(6),Intent(IN)           :: R1
+
+      M1%XX = R1(1)
+      M1%YY = R1(2)
+      M1%ZZ = R1(3)
+      M1%YZ = R1(4)
+      M1%XZ = R1(5)
+      M1%XY = R1(6)
+   End Subroutine MatS3D_Get_VectR
    
    Subroutine Tens4OS2DEQ(T1,T2)
       Type(Tens4OS2D),Intent(OUT)                 :: T1
