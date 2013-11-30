@@ -1,6 +1,0 @@
-Notes on ordering scheme
-- If Geom%Comm == PETSC_COMM_WORLD, once scattered to IO node, the DoF are numbered following the EXO convention (i.e. each components of vector V representing a logically N dimensional field are stored after each other: [V_1(x_1), V_1(x_2), ... , V_1(x_p), V_2(x_1), V_2(x_2), ... , V_2(x_p), v_3(x_1) ...] This is the old Numbering_Per_Coord scheme
-- If Geom%Comm = PETSC_COMM_SELF, the geom represents a local domain, and the DoF are numbered in a way that minimizes matrix bandwidth, i.e. [V_1(x_1), V_2(x_1), ... , V_N(x_1), V_1(x_2), V_2(x_2), ... , V_N(x_2), v_1(x_3)...] this is the old Numbering_Per_Node scheme
-
-The flags Numbering_Per_Nodes and Numbering_Per_Coordinates will be ignored as of 0.14.0 (NewLayout branch)
-

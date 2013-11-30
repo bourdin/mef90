@@ -117,6 +117,9 @@ Contains
       End Do ! set
       
       Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
+      !!!
+      !!! Cell set BC
+      !!!
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
@@ -148,10 +151,9 @@ Contains
       Call SectionRealComplete(residualSec,ierr);CHKERRQ(ierr)
       !!! Scatter back from SectionReal to Vec
       Call SectionRealToVec(residualSec,ScatterSecToVec,SCATTER_FORWARD,residual,ierr);CHKERRQ(ierr)
-      
-      
+            
       !!!
-      !!! Account for BC entries in the residual
+      !!! Vertex set BC
       !!!
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 

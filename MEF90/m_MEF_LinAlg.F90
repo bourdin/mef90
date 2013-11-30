@@ -213,6 +213,10 @@ Module m_MEF_LinAlg
       Module Procedure Vect2DNorm,Vect3DNorm,Mat2DNorm,MatS2DNorm,Mat3DNorm,MatS3DNorm
       ! Tens4OS2DNorm,Tens4OS3DNorm
    End Interface
+   
+   Interface simplexNormal
+      Module Procedure simplexNormal2D,simplexNormal3D
+   End Interface simplexNormal
 
 !!$  Type(Vect2D),Parameter       :: e1_2D = (/ 1.0_Kr,0.0_Kr /)
 !!$  Type(Vect2D),Parameter       :: e2_2D = (/ 0.0_Kr,1.0_Kr /)
@@ -2212,6 +2216,45 @@ Contains
       flops = 35.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function InvertMatS3D
+
+#undef __FUNCT__
+#define __FUNCT__ "simplexNormal2D"
+   !!!
+   !!!  
+   !!!  simplexNormal2D: Compute the normal to a simplex in 2D
+   !!!  
+   !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+   !!!
+   Subroutine simplexNormal2D(Coord,n,ierr)
+      Type(Vect2D),Dimension(:),Pointer               :: Coord
+      Type(Vect2D),Intent(OUT)                        :: n
+      PetscErrorCode,Intent(OUT)                      :: ierr
+
+      PetscLogDouble                                  :: flops
+
+      n = (/ Coord(1)%Y-Coord(2)%Y, Coord(2)%X-Coord(1)%X /)
+      n = n / norm(n)
+      flops = 2
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Subroutine simplexNormal2D
+
+#undef __FUNCT__
+#define __FUNCT__ "simplexNormal3D"
+   !!!
+   !!!  
+   !!!  simplexNormal3D: Compute the normal to a simplex in 3D
+   !!!  
+   !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+   !!!
+   Subroutine simplexNormal3D(Coord,n,ierr)
+      Type(Vect3D),Dimension(:),Pointer               :: Coord
+      Type(Vect3D),Intent(OUT)                        :: n
+      PetscErrorCode,Intent(OUT)                      :: ierr
+
+      n = (Coord(2)-Coord(1)) .crossP. (Coord(1)-Coord(3))
+      n = n / norm(n)
+      ierr = 0
+   End Subroutine simplexNormal3D
 
    Function InvertTens4OS2D(T)
       Type(Tens4OS2D),Intent(IN)                  :: T
