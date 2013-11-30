@@ -453,9 +453,9 @@ Contains
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%pressureForce,default%pressureForce,'pressureForce','[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%defectLaw,MEF90DefMech_defectLawList,default%defectLaw,'damageLaw','damage law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','Displacement boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,DefMechCellSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','Damage boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechCellSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','[unit-less] (alpha): Damage boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions
 
 #undef __FUNCT__
@@ -480,9 +480,9 @@ Contains
       DefMechVertexSetOptions%Has_displacementBC   = default%Has_displacementBC
       DefMechVertexSetOptions%boundaryDisplacement = default%boundaryDisplacement
       Call PetscBagRegisterBoolArray(bag,DefMechVertexSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%boundaryDisplacement,3,'boundaryDisplacement','Displacement boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechVertexSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,DefMechVertexSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','Damage boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechVertexSetOptions%boundaryDamage,default%boundaryDamage,'[unit-less] (e): boundaryDamage','Damage boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions
 
 #undef __FUNCT__

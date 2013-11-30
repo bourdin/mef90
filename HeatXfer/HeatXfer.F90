@@ -3,6 +3,7 @@ Program TestHeatXfer
 #include <finclude/petscdef.h>
    Use m_MEF90
    Use m_MEF90_HeatXfer
+   Use m_MEF90_HeatXferCtx
    Use petsc
    Implicit NONE   
 

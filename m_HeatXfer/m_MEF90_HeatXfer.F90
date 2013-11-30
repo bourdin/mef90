@@ -15,11 +15,12 @@ Module m_MEF90_HeatXfer
 
    Implicit none
 
-   !Private
-   !Public MEF90HeatXferSetTransients
-   !Public MEF90HeatXferOperator
-   !Public MEF90HeatXferBilinearForm
-   !Public MEF90HeatXferEnergy
+   Private
+   Public MEF90HeatXferOperator
+   Public MEF90HeatXferBilinearForm
+   Public MEF90HeatXferEnergy
+   Public MEF90HeatXferSetTransients
+   Public MEF90HeatXferUpdateboundaryTemperature
    !Public MEF90HeatXferCtx_Type
    !Public MEF90HeatXferGlobalOptions_Type
    !Public MEF90HeatXferCellSetOptions_Type
