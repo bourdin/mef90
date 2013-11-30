@@ -436,13 +436,11 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:),Pointer                     :: Floc,RHSloc
       Type(MEF90_VECT)                                   :: fVect
-      PetscReal                                          :: Felem
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
-         !Allocate(Floc(1))
          Allocate(RHSloc(elemType%numDof))
          Do cell = 1,size(cellID)      
             RHSloc = 0.0_Kr
@@ -510,6 +508,186 @@ Contains
          DeAllocate(Floc)
       End If
    End Subroutine ElasticityForceRHSSetVertex
+
+#undef __FUNCT__
+#define __FUNCT__ "ElasticityPressureForceRHSSetCst"
+!!!
+!!!   ElasticityPressureForceRHSSetCst contribution of a constant pressure force to a residual
+!!!   (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine ElasticityPressureForceRHSSetCst(RHS,mesh,pressure,cellIS,elem,elemType,ierr)
+      Type(SectionReal),Intent(IN)                       :: RHS
+      Type(DM),Intent(IN)                                :: mesh
+      PetscReal,Intent(IN)                               :: pressure
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscReal,Dimension(:,:),Pointer                   :: Coord
+      Type(MEF90_VECT),Dimension(:),Pointer              :: CoordVect
+      PetscInt, Dimension(:),Pointer                     :: Cone
+      Type(MEF90_VECT)                                   :: n
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscReal,Dimension(:),Pointer                     :: RHSloc
+      PetscInt                                           :: iDoF1,iGauss,c,numCell
+      PetscLogDouble                                     :: flops
+           
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Call DMMeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+         Allocate(CoordVect(elemType%numVertex),stat=ierr)
+         Allocate(RHSloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            Call DMMeshGetConeF90(mesh,cellID(cell),Cone,ierr);CHKERRQ(ierr)
+            Do iDoF1 = 1, elemType%numVertex
+               CoordVect(iDoF1) = (/ (Coord(Cone(iDoF1)-numCell+iDoF1,c), c = 1, elemType%dim) /)
+            End Do
+            Call simplexNormal(CoordVect,n,ierr)
+            RHSloc = 0.0_Kr
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                  pressure * (elem(cell)%BF(iDoF1,iGauss) .DotP. n)
+               End Do
+            Call DMMeshRestoreConeF90(mesh,cellID(cell),Cone,ierr);CHKERRQ(ierr)
+            End Do
+            Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+            Call DMMeshRestoreConeF90(mesh,cellID(cell),Cone,ierr);CHKERRQ(ierr)
+         End Do ! cell
+      
+         !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(RHSloc)
+         DeAllocate(CoordVect)
+      End If
+   End Subroutine ElasticityPressureForceRHSSetCst
+
+#undef __FUNCT__
+#define __FUNCT__ "ElasticityPressureForceRHSSetCell"
+!!!
+!!!   ElasticityPressureForceRHSSetCell contribution of a cell-based pressure force to a residual
+!!!   (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine ElasticityPressureForceRHSSetCell(RHS,mesh,pressureSec,cellIS,elem,elemType,ierr)
+      Type(SectionReal),Intent(IN)                       :: RHS
+      Type(DM),Intent(IN)                                :: mesh
+      Type(SectionReal),Intent(IN)                       :: pressureSec
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscReal,Dimension(:,:),Pointer                   :: Coord
+      Type(MEF90_VECT),Dimension(:),Pointer              :: CoordVect
+      PetscInt, Dimension(:),Pointer                     :: Cone
+      Type(MEF90_VECT)                                   :: n
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscReal,Dimension(:),Pointer                     :: pressureloc,RHSloc
+      PetscInt                                           :: iDoF1,iGauss,c,numCell
+      PetscLogDouble                                     :: flops
+           
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Call DMMeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+         Allocate(CoordVect(elemType%numVertex),stat=ierr)
+         Allocate(RHSloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            Call DMMeshGetConeF90(mesh,cellID(cell),Cone,ierr);CHKERRQ(ierr)
+            Do iDoF1 = 1, elemType%numVertex
+               CoordVect(iDoF1) = (/ (Coord(Cone(iDoF1)-numCell+iDoF1,c), c = 1, elemType%dim) /)
+            End Do
+            Call simplexNormal(CoordVect,n,ierr)
+            RHSloc = 0.0_Kr
+            Call SectionRealRestrict(pressureSec,cellID(cell),pressureloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  RHSloc(iDoF1) = RHSloc(iDoF1) + (elem(cell)%Gauss_C(iGauss) * &
+                                  pressureloc(1) * (elem(cell)%BF(iDoF1,iGauss) .DotP. n))
+               End Do
+            End Do
+            Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+            Call SectionRealRestore(pressureSec,cellID(cell),pressureloc,ierr);CHKERRQ(ierr)
+            Call DMMeshRestoreConeF90(mesh,cellID(cell),Cone,ierr);CHKERRQ(ierr)
+         End Do ! cell
+      
+         !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(RHSloc)
+         DeAllocate(CoordVect)
+      End If
+   End Subroutine ElasticityPressureForceRHSSetCell
+
+
+#undef __FUNCT__
+#define __FUNCT__ "ElasticityPressureForceRHSSetVertex"
+!!!
+!!!   ElasticityPressureForceRHSSetVertex contribution of a FE-based pressure force to a residual
+!!!   (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine ElasticityPressureForceRHSSetVertex(RHS,meshDisplacement,meshPressure,pressureSec,cellIS,elemDisplacement,elemDisplacementType,elemPressure,elemPressureType,ierr)
+      Type(SectionReal),Intent(IN)                       :: RHS
+      Type(DM),Intent(IN)                                :: meshDisplacement,meshPressure
+      Type(SectionReal),Intent(IN)                       :: pressureSec
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
+      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemPressure
+      Type(MEF90Element_Type),Intent(IN)                 :: elemPressureType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscReal,Dimension(:,:),Pointer                   :: Coord
+      Type(MEF90_VECT),Dimension(:),Pointer              :: CoordVect
+      PetscInt, Dimension(:),Pointer                     :: Cone
+      Type(MEF90_VECT)                                   :: n
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscReal,Dimension(:),Pointer                     :: pressureloc,RHSloc
+      PetscReal                                          :: pressureelem
+      PetscInt                                           :: iDoF1,iGauss,c,numCell
+      PetscLogDouble                                     :: flops
+           
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Call DMMeshGetStratumSize(meshDisplacement,"height",0,numCell,ierr);CHKERRQ(ierr)
+         Allocate(pressureloc(elemPressureType%numDof))
+         Allocate(CoordVect(elemPressureType%numVertex),stat=ierr)
+         Allocate(RHSloc(elemDisplacementType%numDof))
+         Do cell = 1,size(cellID)      
+            Call DMMeshGetConeF90(meshPressure,cellID(cell),Cone,ierr);CHKERRQ(ierr)
+            Do iDoF1 = 1, elemPressureType%numVertex
+               CoordVect(iDoF1) = (/ (Coord(Cone(iDoF1)-numCell+iDoF1,c), c = 1, elemPressureType%dim) /)
+            End Do
+            Call simplexNormal(CoordVect,n,ierr)
+            RHSloc = 0.0_Kr
+            Call SectionRealRestrictClosure(pressureSec,meshPressure,cellID(cell),elemPressureType%numDof,pressureloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
+               pressureelem     = 0.0_Kr
+               Do iDoF1 = 1,elemDisplacementType%numDof
+                  pressureElem = pressureElem + (pressureloc(iDof1) * elemPressure(cell)%BF(iDoF1,iGauss))
+               End Do
+               Do iDoF1 = 1,elemDisplacementType%numDof
+                  RHSloc(iDoF1) = RHSloc(iDoF1) + elemDisplacement(cell)%Gauss_C(iGauss) * &
+                                  pressureElem * (elemDisplacement(cell)%BF(iDoF1,iGauss) .DotP. n)
+               End Do
+            End Do
+            Call SectionRealUpdateClosure(RHS,meshDisplacement,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+            Call DMMeshRestoreConeF90(meshPressure,cellID(cell),Cone,ierr);CHKERRQ(ierr)
+         End Do ! cell
+      
+         !flops = 5 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(RHSloc)
+         DeAllocate(pressureloc)
+         DeAllocate(CoordVect)
+      End If
+   End Subroutine ElasticityPressureForceRHSSetVertex
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityEnergySet"

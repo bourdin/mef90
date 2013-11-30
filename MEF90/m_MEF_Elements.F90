@@ -780,12 +780,12 @@ Contains
       Type(MEF90Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      PetscInt                                    :: iELoc
-      PetscInt                                    :: i,j,numCell
-      PetscInt,Dimension(:),Pointer               :: CellID
-      PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
-      PetscInt, Dimension(:),Pointer              :: Cone
-
+      PetscInt                                         :: iELoc
+      PetscInt                                         :: i,j,numCell
+      PetscInt,Dimension(:),Pointer                    :: CellID
+      PetscReal,Dimension(:,:),Pointer                 :: Coord,elemCoord
+      PetscInt, Dimension(:),Pointer                   :: Cone
+     
       Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
@@ -820,11 +820,11 @@ Contains
       Type(MEF90Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      PetscInt                                    :: iELoc
-      PetscInt                                    :: i,j,numCell
-      PetscInt,Dimension(:),Pointer               :: CellID
-      PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
-      PetscInt, Dimension(:),Pointer              :: Cone
+      PetscInt                                         :: iELoc
+      PetscInt                                         :: i,j,numCell
+      PetscInt,Dimension(:),Pointer                    :: CellID
+      PetscReal,Dimension(:,:),Pointer                 :: Coord,elemCoord
+      PetscInt, Dimension(:),Pointer                   :: Cone
 
       Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
@@ -860,11 +860,11 @@ Contains
       Type(MEF90Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      PetscInt                                    :: iELoc
-      PetscInt                                    :: i,j,numCell
-      PetscInt,Dimension(:),Pointer               :: CellID
-      PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
-      PetscInt, Dimension(:),Pointer              :: Cone
+      PetscInt                                         :: iELoc
+      PetscInt                                         :: i,j,numCell
+      PetscInt,Dimension(:),Pointer                    :: CellID
+      PetscReal,Dimension(:,:),Pointer                 :: Coord,elemCoord
+      PetscInt, Dimension(:),Pointer                   :: Cone
 
       Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
@@ -900,12 +900,12 @@ Contains
       Type(MEF90Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      PetscInt                                    :: iELoc
-      PetscInt                                    :: i,j,numCell
-      PetscInt,Dimension(:),Pointer               :: CellID
-      PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
-      PetscInt, Dimension(:),Pointer              :: Cone
-
+      PetscInt                                         :: iELoc
+      PetscInt                                         :: i,j,numCell
+      PetscInt,Dimension(:),Pointer                    :: CellID
+      PetscReal,Dimension(:,:),Pointer                 :: Coord,elemCoord
+      PetscInt, Dimension(:),Pointer                   :: Cone
+     
       Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
@@ -940,11 +940,11 @@ Contains
       Type(MEF90Element_Type),intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      PetscInt                                    :: iELoc
-      PetscInt                                    :: i,j,numCell
-      PetscInt,Dimension(:),Pointer               :: CellID
-      PetscReal,Dimension(:,:),Pointer            :: Coord,elemCoord
-      PetscInt, Dimension(:),Pointer              :: Cone
+      PetscInt                                         :: iELoc
+      PetscInt                                         :: i,j,numCell
+      PetscInt,Dimension(:),Pointer                    :: CellID
+      PetscReal,Dimension(:,:),Pointer                 :: Coord,elemCoord
+      PetscInt, Dimension(:),Pointer                   :: Cone
 
       Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
