@@ -275,7 +275,7 @@ Contains
       Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
       Type(IS)                                           :: VertexSetGlobalIS,setIS,setISdof
       Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions
-      Type(IS)                                           :: CellSetGlobalIS
+      Type(IS)                                           :: CellSetGlobalIS,bCIS
       PetscInt,Dimension(:),Pointer                      :: setID
       PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
       PetscInt                                           :: set,dof,cell
@@ -303,16 +303,16 @@ Contains
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          If (cellSetOptions%Has_BC) Then
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
-            Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
-            Call ISGetIndicesF90(setISdof,setdofIdx,ierr);CHKERRQ(ierr)
-            Allocate(xPtr(size(setIdx)))
+            Call MEF90_ISCreateCelltoVertex(MEF90HeatXferCtx%dm,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+            Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,bcIS,0,setISdof,ierr);CHKERRQ(ierr)
+            Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
+            Allocate(xPtr(size(setIdx)),stat=ierr)
             Do dof = 1,size(setIdx)
                Call SectionRealRestrict(boundaryTemperatureSec,setIdx(dof),boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
                xPtr(dof) = boundaryTemperaturePtr(1)
                Call SectionRealRestore(boundaryTemperatureSec,setIdx(dof),boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
             End Do
-            Call VecSetValues(x,size(setIdx),setdofIdx,xPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+            Call VecSetValues(x,size(setIdx),setIdx,xPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
             DeAllocate(xPtr)
             Call ISRestoreIndicesF90(setISdof,setdofIdx,ierr);CHKERRQ(ierr)
             Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
