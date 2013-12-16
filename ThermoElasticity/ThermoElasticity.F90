@@ -40,20 +40,20 @@ Program ThermoElasticity
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
-                                                         -1,                                   & ! elemTypeShortIDDispl will be overriden
-                                                         -1,                                   & ! elemTypeShortIDDamage will be overriden
-                                                         (/0.0_Kr,0.0_Kr,0.0_Kr/),             & ! force
-                                                         0.0_Kr,                               & ! pressureForce
-                                                         MEF90DefMech_defectLawElasticity,     & ! defect law
-                                                         (/PETSC_TRUE,PETSC_TRUE,PETSC_TRUE/), & ! Has Displacement BC
-                                                         0.0_Kr,                               & ! boundary Displacement
-                                                         PETSC_FALSE,                          & ! Has Damage BC
-                                                         0.0_Kr)                                 ! Boundary Damage
+                                                         -1,                                      & ! elemTypeShortIDDispl will be overriden
+                                                         -1,                                      & ! elemTypeShortIDDamage will be overriden
+                                                         (/0.0_Kr,0.0_Kr,0.0_Kr/),                & ! force
+                                                         0.0_Kr,                                  & ! pressureForce
+                                                         MEF90DefMech_defectLawElasticity,        & ! defect law
+                                                         (/PETSC_FALSE,PETSC_FALSE,PETSC_FALSE/), & ! Has Displacement BC
+                                                         0.0_Kr,                                  & ! boundary Displacement
+                                                         PETSC_FALSE,                             & ! Has Damage BC
+                                                         0.0_Kr)                                    ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
-                                                         (/PETSC_TRUE,PETSC_TRUE,PETSC_TRUE/),     & ! Has Displacement BC
-                                                         0.0_Kr,        & ! boundary Displacement
-                                                         PETSC_FALSE,   & ! Has Damage BC
-                                                         0.0_Kr)          ! boundary Damage
+                                                         (/PETSC_FALSE,PETSC_FALSE,PETSC_FALSE/), & ! Has Displacement BC
+                                                         0.0_Kr,                                  & ! boundary Displacement
+                                                         PETSC_FALSE,                             & ! Has Damage BC
+                                                         0.0_Kr)                                    ! boundary Damage
    Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
                                                          
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
@@ -220,7 +220,9 @@ Program ThermoElasticity
    !!! Allocate array of works and energies
    !!!
    Allocate(energy(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   energy = 0.0_Kr
    Allocate(work(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   work = 0.0_Kr
 
    !!!
    !!! Try to figure out if the file was formatted
@@ -294,8 +296,9 @@ Program ThermoElasticity
    !!! Actual computations / time stepping
    !!!
    If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
-      Call MEF90DefMechSetTransients(MEF90DefMechCtx,1,time(1),ierr)
+      !Call VecSet(MEF90DefMechCtx%Damage,0._Kr,ierr);CHKERRQ(ierr)
       Do step = 1,MEF90GlobalOptions%timeNumStep
+        !Call VecSet(MEF90DefMechCtx%Damage,1.234_Kr,ierr);CHKERRQ(ierr)
          Write(IOBuffer,100) step,time(step)
          Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
 

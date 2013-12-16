@@ -29,9 +29,9 @@ Module m_MEF90_DefMechCtx_Type
       PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
       Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
       Type(DM),pointer                 :: DM
-      Type(DM)                         :: DMScal,DMVect
-      Type(DM)                         :: cellDMScal,cellDMVect
-      Type(DM)                         :: DMMatS,cellDMMatS
+      Type(DM)                         :: DMScal,DMVect           ! Remove all these
+      Type(DM)                         :: cellDMScal,cellDMVect   ! after switching to 
+      Type(DM)                         :: DMMatS,cellDMMatS       ! DMcomplex
    End Type MEF90DefMechCtx_Type
    
    Type MEF90DefMechGlobalOptions_Type
