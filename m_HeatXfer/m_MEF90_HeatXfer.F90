@@ -32,7 +32,8 @@ Contains
 #define __FUNCT__ "MEF90HeatXferSetTransients"
 !!!
 !!!  
-!!!  MEF90HeatXferSetTransients:
+!!!  MEF90HeatXferSetTransients: Update all transient data (boundary / external temperature and fluxes)
+!!!                              using the proper scaling law
 !!!  
 !!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -84,7 +85,7 @@ Contains
 #define __FUNCT__ "MEF90HeatXferSetFluxCst"
 !!!
 !!!  
-!!!  MEF90HeatXferSetFluxCst:
+!!!  MEF90HeatXferSetFluxCst: low level function called by MEF90HeatXferSetTransients
 !!!  
 !!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -131,7 +132,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferSetexternalTemperatureCst"
 !!!
-!!!  MEF90HeatXferSetexternalTemperatureCst:
+!!!  MEF90HeatXferSetexternalTemperatureCst: low level function called by MEF90HeatXferSetTransients
 !!!  
 !!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -179,7 +180,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferSetboundaryTemperatureCst"
 !!!
-!!!  MEF90HeatXferSetboundaryTemperatureCst:
+!!!  MEF90HeatXferSetboundaryTemperatureCst: low level function called by MEF90HeatXferSetTransients
 !!!  
 !!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -211,13 +212,6 @@ Contains
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-
-      !!!
-      !!! We loop over all element twice. The first tim in order to assembly all not BC cell sets
-      !!! In the second pass, we only update the BC where necessary
-      !!! vertex cet BC are updated last, so that they override cell set BC
-      !!!
-
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)         
          If (cellSetOptions%Has_BC) Then
@@ -265,7 +259,8 @@ Contains
 #define __FUNCT__ "MEF90HeatXferUpdateboundaryTemperature"
 !!!
 !!!  
-!!!  MEF90HeatXferUpdateboundaryTemperature:
+!!!  MEF90HeatXferUpdateboundaryTemperature: Update the solution vector x with the boundary temperature from 
+!!!                                          MEF90HeatXferCtx%BoundaryTemperature
 !!!  
 !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -279,7 +274,7 @@ Contains
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
       Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
       Type(IS)                                           :: VertexSetGlobalIS,setIS,setISdof
-      Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: cellSetOptions
+      Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions
       Type(IS)                                           :: CellSetGlobalIS
       PetscInt,Dimension(:),Pointer                      :: setID
       PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
@@ -300,11 +295,12 @@ Contains
       !!!
       !!! cell set temperature first, followed vertex sets
       !!!
+!!! WRONG! NEEDS CELLTOVERTEX IS      
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          If (cellSetOptions%Has_BC) Then
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
@@ -363,7 +359,8 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 #define __FUNCT__ "MEF90HeatXferOperator"
 !!!
 !!!  
-!!!  MEF90HeatXferOperator:
+!!!  MEF90HeatXferOperator: wraps calls to MEF90HeatXferOperator from m_MEF90_HeatXferAssembly
+!!!                         since overloading cannot be used here
 !!!  
 !!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -387,7 +384,8 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 #define __FUNCT__ "MEF90HeatXferBilinearForm"
 !!!
 !!!  
-!!!  MEF90HeatXferBilinearForm:
+!!!  MEF90HeatXferBilinearForm: wraps calls to MEF90HeatXferBilinearForm from m_MEF90_HeatXferAssembly
+!!!                             since overloading cannot be used here
 !!!  
 !!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -412,7 +410,8 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 #define __FUNCT__ "MEF90HeatXFerEnergy"
 !!!
 !!!  
-!!!  MEF90HeatXFerEnergy:
+!!!  MEF90HeatXFerEnergy: wraps calls to MEF90HeatXferEnergy from m_MEF90_HeatXferAssembly
+!!!                       since overloading cannot be used here
 !!!  
 !!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
 !!!
