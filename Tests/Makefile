@@ -32,6 +32,13 @@ TestMEF90Ctx: TestMEF90Ctx.o
 TestMEF90Ctx.o: ${MEF90_DIR}/Tests/TestMEF90Ctx.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
+TestUpdateSets.o: ${MEF90_DIR}/Tests/TestUpdateSets.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestUpdateSets: TestUpdateSets.o
+	-@echo "      $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
 
 runTestMaterials: TestMaterials
 	@echo "         Running " $@

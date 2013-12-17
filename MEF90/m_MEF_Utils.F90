@@ -149,6 +149,76 @@ Contains
    End Subroutine MEF90_ISCreateCelltoVertex
    
 #undef __FUNCT__
+#define __FUNCT__ "MEF90_VecGetValuesISdof"
+!!!
+!!!  
+!!!  MEF90_VecGetValuesISdof: returns an array containing the values of a multi dof Vec at
+!!!                           points defined by an IS
+!!!  
+!!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90_VecGetValuesISdof(Mesh,V,val,setIS,dof,ierr)
+      Type(DM),Intent(IN)                 :: Mesh
+      PetscReal,DImension(:),Pointer      :: val
+      Type(Vec),Intent(INOUT)             :: V
+      Type(IS),Intent(IN)                 :: setIS
+      PetscInt,Intent(IN)                 :: dof
+      PetscInt,Intent(OUT)                :: ierr
+      
+      Type(SectionReal)                   :: Sec
+      Type(VecScatter)                    :: ScatterSecToVec
+      PetscInt,Dimension(:), Pointer      :: SetIdx
+      PetscInt                            :: c,p
+      PetscReal,Dimension(:),Pointer      :: Ptr
+      
+      Call DMMeshGetSectionReal(Mesh,'default',Sec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(Mesh,Sec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(Sec,ScatterSecToVec,SCATTER_REVERSE,V,ierr);CHKERRQ(ierr)    
+
+      Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)   
+      Do p = 1, size(setIdx)
+         Call SectionRealRestrict(Sec,setIdx(p),Ptr,ierr);CHKERRQ(ierr)
+         val(p) = Ptr(dof)
+         Call SectionRealRestore(Sec,setIdx(p),Ptr,ierr);CHKERRQ(ierr)
+      End Do !p
+      Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)   
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(Sec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90_VecGetValuesISdof      
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_VecSetValuesISdof"
+!!!
+!!!  
+!!!  MEF90_VecGetValuesISdof: Set the values of a multi dof Vec at
+!!!                           points defined by an IS
+!!!  
+!!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90_VecSetValuesISdof(Mesh,V,x,setIS,dof,MODE,ierr)
+      Type(DM),Intent(IN)                 :: Mesh
+      PetscReal,dimension(:),Pointer      :: x
+      Type(Vec),Intent(INOUT)             :: V
+      Type(IS),Intent(IN)                 :: setIS
+      PetscInt,Intent(IN)                 :: dof
+      PetscInt,Intent(IN)                 :: MODE
+      PetscInt,Intent(OUT)                :: ierr
+      
+      Type(IS)                            :: setISdof
+      PetscInt,Dimension(:), Pointer      :: SetIdx,setIdxdof
+      PetscInt                            :: c,p
+      
+      Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)   
+      Call DMMeshISCreateISglobaldof(Mesh,setIS,dof-1,setISdof,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(setISdof,setIdxdof,ierr);CHKERRQ(ierr)   
+      
+      Call VecSetValues(V,size(setIdx),setIdxdof,x,MODE,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(setISdof,setIdxdof,ierr);CHKERRQ(ierr)   
+      Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)   
+   End Subroutine MEF90_VecSetValuesISdof      
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90_AskInt"
    Subroutine MEF90_AskInt(val,msg,ArgUnit,IsBatch)
       PetscInt                                  :: Val
@@ -205,6 +275,8 @@ Contains
 !!! 
 !!! This should not be needed anywhere anymore
 !!!   
+#undef __FUNCT__
+#define __FUNCT__ "Uniq"
    Subroutine Uniq(dComm, dMyVals, dVals)
       MPI_Comm                         :: dComm
       PetscInt, Dimension(:), Pointer  :: dMyVals, dVals
@@ -251,6 +323,8 @@ Contains
       End If
    End Subroutine Uniq
    
+#undef __FUNCT__
+#define __FUNCT__ "GaussJordan_Inverse"
    Subroutine GaussJordan_Inverse(A, Status)
 !!!
 !!! TODO
@@ -348,6 +422,8 @@ Contains
       DeAllocate (lmask)
    End Subroutine GaussJordan_Inverse
 
+#undef __FUNCT__
+#define __FUNCT__ "GaussJordan_Solve"
    Subroutine GaussJordan_Solve(A, b, Status)
       !
       ! Gauss Jordan inversion
