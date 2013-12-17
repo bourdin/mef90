@@ -1,5 +1,8 @@
 ifneq (,${findstring gcc,${PETSC_ARCH}})
    FC_FLAGS+= -ffree-line-length-none -ffixed-line-length-none -ffree-form
 endif
+ifneq (,${findstring intel,${PETSC_ARCH}})
+   FLINKER+= -Wl,-no_pie
+endif
 MEF90_INCLUDE=${MEF90_DIR}/objs/${PETSC_ARCH}
 
