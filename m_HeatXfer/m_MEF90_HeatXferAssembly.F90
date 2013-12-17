@@ -33,7 +33,7 @@ Contains
       Type(SectionReal)                                  :: fluxSec,externalTemperatureSec,boundaryTemperatureSec
       PetscReal,Dimension(:),Pointer                     :: xPtr,residualPtr,modifiedFluxPtr
       PetscReal,Dimension(:),Pointer                     :: fluxPtr,externalTemperaturePtr,boundaryTemperaturePtr
-      Type(IS)                                           :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
+      Type(IS)                                           :: VertexSetGlobalIS,CellSetGlobalIS,setIS,bcIS
       PetscInt,dimension(:),Pointer                      :: setID
       PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
       PetscInt                                           :: set,QuadratureOrder
@@ -43,7 +43,7 @@ Contains
       Type(VecScatter)                                   :: ScatterSecToVec,ScatterSecToVecCell
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
       Type(MEF90Element_Type)                            :: elemType
-      PetscInt                                           :: cell,dof
+      PetscInt                                           :: cell,dof,nVal
 
       Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
       !!! Create dof-based sections
@@ -117,6 +117,11 @@ Contains
          End If ! cellSetOptions%Has_BC
       End Do ! set
       
+      !!! "Ghost update" for the residual Section
+      Call SectionRealComplete(residualSec,ierr);CHKERRQ(ierr)
+      !!! Scatter back from SectionReal to Vec
+      Call SectionRealToVec(residualSec,ScatterSecToVec,SCATTER_FORWARD,residual,ierr);CHKERRQ(ierr)
+
       !!!
       !!! Cell set BC
       !!!
@@ -124,33 +129,27 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          
+
          If (cellSetOptions%Has_BC) Then
-            Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
-            elemType = MEF90_knownElements(cellSetOptions%ElemTypeShortID)
-            Allocate(boundaryTemperaturePtr(elemType%numDof))
-            Allocate(xPtr(elemType%numDof))
-            Allocate(residualPtr(elemType%numDof))
-            Do cell = 1,size(setIdx)
-               Call SectionRealRestrictClosure(boundaryTemperatureSec,mesh,setIdx(cell),elemType%numDof,boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
-               Call SectionRealRestrictClosure(xSec,mesh,setIdx(cell),elemType%numDof,xPtr,ierr);CHKERRQ(ierr)
-               residualPtr = xPtr - BoundaryTemperaturePtr
-               Call SectionRealUpdateClosure(residualSec,mesh,setIdx(cell),boundaryTemperaturePtr,INSERT_VALUES,ierr);CHKERRQ(iErr)
-            End Do
-            Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+            Call DMMeshGetStratumIS(MEF90HeatXferCtx%dm,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+            Call MEF90_ISCreateCelltoVertex(MEF90HeatXferCtx%dm,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+            Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
+            Allocate(xPtr(nval),stat=ierr)
+            Allocate(residualPtr(nval),stat=ierr)
+            Allocate(boundaryTemperaturePtr(nval),stat=ierr)
+            Call MEF90_VecGetValuesISdof(MEF90HeatXferCtx%DM,x,xPtr,bcIS,1,ierr)
+            Call MEF90_VecGetValuesISdof(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,boundaryTemperaturePtr,bcIS,1,ierr)
+            residualPtr = xPtr - boundaryTemperaturePtr
+            Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,residual,residualPtr,bcIS,1,INSERT_VALUES,ierr)
             DeAllocate(boundaryTemperaturePtr)
-            DeAllocate(xPtr)
             DeAllocate(residualPtr)
+            DeAllocate(xPtr)
+            Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If ! cellSetOptions%Has_BC
       End Do ! set
-      
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      !!! "Ghost update" for the residual Section
-      Call SectionRealComplete(residualSec,ierr);CHKERRQ(ierr)
-      !!! Scatter back from SectionReal to Vec
-      Call SectionRealToVec(residualSec,ScatterSecToVec,SCATTER_FORWARD,residual,ierr);CHKERRQ(ierr)
             
       !!!
       !!! Vertex set BC
@@ -161,27 +160,21 @@ Contains
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
          If (vertexSetOptions%Has_BC) Then
-            Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
-            Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
-            Call ISGetIndicesF90(setISdof,setdofIdx,ierr);CHKERRQ(ierr)
-            Allocate(residualPtr(size(setIdx)))
-            Do dof = 1, size(setIdx)
-               Call SectionRealRestrict(xSec,setIdx(dof),xPtr,ierr);CHKERRQ(ierr)
-               Call SectionRealRestrict(boundaryTemperatureSec,setIdx(dof),boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
-               residualPtr(dof) = xPtr(1) - boundaryTemperaturePtr(1)
-               Call SectionRealRestore(xSec,setIdx(dof),xPtr,ierr);CHKERRQ(ierr)
-               Call SectionRealRestore(boundaryTemperatureSec,setIdx(dof),boundaryTemperaturePtr,ierr);CHKERRQ(ierr)
-            End Do
-            Call VecSetValues(residual,size(setIdx),setdofIdx,residualPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+            Call DMMeshGetStratumIS(MEF90HeatXferCtx%dm,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+            Call ISGetSize(setIS,nval,ierr);CHKERRQ(ierr)
+            Allocate(xPtr(nval),stat=ierr)
+            Allocate(residualPtr(nval),stat=ierr)
+            Allocate(boundaryTemperaturePtr(nval),stat=ierr)
+            Call MEF90_VecGetValuesISdof(MEF90HeatXferCtx%DM,x,xPtr,setIS,1,ierr)
+            Call MEF90_VecGetValuesISdof(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,boundaryTemperaturePtr,setIS,1,ierr)
+            residualPtr = xPtr - boundaryTemperaturePtr
+            Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,residual,residualPtr,setIS,1,INSERT_VALUES,ierr)
+            DeAllocate(boundaryTemperaturePtr)
             DeAllocate(residualPtr)
-            Call ISRestoreIndicesF90(setISdof,setdofIdx,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setISdof,ierr);CHKERRQ(ierr) 
-            Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+            DeAllocate(xPtr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-         End If
-      End Do
-
+         EndIf
+      End Do ! set
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
    
@@ -257,7 +250,7 @@ Contains
          If (cellSetOptions%Has_BC) Then
             Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             Call MEF90_ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,bcIS,ierr)
-            Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,setIS,0,setISdof,ierr);CHKERRQ(ierr)
+            Call DMMeshISCreateISglobaldof(MEF90HeatXferCtx%DM,bcIS,0,setISdof,ierr);CHKERRQ(ierr)
             Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
             Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
