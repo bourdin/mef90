@@ -160,7 +160,7 @@ Contains
    Subroutine MEF90_VecGetValuesISdof(Mesh,V,val,setIS,dof,ierr)
       Type(DM),Intent(IN)                 :: Mesh
       PetscReal,DImension(:),Pointer      :: val
-      Type(Vec),Intent(INOUT)             :: V
+      Type(Vec),Intent(IN)                :: V
       Type(IS),Intent(IN)                 :: setIS
       PetscInt,Intent(IN)                 :: dof
       PetscInt,Intent(OUT)                :: ierr
@@ -198,7 +198,7 @@ Contains
    Subroutine MEF90_VecSetValuesISdof(Mesh,V,x,setIS,dof,MODE,ierr)
       Type(DM),Intent(IN)                 :: Mesh
       PetscReal,dimension(:),Pointer      :: x
-      Type(Vec),Intent(INOUT)             :: V
+      Type(Vec),Intent(IN)                :: V
       Type(IS),Intent(IN)                 :: setIS
       PetscInt,Intent(IN)                 :: dof
       PetscInt,Intent(IN)                 :: MODE
