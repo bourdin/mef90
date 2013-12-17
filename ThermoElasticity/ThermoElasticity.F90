@@ -96,9 +96,6 @@ Program ThermoElasticity
    Type(Vec)                                          :: localVec
    PetscInt                                           :: dim
       
-   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90_Initialize(ierr)
-
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90_Initialize(ierr)
