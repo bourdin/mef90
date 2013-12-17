@@ -45,6 +45,7 @@ Contains
       Type(MEF90Element_Type)                            :: elemType
       PetscInt                                           :: cell,dof
 
+      Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
       !!! Create dof-based sections
       Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(xSec,residualSec,ierr);CHKERRQ(ierr)
@@ -116,7 +117,6 @@ Contains
          End If ! cellSetOptions%Has_BC
       End Do ! set
       
-      Call SNESGetDM(snesTemp,mesh,ierr);CHKERRQ(ierr)
       !!!
       !!! Cell set BC
       !!!

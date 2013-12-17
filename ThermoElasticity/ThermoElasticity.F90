@@ -192,8 +192,8 @@ Program ThermoElasticity
       Call SNESSetDM(snesDisp,MEF90DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
       Call SNESSetOptionsPrefix(snesDisp,'Disp_',ierr);CHKERRQ(ierr)
 
-      !!!Call SNESSetFunction(snesDisp,residual,MEF90DefMechOperator,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-      !!!Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearForm,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+      Call SNESSetFunction(snesDisp,residualDisplacement,MEF90DefMechOperator,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+      Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearForm,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
       Call SNESSetFromOptions(snesDisp,ierr);CHKERRQ(ierr)
       If (MEF90GlobalOptions%verbose > 0) Then
          Call SNESView(snesDisp,PETSC_VIEWER_STDOUT_WORLD,ierr)
@@ -296,17 +296,15 @@ Program ThermoElasticity
    !!! Actual computations / time stepping
    !!!
    If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
-      !Call VecSet(MEF90DefMechCtx%Damage,0._Kr,ierr);CHKERRQ(ierr)
       Do step = 1,MEF90GlobalOptions%timeNumStep
-        !Call VecSet(MEF90DefMechCtx%Damage,1.234_Kr,ierr);CHKERRQ(ierr)
          Write(IOBuffer,100) step,time(step)
          Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
 
          !!! Update fields
          Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
-
+         Call MEF90DefMechUpdateboundaryDisplacement(displacement,MEF90DefMechCtx,ierr)
          !!! Solve SNES
-         !!!Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,Displacement,ierr);CHKERRQ(ierr)
+         Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,Displacement,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
          !Call MEF90DefMechEnergy(Displacement,time(step),MEF90DefMechCtx,energy,work,ierr);CHKERRQ(ierr)
