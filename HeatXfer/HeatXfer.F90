@@ -28,7 +28,7 @@ Program TestHeatXfer
                                                          0.0_Kr)          ! boundaryTemp
                                                          
    Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: MEF90HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
-                                                         PETSC_TRUE,    & ! Has BC
+                                                         PETSC_FALSE,    & ! Has BC
                                                          0.0_Kr)          ! boundaryTemp
    Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
                                                          

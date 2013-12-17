@@ -4,8 +4,8 @@
 -temp_snes_monitor
 -vs0010_boundaryTemp 0.
 -vs0010_tempBC 1
--vs0020_boundaryTemp 1.
--vs0020_tempBC 1
+-cs0020_boundaryTemp 1.
+-cs0020_tempBC 1
 -verbose 0
 -time_numstep 3
 -temp_ksp_converged_reason
