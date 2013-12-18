@@ -84,7 +84,7 @@ Program ThermoElasticity
    Type(PC)                                           :: pcDisp
    Type(Mat)                                          :: matDisp
    Type(MatNullSpace)                                 :: nspDisp
-   PetscReal                                          :: rtol
+   PetscReal                                          :: rtol,dtol
           
    PetscBool                                          :: flg
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
@@ -210,7 +210,8 @@ Program ThermoElasticity
       !!!Call KSPSetNullSpace(kspDisp,nspDisp,ierr);CHKERRQ(ierr)
    End If
    rtol = 1.0D-8
-   Call KSPSetTolerances(kspDisp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+   dtol = 1.0D+10
+   Call KSPSetTolerances(kspDisp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)
    
    !!! 
