@@ -221,7 +221,6 @@ Contains
             Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
             Allocate(val(nval),stat=ierr)
             val = cellSetOptions%boundaryTemp
-!   Write(*,*) 'CCC', set,val
             Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,x,val,bcIS,1,INSERT_VALUES,ierr)
             DeAllocate(val)
             Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
@@ -242,7 +241,6 @@ Contains
             Call ISGetSize(setIS,nval,ierr);CHKERRQ(ierr)
             Allocate(val(nval),stat=ierr)
             val = vertexSetOptions%boundaryTemp
-!   Write(*,*) 'VVV', set,val
             Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,x,val,setIS,1,INSERT_VALUES,ierr)
             DeAllocate(val)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -295,7 +293,6 @@ Contains
             Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
             Allocate(xPtr(nval),stat=ierr)
             Call MEF90_VecGetValuesISdof(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,xPtr,bcIS,1,ierr)
-!!!   Write(*,*) 'C', set, xPtr
             Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,x,xPtr,bcIS,1,INSERT_VALUES,ierr)
             DeAllocate(xPtr)
             Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
@@ -316,7 +313,6 @@ Contains
             Call ISGetSize(setIS,nval,ierr);CHKERRQ(ierr)
             Allocate(xPtr(nval),stat=ierr)
             Call MEF90_VecGetValuesISdof(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,xPtr,setIS,1,ierr)
-!!!   Write(*,*) 'V', set, xPtr
             Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,x,xPtr,setIS,1,INSERT_VALUES,ierr)
             DeAllocate(xPtr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
