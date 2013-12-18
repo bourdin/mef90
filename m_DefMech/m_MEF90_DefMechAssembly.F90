@@ -275,7 +275,7 @@ Contains
          Call MEF90_ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,bcIS,ierr)
          Do c = 1, dim
             If (cellSetOptions%Has_displacementBC(c)) Then
-               Call DMMeshISCreateISglobaldof(mesh,setIS,c,setISdof,ierr);CHKERRQ(ierr)
+               Call DMMeshISCreateISglobaldof(mesh,bcIS,c-1,setISdof,ierr);CHKERRQ(ierr)
                Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
                Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
             End If ! cellSetOptions%Has_displacementBC
@@ -297,7 +297,7 @@ Contains
          Do c = 1, dim
             If (vertexSetOptions%Has_displacementBC(c)) Then
                Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-               Call DMMeshISCreateISglobaldof(mesh,setIS,c,setISdof,ierr);CHKERRQ(ierr)
+               Call DMMeshISCreateISglobaldof(mesh,setIS,c-1,setISdof,ierr);CHKERRQ(ierr)
                Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
             End If
          End Do
