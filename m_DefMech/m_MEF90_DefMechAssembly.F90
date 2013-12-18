@@ -110,7 +110,9 @@ Contains
             Call MEF90ElasticityForceRHSSetCell(residualSec,mesh,forceSec,setIS,elemDisplacement,elemDisplacementType,ierr);CHKERRQ(ierr)
 
             !!! pressure Force
-            
+            If (elemDisplacementType%coDim > 0) Then
+               Call MEF90ElasticityPressureForceRHSSetCell(residualSec,mesh,pressureForceSec,setIS,elemDisplacement,elemDisplacementType,ierr);CHKERRQ(ierr)
+            End If
             Call MEF90Element_Destroy(elemDisplacement,ierr)
          Case (MEF90DefMech_defectLawBrittleFracture,MEF90DefMech_defectLawPlasticity)
             Print*,__FUNCT__,': Unimplemented Damage law',cellSetOptions%defectLaw

@@ -320,36 +320,42 @@ Module m_MEF_Elements
       PetscReal,Dimension(:,:),Pointer             :: BF
       Type(Vect2D),Dimension(:,:),Pointer          :: Grad_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
+      Type(Vect2D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element2D_Scal
  
    Type MEF90Element2D_Vect
       Type (Vect2D),Dimension(:,:),Pointer         :: BF
       Type (Mat2D),Dimension(:,:),Pointer          :: Der_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
+      Type(Vect2D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element2D_Vect
  
    Type MEF90Element2D_Elast
       Type (Vect2D),Dimension(:,:),Pointer         :: BF
       Type (MatS2D),Dimension(:,:),Pointer         :: GradS_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
+      Type(Vect2D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element2D_Elast
  
    Type MEF90Element3D_Vect
       Type (Vect3D),Dimension(:,:),Pointer         :: BF
       Type (Mat3D),Dimension(:,:),Pointer          :: Der_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
+      Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element3D_Vect
  
    Type MEF90Element3D_Scal
       PetscReal,Dimension(:,:),Pointer             :: BF
       Type (Vect3D),Dimension(:,:),Pointer         :: Grad_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
+      Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element3D_Scal
  
    Type MEF90Element3D_Elast
       Type (Vect3D),Dimension(:,:),Pointer         :: BF
       Type (MatS3D),Dimension(:,:),Pointer         :: GradS_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
+      Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element3D_Elast
 
    Interface MEF90Element_Create
@@ -1280,6 +1286,8 @@ Contains
             dElem%Grad_BF(iDoF,iG) = Bt * GradPhiHat(iDoF,iG) 
          End Do
       End Do
+      
+      dElem%outerNormal = 0.0_Kr
      
       DeAllocate(Xi,stat=ierr)
       DeAllocate(PhiHat,stat=ierr)
@@ -1297,9 +1305,15 @@ Contains
       PetscReal, Dimension(:), Pointer       :: Xi
       PetscReal                              :: l
       PetscInt                               :: iDoF,iG,Num_Gauss,Num_DoF
+      Type(Vect2D),Dimension(:),pointer              :: vertices
 
       num_Dof = 0
       num_Gauss = 0
+      Allocate(vertices(2))
+      vertices(1) = (/dCoord(1,1),dCoord(1,2)/)
+      vertices(2) = (/dCoord(2,1),dCoord(2,2)/)
+      Call simplexNormal(vertices,dElem%outerNormal,ierr)
+      DeAllocate(Vertices)
       l = sqrt( (dCoord(2,1)-dCoord(1,1))**2 + (dCoord(2,2)-dCoord(1,2))**2)
       Select Case(dQuadratureOrder)
       Case(0,1)
@@ -1401,6 +1415,7 @@ Contains
          dElem%Der_BF(i*dim+2,:)%YX = Elem_Scal%Grad_BF(i+1,:)%X
          dElem%Der_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
+      
       Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2D_Vect_Init
 
@@ -1424,6 +1439,8 @@ Contains
       dElem%Gauss_C = Elem_Scal%Gauss_C
 
       Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)      
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
       Do idof = 0,Num_DoF-1
          dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
          dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
@@ -1435,6 +1452,7 @@ Contains
             delem%Der_BF(iDof,iG) = 0.0_Kr
          End Do
       End Do
+      dElem%outerNormal = Elem_Scal%outerNormal
       Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Vect_Init
 
@@ -1472,6 +1490,7 @@ Contains
          dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X / 2.0_Kr
          dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
+      dElem%outerNormal = Elem_Scal%outerNormal
       Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2D_Elast_Init
 
@@ -1495,6 +1514,8 @@ Contains
       dElem%Gauss_C = Elem_Scal%Gauss_C
 
       Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)         
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
       Do iDof = 0,Num_DoF-1
          dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
          dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
@@ -1506,6 +1527,7 @@ Contains
             delem%GradS_BF(iDof,iG) = 0.0_Kr
          End Do
       End Do
+      dElem%outerNormal = Elem_Scal%outerNormal
       Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Elast_Init
 
@@ -1734,6 +1756,7 @@ Contains
       PetscInt                               :: Nb_Gauss
       PetscInt                               :: Num_Dof
       PetscInt                               :: iDoF,iG
+      Type(Vect3D),Dimension(:),Pointer              :: vertices
 
       !PetscReal,Dimension(:,:),Pointer       :: PhiHat      ! PhiHat(i,k) The value of the ith basis function at the kth integration point
       
@@ -1752,6 +1775,13 @@ Contains
       l3 = sqrt( (dCoord(1,1) - dCoord(3,1))**2 + (dCoord(1,2) - dCoord(3,2))**2 + (dCoord(1,3) - dCoord(3,3))**2)
       p = (l1 + l2 + l3) / 2.0_Kr
       area = sqrt( p * (p-l1) * (p-l2) * (p-l3)) 
+      Allocate(vertices(3))
+      vertices(1) = (/dCoord(1,1),dCoord(1,2),dCoord(1,3)/)
+      vertices(2) = (/dCoord(2,1),dCoord(2,2),dCoord(2,3)/)
+      vertices(3) = (/dCoord(3,1),dCoord(3,2),dCoord(3,3)/)
+      Call simplexNormal(vertices,dElem%outerNormal,ierr)
+      DeAllocate(Vertices)
+
       Select Case (dQuadratureOrder)
       Case(1)
          Nb_Gauss = 1
@@ -1921,6 +1951,9 @@ Contains
       dElem%Gauss_C = Elem_Scal%Gauss_C
          
       Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
+      dElem%BF(:,:)%Z = 0.0_Kr
       Do iDof = 0,Num_DoF-1
          dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
          dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
@@ -1933,6 +1966,7 @@ Contains
             delem%Der_BF(iDof,iG) = 0.0_Kr
          End Do
       End Do
+      dElem%outerNormal = Elem_Scal%outerNormal
       Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Vect_Init
 
@@ -2006,6 +2040,9 @@ Contains
       dElem%Gauss_C = Elem_Scal%Gauss_C
       
       Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      dElem%BF(:,:)%X = 0.0_Kr
+      dElem%BF(:,:)%Y = 0.0_Kr
+      dElem%BF(:,:)%Z = 0.0_Kr
       Do iDof = 0,Num_DoF-1
          dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
          dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
@@ -2018,6 +2055,7 @@ Contains
             delem%GradS_BF(iDof,iG) = 0.0_Kr
          End Do
       End Do
+      dElem%outerNormal = Elem_Scal%outerNormal
       Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3DBoundary_Elast_Init
 

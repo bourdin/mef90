@@ -16,6 +16,9 @@ Module m_MEF_ElasticityInterface
          ElasticityForceRHSSetCst_2D => ElasticityForceRHSSetCst, &
          ElasticityForceRHSSetCell_2D => ElasticityForceRHSSetCell, &
          ElasticityForceRHSSetVertex_2D => ElasticityForceRHSSetVertex, &
+         ElasticityPressureForceRHSSetCst_2D => ElasticityPressureForceRHSSetCst, &
+         ElasticityPressureForceRHSSetCell_2D => ElasticityPressureForceRHSSetCell, &
+         ElasticityPressureForceRHSSetVertex_2D => ElasticityPressureForceRHSSetVertex, &
          ElasticityWorkSetCst_2D => ElasticityWorkSetCst, &
          ElasticityWorkSetCell_2D => ElasticityWorkSetCell, &
          ElasticityWorkSetVertex_2D => ElasticityWorkSetVertex
@@ -31,6 +34,9 @@ Module m_MEF_ElasticityInterface
          ElasticityForceRHSSetCst_3D => ElasticityForceRHSSetCst, &
          ElasticityForceRHSSetCell_3D => ElasticityForceRHSSetCell, &
          ElasticityForceRHSSetVertex_3D => ElasticityForceRHSSetVertex, &
+         ElasticityPressureForceRHSSetCst_3D => ElasticityPressureForceRHSSetCst, &
+         ElasticityPressureForceRHSSetCell_3D => ElasticityPressureForceRHSSetCell, &
+         ElasticityPressureForceRHSSetVertex_3D => ElasticityPressureForceRHSSetVertex, &
          ElasticityWorkSetCst_3D => ElasticityWorkSetCst, &
          ElasticityWorkSetCell_3D => ElasticityWorkSetCell, &
          ElasticityWorkSetVertex_3D => ElasticityWorkSetVertex
@@ -49,6 +55,9 @@ Module m_MEF_ElasticityInterface
    Public :: MEF90ElasticityForceRHSSetCst
    Public :: MEF90ElasticityForceRHSSetCell
    Public :: MEF90ElasticityForceRHSSetVertex
+   Public :: MEF90ElasticityPressureForceRHSSetCst
+   Public :: MEF90ElasticityPressureForceRHSSetCell
+   Public :: MEF90ElasticityPressureForceRHSSetVertex
    Public :: MEF90ElasticityWorkSetCst
    Public :: MEF90ElasticityWorkSetCell
    Public :: MEF90ElasticityWorkSetVertex
@@ -93,6 +102,18 @@ Module m_MEF_ElasticityInterface
    Interface MEF90ElasticityForceRHSSetVertex
       Module procedure ElasticityForceRHSSetVertex_2D, ElasticityForceRHSSetVertex_3D
    End Interface MEF90ElasticityForceRHSSetVertex
+
+   Interface MEF90ElasticityPressureForceRHSSetCst
+      Module procedure ElasticityPressureForceRHSSetCst_2D, ElasticityPressureForceRHSSetCst_3D
+   End Interface MEF90ElasticityPressureForceRHSSetCst
+
+   Interface MEF90ElasticityPressureForceRHSSetCell
+      Module procedure ElasticityPressureForceRHSSetCell_2D, ElasticityPressureForceRHSSetCell_3D
+   End Interface MEF90ElasticityPressureForceRHSSetCell
+
+   Interface MEF90ElasticityPressureForceRHSSetVertex
+      Module procedure ElasticityPressureForceRHSSetVertex_2D, ElasticityPressureForceRHSSetVertex_3D
+   End Interface MEF90ElasticityPressureForceRHSSetVertex
 
    Interface MEF90ElasticityWorkSetCst
       Module procedure ElasticityWorkSetCst_2D, ElasticityWorkSetCst_3D
