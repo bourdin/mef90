@@ -128,8 +128,6 @@ Contains
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         
-
          If (cellSetOptions%Has_BC) Then
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%dm,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             Call MEF90_ISCreateCelltoVertex(MEF90HeatXferCtx%dm,PETSC_COMM_WORLD,setIS,bcIS,ierr)

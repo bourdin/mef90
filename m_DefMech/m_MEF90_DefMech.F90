@@ -187,7 +187,7 @@ Contains
       Type(IS)                                           :: CellSetGlobalIS
       PetscInt,Dimension(:),Pointer                      :: setID
       PetscInt,Dimension(:),Pointer                      :: setIdx
-      PetscInt                                           :: set
+      PetscInt                                           :: set,nval
       PetscReal,Dimension(:),Pointer                     :: val
       PetscInt,Dimension(:),Pointer                      :: cone
       Type(MEF90Element_Type)                            :: elemType
@@ -205,22 +205,19 @@ Contains
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)   
-         Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call MEF90_ISCreateCelltoVertex(MEF90DefMechCtx%DMVect,PETSC_COMM_WORLD,setIS,bcIS,ierr)
          Do c = 1, dim
             If (cellSetOptions%Has_displacementBC(c)) Then
-               Call DMMeshISCreateISglobaldof(MEF90DefMechCtx%DMVect,bcIS,c-1,setISdof,ierr);CHKERRQ(ierr)
-               Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-               Allocate(val(size(setIdx)),stat=ierr)
-               val = cellSetOptions%boundaryDisplacement(c)
-               Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
-               DeAllocate(val)
-               Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-               Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
-            End If ! cellSetOptions%Has_displacementBC
-            End Do
-         Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
-         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+               Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+               Call MEF90_ISCreateCelltoVertex(MEF90DefMechCtx%DMVect,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+               Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
+               Allocate(val(nval),stat=ierr)
+               val =  cellSetOptions%boundaryDisplacement(c)
+               Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMVect,x,val,bcIS,c,INSERT_VALUES,ierr)
+               DeAllocate(Val)
+               Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+               Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+            End If! cellSetOptions%Has_BC
+         End Do ! c
       End Do ! set
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -230,22 +227,19 @@ Contains
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(MEF90DefMechCtx%VertexSetOptionsBag(set),VertexSetOptions,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(MEF90DefMechCtx%vertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)   
          Do c = 1, dim
             If (vertexSetOptions%Has_displacementBC(c)) Then
-               Call DMMeshISCreateISglobaldof(MEF90DefMechCtx%DMVect,setIS,c-1,setISdof,ierr);CHKERRQ(ierr)
-               Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-               Allocate(val(size(setIdx)),stat=ierr)
-               val = VertexSetOptions%boundaryDisplacement(c)
-               Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
-               DeAllocate(val)
-               Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-               Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
-            End If
-         End Do
-         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-      End Do
+               Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Vertex Sets',setID(set),bcIS,ierr);CHKERRQ(iErr)
+               Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
+               Allocate(val(nval),stat=ierr)
+               val =  vertexSetOptions%boundaryDisplacement(c)
+               Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMVect,x,val,bcIS,c,INSERT_VALUES,ierr)
+               DeAllocate(Val)
+               Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+            End If! cellSetOptions%Has_BC
+         End Do ! c
+      End Do ! set
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
@@ -274,83 +268,57 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
       Type(IS)                                           :: CellSetGlobalIS,bcIS
       PetscInt,Dimension(:),Pointer                      :: setID
-      PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
-      PetscInt                                           :: set,dof,cell,c,dim
-      PetscReal,Dimension(:),Pointer                     :: boundaryDisplacementPtr,xPtr
-      Type(SectionReal)                                  :: boundaryDisplacementSec
-      Type(VecScatter)                                   :: ScatterSecToVec
+      PetscInt                                           :: set,c,dim,nval
+      PetscReal,Dimension(:),Pointer                     :: boundaryDisplacementPtr
       Type(MEF90Element_Type)                            :: elemType
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMMeshGetDimension(MEF90DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr)
       
-      !!! boundaryDisplacement is Vertex-centered
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',boundaryDisplacementSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,boundaryDisplacementSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(boundaryDisplacementSec,ScatterSecToVec,SCATTER_REVERSE,MEF90DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
-      
       !!!
       !!! cell set Displacement first, followed vertex sets
       !!!
-!      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-!      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-!      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-!      Do set = 1,size(setID)
-!         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)         
-!         Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-!         Call MEF90_ISCreateCelltoVertex(MEF90DefMechCtx%DMVect,PETSC_COMM_WORLD,setIS,bcIS,ierr)
-!         Do c = 1, dim
-!            If (cellSetOptions%Has_displacementBC(c)) Then
-!               Call DMMeshISCreateISglobaldof(MEF90DefMechCtx%DMVect,bcIS,c-1,setISdof,ierr);CHKERRQ(ierr)
-!               Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-!               Allocate(xPtr(size(setIdx)),stat=ierr)
-!               Do dof = 1,size(setIdx)
-!                  Call SectionRealRestrict(boundaryDisplacementSec,setIdx(dof),boundaryDisplacementPtr,ierr);CHKERRQ(ierr)
-!                  xPtr(dof) = boundaryDisplacementPtr(1)
-!   Write(*,*) '%%% ',dof,setIdx(dof),boundaryDisplacementPtr(1)
-!                  Call SectionRealRestore(boundaryDisplacementSec,setIdx(dof),boundaryDisplacementPtr,ierr);CHKERRQ(ierr)
-!               End Do
-!               Call VecSetValues(x,size(setIdx),setIdx,xPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
-!               DeAllocate(xPtr)
-!               Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-!               Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
-!            End If ! cellSetOptions%Has_displacementBC
-!            End Do
-!         Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
-!         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-!      End Do ! set
-!      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-!      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)   
+         Do c = 1, dim
+            If (cellSetOptions%Has_displacementBC(c)) Then
+               Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+               Call MEF90_ISCreateCelltoVertex(MEF90DefMechCtx%DMVect,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+               Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
+               Allocate(boundaryDisplacementPtr(nval),stat=ierr)
+               Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,boundaryDisplacementPtr,bcIS,c,ierr)
+               Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMVect,x,boundaryDisplacementPtr,bcIS,c,INSERT_VALUES,ierr)
+               DeAllocate(boundaryDisplacementPtr)
+               Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+               Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+            End If! cellSetOptions%Has_BC
+         End Do ! c
+      End Do ! set
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
-      !!!
-      !!! Vertex set BC
-      !!!
+      !!! Vertex sets
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(MEF90DefMechCtx%VertexSetOptionsBag(set),VertexSetOptions,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(MEF90DefMechCtx%vertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)   
          Do c = 1, dim
             If (vertexSetOptions%Has_displacementBC(c)) Then
-               Call DMMeshISCreateISglobaldof(MEF90DefMechCtx%DMVect,setIS,c-1,setISdof,ierr);CHKERRQ(ierr)
-               Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-               Allocate(xPtr(size(setIdx)))
-               Do dof = 1, size(setIdx)
-                  Call SectionRealRestrict(boundaryDisplacementSec,setIdx(dof),boundaryDisplacementPtr,ierr);CHKERRQ(ierr)
-                  xPtr(dof) = boundaryDisplacementPtr(1)
-         Write(*,*) '*** ', dof, boundaryDisplacementPtr(1)
-                  Call SectionRealRestore(boundaryDisplacementSec,setIdx(dof),boundaryDisplacementPtr,ierr);CHKERRQ(ierr)
-               End Do
-               Call VecSetValues(x,size(setIdx),setdofIdx,xPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
-               DeAllocate(xPtr)
-               Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-               Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
-            End If
-         End Do
-         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-      End Do
+               Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Vertex Sets',setID(set),bcIS,ierr);CHKERRQ(iErr)
+               Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
+               Allocate(boundaryDisplacementPtr(nval),stat=ierr)
+               Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,boundaryDisplacementPtr,bcIS,c,ierr)
+               Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMVect,x,boundaryDisplacementPtr,bcIS,c,INSERT_VALUES,ierr)
+               DeAllocate(boundaryDisplacementPtr)
+               Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+            End If! cellSetOptions%Has_BC
+         End Do ! c
+      End Do ! set
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
 
