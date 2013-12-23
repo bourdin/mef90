@@ -377,30 +377,30 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       End If      
    End Subroutine MEF90DefMechBilinearForm
 
-!#undef __FUNCT__
-!#define __FUNCT__ "MEF90DefMechEnergy"
-!!!!
-!!!!  
-!!!!  MEF90DefMechEnergy: wraps calls to MEF90DefMechEnergy from m_MEF90_DefMechAssembly
-!!!                       since overloading cannot be used here
-!!!!  
-!!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
-!!!!
-!   Subroutine MEF90DefMechEnergy(DisplacementVec,t,MEF90DefMechCtx,energy,work,ierr)
-!      Type(Vec),Intent(IN)                            :: DisplacementVec
-!      PetscReal,Intent(IN)                            :: t
-!      Type(MEF90DefMechCtx_Type),Intent(IN)          :: MEF90DefMechCtx
-!      PetscReal,Dimension(:),Pointer                  :: energy,work
-!      PetscErrorCode,Intent(OUT)                      :: ierr
-!
-!      PetscInt                                           :: dim      
-!      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
-!      If (dim == 2) Then
-!         Call MEF90DefMechEnergy2D(DisplacementVec,t,MEF90DefMechCtx,energy,work,ierr)
-!      Else If (dim == 3) Then
-!         Call MEF90DefMechEnergy3D(DisplacementVec,t,MEF90DefMechCtx,energy,work,ierr)
-!      End If      
-!   End Subroutine MEF90DefMechEnergy
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechEnergy"
+!!!
+!!!  
+!!!  MEF90DefMechEnergy: wraps calls to MEF90DefMechEnergy from m_MEF90_DefMechAssembly
+!!                       since overloading cannot be used here
+!!!  
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechEnergy(DisplacementVec,t,MEF90DefMechCtx,energy,work,ierr)
+      Type(Vec),Intent(IN)                            :: DisplacementVec
+      PetscReal,Intent(IN)                            :: t
+      Type(MEF90DefMechCtx_Type),Intent(IN)          :: MEF90DefMechCtx
+      PetscReal,Dimension(:),Pointer                  :: energy,work
+      PetscErrorCode,Intent(OUT)                      :: ierr
+
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90DefMechEnergy2D(DisplacementVec,t,MEF90DefMechCtx,energy,work,ierr)
+      Else If (dim == 3) Then
+         Call MEF90DefMechEnergy3D(DisplacementVec,t,MEF90DefMechCtx,energy,work,ierr)
+      End If      
+   End Subroutine MEF90DefMechEnergy
 
 
 End Module m_MEF90_DefMech
