@@ -254,57 +254,57 @@ Module m_MEF_Elements
 
    Integer,Parameter,Public :: MEF90_numKnownElements = 24       
    Type(MEF90Element_Type),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90_knownElements = (/ &
-      MEF90_P1_Lagrange_2D_Scal,          &
-      MEF90_P1_Lagrange_3D_Scal,          &
-      MEF90_P1_Lagrange_2D_Elast,         & 
-      MEF90_P1_Lagrange_3D_Elast,         &
-      MEF90_P1_Lagrange_2D_Vect,          &
-      MEF90_P1_Lagrange_3D_Vect,          &
-      MEF90_P1_Lagrange_2DBoundary_Scal,  &
-      MEF90_P1_Lagrange_3DBoundary_Scal,  &
-      MEF90_P1_Lagrange_2DBoundary_Elast, &
-      MEF90_P1_Lagrange_3DBoundary_Elast, &
-      MEF90_P1_Lagrange_2DBoundary_Vect,  &
-      MEF90_P1_Lagrange_3DBoundary_Vect,  &
-      MEF90_P2_Lagrange_2D_Scal,          &
-      MEF90_P2_Lagrange_3D_Scal,          &
-      MEF90_P2_Lagrange_2D_Vect,          &
-      MEF90_P2_Lagrange_3D_Vect,          &
-      MEF90_P2_Lagrange_2D_Elast,         &
-      MEF90_P2_Lagrange_3D_Elast,         &
-      MEF90_P2_Lagrange_2DBoundary_Scal,  &
-      MEF90_P2_Lagrange_3DBoundary_Scal,  &
-      MEF90_P2_Lagrange_2DBoundary_Elast, &
-      MEF90_P2_Lagrange_3DBoundary_Elast, &
-      MEF90_P2_Lagrange_2DBoundary_Vect,  &
-      MEF90_P2_Lagrange_3DBoundary_Vect   &
+      MEF90_P1_Lagrange_2D_Scal,          &  ! 1
+      MEF90_P1_Lagrange_3D_Scal,          &  ! 2
+      MEF90_P1_Lagrange_2D_Elast,         &  ! 3
+      MEF90_P1_Lagrange_3D_Elast,         &  ! 4
+      MEF90_P1_Lagrange_2D_Vect,          &  ! 5
+      MEF90_P1_Lagrange_3D_Vect,          &  ! 6
+      MEF90_P1_Lagrange_2DBoundary_Scal,  &  ! 7
+      MEF90_P1_Lagrange_3DBoundary_Scal,  &  ! 8
+      MEF90_P1_Lagrange_2DBoundary_Elast, &  ! 9
+      MEF90_P1_Lagrange_3DBoundary_Elast, &  ! 10
+      MEF90_P1_Lagrange_2DBoundary_Vect,  &  ! 11
+      MEF90_P1_Lagrange_3DBoundary_Vect,  &  ! 12
+      MEF90_P2_Lagrange_2D_Scal,          &  ! 13
+      MEF90_P2_Lagrange_3D_Scal,          &  ! 14
+      MEF90_P2_Lagrange_2D_Elast,         &  ! 15
+      MEF90_P2_Lagrange_3D_Elast,         &  ! 16
+      MEF90_P2_Lagrange_2D_Vect,          &  ! 17
+      MEF90_P2_Lagrange_3D_Vect,          &  ! 18
+      MEF90_P2_Lagrange_2DBoundary_Scal,  &  ! 19
+      MEF90_P2_Lagrange_3DBoundary_Scal,  &  ! 20
+      MEF90_P2_Lagrange_2DBoundary_Elast, &  ! 21
+      MEF90_P2_Lagrange_3DBoundary_Elast, &  ! 22
+      MEF90_P2_Lagrange_2DBoundary_Vect,  &  ! 23
+      MEF90_P2_Lagrange_3DBoundary_Vect   &  ! 24
    /)
 
    Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = (/ &
-      "P1_Lagrange_2D_Scal         ",     &
-      "P1_Lagrange_3D_Scal         ",     &
-      "P1_Lagrange_2D_Elast        ",     &
-      "P1_Lagrange_3D_Elast        ",     &
-      "P1_Lagrange_2D_Vect         ",     &
-      "P1_Lagrange_3D_Vect         ",     &
-      "P1_Lagrange_2DBoundary_Scal ",     &
-      "P1_Lagrange_3DBoundary_Scal ",     &
-      "P1_Lagrange_2DBoundary_Elast",     &
-      "P1_Lagrange_3DBoundary_Elast",     &
-      "P1_Lagrange_2DBoundary_Vect ",     &
-      "P1_Lagrange_3DBoundary_Vect ",     &
-      "P2_Lagrange_2D_Scal         ",     &
-      "P2_Lagrange_3D_Scal         ",     &
-      "P2_Lagrange_2D_Elast        ",     &
-      "P2_Lagrange_3D_Elast        ",     &
-      "P2_Lagrange_2D_Vect         ",     &
-      "P2_Lagrange_3D_Vect         ",     &
-      "P2_Lagrange_2DBoundary_Scal ",     &
-      "P2_Lagrange_3DBoundary_Scal ",     &
-      "P2_Lagrange_2DBoundary_Elast",     &
-      "P2_Lagrange_3DBoundary_Elast",     &
-      "P2_Lagrange_2DBoundary_Vect ",     &
-      "P2_Lagrange_3DBoundary_Vect ",     &
+      "P1_Lagrange_2D_Scal         ",     &  ! 1
+      "P1_Lagrange_3D_Scal         ",     &  ! 2
+      "P1_Lagrange_2D_Elast        ",     &  ! 3
+      "P1_Lagrange_3D_Elast        ",     &  ! 4
+      "P1_Lagrange_2D_Vect         ",     &  ! 5
+      "P1_Lagrange_3D_Vect         ",     &  ! 6
+      "P1_Lagrange_2DBoundary_Scal ",     &  ! 7
+      "P1_Lagrange_3DBoundary_Scal ",     &  ! 8
+      "P1_Lagrange_2DBoundary_Elast",     &  ! 9
+      "P1_Lagrange_3DBoundary_Elast",     &  ! 10
+      "P1_Lagrange_2DBoundary_Vect ",     &  ! 11
+      "P1_Lagrange_3DBoundary_Vect ",     &  ! 12
+      "P2_Lagrange_2D_Scal         ",     &  ! 13
+      "P2_Lagrange_3D_Scal         ",     &  ! 14
+      "P2_Lagrange_2D_Elast        ",     &  ! 15
+      "P2_Lagrange_3D_Elast        ",     &  ! 16
+      "P2_Lagrange_2D_Vect         ",     &  ! 17
+      "P2_Lagrange_3D_Vect         ",     &  ! 18
+      "P2_Lagrange_2DBoundary_Scal ",     &  ! 19
+      "P2_Lagrange_3DBoundary_Scal ",     &  ! 20
+      "P2_Lagrange_2DBoundary_Elast",     &  ! 21
+      "P2_Lagrange_3DBoundary_Elast",     &  ! 22
+      "P2_Lagrange_2DBoundary_Vect ",     &  ! 23
+      "P2_Lagrange_3DBoundary_Vect ",     &  ! 24
       "MEF90_knownElementNames     ",     &
       "prefix_                     ",     &
       C_NULL_CHAR//"                           "/)
@@ -1042,6 +1042,7 @@ Contains
       Type(MEF90Element_Type),intent(IN)     :: elemType
       PetscErrorCode,Intent(OUT)             :: ierr
       
+
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_2D_Elast%shortID)
             Call Element_P_Lagrange_2D_Elast_Init(dElem,dCoord,1,QuadratureOrder,ierr)
