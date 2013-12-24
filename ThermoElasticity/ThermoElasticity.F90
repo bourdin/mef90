@@ -305,7 +305,7 @@ Program ThermoElasticity
          Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,Displacement,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
-         !Call MEF90DefMechEnergy(Displacement,time(step),MEF90DefMechCtx,energy,work,ierr);CHKERRQ(ierr)
+         Call MEF90DefMechWork(Displacement,time(step),MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
          Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
          Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
          Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)

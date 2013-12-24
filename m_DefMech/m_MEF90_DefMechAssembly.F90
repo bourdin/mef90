@@ -7,8 +7,8 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
    Implicit none
    Private
    Public MEF90DefMechOperator,     &
-          MEF90DefMechBilinearForm
-!          MEF90DefMechEnergy
+          MEF90DefMechBilinearForm, &
+          MEF90DefMechWork
 
 Contains
 #undef __FUNCT__
@@ -310,41 +310,35 @@ Contains
       flg = SAME_NONZERO_PATTERN
    End Subroutine MEF90DefMechBilinearForm
    
-   Subroutine MEF90DefMechEnergy(xVec,t,MEF90DefMechCtx,energy,work,ierr)
+   Subroutine MEF90DefMechWork(xVec,t,MEF90DefMechCtx,work,ierr)
       Type(Vec),Intent(IN)                               :: xVec
       PetscReal,Intent(IN)                               :: t
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscReal,Dimension(:),Pointer                     :: energy,work
+      PetscReal,Dimension(:),Pointer                     :: work
       PetscErrorCode,Intent(OUT)                         :: ierr
    
-      Type(SectionReal)                                  :: xSec,residualSec
-      Type(SectionReal)                                  :: inelasticStrainSec,inelasticStrainCellSec
+      Type(SectionReal)                                  :: xSec
       Type(SectionReal)                                  :: forceSec,pressureForceSec
       PetscReal,Dimension(:),Pointer                     :: xPtr
-      PetscReal,Dimension(:),Pointer                     :: inelasticStrainPtr,inelasticStrainCellPtr
-      PetscReal,Dimension(:),Pointer                     :: forcePtr,pressureForcePtr
-      Type(IS)                                           :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof,bcIS
-      PetscInt,dimension(:),Pointer                      :: setID
-      PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
+      Type(IS)                                           :: CellSetGlobalIS,setIS
+      PetscInt,Dimension(:),Pointer                      :: setID
       PetscInt                                           :: set,QuadratureOrder,numCell
-      Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
       Type(MEF90_MATPROP),pointer                        :: matpropSet
-      Type(VecScatter)                                   :: ScatterSecToVec,ScatterSecToVecScal,ScatterSecToVecMatS
-      Type(VecScatter)                                   :: ScatterSecToVecCell,ScatterSecToVecCellScal,ScatterSecToVecCellMatS
+      Type(VecScatter)                                   :: ScatterSecToVec
+      Type(VecScatter)                                   :: ScatterSecToVecCell,ScatterSecToVecCellScal
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemDamage
-      Type(MEF90Element_Type)                            :: elemDisplacementType,elemDamageType
-      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
-      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-      PetscReal,Dimension(:),Pointer                     :: myEnergy,myWork
+      Type(MEF90Element_Type)                            :: elemDisplacementType
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
+      Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
+      PetscReal                                          :: myWork
+      PetscInt                                           :: dim
       
       
       Call DMMeshGetDimension(MEF90DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%globalOptionsBag,globalOptions,ierr);CHKERRQ(ierr)
       !!! Create dof-based sections
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
-      !Call DMMeshGetSectionReal(MEF90DefMechCtx%DMMatS,'default',inelasticStrainSec,ierr);CHKERRQ(ierr)
-      !Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMMatS,inelasticStrainSec,ScatterSecToVecMatS,ierr);CHKERRQ(ierr)
 
       !!! Create cell based sections, and allocate required pointers
       !!! I could check if any of these vectors are null 
@@ -352,49 +346,38 @@ Contains
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMVect,forceSec,ScatterSecToVecCell,ierr);CHKERRQ(ierr)
       Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',pressureForceSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMScal,pressureForceSec,ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',inelasticStrainCellSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,inelasticStrainCellSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
-      Allocate(pressureForcePtr(1))
-      Allocate(forcePtr(dim))
-      Allocate(inelasticStrainCellPtr(dim*(dim+1)/2))
    
       !!! Scatter data from Vec to Sec, or initialize
-      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr) 
-        
+      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,xVec,ierr);CHKERRQ(ierr)         
       Call SectionRealToVec(forceSec,ScatterSecToVecCell,SCATTER_REVERSE,MEF90DefMechCtx%force,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(pressureForceSec,ScatterSecToVecCellScal,SCATTER_REVERSE,MEF90DefMechCtx%pressureForce,ierr);CHKERRQ(ierr)
 
-      Allocate(myEnergy(size(setID)))
-      Allocate(myWork(size(setID)))
-      myEnergy = 0.0_Kr
-      myWork   = 0.0_Kr
-      Energy = 0.0_Kr
       Work   = 0.0_Kr
-      !!!
-      !!! We loop over all element twice. The first time in order to assembly all non BC cell sets
-      !!! In the second pass, we only update the BC where necessary
-      !!! vertex set BC are updated last, so that they override cell set BC
-      !!!
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
-         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+         mywork = 0.0_Kr
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
          elemDisplacementType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDisplacement)
-         elemDamageType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
          Case (MEF90DefMech_defectLawElasticity)
-            QuadratureOrder = 2 * elemDisplacementType%order
-            Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+            QuadratureOrder = elemDisplacementType%order
+            Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
             !!! Elastic energy
             !!! Inelastic strains
 
             !!! Force work
-            Call ElasticityWorkSetCst(mywork(set),xSec,mesh,ForceSec,setIS,elemDisplacement,elemDisplacementType,ierr)
+            If (globalOptions%forceScaling /= MEF90Scaling_Null) Then
+               Call MEF90ElasticityWorkSetCell(mywork,xSec,MEF90DefMechCtx%CellDMVect,ForceSec,setIS,elemDisplacement,elemDisplacementType,ierr)
+            End If
+
             !!! pressure force work
-            If (elemDisplacementType%coDim > 0) Then
-               !Call MEF90ElasticityPressureForceRHSSetCell(residualSec,mesh,pressureForceSec,setIS,elemDisplacement,elemDisplacementType,ierr);CHKERRQ(ierr)
+            If ((globalOptions%pressureForceScaling /= MEF90Scaling_Null) .AND. (elemDisplacementType%coDim > 0)) Then
+               Call MEF90ElasticityPressureWorkSetCell(mywork,xSec,MEF90DefMechCtx%CellDMVect,pressureForceSec,setIS,elemDisplacement,elemDisplacementType,ierr)
             End If
             Call MEF90Element_Destroy(elemDisplacement,ierr)
          Case (MEF90DefMech_defectLawBrittleFracture,MEF90DefMech_defectLawPlasticity)
@@ -402,14 +385,9 @@ Contains
             STOP      
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-      End Do   
-      DeAllocate(pressureForcePtr)
-      DeAllocate(forcePtr)  
-      DeAllocate(inelasticStrainCellPtr)
-      DeAllocate(myEnergy)
-      DeAllocate(myWork)
 
-
-
-   End Subroutine MEF90DefMechEnergy   
+         Call MPI_AllReduce(MPI_IN_PLACE,myWork,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         work(set) = work(set) + mywork
+      End Do ! set
+   End Subroutine MEF90DefMechWork   
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D

@@ -26,6 +26,9 @@ Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
    Public :: ElasticityWorkSetCst
    Public :: ElasticityWorkSetCell
    Public :: ElasticityWorkSetVertex
+   !Public :: ElasticityPressureWorkSetCst
+   Public :: ElasticityPressureWorkSetCell
+   !Public :: ElasticityPressureWorkSetVertex
 
    
 
@@ -760,7 +763,7 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
-         Allocate(floc(1))
+         !Allocate(floc(1))
          Do cell = 1,size(cellID)   
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
             Call SectionRealRestrict(f,cellID(cell),floc,ierr);CHKERRQ(ierr)
@@ -778,7 +781,7 @@ Contains
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
-         DeAllocate(floc)
+         !DeAllocate(floc)
       End If
    End Subroutine ElasticityWorkSetCell
 
@@ -826,5 +829,46 @@ Contains
          DeAllocate(floc)
       End If
    End Subroutine ElasticityWorkSetVertex
+
+#undef __FUNCT__
+#define __FUNCT__ "ElasticitypressureWorkSetCell"
+   Subroutine ElasticitypressureWorkSetCell(work,x,mesh,P,cellIS,elem,elemType,ierr)
+      PetscReal,Intent(OUT)                              :: work
+      Type(SectionReal),Intent(IN)                       :: x
+      Type(DM),Intent(IN)                                :: mesh
+      Type(SectionReal),Intent(IN)                       :: P
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: xloc,ploc
+      Type(MEF90_VECT)                                   :: xelem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+     
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrict(P,cellID(cell),ploc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               xelem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  xelem = xelem + xloc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+               End Do
+               work = work + ploc(1) * elem(cell)%Gauss_C(iGauss) * (xelem .DotP. elem(cell)%OuterNormal)
+            End Do
+         End Do
+      
+         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+      End If
+   End Subroutine ElasticitypressureWorkSetCell
 
 End Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
