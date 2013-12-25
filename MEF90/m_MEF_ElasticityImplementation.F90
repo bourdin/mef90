@@ -236,6 +236,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
@@ -276,6 +277,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,i
       PetscLogDouble                                     :: flops
            
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
@@ -318,6 +320,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,i
       PetscLogDouble                                     :: flops
            
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
@@ -406,6 +409,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
@@ -417,7 +421,6 @@ Contains
                                  (elem(cell)%BF(iDoF1,iGauss) .DotP. F)
                End Do
             End Do
-   Write(*,*) RHSloc
             Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
       
@@ -488,6 +491,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(Floc(elemType%numDof))
@@ -537,6 +541,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,c,numCell
       PetscLogDouble                                     :: flops
            
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Call DMMeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
@@ -628,6 +633,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,c,numCell
       PetscLogDouble                                     :: flops
            
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(pressureloc(elemPressureType%numDof))
@@ -657,50 +663,6 @@ Contains
    End Subroutine ElasticityPressureForceRHSSetVertex
 
 #undef __FUNCT__
-#define __FUNCT__ "ElasticityEnergySet"
-   Subroutine ElasticityEnergySet(energy,x,mesh,A,cellIS,elem,elemType,ierr)
-      PetscReal,Intent(OUT)                              :: energy
-      Type(SectionReal),Intent(IN)                       :: x
-      Type(DM),Intent(IN)                                :: mesh
-      Type(MEF90_TENS4OS),Intent(IN)                     :: A
-      Type(IS),Intent(IN)                                :: cellIS
-      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
-      PetscErrorCode,Intent(OUT)                         :: ierr
-
-      Type(MEF90_MATS)                                   :: stress,strain      
-      Type(MEF90_VECT)                                   :: xelem
-      PetscReal,Dimension(:),Pointer                     :: xloc
-      PetscInt,Dimension(:),Pointer                      :: cellID
-      PetscInt                                           :: cell
-      PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
-     
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      If (Size(cellID) > 0) Then
-         Allocate(xloc(elemType%numDof))
-         Do cell = 1,size(cellID)   
-            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
-            Do iGauss = 1,size(elem(cell)%Gauss_C)
-               strain = 0.0_Kr   
-               xelem  = 0.0_Kr
-               Do iDoF1 = 1,elemType%numDof
-                  strain = strain + elem(cell)%GradS_BF(iDoF1,iGauss) * xloc(iDoF1)
-                  xelem = xelem + elem(cell)%BF(iDoF1,iGauss) * xloc(iDoF1)
-               End Do
-               stress = A * strain
-               energy = energy + elem(cell)%Gauss_C(iGauss) * (stress .dotP. strain) *.5_Kr
-            End Do
-         End Do
-      
-         !flops = (2 * elemType%numDof + 6) * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-         DeAllocate(xloc)
-      End If
-   End Subroutine ElasticityEnergySet
-
-#undef __FUNCT__
 #define __FUNCT__ "ElasticityWorkSetCst"
    Subroutine ElasticityWorkSetCst(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
@@ -719,6 +681,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
      
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
@@ -871,4 +834,84 @@ Contains
       End If
    End Subroutine ElasticitypressureWorkSetCell
 
+#undef __FUNCT__
+#define __FUNCT__ "ElasticityEnergySet"
+   !!!
+   !!!  
+   !!!  ElasticityEnergySet:  Contribution of a cell set to elastic energy. 
+   !!!                        It is assumed that the temperature is interpolated on the FE space while the plastic strain 
+   !!!                        is cell-based
+   !!!  
+   !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+   !!!
+   Subroutine ElasticityEnergySet(energy,x,plasticStrain,temperature,mesh,cellIS,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
+      PetscReal,Intent(OUT)                              :: energy
+      Type(SectionReal),Intent(IN)                       :: x,plasticStrain,temperature
+      Type(DM),Intent(IN)                                :: mesh
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
+      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: xloc,plasticStrainLoc,temperatureLoc
+      PetscReal                                          :: temperatureElem
+      Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+      PetscInt                                           :: hasTemperatureFlag,hasPlasticStrainFlag
+     
+      !!! Test if the temperature and plasticStrain sections are initialized
+      If (temperature%v == 0) Then
+         hasTemperatureFlag = 0
+      Else
+         hasTemperatureFlag = 1
+      End If
+      If (plasticStrain%v == 0) Then
+         hasPlasticStrainFlag = 0
+      Else
+         hasPlasticStrainFlag = 1
+      End If
+      
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemDisplacementType%numDof))
+         Allocate(temperatureloc(elemTemperatureType%numDof))
+         Do cell = 1,size(cellID)   
+            temperatureElem   = 0.0_Kr
+            plasticStrainElem = 0.0_Kr
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
+            If (hasTemperatureFlag /= 0) Then
+               Call SectionRealRestrictClosure(temperature,mesh,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+            End If
+            If (hasPlasticStrainFlag /= 0) Then
+               Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+            Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
+               Do iDoF1 = 1,elemDisplacementType%numDof
+                  strainElem = strainElem + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
+               End Do
+               Do iDoF1 = 1,elemtemperatureType%numDof * hasTemperatureFlag
+                  temperatureElem = temperatureElem + temperatureLoc(iDof1) * elemTemperature(cell)%BF(iDof1,iGauss)
+               End Do
+               plasticStrainElem = plasticStrainLoc
+               strainElem = strainElem - (temperatureElem * thermalExpansion) - plasticStrainElem
+               stressElem = HookesLaw * strainElem
+               energy = energy + (strainElem .dotP. stressElem) * 0.5_Kr
+            End Do ! Gauss
+            If (hasPlasticStrainFlag /= 0) Then
+               Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+         End Do ! cell
+         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(temperatureloc)
+      End If   
+   End Subroutine ElasticityEnergySet
 End Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
