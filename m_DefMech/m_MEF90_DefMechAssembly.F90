@@ -250,14 +250,16 @@ Contains
          Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
          elemTypeDisplacement = MEF90_knownElements(cellSetOptions%elemTypeShortIDDisplacement)
          elemTypeDamage = MEF90_knownElements(cellSetOptions%elemTypeShortIDDamage)
-
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
          Case (MEF90DefMech_defectLawElasticity)
-            QuadratureOrder = 2 * elemTypeDisplacement%order
-            Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-            Call MEF90ElasticityBilinearFormSet(A,mesh,setIS,matPropSet%HookesLaw,elemDisplacement,elemTypeDisplacement,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Destroy(elemDisplacement,ierr)
+            !!! Elements of codim > 0 have no contribution to the bilinear form, so we may as well skip them
+            If (elemTypeDisplacement%coDim == 0) Then
+               QuadratureOrder = 2 * elemTypeDisplacement%order
+               Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90ElasticityBilinearFormSet(A,mesh,setIS,matPropSet%HookesLaw,elemDisplacement,elemTypeDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Destroy(elemDisplacement,ierr)
+            End If
          Case (MEF90DefMech_defectLawBrittleFracture,MEF90DefMech_defectLawPlasticity)
             Print*,__FUNCT__,': Unimplemented Damage law',cellSetOptions%defectLaw
             STOP      
@@ -390,4 +392,72 @@ Contains
          work(set) = work(set) + mywork
       End Do ! set
    End Subroutine MEF90DefMechWork   
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechElasticEnergy"
+!!!
+!!!  
+!!!  MEF90DefMechElasticEnergy: 
+!!!  
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechElasticEnergy(snesDisplacement,x,energy,MEF90DefMechCtx,ierr)
+      Type(SNES),Intent(IN)                              :: snesDisplacement
+      Type(Vec),Intent(IN)                               :: x
+      PetscReal,dimension(:),Pointer                     :: energy
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+   
+      Type(DM)                                           :: mesh
+      Type(SectionReal)                                  :: xSec
+      PetscReal,Dimension(:),Pointer                     :: xPtr
+      Type(IS)                                           :: CellSetGlobalIS,setIS,setISdof,bcIS
+      PetscInt,dimension(:),Pointer                      :: setID
+      PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
+      PetscInt                                           :: set,QuadratureOrder
+      Type(MEF90_MATPROP),pointer                        :: matpropSet
+      Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
+      Type(VecScatter)                                   :: ScatterSecToVec
+      Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
+      Type(MEF90Element_Type)                            :: elemDisplacementType
+      PetscInt                                           :: p,dof,c,dim,numDof
+      PetscInt                                           :: nVal
+
+      Call SNESGetDM(snesDisplacement,mesh,ierr);CHKERRQ(ierr)
+      Call DMMeshGetDimension(mesh,dim,ierr);CHKERRQ(ierr)
+      !!! Create dof-based sections
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DM,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+
+      !!! Scatter data from Vec to Sec, or initialize
+      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr) 
+
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         elemDisplacementType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDisplacement)
+
+         !!! Call proper local assembly depending on the type of damage law
+         Select Case (cellSetOptions%defectLaw)
+         Case (MEF90DefMech_defectLawElasticity)
+            If (elemDisplacementType%coDim == 0) Then
+               QuadratureOrder = 2 * elemDisplacementType%order
+               Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               !Call MEF90ElasticityPressureForceRHSSetCell(residualSec,mesh,pressureForceSec,setIS,elemDisplacement,elemDisplacementType,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Destroy(elemDisplacement,ierr)
+            End If
+         Case (MEF90DefMech_defectLawBrittleFracture,MEF90DefMech_defectLawPlasticity)
+            Print*,__FUNCT__,': Unimplemented Damage law',cellSetOptions%defectLaw
+            STOP      
+         End Select
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      End Do   
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechElasticEnergy
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
