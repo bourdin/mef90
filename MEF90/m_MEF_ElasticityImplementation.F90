@@ -856,54 +856,47 @@ Contains
       Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
-      PetscReal,Dimension(:),Pointer                     :: xloc,plasticStrainLoc,temperatureLoc
+      PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,plasticStrainLoc
       PetscReal                                          :: temperatureElem
       Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
-      PetscInt                                           :: hasTemperatureFlag,hasPlasticStrainFlag
      
-      !!! Test if the temperature and plasticStrain sections are initialized
-      If (temperature%v == 0) Then
-         hasTemperatureFlag = 0
-      Else
-         hasTemperatureFlag = 1
-      End If
-      If (plasticStrain%v == 0) Then
-         hasPlasticStrainFlag = 0
-      Else
-         hasPlasticStrainFlag = 1
-      End If
-      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemDisplacementType%numDof))
          Allocate(temperatureloc(elemTemperatureType%numDof))
          Do cell = 1,size(cellID)   
-            temperatureElem   = 0.0_Kr
-            plasticStrainElem = 0.0_Kr
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
-            If (hasTemperatureFlag /= 0) Then
+            If (temperature%v /= 0) Then
                Call SectionRealRestrictClosure(temperature,mesh,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
             End If
-            If (hasPlasticStrainFlag /= 0) Then
+            If (plasticStrain%v /= 0) Then
                Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
             End If
             Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
+               temperatureElem   = 0.0_Kr
+               plasticStrainElem = 0.0_Kr
+               strainElem        = 0.0_Kr
                Do iDoF1 = 1,elemDisplacementType%numDof
                   strainElem = strainElem + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
                End Do
-               Do iDoF1 = 1,elemtemperatureType%numDof * hasTemperatureFlag
-                  temperatureElem = temperatureElem + temperatureLoc(iDof1) * elemTemperature(cell)%BF(iDof1,iGauss)
-               End Do
-               plasticStrainElem = plasticStrainLoc
-               strainElem = strainElem - (temperatureElem * thermalExpansion) - plasticStrainElem
+               If (temperature%v /= 0) Then
+                  Do iDoF1 = 1,elemtemperatureType%numDof
+                     temperatureElem = temperatureElem + temperatureLoc(iDof1) * elemTemperature(cell)%BF(iDof1,iGauss)
+                  End Do
+                  strainElem = strainElem - (temperatureElem * thermalExpansion)
+               End If
+               If (plasticStrain%v /= 0) Then
+                  plasticStrainElem = plasticStrainLoc
+                  strainElem = strainElem - plasticStrainElem
+               End If
                stressElem = HookesLaw * strainElem
-               energy = energy + (strainElem .dotP. stressElem) * 0.5_Kr
+               energy = energy + (strainElem .dotP. stressElem) * elemDisplacement(cell)%Gauss_C(iGauss) * 0.5_Kr
             End Do ! Gauss
-            If (hasPlasticStrainFlag /= 0) Then
+            If (plasticStrain%v /= 0) Then
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
             End If
          End Do ! cell

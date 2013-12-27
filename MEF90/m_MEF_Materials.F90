@@ -35,13 +35,13 @@ Module m_MEF_Materials_Types
       1.0_Kr,                                          & ! SpecificHeat
       MEF90_MatS2D_Identity,                           & ! ThermalConductivity
       MEF90_MatS2D_Identity,                           & ! LinearThermalExpansion
-      !Tens4OS2D( 1.0989010989_Kr,     & ! A%XXXX
-      !             0.0_Kr,            & ! A%XXXY
-      !             0.32967032967_Kr,  & ! A%XXYY
-      !             0.384615384615_Kr, & ! A%XYXY
-      !             0.0_Kr,            & ! A%XYYY
-      !             1.0989010989_Kr),  & ! A%YYYY        & ! HookesLaw
-      MEF90_Tens4OS2D_Identity,                          & ! HookesLaw
+      Tens4OS2D( 1.0989010989_Kr,     & ! A%XXXX
+                   0.0_Kr,            & ! A%XXXY
+                   0.32967032967_Kr,  & ! A%XXYY
+                   0.384615384615_Kr, & ! A%XYXY
+                   0.0_Kr,            & ! A%XYYY
+                   1.0989010989_Kr),  & ! A%YYYY        & ! HookesLaw
+      !MEF90_Tens4OS2D_Identity,                          & ! HookesLaw
       "MEF90_Mathium2D")  
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90_Mathium3D = MEF90MatProp3D_Type ( &

@@ -30,7 +30,7 @@ BASE_DIR=${MEF90_DIR}/ThermoElasticity
 ThermoElasticity:${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
 	-@echo "      $@"
 
-${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity: ThermoElasticity.o
+${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity: ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}
 	-@echo "      $@"
 	-@${FLINKER} -o $@ ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
