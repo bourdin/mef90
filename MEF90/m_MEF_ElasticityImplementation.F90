@@ -236,7 +236,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -278,7 +278,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,i
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -322,7 +322,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,i
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -367,7 +367,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -414,7 +414,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -497,7 +497,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -548,7 +548,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,c,numCell
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -641,7 +641,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,c,numCell
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -690,7 +690,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
      
-      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then

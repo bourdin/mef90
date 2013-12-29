@@ -89,7 +89,7 @@ Program ThermoElasticity
    PetscBool                                          :: flg
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
    Character(len=MEF90_MXSTRLEN)                      :: setName,setprefix
-   Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameC,nameV
+   Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameV,nameC
    Integer                                            :: numfield
    
    Integer                                            :: step
@@ -240,6 +240,7 @@ Program ThermoElasticity
                      MEF90DefMechGlobalOptions%boundaryDisplacementOffset+dim,&
                      MEF90DefMechGlobalOptions%boundaryDamageOffset)-1
       Allocate(nameV(numfield))
+
       nameV = "empty"
       nameV(MEF90DefMechGlobalOptions%displacementOffset+0)         = "Displacement_X"
       nameV(MEF90DefMechGlobalOptions%displacementOffset+1)         = "Displacement_Y"
