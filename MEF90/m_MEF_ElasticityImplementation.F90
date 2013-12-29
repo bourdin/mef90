@@ -236,6 +236,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
+      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -277,6 +278,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,i
       PetscLogDouble                                     :: flops
            
+      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -320,6 +322,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,i
       PetscLogDouble                                     :: flops
            
+      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -364,6 +367,8 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
+      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(e0loc(elemScalType%numDof))
@@ -409,6 +414,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
+      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -491,6 +497,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
+      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -541,6 +548,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,c,numCell
       PetscLogDouble                                     :: flops
            
+      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -633,6 +641,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,c,numCell
       PetscLogDouble                                     :: flops
            
+      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -681,6 +690,7 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
      
+      Call PetscPrintf(PETSC_COMM_WORLD,,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -726,7 +736,6 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
-         !Allocate(floc(1))
          Do cell = 1,size(cellID)   
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
             Call SectionRealRestrict(f,cellID(cell),floc,ierr);CHKERRQ(ierr)
@@ -744,7 +753,6 @@ Contains
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
-         !DeAllocate(floc)
       End If
    End Subroutine ElasticityWorkSetCell
 
