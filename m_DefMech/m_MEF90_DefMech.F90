@@ -84,10 +84,12 @@ Contains
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
    
+      Type(SectionReal)                               :: xSec
+      Type(VecScatter)                                :: scatterSecToVec
       Type(MEF90DefMechGlobalOptions_Type),pointer    :: MEF90DefMechGlobalOptions
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
       Type(MEF90DefMechCellSetOptions_Type),pointer   :: cellSetOptions
-      Type(IS)                                        :: cellSetGlobalIS,setIS,setISdof
+      Type(IS)                                        :: cellSetGlobalIS,setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt,Dimension(:),Pointer                   :: setIdx
       PetscInt                                        :: set,c,dim
@@ -97,6 +99,9 @@ Contains
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMMeshGetDimension(MEF90DefMechCtx%cellDMVect,dim,ierr);CHKERRQ(ierr)
 
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%cellDMVect,'default',xSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%cellDMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+
       !!! force is cell-centered
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%CellDMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -104,22 +109,19 @@ Contains
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%cellDMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Do c = 1,dim
-            Call DMMeshISCreateISglobaldof(MEF90DefMechCtx%cellDMVect,setIS,c-1,setISdof,ierr);CHKERRQ(ierr)
-            Call ISGetIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-            Allocate(val(size(setIdx)),stat=ierr)
-            val = cellSetOptions%force(c)
-            Call VecSetValues(x,size(setIdx),setIdx,val,INSERT_VALUES,ierr);CHKERRQ(ierr)
-            DeAllocate(val)
-            Call ISRestoreIndicesF90(setISdof,setIdx,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
+        Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+         Do c = 1, size(setIdx)
+            Call SectionRealRestrict(xSec,setIDx(c),val,ierr);CHKERRQ(ierr)
+            val = cellSetOptions%force
+            Call SectionRealRestore(xSec,setIDx(c),val,ierr);CHKERRQ(ierr)
          End Do
+         Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
-      Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr) 
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSetForceCst
 
 #undef __FUNCT__

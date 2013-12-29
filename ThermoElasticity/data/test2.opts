@@ -1,0 +1,10 @@
+-verbose 0
+-cs0010_displacementBC 1,1,1 
+-cs0010_boundaryDisplacement -.5,0,0
+-cs0020_displacementBC 1,1,1 
+-cs0020_boundaryDisplacement .5,0,0
+-time_min .5
+-time_max 1
+-time_numstep 2
+-disp_snes_monitor
+-disp_ksp_converged_reason

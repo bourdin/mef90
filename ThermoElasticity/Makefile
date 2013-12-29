@@ -2,7 +2,7 @@ all:
 	-@make -C ${MEF90_DIR} ThermoElasticity
 test: test2D test3D
 test2D: 
-	-@for OPTIONSFILE in test1.opts test2.opts test3.opts; do \
+	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
 	make testThermoElasticity PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
 	make testThermoElasticity PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	make testThermoElasticity PREFIX=SquareNG_Y-tri3 OPTIONSFILE=$${OPTIONSFILE};\
@@ -10,7 +10,7 @@ test2D:
 	done
 
 test3D: 
-	-@for OPTIONSFILE in test1.opts test2.opts test3.opts; do \
+	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
 	make testThermoElasticity PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	make testThermoElasticity PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 	make testThermoElasticity PREFIX=CubeNG_Y-tetra4  OPTIONSFILE=$${OPTIONSFILE};\

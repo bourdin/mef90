@@ -124,6 +124,53 @@ Program TestUpdateSets
    Call SectionRealToVec(Sec,ScatterSecToVec,SCATTER_REVERSE,VecIn,ierr);CHKERRQ(ierr) 
    Call SectionRealView(Sec,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
 
+   Call PetscPrintf(PETSC_COMM_WORLD,"\n\n===== DMMeshISCreateISglobaldof for vertex sets ====\n",ierr)
+   Call DMmeshGetLabelIdIS(Mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(VertexSetGlobalIS,VertexSetGlobalIdx,ierr);CHKERRQ(ierr)   
+   Do set = 1,size(VertexSetGlobalIdx)
+      Call DMMeshGetStratumIS(Mesh,'Vertex Sets',VertexSetGlobalIdx(set),setIS,ierr);CHKERRQ(iErr)
+      Write(IOBuffer,*) 'set ', set,'\n'
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      Call ISView(setIS,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+      Do c = 1, dim
+         Call DMMeshISCreateISglobaldof(Mesh,setIS,c-1,setISdof,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,*) '   dof ', c,' setISdof\n'
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         Call ISView(setISdof,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
+      End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)   
+   End Do
+   Call ISRestoreIndicesF90(VertexSetGlobalIS,VertexSetGlobalIdx,ierr);CHKERRQ(ierr)   
+   Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+
+   Call PetscPrintf(PETSC_COMM_WORLD,"\n\n===== DMMeshISCreateISglobaldof for cell sets ====\n",ierr)
+   Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call ISGetIndicesF90(CellSetGlobalIS,CellSetGlobalIdx,ierr);CHKERRQ(ierr)   
+   Write(IOBuffer,*) "CellSetGlobalIdx: ",CellSetGlobalIdx,"\n"
+   Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   Call PetscSynchronizedFlush(PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+
+   Do set = 1,size(CellSetGlobalIdx)
+      Call DMMeshGetStratumIS(Mesh,'Cell Sets',CellSetGlobalIdx(set),setIS,ierr);CHKERRQ(iErr)
+      Write(IOBuffer,*) 'set ', set,'\n'
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      Call ISView(setIS,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+      Do c = 1, dim
+         Call DMMeshISCreateISglobaldof(Mesh,setIS,c-1,setISdof,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,*) '   dof ', c,' setISdof\n'
+         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+         Call ISView(setISdof,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
+      End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)   
+   End Do
+   Call ISRestoreIndicesF90(CellSetGlobalIS,CellSetGlobalIdx,ierr);CHKERRQ(ierr)   
+   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+
+
    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(Sec,ierr);CHKERRQ(ierr)
    Call VecDestroy(VecIn,ierr);CHKERRQ(ierr)
