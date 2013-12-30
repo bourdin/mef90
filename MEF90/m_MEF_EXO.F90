@@ -92,6 +92,7 @@ Contains
       Integer                                         :: cpu_ws,io_ws
       Real                                            :: exo_version
       Integer                                         :: exoerr
+      Logical                                         :: exoExists
       
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
@@ -111,24 +112,26 @@ Contains
    
       !!! Open output file or create it and format it depending on loading type
       If (IORank == 0) Then
+         Inquire(file=filename,exist=exoExists)
          cpu_ws = 8
          io_ws = 8
-         MEF90Ctx%fileExoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
-         If (exoerr < 0) Then
-               If (GlobalOptions%verbose > 0) Then    
-                  Write(IOBuffer,*) 'EXO file ',trim(filename),' does not seem to exist. Creating it.\n'
-                  Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
-               EndIf
-               MEF90Ctx%fileExoUnit = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
-               Select Case (GlobalOptions%FileFormat)
-               Case (MEF90FileFormat_EXOSplit)
-                  Call DMmeshViewExodusSplit(mesh,MEF90Ctx%fileExoUnit,ierr)
-               Case (MEF90FileFormat_EXOSingle)
-                  Write(filename,102) trim(MEF90Ctx%prefix)
-                  exoUnitIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
-                  Call EXCOPY(exoUnitIN,MEF90Ctx%fileExoUnit,exoErr)
-                  Call EXCLOS(exoUnitIN,exoErr)
-               End Select
+         If (not(exoExists)) Then
+            If (GlobalOptions%verbose > 0) Then    
+               Write(IOBuffer,*) 'EXO file ',trim(filename),' does not seem to exist. Creating it.\n'
+               Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+            EndIf
+            MEF90Ctx%fileExoUnit = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
+            Select Case (GlobalOptions%FileFormat)
+            Case (MEF90FileFormat_EXOSplit)
+               Call DMmeshViewExodusSplit(mesh,MEF90Ctx%fileExoUnit,ierr)
+            Case (MEF90FileFormat_EXOSingle)
+               Write(filename,102) trim(MEF90Ctx%prefix)
+               exoUnitIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
+               Call EXCOPY(exoUnitIN,MEF90Ctx%fileExoUnit,exoErr)
+               Call EXCLOS(exoUnitIN,exoErr)
+            End Select
+         Else
+            MEF90Ctx%fileExoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
          EndIf
       End If
    102 Format(A,'.gen')

@@ -112,7 +112,7 @@ Contains
             Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do
          !flops = 5 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(MatElem)
       End If
@@ -157,9 +157,9 @@ Contains
             End Do
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do      
-         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(Gloc)
          DeAllocate(Uloc)
       End If
@@ -212,7 +212,7 @@ Contains
          End Do
       
          !flops = (5 * elemType%numDof * size(elem(1)%Gauss_C) + 1) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(Gloc)
@@ -253,7 +253,7 @@ Contains
          End Do
       
          !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
@@ -298,7 +298,7 @@ Contains
          End Do
       
          !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
@@ -341,7 +341,7 @@ Contains
          End Do
       
          !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
@@ -390,7 +390,7 @@ Contains
          End Do
       
          !flops = 5 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
          DeAllocate(e0loc)
@@ -431,7 +431,7 @@ Contains
          End Do
       
          !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
@@ -473,7 +473,7 @@ Contains
          End Do
       
          !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
@@ -520,7 +520,7 @@ Contains
          End Do
       
          !flops = 5 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
          DeAllocate(Floc)
@@ -566,7 +566,7 @@ Contains
          End Do ! cell
       
          !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
@@ -610,7 +610,7 @@ Contains
          End Do ! cell
       
          !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
@@ -664,7 +664,7 @@ Contains
          End Do ! cell
       
          !flops = 5 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
          DeAllocate(pressureloc)
@@ -707,7 +707,7 @@ Contains
          End Do
       
          !flops = (2 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
@@ -750,7 +750,7 @@ Contains
          End Do
       
          !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
@@ -794,7 +794,7 @@ Contains
          End Do
       
          !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(floc)
@@ -836,7 +836,7 @@ Contains
          End Do
       
          !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
@@ -909,7 +909,7 @@ Contains
             End If
          End Do ! cell
          !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(temperatureloc)
