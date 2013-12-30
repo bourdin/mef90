@@ -84,7 +84,7 @@ Program ThermoElasticity
    Type(PC)                                           :: pcDisp
    Type(Mat)                                          :: matDisp
    Type(MatNullSpace)                                 :: nspDisp
-   PetscReal                                          :: rtol,dtol
+   PetscReal                                          :: rtol,dtol,atol
           
    PetscBool                                          :: flg
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
@@ -183,7 +183,7 @@ Program ThermoElasticity
    Call MatSetOption(matDisp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetFromOptions(matDisp,ierr);CHKERRQ(ierr)
 
-   If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiSTatic) Then
+   If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
       Call SNESCreate(PETSC_COMM_WORLD,snesDisp,ierr);CHKERRQ(ierr)
       Call SNESSetApplicationContext(snesDisp,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
       Call SNESSetDM(snesDisp,MEF90DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
@@ -191,6 +191,9 @@ Program ThermoElasticity
 
       Call SNESSetFunction(snesDisp,residualDisplacement,MEF90DefMechOperator,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
       Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearForm,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+      !atol = 1.0D-10
+      !rtol = 1.0D-10
+      !Call SNESSetTolerances(snesDisp,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
       Call SNESSetFromOptions(snesDisp,ierr);CHKERRQ(ierr)
       If (MEF90GlobalOptions%verbose > 0) Then
          Call SNESView(snesDisp,PETSC_VIEWER_STDOUT_WORLD,ierr)
@@ -210,8 +213,9 @@ Program ThermoElasticity
       !!!Call KSPSetNullSpace(kspDisp,nspDisp,ierr);CHKERRQ(ierr)
    End If
    rtol = 1.0D-8
+   atol = 1.0D-8
    dtol = 1.0D+10
-   Call KSPSetTolerances(kspDisp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+   Call KSPSetTolerances(kspDisp,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)
    
    !!! 
@@ -354,8 +358,8 @@ Program ThermoElasticity
       End Do
    End If
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
-101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5,"\n")
-102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5,"\n")
+101 Format("cell set ",I4," elastic energy: ",ES12.5," work: ",ES12.5,"\n")
+102 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5,"\n")
    !!! Clean up and exit nicely
    If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
