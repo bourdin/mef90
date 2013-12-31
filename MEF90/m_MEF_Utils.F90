@@ -217,6 +217,43 @@ Contains
       Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)   
    End Subroutine MEF90_VecSetValuesISdof      
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DMMeshCreateGlobalVector"
+!!!
+!!!  
+!!!  MEF90DMMeshCreateGlobalVector: Manually create a global vector and set the block size properly
+!!!  
+!!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DMMeshCreateGlobalVector(Mesh,globalVec,ierr)
+      Type(DM),Intent(IN)                 :: Mesh
+      Type(Vec),Intent(OUT)               :: globalVec
+      PetscErrorCode,Intent(OUT)          :: ierr
+      
+      PetscInt                            :: bs
+      PetscInt                            :: localSize,globalSize,numCell,bsC,bsV
+      Type(SectionReal)                   :: defaultSection
+
+
+      !!! Try to get the block size by getting the fiber size for the first cell and vertex
+      Call DMMeshGetSectionReal(Mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
+      Call SectionRealGetFiberDimension(defaultSection,0,bs,ierr);CHKERRQ(ierr)
+      If (bs == 0) Then
+         Call DMMeshGetStratumSize(Mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+         Call SectionRealGetFiberDimension(defaultSection,numCell,bs,ierr);CHKERRQ(ierr)
+      End If
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+
+      Call DMGetGlobalVector(Mesh,globalVec,ierr);CHKERRQ(ierr)
+      Call VecGetLocalSize(globalVec,localSize,ierr)
+      Call VecGetSize(globalVec,globalSize,ierr)
+      Call DMRestoreGlobalVector(Mesh,globalVec,ierr);CHKERRQ(ierr)
+
+      Call VecCreate(PETSC_COMM_WORLD,globalVec,ierr);CHKERRQ(ierr)
+      Call VecSetSizes(globalVec,localSize,globalsize,ierr);CHKERRQ(ierr)
+      Call VecSetBlockSize(globalVec,bs,ierr);CHKERRQ(ierr)
+      Call VecSetFromOptions(globalVec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DMMeshCreateGlobalVector
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_AskInt"

@@ -55,7 +55,7 @@ Module m_MEF_Ctx
    Enum,bind(c)
       Enumerator ::  MEF90Scaling_CST=0,        &
                      MEF90Scaling_Linear,       &  
-                     MEF90Scaling_Null,       &  
+                     MEF90Scaling_Null,         &  
                      MEF90Scaling_File
    End Enum
    Character(len=MEF90_MXSTRLEN),dimension(7),protected  :: MEF90ScalingList

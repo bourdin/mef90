@@ -71,13 +71,15 @@ Program ThermoElasticity
    Type(IS)                                           :: setIS,cellIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
-   Type(SectionReal)                                  :: defaultSection
+   Type(SectionReal)                                  :: defaultSection,coordSec
    Type(Vec),target                                   :: displacement
    Type(Vec),target                                   :: boundaryDisplacement
    Type(Vec),target                                   :: force
    Type(Vec),target                                   :: pressureForce
    Type(Vec)                                          :: residualDisplacement
+   Type(Vec)                                          :: coordVec
    PetscReal,Dimension(:),Pointer                     :: time,energy,work
+   Type(VecScatter)                                   :: ScatterSecToVec
 
    Type(SNES)                                         :: snesDisp
    Type(KSP)                                          :: kspDisp
@@ -155,23 +157,23 @@ Program ThermoElasticity
    Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
 
    !!! Create vectors
-   Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,Displacement,ierr);CHKERRQ(ierr)
+   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%DMVect,Displacement,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(Displacement,"Displacement",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%Displacement => Displacement
 
-   Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,boundaryDisplacement,ierr);CHKERRQ(ierr)
+   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%DMVect,boundaryDisplacement,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(boundaryDisplacement,"boundary Displacement",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%boundaryDisplacement => boundaryDisplacement
    
-   Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMVect,force,ierr);CHKERRQ(ierr)
+   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%cellDMVect,force,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(force,"Force",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%Force => Force
 
-   Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMScal,pressureForce,ierr);CHKERRQ(ierr)
+   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%cellDMScal,pressureForce,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(pressureForce,"Pressure Force",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%pressureForce => pressureForce
 
-   Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,residualDisplacement,ierr);CHKERRQ(ierr)
+   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%DMVect,residualDisplacement,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDisplacement,"residualDisplacement",ierr);CHKERRQ(ierr)
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
@@ -181,6 +183,18 @@ Program ThermoElasticity
    Call MatSetOption(matDisp,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetOption(matDisp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetOption(matDisp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
+   If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'coordinates',coordSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,coordSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%DMVect,coordVec,ierr)
+      Call SectionRealToVec(coordSec,ScatterSecToVec,SCATTER_FORWARD,coordVec,ierr);CHKERRQ(ierr)
+      Call MatNullSpaceCreateRigidBody(coordVec,nspDisp,ierr);CHKERRQ(ierr)
+      Call MatSetNearNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
+      !!!Call MatSetNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
+      Call MatNullSpaceDestroy(nspDisp,ierr);CHKERRQ(ierr)
+   End If
+
+
    Call MatSetFromOptions(matDisp,ierr);CHKERRQ(ierr)
 
    If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
@@ -198,10 +212,6 @@ Program ThermoElasticity
       If (MEF90GlobalOptions%verbose > 0) Then
          Call SNESView(snesDisp,PETSC_VIEWER_STDOUT_WORLD,ierr)
       End If
-   End If
-   If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
-      !!!Call MatNullSpaceCreateRigidBody(Vec coords,nspDisp,ierr);CHKERRQ(ierr))
-      !!!Call MatSetNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
    End If
    !!! 
    !!! Set some KSP options
