@@ -143,6 +143,10 @@ Program TestHeatXfer
    Call MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
    Call MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
+   If (MEF90HeatXferGlobalOptions%addNullSpace) Then
+      Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
+      Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
+   End If
    Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
 
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
@@ -182,10 +186,6 @@ Program TestHeatXfer
       If (MEF90GlobalOptions%verbose > 0) Then
          Call TSView(tsTemp,PETSC_VIEWER_STDOUT_WORLD,ierr)
       End If
-   End If
-   If (MEF90HeatXferGlobalOptions%addNullSpace) Then
-      Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
-      Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
    End If
    !!! 
    !!! Set some KSP options
