@@ -10,7 +10,7 @@ Program ThermoElasticity
    Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
-                                                         PETSC_FALSE,         & ! addDisplacementNullSpace
+                                                         PETSC_TRUE,          & ! disp_addNullSpace
                                                          1,                   & ! DisplacementOffset
                                                          3,                   & ! DamageOffset
                                                          4,                   & ! boundaryDisplacementOffset
@@ -25,7 +25,7 @@ Program ThermoElasticity
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
-                                                         PETSC_FALSE,         & ! addDisplacementNullSpace
+                                                         PETSC_TRUE,          & ! disp_addNullSpace
                                                          1,                   & ! DisplacementOffset
                                                          4,                   & ! DamageOffset
                                                          5,                   & ! boundaryDisplacementOffset
@@ -80,8 +80,11 @@ Program ThermoElasticity
    Type(Vec)                                          :: coordVec
    PetscReal,Dimension(:),Pointer                     :: time,energy,work
    Type(VecScatter)                                   :: ScatterSecToVec
+   PetscReal,Dimension(:,:),Pointer                   :: coordPtr
+   PetscReal,Dimension(:),Pointer                     :: coordPCPtr
 
    Type(SNES)                                         :: snesDisp
+   SNESConvergedReason                                :: snesDispConvergedReason
    Type(KSP)                                          :: kspDisp
    Type(PC)                                           :: pcDisp
    Type(Mat)                                          :: matDisp
@@ -192,6 +195,8 @@ Program ThermoElasticity
       Call MatSetNearNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
       !!!Call MatSetNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
       Call MatNullSpaceDestroy(nspDisp,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(coordSec,ierr);CHKERRQ(ierr)
+      Call VecDestroy(coordVec,ierr);CHKERRQ(ierr)
    End If
 
 
@@ -219,15 +224,23 @@ Program ThermoElasticity
    Call SNESGetKSP(snesDisp,kspDisp,ierr);CHKERRQ(ierr)
    Call KSPSetType(kspDisp,KSPCG,ierr);CHKERRQ(ierr)
    Call KSPSetInitialGuessNonzero(kspDisp,PETSC_TRUE,ierr);CHKERRQ(ierr)
-   If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
-      !!!Call KSPSetNullSpace(kspDisp,nspDisp,ierr);CHKERRQ(ierr)
-   End If
    rtol = 1.0D-8
    atol = 1.0D-8
    dtol = 1.0D+10
    Call KSPSetTolerances(kspDisp,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
    Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)
-   
+
+
+   ! set coordinates in PC for GAMG
+   Call KSPGetPC(kspDisp,pcDisp,ierr);CHKERRQ(ierr)
+   Call DMMeshGetCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
+   Allocate(coordPCPtr(size(CoordPtr)))
+   coordPCPtr = reshape(transpose(coordPtr),[size(CoordPtr)])
+   coordPCPtr = reshape((coordPtr),[size(CoordPtr)])
+   !Call PCSetCoordinates(pcDisp,dim,size(coordPtr),coordPCPtr,ierr);CHKERRQ(ierr)
+   DeAllocate(coordPCPtr)
+   Call DMMeshRestoreCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
+   Call PCSetFromOptions(pcDisp,ierr);CHKERRQ(ierr)
    !!! 
    !!! Allocate array of works and energies
    !!!
@@ -318,6 +331,9 @@ Program ThermoElasticity
          Call MEF90DefMechUpdateboundaryDisplacement(displacement,MEF90DefMechCtx,ierr)
          !!! Solve SNES
          Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,Displacement,ierr);CHKERRQ(ierr)
+         Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,*) "SNESConvergedReason returned ",snesDispConvergedReason,"\n"
+         Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
          
          !!! Compute energies
          energy = 0.0_Kr
