@@ -13,6 +13,7 @@ Program TestNSP
    Type(MatNullSpace)                  :: nspDisp
    Type(Vec)                           :: coordVec,tmpVec
    PetscReal,Dimension(:,:),Pointer    :: coordPtr
+   PetscReal,Dimension(:),Pointer      :: coordPCPtr
    Type(SectionReal)                   :: defaultSection,coordSec
    Type(VecScatter)                    :: ScatterSecToVec
    PetscBool                           :: flg
@@ -69,6 +70,10 @@ Program TestNSP
 100 Format("[",I3.3,"]: ",A,"\n")
 102 Format("[",I3.3,"]: ",I3.3,"  ", 2(F5.2,"  "),"\n")
 103 Format("[",I3.3,"]: ",I3.3,"  ", 3(F5.2,"  "),"\n")
+   Allocate(coordPCPtr(size(CoordPtr)))
+   coordPCPtr = reshape(transpose(coordPtr),[size(CoordPtr)])
+   Write(*,*) "CoordPCPtr",size(CoordPtr)
+   Write(*,*) coordPCPtr
    Call DMMeshRestoreCoordinatesF90(mesh,coordPtr,ierr);
 
 

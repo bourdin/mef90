@@ -406,7 +406,7 @@ Contains
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%mode,MEF90DefMech_ModeList,default%mode,'DefMech_mode','Type of heat transfer computation',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'addDisplacementNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'disp_addNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%displacementOffset,default%displacementOffset,'displacement_Offset','Position of displacement field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%damageOffset,default%damageOffset,'damage_Offset','Position of damage field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDamageOffset,default%damageOffset,'boundaryDamage_Offset','Position of boundary damage field in EXO file',ierr);CHKERRQ(ierr)
