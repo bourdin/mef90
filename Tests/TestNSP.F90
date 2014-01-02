@@ -6,9 +6,9 @@ Program TestNSP
    Implicit NONE   
 
    PetscErrorCode                      :: ierr
-   Type(DM),target                     :: Mesh
+   Type(DM),target                     :: Mesh,MeshClone
    Character(len=MEF90_MXSTRLEN)       :: IOBuffer
-   PetscInt                            :: dim
+   PetscInt                            :: dim,bs
    Type(Mat)                           :: matDisp
    Type(MatNullSpace)                  :: nspDisp
    Type(Vec)                           :: coordVec,tmpVec
@@ -44,6 +44,7 @@ Program TestNSP
    !!! Get DM from mesh
    Call MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
+   Call DMSetBlockSize(Mesh,dim,ierr);CHKERRQ(ierr)
    Call DMMeshSetMaxDof(Mesh,dim,ierr);CHKERRQ(ierr) 
    Call DMMeshGetVertexSectionReal(Mesh,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
    Call DMMeshSetSectionReal(Mesh,"default",defaultSection,ierr);CHKERRQ(ierr)
@@ -72,27 +73,44 @@ Program TestNSP
 103 Format("[",I3.3,"]: ",I3.3,"  ", 3(F5.2,"  "),"\n")
    Allocate(coordPCPtr(size(CoordPtr)))
    coordPCPtr = reshape(transpose(coordPtr),[size(CoordPtr)])
-   Write(*,*) "CoordPCPtr",size(CoordPtr)
-   Write(*,*) coordPCPtr
    Call DMMeshRestoreCoordinatesF90(mesh,coordPtr,ierr);
 
 
 
    Call DMMeshGetSectionReal(Mesh,'coordinates',coordSec,ierr);CHKERRQ(ierr)
    Call DMMeshCreateGlobalScatter(Mesh,coordSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
-   Call MEF90DMMeshCreateGlobalVector(Mesh,coordVec,ierr)
+   Call DMCreateGlobalVector(Mesh,coordVec,ierr)
    Call SectionRealToVec(coordSec,ScatterSecToVec,SCATTER_FORWARD,coordVec,ierr);CHKERRQ(ierr)
    !Call SectionRealView(coordSec,PETSC_VIEWER_STDOUT_WORLD,ierr)
    !Call VecView(coordVec,PETSC_VIEWER_STDOUT_WORLD,ierr)
 
-   Call MatNullSpaceCreateRigidBody(coordVec,nspDisp,ierr);CHKERRQ(ierr);
+   Call MatNullSpaceCreateRigidBody(coordVec,nspDisp,ierr);CHKERRQ(ierr)
    Call MatNullSpaceView(nspDisp,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-   Call MatSetNearNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr);
-   Call MatNullSpaceDestroy(nspDisp,ierr);CHKERRQ(ierr);
+   Call MatSetNearNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
+   Call MatNullSpaceDestroy(nspDisp,ierr);CHKERRQ(ierr)
+   
+   Call DMMeshClone(Mesh,MeshClone,ierr);CHKERRQ(ierr)
+   Call DMSetBlockSize(MeshClone,1,ierr);CHKERRQ(ierr)
+   Call DMMeshSetMaxDof(MeshClone,1,ierr);CHKERRQ(ierr) 
+   Call DMMeshGetVertexSectionReal(MeshClone,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(MeshClone,"default",defaultSection,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+
+   Call DMCreateGlobalVector(MeshClone,coordVec,ierr)
+   Call VecGetBlockSize(coordVec,bs,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) 'Block size for Vec created from MeshClone: ',bs,'\n'
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   Call VecDestroy(coordVec,ierr);CHKERRQ(ierr)
+   Call DMCreateGlobalVector(Mesh,coordVec,ierr)
+   Call VecGetBlockSize(coordVec,bs,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) 'Block size for Vec created from Mesh: ',bs,'\n'
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   Call VecDestroy(coordVec,ierr);CHKERRQ(ierr)
+   
+   
    
    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
    Call VecDestroy(coordVec,ierr);CHKERRQ(ierr)
-
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
    Call MEF90Ctx_Destroy(MEF90Ctx,ierr);CHKERRQ(ierr)   
    Call MEF90_Finalize(ierr)
