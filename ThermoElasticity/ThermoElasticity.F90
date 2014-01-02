@@ -112,7 +112,8 @@ Program ThermoElasticity
    !!! Get DM from mesh
    Call MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
-   Call DMMeshSetMaxDof(mesh,dim,ierr);CHKERRQ(ierr) 
+   Call DMMeshSetMaxDof(Mesh,dim,ierr);CHKERRQ(ierr) 
+   Call DMSetBlockSize(Mesh,dim,ierr);CHKERRQ(ierr)
    
    !!! Open output file
    Call MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
@@ -160,23 +161,23 @@ Program ThermoElasticity
    Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
 
    !!! Create vectors
-   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%DMVect,Displacement,ierr);CHKERRQ(ierr)
+   Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,Displacement,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(Displacement,"Displacement",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%Displacement => Displacement
 
-   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%DMVect,boundaryDisplacement,ierr);CHKERRQ(ierr)
+   Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,boundaryDisplacement,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(boundaryDisplacement,"boundary Displacement",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%boundaryDisplacement => boundaryDisplacement
    
-   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%cellDMVect,force,ierr);CHKERRQ(ierr)
+   Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMVect,force,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(force,"Force",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%Force => Force
 
-   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%cellDMScal,pressureForce,ierr);CHKERRQ(ierr)
+   Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMScal,pressureForce,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(pressureForce,"Pressure Force",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%pressureForce => pressureForce
 
-   Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%DMVect,residualDisplacement,ierr);CHKERRQ(ierr)
+   Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,residualDisplacement,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDisplacement,"residualDisplacement",ierr);CHKERRQ(ierr)
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
@@ -189,7 +190,7 @@ Program ThermoElasticity
    If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'coordinates',coordSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,coordSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
-      Call MEF90DMMeshCreateGlobalVector(MEF90DefMechCtx%DMVect,coordVec,ierr)
+      Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,coordVec,ierr)
       Call SectionRealToVec(coordSec,ScatterSecToVec,SCATTER_FORWARD,coordVec,ierr);CHKERRQ(ierr)
       Call MatNullSpaceCreateRigidBody(coordVec,nspDisp,ierr);CHKERRQ(ierr)
       Call MatSetNearNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
