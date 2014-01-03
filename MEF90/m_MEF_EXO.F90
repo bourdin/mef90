@@ -29,7 +29,7 @@ Contains
 !!!  
 !!!  MEF90Ctx_GetDMMeshEXO:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr)
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
@@ -77,7 +77,7 @@ Contains
 !!!  
 !!!  MEF90Ctx_OpenEXO:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
@@ -143,7 +143,7 @@ Contains
 !!!  
 !!!  MEF90Ctx_CloseEXO:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90Ctx_CloseEXO(MEF90Ctx,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
@@ -370,7 +370,7 @@ Contains
 !!!  
 !!!  MEF90EXOFormat:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 Subroutine MEF90EXOFormat(exoid,NameG,NameC,NameV,ierr)
    Integer,Intent(IN)                                 :: exoid

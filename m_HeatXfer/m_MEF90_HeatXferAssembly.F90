@@ -21,7 +21,7 @@ Contains
 !!!  MEF90HeatXferOperator: Build the operator. When called in SNES, the solution time should always match the target time, 
 !!!                         so there is no need for interpolation of the fluxes, external, and boundary values
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
@@ -196,7 +196,7 @@ Contains
 !!!  
 !!!  MEF90HeatXferBilinearForm:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
@@ -286,7 +286,7 @@ Contains
 !!!  
 !!!  MEF90HeatXFerEnergy:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
       Type(Vec),Intent(IN)                            :: temperatureVec

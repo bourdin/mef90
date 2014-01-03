@@ -161,7 +161,7 @@ Contains
 !!!  
 !!!  DiffusionOperatorAddTransientTermSet:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine DiffusionOperatorAddTransientTermSet(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: G

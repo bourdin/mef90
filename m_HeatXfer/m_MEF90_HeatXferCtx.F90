@@ -181,7 +181,7 @@ Contains
 !!!  
 !!!  MEF90HeatXferCtx_InitializePrivate:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferCtx_InitializePrivate(ierr)
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -210,7 +210,7 @@ Contains
 !!!  
 !!!  MEF90HeatXferCtx_Create:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferCtx_Create(HeatXferCtx,Mesh,MEF90Ctx,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(OUT)            :: HeatXferCtx
@@ -265,7 +265,7 @@ Contains
 !!!  
 !!!  MEF90HeatXferCtx_Destroy:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferCtx_Destroy(HeatXferCtx,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(OUT)         :: HeatXferCtx
@@ -298,7 +298,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90HeatXferCtxGlobalOptions:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90HeatXferCtxGlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
@@ -334,7 +334,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90HeatXferCtxCellSetOptions:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
@@ -361,7 +361,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90HeatXferCtxVertexSetOptions:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90HeatXferCtxVertexSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                              :: bag
@@ -384,7 +384,7 @@ Contains
 !!!  
 !!!  MEF90HeatXferCtx_SetFromOptions:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferCtx_SetFromOptions(heatXferCtx,prefix,defaultGlobalOptions, &
                                               defaultCellSetOptions,defaultVertexSetOptions,ierr)

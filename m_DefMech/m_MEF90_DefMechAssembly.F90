@@ -19,7 +19,7 @@ Contains
 !!!  MEF90DefMechOperator: Build the operator. When called in SNES, the solution time should always match the target time, 
 !!!                         so there is no need for interpolation of the forcees, external, and boundary values
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechOperator(snesDisplacement,x,residual,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesDisplacement
@@ -214,7 +214,7 @@ Contains
 !!!  
 !!!  MEF90DefMechBilinearForm:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechBilinearForm(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesDispl
@@ -399,7 +399,7 @@ Contains
 !!!  
 !!!  MEF90DefMechElasticEnergy: 
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechElasticEnergy(x,MEF90DefMechCtx,energy,ierr)
       Type(Vec),Intent(IN)                               :: x
