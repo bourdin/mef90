@@ -220,7 +220,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtx_InitializePrivate:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechCtx_InitializePrivate(ierr)
       PetscErrorCode,Intent(OUT)                         :: ierr
@@ -268,7 +268,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtx_Create:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechCtx_Create(DefMechCtx,Mesh,MEF90Ctx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(OUT)                   :: DefMechCtx
@@ -351,7 +351,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtx_Destroy:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechCtx_Destroy(DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(OUT)          :: DefMechCtx
@@ -391,7 +391,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90DefMechCtxGlobalOptions:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                                 :: bag
@@ -430,7 +430,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90DefMechCtxCellSetOptions:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
@@ -465,7 +465,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90DefMechCtxVertexSetOptions:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                              :: bag
@@ -492,7 +492,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtx_SetFromOptions:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 !   Subroutine MEF90DefMechCtx_SetFromOptions(DefMechCtx,prefix,defaultGlobalOptions, &
 !                                              defaultCellSetOptions,cellSetNames,    &

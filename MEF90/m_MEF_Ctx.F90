@@ -92,7 +92,7 @@ Contains
 !!!  
 !!!  MEF90Ctx_InitializePrivate:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90Ctx_InitializePrivate(ierr)
       PetscErrorCode,Intent(OUT)                   :: ierr
@@ -137,7 +137,7 @@ Contains
 !!!  
 !!!  PetscBagGetDataMEF90CtxGlobalOptions:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagGetDataMEF90CtxGlobalOptions(bag,data,ierr)
       PetscBag                                        :: bag
@@ -153,7 +153,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90CtxGlobalOptions:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90CtxGlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                        :: bag
@@ -180,7 +180,7 @@ Contains
 !!!  
 !!!  MEF90Ctx_Create:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 Subroutine MEF90Ctx_Create(comm,MEF90Ctx,default,ierr)
       MPI_Comm,Intent(IN)                          :: comm
@@ -233,7 +233,7 @@ End Subroutine MEF90Ctx_Create
 !!!  
 !!!  MEF90Ctx_Destroy:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 Subroutine MEF90Ctx_Destroy(MEF90Ctx,ierr)
    Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
@@ -249,7 +249,7 @@ End Subroutine MEF90Ctx_Destroy
 !!!  
 !!!  MEF90Ctx_GetTimeArray:
 !!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90Ctx_GetTime(MEF90Ctx,t,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx

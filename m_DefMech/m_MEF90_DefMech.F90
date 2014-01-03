@@ -25,7 +25,7 @@ Contains
 !!!  
 !!!  MEF90DefMechSetTransients:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechSetTransients(MEF90DefMechCtx,step,time,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: MEF90DefMechCtx
@@ -77,7 +77,7 @@ Contains
 !!!  
 !!!  MEF90DefMechSetForceCst:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechSetForceCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
@@ -130,7 +130,7 @@ Contains
 !!!  
 !!!  MEF90DefMechSetPressureForceCst:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechSetPressureForceCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
@@ -183,7 +183,7 @@ Contains
 !!!  
 !!!  MEF90DefMechSetBoundaryDisplacementCst:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechSetBoundaryDisplacementCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
@@ -344,7 +344,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
 !!!  MEF90DefMechOperator: wraps calls to MEF90DefMechOperator from m_MEF90_DefMechAssembly
 !!!                        since overloading cannot be used here
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechOperator(snesTemp,x,residual,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
@@ -369,7 +369,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
 !!!  MEF90DefMechBilinearForm: wraps calls to MEF90DefMechBilinearForm from m_MEF90_DefMechAssembly
 !!!                            since overloading cannot be used here
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechBilinearForm(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesDispl
@@ -395,7 +395,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
 !!!  MEF90DefMechWork: wraps calls to MEF90DefMechWork from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechWork(DisplacementVec,MEF90DefMechCtx,work,ierr)
       Type(Vec),Intent(IN)                            :: DisplacementVec
@@ -419,7 +419,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
 !!!  MEF90DefMechElasticEnergy: wraps calls to MEF90DefMechElasticEnergy from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechElasticEnergy(x,MEF90DefMechCtx,energy,ierr)
       Type(Vec),Intent(IN)                               :: x

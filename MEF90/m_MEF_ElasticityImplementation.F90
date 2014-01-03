@@ -171,7 +171,7 @@ Contains
 !!!  
 !!!  ElasticityOperatorAddTransientTermSet:
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine ElasticityOperatorAddTransientTermSet(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: G
@@ -531,7 +531,7 @@ Contains
 #define __FUNCT__ "ElasticityPressureForceRHSSetCst"
 !!!
 !!!   ElasticityPressureForceRHSSetCst contribution of a constant pressure force to a residual
-!!!   (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!   (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine ElasticityPressureForceRHSSetCst(RHS,mesh,pressure,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
@@ -576,7 +576,7 @@ Contains
 #define __FUNCT__ "ElasticityPressureForceRHSSetCell"
 !!!
 !!!   ElasticityPressureForceRHSSetCell contribution of a cell-based pressure force to a residual
-!!!   (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!   (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine ElasticityPressureForceRHSSetCell(RHS,mesh,pressureSec,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
@@ -621,7 +621,7 @@ Contains
 #define __FUNCT__ "ElasticityPressureForceRHSSetVertex"
 !!!
 !!!   ElasticityPressureForceRHSSetVertex contribution of a FE-based pressure force to a residual
-!!!   (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!   (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine ElasticityPressureForceRHSSetVertex(RHS,meshDisplacement,meshPressure,pressureSec,cellIS,elemDisplacement,elemDisplacementType,elemPressure,elemPressureType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
@@ -850,7 +850,7 @@ Contains
    !!!                        It is assumed that the temperature is interpolated on the FE space while the plastic strain 
    !!!                        is cell-based
    !!!  
-   !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+   !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
    !!!
    Subroutine ElasticityEnergySet(energy,x,plasticStrain,temperature,mesh,cellIS,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
       PetscReal,Intent(OUT)                              :: energy

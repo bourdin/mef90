@@ -36,7 +36,7 @@ Contains
 !!!  MEF90HeatXferSetTransients: Update all transient data (boundary / external temperature and fluxes)
 !!!                              using the proper scaling law
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(INOUT)       :: MEF90HeatXferCtx
@@ -88,7 +88,7 @@ Contains
 !!!  
 !!!  MEF90HeatXferSetFluxCst: low level function called by MEF90HeatXferSetTransients
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferSetFluxCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
@@ -135,7 +135,7 @@ Contains
 !!!
 !!!  MEF90HeatXferSetexternalTemperatureCst: low level function called by MEF90HeatXferSetTransients
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferSetexternalTemperatureCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
@@ -183,7 +183,7 @@ Contains
 !!!
 !!!  MEF90HeatXferSetboundaryTemperatureCst: low level function called by MEF90HeatXferSetTransients
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferSetboundaryTemperatureCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
@@ -333,7 +333,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  MEF90HeatXferOperator: wraps calls to MEF90HeatXferOperator from m_MEF90_HeatXferAssembly
 !!!                         since overloading cannot be used here
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
@@ -358,7 +358,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  MEF90HeatXferBilinearForm: wraps calls to MEF90HeatXferBilinearForm from m_MEF90_HeatXferAssembly
 !!!                             since overloading cannot be used here
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
@@ -385,7 +385,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  MEF90HeatXFerEnergy: wraps calls to MEF90HeatXferEnergy from m_MEF90_HeatXferAssembly
 !!!                       since overloading cannot be used here
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
       Type(Vec),Intent(IN)                            :: temperatureVec
@@ -411,7 +411,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  MEF90HeatXFerIFunction: wraps calls to MEF90HeatXFerIFunction from m_MEF90_HeatXferAssembly
 !!!                         since overloading cannot be used here
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXFerIFunction(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr)
       Type(TS),Intent(IN)                             :: tempTS
@@ -438,7 +438,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  MEF90HeatXferIJacobian: wraps calls to MEF90HeatXferIJacobian from m_MEF90_HeatXferAssembly
 !!!                         since overloading cannot be used here
 !!!  
-!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferIJacobian(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr)
       Type(TS),Intent(IN)                             :: tempTS
