@@ -122,11 +122,13 @@ m_MEF_MassMatrixImplementation_MEF90Element2D_Elast.o: ${MEF90_DIR}/MEF90/m_MEF_
         m_MEF_Elements.o \
         m_MEF_Parameters.o \
         m_MEF_Utils.o
+	@echo "      $< MEF90Element2D_Elast"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element2D_Elast -c -o $@ $<
 m_MEF_MassMatrixImplementation_MEF90Element3D_Scal.o: ${MEF90_DIR}/MEF90/m_MEF_MassMatrixImplementation.F90 \
         m_MEF_Elements.o \
         m_MEF_Parameters.o \
         m_MEF_Utils.o
+	@echo "      $< MEF90Element3DScal"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Scal -c -o $@ $<
 m_MEF_MassMatrixImplementation_MEF90Element3D_Vect.o: ${MEF90_DIR}/MEF90/m_MEF_MassMatrixImplementation.F90 \
         m_MEF_Elements.o \

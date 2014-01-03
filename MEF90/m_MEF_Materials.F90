@@ -164,7 +164,7 @@ Contains
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
       
       Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
-      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr)
+      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-2)] (rho) Density',ierr)
       Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
       Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
       matprop%ThermalConductivity = default%ThermalConductivity
