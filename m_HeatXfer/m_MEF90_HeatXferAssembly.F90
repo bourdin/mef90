@@ -9,7 +9,9 @@ Module MEF90_APPEND(m_MEF90_HeatXferAssembly,MEF90_DIM)D
    Private
    Public MEF90HeatXferOperator, &
           MEF90HeatXferBilinearForm, &
-          MEF90HeatXFerEnergy
+          MEF90HeatXFerEnergy, &
+          MEF90HeatXFerIFunction, &
+          MEF90HeatXferIJacobian
 
 Contains
 #undef __FUNCT__
@@ -356,4 +358,122 @@ Contains
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXFerEnergy
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXFerIFunction"
+!!!
+!!!  
+!!!  MEF90HeatXFerIFunction:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXFerIFunction(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr)
+      Type(TS),Intent(IN)                             :: tempTS
+      PetscReal,Intent(IN)                            :: time
+      Type(Vec),Intent(IN)                            :: x,xdot
+      Type(Vec),Intent(INOUT)                         :: F
+      Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                      :: ierr
+      
+      Type(SNES)                                      :: tempSNES
+      Type(SectionReal)                               :: FSec,xdotSec
+      Type(IS)                                        :: CellSetGlobalIS,setIS
+      PetscInt,Dimension(:),Pointer                   :: setID
+      PetscInt                                        :: set
+      Type(VecScatter)                                :: ScatterSecToVec
+      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+      Type(MEF90Element_Type)                         :: elemType
+      PetscInt                                        :: QuadratureOrder
+      Type(MEF90_MATPROP),pointer                     :: matpropSet
+      Type(MEF90HeatXferCellSetOptions_Type),pointer  :: cellSetOptions
+
+      Call TSGetSNES(tempTS,tempSNES,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xdotSec,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',FSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%DM,xdotSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(xdotSec,ScatterSecToVec,SCATTER_REVERSE,xdot,ierr);CHKERRQ(ierr)
+      Call SectionRealSet(Fsec,0.0_Kr,ierr);CHKERRQ(ierr)
+            
+      Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+         Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         
+         elemType = MEF90_knownElements(cellSetOptions%ElemTypeShortID)
+         QuadratureOrder = elemType%order * 2
+         Call MEF90Element_Create(MEF90HeatXferCtx%DM,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)   
+
+         Call MEF90DiffusionOperatorAddTransientTermSet(FSec,MEF90HeatXferCtx%DM,xdotSec,setIS,matpropSet%density*matpropSet%SpecificHeat,elem,elemType,ierr)
+         Call MEF90Element_Destroy(elem,ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      End Do
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+
+      !!! "Ghost update" for the residual Section
+      Call SectionRealComplete(FSec,ierr);CHKERRQ(ierr)
+      !!! Scatter back from SectionReal to Vec
+      Call SectionRealToVec(FSec,ScatterSecToVec,SCATTER_FORWARD,F,ierr);CHKERRQ(ierr)
+      Call MEF90HeatXferOperator(tempSNES,x,F,MEF90HeatXferCtx,ierr)
+      
+      Call SectionRealDestroy(FSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(xdotSec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90HeatXFerIFunction
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferIJacobian"
+!!!
+!!!  
+!!!  MEF90HeatXferIJacobian:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferIJacobian(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr)
+      Type(TS),Intent(IN)                             :: tempTS
+      PetscReal,Intent(IN)                            :: t
+      Type(Vec),Intent(IN)                            :: x,xdot
+      PetscReal,Intent(IN)                            :: shift
+      Type(Mat),Intent(INOUT)                         :: A,M
+      MatStructure,Intent(INOUT)                      :: flg
+      Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                      :: ierr  
+
+      Type(SNES)                                      :: tempSNES
+      Type(SectionReal)                               :: xSec
+      Type(IS)                                        :: CellSetGlobalIS,setIS
+      PetscInt,Dimension(:),Pointer                   :: setID
+      PetscInt                                        :: set
+      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+      Type(MEF90Element_Type)                         :: elemType
+      PetscInt                                        :: QuadratureOrder
+      Type(MEF90_MATPROP),pointer                     :: matpropSet
+      Type(MEF90HeatXferCellSetOptions_Type),pointer  :: cellSetOptions
+
+      Call TSGetSNES(tempTS,tempSNES,ierr);CHKERRQ(ierr)
+            
+      Call DMMeshGetSectionReal(MEF90HeatXferCtx%DM,'default',xSec,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+         Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         
+         elemType = MEF90_knownElements(cellSetOptions%ElemTypeShortID)
+         QuadratureOrder = elemType%order * 2
+         Call MEF90Element_Create(MEF90HeatXferCtx%DM,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)   
+
+         Call MEF90_MassMatrixAssembleSet(A,MEF90HeatXferCtx%DM,xSec,setIS,matpropSet%density*matpropSet%SpecificHeat,elem,elemType,ierr)
+         Call MEF90Element_Destroy(elem,ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      End Do
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+
+      Call MEF90HeatXferBilinearForm(tempSNES,x,A,M,flg,MEF90HeatXferCtx,ierr)
+   End Subroutine MEF90HeatXferIJacobian
 End Module MEF90_APPEND(m_MEF90_HeatXferAssembly,MEF90_DIM)D

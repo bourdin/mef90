@@ -5,13 +5,17 @@ Module m_MEF90_HeatXfer
    Use m_MEF90
    Use m_MEF90_HeatXferCtx
    Use m_MEF90_HeatXferAssembly2D, &
-      MEF90HeatXferEnergy2D => MEF90HeatXferEnergy, &
-      MEF90HeatXferOperator2D => MEF90HeatXferOperator, &
-      MEF90HeatXferBilinearForm2D => MEF90HeatXferBilinearForm
+      MEF90HeatXferEnergy2D      => MEF90HeatXferEnergy, &
+      MEF90HeatXferOperator2D    => MEF90HeatXferOperator, &
+      MEF90HeatXferBilinearForm2D => MEF90HeatXferBilinearForm, &
+      MEF90HeatXferIFunction2D    => MEF90HeatXferIFunction, &
+      MEF90HeatXferIJacobian2D    => MEF90HeatXferIJacobian
    Use m_MEF90_HeatXferAssembly3D, &
-      MEF90HeatXferEnergy3D => MEF90HeatXFerEnergy, &
-      MEF90HeatXferOperator3D => MEF90HeatXferOperator, &
-      MEF90HeatXferBilinearForm3D => MEF90HeatXferBilinearForm
+      MEF90HeatXferEnergy3D      => MEF90HeatXFerEnergy, &
+      MEF90HeatXferOperator3D    => MEF90HeatXferOperator, &
+      MEF90HeatXferBilinearForm3D => MEF90HeatXferBilinearForm, &
+      MEF90HeatXferIFunction3D    => MEF90HeatXferIFunction, &
+      MEF90HeatXferIJacobian3D    => MEF90HeatXferIJacobian
 
    Implicit none
 
@@ -21,11 +25,8 @@ Module m_MEF90_HeatXfer
    Public MEF90HeatXferEnergy
    Public MEF90HeatXferSetTransients
    Public MEF90HeatXferUpdateboundaryTemperature
-   !Public MEF90HeatXferCtx_Type
-   !Public MEF90HeatXferGlobalOptions_Type
-   !Public MEF90HeatXferCellSetOptions_Type
-   !Public MEF90HeatXferVertexSetOptions_Type
-   !Public MEF90HeatXFer_ModeSteadyState, MEF90HeatXFer_ModeTransient
+   Public MEF90HeatXferIFunction
+   Public MEF90HeatXferIJacobian
 Contains
 
 #undef __FUNCT__
@@ -368,6 +369,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       PetscErrorCode,Intent(OUT)                         :: ierr  
 
       PetscInt                                           :: dim      
+
       Call DMMeshGetDimension(MEF90HeatXferCtx%DM,dim,ierr);CHKERRQ(ierr)
       If (dim == 2) Then
          Call MEF90HeatXferBilinearForm2D(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
@@ -392,7 +394,8 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       PetscReal,Dimension(:),Pointer                  :: energy,work
       PetscErrorCode,Intent(OUT)                      :: ierr
 
-      PetscInt                                           :: dim      
+      PetscInt                                        :: dim      
+
       Call DMMeshGetDimension(MEF90HeatXferCtx%DM,dim,ierr);CHKERRQ(ierr)
       If (dim == 2) Then
          Call MEF90HeatXFerEnergy2D(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
@@ -400,4 +403,60 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
          Call MEF90HeatXFerEnergy3D(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
       End If      
    End Subroutine MEF90HeatXFerEnergy
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXFerIFunction"
+!!!
+!!!  
+!!!  MEF90HeatXFerIFunction: wraps calls to MEF90HeatXFerIFunction from m_MEF90_HeatXferAssembly
+!!!                         since overloading cannot be used here
+!!!  
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXFerIFunction(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr)
+      Type(TS),Intent(IN)                             :: tempTS
+      PetscReal,Intent(IN)                            :: time
+      Type(Vec),Intent(IN)                            :: x,xdot
+      Type(Vec),Intent(INOUT)                         :: F
+      Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                      :: ierr
+      
+      PetscInt                                           :: dim      
+
+      Call DMMeshGetDimension(MEF90HeatXferCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90HeatXFerIFunction2D(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr)
+      Else If (dim == 3) Then
+         Call MEF90HeatXFerIFunction3D(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr)
+      End If      
+   End Subroutine MEF90HeatXFerIFunction
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferIJacobian"
+!!!
+!!!  
+!!!  MEF90HeatXferIJacobian: wraps calls to MEF90HeatXferIJacobian from m_MEF90_HeatXferAssembly
+!!!                         since overloading cannot be used here
+!!!  
+!!!  (c) 2012-13 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferIJacobian(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr)
+      Type(TS),Intent(IN)                             :: tempTS
+      PetscReal,Intent(IN)                            :: t
+      Type(Vec),Intent(IN)                            :: x,xdot
+      PetscReal,Intent(IN)                            :: shift
+      Type(Mat),Intent(INOUT)                         :: A,M
+      MatStructure,Intent(INOUT)                      :: flg
+      Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                      :: ierr  
+      
+      PetscInt                                           :: dim      
+
+      Call DMMeshGetDimension(MEF90HeatXferCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90HeatXferIJacobian2D(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr)
+      Else If (dim == 3) Then
+         Call MEF90HeatXferIJacobian3D(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr)
+      End If      
+   End Subroutine MEF90HeatXferIJacobian
 End Module m_MEF90_HeatXfer

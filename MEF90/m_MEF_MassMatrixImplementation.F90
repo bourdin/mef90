@@ -9,8 +9,7 @@ Module MEF90_APPEND(m_MEF_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
    IMPLICIT NONE
 
    Private   
-   Public :: MEF90_MassMatrixAssembleSet
-   
+   Public :: MEF90_MassMatrixAssembleSet   
 
 Contains
 #undef __FUNCT__
@@ -52,5 +51,5 @@ Contains
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       DeAllocate(MatElem,stat=ierr)
-   End Subroutine MEF90_MassMatrixAssembleSet
+   End Subroutine MEF90_MassMatrixAssembleSet   
 End Module MEF90_APPEND(m_MEF_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
