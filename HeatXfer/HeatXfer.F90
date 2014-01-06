@@ -178,7 +178,7 @@ Program TestHeatXfer
       tsTempInitialStep = (time(size(time))-time(0)) / (size(time) + 0.0_Kr) / 10.0_Kr
       tsTempInitialTime = time(1)
       Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
-      Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
+!!!Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
       Call VecSet(temperature,MEF90HeatXferGlobalOptions%initialTemperature,ierr);CHKERRQ(ierr)
       Call TSSetSolution(tsTemp,temperature,ierr);CHKERRQ(ierr)
       Call TSSetExactFinalTime(tsTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
@@ -253,8 +253,15 @@ Program TestHeatXfer
          Call MEF90HeatXferUpdateboundaryTemperature(temperature,MEF90HeatXferCtx,ierr);
          Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,temperature,ierr);CHKERRQ(ierr)
       Case (MEF90HeatXFer_ModeTransient)
-         Call TSSetDuration(tsTemp,tsTempmaxIter,time(step),ierr);CHKERRQ(ierr)
-         Call TSSolve(tsTemp,temperature,time(step),ierr);CHKERRQ(ierr)
+         If (step > 1) Then
+            !!! Update fields
+            Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
+            !!! Solve SNES
+            Call MEF90HeatXferUpdateboundaryTemperature(temperature,MEF90HeatXferCtx,ierr);
+            Call TSSetDuration(tsTemp,tsTempmaxIter,time(step),ierr);CHKERRQ(ierr)
+            Call TSSolve(tsTemp,temperature,time(step),ierr);CHKERRQ(ierr)
+            Call TSGetSolution(tsTemp,temperature,ierr);CHKERRQ(ierr)
+         End If
       End Select
       !!! Compute energies
       Call MEF90HeatXFerEnergy(temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
@@ -272,6 +279,7 @@ Program TestHeatXfer
   
       
       !!! Save results
+Write(*,*) 'saving flux at offset', MEF90HeatXferGlobalOptions%fluxOffset
       Call DMGetLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
       If (MEF90HeatXferGlobalOptions%fluxOffset > 0) Then
          Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
@@ -289,6 +297,7 @@ Program TestHeatXfer
       Call DMRestoreLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
       
       Call DMGetLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
+Write(*,*) 'saving temperature at offset', MEF90HeatXferGlobalOptions%tempOffset
       If (MEF90HeatXferGlobalOptions%tempOffset > 0) Then
          Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
@@ -296,6 +305,7 @@ Program TestHeatXfer
                                   MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%tempOffset,ierr);CHKERRQ(ierr)
       End If
 
+Write(*,*) 'saving boundary temperature at offset', MEF90HeatXferGlobalOptions%boundaryTempOffset
       If (MEF90HeatXferGlobalOptions%boundaryTempOffset > 0) Then
          Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
@@ -314,7 +324,7 @@ Program TestHeatXfer
       Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
    End If
 
-   Call VecDestroy(Temperature,ierr);CHKERRQ(ierr)
+   !Call VecDestroy(Temperature,ierr);CHKERRQ(ierr)
    Call VecDestroy(residual,ierr);CHKERRQ(ierr)
    Call VecDestroy(RHS,ierr);CHKERRQ(ierr)
    
