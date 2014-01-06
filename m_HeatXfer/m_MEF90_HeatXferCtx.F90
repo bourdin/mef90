@@ -34,6 +34,7 @@ Module m_MEF90_HeatXferCtx_Type
       PetscInt                         :: externalTempOffset
       PetscInt                         :: fluxScaling
       PetscInt                         :: fluxOffset
+      PetscReal                        :: initialTemperature
       !!! offset  = position in data file (required for exodus)
       !!! scaling = time (step) scaling law currently CST, Linear, Null (not present) File
    End Type MEF90HeatXferGlobalOptions_Type
@@ -314,18 +315,17 @@ Contains
       Call PetscBagRegisterEnum(bag,HeatXferGlobalOptions%mode,MEF90HeatXFer_ModeList,default%mode,'heatxfer_mode','Type of heat transfer computation',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%addNullSpace,default%addNullSpace,'addNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,HeatXferGlobalOptions%tempOffset,default%tempOffset,'temp_Offset','Position of temperature field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,HeatXferGlobalOptions%initialTemperature,default%initialTemperature,'initialTemp','[K] (T): Initial Temperature' ,ierr);CHKERRQ(ierr)
 
-      !Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%boundaryTempCST,default%boundaryTempCST,'boundaryTemp_CST','Piecewise constant boundary temperature',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,HeatXferGlobalOptions%boundaryTempScaling,MEF90ScalingList,default%boundaryTempScaling,'boundaryTemp_scaling','Boundary temperature scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,HeatXferGlobalOptions%boundaryTempOffset,default%boundaryTempOffset,'boundaryTemp_Offset','Position of boundary temperature field in EXO file',ierr);CHKERRQ(ierr)
 
-      !Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%externalTempCST,default%externalTempCST,'externalTemp_CST','Piecewise constant external temperature',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,HeatXferGlobalOptions%externalTempScaling,MEF90ScalingList,default%externalTempScaling,'externalTemp_scaling','External Temperature scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,HeatXferGlobalOptions%externalTempOffset,default%externalTempOffset,'externalTemp_Offset','Position of external temperature field in EXO file',ierr);CHKERRQ(ierr)
 
-      !Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%fluxCST,default%fluxCST,'flux_CST','Piecewise constant heat flux',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,HeatXferGlobalOptions%fluxScaling,MEF90ScalingList,default%fluxScaling,'flux_scaling','Heat flux scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,HeatXferGlobalOptions%fluxOffset,default%fluxOffset,'flux_Offset','Position of heat flux field in EXO file',ierr);CHKERRQ(ierr)      
+
    End Subroutine PetscBagRegisterMEF90HeatXferCtxGlobalOptions
 
 #undef __FUNCT__
