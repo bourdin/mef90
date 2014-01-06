@@ -13,6 +13,7 @@ Program TestHeatXfer
                                                          MEF90HeatXFer_ModeSteadyState, & ! mode
                                                          PETSC_FALSE,         & ! addNullSpace
                                                          1,                   & ! tempOffset
+                                                         0.,                  & ! initialTemperature
                                                          MEF90Scaling_Linear, & ! boundaryTempScaling
                                                          2,                   & ! boundaryTempOffset
                                                          MEF90Scaling_Linear, & ! externalTempScaling
@@ -68,6 +69,9 @@ Program TestHeatXfer
    Character(len=MEF90_MXSTRLEN)                      :: setName,setprefix
    Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameC,nameV
    Integer                                            :: numfield
+   
+   PetscReal                                          :: tsTempInitialStep,tsTempInitialTime
+   PetscInt                                           :: tsTempmaxIter
    
    Integer                                            :: step
    Type(Vec)                                          :: localVec
@@ -167,22 +171,19 @@ Program TestHeatXfer
       Call TSSetOptionsPrefix(tsTemp,'temp_',ierr);CHKERRQ(ierr)
       Call TSGetSNES(tsTemp,snesTemp,ierr);CHKERRQ(ierr)
 
-      !Call TSSetIFunction(tsTemp,resTemp,SimplePoissonTSIFunction,MEF90Ctx,ierr);CHKERRQ(ierr)
-      !Call TSSetIJacobian(tsTemp,matTemp,matTemp,SimplePoissonTSIJacobian,MEF90Ctx,ierr);CHKERRQ(ierr)
-      !If ((GlobalProperties%LoadingType == Poisson_MIL) .OR. (GlobalProperties%LoadingType == Poisson_CST)) Then
-      !   Call TSSetRHSFunction(tsTemp,PETSC_NULL_OBJECT,SimplePoissonTSRHS_Cst,MEF90Ctx,ierr);CHKERRQ(ierr)
-      !Else
-      !   !Call TSSetRHSFunction(tsTemp,PETSC_NULL_OBJECT,SimplePoissonTSRHS,MEF90Ctx,ierr);CHKERRQ(ierr)
-      !End If
+      Call TSSetIFunction(tsTemp,residual,MEF90HeatXFerIFunction,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+      Call TSSetIJacobian(tsTemp,matTemp,matTemp,MEF90HeatXFerIJacobian,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
       Call TSSetType(tsTemp,'rosw',ierr);CHKERRQ(ierr)
       Call TSRosWSetType(tsTemp,'ra3pw',ierr);CHKERRQ(ierr)
-      !TSinitialStep = (time(size(time))-time(0)) / (size(time) + 0.0_Kr) / 10.0_Kr
-      !TSinitialTime = time(1)
-      !Call TSSetInitialTimeStep(tsTemp,TSinitialTime,TSinitialStep,ierr);CHKERRQ(ierr)
-      !Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
-      !Call VecSet(solTemp,GlobalProperties%initialTemp,ierr);CHKERRQ(ierr)
-      !Call TSSetSolution(tsTemp,solTemp,ierr);CHKERRQ(ierr)
-      !Call TSSetFromOptions(tsTemp,ierr);CHKERRQ(ierr)
+      tsTempInitialStep = (time(size(time))-time(0)) / (size(time) + 0.0_Kr) / 10.0_Kr
+      tsTempInitialTime = time(1)
+      Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
+      Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
+      Call VecSet(temperature,MEF90HeatXferGlobalOptions%initialTemperature,ierr);CHKERRQ(ierr)
+      Call TSSetSolution(tsTemp,temperature,ierr);CHKERRQ(ierr)
+      Call TSSetExactFinalTime(tsTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call TSSetFromOptions(tsTemp,ierr);CHKERRQ(ierr)
+      Call TSGetDuration(tsTemp,tsTempmaxIter,tsTempInitialTime,ierr);CHKERRQ(ierr)
       If (MEF90GlobalOptions%verbose > 0) Then
          Call TSView(tsTemp,PETSC_VIEWER_STDOUT_WORLD,ierr)
       End If
@@ -240,68 +241,69 @@ Program TestHeatXfer
    !!!
    !!! Actual computations / time stepping
    !!!
-   If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
-      Do step = 1,MEF90GlobalOptions%timeNumStep
-         Write(IOBuffer,100) step,time(step)
-         Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
+   Do step = 1,MEF90GlobalOptions%timeNumStep
+      Write(IOBuffer,100) step,time(step)
+      Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
 
+      Select Case (MEF90HeatXferGlobalOptions%mode)
+      Case (MEF90HeatXFer_ModeSteadyState) 
          !!! Update fields
          Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
-
          !!! Solve SNES
          Call MEF90HeatXferUpdateboundaryTemperature(temperature,MEF90HeatXferCtx,ierr);
          Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,temperature,ierr);CHKERRQ(ierr)
-         
-         !!! Compute energies
-         Call MEF90HeatXFerEnergy(temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
-         Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-         Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-         Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-         Do set = 1, size(setID)
-            Write(IOBuffer,101) setID(set),energy(set),work(set)
-            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-         Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-         Write(IOBuffer,102) sum(energy),sum(work)
+      Case (MEF90HeatXFer_ModeTransient)
+         Call TSSetDuration(tsTemp,tsTempmaxIter,time(step),ierr);CHKERRQ(ierr)
+         Call TSSolve(tsTemp,temperature,time(step),ierr);CHKERRQ(ierr)
+      End Select
+      !!! Compute energies
+      Call MEF90HeatXFerEnergy(temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
+      Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1, size(setID)
+         Write(IOBuffer,101) setID(set),energy(set),work(set)
          Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-     
-         
-         !!! Save results
-         Call DMGetLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
-         If (MEF90HeatXferGlobalOptions%fluxOffset > 0) Then
-            Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-                                   MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr);CHKERRQ(ierr)
-         End If
-         
-         If (MEF90HeatXferGlobalOptions%externalTempOffset > 0) Then
-            Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-                                   MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
-         End If
-         Call DMRestoreLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
-         
-         Call DMGetLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
-         If (MEF90HeatXferGlobalOptions%tempOffset > 0) Then
-            Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-                                     MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%tempOffset,ierr);CHKERRQ(ierr)
-         End If
-
-         If (MEF90HeatXferGlobalOptions%boundaryTempOffset > 0) Then
-            Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-                                     MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
-            End If
-         Call DMRestoreLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
       End Do
-   !Else
-   End If
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,102) sum(energy),sum(work)
+      Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+  
+      
+      !!! Save results
+      Call DMGetLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferGlobalOptions%fluxOffset > 0) Then
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr);CHKERRQ(ierr)
+      End If
+      
+      If (MEF90HeatXferGlobalOptions%externalTempOffset > 0) Then
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
+      End If
+      Call DMRestoreLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
+      
+      Call DMGetLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferGlobalOptions%tempOffset > 0) Then
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                  MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%tempOffset,ierr);CHKERRQ(ierr)
+      End If
+
+      If (MEF90HeatXferGlobalOptions%boundaryTempOffset > 0) Then
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                  MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
+         End If
+      Call DMRestoreLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
+   End Do
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5,"\n")
 102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5,"\n")
