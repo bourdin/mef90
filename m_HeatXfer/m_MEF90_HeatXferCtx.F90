@@ -28,13 +28,13 @@ Module m_MEF90_HeatXferCtx_Type
       PetscEnum                        :: mode
       PetscBool                        :: addNullSpace
       PetscInt                         :: tempOffset
+      PetscReal                        :: initialTemperature
       PetscInt                         :: boundaryTempScaling
       PetscInt                         :: boundaryTempOffset
       PetscInt                         :: externalTempScaling
       PetscInt                         :: externalTempOffset
       PetscInt                         :: fluxScaling
       PetscInt                         :: fluxOffset
-      PetscReal                        :: initialTemperature
       !!! offset  = position in data file (required for exodus)
       !!! scaling = time (step) scaling law currently CST, Linear, Null (not present) File
    End Type MEF90HeatXferGlobalOptions_Type
