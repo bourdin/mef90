@@ -1,8 +1,6 @@
--boundaryTemp_scaling constant
 -cs0001_flux 0.
 -cs0010_flux 0.
 -cs0020_flux 0.
-#-temp_snes_monitor
 -vs0010_boundaryTemp 0.
 -vs0010_tempBC 1
 -cs0020_boundaryTemp 1.
@@ -11,8 +9,6 @@
 -time_numstep 3
 -time_min 0
 -time_max 100
-#-temp_ksp_converged_reason
 -heatxfer_mode transient
 -temp_ts_monitor
-#-temp_ts_view
 ### Pure Dirichlet pb
