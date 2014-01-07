@@ -1,0 +1,11 @@
+-cs0001_specificHeat 1.
+-cs0010_flux -1.
+-cs0020_flux  1.
+-flux_Scaling constant
+-heatxfer_mode transient 
+-time_max 10 
+-time_numstep 11 
+-time_interpolation quadratic 
+-temp_ts_monitor 
+#-initialtemp 1 
+### Pure Dirichlet pb

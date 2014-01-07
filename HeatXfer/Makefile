@@ -19,6 +19,11 @@ test3D:
 	make testHeatXfer PREFIX=CubeNG_Z-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
+testTransient:
+	-@for OPTIONSFILE in test5.opts test6.opts; do \
+	make testHeatXfer PREFIX=Beam1x10  OPTIONSFILE=$${OPTIONSFILE};\
+	done
+
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
 include ${MEF90_DIR}/Makefile.include
