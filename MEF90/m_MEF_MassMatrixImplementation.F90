@@ -32,25 +32,28 @@ Contains
      
       flops = 0
       Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
-      Allocate(MatElem(elemType%numDof,elemType%numDof),stat=ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Do cell = 1,size(elem)      
-         MatElem = 0.0_Kr
-         Do iGauss = 1,size(elem(cell)%Gauss_C)
-            Do iDoF1 = 1,elemType%numDof
-               Do iDoF2 = 1,elemType%numDof
-                  MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                        (elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) )
-               End Do
-            End Do
-         End Do
-         MatElem = MatElem * scaling
-         Call DMmeshAssembleMatrix(M,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
-      End Do
-      flops = elemType%numDof**2 * (3 * size(elem(1)%Gauss_C) + 1) * size(cellID)
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(MatElem(elemType%numDof,elemType%numDof))
+         Do cell = 1,size(cellID)   
+            MatElem = 0.0_Kr
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  Do iDoF2 = 1,elemType%numDof
+                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                           (elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) )
+                  End Do ! iDoF2
+               End Do ! iDoF1
+            End Do ! iGauss
+            MatElem = MatElem * scaling
+            Call DMmeshAssembleMatrix(M,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+         End Do ! cell
+         flops = elemType%numDof**2 * (3 * size(elem(1)%Gauss_C) + 1) * size(cellID)
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(MatElem,stat=ierr)
+      End If 
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      DeAllocate(MatElem,stat=ierr)
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+      
    End Subroutine MEF90_MassMatrixAssembleSet   
 End Module MEF90_APPEND(m_MEF_MassMatrixImplementation_,MEF90_ELEMENTTYPE)

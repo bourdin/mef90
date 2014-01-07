@@ -97,9 +97,10 @@ Contains
          End Do
          flops = 5 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(MatElem)
       End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine DiffusionBilinearFormSet
 
 #undef __FUNCT__
