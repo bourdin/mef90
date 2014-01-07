@@ -35,12 +35,12 @@ Module m_MEF_Materials_Types
       1.0_Kr,                                          & ! SpecificHeat
       MEF90_MatS2D_Identity,                           & ! ThermalConductivity
       MEF90_MatS2D_Identity,                           & ! LinearThermalExpansion
-      Tens4OS2D( 1.0989010989_Kr,     & ! A%XXXX
-                   0.0_Kr,            & ! A%XXXY
-                   0.32967032967_Kr,  & ! A%XXYY
-                   0.384615384615_Kr, & ! A%XYXY
-                   0.0_Kr,            & ! A%XYYY
-                   1.0989010989_Kr),  & ! A%YYYY        & ! HookesLaw
+      Tens4OS2D( 1.09890_Kr,                           & ! A%XXXX
+                 0.00000_Kr,                           & ! A%XXXY
+                 0.32967_Kr,                           & ! A%XXYY
+                 0.38462_Kr,                           & ! A%XYXY
+                 0.00000_Kr,                           & ! A%XYYY
+                 1.09890_Kr),                          & ! A%YYYY        & ! HookesLaw
       !MEF90_Tens4OS2D_Identity,                          & ! HookesLaw
       "MEF90_Mathium2D")  
 
@@ -50,7 +50,28 @@ Module m_MEF_Materials_Types
       1.0_Kr,                                          & ! SpecificHeat
       MEF90_MatS3D_Identity,                           & ! ThermalConductivity
       MEF90_MatS3D_Identity,                           & ! LinearThermalExpansion
-      MEF90_Tens4OS3D_Identity,                        & ! HookesLaw
+      Tens4OS3D( 1.34615_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.57692_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.57692_Kr,                           &
+                 0.38462_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.38462_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.00000_Kr,                           &
+                 1.34615_Kr,                           &
+                 0.00000_Kr,                           &
+                 0.57692_Kr,                           &
+                 0.38462_Kr,                           &
+                 0.00000_Kr,                           &
+                 1.34615_Kr),                          &
+      !MEF90_Tens4OS3D_Identity,                        & ! HookesLaw
       "MEF90_Mathium3D")  
 End Module m_MEF_Materials_Types
 

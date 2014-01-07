@@ -76,6 +76,8 @@ Program ThermoElasticity
    Type(Vec),target                                   :: boundaryDisplacement
    Type(Vec),target                                   :: force
    Type(Vec),target                                   :: pressureForce
+   Type(Vec),target                                   :: temperature
+   Type(Vec),target                                   :: plasticStrain
    Type(Vec)                                          :: residualDisplacement
    Type(Vec)                                          :: coordVec
    PetscReal,Dimension(:),Pointer                     :: time,energy,work
@@ -164,21 +166,36 @@ Program ThermoElasticity
    Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,Displacement,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(Displacement,"Displacement",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%Displacement => Displacement
+   Call VecSet(Displacement,0.0_Kr,ierr);CHKERRQ(ierr)
 
    Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,boundaryDisplacement,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(boundaryDisplacement,"boundary Displacement",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%boundaryDisplacement => boundaryDisplacement
+   Call VecSet(boundaryDisplacement,0.0_Kr,ierr);CHKERRQ(ierr)
    
    Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMVect,force,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(force,"Force",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%Force => Force
+   Call VecSet(Force,0.0_Kr,ierr);CHKERRQ(ierr)
 
    Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMScal,pressureForce,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(pressureForce,"Pressure Force",ierr);CHKERRQ(ierr)
    MEF90DefMechCtx%pressureForce => pressureForce
+   Call VecSet(pressureForce,0.0_Kr,ierr);CHKERRQ(ierr)
 
    Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,residualDisplacement,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDisplacement,"residualDisplacement",ierr);CHKERRQ(ierr)
+   
+   Call DMCreateGlobalVector(MEF90DefMechCtx%DMScal,temperature,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(temperature,"temperature",ierr);CHKERRQ(ierr)
+   MEF90DefMechCtx%temperature => temperature
+   Call VecSet(temperature,0.0_Kr,ierr);CHKERRQ(ierr)
+
+   Call DMCreateGlobalVector(MEF90DefMechCtx%CellDMMatS,plasticStrain,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(plasticStrain,"plasticStrain",ierr);CHKERRQ(ierr)
+   MEF90DefMechCtx%plasticStrain => plasticStrain
+   Call VecSet(plasticStrain,0.0_Kr,ierr);CHKERRQ(ierr)
+
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
    !!!
@@ -208,6 +225,7 @@ Program ThermoElasticity
       Call SNESSetApplicationContext(snesDisp,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
       Call SNESSetDM(snesDisp,MEF90DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
       Call SNESSetOptionsPrefix(snesDisp,'Disp_',ierr);CHKERRQ(ierr)
+      Call SNESSetType(snesDisp,SNESKSPONLY,ierr);CHKERRQ(ierr)
 
       Call SNESSetFunction(snesDisp,residualDisplacement,MEF90DefMechOperator,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
       Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearForm,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
@@ -266,26 +284,27 @@ Program ThermoElasticity
       numfield = max(MEF90DefMechGlobalOptions%displacementOffset+dim, &
                      MEF90DefMechGlobalOptions%damageOffset,&
                      MEF90DefMechGlobalOptions%boundaryDisplacementOffset+dim,&
-                     MEF90DefMechGlobalOptions%boundaryDamageOffset)-1
+                     MEF90DefMechGlobalOptions%boundaryDamageOffset,&
+                     MEF90DefMechGlobalOptions%temperatureOffset)-1
       Allocate(nameV(numfield))
 
       nameV = "empty"
-      nameV(MEF90DefMechGlobalOptions%displacementOffset+0)         = "Displacement_X"
-      nameV(MEF90DefMechGlobalOptions%displacementOffset+1)         = "Displacement_Y"
-      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0) = "Boundary_Displacement_X"
-      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1) = "Boundary_Displacement_Y"
+      nameV(MEF90DefMechGlobalOptions%displacementOffset+0)            = "Displacement_X"
+      nameV(MEF90DefMechGlobalOptions%displacementOffset+1)            = "Displacement_Y"
+      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0)    = "Boundary_Displacement_X"
+      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1)    = "Boundary_Displacement_Y"
       If (dim == 3) Then
          nameV(MEF90DefMechGlobalOptions%displacementOffset+2)         = "Displacement_Z"
          nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+2) = "Boundary_Displacement_Z"
       End If
-      
       nameV(MEF90DefMechGlobalOptions%damageOffset)                    = "Damage"
       nameV(MEF90DefMechGlobalOptions%boundaryDamageOffset)            = "Boundary_Damage"
+      nameV(MEF90DefMechGlobalOptions%temperatureOffset)               = "Temperature"
                      
       numfield = max(MEF90DefMechGlobalOptions%forceOffset+dim,&
                      MEF90DefMechGlobalOptions%pressureForceOffset,&
                      MEF90DefMechGlobalOptions%StressOffset+(dim*(dim+1))/2,&
-                     MEF90DefMechGlobalOptions%inelasticStrainOffset+(dim*(dim+1))/2)-1
+                     MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2)-1
       Allocate(nameC(numfield))
       nameC = "empty"
       nameC(MEF90DefMechGlobalOptions%forceOffset+0)                 = "Force_X"
@@ -299,9 +318,9 @@ Program ThermoElasticity
          nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
          nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
          nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_XY"
-         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+0)    = "inelastic_Strain_XX"
-         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+1)    = "inelastic_Strain_YY"
-         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+2)    = "inelastic_Strain_XY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plasticStrainOffset_XX"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plasticStrainOffset_YY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plasticStrainOffset_XY"
       Else
          nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
          nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
@@ -309,12 +328,12 @@ Program ThermoElasticity
          nameC(MEF90DefMechGlobalOptions%stressOffset+3)             = "Stress_YZ"
          nameC(MEF90DefMechGlobalOptions%stressOffset+4)             = "Stress_XZ"
          nameC(MEF90DefMechGlobalOptions%stressOffset+5)             = "Stress_XY"
-         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+0)    = "inelastic_Strain_XX"
-         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+1)    = "inelastic_Strain_YY"
-         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+2)    = "inelastic_Strain_ZZ"
-         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+3)    = "inelastic_Strain_YZ"
-         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+4)    = "inelastic_Strain_XZ"
-         nameC(MEF90DefMechGlobalOptions%inelasticStrainOffset+5)    = "inelastic_Strain_XY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plasticStrain_XX"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plasticStrain_YY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plasticStrain_ZZ"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+3)      = "plasticStrain_YZ"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+4)      = "plasticStrain_XZ"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+5)      = "plasticStrain_XY"
       End If
       Call MEF90EXOFormat(MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
    End If
@@ -345,12 +364,12 @@ Program ThermoElasticity
          Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
          Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
          Do set = 1, size(setID)
-            Write(IOBuffer,101) setID(set),energy(set),work(set)
+            Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
          End Do
          Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
          Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-         Write(IOBuffer,102) sum(energy),sum(work)
+         Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
          Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
      
          
@@ -385,36 +404,51 @@ Program ThermoElasticity
       End Do
    End If
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
-101 Format("cell set ",I4," elastic energy: ",ES12.5," work: ",ES12.5,"\n")
-102 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5,"\n")
+101 Format("cell set ",I4," elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
+102 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
    !!! Clean up and exit nicely
    If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
    End If
 
+   Call VecDestroy(boundaryDisplacement,ierr);CHKERRQ(ierr)
    If (Associated(MEF90DefMechCtx%boundaryDisplacement)) Then 
-      Call VecDestroy(MEF90DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
       Nullify(MEF90DefMechCtx%boundaryDisplacement)
    End If   
-   If (Associated(MEF90DefMechCtx%boundaryDamage)) Then 
-      Call VecDestroy(MEF90DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
-      Nullify(MEF90DefMechCtx%boundaryDamage)
-   End If
+
+   !Call VecDestroy(MEF90DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
+   !If (Associated(MEF90DefMechCtx%boundaryDamage)) Then 
+   !   Nullify(MEF90DefMechCtx%boundaryDamage)
+   !End If
    
+   !Call VecDestroy(MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+   !If (Associated(MEF90DefMechCtx%damage)) Then 
+   !   Nullify(MEF90DefMechCtx%damage)
+   !End If
+   
+   Call VecDestroy(force,ierr);CHKERRQ(ierr)   
    If (Associated(MEF90DefMechCtx%force)) Then 
-      Call VecDestroy(MEF90DefMechCtx%force,ierr);CHKERRQ(ierr)
       Nullify(MEF90DefMechCtx%force)
    End If
+
+   Call VecDestroy(pressureForce,ierr);CHKERRQ(ierr)   
    If (Associated(MEF90DefMechCtx%pressureForce)) Then 
-      Call VecDestroy(MEF90DefMechCtx%pressureForce,ierr);CHKERRQ(ierr)
       Nullify(MEF90DefMechCtx%pressureForce)
    End If
 
+   Call VecDestroy(temperature,ierr);CHKERRQ(ierr)   
+   If (Associated(MEF90DefMechCtx%temperature)) Then 
+      Nullify(MEF90DefMechCtx%temperature)
+   End If
+
+   Call VecDestroy(plasticStrain,ierr);CHKERRQ(ierr)   
+   If (Associated(MEF90DefMechCtx%plasticStrain)) Then 
+      Nullify(MEF90DefMechCtx%plasticStrain)
+   End If
+
+
    Call VecDestroy(Displacement,ierr);CHKERRQ(ierr)
-   Call VecDestroy(boundaryDisplacement,ierr);CHKERRQ(ierr)
    Call VecDestroy(residualDisplacement,ierr);CHKERRQ(ierr)   
-   Call VecDestroy(force,ierr);CHKERRQ(ierr)   
-   Call VecDestroy(pressureForce,ierr);CHKERRQ(ierr)   
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
    DeAllocate(time)
    DeAllocate(energy)

@@ -79,6 +79,12 @@ Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityBilinearFormSet"
+!!!
+!!!  
+!!!  ElasticityBilinearFormSet:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityBilinearFormSet(K,mesh,cellIS,A,elem,elemType,ierr)
       Type(Mat),Intent(IN)                               :: K 
       Type(DM),Intent(IN)                                :: mesh
@@ -120,6 +126,12 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityOperatorSet"   
+!!!
+!!!  
+!!!  ElasticityOperatorSet:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityOperatorSet(G,mesh,U,cellIS,A,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: G
       Type(DM),Intent(IN)                                :: mesh
@@ -221,6 +233,13 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityInelasticStrainRHSSetCst"
+!!!
+!!!  
+!!!  ElasticityInelasticStrainRHSSetCst: Contribution of a constant inelastic strain e0
+!!!                                      to a RHS in a cell set
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityInelasticStrainRHSSetCst(RHS,mesh,e0,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
@@ -245,7 +264,7 @@ Contains
             RHSloc = 0.0_Kr
             Do iGauss = 1,size(elem(cell)%Gauss_C)
                Do iDoF1 = 1,elemType%numDof
-                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                  RHSloc(iDoF1) = RHSloc(iDoF1) - elem(cell)%Gauss_C(iGauss) * &
                                  (elem(cell)%GradS_BF(iDoF1,iGauss) .DotP. e0)
                End Do
             End Do
@@ -261,6 +280,13 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityInelasticStrainRHSSetCell"
+!!!
+!!!  
+!!!  ElasticityInelasticStrainRHSSetCell: Contribution of a cell-based inelastic strain e0
+!!!                                       to a RHS in a cell set
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityInelasticStrainRHSSetCell(RHS,mesh,meshMatS,e0,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh,meshMatS
@@ -278,8 +304,6 @@ Contains
       PetscInt                                           :: iDoF1,iGauss,i
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
-      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
@@ -289,7 +313,7 @@ Contains
             Do iGauss = 1,size(elem(cell)%Gauss_C)
                e0_elem = e0_loc
                Do iDoF1 = 1,elemType%numDof
-                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                  RHSloc(iDoF1) = RHSloc(iDoF1) - elem(cell)%Gauss_C(iGauss) * &
                                  (elem(cell)%GradS_BF(iDoF1,iGauss) .DotP. e0_elem)
                End Do
             End Do
@@ -306,6 +330,13 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityInelasticStrainRHSSetCell2"
+!!!
+!!!  
+!!!  ElasticityInelasticStrainRHSSetCell2: Contribution of a cell-based inelastic strain e0 K0
+!!!                                        to a RHS in a cell set
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityInelasticStrainRHSSetCell2(RHS,mesh,meshMatS,e0,K0,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh,meshMatS
@@ -332,7 +363,7 @@ Contains
             Call SectionRealRestrict(e0,cellID(cell),e0loc,ierr);CHKERRQ(ierr)
             Do iGauss = 1,size(elem(cell)%Gauss_C)
                Do iDoF1 = 1,elemType%numDof
-                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                  RHSloc(iDoF1) = RHSloc(iDoF1) - elem(cell)%Gauss_C(iGauss) * &
                                  e0loc(1) * (elem(cell)%GradS_BF(iDoF1,iGauss) .DotP. K0)
                End Do
             End Do
@@ -349,6 +380,13 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityInelasticStrainRHSSetVertex2"
+!!!
+!!!  
+!!!  ElasticityInelasticStrainRHSSetVertex2: Contribution of a vertex-based inelastic strain e0 K0
+!!!                                          to a RHS in a cell set
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityInelasticStrainRHSSetVertex2(RHS,mesh,meshScal,e0,K0,cellIS,elem,elemType,elemScal,elemScalType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh,meshScal
@@ -367,8 +405,8 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
-      Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
-      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
+      !Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
+      !SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(e0loc(elemScalType%numDof))
@@ -382,7 +420,7 @@ Contains
                   e0elem = e0elem + (e0loc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss))
                End Do
                Do iDoF1 = 1,elemType%numDof
-                  RHSloc(iDoF1) = RHSloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                  RHSloc(iDoF1) = RHSloc(iDoF1) - elem(cell)%Gauss_C(iGauss) * &
                                  e0elem * (elem(cell)%GradS_BF(iDoF1,iGauss) .DotP. K0)
                End Do
             End Do
@@ -399,6 +437,12 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityForceRHSSetCst"
+!!!
+!!!  
+!!!  ElasticityForceRHSSetCst:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityForceRHSSetCst(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
@@ -439,6 +483,12 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityForceRHSSetCell"
+!!!
+!!!  
+!!!  ElasticityForceRHSSetCell:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityForceRHSSetCell(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
@@ -481,6 +531,12 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityForceRHSSetVertex"
+!!!
+!!!  
+!!!  ElasticityForceRHSSetVertex:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityForceRHSSetVertex(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
@@ -673,6 +729,12 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityWorkSetCst"
+!!!
+!!!  
+!!!  ElasticityWorkSetCst:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityWorkSetCst(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
@@ -715,6 +777,12 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityWorkSetCell"
+!!!
+!!!  
+!!!  ElasticityWorkSetCell:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityWorkSetCell(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
@@ -758,6 +826,12 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityWorkSetVertex"
+!!!
+!!!  
+!!!  ElasticityWorkSetVertex:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticityWorkSetVertex(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
@@ -803,6 +877,12 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticitypressureWorkSetCell"
+!!!
+!!!  
+!!!  ElasticitypressureWorkSetCell:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine ElasticitypressureWorkSetCell(work,x,mesh,P,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
