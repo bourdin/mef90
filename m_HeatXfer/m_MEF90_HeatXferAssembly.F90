@@ -425,7 +425,9 @@ Contains
             QuadratureOrder = elemType%order * 2
             Call MEF90Element_Create(MEF90HeatXferCtx%DM,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
             Call MEF90DiffusionOperatorSet(FSec,MEF90HeatXferCtx%DM,xSec,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
-            Call MEF90DiffusionOperatorAddTransientTermSet(FSec,MEF90HeatXferCtx%DM,xdotSec,setIS,matpropSet%density*matpropSet%SpecificHeat,elem,elemType,ierr)
+            If (elemType%codim == 0) Then
+               Call MEF90DiffusionOperatorAddTransientTermSet(FSec,MEF90HeatXferCtx%DM,xdotSec,setIS,matpropSet%density*matpropSet%SpecificHeat,elem,elemType,ierr)
+            End If
             !!! Modified flux is flux + surfaceThermalConductivity * refTemp      
             !!! I _could_ use a SecAXPY, but this would summ all values at all cells for each block
             !!! I _could_ also create Sections restricted to the cell set only

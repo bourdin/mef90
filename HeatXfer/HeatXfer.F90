@@ -176,11 +176,10 @@ Program HeatXfer
       Call TSSetIJacobian(tsTemp,matTemp,matTemp,MEF90HeatXFerIJacobian,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
       Call TSSetType(tsTemp,'rosw',ierr);CHKERRQ(ierr)
       Call TSRosWSetType(tsTemp,'ra3pw',ierr);CHKERRQ(ierr)
-      tsTempInitialStep = (time(size(time))-time(0)) / (size(time) + 0.0_Kr) / 10.0_Kr
+      tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
       tsTempInitialTime = time(1)
       Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
       Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
-Write(*,*) 'Setting initial temperature to ', MEF90HeatXferGlobalOptions%initialTemperature
       Call VecSet(temperature,MEF90HeatXferGlobalOptions%initialTemperature,ierr);CHKERRQ(ierr)
       Call TSSetSolution(tsTemp,temperature,ierr);CHKERRQ(ierr)
       Call TSSetExactFinalTime(tsTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)

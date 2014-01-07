@@ -1,14 +1,13 @@
--cs0001_flux 0.
--cs0010_flux 0.
--cs0020_flux 0.
--vs0010_boundaryTemp 0.
--vs0010_tempBC 1
--cs0020_boundaryTemp 1.
--cs0020_tempBC 1
--verbose 0
--time_numstep 3
--time_min 0
--time_max 100
--heatxfer_mode transient
--temp_ts_monitor
+-cs0001_specificHeat 1.
+-cs0010_tempBC 1  
+-cs0010_boundaryTemp 0 
+-cs0020_tempBC 0 
+-cs0020_boundaryTemp 1 
+-boundaryTemp_Scaling constant
+-heatxfer_mode transient 
+-time_max 20 
+-time_numstep 21 
+-time_interpolation quadratic 
+-temp_ts_monitor 
+-initialtemp 1 
 ### Pure Dirichlet pb
