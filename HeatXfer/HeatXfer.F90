@@ -158,6 +158,7 @@ Program HeatXfer
       Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
       Call SNESSetApplicationContext(snesTemp,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
       Call SNESSetDM(snesTemp,MEF90HeatXferCtx%DM,ierr);CHKERRQ(ierr)
+      Call SNESSetType(snesTemp,SNESKSPONLY,ierr);CHKERRQ(ierr)
       Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
 
       Call SNESSetFunction(snesTemp,residual,MEF90HeatXferOperator,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
@@ -174,6 +175,7 @@ Program HeatXfer
 
       Call TSSetIFunction(tsTemp,residual,MEF90HeatXFerIFunction,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
       Call TSSetIJacobian(tsTemp,matTemp,matTemp,MEF90HeatXFerIJacobian,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+
       Call TSSetType(tsTemp,'rosw',ierr);CHKERRQ(ierr)
       Call TSRosWSetType(tsTemp,'ra3pw',ierr);CHKERRQ(ierr)
       tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr

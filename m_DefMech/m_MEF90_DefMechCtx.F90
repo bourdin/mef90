@@ -16,12 +16,12 @@ Module m_MEF90_DefMechCtx_Type
       Type(Vec),pointer                :: damage
       Type(Vec),pointer                :: boundaryDisplacement
       Type(Vec),pointer                :: boundaryDamage
-      Type(Vec),Pointer                :: inelasticStrain
+      Type(Vec),Pointer                :: temperature
 
       !!! cell based vec
       Type(Vec),pointer                :: force
       Type(Vec),pointer                :: pressureForce
-      Type(Vec),Pointer                :: inelasticStrainCell
+      Type(Vec),Pointer                :: plasticStrain
 
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
@@ -42,11 +42,11 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                         :: damageOffset
       PetscInt                         :: boundaryDisplacementOffset
       PetscInt                         :: boundaryDamageOffset
-      PetscInt                         :: inelasticStrainOffset
+      PetscInt                         :: temperatureOffset
       !!! Position of cell-based vecs in exo files
       PetscInt                         :: forceOffset
       PetscInt                         :: pressureForceOffset
-      PetscInt                         :: inelasticStrainCellOffset
+      PetscInt                         :: plasticStrainOffset
       PetscInt                         :: stressOffset
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscInt                         :: boundaryDisplacementScaling
@@ -341,8 +341,8 @@ Contains
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
       Nullify(DefMechCtx%Damage)
-      Nullify(DefMechCtx%inelasticStrain)
-      Nullify(DefMechCtx%inelasticStrainCell)
+      Nullify(DefMechCtx%temperature)
+      Nullify(DefMechCtx%plasticStrain)
    End Subroutine MEF90DefMechCtx_Create
    
 #undef __FUNCT__
@@ -375,8 +375,8 @@ Contains
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
       Nullify(DefMechCtx%Damage)
-      Nullify(DefMechCtx%inelasticStrain)
-      Nullify(DefMechCtx%inelasticStrainCell)
+      Nullify(DefMechCtx%temperature)
+      Nullify(DefMechCtx%plasticStrain)
       Call DMDestroy(DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
@@ -411,8 +411,8 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%damageOffset,default%damageOffset,'damage_Offset','Position of damage field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDamageOffset,default%damageOffset,'boundaryDamage_Offset','Position of boundary damage field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%stressOffset,default%stressOffset,'stress_Offset','Position of stress field in EXO file',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%inelasticStrainCellOffset,default%inelasticStrainCellOffset,'inelasticStrain_CellOffset','Position of cell-based inelasticStrain field in EXO file',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%inelasticStrainOffset,default%inelasticStrainOffset,'inelasticStrain_Offset','Position of vertex-based inelasticStrain field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%temperatureOffset,default%temperatureOffset,'temperature_Offset','Position of temperature field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%plasticStrainOffset,default%plasticStrainOffset,'plasticStrain_Offset','Position of the plastic Strain field in EXO file',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDisplacementOffset,default%boundaryDisplacementOffset,'boundaryDisplacement_Offset','Position of boundary displacement field in EXO file',ierr);CHKERRQ(ierr)

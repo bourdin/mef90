@@ -55,7 +55,7 @@ PetscBag Object:  Cell set    1 MatProp3D object: material properties
   SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
   ThermalConductivity = 1 1 1 0 0 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
   LinearThermalExpansion = 1 1 1 0 0 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
-  HookesLaw = 1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0 0 1 0 1 ; [N.m^(-2)] (A) Hooke's law
+  HookesLaw = 1.34615 0 0 0.57692 0 0.57692 0.38462 0 0 0 0 0.38462 0 0 0 1.34615 0 0.57692 0.38462 0 1.34615 ; [N.m^(-2)] (A) Hooke's law
  
 Registering materials properties for cell set   10: cs0010_ 
 PetscBag Object:  Cell set   10 MatProp3D object: material properties
@@ -65,7 +65,7 @@ PetscBag Object:  Cell set   10 MatProp3D object: material properties
   SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
   ThermalConductivity = 1 1 1 0 0 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
   LinearThermalExpansion = 1 1 1 0 0 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
-  HookesLaw = 1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0 0 1 0 1 ; [N.m^(-2)] (A) Hooke's law
+  HookesLaw = 1.34615 0 0 0.57692 0 0.57692 0.38462 0 0 0 0 0.38462 0 0 0 1.34615 0 0.57692 0.38462 0 1.34615 ; [N.m^(-2)] (A) Hooke's law
  
 Registering materials properties for cell set   20: cs0020_ 
 PetscBag Object:  Cell set   20 MatProp3D object: material properties
@@ -75,7 +75,7 @@ PetscBag Object:  Cell set   20 MatProp3D object: material properties
   SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
   ThermalConductivity = 1 1 1 0 0 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
   LinearThermalExpansion = 1 1 1 0 0 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
-  HookesLaw = 1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0 0 1 0 1 ; [N.m^(-2)] (A) Hooke's law
+  HookesLaw = 1.34615 0 0 0.57692 0 0.57692 0.38462 0 0 0 0 0.38462 0 0 0 1.34615 0 0.57692 0.38462 0 1.34615 ; [N.m^(-2)] (A) Hooke's law
  
 Time values array: 
  0:   0.0000e+00   1.0000e-01   4.0000e-01   9.0000e-01   1.6000e+00
