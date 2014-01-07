@@ -1,26 +1,18 @@
 Solving steady state step    1, t= 0.00000E+00 
-  0 SNES Function norm 0.000000000000e+00 
-cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
+  Linear solve converged due to CONVERGED_ATOL iterations 0
+cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 Solving steady state step    2, t= 5.00000E-01 
-  0 SNES Function norm 9.539621341486e-02 
   Linear solve converged due to CONVERGED_RTOL iterations 23
-  1 SNES Function norm 1.717191791098e-09 
-  Linear solve converged due to CONVERGED_RTOL iterations 37
-  2 SNES Function norm 4.663498889654e-16 
-cell set    1 thermal energy:  1.25000E-01 fluxes work:  0.00000E+00 
-cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set   20 thermal energy:  0.00000E+00 fluxes work:  2.50000E-01 
-======= Total thermal energy:  1.25000E-01 fluxes work:  2.50000E-01 
+cell set    1 thermal energy:  1.25000E-01 fluxes work:  0.00000E+00 total:  1.25000E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  2.50000E-01 total: -2.50000E-01 
+======= Total thermal energy:  1.25000E-01 fluxes work:  2.50000E-01 total: -1.25000E-01 
 Solving steady state step    3, t= 1.00000E+00 
-  0 SNES Function norm 9.539621341486e-02 
-  Linear solve converged due to CONVERGED_RTOL iterations 23
-  1 SNES Function norm 1.717191837756e-09 
-  Linear solve converged due to CONVERGED_RTOL iterations 37
-  2 SNES Function norm 5.995066029238e-16 
-cell set    1 thermal energy:  5.00000E-01 fluxes work:  0.00000E+00 
-cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 
-cell set   20 thermal energy:  0.00000E+00 fluxes work:  1.00000E+00 
-======= Total thermal energy:  5.00000E-01 fluxes work:  1.00000E+00 
+  Linear solve converged due to CONVERGED_RTOL iterations 0
+cell set    1 thermal energy:  5.00000E-01 fluxes work:  0.00000E+00 total:  5.00000E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  1.00000E+00 total: -1.00000E+00 
+======= Total thermal energy:  5.00000E-01 fluxes work:  1.00000E+00 total: -5.00000E-01 
