@@ -394,9 +394,11 @@ Contains
 
       Call SectionRealDuplicate(FSec,xSec,ierr)
       Call SectionRealDuplicate(FSec,xdotSec,ierr)
+      Call SectionRealDuplicate(FSec,boundaryTemperatureSec,ierr)
       Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%DM,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xdotSec,ScatterSecToVec,SCATTER_REVERSE,xdot,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(boundaryTemperatureSec,ScatterSecToVec,SCATTER_REVERSE,MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
 
       !!! Create cell based sections, and allocate required pointers
       Allocate(modifiedFluxPtr(1))
@@ -404,6 +406,11 @@ Contains
       Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%CellDM,modifiedFluxSec,ScatterSecToVecCell,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(modifiedFluxSec,fluxSec,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(modifiedFluxSec,externalTemperatureSec,ierr);CHKERRQ(ierr)
+
+      Call SectionRealSet(modifiedFluxSec,0.0_Kr,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(fluxSec,ScatterSecToVecCell,SCATTER_REVERSE,MEF90HeatXferCtx%flux,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(externalTemperatureSec,ScatterSecToVecCell,SCATTER_REVERSE,MEF90HeatXferCtx%externalTemperature,ierr);CHKERRQ(ierr)
+
 
       Call DMMeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -425,13 +432,13 @@ Contains
             !!! But this is going away with sections anyway...
             Do cell = 1,size(setIdx)
                Call SectionRealRestrict(fluxSec,setIdx(cell),fluxPtr,ierr);CHKERRQ(ierr)
-               modifiedFluxPtr = - fluxPtr
+               modifiedFluxPtr = -fluxPtr
                Call SectionRealUpdate(modifiedFluxSec,setIdx(cell),modifiedFluxPtr,ADD_VALUES,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(fluxSec,setIdx(cell),fluxPtr,ierr);CHKERRQ(ierr)
             End Do ! cell
             Do cell = 1,size(setIdx)
                Call SectionRealRestrict(externalTemperatureSec,setIdx(cell),externalTemperaturePtr,ierr);CHKERRQ(ierr)
-               modifiedFluxPtr = - cellSetOptions%SurfaceThermalConductivity * externalTemperaturePtr
+               modifiedFluxPtr = -cellSetOptions%SurfaceThermalConductivity * externalTemperaturePtr
                Call SectionRealUpdate(modifiedFluxSec,setIdx(cell),modifiedFluxPtr,ADD_VALUES,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(externalTemperatureSec,setIdx(cell),externalTemperaturePtr,ierr);CHKERRQ(ierr)
             End Do ! cell

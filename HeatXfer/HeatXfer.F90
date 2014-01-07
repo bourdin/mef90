@@ -58,6 +58,7 @@ Program HeatXfer
 
    Type(SNES)                                         :: snesTemp
    Type(TS)                                           :: tsTemp
+   Type(TSAdapt)                                      :: tsAdaptTemp
    Type(KSP)                                          :: kspTemp
    Type(PC)                                           :: pcTemp
    Type(Mat)                                          :: matTemp
@@ -179,11 +180,14 @@ Program HeatXfer
       tsTempInitialTime = time(1)
       Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
       Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
+Write(*,*) 'Setting initial temperature to ', MEF90HeatXferGlobalOptions%initialTemperature
       Call VecSet(temperature,MEF90HeatXferGlobalOptions%initialTemperature,ierr);CHKERRQ(ierr)
       Call TSSetSolution(tsTemp,temperature,ierr);CHKERRQ(ierr)
       Call TSSetExactFinalTime(tsTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
       Call TSSetFromOptions(tsTemp,ierr);CHKERRQ(ierr)
       Call TSGetDuration(tsTemp,tsTempmaxIter,tsTempInitialTime,ierr);CHKERRQ(ierr)
+      Call TSGetAdapt(tsTemp,tsAdaptTemp,ierr);CHKERRQ(ierr)
+      Call TSAdaptSetFromOptions(tsAdaptTemp,ierr);CHKERRQ(ierr)
       If (MEF90GlobalOptions%verbose > 0) Then
          Call TSView(tsTemp,PETSC_VIEWER_STDOUT_WORLD,ierr)
       End If
@@ -256,12 +260,19 @@ Program HeatXfer
          If (step > 1) Then
             !!! Update fields
             Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
-            !!! Solve SNES
             Call MEF90HeatXferUpdateboundaryTemperature(temperature,MEF90HeatXferCtx,ierr);
-            Call TSSetDuration(tsTemp,tsTempmaxIter,time(step),ierr);CHKERRQ(ierr)
-            Call TSSolve(tsTemp,temperature,time(step),ierr);CHKERRQ(ierr)
+            !!! Make sure TS does not overstep
             Call TSGetTime(tsTemp,t,ierr);CHKERRQ(ierr)
-            Write(*,*) '------- t = ', t
+            If (t < time(step)) Then
+               Call TSAdaptSetStepLimits(tsAdaptTemp,PETSC_DECIDE,(time(step)-time)/2.0_Kr,ierr);CHKERRQ(ierr)
+               Call TSSetDuration(tsTemp,tsTempmaxIter,time(step),ierr);CHKERRQ(ierr)
+               Call TSSolve(tsTemp,temperature,time(step),ierr);CHKERRQ(ierr)
+               Call TSGetTime(tsTemp,t,ierr);CHKERRQ(ierr)
+               time(step) = t
+            Else
+               Write(IOBuffer,*) 'TS exceeded analysis time. Skipping step\n'
+               Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            End If
          End If
       End Select
       !!! Compute energies
@@ -270,12 +281,12 @@ Program HeatXfer
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1, size(setID)
-         Write(IOBuffer,101) setID(set),energy(set),work(set)
+         Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
          Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,102) sum(energy),sum(work)
+      Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
       Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
   
       
@@ -313,8 +324,8 @@ Program HeatXfer
       Call DMRestoreLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
    End Do
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
-101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5,"\n")
-102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5,"\n")
+101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
+102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
    !!! Clean up and exit nicely
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
