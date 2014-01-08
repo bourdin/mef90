@@ -282,11 +282,11 @@ Program ThermoElasticity
       nameG(1) = "Energy"
       nameG(2) = "Work"
    
-      numfield = max(MEF90DefMechGlobalOptions%displacementOffset+dim, &
+      numfield = max(MEF90DefMechGlobalOptions%displacementOffset+dim-1, &
                      MEF90DefMechGlobalOptions%damageOffset,&
-                     MEF90DefMechGlobalOptions%boundaryDisplacementOffset+dim,&
+                     MEF90DefMechGlobalOptions%boundaryDisplacementOffset+dim-1,&
                      MEF90DefMechGlobalOptions%boundaryDamageOffset,&
-                     MEF90DefMechGlobalOptions%temperatureOffset)-1
+                     MEF90DefMechGlobalOptions%temperatureOffset)
       Allocate(nameV(numfield))
 
       nameV = "empty"
@@ -302,10 +302,10 @@ Program ThermoElasticity
       nameV(MEF90DefMechGlobalOptions%boundaryDamageOffset)            = "Boundary_Damage"
       nameV(MEF90DefMechGlobalOptions%temperatureOffset)               = "Temperature"
                      
-      numfield = max(MEF90DefMechGlobalOptions%forceOffset+dim,&
+      numfield = max(MEF90DefMechGlobalOptions%forceOffset+dim-1,&
                      MEF90DefMechGlobalOptions%pressureForceOffset,&
-                     MEF90DefMechGlobalOptions%StressOffset+(dim*(dim+1))/2,&
-                     MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2)-1
+                     MEF90DefMechGlobalOptions%StressOffset+(dim*(dim+1))/2-1,&
+                     MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1)
       Allocate(nameC(numfield))
       nameC = "empty"
       nameC(MEF90DefMechGlobalOptions%forceOffset+0)                 = "Force_X"
@@ -458,5 +458,5 @@ Program ThermoElasticity
    Call MEF90DefMechCtx_Destroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
    Call MEF90Ctx_CloseEXO(MEF90Ctx,ierr)
    Call MEF90_Finalize(ierr)
-   Call PetscFinalize()
+   Call PetscFinalize(ierr)
 End Program ThermoElasticity

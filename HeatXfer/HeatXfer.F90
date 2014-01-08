@@ -360,5 +360,5 @@ Program HeatXfer
    Call MEF90HeatXferCtx_Destroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90Ctx_CloseEXO(MEF90Ctx,ierr)
    Call MEF90_Finalize(ierr)
-   Call PetscFinalize()
+   Call PetscFinalize(ierr)
 End Program HeatXfer

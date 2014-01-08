@@ -519,6 +519,7 @@ Contains
       Call SectionRealDestroy(modifiedFluxSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(fluxSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(externalTemperatureSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(boundaryTemperatureSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXFerIFunction

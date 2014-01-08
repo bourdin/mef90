@@ -376,7 +376,7 @@ Contains
 
       !!! Create cell based sections, and allocate required pointers
       !!! I could check if any of these vectors are null 
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMVect,'default',forceSec,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMVect,'default',ForceSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMVect,forceSec,ScatterSecToVecCell,ierr);CHKERRQ(ierr)
       Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',pressureForceSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMScal,pressureForceSec,ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
@@ -423,6 +423,12 @@ Contains
          Call MPI_AllReduce(MPI_IN_PLACE,myWork,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
          work(set) = work(set) + mywork
       End Do ! set
+      Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(forceSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(pressureForceSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechWork   
 
 #undef __FUNCT__
@@ -514,10 +520,12 @@ Contains
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-         Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)          
+         Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)                   
       End If
 
       If (Associated(MEF90DefMechCtx%temperature)) Then
+         Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
          Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       End If
    End Subroutine MEF90DefMechElasticEnergy
