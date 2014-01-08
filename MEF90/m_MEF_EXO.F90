@@ -115,7 +115,7 @@ Contains
          Inquire(file=filename,exist=exoExists)
          cpu_ws = 8
          io_ws = 8
-         If (not(exoExists)) Then
+         If (.NOT. exoExists) Then
             If (GlobalOptions%verbose > 0) Then    
                Write(IOBuffer,*) 'EXO file ',trim(filename),' does not seem to exist. Creating it.\n'
                Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);

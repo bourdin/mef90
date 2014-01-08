@@ -215,6 +215,7 @@ Program ThermoElasticity
       Call MatNullSpaceDestroy(nspDisp,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(coordSec,ierr);CHKERRQ(ierr)
       Call VecDestroy(coordVec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
    End If
 
 

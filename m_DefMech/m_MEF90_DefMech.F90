@@ -122,6 +122,7 @@ Contains
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr) 
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSetForceCst
 
 #undef __FUNCT__
@@ -175,6 +176,7 @@ Contains
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr) 
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSetPressureForceCst
 
 #undef __FUNCT__
