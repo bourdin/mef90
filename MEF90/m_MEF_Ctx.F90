@@ -41,9 +41,9 @@ Module m_MEF_Ctx
    !Private  
    Public :: MEF90Ctx_Type
    Public :: MEF90CtxGlobalOptions_Type
-   Public :: MEF90Ctx_InitializePrivate
+   Public :: MEF90CtxInitialize_Private
    Public :: PetscBagGetDataMEF90CtxGlobalOptions
-   Public :: MEF90Ctx_GetTime
+   Public :: MEF90CtxGetTime
    Public :: sizeofMEF90CtxGlobalOptions
 
    Private :: PetscBagGetData
@@ -94,7 +94,7 @@ Contains
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90Ctx_InitializePrivate(ierr)
+   Subroutine MEF90CtxInitialize_Private(ierr)
       PetscErrorCode,Intent(OUT)                   :: ierr
    
       Type(MEF90CtxGlobalOptions_Type)             :: MEF90CtxGlobalOptions
@@ -129,7 +129,7 @@ Contains
       MEF90TimeInterpolationList(4) = 'MEF90TimeInterpolation'
       MEF90TimeInterpolationList(5) = '_MEF90TimeInterpolation'
       MEF90TimeInterpolationList(6) = ''
-   End Subroutine MEF90Ctx_InitializePrivate
+   End Subroutine MEF90CtxInitialize_Private
    
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagGetDataMEF90CtxGlobalOptions"
@@ -175,14 +175,14 @@ Contains
    End Subroutine PetscBagRegisterMEF90CtxGlobalOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Ctx_Create"
+#define __FUNCT__ "MEF90CtxCreate"
 !!!
 !!!  
-!!!  MEF90Ctx_Create:
+!!!  MEF90CtxCreate:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine MEF90Ctx_Create(comm,MEF90Ctx,default,ierr)
+Subroutine MEF90CtxCreate(comm,MEF90Ctx,default,ierr)
       MPI_Comm,Intent(IN)                          :: comm
       Type(MEF90Ctx_type),Intent(OUT)              :: MEF90Ctx
       Type(MEF90CtxGlobalOptions_Type),Intent(IN)  :: default
@@ -225,33 +225,33 @@ Subroutine MEF90Ctx_Create(comm,MEF90Ctx,default,ierr)
       MEF90Ctx%fileexounit = 0
    100 Format('  prefix:       ',(A),'\n')
    102 Format('  log file:     ',(A),'\n')
-End Subroutine MEF90Ctx_Create
+End Subroutine MEF90CtxCreate
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Ctx_Destroy"
+#define __FUNCT__ "MEF90CtxDestroy"
 !!!
 !!!  
-!!!  MEF90Ctx_Destroy:
+!!!  MEF90CtxDestroy:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine MEF90Ctx_Destroy(MEF90Ctx,ierr)
+Subroutine MEF90CtxDestroy(MEF90Ctx,ierr)
    Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
    Call PetscViewerDestroy(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
    Call PetscBagDestroy(MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
-End Subroutine MEF90Ctx_Destroy
+End Subroutine MEF90CtxDestroy
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Ctx_GetTime"
+#define __FUNCT__ "MEF90CtxGetTime"
 !!!
 !!!  
-!!!  MEF90Ctx_GetTimeArray:
+!!!  MEF90CtxGetTime:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90Ctx_GetTime(MEF90Ctx,t,ierr)
+   Subroutine MEF90CtxGetTime(MEF90Ctx,t,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
       PetscReal,Dimension(:),Pointer                  :: t
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -319,5 +319,5 @@ End Subroutine MEF90Ctx_Destroy
          Call PetscRealView(GlobalOptions%timeNumStep,t,PETSC_VIEWER_STDOUT_SELF,ierr);CHKERRQ(ierr)
          Call PetscPrintf(PETSC_COMM_SELF,"===\n",ierr);CHKERRQ(ierr)  
       End If
-   End Subroutine MEF90Ctx_GetTime
+   End Subroutine MEF90CtxGetTime
 End Module m_MEF_Ctx

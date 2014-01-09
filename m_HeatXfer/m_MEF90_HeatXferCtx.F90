@@ -177,14 +177,14 @@ Module m_MEF90_HeatXferCtx
    
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferCtx_InitializePrivate"
+#define __FUNCT__ "MEF90HeatXferCtxInitialize_Private"
 !!!
 !!!  
-!!!  MEF90HeatXferCtx_InitializePrivate:
+!!!  MEF90HeatXferCtxInitialize_Private:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferCtx_InitializePrivate(ierr)
+   Subroutine MEF90HeatXferCtxInitialize_Private(ierr)
       PetscErrorCode,Intent(OUT)                      :: ierr
    
       Type(MEF90HeatXferGlobalOptions_Type)           :: HeatXferGlobalOptions
@@ -203,17 +203,17 @@ Contains
       MEF90HeatXFer_ModeList(3) = 'MEF90_HeatXFer_Mode'
       MEF90HeatXFer_ModeList(4) = '_MEF90_HeatXFer_Mode'
       MEF90HeatXFer_ModeList(5) = ''
-   End Subroutine MEF90HeatXferCtx_InitializePrivate
+   End Subroutine MEF90HeatXferCtxInitialize_Private
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferCtx_Create"
+#define __FUNCT__ "MEF90HeatXferCtxCreate"
 !!!
 !!!  
-!!!  MEF90HeatXferCtx_Create:
+!!!  MEF90HeatXferCtxCreate:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferCtx_Create(HeatXferCtx,Mesh,MEF90Ctx,ierr)
+   Subroutine MEF90HeatXferCtxCreate(HeatXferCtx,Mesh,MEF90Ctx,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(OUT)            :: HeatXferCtx
       Type(DM),target,Intent(IN)                         :: Mesh
       Type(MEF90Ctx_Type),target,Intent(IN)              :: MEF90Ctx
@@ -226,7 +226,7 @@ Contains
       Type(IS)                                           :: setIS
       PetscInt                                           :: set,numSet
 
-      Call MEF90HeatXferCtx_InitializePrivate(ierr)
+      Call MEF90HeatXferCtxInitialize_Private(ierr)
       HeatXferCtx%DM => Mesh
       HeatXferCtx%MEF90Ctx => MEF90Ctx
       Call DMMeshClone(HeatXferCtx%DM,HeatXferCtx%cellDM,ierr);CHKERRQ(ierr)
@@ -258,17 +258,17 @@ Contains
       Nullify(HeatXferCtx%flux)
       Nullify(HeatXferCtx%boundaryTemperature)
       Nullify(HeatXferCtx%externalTemperature)
-   End Subroutine MEF90HeatXferCtx_Create
+   End Subroutine MEF90HeatXferCtxCreate
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferCtx_Destroy"
+#define __FUNCT__ "MEF90HeatXferCtxDestroy"
 !!!
 !!!  
-!!!  MEF90HeatXferCtx_Destroy:
+!!!  MEF90HeatXferCtxDestroy:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferCtx_Destroy(HeatXferCtx,ierr)
+   Subroutine MEF90HeatXferCtxDestroy(HeatXferCtx,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(OUT)         :: HeatXferCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
       
@@ -291,7 +291,7 @@ Contains
       Nullify(HeatXferCtx%externalTemperature)
       Nullify(HeatXferCtx%DM)
       Call DMDestroy(HeatXferCtx%cellDM,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90HeatXferCtx_Destroy
+   End Subroutine MEF90HeatXferCtxDestroy
 
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterMEF90HeatXferCtxGlobalOptions"
@@ -379,14 +379,14 @@ Contains
    End Subroutine PetscBagRegisterMEF90HeatXferCtxVertexSetOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferCtx_SetFromOptions"
+#define __FUNCT__ "MEF90HeatXferCtxSetFromOptions"
 !!!
 !!!  
-!!!  MEF90HeatXferCtx_SetFromOptions:
+!!!  MEF90HeatXferCtxSetFromOptions:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferCtx_SetFromOptions(heatXferCtx,prefix,defaultGlobalOptions, &
+   Subroutine MEF90HeatXferCtxSetFromOptions(heatXferCtx,prefix,defaultGlobalOptions, &
                                               defaultCellSetOptions,defaultVertexSetOptions,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: heatXferCtx
       Character(len=*),Intent(IN)                           :: prefix
@@ -465,5 +465,5 @@ Contains
 200 Format('Vertex set ',I4)
 201 Format('vs',I4.4,'_')
 203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
-   End Subroutine MEF90HeatXferCtx_SetFromOptions
+   End Subroutine MEF90HeatXferCtxSetFromOptions
 End Module m_MEF90_HeatXferCtx

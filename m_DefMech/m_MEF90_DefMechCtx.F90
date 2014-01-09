@@ -215,14 +215,14 @@ Module m_MEF90_DefMechCtx
    Character(len = MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_defectLawPlasticityList
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCtx_InitializePrivate"
+#define __FUNCT__ "MEF90DefMechCtxInitialize_Private"
 !!!
 !!!  
-!!!  MEF90DefMechCtx_InitializePrivate:
+!!!  MEF90DefMechCtxInitialize_Private:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechCtx_InitializePrivate(ierr)
+   Subroutine MEF90DefMechCtxInitialize_Private(ierr)
       PetscErrorCode,Intent(OUT)                         :: ierr
    
       Type(MEF90DefMechGlobalOptions_Type)               :: DefMechGlobalOptions
@@ -260,17 +260,17 @@ Contains
       MEF90DefMech_defectLawPlasticityList(3) = 'MEF90DefMech_defectLawPlasticity'
       MEF90DefMech_defectLawPlasticityList(4) = '_MEF90DefMech_defectLawPlasticity'
       MEF90DefMech_defectLawPlasticityList(5) = ''
-   End Subroutine MEF90DefMechCtx_InitializePrivate
+   End Subroutine MEF90DefMechCtxInitialize_Private
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCtx_Create"
+#define __FUNCT__ "MEF90DefMechCtxCreate"
 !!!
 !!!  
-!!!  MEF90DefMechCtx_Create:
+!!!  MEF90DefMechCtxCreate:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechCtx_Create(DefMechCtx,Mesh,MEF90Ctx,ierr)
+   Subroutine MEF90DefMechCtxCreate(DefMechCtx,Mesh,MEF90Ctx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(OUT)                   :: DefMechCtx
       Type(DM),target,Intent(IN)                               :: Mesh
       Type(MEF90Ctx_Type),target,Intent(IN)                    :: MEF90Ctx
@@ -285,7 +285,7 @@ Contains
       PetscInt                                                 :: set,numSet
       PetscInt                                                 :: dim
 
-      Call MEF90DefMechCtx_InitializePrivate(ierr)
+      Call MEF90DefMechCtxInitialize_Private(ierr)
       Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
       DefMechCtx%DM => Mesh
       DefMechCtx%MEF90Ctx => MEF90Ctx
@@ -346,19 +346,19 @@ Contains
       Nullify(DefMechCtx%Damage)
       Nullify(DefMechCtx%temperature)
       Nullify(DefMechCtx%plasticStrain)
-   End Subroutine MEF90DefMechCtx_Create
+   End Subroutine MEF90DefMechCtxCreate
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCtx_SetSections"
+#define __FUNCT__ "MEF90DefMechCtxSetSections"
 !!!
 !!!  
-!!!  MEF90DefMechCtx_SetSections: Set the data layout for each of the fields involved in a MEF90DefMechCtx_Type
+!!!  MEF90DefMechCtxSetSections: Set the data layout for each of the fields involved in a MEF90DefMechCtx_Type
 !!!                               Uses Sieve convenience functions for now, but will be pulling layout informations
 !!!                               from teh element types when switching to DMComplex
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine MEF90DefMechCtx_SetSections(DefMechCtx,ierr)
+Subroutine MEF90DefMechCtxSetSections(DefMechCtx,ierr)
    Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
    
@@ -391,17 +391,17 @@ Subroutine MEF90DefMechCtx_SetSections(DefMechCtx,ierr)
    Call DMMeshSetSectionReal(DefMechCtx%cellDMMatS,"default",defaultSection,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)   
    Call DMSetBlockSize(DefMechCtx%cellDMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr)
-End Subroutine MEF90DefMechCtx_SetSections
+End Subroutine MEF90DefMechCtxSetSections
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCtx_CreateVectors"
+#define __FUNCT__ "MEF90DefMechCtxCreateVectors"
 !!!
 !!!  
-!!!  MEF90DefMechCtx_CreateVectors: Create a default set of vectors in a MEF90DefMechCtx_Type
+!!!  MEF90DefMechCtxCreateVectors: Create a default set of vectors in a MEF90DefMechCtx_Type
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine MEF90DefMechCtx_CreateVectors(DefMechCtx,ierr)
+Subroutine MEF90DefMechCtxCreateVectors(DefMechCtx,ierr)
    Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
    
@@ -444,17 +444,17 @@ Subroutine MEF90DefMechCtx_CreateVectors(DefMechCtx,ierr)
    Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(DefMechCtx%boundaryDamage,"boundaryDamage",ierr);CHKERRQ(ierr)
    Call VecSet(DefMechCtx%boundaryDamage,0.0_Kr,ierr);CHKERRQ(ierr)
-End Subroutine MEF90DefMechCtx_CreateVectors
+End Subroutine MEF90DefMechCtxCreateVectors
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCtx_DestroyVectors"
+#define __FUNCT__ "MEF90DefMechCtxDestroyVectors"
 !!!
 !!!  
-!!!  MEF90DefMechCtx_DestroyVectors: destroys the Vecs in a MEF90DefMechCtx_Type
+!!!  MEF90DefMechCtxDestroyVectors: destroys the Vecs in a MEF90DefMechCtx_Type
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine MEF90DefMechCtx_DestroyVectors(DefMechCtx,ierr)
+Subroutine MEF90DefMechCtxDestroyVectors(DefMechCtx,ierr)
    Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
@@ -505,18 +505,17 @@ Subroutine MEF90DefMechCtx_DestroyVectors(DefMechCtx,ierr)
       DeAllocate(DefMechCtx%plasticStrain)
       Nullify(DefMechCtx%plasticStrain)
    End If
-   
-End Subroutine MEF90DefMechCtx_DestroyVectors
+End Subroutine MEF90DefMechCtxDestroyVectors
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCtx_Destroy"
+#define __FUNCT__ "MEF90DefMechCtxDestroy"
 !!!
 !!!  
-!!!  MEF90DefMechCtx_Destroy: destroys a MEF90DefMechCtx_Type
+!!!  MEF90DefMechCtxDestroy: destroys a MEF90DefMechCtx_Type
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechCtx_Destroy(DefMechCtx,ierr)
+   Subroutine MEF90DefMechCtxDestroy(DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(OUT)          :: DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
       
@@ -546,7 +545,7 @@ End Subroutine MEF90DefMechCtx_DestroyVectors
       Call DMDestroy(DefMechCtx%cellDMVect,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%DMMatS,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMMatS,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechCtx_Destroy
+   End Subroutine MEF90DefMechCtxDestroy
 
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterMEF90DefMechCtxGlobalOptions"
@@ -650,17 +649,14 @@ End Subroutine MEF90DefMechCtx_DestroyVectors
    End Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCtx_SetFromOptions"
+#define __FUNCT__ "MEF90DefMechCtxSetFromOptions"
 !!!
 !!!  
-!!!  MEF90DefMechCtx_SetFromOptions:
+!!!  MEF90DefMechCtxSetFromOptions:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-!   Subroutine MEF90DefMechCtx_SetFromOptions(DefMechCtx,prefix,defaultGlobalOptions, &
-!                                              defaultCellSetOptions,cellSetNames,    &
-!                                              defaultVertexSetOptions,vertexSetNames,ierr)
-   Subroutine MEF90DefMechCtx_SetFromOptions(DefMechCtx,prefix,defaultGlobalOptions, &
+   Subroutine MEF90DefMechCtxSetFromOptions(DefMechCtx,prefix,defaultGlobalOptions, &
                                               defaultCellSetOptions,    &
                                               defaultVertexSetOptions,ierr)
       Type(MEF90DefMechCtx_Type),Intent(OUT)                :: DefMechCtx
@@ -745,5 +741,5 @@ End Subroutine MEF90DefMechCtx_DestroyVectors
 200 Format('Vertex set ',I4)
 201 Format('vs',I4.4,'_')
 203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
-   End Subroutine MEF90DefMechCtx_SetFromOptions
+   End Subroutine MEF90DefMechCtxSetFromOptions
 End Module m_MEF90_DefMechCtx

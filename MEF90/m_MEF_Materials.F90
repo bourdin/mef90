@@ -146,8 +146,8 @@ Module m_MEF_Materials
       Module Procedure PetscBagRegisterMEF90MatProp2D,PetscBagRegisterMEF90MatProp3D
    End Interface
    
-   Interface MEF90MatPropBag_SetFromOptions
-      Module Procedure MEF90MatPropBag_SetFromOptions2D,MEF90MatPropBag_SetFromOptions3D
+   Interface MEF90MatPropBagSetFromOptions
+      Module Procedure MEF90MatPropBagSetFromOptions2D,MEF90MatPropBagSetFromOptions3D
    End Interface
    
    PetscSizeT,protected   :: sizeofMEF90MatProp2D
@@ -156,8 +156,14 @@ Module m_MEF_Materials
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Materials_InitializePrivate"
-   Subroutine MEF90Materials_InitializePrivate(ierr)
+#define __FUNCT__ "MEF90MaterialsInitialize_Private"
+!!!
+!!!  
+!!!  MEF90MaterialsInitialize_Private:
+!!!  
+!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90MaterialsInitialize_Private(ierr)
       PetscErrorCode,intent(OUT)          :: ierr
 
       Type(MEF90MatProp2D_Type),Target    :: matProp2D
@@ -168,10 +174,16 @@ Contains
       Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
       sizeofMEF90MatProp2D = size(transfer(matProp2D,dummychar))*sizeofchar
       sizeofMEF90MatProp3D = size(transfer(matProp3D,dummychar))*sizeofchar
-   End Subroutine MEF90Materials_InitializePrivate
+   End Subroutine MEF90MaterialsInitialize_Private
 
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterMEF90MatProp2D"
+!!!
+!!!  
+!!!  PetscBagRegisterMEF90MatProp2D:
+!!!  
+!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine PetscBagRegisterMEF90MatProp2D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
@@ -199,6 +211,12 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterMEF90MatProp3D"
+!!!
+!!!  
+!!!  PetscBagRegisterMEF90MatProp3D:
+!!!  
+!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
+!!!
    Subroutine PetscBagRegisterMEF90MatProp3D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
@@ -225,14 +243,14 @@ Contains
 
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90MatPropBag_SetFromOptions2D"
+#define __FUNCT__ "MEF90MatPropBagSetFromOptions2D"
 !!!
 !!!  
-!!!  MEF90MatPropBag_SetFromOptions2D:
-!!!  
+!!!  MEF90MatPropBagSetFromOptionsierr:
+!!!MEF90MatPropBagSetFromOptions2D
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90MatPropBag_SetFromOptions2D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
+   Subroutine MEF90MatPropBagSetFromOptions2D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
       Type(DM),Intent(IN)                             :: Mesh
       Type(MEF90MatProp2D_Type),intent(IN)            :: defaultMaterial
@@ -270,17 +288,17 @@ Contains
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')
 102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
-   End Subroutine MEF90MatPropBag_SetFromOptions2D
+   End Subroutine MEF90MatPropBagSetFromOptions2D
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90MatPropBag_SetFromOptions3D"
+#define __FUNCT__ "MEF90MatPropBagSetFromOptions3D"
 !!!
 !!!  
-!!!  MEF90MatPropBag_SetFromOptions3D:
+!!!  MEF90MatPropBagSetFromOptions3D:
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90MatPropBag_SetFromOptions3D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
+   Subroutine MEF90MatPropBagSetFromOptions3D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
       Type(DM),Intent(IN)                             :: Mesh
       Type(MEF90MatProp3D_Type),intent(IN)            :: defaultMaterial
@@ -318,7 +336,7 @@ Contains
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')
 102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
-   End Subroutine MEF90MatPropBag_SetFromOptions3D
+   End Subroutine MEF90MatPropBagSetFromOptions3D
 
 
 !!! Subroutine generating various types of Hooke's laws 

@@ -13,25 +13,25 @@ Module m_MEF_EXO
    PetscInt,Public                                 :: exo_ver
 
    
-   Public :: MEF90Ctx_GetDMMeshEXO
+   Public :: MEF90CtxGetDMMeshEXO
+   Public :: MEF90CtxOpenEXO
+   Public :: MEF90CtxCloseEXO
+   Public :: MEF90EXOFormat
    Public :: EXOGetCellSetElementType_Scal      
    Public :: EXOGetCellSetElementType_Vect      
    Public :: EXOGetCellSetElementType_Elast      
-   Public :: Write_EXO_Case
-   Public :: MEF90Ctx_OpenEXO
-   Public :: MEF90Ctx_CloseEXO
-   Public :: MEF90EXOFormat
+   Public :: EXOWriteCase
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Ctx_GetDMMeshEXO"
+#define __FUNCT__ "MEF90CtxGetDMMeshEXO"
 !!!
 !!!  
-!!!  MEF90Ctx_GetDMMeshEXO:
+!!!  MEF90CtxGetDMMeshEXO:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr)
+   Subroutine MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr)
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       Type(DM),Intent(OUT)                            :: Mesh
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -69,17 +69,17 @@ Contains
       If (MEF90_MyRank == 0) Then
          Call EXCLOS(exoUnit,exoErr)
       End If
-   End Subroutine MEF90Ctx_GetDMMeshEXO
+   End Subroutine MEF90CtxGetDMMeshEXO
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Ctx_OpenEXO"
+#define __FUNCT__ "MEF90CtxOpenEXO"
 !!!
 !!!  
-!!!  MEF90Ctx_OpenEXO:
+!!!  MEF90CtxOpenEXO:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
+   Subroutine MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
       Type(DM), Intent(IN)                            :: Mesh
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -135,17 +135,17 @@ Contains
          EndIf
       End If
    102 Format(A,'.gen')
-   End Subroutine MEF90Ctx_OpenEXO
+   End Subroutine MEF90CtxOpenEXO
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Ctx_CloseEXO"
+#define __FUNCT__ "MEF90CtxCloseEXO"
 !!!
 !!!  
-!!!  MEF90Ctx_CloseEXO:
+!!!  MEF90CtxCloseEXO:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90Ctx_CloseEXO(MEF90Ctx,ierr)
+   Subroutine MEF90CtxCloseEXO(MEF90Ctx,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
       PetscErrorCode,Intent(OUT)                      :: ierr
    
@@ -178,7 +178,7 @@ Contains
          Call EXCLOS(MEF90Ctx%fileExoUnit,exoErr)
          MEF90Ctx%fileExoUnit = 0
       End If
-   End Subroutine MEF90Ctx_CloseEXO
+   End Subroutine MEF90CtxCloseEXO
 
 #undef __FUNCT__
 #define __FUNCT__ "EXOGetCellSetElementType_Scal"
@@ -343,8 +343,8 @@ Contains
    End Subroutine EXOGetCellSetElementType_Elast
       
 #undef __FUNCT__
-#define __FUNCT__ "Write_EXO_Case"
-   Subroutine Write_EXO_Case(prefix,formatstring,numprocs)
+#define __FUNCT__ "EXOWriteCase"
+   Subroutine EXOWriteCase(prefix,formatstring,numprocs)
       Character(len=*)                               :: prefix,formatstring
       PetscInt                                       :: numprocs
       
@@ -362,7 +362,7 @@ Contains
 100 Format(A)
 101 Format('FILES_PER_TIMESET',I4)
 102 Format('TIMESET_TEMPLATE "',A,'-',A,'.gen"')
-   End Subroutine Write_EXO_Case
+   End Subroutine EXOWriteCase
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOFormat"
