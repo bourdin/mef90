@@ -72,12 +72,6 @@ Program ThermoElasticity
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
    Type(SectionReal)                                  :: defaultSection,coordSec
-   Type(Vec),target                                   :: displacement
-   Type(Vec),target                                   :: boundaryDisplacement
-   Type(Vec),target                                   :: force
-   Type(Vec),target                                   :: pressureForce
-   Type(Vec),target                                   :: temperature
-   Type(Vec),target                                   :: plasticStrain
    Type(Vec)                                          :: residualDisplacement
    Type(Vec)                                          :: coordVec
    PetscReal,Dimension(:),Pointer                     :: time,energy,work
@@ -129,7 +123,7 @@ Program ThermoElasticity
       Call MEF90DefMechCtx_SetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,MEF90DefMechDefaultGlobalOptions3D, &
                                         MEF90DefMechDefaultCellSetOptions,MEF90DefMechDefaultVertexSetOptions,ierr)
    End If
-      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+   Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
    
    !!! Get material properties bags
    If (dim == 2) Then
@@ -141,60 +135,11 @@ Program ThermoElasticity
 
    Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
 
-   !!! Create default section matching element type
-   Call DMMeshGetVertexSectionReal(MEF90DefMechCtx%DMVect,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
-   Call DMMeshSetSectionReal(MEF90DefMechCtx%DMVect,"default",defaultSection,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-   
-   Call DMMeshGetCellSectionReal(MEF90DefMechCtx%cellDMVect,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
-   Call DMMeshSetSectionReal(MEF90DefMechCtx%cellDMVect,"default",defaultSection,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-      
-   Call DMMeshGetVertexSectionReal(MEF90DefMechCtx%DMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
-   Call DMMeshSetSectionReal(MEF90DefMechCtx%DMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-
-   Call DMMeshGetCellSectionReal(MEF90DefMechCtx%cellDMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
-   Call DMMeshSetSectionReal(MEF90DefMechCtx%cellDMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-
-   Call DMMeshGetCellSectionReal(MEF90DefMechCtx%cellDMMatS,"default",(dim*(dim+1))/2,defaultSection,ierr);CHKERRQ(ierr)
-   Call DMMeshSetSectionReal(MEF90DefMechCtx%cellDMMatS,"default",defaultSection,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   !!! Set the data layout
+   Call MEF90DefMechCtx_SetSections(MEF90DefMechCtx,ierr)
 
    !!! Create vectors
-   Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,Displacement,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(Displacement,"Displacement",ierr);CHKERRQ(ierr)
-   MEF90DefMechCtx%Displacement => Displacement
-   Call VecSet(Displacement,0.0_Kr,ierr);CHKERRQ(ierr)
-
-   Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,boundaryDisplacement,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(boundaryDisplacement,"boundary Displacement",ierr);CHKERRQ(ierr)
-   MEF90DefMechCtx%boundaryDisplacement => boundaryDisplacement
-   Call VecSet(boundaryDisplacement,0.0_Kr,ierr);CHKERRQ(ierr)
-   
-   Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMVect,force,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(force,"Force",ierr);CHKERRQ(ierr)
-   MEF90DefMechCtx%Force => Force
-   Call VecSet(Force,0.0_Kr,ierr);CHKERRQ(ierr)
-
-   Call DMCreateGlobalVector(MEF90DefMechCtx%cellDMScal,pressureForce,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(pressureForce,"Pressure Force",ierr);CHKERRQ(ierr)
-   MEF90DefMechCtx%pressureForce => pressureForce
-   Call VecSet(pressureForce,0.0_Kr,ierr);CHKERRQ(ierr)
-
-   Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,residualDisplacement,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(residualDisplacement,"residualDisplacement",ierr);CHKERRQ(ierr)
-   
-   Call DMCreateGlobalVector(MEF90DefMechCtx%DMScal,temperature,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(temperature,"temperature",ierr);CHKERRQ(ierr)
-   MEF90DefMechCtx%temperature => temperature
-   Call VecSet(temperature,0.0_Kr,ierr);CHKERRQ(ierr)
-
-   Call DMCreateGlobalVector(MEF90DefMechCtx%CellDMMatS,plasticStrain,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(plasticStrain,"plasticStrain",ierr);CHKERRQ(ierr)
-   MEF90DefMechCtx%plasticStrain => plasticStrain
-   Call VecSet(plasticStrain,0.0_Kr,ierr);CHKERRQ(ierr)
+   Call MEF90DefMechCtx_CreateVectors(MEF90DefMechCtx,ierr)
 
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
@@ -349,9 +294,9 @@ Program ThermoElasticity
 
          !!! Update fields
          Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
-         Call MEF90DefMechUpdateboundaryDisplacement(displacement,MEF90DefMechCtx,ierr)
+         Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
          !!! Solve SNES
-         Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,Displacement,ierr);CHKERRQ(ierr)
+         Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
          Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
          Write(IOBuffer,*) "SNESConvergedReason returned ",snesDispConvergedReason,"\n"
          Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -359,8 +304,8 @@ Program ThermoElasticity
          !!! Compute energies
          energy = 0.0_Kr
          work = 0.0_Kr
-         Call MEF90DefMechWork(Displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
-         Call MEF90DefMechElasticEnergy(Displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
+         Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
+         Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
          Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
          Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
          Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -373,35 +318,8 @@ Program ThermoElasticity
          Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
          Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
      
-         
          !!! Save results and boundary Values
-         Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%displacementOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-
-         Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDisplacementOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
-
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+         Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
       End Do
    End If
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
@@ -412,44 +330,9 @@ Program ThermoElasticity
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
    End If
 
-   Call VecDestroy(boundaryDisplacement,ierr);CHKERRQ(ierr)
-   If (Associated(MEF90DefMechCtx%boundaryDisplacement)) Then 
-      Nullify(MEF90DefMechCtx%boundaryDisplacement)
-   End If   
+   Call MEF90DefMechCtx_DestroyVectors(MEF90DefMechCtx,ierr)
+!   Call VecDestroy(residualDisplacement,ierr);CHKERRQ(ierr)   
 
-   !Call VecDestroy(MEF90DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
-   !If (Associated(MEF90DefMechCtx%boundaryDamage)) Then 
-   !   Nullify(MEF90DefMechCtx%boundaryDamage)
-   !End If
-   
-   !Call VecDestroy(MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-   !If (Associated(MEF90DefMechCtx%damage)) Then 
-   !   Nullify(MEF90DefMechCtx%damage)
-   !End If
-   
-   Call VecDestroy(force,ierr);CHKERRQ(ierr)   
-   If (Associated(MEF90DefMechCtx%force)) Then 
-      Nullify(MEF90DefMechCtx%force)
-   End If
-
-   Call VecDestroy(pressureForce,ierr);CHKERRQ(ierr)   
-   If (Associated(MEF90DefMechCtx%pressureForce)) Then 
-      Nullify(MEF90DefMechCtx%pressureForce)
-   End If
-
-   Call VecDestroy(temperature,ierr);CHKERRQ(ierr)   
-   If (Associated(MEF90DefMechCtx%temperature)) Then 
-      Nullify(MEF90DefMechCtx%temperature)
-   End If
-
-   Call VecDestroy(plasticStrain,ierr);CHKERRQ(ierr)   
-   If (Associated(MEF90DefMechCtx%plasticStrain)) Then 
-      Nullify(MEF90DefMechCtx%plasticStrain)
-   End If
-
-
-   Call VecDestroy(Displacement,ierr);CHKERRQ(ierr)
-   Call VecDestroy(residualDisplacement,ierr);CHKERRQ(ierr)   
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
    DeAllocate(time)
    DeAllocate(energy)

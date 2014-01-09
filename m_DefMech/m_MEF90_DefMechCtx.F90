@@ -280,6 +280,7 @@ Contains
       Type(MEF90DefMechGlobalOptions_Type),pointer             :: MEF90DefMechGlobalOptions
       Type(MEF90DefMechCellSetOptions_Type),pointer            :: MEF90DefMechCellSetOptions
       Type(MEF90DefMechVertexSetOptions_Type),pointer          :: MEF90DefMechVertexSetOptions
+      Type(SectionReal)                                        :: defaultSection
       Type(IS)                                                 :: setIS
       PetscInt                                                 :: set,numSet
       PetscInt                                                 :: dim
@@ -288,6 +289,8 @@ Contains
       Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
       DefMechCtx%DM => Mesh
       DefMechCtx%MEF90Ctx => MEF90Ctx
+      
+      !!! Clone DM for each of the other layouts
       Call DMMeshClone(Mesh,DefMechCtx%cellDMVect,ierr);CHKERRQ(ierr)
       Call DMMeshSetMaxDof(DefMechCtx%cellDMVect,dim,ierr);CHKERRQ(ierr) 
       Call DMSetBlockSize(DefMechCtx%cellDMVect,dim,ierr);CHKERRQ(ierr)
@@ -346,10 +349,170 @@ Contains
    End Subroutine MEF90DefMechCtx_Create
    
 #undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCtx_SetSections"
+!!!
+!!!  
+!!!  MEF90DefMechCtx_SetSections: Set the data layout for each of the fields involved in a MEF90DefMechCtx_Type
+!!!                               Uses Sieve convenience functions for now, but will be pulling layout informations
+!!!                               from teh element types when switching to DMComplex
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine MEF90DefMechCtx_SetSections(DefMechCtx,ierr)
+   Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+   
+   Type(SectionReal)                               :: defaultSection
+   PetscInt                                        :: dim
+
+   Call DMMeshGetDimension(DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+
+   Call DMMeshGetVertexSectionReal(DefMechCtx%DMVect,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(DefMechCtx%DMVect,"default",defaultSection,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   Call DMSetBlockSize(DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr)
+   
+   Call DMMeshGetCellSectionReal(DefMechCtx%cellDMVect,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(DefMechCtx%cellDMVect,"default",defaultSection,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   Call DMSetBlockSize(DefMechCtx%CellDMVect,dim,ierr);CHKERRQ(ierr)
+      
+   Call DMMeshGetVertexSectionReal(DefMechCtx%DMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(DefMechCtx%DMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   Call DMSetBlockSize(DefMechCtx%DMScal,1,ierr);CHKERRQ(ierr)
+
+   Call DMMeshGetCellSectionReal(DefMechCtx%cellDMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(DefMechCtx%cellDMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   Call DMSetBlockSize(DefMechCtx%cellDMScal,1,ierr);CHKERRQ(ierr)
+
+   Call DMMeshGetCellSectionReal(DefMechCtx%cellDMMatS,"default",(dim*(dim+1))/2,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(DefMechCtx%cellDMMatS,"default",defaultSection,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)   
+   Call DMSetBlockSize(DefMechCtx%cellDMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr)
+End Subroutine MEF90DefMechCtx_SetSections
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCtx_CreateVectors"
+!!!
+!!!  
+!!!  MEF90DefMechCtx_CreateVectors: Create a default set of vectors in a MEF90DefMechCtx_Type
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine MEF90DefMechCtx_CreateVectors(DefMechCtx,ierr)
+   Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+   
+   Allocate(DefMechCtx%Displacement,stat=ierr)
+   Call DMCreateGlobalVector(DefMechCtx%DMVect,DefMechCtx%Displacement,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(DefMechCtx%Displacement,"Displacement",ierr);CHKERRQ(ierr)
+   Call VecSet(DefMechCtx%Displacement,0.0_Kr,ierr);CHKERRQ(ierr)
+
+   Allocate(DefMechCtx%boundaryDisplacement,stat=ierr)
+   Call DMCreateGlobalVector(DefMechCtx%DMVect,DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(DefMechCtx%boundaryDisplacement,"boundary Displacement",ierr);CHKERRQ(ierr)
+   Call VecSet(DefMechCtx%boundaryDisplacement,0.0_Kr,ierr);CHKERRQ(ierr)
+   
+   Allocate(DefMechCtx%force,stat=ierr)
+   Call DMCreateGlobalVector(DefMechCtx%cellDMVect,DefMechCtx%force,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(DefMechCtx%force,"Force",ierr);CHKERRQ(ierr)
+   Call VecSet(DefMechCtx%force,0.0_Kr,ierr);CHKERRQ(ierr)
+
+   Allocate(DefMechCtx%pressureForce,stat=ierr)
+   Call DMCreateGlobalVector(DefMechCtx%cellDMScal,DefMechCtx%pressureForce,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(DefMechCtx%pressureForce,"PressureForce",ierr);CHKERRQ(ierr)
+   Call VecSet(DefMechCtx%pressureForce,0.0_Kr,ierr);CHKERRQ(ierr)
+
+   Allocate(DefMechCtx%temperature,stat=ierr)
+   Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%temperature,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(DefMechCtx%temperature,"temperature",ierr);CHKERRQ(ierr)
+   Call VecSet(DefMechCtx%temperature,0.0_Kr,ierr);CHKERRQ(ierr)
+
+   Allocate(DefMechCtx%plasticStrain,stat=ierr)
+   Call DMCreateGlobalVector(DefMechCtx%CellDMMatS,DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(DefMechCtx%plasticStrain,"plasticStrain",ierr);CHKERRQ(ierr)
+   Call VecSet(DefMechCtx%plasticStrain,0.0_Kr,ierr);CHKERRQ(ierr)
+   
+   Allocate(DefMechCtx%damage,stat=ierr)
+   Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%damage,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(DefMechCtx%damage,"damage",ierr);CHKERRQ(ierr)
+   Call VecSet(DefMechCtx%damage,0.0_Kr,ierr);CHKERRQ(ierr)
+
+   Allocate(DefMechCtx%boundaryDamage,stat=ierr)
+   Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(DefMechCtx%boundaryDamage,"boundaryDamage",ierr);CHKERRQ(ierr)
+   Call VecSet(DefMechCtx%boundaryDamage,0.0_Kr,ierr);CHKERRQ(ierr)
+End Subroutine MEF90DefMechCtx_CreateVectors
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCtx_DestroyVectors"
+!!!
+!!!  
+!!!  MEF90DefMechCtx_DestroyVectors: destroys the Vecs in a MEF90DefMechCtx_Type
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+Subroutine MEF90DefMechCtx_DestroyVectors(DefMechCtx,ierr)
+   Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
+   PetscErrorCode,Intent(OUT)                      :: ierr
+
+   If (Associated(DefMechCtx%Displacement)) Then 
+      Call VecDestroy(DefMechCtx%Displacement,ierr);CHKERRQ(ierr)
+      DeAllocate(DefMechCtx%Displacement)
+      Nullify(DefMechCtx%Displacement)
+   End If   
+
+   If (Associated(DefMechCtx%boundaryDisplacement)) Then 
+      Call VecDestroy(DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
+      DeAllocate(DefMechCtx%boundaryDisplacement)
+      Nullify(DefMechCtx%boundaryDisplacement)
+   End If   
+
+   If (Associated(DefMechCtx%boundaryDamage)) Then 
+      Call VecDestroy(DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
+      DeAllocate(DefMechCtx%boundaryDamage)
+      Nullify(DefMechCtx%boundaryDamage)
+   End If
+   
+   If (Associated(DefMechCtx%damage)) Then 
+      Call VecDestroy(DefMechCtx%damage,ierr);CHKERRQ(ierr)
+      DeAllocate(DefMechCtx%damage)
+      Nullify(DefMechCtx%damage)
+   End If
+   
+   If (Associated(DefMechCtx%force)) Then 
+      Call VecDestroy(DefMechCtx%force,ierr);CHKERRQ(ierr)   
+      DeAllocate(DefMechCtx%force)
+      Nullify(DefMechCtx%force)
+   End If
+
+   If (Associated(DefMechCtx%pressureForce)) Then 
+      Call VecDestroy(DefMechCtx%pressureForce,ierr);CHKERRQ(ierr)      
+      DeAllocate(DefMechCtx%pressureForce)
+      Nullify(DefMechCtx%pressureForce)
+   End If
+
+   If (Associated(DefMechCtx%temperature)) Then 
+      Call VecDestroy(DefMechCtx%temperature,ierr);CHKERRQ(ierr)   
+      DeAllocate(DefMechCtx%temperature)
+      Nullify(DefMechCtx%temperature)
+   End If
+
+   If (Associated(DefMechCtx%plasticStrain)) Then 
+      Call VecDestroy(DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)   
+      DeAllocate(DefMechCtx%plasticStrain)
+      Nullify(DefMechCtx%plasticStrain)
+   End If
+   
+End Subroutine MEF90DefMechCtx_DestroyVectors
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtx_Destroy"
 !!!
 !!!  
-!!!  MEF90DefMechCtx_Destroy:
+!!!  MEF90DefMechCtx_Destroy: destroys a MEF90DefMechCtx_Type
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
