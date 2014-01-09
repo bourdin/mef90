@@ -1,5 +1,6 @@
 Module m_MEF90
 #include "finclude/petscdef.h"
+#include "../mef90version.h"
    Use petsc
    Use m_MEF_Ctx
    Use m_MEF_DiffusionInterface
@@ -30,10 +31,15 @@ Contains
 !!!
    Subroutine MEF90Initialize(ierr)
       PetscInt,Intent(OUT)                               :: ierr
+
+      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
        
       Call PetscLogBegin(ierr);CHKERRQ(ierr)
+      Write(IOBuffer,*) "# MEF90: (c) 2014 B. Bourdin bourdin@lsu.edu\n"
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,*) "# hg changeset ",MEF90_HGVER,"\n"
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 
-      
       !!! Individual modules runtime initialization should be called here
       Call MEF90MPIInitialize_Private(ierr);CHKERRQ(ierr)
       Call MEF90MaterialsInitialize_Private(ierr);CHKERRQ(ierr)

@@ -53,7 +53,7 @@ HeatXfer.o: ${BASE_DIR}/HeatXfer.F90 ${MEF90_HEATXFER_OBJS}
 testHeatXfer:
 	@echo "Testing HeatXfer with $${PREFIX} $${OPTIONSFILE}"
 	@ARGS="-prefix data/$${PREFIX} -options_file data/$${OPTIONSFILE}";\
-	${MPIEXEC} -n ${NP} ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer $${ARGS} > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
+	${MPIEXEC} -n ${NP} ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer $${ARGS}| grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "         ... passed";\
 	else echo "Possible problem. Diffs above \n========================================="; fi
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 

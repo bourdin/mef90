@@ -1,5 +1,6 @@
 Module m_MEF_Parameters
 #include "finclude/petscdef.h"
+#include "../mef90version.h"
 
    Use petsc
    IMPLICIT NONE
