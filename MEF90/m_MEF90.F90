@@ -15,34 +15,44 @@ Module m_MEF90
    Use m_MEF_Utils
 
    Implicit NONE
-   Public :: MEF90_Initialize
-   Public :: MEF90_Finalize
+   Public :: MEF90Initialize
+   Public :: MEF90Finalize
    
    
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_Initialize"
-   Subroutine MEF90_Initialize(ierr)
+#define __FUNCT__ "MEF90Initialize"
+!!!
+!!!  
+!!!  MEF90Initialize:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90Initialize(ierr)
       PetscInt,Intent(OUT)                               :: ierr
        
       Call PetscLogBegin(ierr);CHKERRQ(ierr)
 
       
       !!! Individual modules runtime initialization should be called here
-      Call MEF90MPI_InitializePrivate(ierr);CHKERRQ(ierr)
-      Call MEF90Materials_InitializePrivate(ierr);CHKERRQ(ierr)
-      Call MEF90Ctx_InitializePrivate(ierr);CHKERRQ(ierr)
-      
-   End Subroutine MEF90_Initialize
+      Call MEF90MPIInitialize_Private(ierr);CHKERRQ(ierr)
+      Call MEF90MaterialsInitialize_Private(ierr);CHKERRQ(ierr)
+      Call MEF90CtxInitialize_Private(ierr);CHKERRQ(ierr)
+   End Subroutine MEF90Initialize
    
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_Finalize"
-   Subroutine MEF90_Finalize(ierr)
+#define __FUNCT__ "MEF90Finalize"
+!!!
+!!!  
+!!!  MEF90Finalize:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90Finalize(ierr)
       PetscInt,Intent(OUT)                   :: ierr
       
-      Call MEF90MPI_FinalizePrivate(ierr);CHKERRQ(ierr)
-      !Call PetscFinalize(ierr)
-   End Subroutine MEF90_Finalize
+      Call MEF90MPIFinalize_Private(ierr);CHKERRQ(ierr)
+   End Subroutine MEF90Finalize
 End Module m_MEF90
 

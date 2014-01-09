@@ -20,14 +20,20 @@ Module m_MEF_MPI
    PetscInt,Public,protected  :: MEF90_NumProcs
 
    
-   Public   :: MEF90MPI_InitializePrivate
-   Public   :: MEF90MPI_FinalizePrivate
+   Public   :: MEF90MPIInitialize_Private
+   Public   :: MEF90MPIFinalize_Private
    
 Contains
 
+!!!
+!!!  
+!!!  MEF90MPIInitialize_Private:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
 #undef __FUNCT__
-#define __FUNCT__ "MEF90MPI_InitializePrivate"
-   Subroutine MEF90MPI_InitializePrivate(ierr)
+#define __FUNCT__ "MEF90MPIInitialize_Private"
+   Subroutine MEF90MPIInitialize_Private(ierr)
       PetscErrorCode,Intent(OUT)       :: ierr
       PetscInt,Dimension(:),Pointer    :: BlkCounts,Offsets,DataTypes
       PetscInt                         :: NumBlk
@@ -81,11 +87,17 @@ Contains
       
       Call MPI_COMM_RANK(MPI_COMM_WORLD,MEF90_MyRank,ierr)
       Call MPI_COMM_SIZE(MPI_COMM_WORLD,MEF90_NumProcs,ierr)
-   End Subroutine MEF90MPI_InitializePrivate
+   End Subroutine MEF90MPIInitialize_Private
    
+!!!
+!!!  
+!!!  MEF90MPIFinalize_Private:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
 #undef __FUNCT__
-#define __FUNCT__ "MEF90MPI_FinalizePrivate"
-   Subroutine MEF90MPI_FinalizePrivate(ierr)
+#define __FUNCT__ "MEF90MPIFinalize_Private"
+   Subroutine MEF90MPIFinalize_Private(ierr)
       PetscInt,Intent(OUT)             :: ierr
       
       Call MPI_TYPE_FREE(Vect2D_MPIType,ierr)
@@ -96,5 +108,5 @@ Contains
       Call MPI_TYPE_FREE(MatS3D_MPIType,ierr)
       Call MPI_TYPE_FREE(Tens4OS2D_MPIType,ierr)
       Call MPI_TYPE_FREE(Tens4OS3D_MPIType,ierr)
-   End Subroutine MEF90MPI_FinalizePrivate
+   End Subroutine MEF90MPIFinalize_Private
 End Module m_MEF_MPI

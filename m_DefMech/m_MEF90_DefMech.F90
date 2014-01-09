@@ -528,4 +528,173 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
          Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
       End If
    End Subroutine MEF90DefMechViewEXO
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechFormatEXO"
+!!!
+!!!  
+!!!  MEF90DefMechFormatEXO:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameV,nameC
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Integer                                            :: dim,numfield
+
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+      Allocate(nameG(4))
+      nameG(1) = "Elastic Energy"
+      nameG(2) = "Work"
+      nameG(3) = "Surface Energy"
+      nameG(4) = "Total Energy"
+   
+      numfield = max(MEF90DefMechGlobalOptions%displacementOffset+dim-1, &
+                     MEF90DefMechGlobalOptions%damageOffset,&
+                     MEF90DefMechGlobalOptions%boundaryDisplacementOffset+dim-1,&
+                     MEF90DefMechGlobalOptions%boundaryDamageOffset,&
+                     MEF90DefMechGlobalOptions%temperatureOffset)
+      Allocate(nameV(numfield))
+
+      nameV = "empty"
+      nameV(MEF90DefMechGlobalOptions%displacementOffset+0)            = "Displacement_X"
+      nameV(MEF90DefMechGlobalOptions%displacementOffset+1)            = "Displacement_Y"
+      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0)    = "Boundary_Displacement_X"
+      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1)    = "Boundary_Displacement_Y"
+      If (dim == 3) Then
+         nameV(MEF90DefMechGlobalOptions%displacementOffset+2)         = "Displacement_Z"
+         nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+2) = "Boundary_Displacement_Z"
+      End If
+      nameV(MEF90DefMechGlobalOptions%damageOffset)                    = "Damage"
+      nameV(MEF90DefMechGlobalOptions%boundaryDamageOffset)            = "Boundary_Damage"
+      nameV(MEF90DefMechGlobalOptions%temperatureOffset)               = "Temperature"
+                     
+      numfield = max(MEF90DefMechGlobalOptions%forceOffset+dim-1,&
+                     MEF90DefMechGlobalOptions%pressureForceOffset,&
+                     MEF90DefMechGlobalOptions%StressOffset+(dim*(dim+1))/2-1,&
+                     MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1)
+      Allocate(nameC(numfield))
+      nameC = "empty"
+      nameC(MEF90DefMechGlobalOptions%forceOffset+0)                 = "Force_X"
+      nameC(MEF90DefMechGlobalOptions%forceOffset+1)                 = "Force_Y"
+      If (dim == 3) Then
+         nameC(MEF90DefMechGlobalOptions%forceOffset+2)              = "Force_Z"
+      End If
+
+      nameC(MEF90DefMechGlobalOptions%pressureForceOffset)           = "Pressure_Force"
+      If (dim == 2) Then
+         nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_XY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plasticStrainOffset_XX"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plasticStrainOffset_YY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plasticStrainOffset_XY"
+      Else
+         nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_ZZ"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+3)             = "Stress_YZ"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+4)             = "Stress_XZ"
+         nameC(MEF90DefMechGlobalOptions%stressOffset+5)             = "Stress_XY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plasticStrain_XX"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plasticStrain_YY"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plasticStrain_ZZ"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+3)      = "plasticStrain_YZ"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+4)      = "plasticStrain_XZ"
+         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+5)      = "plasticStrain_XY"
+      End If
+      Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
+   End Subroutine MEF90DefMechFormatEXO
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCreateSolvers"
+!!!
+!!!  
+!!!  MEF90DefMechCreateSolvers:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechCreateSolvers(MEF90DefMechCtx,snesDisp,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      Type(SNES),Intent(INOUT)                           :: snesDisp
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(Mat)                                          :: matDisp
+      Type(SectionReal)                                  :: coordSec
+      Type(Vec)                                          :: CoordVec
+      PetscReal,Dimension(:,:),Pointer                   :: CoordPtr
+      Type(VecScatter)                                   :: ScatterSecToVec
+      Type(MatNullSpace)                                 :: nspDisp
+      Type(Vec)                                          :: residualDisp
+      Type(KSP)                                          :: kspDisp
+      Type(PC)                                           :: pcDisp
+      Type(TS)                                           :: tsDIsp
+      PetscReal                                          :: atol,rtol,dtol
+      PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
+
+   
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+      Call DMCreateMatrix(MEF90DefMechCtx%DMVect,MATAIJ,matDisp,iErr);CHKERRQ(iErr)
+      Call MatSetOptionsPrefix(matDisp,"Disp_",ierr);CHKERRQ(ierr)
+      Call MatSetOption(matDisp,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call MatSetOption(matDisp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call MatSetOption(matDisp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
+         Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'coordinates',coordSec,ierr);CHKERRQ(ierr)
+         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,coordSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+         Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,coordVec,ierr)
+         Call SectionRealToVec(coordSec,ScatterSecToVec,SCATTER_FORWARD,coordVec,ierr);CHKERRQ(ierr)
+         Call MatNullSpaceCreateRigidBody(coordVec,nspDisp,ierr);CHKERRQ(ierr)
+         Call MatSetNearNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
+         !!!Call MatSetNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
+         Call MatNullSpaceDestroy(nspDisp,ierr);CHKERRQ(ierr)
+         Call SectionRealDestroy(coordSec,ierr);CHKERRQ(ierr)
+         Call VecDestroy(coordVec,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+      End If
+
+      Call MatSetFromOptions(matDisp,ierr);CHKERRQ(ierr)
+
+      If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
+         Call SNESCreate(PETSC_COMM_WORLD,snesDisp,ierr);CHKERRQ(ierr)
+         Call SNESSetApplicationContext(snesDisp,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         Call SNESSetDM(snesDisp,MEF90DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
+         Call SNESSetOptionsPrefix(snesDisp,'Disp_',ierr);CHKERRQ(ierr)
+         Call SNESSetType(snesDisp,SNESKSPONLY,ierr);CHKERRQ(ierr)
+
+         Call SNESSetFunction(snesDisp,residualDisp,MEF90DefMechOperator,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearForm,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         !atol = 1.0D-10
+         !rtol = 1.0D-10
+         !Call SNESSetTolerances(snesDisp,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+         Call SNESSetFromOptions(snesDisp,ierr);CHKERRQ(ierr)
+      End If
+      !!! 
+      !!! Set some KSP options
+      !!!
+      Call SNESGetKSP(snesDisp,kspDisp,ierr);CHKERRQ(ierr)
+      Call KSPSetType(kspDisp,KSPCG,ierr);CHKERRQ(ierr)
+      Call KSPSetInitialGuessNonzero(kspDisp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      rtol = 1.0D-8
+      atol = 1.0D-8
+      dtol = 1.0D+10
+      Call KSPSetTolerances(kspDisp,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+      Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)
+
+      ! set coordinates in PC for GAMG
+      !Call KSPGetPC(kspDisp,pcDisp,ierr);CHKERRQ(ierr)
+      !Call DMMeshGetCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
+      !Allocate(coordPCPtr(size(CoordPtr)))
+      !coordPCPtr = reshape(transpose(coordPtr),[size(CoordPtr)])
+      !coordPCPtr = reshape((coordPtr),[size(CoordPtr)])
+      !Call PCSetCoordinates(pcDisp,dim,size(coordPtr),coordPCPtr,ierr);CHKERRQ(ierr)
+      !DeAllocate(coordPCPtr)
+      !Call DMMeshRestoreCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
+      !Call PCSetFromOptions(pcDisp,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechCreateSolvers
 End Module m_MEF90_DefMech

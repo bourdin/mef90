@@ -80,36 +80,36 @@ Program HeatXfer
       
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90_Initialize(ierr)
+   Call MEF90Initialize(ierr)
 
    !!! Get all MEF90-wide options
-   Call MEF90Ctx_Create(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr);CHKERRQ(ierr)
+   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr);CHKERRQ(ierr)
    Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
 
    !!! Get DM from mesh
-   Call MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
+   Call MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
    Call DMMeshSetMaxDof(mesh,1,ierr);CHKERRQ(ierr) 
    
    !!! Open output file
-   Call MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
+   Call MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
 
    
    !!! Create HeatXfer context, get all HeatXfer options
-   Call MEF90HeatXferCtx_Create(MEF90HeatXferCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
-   Call MEF90HeatXferCtx_SetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions, &
-                                        MEF90HeatXferDefaultCellSetOptions,MEF90HeatXferDefaultVertexSetOptions,ierr)
+   Call MEF90HeatXferCtxCreate(MEF90HeatXferCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
+   Call MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions, &
+                                       MEF90HeatXferDefaultCellSetOptions,MEF90HeatXferDefaultVertexSetOptions,ierr)
    Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
 
    !!! Get material properties bags
    Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
    If (dim == 2) Then
-      Call MEF90MatPropBag_SetFromOptions(MEF90MatPropBag,MEF90HeatXferCtx%DM,MEF90_Mathium2D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90HeatXferCtx%DM,MEF90_Mathium2D,MEF90Ctx,ierr)
    Else
-      Call MEF90MatPropBag_SetFromOptions(MEF90MatPropBag,MEF90HeatXferCtx%DM,MEF90_Mathium3D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90HeatXferCtx%DM,MEF90_Mathium3D,MEF90Ctx,ierr)
    End If   
    MEF90HeatXferCtx%MaterialPropertiesBag => MEF90MatPropBag
 
-   Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
+   Call MEF90CtxGetTime(MEF90Ctx,time,ierr)
 
    !!! Create default section matching element type
    Call DMMeshGetVertexSectionReal(MEF90HeatXferCtx%DM,"default",1,defaultSection,ierr);CHKERRQ(ierr)
@@ -357,8 +357,8 @@ Program HeatXfer
    DeAllocate(energy)
    DeAllocate(work)
    Call PetscLogView(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
-   Call MEF90HeatXferCtx_Destroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
-   Call MEF90Ctx_CloseEXO(MEF90Ctx,ierr)
-   Call MEF90_Finalize(ierr)
+   Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+   Call MEF90CtxCloseEXO(MEF90Ctx,ierr)
+   Call MEF90Finalize(ierr)
    Call PetscFinalize(ierr)
 End Program HeatXfer
