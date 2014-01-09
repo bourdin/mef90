@@ -85,7 +85,7 @@ Program ThermoElasticity
       
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90_Initialize(ierr)
+   Call MEF90Initialize(ierr)
 
    !!! Get all MEF90-wide options
    Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr);CHKERRQ(ierr)
@@ -211,6 +211,6 @@ Program ThermoElasticity
 
    Call PetscLogView(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
    Call MEF90CtxDestroy(MEF90Ctx,ierr)
-   Call MEF90_Finalize(ierr)
+   Call MEF90Finalize(ierr)
    Call PetscFinalize(ierr)
 End Program ThermoElasticity

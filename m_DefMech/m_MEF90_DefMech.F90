@@ -620,7 +620,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
 !!!
    Subroutine MEF90DefMechCreateSolvers(MEF90DefMechCtx,snesDisp,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      Type(SNES),Intent(INOUT)                           :: snesDisp
+      Type(SNES),Intent(OUT)                             :: snesDisp
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
@@ -633,7 +633,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       Type(Vec)                                          :: residualDisp
       Type(KSP)                                          :: kspDisp
       Type(PC)                                           :: pcDisp
-      Type(TS)                                           :: tsDIsp
+      Type(TS)                                           :: tsDisp
       PetscReal                                          :: atol,rtol,dtol
       PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
 
