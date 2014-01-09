@@ -263,6 +263,7 @@ End Subroutine MEF90CtxDestroy
       Integer                                         :: exoerr      
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
 
+      i = 0 ! silence gfortran silly warning
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       Select Case(GlobalOptions%timeInterpolation)
       Case (MEF90TimeInterpolation_linear)
@@ -271,8 +272,7 @@ End Subroutine MEF90CtxDestroy
          If (GlobalOptions%timeNumStep > 1) Then
             dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / Real(GlobalOptions%timeNumStep-1.0_Kr)
          End If
-         i = 0 ! useless, but avoids a gfortran warning
-         t = (/ (GlobalOptions%timeMin + Real(i) * dt, i = 0,GlobalOptions%timeNumStep-1) /)
+         t = [ (GlobalOptions%timeMin + Real(i) * dt, i = 0,GlobalOptions%timeNumStep-1) ]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
       Case (MEF90TimeInterpolation_quadratic)
          !!! Natural time scale for the heat equation
@@ -281,7 +281,7 @@ End Subroutine MEF90CtxDestroy
          If (GlobalOptions%timeNumStep > 1) Then
             dt = (sqrt(GlobalOptions%timeMax) - sqrt(GlobalOptions%timeMin)) / Real(GlobalOptions%timeNumStep-1.0_Kr)
          End If
-         t = (/ ((sqrt(GlobalOptions%timeMin) + Real(i) * dt)**2, i = 0,GlobalOptions%timeNumStep-1) /)
+         t = [ ((sqrt(GlobalOptions%timeMin) + Real(i) * dt)**2, i = 0,GlobalOptions%timeNumStep-1) ]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
       Case (MEF90TimeInterpolation_exo)
          Select case(GlobalOptions%FileFormat)

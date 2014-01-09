@@ -561,15 +561,15 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,ierr)
+   Subroutine MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residual,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       Type(SNES),Intent(OUT)                             :: snesTemp
+      Type(Vec),Intent(IN)                               :: residual
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
       Type(Mat)                                          :: matTemp
       Type(MatNullSpace)                                 :: nspTemp
-      Type(Vec)                                          :: residual
       Type(KSP)                                          :: kspTemp
       Type(PC)                                           :: pcTemp
       PetscReal                                          :: rtol,dtol
@@ -608,7 +608,6 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       dtol = 1.0D+10
       Call KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
       Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
-      
    End Subroutine MEF90HeatXferCreateSNES
 
 #undef __FUNCT__
@@ -619,16 +618,16 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,ierr)
+   Subroutine MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residual,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       Type(TS),Intent(OUT)                               :: tsTemp
+      Type(Vec),Intent(IN)                               :: residual
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
       Type(Mat)                                          :: matTemp
       Type(MatNullSpace)                                 :: nspTemp
       Type(SNES)                                         :: snesTemp
-      Type(Vec)                                          :: residual
       Type(KSP)                                          :: kspTemp
       Type(PC)                                           :: pcTemp
       PetscReal                                          :: rtol,dtol
@@ -673,6 +672,5 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       dtol = 1.0D+10
       Call KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
       Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
-      
    End Subroutine MEF90HeatXferCreateTS
 End Module m_MEF90_HeatXfer

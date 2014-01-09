@@ -1,6 +1,6 @@
  MEF90 Global Context:  
-  prefix:       data/Beam1x10 
-  log file:     data/Beam1x10.log 
+  prefix:       data/Beam1x10-tetra4 
+  log file:     data/Beam1x10-tetra4.log 
 PetscBag Object:  MEF90Ctx MEF90 Global options object
   verbose = 1 ; Verbosity: level
   time_interpolation = quadratic; (MEF90TimeInterpolation) Time: interpolation type
@@ -9,6 +9,7 @@ PetscBag Object:  MEF90Ctx MEF90 Global options object
   time_numstep = 21 ; Time: number of time steps
   file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
  
+ EXO file data/Beam1x10-tetra4_out.gen does not seem to exist. Creating it. 
 PetscBag Object:  MEF90HeatXfer Global Ctx HeatXferGlobalOptions MEF90 Heat transfer global options
   heatxfer_mode = Transient; (MEF90_HeatXFer_Mode) Type of heat transfer computation
   addNullSpace =  FALSE; Add null space to SNES
@@ -84,45 +85,6 @@ Time values array:
 15:   1.1250e+01   1.2800e+01   1.4450e+01   1.6200e+01   1.8050e+01
 20:   2.0000e+01
 === 
-TS Object:(temp_) 2 MPI processes
-  type: rosw
-  maximum steps=5000
-  maximum time=5
-  total number of linear solver iterations=0
-  total number of rejected steps=0
-    Rosenbrock-W ra34pw2
-    Abscissa of A       =  0.000000  0.871733  0.731580  1.000000 
-    Abscissa of A+Gamma =  0.435867  0.871733  0.731580  1.000000 
-  SNES Object:  (temp_)   2 MPI processes
-    type: ksponly
-    maximum iterations=50, maximum function evaluations=10000
-    tolerances: relative=1e-08, absolute=1e-50, solution=1e-08
-    total number of linear solver iterations=0
-    total number of function evaluations=0
-    KSP Object:    (temp_)     2 MPI processes
-      type: gmres
-        GMRES: restart=30, using Classical (unmodified) Gram-Schmidt Orthogonalization with no iterative refinement
-        GMRES: happy breakdown tolerance 1e-30
-      maximum iterations=10000, initial guess is zero
-      tolerances:  relative=1e-05, absolute=1e-50, divergence=10000
-      left preconditioning
-      using DEFAULT norm type for convergence test
-    PC Object:    (temp_)     2 MPI processes
-      type: bjacobi
-        block Jacobi: number of blocks = -1
-        Local solve is same for all blocks, in the following KSP and PC objects:
-      linear system matrix = precond matrix:
-      Matrix Object:      (temp_)       2 MPI processes
-        type: mpiaij
-        rows=2635, cols=2635
-        total: nonzeros=33933, allocated nonzeros=33933
-        total number of mallocs used during MatSetValues calls =0
-          not using I-node (on process 0) routines
-    SNESLineSearch Object:    (temp_)     2 MPI processes
-      type: basic
-      maxstep=1.000000e+08, minlambda=1.000000e-12
-      tolerances: relative=1.000000e-08, absolute=1.000000e-15, lambda=1.000000e-08
-      maximum iterations=1
 Solving steady state step    1, t= 0.00000E+00 
 cell set    1 thermal energy:  2.16759E-30 fluxes work:  0.00000E+00 total:  2.16759E-30 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
@@ -154,13 +116,13 @@ Solving steady state step    3, t= 2.00000E-01
 2 TS dt 0.0332028 time 0.109552
 3 TS dt 0.0423472 time 0.142755
 4 TS dt 0.0536363 time 0.185102
-5 TS dt 0.0675373 time 0.238738
+5 TS dt 0.0675372 time 0.238738
 cell set    1 thermal energy:  4.06735E-01 fluxes work:  0.00000E+00 total:  4.06735E-01 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  4.06735E-01 fluxes work:  0.00000E+00 total:  4.06735E-01 
 Solving steady state step    4, t= 4.50000E-01 
-0 TS dt 0.0675373 time 0.238738
+0 TS dt 0.0675372 time 0.238738
 1 TS dt 0.0846331 time 0.306275
 2 TS dt 0.105614 time 0.390908
 3 TS dt 0.131293 time 0.496523
@@ -179,7 +141,7 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  2.00154E-01 fluxes work:  0.00000E+00 total:  2.00154E-01 
 Solving steady state step    6, t= 1.25000E+00 
 0 TS dt 0.247247 time 0.991282
-1 TS dt 0.303506 time 1.23853
+1 TS dt 0.303507 time 1.23853
 2 TS dt 0.37145 time 1.54204
 cell set    1 thermal energy:  1.60530E-01 fluxes work:  0.00000E+00 total:  1.60530E-01 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
@@ -216,13 +178,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  9.51229E-02 fluxes work:  0.00000E+00 total:  9.51229E-02 
 Solving steady state step   11, t= 5.00000E+00 
 0 TS dt 0.969894 time 4.39507
-1 TS dt 1.11964 time 5.36496
+1 TS dt 1.11964 time 5.36497
 cell set    1 thermal energy:  8.60902E-02 fluxes work:  0.00000E+00 total:  8.60902E-02 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  8.60902E-02 fluxes work:  0.00000E+00 total:  8.60902E-02 
 Solving steady state step   12, t= 6.05000E+00 
-0 TS dt 1.11964 time 5.36496
+0 TS dt 1.11964 time 5.36497
 1 TS dt 1.17214 time 6.4846
 cell set    1 thermal energy:  7.82663E-02 fluxes work:  0.00000E+00 total:  7.82663E-02 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
@@ -230,13 +192,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  7.82663E-02 fluxes work:  0.00000E+00 total:  7.82663E-02 
 Solving steady state step   13, t= 7.20000E+00 
 0 TS dt 1.17214 time 6.4846
-1 TS dt 1.10835 time 7.65674
+1 TS dt 1.10835 time 7.65675
 cell set    1 thermal energy:  7.19132E-02 fluxes work:  0.00000E+00 total:  7.19132E-02 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  7.19132E-02 fluxes work:  0.00000E+00 total:  7.19132E-02 
 Solving steady state step   14, t= 8.45000E+00 
-0 TS dt 1.10835 time 7.65674
+0 TS dt 1.10835 time 7.65675
 1 TS dt 0.938927 time 8.64845
 cell set    1 thermal energy:  6.74846E-02 fluxes work:  0.00000E+00 total:  6.74846E-02 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 

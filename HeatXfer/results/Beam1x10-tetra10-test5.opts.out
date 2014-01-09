@@ -1,0 +1,269 @@
+ MEF90 Global Context:  
+  prefix:       data/Beam1x10-tetra10 
+  log file:     data/Beam1x10-tetra10.log 
+PetscBag Object:  MEF90Ctx MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  time_interpolation = quadratic; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0 ; Time: min
+  time_max = 20 ; Time: max
+  time_numstep = 21 ; Time: number of time steps
+  file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
+ 
+ EXO file data/Beam1x10-tetra10_out.gen does not seem to exist. Creating it. 
+PetscBag Object:  MEF90HeatXfer Global Ctx HeatXferGlobalOptions MEF90 Heat transfer global options
+  heatxfer_mode = Transient; (MEF90_HeatXFer_Mode) Type of heat transfer computation
+  addNullSpace =  FALSE; Add null space to SNES
+  temp_Offset = 1 ; Position of temperature field in EXO file
+  initialTemp = 1 ; [K] (T): Initial Temperature
+  boundaryTemp_scaling = constant; (MEF90scaling) Boundary temperature scaling
+  boundaryTemp_Offset = 2 ; Position of boundary temperature field in EXO file
+  externalTemp_scaling = linear; (MEF90scaling) External Temperature scaling
+  externalTemp_Offset = 1 ; Position of external temperature field in EXO file
+  flux_scaling = linear; (MEF90scaling) Heat flux scaling
+  flux_Offset = 2 ; Position of heat flux field in EXO file
+Registering cell set    1 prefix: cs0001_ 
+PetscBag Object:  Cell set    1 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
+  ShortID = 14 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity
+  externalTemp = 0 ; Reference temperature T [K]
+  TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemp = 0 ; Temperature boundary value
+ 
+Registering cell set   10 prefix: cs0010_ 
+PetscBag Object:  Cell set   10 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
+  ShortID = 20 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity
+  externalTemp = 0 ; Reference temperature T [K]
+  TempBC =  TRUE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemp = 0 ; Temperature boundary value
+ 
+Registering cell set   20 prefix: cs0020_ 
+PetscBag Object:  Cell set   20 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
+  ShortID = 20 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1)] (H) Surface Thermal Conductivity
+  externalTemp = 0 ; Reference temperature T [K]
+  TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemp = 1 ; Temperature boundary value
+ 
+Registering materials properties for cell set    1: cs0001_ 
+PetscBag Object:  Cell set    1 MatProp3D object: material properties
+  Name = MEF90_Mathium3D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 1 0 0 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 1 0 0 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  HookesLaw = 1.34615 0 0 0.57692 0 0.57692 0.38462 0 0 0 0 0.38462 0 0 0 1.34615 0 0.57692 0.38462 0 1.34615 ; [N.m^(-2)] (A) Hooke's law
+ 
+Registering materials properties for cell set   10: cs0010_ 
+PetscBag Object:  Cell set   10 MatProp3D object: material properties
+  Name = MEF90_Mathium3D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 1 0 0 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 1 0 0 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  HookesLaw = 1.34615 0 0 0.57692 0 0.57692 0.38462 0 0 0 0 0.38462 0 0 0 1.34615 0 0.57692 0.38462 0 1.34615 ; [N.m^(-2)] (A) Hooke's law
+ 
+Registering materials properties for cell set   20: cs0020_ 
+PetscBag Object:  Cell set   20 MatProp3D object: material properties
+  Name = MEF90_Mathium3D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 1 0 0 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 1 0 0 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  HookesLaw = 1.34615 0 0 0.57692 0 0.57692 0.38462 0 0 0 0 0.38462 0 0 0 1.34615 0 0.57692 0.38462 0 1.34615 ; [N.m^(-2)] (A) Hooke's law
+ 
+Time values array: 
+ 0:   0.0000e+00   5.0000e-02   2.0000e-01   4.5000e-01   8.0000e-01
+ 5:   1.2500e+00   1.8000e+00   2.4500e+00   3.2000e+00   4.0500e+00
+10:   5.0000e+00   6.0500e+00   7.2000e+00   8.4500e+00   9.8000e+00
+15:   1.1250e+01   1.2800e+01   1.4450e+01   1.6200e+01   1.8050e+01
+20:   2.0000e+01
+=== 
+Solving steady state step    1, t= 0.00000E+00 
+cell set    1 thermal energy:  4.52383E-29 fluxes work:  0.00000E+00 total:  4.52383E-29 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  4.52383E-29 fluxes work:  0.00000E+00 total:  4.52383E-29 
+Solving steady state step    2, t= 5.00000E-02 
+0 TS dt 0.0952381 time 0
+1 TS dt 0.00518892 time 0.00249873
+2 TS dt 0.000489493 time 0.00290251
+3 TS dt 0.000368517 time 0.0032657
+4 TS dt 0.000518087 time 0.00363422
+5 TS dt 0.000756433 time 0.00415231
+6 TS dt 0.00108768 time 0.00490874
+7 TS dt 0.00152137 time 0.00599642
+8 TS dt 0.00206002 time 0.0075178
+9 TS dt 0.00274174 time 0.00957782
+10 TS dt 0.00362922 time 0.0123196
+11 TS dt 0.00477834 time 0.0159488
+12 TS dt 0.00626216 time 0.0207271
+13 TS dt 0.00818751 time 0.0269893
+14 TS dt 0.0106816 time 0.0351768
+15 TS dt 0.0138906 time 0.0458584
+16 TS dt 0.0179999 time 0.0597489
+cell set    1 thermal energy:  8.36460E-01 fluxes work:  0.00000E+00 total:  8.36460E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  8.36460E-01 fluxes work:  0.00000E+00 total:  8.36460E-01 
+Solving steady state step    3, t= 2.00000E-01 
+0 TS dt 0.0179999 time 0.0597489
+1 TS dt 0.0232378 time 0.0777488
+2 TS dt 0.0298624 time 0.100987
+3 TS dt 0.038153 time 0.130849
+4 TS dt 0.0484217 time 0.169002
+5 TS dt 0.0610649 time 0.217424
+cell set    1 thermal energy:  4.30645E-01 fluxes work:  0.00000E+00 total:  4.30645E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  4.30645E-01 fluxes work:  0.00000E+00 total:  4.30645E-01 
+Solving steady state step    4, t= 4.50000E-01 
+0 TS dt 0.0610649 time 0.217424
+1 TS dt 0.0766074 time 0.278489
+2 TS dt 0.0956929 time 0.355096
+3 TS dt 0.119073 time 0.450789
+cell set    1 thermal energy:  2.98039E-01 fluxes work:  0.00000E+00 total:  2.98039E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  2.98039E-01 fluxes work:  0.00000E+00 total:  2.98039E-01 
+Solving steady state step    5, t= 8.00000E-01 
+0 TS dt 0.119073 time 0.450789
+1 TS dt 0.147641 time 0.569862
+2 TS dt 0.182474 time 0.717503
+3 TS dt 0.224863 time 0.899977
+cell set    1 thermal energy:  2.10594E-01 fluxes work:  0.00000E+00 total:  2.10594E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  2.10594E-01 fluxes work:  0.00000E+00 total:  2.10594E-01 
+Solving steady state step    6, t= 1.25000E+00 
+0 TS dt 0.224863 time 0.899977
+1 TS dt 0.276318 time 1.12484
+2 TS dt 0.338565 time 1.40116
+cell set    1 thermal energy:  1.68682E-01 fluxes work:  0.00000E+00 total:  1.68682E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.68682E-01 fluxes work:  0.00000E+00 total:  1.68682E-01 
+Solving steady state step    7, t= 1.80000E+00 
+0 TS dt 0.338565 time 1.40116
+1 TS dt 0.413594 time 1.73972
+2 TS dt 0.503723 time 2.15332
+cell set    1 thermal energy:  1.36019E-01 fluxes work:  0.00000E+00 total:  1.36019E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.36019E-01 fluxes work:  0.00000E+00 total:  1.36019E-01 
+Solving steady state step    8, t= 2.45000E+00 
+0 TS dt 0.503723 time 2.15332
+1 TS dt 0.611674 time 2.65704
+cell set    1 thermal energy:  1.22434E-01 fluxes work:  0.00000E+00 total:  1.22434E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.22434E-01 fluxes work:  0.00000E+00 total:  1.22434E-01 
+Solving steady state step    9, t= 3.20000E+00 
+0 TS dt 0.611674 time 2.65704
+1 TS dt 0.740602 time 3.26871
+cell set    1 thermal energy:  1.10374E-01 fluxes work:  0.00000E+00 total:  1.10374E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.10374E-01 fluxes work:  0.00000E+00 total:  1.10374E-01 
+Solving steady state step   10, t= 4.05000E+00 
+0 TS dt 0.740602 time 3.26871
+1 TS dt 0.893044 time 4.00932
+2 TS dt 1.05829 time 4.90236
+cell set    1 thermal energy:  9.01090E-02 fluxes work:  0.00000E+00 total:  9.01090E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  9.01090E-02 fluxes work:  0.00000E+00 total:  9.01090E-02 
+Solving steady state step   11, t= 5.00000E+00 
+0 TS dt 1.05829 time 4.90236
+1 TS dt 1.17379 time 5.96065
+cell set    1 thermal energy:  8.16922E-02 fluxes work:  0.00000E+00 total:  8.16922E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  8.16922E-02 fluxes work:  0.00000E+00 total:  8.16922E-02 
+Solving steady state step   12, t= 6.05000E+00 
+0 TS dt 1.17379 time 5.96065
+1 TS dt 1.17111 time 7.13444
+cell set    1 thermal energy:  7.45889E-02 fluxes work:  0.00000E+00 total:  7.45889E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  7.45889E-02 fluxes work:  0.00000E+00 total:  7.45889E-02 
+Solving steady state step   13, t= 7.20000E+00 
+0 TS dt 1.17111 time 7.13444
+1 TS dt 1.08059 time 8.30555
+cell set    1 thermal energy:  6.89577E-02 fluxes work:  0.00000E+00 total:  6.89577E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  6.89577E-02 fluxes work:  0.00000E+00 total:  6.89577E-02 
+Solving steady state step   14, t= 8.45000E+00 
+0 TS dt 1.08059 time 8.30555
+1 TS dt 0.913144 time 9.27109
+cell set    1 thermal energy:  6.50356E-02 fluxes work:  0.00000E+00 total:  6.50356E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  6.50356E-02 fluxes work:  0.00000E+00 total:  6.50356E-02 
+Solving steady state step   15, t= 9.80000E+00 
+0 TS dt 0.913144 time 9.27109
+1 TS dt 0.82793 time 10.1842
+cell set    1 thermal energy:  6.17512E-02 fluxes work:  0.00000E+00 total:  6.17512E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  6.17512E-02 fluxes work:  0.00000E+00 total:  6.17512E-02 
+Solving steady state step   16, t= 1.12500E+01 
+0 TS dt 0.82793 time 10.1842
+1 TS dt 0.761615 time 11.0122
+2 TS dt 0.703626 time 11.7738
+cell set    1 thermal energy:  5.67340E-02 fluxes work:  0.00000E+00 total:  5.67340E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  5.67340E-02 fluxes work:  0.00000E+00 total:  5.67340E-02 
+Solving steady state step   17, t= 1.28000E+01 
+0 TS dt 0.703626 time 11.7738
+1 TS dt 0.658254 time 12.4774
+2 TS dt 0.622251 time 13.1357
+cell set    1 thermal energy:  5.29454E-02 fluxes work:  0.00000E+00 total:  5.29454E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  5.29454E-02 fluxes work:  0.00000E+00 total:  5.29454E-02 
+Solving steady state step   18, t= 1.44500E+01 
+0 TS dt 0.622251 time 13.1357
+1 TS dt 0.594146 time 13.7579
+2 TS dt 0.572069 time 14.3521
+3 TS dt 0.554704 time 14.9241
+cell set    1 thermal energy:  4.84856E-02 fluxes work:  0.00000E+00 total:  4.84856E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  4.84856E-02 fluxes work:  0.00000E+00 total:  4.84856E-02 
+Solving steady state step   19, t= 1.62000E+01 
+0 TS dt 0.554704 time 14.9241
+1 TS dt 0.540974 time 15.4788
+2 TS dt 0.530082 time 16.0198
+3 TS dt 0.521416 time 16.5499
+cell set    1 thermal energy:  4.48269E-02 fluxes work:  0.00000E+00 total:  4.48269E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  4.48269E-02 fluxes work:  0.00000E+00 total:  4.48269E-02 
+Solving steady state step   20, t= 1.80500E+01 
+0 TS dt 0.521416 time 16.5499
+1 TS dt 0.514517 time 17.0713
+2 TS dt 0.509035 time 17.5858
+3 TS dt 0.504705 time 18.0949
+cell set    1 thermal energy:  4.16365E-02 fluxes work:  0.00000E+00 total:  4.16365E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  4.16365E-02 fluxes work:  0.00000E+00 total:  4.16365E-02 
+Solving steady state step   21, t= 2.00000E+01 
+0 TS dt 0.504705 time 18.0949
+1 TS dt 0.501321 time 18.5996
+2 TS dt 0.498724 time 19.1009
+3 TS dt 0.49679 time 19.5996
+4 TS dt 0.49542 time 20.0964
+cell set    1 thermal energy:  3.78598E-02 fluxes work:  0.00000E+00 total:  3.78598E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  3.78598E-02 fluxes work:  0.00000E+00 total:  3.78598E-02 

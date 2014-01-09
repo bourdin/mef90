@@ -1,6 +1,6 @@
  MEF90 Global Context:  
-  prefix:       data/Beam1x10 
-  log file:     data/Beam1x10.log 
+  prefix:       data/Beam1x10-tetra4 
+  log file:     data/Beam1x10-tetra4.log 
 PetscBag Object:  MEF90Ctx MEF90 Global options object
   verbose = 1 ; Verbosity: level
   time_interpolation = quadratic; (MEF90TimeInterpolation) Time: interpolation type
@@ -82,45 +82,6 @@ Time values array:
  5:   2.5000e+00   3.6000e+00   4.9000e+00   6.4000e+00   8.1000e+00
 10:   1.0000e+01
 === 
-TS Object:(temp_) 2 MPI processes
-  type: rosw
-  maximum steps=5000
-  maximum time=5
-  total number of linear solver iterations=0
-  total number of rejected steps=0
-    Rosenbrock-W ra34pw2
-    Abscissa of A       =  0.000000  0.871733  0.731580  1.000000 
-    Abscissa of A+Gamma =  0.435867  0.871733  0.731580  1.000000 
-  SNES Object:  (temp_)   2 MPI processes
-    type: ksponly
-    maximum iterations=50, maximum function evaluations=10000
-    tolerances: relative=1e-08, absolute=1e-50, solution=1e-08
-    total number of linear solver iterations=0
-    total number of function evaluations=0
-    KSP Object:    (temp_)     2 MPI processes
-      type: gmres
-        GMRES: restart=30, using Classical (unmodified) Gram-Schmidt Orthogonalization with no iterative refinement
-        GMRES: happy breakdown tolerance 1e-30
-      maximum iterations=10000, initial guess is zero
-      tolerances:  relative=1e-05, absolute=1e-50, divergence=10000
-      left preconditioning
-      using DEFAULT norm type for convergence test
-    PC Object:    (temp_)     2 MPI processes
-      type: bjacobi
-        block Jacobi: number of blocks = -1
-        Local solve is same for all blocks, in the following KSP and PC objects:
-      linear system matrix = precond matrix:
-      Matrix Object:      (temp_)       2 MPI processes
-        type: mpiaij
-        rows=2635, cols=2635
-        total: nonzeros=33933, allocated nonzeros=33933
-        total number of mallocs used during MatSetValues calls =0
-          not using I-node (on process 0) routines
-    SNESLineSearch Object:    (temp_)     2 MPI processes
-      type: basic
-      maxstep=1.000000e+08, minlambda=1.000000e-12
-      tolerances: relative=1.000000e-08, absolute=1.000000e-15, lambda=1.000000e-08
-      maximum iterations=1
 Solving steady state step    1, t= 0.00000E+00 
 cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
@@ -347,7 +308,7 @@ Solving steady state step    4, t= 9.00000E-01
 56 TS dt 0.00761442 time 0.746328
 57 TS dt 0.00767305 time 0.753943
 58 TS dt 0.00773207 time 0.761616
-59 TS dt 0.00779148 time 0.769348
+59 TS dt 0.00779149 time 0.769348
 60 TS dt 0.0078513 time 0.777139
 61 TS dt 0.00791151 time 0.784991
 62 TS dt 0.00797212 time 0.792902
@@ -628,7 +589,7 @@ Solving steady state step    9, t= 6.40000E+00
 29 TS dt 0.0455769 time 6.10688
 30 TS dt 0.0459131 time 6.15246
 31 TS dt 0.0462527 time 6.19837
-32 TS dt 0.0465956 time 6.24462
+32 TS dt 0.0465956 time 6.24463
 33 TS dt 0.046942 time 6.29122
 34 TS dt 0.0472919 time 6.33816
 35 TS dt 0.0476453 time 6.38545
@@ -694,7 +655,7 @@ Solving steady state step   11, t= 1.00000E+01
 16 TS dt 0.0704497 time 9.15485
 17 TS dt 0.0710936 time 9.2253
 18 TS dt 0.071747 time 9.29639
-19 TS dt 0.0724101 time 9.36814
+19 TS dt 0.0724102 time 9.36814
 20 TS dt 0.0730833 time 9.44055
 21 TS dt 0.0737666 time 9.51363
 22 TS dt 0.0744604 time 9.5874

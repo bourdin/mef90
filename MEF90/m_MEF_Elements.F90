@@ -1728,7 +1728,7 @@ Contains
          GradPhiHat(10,:)%Y = 4.0_Kr * Xi%Z
          GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Y
       Case Default
-         NumDoF = 0
+         Num_DoF = 0
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
          STOP
       End Select
