@@ -271,6 +271,7 @@ End Subroutine MEF90CtxDestroy
          If (GlobalOptions%timeNumStep > 1) Then
             dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / Real(GlobalOptions%timeNumStep-1.0_Kr)
          End If
+         i = 0 ! useless, but avoids a gfortran warning
          t = (/ (GlobalOptions%timeMin + Real(i) * dt, i = 0,GlobalOptions%timeNumStep-1) /)
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
       Case (MEF90TimeInterpolation_quadratic)

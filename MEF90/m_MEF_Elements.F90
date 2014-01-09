@@ -1276,7 +1276,9 @@ Contains
          GradPhiHat(5,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(5,:)%Y = 4.0_Kr * Xi%X
          GradPhiHat(6,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(6,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
       Case Default
+         Num_DoF = 0
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
+         STOP
       End Select
       
       Allocate (dElem%BF(Num_DoF,Nb_Gauss),stat=ierr) 
@@ -1306,7 +1308,7 @@ Contains
       PetscReal, Dimension(:), Pointer       :: Xi
       PetscReal                              :: l
       PetscInt                               :: iDoF,iG,Num_Gauss,Num_DoF
-      Type(Vect2D),Dimension(:),pointer              :: vertices
+      Type(Vect2D),Dimension(:),pointer      :: vertices
 
       num_Dof = 0
       num_Gauss = 0
@@ -1726,8 +1728,9 @@ Contains
          GradPhiHat(10,:)%Y = 4.0_Kr * Xi%Z
          GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Y
       Case Default
+         NumDoF = 0
          Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
-         ierr = PETSC_ERR_SUP
+         STOP
       End Select
       
       Allocate (dElem%BF(Num_DoF,Nb_Gauss),stat=ierr) 
