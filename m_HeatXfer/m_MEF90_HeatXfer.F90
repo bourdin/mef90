@@ -27,6 +27,10 @@ Module m_MEF90_HeatXfer
    Public MEF90HeatXferUpdateboundaryTemperature
    Public MEF90HeatXferIFunction
    Public MEF90HeatXferIJacobian
+   Public MEF90HeatXferViewEXO
+   Public MEF90HeatXferFormatEXO
+   Public MEF90HeatXferCreateSNES
+   Public MEF90HeatXferCreateTS
 Contains
 
 #undef __FUNCT__
@@ -388,13 +392,13 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
-      Type(Vec),Intent(IN)                            :: temperatureVec
-      PetscReal,Intent(IN)                            :: t
-      Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
-      PetscReal,Dimension(:),Pointer                  :: energy,work
-      PetscErrorCode,Intent(OUT)                      :: ierr
-
-      PetscInt                                        :: dim      
+      Type(Vec),Intent(IN)                               :: temperatureVec
+      PetscReal,Intent(IN)                               :: t
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      PetscReal,Dimension(:),Pointer                     :: energy,work
+      PetscErrorCode,Intent(OUT)                         :: ierr
+   
+      PetscInt                                           :: dim      
 
       Call DMMeshGetDimension(MEF90HeatXferCtx%DM,dim,ierr);CHKERRQ(ierr)
       If (dim == 2) Then
@@ -414,12 +418,12 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXFerIFunction(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr)
-      Type(TS),Intent(IN)                             :: tempTS
-      PetscReal,Intent(IN)                            :: time
-      Type(Vec),Intent(IN)                            :: x,xdot
-      Type(Vec),Intent(INOUT)                         :: F
-      Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
-      PetscErrorCode,Intent(OUT)                      :: ierr
+      Type(TS),Intent(IN)                                :: tempTS
+      PetscReal,Intent(IN)                               :: time
+      Type(Vec),Intent(IN)                               :: x,xdot
+      Type(Vec),Intent(INOUT)                            :: F
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt                                           :: dim      
 
@@ -441,14 +445,14 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferIJacobian(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr)
-      Type(TS),Intent(IN)                             :: tempTS
-      PetscReal,Intent(IN)                            :: t
-      Type(Vec),Intent(IN)                            :: x,xdot
-      PetscReal,Intent(IN)                            :: shift
-      Type(Mat),Intent(INOUT)                         :: A,M
-      MatStructure,Intent(INOUT)                      :: flg
-      Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
-      PetscErrorCode,Intent(OUT)                      :: ierr  
+      Type(TS),Intent(IN)                                :: tempTS
+      PetscReal,Intent(IN)                               :: t
+      Type(Vec),Intent(IN)                               :: x,xdot
+      PetscReal,Intent(IN)                               :: shift
+      Type(Mat),Intent(INOUT)                            :: A,M
+      MatStructure,Intent(INOUT)                         :: flg
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr  
       
       PetscInt                                           :: dim      
 
@@ -459,4 +463,216 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
          Call MEF90HeatXferIJacobian3D(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr)
       End If      
    End Subroutine MEF90HeatXferIJacobian
+   
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferViewEXO"
+!!!
+!!!  
+!!!  MEF90HeatXferViewEXO:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      PetscInt,Intent(IN)                                :: step
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      Type(Vec)                                          :: localVec
+      Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
+
+      Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
+      Call DMGetLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferGlobalOptions%fluxOffset > 0) Then
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr);CHKERRQ(ierr)
+      End If
+      
+      If (MEF90HeatXferGlobalOptions%externalTempOffset > 0) Then
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90HeatXferCtx%cellDM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
+      End If
+      Call DMRestoreLocalVector(MEF90HeatXferCtx%cellDM,localVec,ierr);CHKERRQ(ierr)
+      
+      Call DMGetLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferGlobalOptions%tempOffset > 0) Then
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                  MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%tempOffset,ierr);CHKERRQ(ierr)
+      End If
+
+      If (MEF90HeatXferGlobalOptions%boundaryTempOffset > 0) Then
+         Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusVertex(MEF90HeatXferCtx%DM,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                  MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
+         End If
+      Call DMRestoreLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90HeatXferViewEXO
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferFormatEXO"
+!!!
+!!!  
+!!!  MEF90HeatXferFormatEXO:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferFormatEXO(MEF90HeatXferCtx,ierr)
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameV,nameC
+      Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
+      Integer                                            :: numfield
+
+      Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
+      Allocate(nameG(2))
+      nameG(1) = "Energy"
+      nameG(2) = "work"
+   
+      numfield = max(MEF90HeatXferGlobalOptions%tempOffset, &
+                     MEF90HeatXferGlobalOptions%boundaryTempOffset)
+      Allocate(nameV(numfield))
+      nameV = "empty"
+      nameV(MEF90HeatXferGlobalOptions%tempOffset) = "temperature"
+      nameV(MEF90HeatXferGlobalOptions%boundaryTempOffset) = "boundary temperature"
+                     
+      numfield = max(MEF90HeatXferGlobalOptions%externalTempOffset, &
+                     MEF90HeatXferGlobalOptions%fluxOffset)
+      Allocate(nameC(numfield))
+      nameC = "empty"
+      nameC(MEF90HeatXferGlobalOptions%externalTempOffset) = "external temperature"
+      nameC(MEF90HeatXferGlobalOptions%fluxOffset) = "heat flux"
+
+      Call MEF90EXOFormat(MEF90HeatXferCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
+   End Subroutine MEF90HeatXferFormatEXO
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferCreateSNES"
+!!!
+!!!  
+!!!  MEF90HeatXferCreateSNES:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,ierr)
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      Type(SNES),Intent(OUT)                             :: snesTemp
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
+      Type(Mat)                                          :: matTemp
+      Type(MatNullSpace)                                 :: nspTemp
+      Type(Vec)                                          :: residual
+      Type(KSP)                                          :: kspTemp
+      Type(PC)                                           :: pcTemp
+      PetscReal                                          :: rtol,dtol
+
+      Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
+      Call DMCreateMatrix(MEF90HeatXferCtx%DM,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
+      Call MatSetOptionsPrefix(matTemp,"temp_",ierr);CHKERRQ(ierr)
+      Call MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferGlobalOptions%addNullSpace) Then
+         Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
+         Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
+      End If
+      Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
+
+      Call SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr);CHKERRQ(ierr)
+      Call SNESSetApplicationContext(snesTemp,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+      Call SNESSetDM(snesTemp,MEF90HeatXferCtx%DM,ierr);CHKERRQ(ierr)
+      Call SNESSetType(snesTemp,SNESKSPONLY,ierr);CHKERRQ(ierr)
+      Call SNESSetOptionsPrefix(snesTemp,'temp_',ierr);CHKERRQ(ierr)
+
+      Call SNESSetFunction(snesTemp,residual,MEF90HeatXferOperator,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+      Call SNESSetJacobian(snesTemp,matTemp,matTemp,MEF90HeatXferBilinearForm,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+      Call SNESSetFromOptions(snesTemp,ierr);CHKERRQ(ierr)
+      !!! 
+      !!! Set some KSP options
+      !!!
+      Call SNESGetKSP(snesTemp,kspTemp,ierr);CHKERRQ(ierr)
+      Call KSPSetType(kspTemp,KSPCG,ierr);CHKERRQ(ierr)
+      Call KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferGlobalOptions%addNullSpace) Then
+         Call KSPSetNullSpace(kspTemp,nspTemp,ierr);CHKERRQ(ierr)
+      End If
+      rtol = 1.0D-8
+      dtol = 1.0D+10
+      Call KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+      Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
+      
+   End Subroutine MEF90HeatXferCreateSNES
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferCreateTS"
+!!!
+!!!  
+!!!  MEF90HeatXferCreateTS:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,ierr)
+      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      Type(TS),Intent(OUT)                               :: tsTemp
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
+      Type(Mat)                                          :: matTemp
+      Type(MatNullSpace)                                 :: nspTemp
+      Type(SNES)                                         :: snesTemp
+      Type(Vec)                                          :: residual
+      Type(KSP)                                          :: kspTemp
+      Type(PC)                                           :: pcTemp
+      PetscReal                                          :: rtol,dtol
+
+      Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
+      Call DMCreateMatrix(MEF90HeatXferCtx%DM,MATAIJ,matTemp,iErr);CHKERRQ(iErr)
+      Call MatSetOptionsPrefix(matTemp,"temp_",ierr);CHKERRQ(ierr)
+      Call MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferGlobalOptions%addNullSpace) Then
+         Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
+         Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
+      End If
+      Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
+
+      Call TSCreate(PETSC_COMM_WORLD,tsTemp,ierr);CHKERRQ(ierr)
+      Call TSSetDM(tsTemp,MEF90HeatXferCtx%DM,ierr);CHKERRQ(ierr)
+      Call TSSetOptionsPrefix(tsTemp,'temp_',ierr);CHKERRQ(ierr)
+      Call TSGetSNES(tsTemp,snesTemp,ierr);CHKERRQ(ierr)
+
+      Call TSSetIFunction(tsTemp,residual,MEF90HeatXFerIFunction,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+      Call TSSetIJacobian(tsTemp,matTemp,matTemp,MEF90HeatXFerIJacobian,MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+
+      Call TSSetType(tsTemp,'rosw',ierr);CHKERRQ(ierr)
+      Call TSRosWSetType(tsTemp,'ra3pw',ierr);CHKERRQ(ierr)
+      Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
+      Call VecSet(MEF90HeatXferCtx%temperature,MEF90HeatXferGlobalOptions%initialTemperature,ierr);CHKERRQ(ierr)
+      Call TSSetSolution(tsTemp,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
+      Call TSSetExactFinalTime(tsTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call TSSetFromOptions(tsTemp,ierr);CHKERRQ(ierr)
+      !!! 
+      !!! Set some KSP options
+      !!!
+      Call SNESGetKSP(snesTemp,kspTemp,ierr);CHKERRQ(ierr)
+      Call KSPSetType(kspTemp,KSPCG,ierr);CHKERRQ(ierr)
+      Call KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferGlobalOptions%addNullSpace) Then
+         Call KSPSetNullSpace(kspTemp,nspTemp,ierr);CHKERRQ(ierr)
+      End If
+      rtol = 1.0D-8
+      dtol = 1.0D+10
+      Call KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+      Call KSPSetFromOptions(kspTemp,ierr);CHKERRQ(ierr)
+      
+   End Subroutine MEF90HeatXferCreateTS
 End Module m_MEF90_HeatXfer

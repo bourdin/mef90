@@ -11,6 +11,7 @@ Module m_MEF90_HeatXferCtx_Type
    Public :: MEF90HeatXferVertexSetOptions_Type
    
    Type MEF90HeatXferCtx_Type
+      Type(Vec),pointer                :: temperature
       Type(Vec),pointer                :: flux
       Type(Vec),pointer                :: boundaryTemperature
       Type(Vec),pointer                :: externalTemperature
@@ -466,4 +467,100 @@ Contains
 201 Format('vs',I4.4,'_')
 203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
    End Subroutine MEF90HeatXferCtxSetFromOptions
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferCtxSetSections"
+!!!
+!!!  
+!!!  MEF90HeatXferCtxSetSections:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferCtxSetSections(MEF90HeatXferCtx,ierr)
+      Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                            :: ierr
+      
+      Type(SectionReal)                                     :: defaultSection
+
+      Call DMMeshGetVertexSectionReal(MEF90HeatXferCtx%DM,"default",1,defaultSection,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(MEF90HeatXferCtx%DM,"default",defaultSection,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+      Call DMSetBlockSize(MEF90HeatXferCtx%DM,1,ierr);CHKERRQ(ierr)
+
+      Call DMMeshGetCellSectionReal(MEF90HeatXferCtx%cellDM,"default",1,defaultSection,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(MEF90HeatXferCtx%cellDM,"default",defaultSection,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+      Call DMSetBlockSize(MEF90HeatXferCtx%CellDM,1,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90HeatXferCtxSetSections
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferCtxCreateVectors"
+!!!
+!!!  
+!!!  MEF90HeatXferCtxCreateVectors:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx,ierr)
+      Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                            :: ierr
+
+      Allocate(MEF90HeatXferCtx%temperature)
+      Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(MEF90HeatXferCtx%temperature,"temperature",ierr);CHKERRQ(ierr)
+      Call VecSet(MEF90HeatXferCtx%temperature,0.0_Kr,ierr);CHKERRQ(ierr)
+   
+      Allocate(MEF90HeatXferCtx%boundaryTemperature)
+      Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(MEF90HeatXferCtx%boundaryTemperature,"boundary Temperature",ierr);CHKERRQ(ierr)
+      Call VecSet(MEF90HeatXferCtx%boundaryTemperature,0.0_Kr,ierr);CHKERRQ(ierr)
+   
+      Allocate(MEF90HeatXferCtx%externalTemperature)
+      Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(MEF90HeatXferCtx%externalTemperature,"external Temperature",ierr);CHKERRQ(ierr)
+      Call VecSet(MEF90HeatXferCtx%externalTemperature,0.0_Kr,ierr);CHKERRQ(ierr)
+
+      Allocate(MEF90HeatXferCtx%flux)
+      Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(MEF90HeatXferCtx%flux,"Flux",ierr);CHKERRQ(ierr)
+      Call VecSet(MEF90HeatXferCtx%flux,0.0_Kr,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90HeatXferCtxCreateVectors   
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HeatXferCtxDestroyVectors"
+!!!
+!!!  
+!!!  MEF90HeatXferCtxDestroyVectors:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx,ierr)
+      Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: MEF90HeatXferCtx
+      PetscErrorCode,Intent(OUT)                            :: ierr
+   
+      If (Associated(MEF90HeatXferCtx%temperature)) Then 
+         Call VecDestroy(MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
+         DeAllocate(MEF90HeatXferCtx%temperature)
+         Nullify(MEF90HeatXferCtx%temperature)
+      End If   
+
+      If (Associated(MEF90HeatXferCtx%boundaryTemperature)) Then 
+         Call VecDestroy(MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
+         DeAllocate(MEF90HeatXferCtx%boundaryTemperature)
+         Nullify(MEF90HeatXferCtx%boundaryTemperature)
+      End If   
+
+      If (Associated(MEF90HeatXferCtx%externalTemperature)) Then 
+         Call VecDestroy(MEF90HeatXferCtx%externalTemperature,ierr);CHKERRQ(ierr)
+         DeAllocate(MEF90HeatXferCtx%externalTemperature)
+         Nullify(MEF90HeatXferCtx%externalTemperature)
+      End If   
+
+      If (Associated(MEF90HeatXferCtx%flux)) Then 
+         Call VecDestroy(MEF90HeatXferCtx%flux,ierr);CHKERRQ(ierr)
+         DeAllocate(MEF90HeatXferCtx%flux)
+         Nullify(MEF90HeatXferCtx%flux)
+      End If   
+   End Subroutine MEF90HeatXferCtxDestroyVectors
 End Module m_MEF90_HeatXferCtx
