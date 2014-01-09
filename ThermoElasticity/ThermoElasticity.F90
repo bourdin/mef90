@@ -75,6 +75,7 @@ Program ThermoElasticity
 
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
+   Type(Vec)                                          :: residualDisp
           
    PetscBool                                          :: flg
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
@@ -130,7 +131,9 @@ Program ThermoElasticity
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
    !!!
-   Call MEF90DefMechCreateSolvers(MEF90DefMechCtx,snesDisp,ierr)
+   Call VecDuplicate(MEF90DefMechCtx%displacement,residualDisp,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(residualDisp,"residualDisp",ierr);CHKERRQ(ierr)
+   Call MEF90DefMechCreateSolvers(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
 
    !!! 
    !!! Allocate array of works and energies
@@ -197,6 +200,7 @@ Program ThermoElasticity
    !!! Clean up and exit nicely
    If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
+      Call VecDestroy(residualDisp,ierr);CHKERRQ(ierr)
    End If
 
    Call MEF90DefMechCtxDestroyVectors(MEF90DefMechCtx,ierr)

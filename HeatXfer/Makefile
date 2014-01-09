@@ -1,7 +1,8 @@
+NP=2
 all:
 	-@make -C ${MEF90_DIR} HeatXfer
-test: test2D test3D
-test2D: 
+test: test2D test3D testTransient2D testTransient3D
+test2D: HeatXfer
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts; do \
 	make testHeatXfer PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
 	make testHeatXfer PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
@@ -9,7 +10,7 @@ test2D:
 	make testHeatXfer PREFIX=SquareNG_Y-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
-test3D: 
+test3D: HeatXfer
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts; do \
 	make testHeatXfer PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	make testHeatXfer PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
@@ -19,9 +20,16 @@ test3D:
 	make testHeatXfer PREFIX=CubeNG_Z-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
-testTransient:
+testTransient2D: HeatXfer
 	-@for OPTIONSFILE in test5.opts test6.opts; do \
-	make testHeatXfer PREFIX=Beam1x10  OPTIONSFILE=$${OPTIONSFILE};\
+	make testHeatXfer PREFIX=Beam1x10-tri3 OPTIONSFILE=$${OPTIONSFILE};\
+	make testHeatXfer PREFIX=Beam1x10-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	done
+
+testTransient3D: HeatXfer
+	-@for OPTIONSFILE in test5.opts test6.opts; do \
+	make testHeatXfer PREFIX=Beam1x10-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
+	make testHeatXfer PREFIX=Beam1x10-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 include ${PETSC_DIR}/conf/rules
@@ -45,7 +53,7 @@ HeatXfer.o: ${BASE_DIR}/HeatXfer.F90 ${MEF90_HEATXFER_OBJS}
 testHeatXfer:
 	@echo "Testing HeatXfer with $${PREFIX} $${OPTIONSFILE}"
 	@ARGS="-prefix data/$${PREFIX} -options_file data/$${OPTIONSFILE}";\
-	${MPIEXEC} -n 2 ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer $${ARGS} > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
+	${MPIEXEC} -n ${NP} ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer $${ARGS} > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "         ... passed";\
 	else echo "Possible problem. Diffs above \n========================================="; fi
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 

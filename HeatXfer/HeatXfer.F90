@@ -48,7 +48,6 @@ Program HeatXfer
    Type(IS)                                           :: setIS,cellIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
-   Type(Vec)                                          :: residual
    PetscReal,Dimension(:),Pointer                     :: time,energy,work
 
           
@@ -59,10 +58,11 @@ Program HeatXfer
    Type(SNES)                                         :: snesTemp
    Type(TS)                                           :: tsTemp
    Type(TSAdapt)                                      :: tsAdaptTemp
+   Type(Vec)                                          :: residualTemp
 
    PetscReal                                          :: tsTempInitialStep,tsTempInitialTime
-   PetscReal                                          :: t
    PetscInt                                           :: tsTempmaxIter
+   PetscReal                                          :: t
    
    Integer                                            :: step
    Type(Vec)                                          :: localVec
@@ -111,14 +111,15 @@ Program HeatXfer
    !!! Create SNES or TS, Mat and set KSP default options
    !!!
 
+   Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
-      Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,ierr)
+      Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
    Else
-      Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,ierr)
+      Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
       tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
       tsTempInitialTime = time(1)
       Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
-      !Call TSGetDuration(tsTemp,tsTempmaxIter,tsTempInitialTime,ierr);CHKERRQ(ierr)
       Call TSGetAdapt(tsTemp,tsAdaptTemp,ierr);CHKERRQ(ierr)
       Call TSAdaptSetFromOptions(tsAdaptTemp,ierr);CHKERRQ(ierr)
    End If
@@ -164,7 +165,10 @@ Program HeatXfer
             Call TSGetTime(tsTemp,t,ierr);CHKERRQ(ierr)
             If (t < time(step)) Then
                Call TSAdaptSetStepLimits(tsAdaptTemp,PETSC_DECIDE,(time(step)-time)/2.0_Kr,ierr);CHKERRQ(ierr)
-               Call TSSetDuration(tsTemp,tsTempmaxIter,time(step),ierr);CHKERRQ(ierr)
+               !!! Something is up here. 
+               !!! replacing the constant 10000 with a variable leads to divergence of TSAdapt
+               !!! when using gcc
+               Call TSSetDuration(tsTemp,10000,time(step),ierr);CHKERRQ(ierr)
                Call TSSolve(tsTemp,MEF90HeatXferCtx%temperature,time(step),ierr);CHKERRQ(ierr)
                Call TSGetTime(tsTemp,t,ierr);CHKERRQ(ierr)
                time(step) = t
@@ -201,7 +205,7 @@ Program HeatXfer
    Else
       Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
    End If
-
+   Call VecDestroy(residualTemp,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx,ierr)
    
    DeAllocate(time)

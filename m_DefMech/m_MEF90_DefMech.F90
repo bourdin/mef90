@@ -618,9 +618,10 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechCreateSolvers(MEF90DefMechCtx,snesDisp,ierr)
+   Subroutine MEF90DefMechCreateSolvers(MEF90DefMechCtx,snesDisp,residual,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(SNES),Intent(OUT)                             :: snesDisp
+      Type(Vec),Intent(IN)                               :: residual
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
@@ -667,7 +668,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
          Call SNESSetOptionsPrefix(snesDisp,'Disp_',ierr);CHKERRQ(ierr)
          Call SNESSetType(snesDisp,SNESKSPONLY,ierr);CHKERRQ(ierr)
 
-         Call SNESSetFunction(snesDisp,residualDisp,MEF90DefMechOperator,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         Call SNESSetFunction(snesDisp,residual,MEF90DefMechOperator,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearForm,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          !atol = 1.0D-10
          !rtol = 1.0D-10
