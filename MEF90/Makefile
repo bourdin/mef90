@@ -5,6 +5,11 @@ include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 include ${MEF90_DIR}/Makefile.include
 
+${MEF90_DIR}/mef90version.h: ${MEF90_DIR}/.hg/dirstate
+	@echo \#define MEF90_HGVER \"`hg tip | head -1 | cut -d : -f 2,3 | tr -d ' '`\" > ${MEF90_DIR}/mef90version.h
+
+m_MEF_Parameters.F90: ${MEF90_DIR}/mef90version.h
+
 MEF90: m_MEF90.o
 
 m_MEF90.o: ${MEF90_DIR}/MEF90/m_MEF90.F90 m_MEF_Ctx.o \

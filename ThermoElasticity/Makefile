@@ -25,7 +25,6 @@ include ${PETSC_DIR}/conf/variables
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
-include ${MEF90_DIR}/m_Elasticity/Makefile.include
 BASE_DIR=${MEF90_DIR}/ThermoElasticity
 
 ThermoElasticity:${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
@@ -42,7 +41,7 @@ ThermoElasticity.o: ${BASE_DIR}/ThermoElasticity.F90 ${MEF90_DEFMECH_OBJS}
 testThermoElasticity:
 	@echo "Testing ThermoElasticity with $${PREFIX} $${OPTIONSFILE}"
 	@ARGS="-prefix data/$${PREFIX} -options_file data/$${OPTIONSFILE}";\
-	${MPIEXEC} -n ${NP} ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity $${ARGS} > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
+	${MPIEXEC} -n ${NP} ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity $${ARGS} | grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/ThermoElasticity/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "         ... passed";\
 	else echo "Possible problem. Diffs above \n========================================="; fi
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 
