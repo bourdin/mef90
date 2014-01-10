@@ -1,0 +1,12 @@
+diff -r 122bd20de8a3 src/mat/interface/matnull.c
+--- a/src/mat/interface/matnull.c	Mon Mar 04 20:57:22 2013 -0600
++++ b/src/mat/interface/matnull.c	Fri Jan 10 16:06:23 2014 -0600
+@@ -86,7 +86,7 @@
+ {
+   PetscErrorCode ierr;
+   const PetscScalar *x;
+-  PetscScalar *v[6],dots[3];
++  PetscScalar *v[6],dots[5];
+   Vec vec[6];
+   PetscInt n,N,dim,nmodes,i,j;
+ 

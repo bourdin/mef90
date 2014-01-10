@@ -630,9 +630,6 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
          End If
       End If
       
-      Write(*,*) "nameG :", nameG
-      Write(*,*) "nameC :", nameC
-      Write(*,*) "nameV :", nameV
       Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
       DeAllocate(nameG)
       DeAllocate(nameV)
@@ -666,8 +663,9 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       Type(TS)                                           :: tsDisp
       PetscReal                                          :: atol,rtol,dtol
       PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
-
-   
+      PetscInt                                           :: dim
+      
+      Call DMMeshGetDimension(MEF90DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMCreateMatrix(MEF90DefMechCtx%DMVect,MATAIJ,matDisp,iErr);CHKERRQ(iErr)
       Call MatSetOptionsPrefix(matDisp,"Disp_",ierr);CHKERRQ(ierr)
@@ -716,7 +714,9 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       Call KSPSetTolerances(kspDisp,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
       Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)
 
-      ! set coordinates in PC for GAMG
+      !!! set coordinates in PC for GAMG
+      !!! For some reason, this makes gamg convergence worse, when the null space is specified.
+      !!! Will investigate later
       !Call KSPGetPC(kspDisp,pcDisp,ierr);CHKERRQ(ierr)
       !Call DMMeshGetCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
       !Allocate(coordPCPtr(size(CoordPtr)))

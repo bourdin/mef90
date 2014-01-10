@@ -54,19 +54,19 @@ Program ThermoElasticity
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
                                                          -1,                                      & ! elemTypeShortIDDamage will be overriden
-                                                         (/0.0_Kr,0.0_Kr,0.0_Kr/),                & ! force
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! force
                                                          0.0_Kr,                                  & ! pressureForce
                                                          MEF90DefMech_defectLawElasticity,        & ! defect law
-                                                         (/PETSC_FALSE,PETSC_FALSE,PETSC_FALSE/), & ! Has Displacement BC
+                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
                                                          0.0_Kr,                                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
                                                          0.0_Kr)                                    ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
-                                                         (/PETSC_FALSE,PETSC_FALSE,PETSC_FALSE/), & ! Has Displacement BC
+                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
                                                          0.0_Kr,                                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
                                                          0.0_Kr)                                    ! boundary Damage
-   PetscBag,dimension(:),pointer                      :: MEF90MatPropBag                                                      
+   !PetscBag,dimension(:),pointer                      :: MEF90MatPropBag                                                      
 
    Type(DM),target                                    :: Mesh
    Type(IS)                                           :: setIS,CellSetGlobalIS
@@ -115,11 +115,13 @@ Program ThermoElasticity
    
    !!! Get material properties bags
    If (dim == 2) Then
-      Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90DefMechCtx%DM,MEF90_Mathium2D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DMVect,MEF90_Mathium2D,MEF90Ctx,ierr)
+      !Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90DefMechCtx%DMVect,MEF90_Mathium2D,MEF90Ctx,ierr)
    Else
-      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DM,MEF90_Mathium3D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DMVect,MEF90_Mathium3D,MEF90Ctx,ierr)
+      !Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90DefMechCtx%DMVect,MEF90_Mathium3D,MEF90Ctx,ierr)
    End If   
-   MEF90DefMechCtx%MaterialPropertiesBag => MEF90MatPropBag
+   !MEF90DefMechCtx%MaterialPropertiesBag => MEF90MatPropBag
    Call MEF90CtxGetTime(MEF90Ctx,time,ierr)
 
    !!! Set the data layout
