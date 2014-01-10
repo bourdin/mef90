@@ -547,11 +547,11 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
 
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
-      Allocate(nameG(4))
-      nameG(1) = "Elastic Energy"
-      nameG(2) = "Work"
-      nameG(3) = "Surface Energy"
-      nameG(4) = "Total Energy"
+      Allocate(nameG(0))
+      !nameG(1) = "Elastic Energy"
+      !nameG(2) = "Work"
+      !nameG(3) = "Surface Energy"
+      !nameG(4) = "Total Energy"
    
       numfield = max(MEF90DefMechGlobalOptions%displacementOffset+dim-1, &
                      MEF90DefMechGlobalOptions%damageOffset,&
@@ -559,19 +559,30 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
                      MEF90DefMechGlobalOptions%boundaryDamageOffset,&
                      MEF90DefMechGlobalOptions%temperatureOffset)
       Allocate(nameV(numfield))
-
       nameV = "empty"
-      nameV(MEF90DefMechGlobalOptions%displacementOffset+0)            = "Displacement_X"
-      nameV(MEF90DefMechGlobalOptions%displacementOffset+1)            = "Displacement_Y"
-      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0)    = "Boundary_Displacement_X"
-      nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1)    = "Boundary_Displacement_Y"
-      If (dim == 3) Then
-         nameV(MEF90DefMechGlobalOptions%displacementOffset+2)         = "Displacement_Z"
-         nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+2) = "Boundary_Displacement_Z"
+      If (MEF90DefMechGlobalOptions%displacementOffset > 0) Then
+         nameV(MEF90DefMechGlobalOptions%displacementOffset+0)            = "Displacement_X"
+         nameV(MEF90DefMechGlobalOptions%displacementOffset+1)            = "Displacement_Y"
+         If (dim == 3) Then
+            nameV(MEF90DefMechGlobalOptions%displacementOffset+2)         = "Displacement_Z"
+         End If
       End If
-      nameV(MEF90DefMechGlobalOptions%damageOffset)                    = "Damage"
-      nameV(MEF90DefMechGlobalOptions%boundaryDamageOffset)            = "Boundary_Damage"
-      nameV(MEF90DefMechGlobalOptions%temperatureOffset)               = "Temperature"
+      If (MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) Then
+         nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0)    = "Boundary_Displacement_X"
+         nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1)    = "Boundary_Displacement_Y"
+         If (dim == 3) Then
+            nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+2) = "Boundary_Displacement_Z"
+         End If
+      End If
+      If (MEF90DefMechGlobalOptions%damageOffset > 0) Then
+         nameV(MEF90DefMechGlobalOptions%damageOffset)                    = "Damage"
+      End If
+      If (MEF90DefMechGlobalOptions%boundaryDamageOffset > 0) Then
+         nameV(MEF90DefMechGlobalOptions%boundaryDamageOffset)            = "Boundary_Damage"
+      End If
+      If (MEF90DefMechGlobalOptions%temperatureOffset > 0) Then
+         nameV(MEF90DefMechGlobalOptions%temperatureOffset)               = "Temperature"
+      End If
                      
       numfield = max(MEF90DefMechGlobalOptions%forceOffset+dim-1,&
                      MEF90DefMechGlobalOptions%pressureForceOffset,&
@@ -579,35 +590,53 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
                      MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1)
       Allocate(nameC(numfield))
       nameC = "empty"
-      nameC(MEF90DefMechGlobalOptions%forceOffset+0)                 = "Force_X"
-      nameC(MEF90DefMechGlobalOptions%forceOffset+1)                 = "Force_Y"
-      If (dim == 3) Then
-         nameC(MEF90DefMechGlobalOptions%forceOffset+2)              = "Force_Z"
+      If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
+         nameC(MEF90DefMechGlobalOptions%forceOffset+0)                 = "Force_X"
+         nameC(MEF90DefMechGlobalOptions%forceOffset+1)                 = "Force_Y"
+         If (dim == 3) Then
+            nameC(MEF90DefMechGlobalOptions%forceOffset+2)              = "Force_Z"
+         End If
       End If
-
-      nameC(MEF90DefMechGlobalOptions%pressureForceOffset)           = "Pressure_Force"
-      If (dim == 2) Then
-         nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_XY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plasticStrainOffset_XX"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plasticStrainOffset_YY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plasticStrainOffset_XY"
-      Else
-         nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_ZZ"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+3)             = "Stress_YZ"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+4)             = "Stress_XZ"
-         nameC(MEF90DefMechGlobalOptions%stressOffset+5)             = "Stress_XY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plasticStrain_XX"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plasticStrain_YY"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plasticStrain_ZZ"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+3)      = "plasticStrain_YZ"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+4)      = "plasticStrain_XZ"
-         nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+5)      = "plasticStrain_XY"
+      
+      If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
+         nameC(MEF90DefMechGlobalOptions%pressureForceOffset)           = "Pressure_Force"
       End If
+      If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
+         If (dim == 2) Then
+            nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
+            nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
+            nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_XY"
+         Else
+            nameC(MEF90DefMechGlobalOptions%stressOffset+0)             = "Stress_XX"
+            nameC(MEF90DefMechGlobalOptions%stressOffset+1)             = "Stress_YY"
+            nameC(MEF90DefMechGlobalOptions%stressOffset+2)             = "Stress_ZZ"
+            nameC(MEF90DefMechGlobalOptions%stressOffset+3)             = "Stress_YZ"
+            nameC(MEF90DefMechGlobalOptions%stressOffset+4)             = "Stress_XZ"
+            nameC(MEF90DefMechGlobalOptions%stressOffset+5)             = "Stress_XY"
+         End If
+      End If
+      If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
+         If (dim == 2) Then
+            nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plasticStrain_XX"
+            nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plasticStrain_YY"
+            nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plasticStrain_XY"
+         Else
+            nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)      = "plasticStrain_XX"
+            nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)      = "plasticStrain_YY"
+            nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)      = "plasticStrain_ZZ"
+            nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+3)      = "plasticStrain_YZ"
+            nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+4)      = "plasticStrain_XZ"
+            nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+5)      = "plasticStrain_XY"
+         End If
+      End If
+      
+      Write(*,*) "nameG :", nameG
+      Write(*,*) "nameC :", nameC
+      Write(*,*) "nameV :", nameV
       Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
+      DeAllocate(nameG)
+      DeAllocate(nameV)
+      DeAllocate(nameC)
    End Subroutine MEF90DefMechFormatEXO
    
 #undef __FUNCT__

@@ -532,25 +532,36 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       Integer                                            :: numfield
 
       Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
-      Allocate(nameG(2))
-      nameG(1) = "Energy"
-      nameG(2) = "work"
+      Allocate(nameG(0))
+      !nameG(1) = "Energy"
+      !nameG(2) = "work"
    
       numfield = max(MEF90HeatXferGlobalOptions%tempOffset, &
                      MEF90HeatXferGlobalOptions%boundaryTempOffset)
       Allocate(nameV(numfield))
       nameV = "empty"
-      nameV(MEF90HeatXferGlobalOptions%tempOffset) = "temperature"
-      nameV(MEF90HeatXferGlobalOptions%boundaryTempOffset) = "boundary temperature"
+      If (MEF90HeatXferGlobalOptions%tempOffset > 0) Then
+         nameV(MEF90HeatXferGlobalOptions%tempOffset) = "temperature"
+      End If
+      If (MEF90HeatXferGlobalOptions%boundaryTempOffset > 0) Then
+         nameV(MEF90HeatXferGlobalOptions%boundaryTempOffset) = "boundary temperature"
+      End If
                      
       numfield = max(MEF90HeatXferGlobalOptions%externalTempOffset, &
                      MEF90HeatXferGlobalOptions%fluxOffset)
       Allocate(nameC(numfield))
       nameC = "empty"
-      nameC(MEF90HeatXferGlobalOptions%externalTempOffset) = "external temperature"
-      nameC(MEF90HeatXferGlobalOptions%fluxOffset) = "heat flux"
-
+      If (MEF90HeatXferGlobalOptions%externalTempOffset > 0) Then
+         nameC(MEF90HeatXferGlobalOptions%externalTempOffset) = "external temperature"
+      End If
+      If (MEF90HeatXferGlobalOptions%fluxOffset > 0) Then
+         nameC(MEF90HeatXferGlobalOptions%fluxOffset) = "heat flux"
+      End If
+      
       Call MEF90EXOFormat(MEF90HeatXferCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
+      DeAllocate(nameG)
+      DeAllocate(nameV)
+      DeAllocate(nameC)
    End Subroutine MEF90HeatXferFormatEXO
 
 #undef __FUNCT__

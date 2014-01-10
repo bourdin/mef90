@@ -27,10 +27,10 @@ Program ThermoElasticity
                                                          2,                   & ! DamageOffset
                                                          0,                   & ! boundaryDisplacementOffset
                                                          0,                   & ! boundaryDamageOffset
-                                                         0,                   & ! inelasticStrainOffset
+                                                         0,                   & ! temperatureOffset
                                                          4,                   & ! ForceOffset
                                                          3,                   & ! pressureForceOffset
-                                                         0,                   & ! inelasticStrainCellOffset
+                                                         0,                   & ! plasticStrainOffset
                                                          0,                   & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
@@ -42,10 +42,10 @@ Program ThermoElasticity
                                                          2,                   & ! DamageOffset
                                                          0,                   & ! boundaryDisplacementOffset
                                                          0,                   & ! boundaryDamageOffset
-                                                         0,                   & ! inelasticStrainOffset
+                                                         0,                   & ! temperatureOffset
                                                          4,                   & ! ForceOffset
                                                          3,                   & ! pressureForceOffset
-                                                         0,                   & ! inelasticStrainCellOffset
+                                                         0,                   & ! plasticStrainOffset
                                                          0,                   & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
