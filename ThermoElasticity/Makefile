@@ -2,7 +2,7 @@ NP=2
 all:
 	-@make -C ${MEF90_DIR} ThermoElasticity
 test: test2D test3D
-test2D: ThermoElasticity
+test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
 	make testThermoElasticity PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
 	make testThermoElasticity PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
@@ -10,7 +10,7 @@ test2D: ThermoElasticity
 	make testThermoElasticity PREFIX=SquareNG_Y-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
-test3D: ThermoElasticity
+test3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
 	make testThermoElasticity PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	make testThermoElasticity PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\

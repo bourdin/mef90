@@ -190,10 +190,11 @@ Module m_MEF90_DefMechCtx
    PetscSizeT,protected   :: sizeofMEF90DefMechVertexSetOptions
    
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_ModeQuasiStatic = 0, &
+      enumerator  :: MEF90DefMech_ModeNULL = 0,    &
+                     MEF90DefMech_ModeQuasiStatic, &
                      MEF90DefMech_ModeGradientFlow
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_ModeList
+   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_ModeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_defectLawElasticity = 0, &
@@ -236,11 +237,12 @@ Contains
       sizeofMEF90DefMechCellSetOptions = size(transfer(DefMechCellSetOptions,dummychar))*sizeofchar
       sizeofMEF90DefMechVertexSetOptions = size(transfer(DefMechVertexSetOptions,dummychar))*sizeofchar
 
-      MEF90DefMech_ModeList(1) = 'QuasiStatic'
-      MEF90DefMech_ModeList(2) = 'GradientFlow'
-      MEF90DefMech_ModeList(3) = 'MEF90_DefMech_Mode'
-      MEF90DefMech_ModeList(4) = '_MEF90_DefMech_Mode'
-      MEF90DefMech_ModeList(5) = ''
+      MEF90DefMech_ModeList(1) = 'Null'
+      MEF90DefMech_ModeList(2) = 'QuasiStatic'
+      MEF90DefMech_ModeList(3) = 'GradientFlow'
+      MEF90DefMech_ModeList(4) = 'MEF90_DefMech_Mode'
+      MEF90DefMech_ModeList(5) = '_MEF90_DefMech_Mode'
+      MEF90DefMech_ModeList(6) = ''
       
       MEF90DefMech_defectLawList(1) = 'Elasticity'
       MEF90DefMech_defectLawList(2) = 'BrittleFracture'
