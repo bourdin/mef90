@@ -15,11 +15,11 @@ Program HeatXfer
                                                          1,                   & ! tempOffset
                                                          0.,                  & ! initialTemperature
                                                          MEF90Scaling_Linear, & ! boundaryTempScaling
-                                                         2,                   & ! boundaryTempOffset
+                                                         0,                   & ! boundaryTempOffset
                                                          MEF90Scaling_Linear, & ! externalTempScaling
-                                                         1,                   & ! externalTempOffset
+                                                         2,                   & ! externalTempOffset
                                                          MEF90Scaling_Linear, & ! fluxScaling
-                                                         2)                     ! fluxOffset
+                                                         1)                     ! fluxOffset
    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                          -1,            & ! elemTypeShortID will be overriden
                                                          0.0_Kr,        & ! flux
@@ -191,8 +191,6 @@ Program HeatXfer
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
       Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-  
-      
       !!! Save results
       Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
    End Do

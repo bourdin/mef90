@@ -6,35 +6,47 @@ Program ThermoElasticity
    Use m_MEF90_DefMech
    Use petsc
    Implicit NONE   
+
    PetscErrorCode                                     :: ierr
+   Type(MEF90Ctx_Type),target                         :: MEF90Ctx
+   Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
+   Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
+                                                         1,                             & ! verbose
+                                                         MEF90TimeInterpolation_linear, & ! timeInterpolation
+                                                         0.0_Kr,                        & ! timeMin
+                                                         1.0_Kr,                        & ! timeMax
+                                                         11,                            & ! timeNumStep
+                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
+
    Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
+   Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,          & ! disp_addNullSpace
-                                                         1,                   & ! DisplacementOffset
-                                                         3,                   & ! DamageOffset
-                                                         4,                   & ! boundaryDisplacementOffset
-                                                         5,                   & ! boundaryDamageOffset
-                                                         6,                   & ! inelasticStrainOffset
-                                                         1,                   & ! ForceOffset
+                                                         3,                   & ! DisplacementOffset
+                                                         2,                   & ! DamageOffset
+                                                         0,                   & ! boundaryDisplacementOffset
+                                                         0,                   & ! boundaryDamageOffset
+                                                         0,                   & ! inelasticStrainOffset
+                                                         4,                   & ! ForceOffset
                                                          3,                   & ! pressureForceOffset
-                                                         4,                   & ! inelasticStrainCellOffset
-                                                         8,                   & ! StressOffset
+                                                         0,                   & ! inelasticStrainCellOffset
+                                                         0,                   & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,          & ! disp_addNullSpace
-                                                         1,                   & ! DisplacementOffset
-                                                         4,                   & ! DamageOffset
-                                                         5,                   & ! boundaryDisplacementOffset
-                                                         8,                   & ! boundaryDamageOffset
-                                                         9,                   & ! inelasticStrainOffset
-                                                         1,                   & ! ForceOffset
+                                                         3,                   & ! DisplacementOffset
+                                                         2,                   & ! DamageOffset
+                                                         0,                   & ! boundaryDisplacementOffset
+                                                         0,                   & ! boundaryDamageOffset
+                                                         0,                   & ! inelasticStrainOffset
+                                                         4,                   & ! ForceOffset
                                                          3,                   & ! pressureForceOffset
-                                                         4,                   & ! inelasticStrainCellOffset
-                                                         11,                  & ! StressOffset
+                                                         0,                   & ! inelasticStrainCellOffset
+                                                         0,                   & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
@@ -54,18 +66,7 @@ Program ThermoElasticity
                                                          0.0_Kr,                                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
                                                          0.0_Kr)                                    ! boundary Damage
-   Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-                                                         
-   Type(MEF90Ctx_Type),target                         :: MEF90Ctx
-   Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
-                                                         1,                             & ! verbose
-                                                         MEF90TimeInterpolation_linear, & ! timeInterpolation
-                                                         0.0_Kr,                        & ! timeMin
-                                                         1.0_Kr,                        & ! timeMax
-                                                         11,                            & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
-   Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
-   PetscBag,dimension(:),pointer                      :: MEF90MatPropBag
+   PetscBag,dimension(:),pointer                      :: MEF90MatPropBag                                                      
 
    Type(DM),target                                    :: Mesh
    Type(IS)                                           :: setIS,CellSetGlobalIS
@@ -114,12 +115,11 @@ Program ThermoElasticity
    
    !!! Get material properties bags
    If (dim == 2) Then
-      Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90DefMechCtx%DMVect,MEF90_Mathium2D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90DefMechCtx%DM,MEF90_Mathium2D,MEF90Ctx,ierr)
    Else
-      Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90DefMechCtx%DMVect,MEF90_Mathium3D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DM,MEF90_Mathium3D,MEF90Ctx,ierr)
    End If   
    MEF90DefMechCtx%MaterialPropertiesBag => MEF90MatPropBag
-
    Call MEF90CtxGetTime(MEF90Ctx,time,ierr)
 
    !!! Set the data layout

@@ -2,7 +2,7 @@ NP=2
 all:
 	-@make -C ${MEF90_DIR} HeatXfer
 test: test2D test3D testTransient2D testTransient3D
-test2D: HeatXfer
+test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts; do \
 	make testHeatXfer PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
 	make testHeatXfer PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
@@ -10,7 +10,7 @@ test2D: HeatXfer
 	make testHeatXfer PREFIX=SquareNG_Y-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
-test3D: HeatXfer
+test3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts; do \
 	make testHeatXfer PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	make testHeatXfer PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
@@ -20,13 +20,13 @@ test3D: HeatXfer
 	make testHeatXfer PREFIX=CubeNG_Z-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
-testTransient2D: HeatXfer
+testTransient2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer
 	-@for OPTIONSFILE in test5.opts test6.opts; do \
 	make testHeatXfer PREFIX=Beam1x10-tri3 OPTIONSFILE=$${OPTIONSFILE};\
 	make testHeatXfer PREFIX=Beam1x10-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
-testTransient3D: HeatXfer
+testTransient3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer
 	-@for OPTIONSFILE in test5.opts test6.opts; do \
 	make testHeatXfer PREFIX=Beam1x10-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	make testHeatXfer PREFIX=Beam1x10-tetra10 OPTIONSFILE=$${OPTIONSFILE};\

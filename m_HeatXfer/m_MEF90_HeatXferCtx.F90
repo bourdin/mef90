@@ -171,10 +171,11 @@ Module m_MEF90_HeatXferCtx
    PetscSizeT,protected   :: sizeofMEF90HeatXferVertexSetOptions
    
    Enum,bind(c)
-      enumerator  :: MEF90HeatXFer_ModeSteadyState = 0, &
+      enumerator  :: MEF90HeatXfer_ModeNULL = 0,    &
+                     MEF90HeatXFer_ModeSteadyState, &
                      MEF90HeatXFer_ModeTransient
    End Enum
-   Character(len = MEF90_MXSTRLEN),dimension(5),protected   :: MEF90HeatXFer_ModeList
+   Character(len = MEF90_MXSTRLEN),dimension(6),protected   :: MEF90HeatXFer_ModeList
    
 Contains
 #undef __FUNCT__
@@ -199,11 +200,12 @@ Contains
       sizeofMEF90HeatXferCellSetOptions = size(transfer(HeatXferCellSetOptions,dummychar))*sizeofchar
       sizeofMEF90HeatXferVertexSetOptions = size(transfer(HeatXferVertexSetOptions,dummychar))*sizeofchar
 
-      MEF90HeatXFer_ModeList(1) = 'SteadyState'
-      MEF90HeatXFer_ModeList(2) = 'Transient'
-      MEF90HeatXFer_ModeList(3) = 'MEF90_HeatXFer_Mode'
-      MEF90HeatXFer_ModeList(4) = '_MEF90_HeatXFer_Mode'
-      MEF90HeatXFer_ModeList(5) = ''
+      MEF90HeatXFer_ModeList(1) = 'null'
+      MEF90HeatXFer_ModeList(2) = 'SteadyState'
+      MEF90HeatXFer_ModeList(3) = 'Transient'
+      MEF90HeatXFer_ModeList(4) = 'MEF90_HeatXFer_Mode'
+      MEF90HeatXFer_ModeList(5) = '_MEF90_HeatXFer_Mode'
+      MEF90HeatXFer_ModeList(6) = ''
    End Subroutine MEF90HeatXferCtxInitialize_Private
    
 #undef __FUNCT__
