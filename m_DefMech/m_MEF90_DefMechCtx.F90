@@ -573,7 +573,7 @@ Contains
       Call PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'disp_addNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%displacementOffset,default%displacementOffset,'displacement_Offset','Position of displacement field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%damageOffset,default%damageOffset,'damage_Offset','Position of damage field in EXO file',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDamageOffset,default%damageOffset,'boundaryDamage_Offset','Position of boundary damage field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDamageOffset,default%boundaryDamageOffset,'boundaryDamage_Offset','Position of boundary damage field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%stressOffset,default%stressOffset,'stress_Offset','Position of stress field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%temperatureOffset,default%temperatureOffset,'temperature_Offset','Position of temperature field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%plasticStrainOffset,default%plasticStrainOffset,'plasticStrain_Offset','Position of the plastic Strain field in EXO file',ierr);CHKERRQ(ierr)
@@ -609,8 +609,8 @@ Contains
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
       
       DefMechCellSetOptions%force = default%Force
-      DefMechCellSetOptions%Has_displacementBC   = default%Has_displacementBC
       DefMechCellSetOptions%boundaryDisplacement = default%boundaryDisplacement
+      DefMechCellSetOptions%Has_displacementBC   = default%Has_displacementBC
 
       Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortIDDisplacement,default%ElemTypeShortIDDisplacement,'ShortIDDisplacement','Displacement element type ShortID',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortIDDamage,default%ElemTypeShortIDDamage,'ShortIDDamage','Damage field element type ShortID',ierr);CHKERRQ(ierr)
@@ -665,9 +665,9 @@ Contains
       Character(len=*),Intent(IN)                           :: prefix
       Type(MEF90DefMechGlobalOptions_Type),Intent(IN)       :: defaultGlobalOptions
       Type(MEF90DefMechCellSetOptions_Type),Intent(IN)      :: defaultCellSetOptions
-      Character(len=MXSTLN),Dimension(:),POinter            :: cellSetNames
+      Character(len=MXSTLN),Dimension(:),Pointer            :: cellSetNames
       Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)    :: defaultVertexSetOptions
-      Character(len=MXSTLN),Dimension(:),POinter            :: vertexSetNames
+      Character(len=MXSTLN),Dimension(:),Pointer            :: vertexSetNames
       PetscErrorCode,Intent(OUT)                            :: ierr
    
       Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions

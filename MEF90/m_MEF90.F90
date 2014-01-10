@@ -35,10 +35,15 @@ Contains
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
        
       Call PetscLogBegin(ierr);CHKERRQ(ierr)
-      Write(IOBuffer,*) "# MEF90: (c) 2014 B. Bourdin bourdin@lsu.edu\n"
+      Write(IOBuffer,*) "# MEF90: hg changeset ",MEF90_HGVER,"\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,*) "# hg changeset ",MEF90_HGVER,"\n"
+      Write(IOBuffer,*) "# Copyright (c) 2014 B. Bourdin bourdin@lsu.edu\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,*) "# PETSC_ARCH=", PETSC_ARCH ,"\n"
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,*) "# PETSC_DIR=", PETSC_DIR ,"\n"
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      
 
       !!! Individual modules runtime initialization should be called here
       Call MEF90MPIInitialize_Private(ierr);CHKERRQ(ierr)
