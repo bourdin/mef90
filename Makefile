@@ -1,7 +1,7 @@
 all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity mef90version.h
 
 mef90version.h: ${MEF90_DIR}/.hg/dirstate
-	@echo \#define MEF90_HGVER \"`hg tip | head -1 | cut -d : -f 2,3 | tr -d ' '`\" > ${MEF90_DIR}/mef90version.h
+	@echo \#define MEF90_HGVER \"`hg parents | head -1 | cut -d : -f 2,3 | tr -d ' '`\" > ${MEF90_DIR}/mef90version.h
 
 MEF90: chkpaths
 	-@echo "Building $@"
