@@ -54,7 +54,7 @@ Contains
       Call DMMeshGetDimension(mesh,dim,ierr);CHKERRQ(ierr)
       !!! Create dof-based sections and Scatter from the Vecs
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DM,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(xSec,residualSec,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(xSec,boundaryDisplacementSec,ierr);CHKERRQ(ierr)
       If (Associated(MEF90DefMechCtx%temperature)) Then

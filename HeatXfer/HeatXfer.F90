@@ -8,7 +8,18 @@ Program HeatXfer
    Implicit NONE   
 
    PetscErrorCode                                     :: ierr
+   Type(MEF90Ctx_Type),target                         :: MEF90Ctx
+   Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
+   Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
+                                                         1,             & ! verbose
+                                                         MEF90TimeInterpolation_linear, & ! timeInterpolation
+                                                         0.0_Kr,        & ! timeMin
+                                                         1.0_Kr,        & ! timeMax
+                                                         11,            & ! timeNumStep
+                                                         MEF90FileFormat_EXOSingle) ! fileFormat
+
    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
+   Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
                                                          MEF90HeatXFer_ModeSteadyState, & ! mode
                                                          PETSC_FALSE,         & ! addNullSpace
@@ -29,21 +40,9 @@ Program HeatXfer
                                                          0.0_Kr)          ! boundaryTemp
                                                          
    Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: MEF90HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
-                                                         PETSC_FALSE,    & ! Has BC
+                                                         PETSC_FALSE,   & ! Has BC
                                                          0.0_Kr)          ! boundaryTemp
-   Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
                                                          
-   Type(MEF90Ctx_Type),target                         :: MEF90Ctx
-   Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
-                                                         1,             & ! verbose
-                                                         MEF90TimeInterpolation_linear, & ! timeInterpolation
-                                                         0.0_Kr,        & ! timeMin
-                                                         1.0_Kr,        & ! timeMax
-                                                         11,            & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle) ! fileFormat
-   Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
-   PetscBag,dimension(:),pointer                      :: MEF90MatPropBag
-
    Type(DM),target                                    :: Mesh
    Type(IS)                                           :: setIS,cellIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
@@ -65,7 +64,6 @@ Program HeatXfer
    PetscReal                                          :: t
    
    Integer                                            :: step
-   Type(Vec)                                          :: localVec
    PetscInt                                           :: dim
       
    !!! Initialize MEF90
@@ -93,11 +91,10 @@ Program HeatXfer
    !!! Get material properties bags
    Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
    If (dim == 2) Then
-      Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90HeatXferCtx%DM,MEF90_Mathium2D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag,MEF90HeatXferCtx%DM,MEF90_Mathium2D,MEF90Ctx,ierr)
    Else
-      Call MEF90MatPropBagSetFromOptions(MEF90MatPropBag,MEF90HeatXferCtx%DM,MEF90_Mathium3D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag,MEF90HeatXferCtx%DM,MEF90_Mathium3D,MEF90Ctx,ierr)
    End If   
-   MEF90HeatXferCtx%MaterialPropertiesBag => MEF90MatPropBag
 
    Call MEF90CtxGetTime(MEF90Ctx,time,ierr)
 
