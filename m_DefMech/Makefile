@@ -10,15 +10,30 @@ BASE_DIR=${MEF90_DIR}/m_DefMech
 
 m_DefMech:m_MEF90_DefMech.o m_MEF90_DefMechCtx.o
 
-m_MEF90_DefMech.o: ${BASE_DIR}/m_MEF90_DefMech.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechAssembly2D.o  m_MEF90_DefMechAssembly3D.o
+m_MEF90_DefMech.o: ${BASE_DIR}/m_MEF90_DefMech.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechAssembly2D.o  m_MEF90_DefMechAssembly3D.o \
+                                                   m_MEF90_DefMechGradientDamageImplementation2D.o m_MEF90_DefMechGradientDamageImplementation3D.o \
+                                                   m_MEF90_DefMechGradientDamageInterface.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
-m_MEF90_DefMechAssembly2D.o: ${BASE_DIR}/m_MEF90_DefMechAssembly.F90 m_MEF90_DefMechCtx.o
+m_MEF90_DefMechGradientDamageInterface.o: ${BASE_DIR}/m_MEF90_DefMechGradientDamageInterface.F90\
+                                                   m_MEF90_DefMechGradientDamageImplementation2D.o m_MEF90_DefMechGradientDamageImplementation3D.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF90_DefMechGradientDamageImplementation2D.o: ${BASE_DIR}/m_MEF90_DefMechGradientDamageImplementation.F90 m_MEF90_DefMechCtx.o
 	@echo "      $< MEF90_DIM=2"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
-m_MEF90_DefMechAssembly3D.o: ${BASE_DIR}/m_MEF90_DefMechAssembly.F90 m_MEF90_DefMechCtx.o
+m_MEF90_DefMechGradientDamageImplementation3D.o: ${BASE_DIR}/m_MEF90_DefMechGradientDamageImplementation.F90 m_MEF90_DefMechCtx.o
+	@echo "      $< MEF90_DIM=3"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
+
+m_MEF90_DefMechAssembly2D.o: ${BASE_DIR}/m_MEF90_DefMechAssembly.F90 m_MEF90_DefMechGradientDamageInterface.o m_MEF90_DefMechGradientDamageInterface.o m_MEF90_DefMechCtx.o
+	@echo "      $< MEF90_DIM=2"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
+
+m_MEF90_DefMechAssembly3D.o: ${BASE_DIR}/m_MEF90_DefMechAssembly.F90 m_MEF90_DefMechGradientDamageInterface.o m_MEF90_DefMechGradientDamageInterface.o m_MEF90_DefMechCtx.o
 	@echo "      $< MEF90_DIM=3"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
