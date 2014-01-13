@@ -7,22 +7,22 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
    Use m_MEF90_DefMechGradientDamageInterface
    Implicit none
    Private
-   Public MEF90DefMechOperator,     &
-          MEF90DefMechBilinearForm, &
-          MEF90DefMechWork,         &
+   Public MEF90DefMechOperatorDisplacement,     &
+          MEF90DefMechBilinearFormDisplacement, &
+          MEF90DefMechWork,                     &
           MEF90DefMechElasticEnergy
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechOperator"
+#define __FUNCT__ "MEF90DefMechOperatorDisplacement"
 !!!
 !!!  
-!!!  MEF90DefMechOperator: Build the operator. When called in SNES, the solution time should always match the target time, 
+!!!  MEF90DefMechOperatorDisplacement: Build the operator. When called in SNES, the solution time should always match the target time, 
 !!!                         so there is no need for interpolation of the forcees, external, and boundary values
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechOperator(snesDisplacement,x,residual,MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechOperatorDisplacement(snesDisplacement,x,residual,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesDisplacement
       Type(Vec),Intent(IN)                               :: x
       Type(Vec),Intent(INOUT)                            :: residual
@@ -239,17 +239,17 @@ Contains
 
       Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)      
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechOperator
+   End Subroutine MEF90DefMechOperatorDisplacement
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearForm"
+#define __FUNCT__ "MEF90DefMechBilinearFormDisplacement"
 !!!
 !!!  
-!!!  MEF90DefMechBilinearForm:
+!!!  MEF90DefMechBilinearFormDisplacement:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechBilinearForm(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechBilinearFormDisplacement(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesDispl
       Type(Vec),Intent(IN)                               :: x
       Type(Mat),Intent(INOUT)                            :: A,M
@@ -344,7 +344,7 @@ Contains
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       
       flg = SAME_NONZERO_PATTERN
-   End Subroutine MEF90DefMechBilinearForm
+   End Subroutine MEF90DefMechBilinearFormDisplacement
    
    Subroutine MEF90DefMechWork(xVec,MEF90DefMechCtx,work,ierr)
       Type(Vec),Intent(IN)                               :: xVec
