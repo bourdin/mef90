@@ -10,13 +10,17 @@ Module m_MEF90_GradDamageInterface
       MEF90GradDamageDispBilinearFormSet_2D              => MEF90GradDamageDispBilinearFormSet, &
       MEF90GradDamageDispOperatorSet_2D                  => MEF90GradDamageDispOperatorSet, &
       MEF90GradDamageDispInelasticStrainRHSSetVertex2_2D => MEF90GradDamageDispInelasticStrainRHSSetVertex2, &
-      MEF90GradDamageDispInelasticStrainRHSSetCell_2D    => MEF90GradDamageDispInelasticStrainRHSSetCell
-
+      MEF90GradDamageDispInelasticStrainRHSSetCell_2D    => MEF90GradDamageDispInelasticStrainRHSSetCell, &
+      MEF90GradDamageDamageBilinearFormSetAT1_2D         => MEF90GradDamageDamageBilinearFormSetAT1, &
+      MEF90GradDamageDamageBilinearFormSetAT2_2D         => MEF90GradDamageDamageBilinearFormSetAT2
+      
    Use m_MEF90_GradDamageImplementation_3D , &
       MEF90GradDamageDispBilinearFormSet_3D              => MEF90GradDamageDispBilinearFormSet, &
       MEF90GradDamageDispOperatorSet_3D                  => MEF90GradDamageDispOperatorSet, &
       MEF90GradDamageDispInelasticStrainRHSSetVertex2_3D => MEF90GradDamageDispInelasticStrainRHSSetVertex2, &
-      MEF90GradDamageDispInelasticStrainRHSSetCell_3D    => MEF90GradDamageDispInelasticStrainRHSSetCell
+      MEF90GradDamageDispInelasticStrainRHSSetCell_3D    => MEF90GradDamageDispInelasticStrainRHSSetCell, &
+      MEF90GradDamageDamageBilinearFormSetAT1_3D         => MEF90GradDamageDamageBilinearFormSetAT1, &
+      MEF90GradDamageDamageBilinearFormSetAT2_3D         => MEF90GradDamageDamageBilinearFormSetAT2
       
    IMPLICIT NONE
    Private
@@ -25,6 +29,8 @@ Module m_MEF90_GradDamageInterface
    Public :: MEF90GradDamageDispOperatorSet
    Public :: MEF90GradDamageDispInelasticStrainRHSSetVertex
    Public :: MEF90GradDamageDispInelasticStrainRHSSetCell
+   Public :: MEF90GradDamageDamageBilinearFormSetAT1
+   Public :: MEF90GradDamageDamageBilinearFormSetAT2
    
    Interface MEF90GradDamageDispBilinearFormSet
       Module Procedure MEF90GradDamageDispBilinearFormSet_2D, MEF90GradDamageDispBilinearFormSet_3D
@@ -41,4 +47,12 @@ Module m_MEF90_GradDamageInterface
    Interface MEF90GradDamageDispInelasticStrainRHSSetCell
       Module Procedure MEF90GradDamageDispInelasticStrainRHSSetCell_2D, MEF90GradDamageDispInelasticStrainRHSSetCell_3D
    End Interface MEF90GradDamageDispInelasticStrainRHSSetCell
+
+   Interface MEF90GradDamageDamageBilinearFormSetAT1
+      Module Procedure MEF90GradDamageDamageBilinearFormSetAT1_2D, MEF90GradDamageDamageBilinearFormSetAT1_3D
+   End Interface MEF90GradDamageDamageBilinearFormSetAT1
+
+   Interface MEF90GradDamageDamageBilinearFormSetAT2
+      Module Procedure MEF90GradDamageDamageBilinearFormSetAT2_2D, MEF90GradDamageDamageBilinearFormSetAT2_3D
+   End Interface MEF90GradDamageDamageBilinearFormSetAT2
 End Module m_MEF90_GradDamageInterface

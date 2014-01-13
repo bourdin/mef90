@@ -12,6 +12,10 @@ Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
    Public :: MEF90GradDamageDispOperatorSet
    Public :: MEF90GradDamageDispInelasticStrainRHSSetVertex2
    Public :: MEF90GradDamageDispInelasticStrainRHSSetCell
+
+   Public :: MEF90GradDamageDamageBilinearFormSetAT1
+   !Public :: MEF90GradDamageDamageBilinearFormSetAT2
+   !Public :: MEF90GradDamageDamageOperatorSet
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDispBilinearFormSet"
@@ -264,4 +268,186 @@ Contains
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDispInelasticStrainRHSSetCell
+
+!!! ============== Functions for the alpha problem ==============
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT1"
+!!!
+!!!  
+!!!  MEF90GradDamageDamageBilinearFormSetAT1:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageDamageBilinearFormSetAT1(K,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+      Type(Mat),Intent(IN)                               :: K 
+      Type(DM),Intent(IN)                                :: mesh,meshDisp
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
+      PetscInt,Intent(IN)                                :: internalLength
+      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
+      PetscReal,Intent(IN)                               :: FractureToughness
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisp
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType,elemDispType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(SectionReal)                                  :: defaultSection
+      PetscReal,Dimension(:),Pointer                     :: displacementloc,temperatureLoc,plasticStrainLoc
+      PetscReal                                          :: temperatureElem
+      Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iDoF2,iGauss
+      PetscReal,Dimension(:,:),Pointer                   :: MatElem
+      PetscReal                                          :: C2
+      PetscLogDouble                                     :: flops
+
+      !C1 = FractureToughness * 4.0_Kr / internalLength / 3.0_Kr 
+      C2 = FractureToughness * 4.0_Kr * internalLength / 3.0_Kr
+
+      Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(displacementloc(elemDispType%numDof))
+         Allocate(temperatureloc(elemType%numDof))
+         Allocate(MatElem(elemType%numDof,elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(displacement,meshDisp,cellID(cell),elemDispType%numDof,displacementloc,ierr);CHKERRQ(ierr)
+            If (temperature%v /= 0) Then
+               Call SectionRealRestrictClosure(temperature,mesh,cellID(cell),elemType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+            End If
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               temperatureElem   = 0.0_Kr
+               plasticStrainElem = 0.0_Kr
+               strainElem        = 0.0_Kr
+               Do iDoF1 = 1,elemDispType%numDof
+                  strainElem = strainElem + displacementloc(iDof1) * elemDisp(cell)%GradS_BF(iDof1,iGauss)
+               End Do
+               If (temperature%v /= 0) Then
+                  Do iDoF1 = 1,elemType%numDof
+                     temperatureElem = temperatureElem + temperatureLoc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+                  End Do
+                  strainElem = strainElem - (temperatureElem * LinearThermalExpansion)
+               End If
+               If (plasticStrain%v /= 0) Then
+                  plasticStrainElem = plasticStrainLoc
+                  strainElem = strainElem - plasticStrainElem
+               End If
+               stressElem = HookesLaw * strainElem
+               Do iDoF1 = 1,elemType%numDof
+                  Do iDoF2 = 1,elemType%numDof
+                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                    ( (stressElem .DotP. StrainElem) * elem(cell)%BF(iDof1,iGauss) * elem(cell)%BF(iDof2,iGauss) + & 
+                                    C2 * (elem(cell)%Grad_BF(iDof1,iGauss) .dotP. elem(cell)%Grad_BF(iDof2,iGauss)))
+                  End Do
+               End Do
+            End Do
+            Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+         End Do ! cell
+         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(displacementloc)
+         DeAllocate(temperatureloc)
+         DeAllocate(MatElem)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
+   End Subroutine MEF90GradDamageDamageBilinearFormSetAT1
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT2"
+!!!
+!!!  
+!!!  MEF90GradDamageDamageBilinearFormSetAT2:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageDamageBilinearFormSetAT2(K,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+      Type(Mat),Intent(IN)                               :: K 
+      Type(DM),Intent(IN)                                :: mesh,meshDisp
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
+      PetscInt,Intent(IN)                                :: internalLength
+      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
+      PetscReal,Intent(IN)                               :: FractureToughness
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisp
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType,elemDispType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(SectionReal)                                  :: defaultSection
+      PetscReal,Dimension(:),Pointer                     :: displacementloc,temperatureLoc,plasticStrainLoc
+      PetscReal                                          :: temperatureElem
+      Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iDoF2,iGauss
+      PetscReal,Dimension(:,:),Pointer                   :: MatElem
+      PetscReal                                          :: C1,C2
+      PetscLogDouble                                     :: flops
+
+      C1 = FractureToughness * 4.0_Kr / internalLength / 3.0_Kr 
+      C2 = FractureToughness * 4.0_Kr * internalLength / 3.0_Kr
+
+      Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(displacementloc(elemDispType%numDof))
+         Allocate(temperatureloc(elemType%numDof))
+         Allocate(MatElem(elemType%numDof,elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(displacement,meshDisp,cellID(cell),elemDispType%numDof,displacementloc,ierr);CHKERRQ(ierr)
+            If (temperature%v /= 0) Then
+               Call SectionRealRestrictClosure(temperature,mesh,cellID(cell),elemType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+            End If
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               temperatureElem   = 0.0_Kr
+               plasticStrainElem = 0.0_Kr
+               strainElem        = 0.0_Kr
+               Do iDoF1 = 1,elemDispType%numDof
+                  strainElem = strainElem + displacementloc(iDof1) * elemDisp(cell)%GradS_BF(iDof1,iGauss)
+               End Do
+               If (temperature%v /= 0) Then
+                  Do iDoF1 = 1,elemType%numDof
+                     temperatureElem = temperatureElem + temperatureLoc(iDof1) * elem(cell)%BF(iDof1,iGauss)
+                  End Do
+                  strainElem = strainElem - (temperatureElem * LinearThermalExpansion)
+               End If
+               If (plasticStrain%v /= 0) Then
+                  plasticStrainElem = plasticStrainLoc
+                  strainElem = strainElem - plasticStrainElem
+               End If
+               stressElem = HookesLaw * strainElem
+               Do iDoF1 = 1,elemType%numDof
+                  Do iDoF2 = 1,elemType%numDof
+                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                    (((stressElem .DotP. StrainElem) + C1) * elem(cell)%BF(iDof1,iGauss) * elem(cell)%BF(iDof2,iGauss) + & 
+                                    C2 * (elem(cell)%Grad_BF(iDof1,iGauss) .dotP. elem(cell)%Grad_BF(iDof2,iGauss)))
+                  End Do
+               End Do
+            End Do
+            Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+         End Do ! cell
+         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(displacementloc)
+         DeAllocate(temperatureloc)
+         DeAllocate(MatElem)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
+   End Subroutine MEF90GradDamageDamageBilinearFormSetAT2
 End Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
