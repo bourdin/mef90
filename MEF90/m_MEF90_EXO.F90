@@ -1,9 +1,9 @@
-Module m_MEF_EXO
+Module m_MEF90_EXO
 #include "finclude/petscdef.h"
-   Use m_MEF_Parameters
-   Use m_MEF_Ctx
-   Use m_MEF_Utils
-   Use m_MEF_Elements
+   Use m_MEF90_Parameters
+   Use m_MEF90_Ctx
+   Use m_MEF90_Utils
+   Use m_MEF90_Elements
    Use petsc
    IMPLICIT NONE
 
@@ -394,5 +394,5 @@ Subroutine MEF90EXOFormat(exoid,NameG,NameC,NameV,ierr)
       End If
    End If
 End Subroutine MEF90EXOFormat
-End Module m_MEF_EXO
+End Module m_MEF90_EXO
 

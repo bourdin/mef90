@@ -1,28 +1,28 @@
 #include "mef90.inc"
-Module MEF90_APPEND(m_MEF_DiffusionImplementation_,MEF90_DIM)D
+Module MEF90_APPEND(m_MEF90_DiffusionImplementation_,MEF90_DIM)D
 #include "finclude/petscdef.h"
-   Use m_MEF_LinAlg
-   Use m_MEF_Parameters
-   Use m_MEF_Elements
-   Use m_MEF_Utils
+   Use m_MEF90_LinAlg
+   Use m_MEF90_Parameters
+   Use m_MEF90_Elements
+   Use m_MEF90_Utils
    Use petsc
    IMPLICIT NONE
 
    Private   
-   Public :: DiffusionBilinearFormSet
-   Public :: DiffusionEnergySet
-   Public :: DiffusionOperatorAddTransientTermSet
-   Public :: DiffusionOperatorSet
-   Public :: DiffusionRHSSetVertex
-   Public :: DiffusionRHSSetCell
-   Public :: DiffusionRHSSetCst
-   Public :: DiffusionWorkSetVertex
-   Public :: DiffusionWorkSetCell
-   Public :: DiffusionWorkSetCst
+   Public :: MEF90DiffusionBilinearFormSet
+   Public :: MEF90DiffusionEnergySet
+   Public :: MEF90DiffusionOperatorAddTransientTermSet
+   Public :: MEF90DiffusionOperatorSet
+   Public :: MEF90DiffusionRHSSetVertex
+   Public :: MEF90DiffusionRHSSetCell
+   Public :: MEF90DiffusionRHSSetCst
+   Public :: MEF90DiffusionWorkSetVertex
+   Public :: MEF90DiffusionWorkSetCell
+   Public :: MEF90DiffusionWorkSetCst
 
    
 
-!  Assembles all components required to solve a diffusion equation in the form
+!  Assembles all components required to solve a MEF90Diffusion equation in the form
 !
 !       { -div[A\nabla v] + \lambda v = f in \Omega
 !  (1)  {                           v = V on \partial \Omega_d
@@ -60,8 +60,8 @@ Module MEF90_APPEND(m_MEF_DiffusionImplementation_,MEF90_DIM)D
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionBilinearFormSet"
-   Subroutine DiffusionBilinearFormSet(K,mesh,cellIS,A,lambda,elem,elemType,ierr)
+#define __FUNCT__ "MEF90DiffusionBilinearFormSet"
+   Subroutine MEF90DiffusionBilinearFormSet(K,mesh,cellIS,A,lambda,elem,elemType,ierr)
       Type(Mat),Intent(IN)                               :: K 
       Type(DM),Intent(IN)                                :: mesh
       Type(IS),Intent(IN)                                :: cellIS
@@ -101,11 +101,11 @@ Contains
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-   End Subroutine DiffusionBilinearFormSet
+   End Subroutine MEF90DiffusionBilinearFormSet
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionOperatorSet"   
-   Subroutine DiffusionOperatorSet(G,mesh,V,cellIS,A,lambda,elem,elemType,ierr)
+#define __FUNCT__ "MEF90DiffusionOperatorSet"   
+   Subroutine MEF90DiffusionOperatorSet(G,mesh,V,cellIS,A,lambda,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: G
       Type(DM),Intent(IN)                                :: mesh
       Type(SectionReal),Intent(IN)                       :: V
@@ -154,17 +154,17 @@ Contains
          DeAllocate(Gloc)
          DeAllocate(Vloc)
       End If
-   End Subroutine DiffusionOperatorSet
+   End Subroutine MEF90DiffusionOperatorSet
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionOperatorAddTransientTermSet"
+#define __FUNCT__ "MEF90DiffusionOperatorAddTransientTermSet"
 !!!
 !!!  
-!!!  DiffusionOperatorAddTransientTermSet:
+!!!  MEF90DiffusionOperatorAddTransientTermSet:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine DiffusionOperatorAddTransientTermSet(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
+   Subroutine MEF90DiffusionOperatorAddTransientTermSet(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: G
       Type(DM),Intent(IN)                                :: mesh
       Type(SectionReal),Intent(IN)                       :: x
@@ -208,11 +208,11 @@ Contains
          DeAllocate(xloc)
          DeAllocate(Gloc)
       End If
-   End Subroutine DiffusionOperatorAddTransientTermSet
+   End Subroutine MEF90DiffusionOperatorAddTransientTermSet
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionRHSSetVertex"
-   Subroutine DiffusionRHSSetVertex(RHS,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "MEF90DiffusionRHSSetVertex"
+   Subroutine MEF90DiffusionRHSSetVertex(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
       Type(SectionReal),Intent(IN)                       :: F
@@ -254,11 +254,11 @@ Contains
          DeAllocate(RHSloc)
          DeAllocate(Floc)
       End If
-   End Subroutine DiffusionRHSSetVertex
+   End Subroutine MEF90DiffusionRHSSetVertex
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionRHSSetCell"
-   Subroutine DiffusionRHSSetCell(RHS,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "MEF90DiffusionRHSSetCell"
+   Subroutine MEF90DiffusionRHSSetCell(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
       Type(SectionReal),Intent(IN)                       :: F
@@ -296,11 +296,11 @@ Contains
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
-   End Subroutine DiffusionRHSSetCell
+   End Subroutine MEF90DiffusionRHSSetCell
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionRHSSetCst"
-   Subroutine DiffusionRHSSetCst(RHS,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "MEF90DiffusionRHSSetCst"
+   Subroutine MEF90DiffusionRHSSetCst(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
       PetscReal,Intent(IN)                               :: F
@@ -334,11 +334,11 @@ Contains
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
-   End Subroutine DiffusionRHSSetCst
+   End Subroutine MEF90DiffusionRHSSetCst
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionEnergySet"
-   Subroutine DiffusionEnergySet(energy,x,x0,mesh,A,lambda,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "MEF90DiffusionEnergySet"
+   Subroutine MEF90DiffusionEnergySet(energy,x,x0,mesh,A,lambda,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: energy
       Type(SectionReal),Intent(IN)                       :: x,x0
       Type(DM),Intent(IN)                                :: mesh
@@ -382,11 +382,11 @@ Contains
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
-   End Subroutine DiffusionEnergySet
+   End Subroutine MEF90DiffusionEnergySet
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionWorkSetVertex"
-   Subroutine DiffusionWorkSetVertex(work,x,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "MEF90DiffusionWorkSetVertex"
+   Subroutine MEF90DiffusionWorkSetVertex(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
       Type(DM),Intent(IN)                                :: mesh
@@ -427,11 +427,11 @@ Contains
          DeAllocate(xloc)
          DeAllocate(floc)
       End If
-   End Subroutine DiffusionWorkSetVertex
+   End Subroutine MEF90DiffusionWorkSetVertex
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionWorkSetCell"
-   Subroutine DiffusionWorkSetCell(work,x,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "MEF90DiffusionWorkSetCell"
+   Subroutine MEF90DiffusionWorkSetCell(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
       Type(DM),Intent(IN)                                :: mesh
@@ -468,11 +468,11 @@ Contains
          DeAllocate(xloc)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine DiffusionWorkSetCell
+   End Subroutine MEF90DiffusionWorkSetCell
 
 #undef __FUNCT__
-#define __FUNCT__ "DiffusionWorkSetCst"
-   Subroutine DiffusionWorkSetCst(work,x,mesh,F,cellIS,elem,elemType,ierr)
+#define __FUNCT__ "MEF90DiffusionWorkSetCst"
+   Subroutine MEF90DiffusionWorkSetCst(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
       Type(DM),Intent(IN)                                :: mesh
@@ -508,5 +508,5 @@ Contains
          Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
-   End Subroutine DiffusionWorkSetCst
-End Module MEF90_APPEND(m_MEF_DiffusionImplementation_,MEF90_DIM)D
+   End Subroutine MEF90DiffusionWorkSetCst
+End Module MEF90_APPEND(m_MEF90_DiffusionImplementation_,MEF90_DIM)D

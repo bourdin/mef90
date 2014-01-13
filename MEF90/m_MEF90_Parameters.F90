@@ -1,4 +1,4 @@
-Module m_MEF_Parameters
+Module m_MEF90_Parameters
 #include "finclude/petscdef.h"
 #include "../mef90version.h"
 
@@ -23,4 +23,4 @@ Module m_MEF_Parameters
    
    PetscInt,Public                     :: MEF90_GaussOrder
    PetscInt,Parameter,Public           :: MEF90_MXSTRLEN = 256
-End Module m_MEF_Parameters
+End Module m_MEF90_Parameters
