@@ -6,18 +6,18 @@ Module m_MEF90_DefMech
    Use m_MEF90_DefMechCtx
 
    Use m_MEF90_DefMechAssembly2D, &
-      MEF90DefMechOperator2D        => MEF90DefMechOperator,     &
-      MEF90DefMechBilinearForm2D    => MEF90DefMechBilinearForm, &     
-      MEF90DefMechWork2D            => MEF90DefMechWork,         &
-      MEF90DefMechElasticEnergy2D   => MEF90DefMechElasticEnergy
+      MEF90DefMechOperatorDisplacement2D     => MEF90DefMechOperatorDisplacement,      &
+      MEF90DefMechBilinearFormDisplacement2D => MEF90DefMechBilinearFormDisplacement,  &     
+      MEF90DefMechWork2D                     => MEF90DefMechWork,                      &
+      MEF90DefMechElasticEnergy2D            => MEF90DefMechElasticEnergy
    Use m_MEF90_DefMechAssembly3D, &
-      MEF90DefMechOperator3D        => MEF90DefMechOperator,     &
-      MEF90DefMechBilinearForm3D    => MEF90DefMechBilinearForm, &     
-      MEF90DefMechWork3D            => MEF90DefMechWork,         &
-      MEF90DefMechElasticEnergy3D   => MEF90DefMechElasticEnergy
+      MEF90DefMechOperatorDisplacement3D     => MEF90DefMechOperatorDisplacement,      &
+      MEF90DefMechBilinearFormDisplacement3D => MEF90DefMechBilinearFormDisplacement,  &     
+      MEF90DefMechWork3D                     => MEF90DefMechWork,                      &
+      MEF90DefMechElasticEnergy3D            => MEF90DefMechElasticEnergy
 
    Implicit none
-   
+
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSetTransients"
@@ -341,15 +341,15 @@ Contains
 End Subroutine MEF90DefMechUpdateboundaryDisplacement
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechOperator"
+#define __FUNCT__ "MEF90DefMechOperatorDisplacement"
 !!!
 !!!  
-!!!  MEF90DefMechOperator: wraps calls to MEF90DefMechOperator from m_MEF90_DefMechAssembly
+!!!  MEF90DefMechOperatorDisplacement: wraps calls to MEF90DefMechOperatorDisplacement from m_MEF90_DefMechAssembly
 !!!                        since overloading cannot be used here
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechOperator(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechOperatorDisplacement(snesTemp,x,residual,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
       Type(Vec),Intent(IN)                               :: x
       Type(Vec),Intent(INOUT)                            :: residual
@@ -359,22 +359,22 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       PetscInt                                           :: dim      
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
       If (dim == 2) Then
-         Call MEF90DefMechOperator2D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+         Call MEF90DefMechOperatorDisplacement2D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
       Else If (dim == 3) Then
-         Call MEF90DefMechOperator3D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+         Call MEF90DefMechOperatorDisplacement3D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
       End If      
-   End Subroutine MEF90DefMechOperator
+   End Subroutine MEF90DefMechOperatorDisplacement
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearForm"
+#define __FUNCT__ "MEF90DefMechBilinearFormDisplacement"
 !!!
 !!!  
-!!!  MEF90DefMechBilinearForm: wraps calls to MEF90DefMechBilinearForm from m_MEF90_DefMechAssembly
+!!!  MEF90DefMechBilinearFormDisplacement: wraps calls to MEF90DefMechBilinearFormDisplacement from m_MEF90_DefMechAssembly
 !!!                            since overloading cannot be used here
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechBilinearForm(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechBilinearFormDisplacement(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesDispl
       Type(Vec),Intent(IN)                               :: x
       Type(Mat),Intent(INOUT)                            :: A,M
@@ -385,11 +385,11 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       PetscInt                                           :: dim      
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
       If (dim == 2) Then
-         Call MEF90DefMechBilinearForm2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+         Call MEF90DefMechBilinearFormDisplacement2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
       Else If (dim == 3) Then
-         Call MEF90DefMechBilinearForm3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+         Call MEF90DefMechBilinearFormDisplacement3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
       End If      
-   End Subroutine MEF90DefMechBilinearForm
+   End Subroutine MEF90DefMechBilinearFormDisplacement
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechWork"
@@ -695,8 +695,8 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
          Call SNESSetOptionsPrefix(snesDisp,'Disp_',ierr);CHKERRQ(ierr)
          Call SNESSetType(snesDisp,SNESKSPONLY,ierr);CHKERRQ(ierr)
 
-         Call SNESSetFunction(snesDisp,residual,MEF90DefMechOperator,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearForm,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         Call SNESSetFunction(snesDisp,residual,MEF90DefMechOperatorDisplacement,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearFormDisplacement,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          !atol = 1.0D-10
          !rtol = 1.0D-10
          !Call SNESSetTolerances(snesDisp,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
