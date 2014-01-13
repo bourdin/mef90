@@ -1,7 +1,7 @@
-Module m_MEF_Materials_Types
+Module m_MEF90_Materials_Types
 #include "finclude/petscdef.h"
-   Use m_MEF_LinAlg
-   Use m_MEF_Ctx
+   Use m_MEF90_LinAlg
+   Use m_MEF90_Ctx
    Use petsc
    IMPLICIT NONE
 
@@ -73,20 +73,20 @@ Module m_MEF_Materials_Types
                  1.34615_Kr),                          &
       !MEF90_Tens4OS3D_Identity,                        & ! HookesLaw
       "MEF90_Mathium3D")  
-End Module m_MEF_Materials_Types
+End Module m_MEF90_Materials_Types
 
-Module m_MEF_Materials_Interface2D
+Module m_MEF90_Materials_Interface2D
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use petsc
-   Use m_MEF_Materials_Types
+   Use m_MEF90_Materials_Types
    Implicit NONE
    Private
    Public :: PetscBagGetDataMEF90MatProp2D
 
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
-         Use m_MEF_Materials_Types
+         Use m_MEF90_Materials_Types
          PetscBag                             :: bag
          type(MEF90MatProp2D_Type),pointer    :: data
          PetscErrorCode                       :: ierr
@@ -100,20 +100,20 @@ Contains
       
       Call PetscBagGetData(bag,data,ierr)
    End Subroutine PetscBagGetDataMEF90MatProp2D
-End Module m_MEF_Materials_Interface2D
+End Module m_MEF90_Materials_Interface2D
 
-Module m_MEF_Materials_Interface3D
+Module m_MEF90_Materials_Interface3D
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use petsc
-   Use m_MEF_Materials_Types
+   Use m_MEF90_Materials_Types
    Implicit NONE
    Private
    Public :: PetscBagGetDataMEF90MatProp3D
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
-         Use m_MEF_Materials_Types
+         Use m_MEF90_Materials_Types
          PetscBag                             :: bag
          type(MEF90MatProp3D_Type),pointer    :: data
          PetscErrorCode                       :: ierr
@@ -127,15 +127,15 @@ Contains
       
       Call PetscBagGetData(bag,data,ierr)
    End Subroutine PetscBagGetDataMEF90MatProp3D
-End Module m_MEF_Materials_Interface3D
+End Module m_MEF90_Materials_Interface3D
 
-Module m_MEF_Materials
+Module m_MEF90_Materials
 #include "finclude/petscdef.h"
 #include "finclude/petscbagdef.h"
    Use petsc
-   Use m_MEF_Materials_Types
-   Use m_MEF_Materials_Interface2D
-   Use m_MEF_Materials_Interface3D
+   Use m_MEF90_Materials_Types
+   Use m_MEF90_Materials_Interface2D
+   Use m_MEF90_Materials_Interface3D
    Implicit NONE
    
    Interface PetscBagGetDataMEF90MatProp
@@ -437,4 +437,4 @@ Contains
       
       A%ZZZZ = lambda + mu * 2.0_Kr
    End Subroutine MEF90_HookeLawIsoENu_3D
-End Module m_MEF_Materials
+End Module m_MEF90_Materials

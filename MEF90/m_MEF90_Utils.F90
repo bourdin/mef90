@@ -1,7 +1,7 @@
-Module m_MEF_Utils
+Module m_MEF90_Utils
 #include "finclude/petscdef.h"
-   Use m_MEF_Parameters
-   Use m_MEF_MPI
+   Use m_MEF90_Parameters
+   Use m_MEF90_MPI
    Use petsc
    Implicit None
 
@@ -522,4 +522,4 @@ Contains
       DeAllocate (dumc)
       DeAllocate (lmask)
    End Subroutine GaussJordan_Solve
-End Module m_MEF_Utils
+End Module m_MEF90_Utils

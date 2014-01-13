@@ -1,10 +1,10 @@
 #include "mef90.inc"
-Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
+Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D
 #include "finclude/petscdef.h"
-   Use m_MEF_LinAlg
-   Use m_MEF_Parameters
-   Use m_MEF_Elements
-   Use m_MEF_Utils
+   Use m_MEF90_LinAlg
+   Use m_MEF90_Parameters
+   Use m_MEF90_Elements
+   Use m_MEF90_Utils
    Use petsc
    IMPLICIT NONE
 
@@ -181,7 +181,7 @@ Contains
 #define __FUNCT__ "ElasticityOperatorAddTransientTermSet"
 !!!
 !!!  
-!!!  ElasticityOperatorAddTransientTermSet:
+!!!  ElasticityOperatorAddTransientTermSet: add the term corresponding to a \dot{x} to the operator
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -993,4 +993,4 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityEnergySet
-End Module MEF90_APPEND(m_MEF_ElasticityImplementation_,MEF90_DIM)D
+End Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D

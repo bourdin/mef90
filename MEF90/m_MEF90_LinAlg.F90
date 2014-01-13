@@ -1,7 +1,7 @@
-Module m_MEF_LinAlg
+Module m_MEF90_LinAlg
 #include "finclude/petscdef.h"
-   Use m_MEF_Parameters
-   Use m_MEF_Utils
+   Use m_MEF90_Parameters
+   Use m_MEF90_Utils
    Use petsc
    
    IMPLICIT NONE
@@ -2345,4 +2345,4 @@ Contains
        Tens4OS2DTransform%XYYY = C(1,2,2,2) 
        Tens4OS2DTransform%YYYY = C(2,2,2,2) 
    End Function Tens4OS2DTransform
-End Module m_MEF_LinAlg
+End Module m_MEF90_LinAlg

@@ -1,9 +1,9 @@
-Module m_MEF_Norm
+Module m_MEF90_Norm
 #include "finclude/petscdef.h"
-   Use m_MEF_LinAlg
-   Use m_MEF_Parameters
-   Use m_MEF_Elements
-   Use m_MEF_Utils
+   Use m_MEF90_LinAlg
+   Use m_MEF90_Parameters
+   Use m_MEF90_Elements
+   Use m_MEF90_Utils
    Use petsc
    IMPLICIT NONE
 
@@ -1980,4 +1980,4 @@ Contains
       H1Norm = sqrt(H1Norm)
    End Subroutine SectionRealH1Norm_3DElast
 
-End Module m_MEF_Norm
+End Module m_MEF90_Norm

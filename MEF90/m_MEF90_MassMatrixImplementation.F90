@@ -1,10 +1,10 @@
 #include "mef90.inc"
-Module MEF90_APPEND(m_MEF_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
+Module MEF90_APPEND(m_MEF90_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
 #include "finclude/petscdef.h"
-   Use m_MEF_LinAlg
-   Use m_MEF_Parameters
-   Use m_MEF_Elements
-   Use m_MEF_Utils
+   Use m_MEF90_LinAlg
+   Use m_MEF90_Parameters
+   Use m_MEF90_Elements
+   Use m_MEF90_Utils
    Use petsc
    IMPLICIT NONE
 
@@ -56,4 +56,4 @@ Contains
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
       
    End Subroutine MEF90_MassMatrixAssembleSet   
-End Module MEF90_APPEND(m_MEF_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
+End Module MEF90_APPEND(m_MEF90_MassMatrixImplementation_,MEF90_ELEMENTTYPE)

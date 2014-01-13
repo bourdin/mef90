@@ -1,6 +1,6 @@
-Module m_MEF_Ctx_Type
+Module m_MEF90_Ctx_Type
 #include "finclude/petscdef.h"
-   Use m_MEF_Parameters
+   Use m_MEF90_Parameters
    Use,Intrinsic :: iso_c_binding
    Implicit none
    Private  
@@ -29,13 +29,13 @@ Module m_MEF_Ctx_Type
       PetscInt                                        :: timeNumStep
       PetscEnum                                       :: fileFormat
    End Type MEF90CtxGlobalOptions_Type
-End Module m_MEF_Ctx_Type
+End Module m_MEF90_Ctx_Type
 
-Module m_MEF_Ctx
+Module m_MEF90_Ctx
 #include "finclude/petscdef.h"
    Use, Intrinsic :: iso_c_binding
-   Use m_MEF_Parameters
-   Use m_MEF_Ctx_Type
+   Use m_MEF90_Parameters
+   Use m_MEF90_Ctx_Type
    Implicit none
 
    !Private  
@@ -78,7 +78,7 @@ Module m_MEF_Ctx
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
-         Use m_MEF_Ctx_Type
+         Use m_MEF90_Ctx_Type
          PetscBag                                     :: bag
          Type(MEF90CtxGlobalOptions_Type),pointer     :: data
          PetscErrorCode                               :: ierr
@@ -321,4 +321,4 @@ End Subroutine MEF90CtxDestroy
          Call PetscPrintf(PETSC_COMM_SELF,"===\n",ierr);CHKERRQ(ierr)  
       End If
    End Subroutine MEF90CtxGetTime
-End Module m_MEF_Ctx
+End Module m_MEF90_Ctx

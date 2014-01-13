@@ -1,10 +1,10 @@
 !!! TODO
 !!! - Add a validation of the shortID and names
-Module m_MEF_Elements
+Module m_MEF90_Elements
 #include "finclude/petscdef.h"
-   Use m_MEF_LinAlg
-   Use m_MEF_Utils
-   Use m_MEF_Parameters
+   Use m_MEF90_LinAlg
+   Use m_MEF90_Utils
+   Use m_MEF90_Parameters
    Use petsc
    Use,intrinsic :: iso_c_binding
    IMPLICIT NONE
@@ -1225,7 +1225,7 @@ Contains
          Xi(5) = (/ 0.0_Kr,1.0_Kr /)
          Xi(6) = (/ 0.0_Kr,0.5_Kr /)
          Xi(7) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
-      Case(6)
+      Case(5,6)
          Nb_Gauss = 9
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
@@ -1622,7 +1622,7 @@ Contains
          dElem%Gauss_C(1)    = -0.0789333333333333_Kr / 6.0_Kr * detBinv
          dElem%Gauss_C(2:5)  =  0.0457333333333333_Kr / 6.0_Kr * detBinv
          dElem%Gauss_C(6:11) =  0.1493333333333333_Kr / 6.0_Kr * detBinv
-      Case(6)
+      Case(5,6)
          Nb_Gauss = 24
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
@@ -1832,7 +1832,7 @@ Contains
          Xi(5) = (/ 0.0_Kr,1.0_Kr /)
          Xi(6) = (/ 0.0_Kr,0.5_Kr /)
          Xi(7) = (/ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr /)
-      Case(6)
+      Case(5,6)
          Nb_Gauss = 9
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
@@ -2684,4 +2684,4 @@ Contains
 200 Format(A)
 201 Format('   ',F5.2)
    End Subroutine Element3D_Elast_View
-End Module m_MEF_Elements
+End Module m_MEF90_Elements

@@ -2,18 +2,18 @@ Module m_MEF90
 #include "finclude/petscdef.h"
 #include "../mef90version.h"
    Use petsc
-   Use m_MEF_Ctx
-   Use m_MEF_DiffusionInterface
-   Use m_MEF_ElasticityInterface
-   Use m_MEF_Elements 
-   Use m_MEF_EXO  
-   Use m_MEF_LinAlg
-   Use m_MEF_Parameters
-   Use m_MEF_MassMatrixInterface
-   Use m_MEF_Materials
-   Use m_MEF_MPI
-   Use m_MEF_Norm
-   Use m_MEF_Utils
+   Use m_MEF90_Ctx
+   Use m_MEF90_DiffusionInterface
+   Use m_MEF90_ElasticityInterface
+   Use m_MEF90_Elements 
+   Use m_MEF90_EXO  
+   Use m_MEF90_LinAlg
+   Use m_MEF90_Parameters
+   Use m_MEF90_MassMatrixInterface
+   Use m_MEF90_Materials
+   Use m_MEF90_MPI
+   Use m_MEF90_Norm
+   Use m_MEF90_Utils
 
    Implicit NONE
    Public :: MEF90Initialize

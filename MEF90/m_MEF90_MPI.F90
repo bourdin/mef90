@@ -1,6 +1,6 @@
-Module m_MEF_MPI
+Module m_MEF90_MPI
 #include "finclude/petscdef.h"
-   Use m_MEF_Parameters
+   Use m_MEF90_Parameters
    Use petsc
    Implicit None
 
@@ -109,4 +109,4 @@ Contains
       Call MPI_TYPE_FREE(Tens4OS2D_MPIType,ierr)
       Call MPI_TYPE_FREE(Tens4OS3D_MPIType,ierr)
    End Subroutine MEF90MPIFinalize_Private
-End Module m_MEF_MPI
+End Module m_MEF90_MPI
