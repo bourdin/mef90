@@ -60,6 +60,8 @@ Program ThermoElasticity
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! force
                                                          0.0_Kr,                                  & ! pressureForce
                                                          MEF90DefMech_defectLawElasticity,        & ! defect law
+                                                         MEF90DefMech_defectLawGradientDamageAT1, & ! gradientDamageLaw
+                                                         MEF90DefMech_defectLawPlasticityVonMises,& ! plasticityLaw
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
                                                          0.0_Kr,                                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
@@ -185,7 +187,7 @@ Program ThermoElasticity
    !!!
    Call VecDuplicate(MEF90DefMechCtx%displacement,residualDisp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDisp,"residualDisp",ierr);CHKERRQ(ierr)
-   Call MEF90DefMechCreateSolvers(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
+   Call MEF90DefMechCreateSolversDisp(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
 
    Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)

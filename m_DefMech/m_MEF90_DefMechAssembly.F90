@@ -138,7 +138,7 @@ Contains
             End If
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemDamage,ierr)
-         Case (MEF90DefMech_defectLawBrittleFracture,MEF90DefMech_defectLawPlasticity)
+         Case (MEF90DefMech_defectLawGradientDamage,MEF90DefMech_defectLawPlasticity)
             Print*,__FUNCT__,': Unimplemented Damage law',cellSetOptions%defectLaw
             STOP      
          End Select
@@ -293,7 +293,17 @@ Contains
                Call MEF90ElasticityBilinearFormSet(A,mesh,setIS,matPropSet%HookesLaw,elemDisplacement,elemTypeDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
             End If
-         Case (MEF90DefMech_defectLawBrittleFracture,MEF90DefMech_defectLawPlasticity)
+         Case (MEF90DefMech_defectLawGradientDamage)
+         !!! switch base don ATnum
+            !!! Elements of codim > 0 have no contribution to the bilinear form, so we may as well skip them
+            If (elemTypeDisplacement%coDim == 0) Then
+               QuadratureOrder = 2 * elemTypeDisplacement%order
+               Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90ElasticityBilinearFormSet(A,mesh,setIS,matPropSet%HookesLaw,elemDisplacement,elemTypeDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Destroy(elemDisplacement,ierr)
+            End If
+         
+         Case (MEF90DefMech_defectLawPlasticity)
             Print*,__FUNCT__,': Unimplemented Damage law',cellSetOptions%defectLaw
             STOP      
          End Select
@@ -414,7 +424,7 @@ Contains
                Call MEF90ElasticityPressureWorkSetCell(mywork,xSec,MEF90DefMechCtx%CellDMVect,pressureForceSec,setIS,elemDisplacement,elemDisplacementType,ierr)
             End If
             Call MEF90Element_Destroy(elemDisplacement,ierr)
-         Case (MEF90DefMech_defectLawBrittleFracture,MEF90DefMech_defectLawPlasticity)
+         Case (MEF90DefMech_defectLawGradientDamage,MEF90DefMech_defectLawPlasticity)
             Print*,__FUNCT__,': Unimplemented Damage law',cellSetOptions%defectLaw
             STOP      
          End Select
@@ -508,8 +518,8 @@ Contains
                Call MEF90ElasticityEnergySet(myenergy,xSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,setIS,matpropSet%HookesLaw,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
             End If
-         Case (MEF90DefMech_defectLawBrittleFracture,MEF90DefMech_defectLawPlasticity)
-            Print*,__FUNCT__,': Unimplemented Damage law',cellSetOptions%defectLaw
+         Case (MEF90DefMech_defectLawGradientDamage,MEF90DefMech_defectLawPlasticity)
+            Print*,__FUNCT__,': Unimplemented Defect law',cellSetOptions%defectLaw
             STOP      
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -529,4 +539,18 @@ Contains
          Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       End If
    End Subroutine MEF90DefMechElasticEnergy
+
+!#undef __FUNCT__
+!#define __FUNCT__ "MEF90DefMechSurfaceEnergy"
+!!!
+!!!  
+!!!  MEF90DefMechSurfaceEnergy:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+!   Subroutine MEF90DefMechSurfaceEnergy(,ierr)
+!      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      
+!   End Subroutine MEF90DefMechSurfaceEnergy
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
