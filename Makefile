@@ -34,7 +34,7 @@ tests: MEF90 chkpaths
 runtests: MEF90 chkpaths
 	-@make -C objs/${PETSC_ARCH} -f ../../Tests/Makefile runall
 
-chkpaths: objs/${PETSC_ARCH} bin/${PETSC_ARCH}
+chkpaths: objs/${PETSC_ARCH} bin/${PETSC_ARCH} mef90version.h
 objs/${PETSC_ARCH}:
 	-@mkdir -p objs/${PETSC_ARCH}
 bin/${PETSC_ARCH}:
