@@ -149,11 +149,11 @@ Contains
          End Do
       
          flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(Gloc)
          DeAllocate(Vloc)
       End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionOperatorSet
 
 #undef __FUNCT__
@@ -204,10 +204,10 @@ Contains
       
          flops = (5 * elemType%numDof * size(elem(1)%Gauss_C) + 1) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(Gloc)
       End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionOperatorAddTransientTermSet
 
 #undef __FUNCT__
@@ -250,10 +250,10 @@ Contains
       
          flops = 5 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
          DeAllocate(Floc)
       End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionRHSSetVertex
 
 #undef __FUNCT__
@@ -293,9 +293,9 @@ Contains
       
          flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionRHSSetCell
 
 #undef __FUNCT__
@@ -331,9 +331,9 @@ Contains
       
          flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionRHSSetCst
 
 #undef __FUNCT__
@@ -379,9 +379,9 @@ Contains
          
          !flops = (2 * elemType%numDof + 6) * size(elem(1)%Gauss_C) * size(cellID) 
          !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionEnergySet
 
 #undef __FUNCT__
@@ -423,10 +423,10 @@ Contains
       
          flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(floc)
       End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionWorkSetVertex
 
 #undef __FUNCT__
@@ -505,8 +505,8 @@ Contains
       
          flops = (2 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionWorkSetCst
 End Module MEF90_APPEND(m_MEF90_DiffusionImplementation_,MEF90_DIM)D
