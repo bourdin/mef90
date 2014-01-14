@@ -637,14 +637,14 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
    End Subroutine MEF90DefMechFormatEXO
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCreateSolvers"
+#define __FUNCT__ "MEF90DefMechCreateSolversDisp"
 !!!
 !!!  
-!!!  MEF90DefMechCreateSolvers:
+!!!  MEF90DefMechCreateSolversDisp:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechCreateSolvers(MEF90DefMechCtx,snesDisp,residual,ierr)
+   Subroutine MEF90DefMechCreateSolversDisp(MEF90DefMechCtx,snesDisp,residual,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(SNES),Intent(OUT)                             :: snesDisp
       Type(Vec),Intent(IN)                               :: residual
@@ -660,7 +660,6 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       Type(Vec)                                          :: residualDisp
       Type(KSP)                                          :: kspDisp
       Type(PC)                                           :: pcDisp
-      Type(TS)                                           :: tsDisp
       PetscReal                                          :: atol,rtol,dtol
       PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
       PetscInt                                           :: dim
@@ -726,5 +725,81 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       !DeAllocate(coordPCPtr)
       !Call DMMeshRestoreCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
       !Call PCSetFromOptions(pcDisp,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechCreateSolvers
+   End Subroutine MEF90DefMechCreateSolversDisp
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCreateSolversDamage"
+!!!
+!!!  
+!!!  MEF90DefMechCreateSolversDamage:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechCreateSolversDamage(MEF90DefMechCtx,snesDamage,residual,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      Type(SNES),Intent(OUT)                             :: snesDamage
+      Type(Vec),Intent(IN)                               :: residual
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(Mat)                                          :: matDamage
+      Type(SectionReal)                                  :: CoordSec
+      Type(Vec)                                          :: CoordVec
+      PetscReal,Dimension(:,:),Pointer                   :: CoordPtr
+      Type(VecScatter)                                   :: ScatterSecToVec
+      Type(Vec)                                          :: residualDamage
+      Type(KSP)                                          :: kspDamage
+      Type(PC)                                           :: pcDamage
+      PetscReal                                          :: atol,rtol,dtol
+      PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
+      PetscInt                                           :: dim
+      
+      Call DMMeshGetDimension(MEF90DefMechCtx%DMScal,dim,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+      Call DMCreateMatrix(MEF90DefMechCtx%DMScal,MATAIJ,matDamage,iErr);CHKERRQ(iErr)
+      Call MatSetOptionsPrefix(matDamage,"Damage_",ierr);CHKERRQ(ierr)
+      Call MatSetOption(matDamage,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call MatSetOption(matDamage,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call MatSetOption(matDamage,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      Call MatSetFromOptions(matDamage,ierr);CHKERRQ(ierr)
+
+      If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
+         Call SNESCreate(PETSC_COMM_WORLD,snesDamage,ierr);CHKERRQ(ierr)
+         Call SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         Call SNESSetDM(snesDamage,MEF90DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
+         Call SNESSetOptionsPrefix(snesDamage,'Damage_',ierr);CHKERRQ(ierr)
+         Call SNESSetType(snesDamage,SNESKSPONLY,ierr);CHKERRQ(ierr)
+
+         !!!Call SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         !!!Call SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         !atol = 1.0D-10
+         !rtol = 1.0D-10
+         !Call SNESSetTolerances(snesDamage,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+         Call SNESSetFromOptions(snesDamage,ierr);CHKERRQ(ierr)
+      End If
+      !!! 
+      !!! Set some KSP options
+      !!!
+      Call SNESGetKSP(snesDamage,kspDamage,ierr);CHKERRQ(ierr)
+      Call KSPSetType(kspDamage,KSPCG,ierr);CHKERRQ(ierr)
+      Call KSPSetInitialGuessNonzero(kspDamage,PETSC_TRUE,ierr);CHKERRQ(ierr)
+      rtol = 1.0D-8
+      atol = 1.0D-8
+      dtol = 1.0D+10
+      Call KSPSetTolerances(kspDamage,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+      Call KSPSetFromOptions(kspDamage,ierr);CHKERRQ(ierr)
+
+      !!! set coordinates in PC for GAMG
+      !!! For some reason, this makes gamg convergence worse, when the null space is specified.
+      !!! Will investigate later
+      !Call KSPGetPC(kspDamage,pcDamage,ierr);CHKERRQ(ierr)
+      !Call DMMeshGetCoordinatesF90(MEF90DefMechCtx%DMScal,coordPtr,ierr);CHKERRQ(ierr)
+      !Allocate(coordPCPtr(size(CoordPtr)))
+      !coordPCPtr = reshape(transpose(coordPtr),[size(CoordPtr)])
+      !coordPCPtr = reshape((coordPtr),[size(CoordPtr)])
+      !Call PCSetCoordinates(pcDamage,dim,size(coordPtr),coordPCPtr,ierr);CHKERRQ(ierr)
+      !DeAllocate(coordPCPtr)
+      !Call DMMeshRestoreCoordinatesF90(MEF90DefMechCtx%DMScal,coordPtr,ierr);CHKERRQ(ierr)
+      !Call PCSetFromOptions(pcDamage,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechCreateSolversDamage
 End Module m_MEF90_DefMech

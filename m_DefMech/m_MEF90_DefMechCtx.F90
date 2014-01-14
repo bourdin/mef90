@@ -60,6 +60,8 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal,Dimension(3)           :: force
       PetscReal                        :: pressureForce
       PetscEnum                        :: defectLaw
+      PetscEnum                        :: gradientDamageLaw
+      PetscEnum                        :: plasticityLaw
       PetscBool,Dimension(3)           :: Has_displacementBC
       PetscReal,Dimension(3)           :: boundaryDisplacement
       PetscBool                        :: Has_damageBC
@@ -198,17 +200,17 @@ Module m_MEF90_DefMechCtx
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_defectLawElasticity = 0, &
-                     MEF90DefMech_defectLawBrittleFracture, &
+                     MEF90DefMech_defectLawGradientDamage, &
                      MEF90DefMech_defectLawPlasticity
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_defectLawList
    
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_defectLawBrittleFractureAT1 = 0, &
-                     MEF90DefMech_defectLawBrittleFractureAT2
+      enumerator  :: MEF90DefMech_defectLawGradientDamageAT1 = 0, &
+                     MEF90DefMech_defectLawGradientDamageAT2
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_defectLawBrittleFractureList
-
+   Character(len = MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_defectLawGradientDamageList
+   
    Enum,bind(c)
       enumerator  :: MEF90DefMech_defectLawPlasticityTresca = 0, &
                      MEF90DefMech_defectLawPlasticityVonMises
@@ -251,11 +253,11 @@ Contains
       MEF90DefMech_defectLawList(5) = '_MEF90DefMech_defectLaw'
       MEF90DefMech_defectLawList(6) = ''
 
-      MEF90DefMech_defectLawBrittleFractureList(1) = 'AT1'
-      MEF90DefMech_defectLawBrittleFractureList(2) = 'AT2'
-      MEF90DefMech_defectLawBrittleFractureList(3) = 'MEF90DefMech_defectLawBrittleFracture'
-      MEF90DefMech_defectLawBrittleFractureList(4) = '_MEF90DefMech_defectLawBrittleFracture'
-      MEF90DefMech_defectLawBrittleFractureList(5) = ''
+      MEF90DefMech_defectLawGradientDamageList(1) = 'AT1'
+      MEF90DefMech_defectLawGradientDamageList(2) = 'AT2'
+      MEF90DefMech_defectLawGradientDamageList(3) = 'MEF90DefMech_defectLawBrittleFracture'
+      MEF90DefMech_defectLawGradientDamageList(4) = '_MEF90DefMech_defectLawBrittleFracture'
+      MEF90DefMech_defectLawGradientDamageList(5) = ''
       
       MEF90DefMech_defectLawPlasticityList(1) = 'Tresca'
       MEF90DefMech_defectLawPlasticityList(2) = 'VonMises'
@@ -616,7 +618,8 @@ Contains
       Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortIDDamage,default%ElemTypeShortIDDamage,'ShortIDDamage','Damage field element type ShortID',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%force,3,'Force','[N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%pressureForce,default%pressureForce,'pressureForce','[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%defectLaw,MEF90DefMech_defectLawList,default%defectLaw,'damageLaw','damage law',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%defectLaw,MEF90DefMech_defectLawList,default%defectLaw,'defectLaw_type','Type of defect law',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%GradientDamageLaw,MEF90DefMech_defectLawGradientDamageList,default%GradientDamageLaw,'damageLaw_gradientDamage_type','Ambrosio-Tortorelli variant',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)

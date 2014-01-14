@@ -489,10 +489,9 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageRHSSetAT1(G,mesh,meshDisp,alpha,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageRHSSetAT1(G,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
       Type(DM),Intent(IN)                                :: mesh,meshDisp
-      Type(SectionReal),Intent(IN)                       :: alpha
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
       PetscInt,Intent(IN)                                :: internalLength
@@ -506,9 +505,6 @@ Contains
       
       Type(SectionReal)                                  :: defaultSection
       PetscReal,Dimension(:),Pointer                     :: Gloc
-      PetscReal,Dimension(:),Pointer                     :: alphaloc
-      PetscReal                                          :: alphaElem
-      Type(MEF90_VECT)                                   :: gradAlphaElem
       PetscReal,Dimension(:),Pointer                     :: displacementloc,temperatureLoc,plasticStrainLoc
       PetscReal                                          :: temperatureElem
       Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem
@@ -518,20 +514,15 @@ Contains
       PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
            
-!!!! NOT IMPLEMENTED YET
-STOP
-      !C1 = FractureToughness / internalLength * .75_Kr 
-      C2 = FractureToughness * internalLength * .75_Kr
+      C2 = FractureToughness * internalLength * 3.0_Kr / 8.0_Kr
 
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
-         Allocate(alphaLoc(elemType%numDof))
          Allocate(Gloc(elemType%numDof))
          Allocate(displacementLoc(elemDispType%numDof))
          Allocate(temperatureLoc(elemType%numDof))
          Do cell = 1,size(cellID)      
             Gloc = 0.0_Kr
-            Call SectionRealRestrictClosure(alpha,mesh,cellID(cell),elemType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
             If (temperature%v /= 0) Then
                Call SectionRealRestrictClosure(temperature,mesh,cellID(cell),elemType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
             End If
@@ -558,16 +549,9 @@ STOP
                End If
                stressElem = HookesLaw * strainElem
 
-               alphaElem     = 0.0_Kr
-               gradAlphaElem = 0.0_Kr
-               Do iDoF1 = 1,elemType%numDof
-                  alphaElem     = alphaElem     + alphaLoc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
-                  gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
-               End Do
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                 ((strainElem .dotP. stressElem) * elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
-                                  ( C2 * (elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. gradAlphaElem))
+                                 ((strainElem .dotP. stressElem) - C2) * elem(cell)%BF(iDoF1,iGauss)
                End Do
             End Do ! iGauss
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -581,7 +565,6 @@ STOP
          DeAllocate(temperatureLoc)
          DeAllocate(displacementLoc)
          DeAllocate(Gloc)
-         DeAllocate(alphaLoc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDamageRHSSetAT1
@@ -788,10 +771,9 @@ STOP
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageRHSSetAT2(G,mesh,meshDisp,alpha,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageRHSSetAT2(G,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
       Type(DM),Intent(IN)                                :: mesh,meshDisp
-      Type(SectionReal),Intent(IN)                       :: alpha
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
       PetscInt,Intent(IN)                                :: internalLength
@@ -805,8 +787,6 @@ STOP
       
       Type(SectionReal)                                  :: defaultSection
       PetscReal,Dimension(:),Pointer                     :: Gloc
-      PetscReal,Dimension(:),Pointer                     :: alphaloc
-      PetscReal                                          :: alphaElem
       Type(MEF90_VECT)                                   :: gradAlphaElem
       PetscReal,Dimension(:),Pointer                     :: displacementloc,temperatureLoc,plasticStrainLoc
       PetscReal                                          :: temperatureElem
@@ -814,24 +794,15 @@ STOP
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscReal                                          :: C1,C2
       PetscLogDouble                                     :: flops
            
-!!!! NOT IMPLEMENTED YET
-STOP
-      C1 = FractureToughness / internalLength
-      C2 = FractureToughness * internalLength
-      
-
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
-         Allocate(alphaLoc(elemType%numDof))
          Allocate(Gloc(elemType%numDof))
          Allocate(displacementLoc(elemDispType%numDof))
          Allocate(temperatureLoc(elemType%numDof))
          Do cell = 1,size(cellID)      
             Gloc = 0.0_Kr
-            Call SectionRealRestrictClosure(alpha,mesh,cellID(cell),elemType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
             If (temperature%v /= 0) Then
                Call SectionRealRestrictClosure(temperature,mesh,cellID(cell),elemType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
             End If
@@ -858,16 +829,9 @@ STOP
                End If
                stressElem = HookesLaw * strainElem
 
-               alphaElem     = 0.0_Kr
-               gradAlphaElem = 0.0_Kr
-               Do iDoF1 = 1,elemType%numDof
-                  alphaElem     = alphaElem     + alphaLoc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
-                  gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
-               End Do
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                 ((strainElem .dotP. stressElem) * elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
-                                  ( C2 * (elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. gradAlphaElem))
+                                (strainElem .dotP. stressElem) * elem(cell)%BF(iDoF1,iGauss) 
                End Do
             End Do ! iGauss
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -881,7 +845,6 @@ STOP
          DeAllocate(temperatureLoc)
          DeAllocate(displacementLoc)
          DeAllocate(Gloc)
-         DeAllocate(alphaLoc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDamageRHSSetAT2
