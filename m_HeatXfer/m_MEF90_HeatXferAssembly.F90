@@ -91,7 +91,9 @@ Contains
             elemType = MEF90_knownElements(cellSetOptions%ElemTypeShortID)
             QuadratureOrder = elemType%order * 2
             Call MEF90Element_Create(MEF90HeatXferCtx%DM,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
-            Call MEF90DiffusionOperatorSet(residualSec,MEF90HeatXferCtx%DM,xSec,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+            If (elemType%Codim == 0) Then
+               Call MEF90DiffusionOperatorSet(residualSec,MEF90HeatXferCtx%DM,xSec,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+            End If
 
             !!! Modified flux is flux + surfaceThermalConductivity * refTemp      
             !!! I _could_ use a SecAXPY, but this would summ all values at all cells for each block
@@ -225,13 +227,15 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          If (.not. cellSetOptions%Has_BC) Then
-            Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             elemType = MEF90_knownElements(cellSetOptions%ElemTypeShortID)
-            QuadratureOrder = 2 * elemType%order
-            Call MEF90Element_Create(MEF90HeatXferCtx%DM,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
-            Call MEF90DiffusionBilinearFormSet(A,MEF90HeatXferCtx%DM,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Destroy(elem,ierr)
-            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+            If (elemType%codim == 0) Then
+               Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+               QuadratureOrder = 2 * elemType%order
+               Call MEF90Element_Create(MEF90HeatXferCtx%DM,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
+               Call MEF90DiffusionBilinearFormSet(A,MEF90HeatXferCtx%DM,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Destroy(elem,ierr)
+               Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+            End If
          End If ! cellSetOptions%Has_BC
       End Do     
       Call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
