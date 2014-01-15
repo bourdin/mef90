@@ -7,3 +7,4 @@
 -time_numstep 2
 -disp_snes_monitor
 -disp_ksp_converged_reason
+-heatxfer_mode null

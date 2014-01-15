@@ -238,6 +238,22 @@ Program ThermoElasticity
             !!! Solve SNES
             Call MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature,MEF90HeatXferCtx,ierr);
             Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
+
+            !!! Compute thermal energy
+            Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
+            Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+            Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+            Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Do set = 1, size(setID)
+               Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
+               Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+            End Do
+            Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
+            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+            !!! Save results
+            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
          Case (MEF90HeatXFer_ModeTransient)
             If (step > 1) Then
                !!! Update fields
@@ -259,54 +275,57 @@ Program ThermoElasticity
                   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
                End If
             End If
+
+            !!! Compute thermal energy
+            Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
+            Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+            Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+            Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Do set = 1, size(setID)
+               Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
+               Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+            End Do
+            Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
+            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+            !!! Save results
+            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
          End Select
 
-         !!! Compute thermal energy
-         Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
-         Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-         Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-         Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-         Do set = 1, size(setID)
-            Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
-            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-         Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-         Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
-         Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-         !!! Save results
-         Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
-
          !!! Solve for displacement
-         !!! Update fields
-         Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
-         Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
+         Select case(MEF90DefMechGlobalOptions%mode)
+         Case (MEF90DefMech_ModeQuasiStatic)
+            !!! Update fields
+            Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
+            Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
 
-         !!! Solve SNES
-         Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
-         Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
-         Write(IOBuffer,*) "SNESConvergedReason returned ",snesDispConvergedReason,"\n"
-         Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-         
-         !!! Compute energies
-         energy = 0.0_Kr
-         work = 0.0_Kr
-         Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
-         Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
-         Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-         Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-         Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-         Do set = 1, size(setID)
-            Write(IOBuffer,201) setID(set),energy(set),work(set),energy(set)-work(set)
+            !!! Solve SNES
+            Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+            Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,*) "SNESConvergedReason returned ",snesDispConvergedReason,"\n"
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-         Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-         Write(IOBuffer,202) sum(energy),sum(work),sum(energy)-sum(work)
-         Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+         
+            !!! Compute energies
+            energy = 0.0_Kr
+            work = 0.0_Kr
+            Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
+            Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
+            Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+            Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+            Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Do set = 1, size(setID)
+               Write(IOBuffer,201) setID(set),energy(set),work(set),energy(set)-work(set)
+               Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+            End Do
+            Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,202) sum(energy),sum(work),sum(energy)-sum(work)
+            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
      
-         !!! Save results and boundary Values
-         Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+            !!! Save results and boundary Values
+            Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+         End Select
       End Do
    End If
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
@@ -316,10 +335,12 @@ Program ThermoElasticity
 202 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
 
    !!! Clean up and exit nicely
-   If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
+   Select case(MEF90DefMechGlobalOptions%mode)
+   Case (MEF90DefMech_ModeQuasiStatic)
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
       Call VecDestroy(residualDisp,ierr);CHKERRQ(ierr)
-   End If
+   End Select
+   
    Select Case (MEF90HeatXferGlobalOptions%mode)
    Case (MEF90HeatXFer_ModeSteadyState) 
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
