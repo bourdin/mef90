@@ -65,7 +65,8 @@ Program ThermoElasticity
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
                                                          0.0_Kr,                                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
-                                                         0.0_Kr)                                    ! Boundary Damage
+                                                         0.0_Kr,                                  & ! Boundary Damage
+                                                         1.0D-9)                                    ! residualStiffness
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
                                                          0.0_Kr,                                  & ! boundary Displacement

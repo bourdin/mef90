@@ -52,7 +52,6 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                         :: boundaryDisplacementScaling
       PetscInt                         :: forceScaling
       PetscInt                         :: pressureForceScaling
-      PetscReal                        :: residualStiffness
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -67,6 +66,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal,Dimension(3)           :: boundaryDisplacement
       PetscBool                        :: Has_damageBC
       PetscReal                        :: boundaryDamage
+      PetscReal                        :: residualStiffness
    End Type MEF90DefMechCellSetOptions_Type
 
    Type MEF90DefMechVertexSetOptions_Type
@@ -589,8 +589,6 @@ Contains
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%pressureForceScaling,MEF90ScalingList,default%pressureforceScaling,'pressureForce_scaling','Pressure force scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%pressureForceOffset,default%pressureForceOffset,'pressureForce_Offset','Position of pressure force field in EXO file',ierr);CHKERRQ(ierr)
-
-      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta): residual stiffness multiplier',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 
 #undef __FUNCT__
@@ -627,6 +625,7 @@ Contains
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','[unit-less] (alpha): Damage boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechCellSetOptions%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta): residual stiffness multiplier',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions
 
 #undef __FUNCT__
