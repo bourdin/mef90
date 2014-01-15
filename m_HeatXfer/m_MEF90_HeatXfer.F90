@@ -541,10 +541,10 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       Allocate(nameV(numfield))
       nameV = "empty"
       If (MEF90HeatXferGlobalOptions%tempOffset > 0) Then
-         nameV(MEF90HeatXferGlobalOptions%tempOffset) = "temperature"
+         nameV(MEF90HeatXferGlobalOptions%tempOffset) = "Temperature"
       End If
       If (MEF90HeatXferGlobalOptions%boundaryTempOffset > 0) Then
-         nameV(MEF90HeatXferGlobalOptions%boundaryTempOffset) = "boundary temperature"
+         nameV(MEF90HeatXferGlobalOptions%boundaryTempOffset) = "Boundary_Temperature"
       End If
                      
       numfield = max(MEF90HeatXferGlobalOptions%externalTempOffset, &
@@ -552,10 +552,10 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       Allocate(nameC(numfield))
       nameC = "empty"
       If (MEF90HeatXferGlobalOptions%externalTempOffset > 0) Then
-         nameC(MEF90HeatXferGlobalOptions%externalTempOffset) = "external temperature"
+         nameC(MEF90HeatXferGlobalOptions%externalTempOffset) = "External_Temperature"
       End If
       If (MEF90HeatXferGlobalOptions%fluxOffset > 0) Then
-         nameC(MEF90HeatXferGlobalOptions%fluxOffset) = "heat flux"
+         nameC(MEF90HeatXferGlobalOptions%fluxOffset) = "Heat_Flux"
       End If
       
       Call MEF90EXOFormat(MEF90HeatXferCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)

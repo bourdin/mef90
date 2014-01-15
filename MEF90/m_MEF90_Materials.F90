@@ -13,6 +13,7 @@ Module m_MEF90_Materials_Types
       Type(MatS2D)                  :: ThermalConductivity        ! K
       Type(MatS2D)                  :: LinearThermalExpansion     ! alpha
       Type(Tens4OS2D)               :: HookesLaw                  ! A
+      PetscReal                     :: internalLength             ! l
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
@@ -24,6 +25,7 @@ Module m_MEF90_Materials_Types
       Type(MatS3D)                  :: ThermalConductivity        ! K
       Type(MatS3D)                  :: LinearThermalExpansion     ! alpha
       Type(Tens4OS3D)               :: HookesLaw                  ! A
+      PetscReal                     :: internalLength             ! l
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
    
@@ -41,7 +43,8 @@ Module m_MEF90_Materials_Types
                  0.38462_Kr,                           & ! A%XYXY
                  0.00000_Kr,                           & ! A%XYYY
                  1.09890_Kr),                          & ! A%YYYY        & ! HookesLaw
-      !MEF90_Tens4OS2D_Identity,                          & ! HookesLaw
+      !MEF90_Tens4OS2D_Identity,                        & ! HookesLaw
+                 1.0_Kr,                               & ! Internal Length
       "MEF90_Mathium2D")  
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90_Mathium3D = MEF90MatProp3D_Type ( &
@@ -72,6 +75,7 @@ Module m_MEF90_Materials_Types
                  0.00000_Kr,                           &
                  1.34615_Kr),                          &
       !MEF90_Tens4OS3D_Identity,                        & ! HookesLaw
+                 1.0_Kr,                               & ! Internal Length
       "MEF90_Mathium3D")  
 End Module m_MEF90_Materials_Types
 
@@ -206,6 +210,7 @@ Contains
       Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
       matprop%HookesLaw = default%HookesLaw
       Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+      Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
 
@@ -238,6 +243,7 @@ Contains
       Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
       matprop%HookesLaw = default%HookesLaw
       Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+      Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
 

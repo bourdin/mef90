@@ -510,17 +510,17 @@ Contains
 
       Allocate(MEF90HeatXferCtx%temperature)
       Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
-      Call PetscObjectSetName(MEF90HeatXferCtx%temperature,"temperature",ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(MEF90HeatXferCtx%temperature,"Temperature",ierr);CHKERRQ(ierr)
       Call VecSet(MEF90HeatXferCtx%temperature,0.0_Kr,ierr);CHKERRQ(ierr)
    
       Allocate(MEF90HeatXferCtx%boundaryTemperature)
       Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
-      Call PetscObjectSetName(MEF90HeatXferCtx%boundaryTemperature,"boundary Temperature",ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(MEF90HeatXferCtx%boundaryTemperature,"Boundary_Temperature",ierr);CHKERRQ(ierr)
       Call VecSet(MEF90HeatXferCtx%boundaryTemperature,0.0_Kr,ierr);CHKERRQ(ierr)
    
       Allocate(MEF90HeatXferCtx%externalTemperature)
       Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,ierr);CHKERRQ(ierr)
-      Call PetscObjectSetName(MEF90HeatXferCtx%externalTemperature,"external Temperature",ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(MEF90HeatXferCtx%externalTemperature,"External_Temperature",ierr);CHKERRQ(ierr)
       Call VecSet(MEF90HeatXferCtx%externalTemperature,0.0_Kr,ierr);CHKERRQ(ierr)
 
       Allocate(MEF90HeatXferCtx%flux)

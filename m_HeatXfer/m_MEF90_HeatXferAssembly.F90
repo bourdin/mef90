@@ -575,7 +575,9 @@ Contains
             QuadratureOrder = 2 * elemType%order
             Call MEF90Element_Create(MEF90HeatXferCtx%DM,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
             Call MEF90DiffusionBilinearFormSet(A,MEF90HeatXferCtx%DM,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
-            Call MEF90_MassMatrixAssembleSet(A,MEF90HeatXferCtx%DM,setIS,shift*matpropSet%density*matpropSet%SpecificHeat,elem,elemType,ierr)
+            If (elemType%codim == 0) Then
+               Call MEF90_MassMatrixAssembleSet(A,MEF90HeatXferCtx%DM,setIS,shift*matpropSet%density*matpropSet%SpecificHeat,elem,elemType,ierr)
+            End If
             Call MEF90Element_Destroy(elem,ierr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If ! cellSetOptions%Has_BC
