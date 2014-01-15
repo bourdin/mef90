@@ -52,6 +52,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                         :: boundaryDisplacementScaling
       PetscInt                         :: forceScaling
       PetscInt                         :: pressureForceScaling
+      PetscReal                        :: residualStiffness
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -588,6 +589,8 @@ Contains
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%pressureForceScaling,MEF90ScalingList,default%pressureforceScaling,'pressureForce_scaling','Pressure force scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%pressureForceOffset,default%pressureForceOffset,'pressureForce_Offset','Position of pressure force field in EXO file',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta): residual stiffness multiplier',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 
 #undef __FUNCT__
@@ -640,7 +643,7 @@ Contains
       Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)    :: default
       PetscErrorCode,Intent(OUT)                            :: ierr
 
-      Type(MEF90DefMechVertexSetOptions_Type),pointer      :: DefMechVertexSetOptions
+      Type(MEF90DefMechVertexSetOptions_Type),pointer       :: DefMechVertexSetOptions
       Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(bag,DefMechVertexSetOptions,ierr);CHKERRQ(ierr)
       Call PetscBagSetName(bag,trim(name),"DefMechVertexSetOptions MEF90 Heat transfer Vertex Set options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
