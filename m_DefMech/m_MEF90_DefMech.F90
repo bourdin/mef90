@@ -753,6 +753,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       PetscReal                                          :: atol,rtol,dtol
       PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
       PetscInt                                           :: dim
+      Type(Vec)                                          :: LB,UB
       
       Call DMMeshGetDimension(MEF90DefMechCtx%DMScal,dim,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
@@ -768,7 +769,15 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
          Call SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetDM(snesDamage,MEF90DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
          Call SNESSetOptionsPrefix(snesDamage,'Damage_',ierr);CHKERRQ(ierr)
-         Call SNESSetType(snesDamage,SNESKSPONLY,ierr);CHKERRQ(ierr)
+         !Call SNESSetType(snesDamage,SNESKSPONLY,ierr);CHKERRQ(ierr)
+         
+         !!! Set default bounds for the damage field
+         Call DMCreateGlobalVector(MEF90DefMechCtx%DMScal,LB,ierr);CHKERRQ(ierr)
+         Call VecDuplicate(LB,UB,ierr);CHKERRQ(ierr)
+         Call VecSet(LB,0.0_Kr,ierr);CHKERRQ(ierr)
+         Call VecSet(UB,1.0_Kr,ierr);CHKERRQ(ierr)
+         Call SNESVISetVariableBounds(snesDamage,LB,UB,ierr);CHKERRQ(ierr)
+
 
          !!!Call SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          !!!Call SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
@@ -788,6 +797,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       dtol = 1.0D+10
       Call KSPSetTolerances(kspDamage,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
       Call KSPSetFromOptions(kspDamage,ierr);CHKERRQ(ierr)
+      
 
       !!! set coordinates in PC for GAMG
       !!! For some reason, this makes gamg convergence worse, when the null space is specified.

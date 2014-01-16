@@ -930,10 +930,10 @@ Contains
    !!!  
    !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
    !!!
-   Subroutine ElasticityEnergySet(energy,x,plasticStrain,temperature,mesh,cellIS,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
+   Subroutine ElasticityEnergySet(energy,x,plasticStrain,temperature,mesh,meshScal,cellIS,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
       PetscReal,Intent(OUT)                              :: energy
       Type(SectionReal),Intent(IN)                       :: x,plasticStrain,temperature
-      Type(DM),Intent(IN)                                :: mesh
+      Type(DM),Intent(IN)                                :: mesh,meshScal
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
@@ -957,7 +957,7 @@ Contains
          Do cell = 1,size(cellID)   
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
             If (temperature%v /= 0) Then
-               Call SectionRealRestrictClosure(temperature,mesh,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+               Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
             End If
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
