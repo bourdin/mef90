@@ -12,14 +12,17 @@ Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
    Public :: MEF90GradDamageDispOperatorSet
    Public :: MEF90GradDamageDispInelasticStrainRHSSetVertex2
    Public :: MEF90GradDamageDispInelasticStrainRHSSetCell
+   Public :: MEF90GradDamageElasticEnergySet   
 
    Public :: MEF90GradDamageDamageBilinearFormSetAT1
    Public :: MEF90GradDamageDamageOperatorSetAT1
    Public :: MEF90GradDamageDamageRHSSetAT1
+   Public :: MEF90GradDamageSurfaceEnergySetAT1
    Public :: MEF90GradDamageDamageBilinearFormSetAT2
    Public :: MEF90GradDamageDamageOperatorSetAT2
    Public :: MEF90GradDamageDamageRHSSetAT2
-   
+   Public :: MEF90GradDamageSurfaceEnergySetAT2
+
    
 !!! The Euler-Lagrange equation for the alpha problem for AT1 is
 !!!
@@ -286,6 +289,96 @@ Contains
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDispInelasticStrainRHSSetCell
 
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageElasticEnergySet"
+   !!!
+   !!!  
+   !!!  MEF90GradDamageElasticEnergySet:  Contribution of a cell set to elastic energy. 
+   !!!                        It is assumed that the temperature is interpolated on the FE space while the plastic strain 
+   !!!                        is cell-based
+   !!!  
+   !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+   !!!
+   Subroutine MEF90GradDamageElasticEnergySet(energy,x,alpha,plasticStrain,temperature,mesh,meshScal,cellIS,eta,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+      PetscReal,Intent(OUT)                              :: energy
+      Type(SectionReal),Intent(IN)                       :: x,alpha,plasticStrain,temperature
+      Type(DM),Intent(IN)                                :: mesh,meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      PetscReal                                          :: eta
+      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemScalType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: xloc,alphaLoc,temperatureLoc,plasticStrainLoc
+      PetscReal                                          :: alphaElem,SalphaElem,temperatureElem
+      Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+     
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemDisplacementType%numDof))
+         Allocate(temperatureloc(elemScalType%numDof))
+         Allocate(alphaLoc(elemScalType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
+            If (temperature%v /= 0) Then
+               Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemScalType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+            End If
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+            If (alpha%v /= 0) Then
+               Call SectionRealRestrictClosure(alpha,meshScal,cellID(cell),elemScalType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+            End If
+            Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
+               alphaElem = 0.0_Kr
+               If (alpha%v /= 0) Then
+                  Do iDoF1 = 1, elemScalType%numDof
+                     alphaElem = alphaElem + alphaLoc(iDoF1) * elemScal(cell)%BF(iDoF1,iGauss)
+                  End Do ! iDoF1
+               End If
+               SalphaElem = eta + (1.0_Kr - alphaElem)**2
+
+               strainElem        = 0.0_Kr
+               Do iDoF1 = 1,elemDisplacementType%numDof
+                  strainElem = strainElem + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
+               End Do
+
+               temperatureElem   = 0.0_Kr
+               If (temperature%v /= 0) Then
+                  Do iDoF1 = 1,elemScalType%numDof
+                     temperatureElem = temperatureElem + temperatureLoc(iDof1) * elemScal(cell)%BF(iDof1,iGauss)
+                  End Do
+                  strainElem = strainElem - (temperatureElem * thermalExpansion)
+               End If
+
+               plasticStrainElem = 0.0_Kr
+               If (plasticStrain%v /= 0) Then
+                  plasticStrainElem = plasticStrainLoc
+                  strainElem = strainElem - plasticStrainElem
+               End If
+               stressElem = HookesLaw * strainElem
+               energy = energy + SalphaElem * (strainElem .dotP. stressElem) * elemDisplacement(cell)%Gauss_C(iGauss) * 0.5_Kr
+            End Do ! Gauss
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+         End Do ! cell
+         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(temperatureloc)
+         DeAllocate(alphaloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90GradDamageElasticEnergySet
+
 !!! ============== Functions for the alpha problem ==============
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT1"
@@ -300,7 +393,7 @@ Contains
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
-      PetscInt,Intent(IN)                                :: internalLength
+      PetscReal,Intent(IN)                               :: internalLength
       Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
@@ -392,7 +485,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: alpha
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
-      PetscInt,Intent(IN)                                :: internalLength
+      PetscReal,Intent(IN)                               :: internalLength
       Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
@@ -494,7 +587,7 @@ Contains
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
-      PetscInt,Intent(IN)                                :: internalLength
+      PetscReal,Intent(IN)                               :: internalLength
       Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
@@ -514,7 +607,7 @@ Contains
       PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
            
-      C2 = FractureToughness * internalLength * 3.0_Kr / 8.0_Kr
+      C2 = FractureToughness * internalLength * .375_Kr
 
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -570,6 +663,58 @@ Contains
    End Subroutine MEF90GradDamageDamageRHSSetAT1
 
 #undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageSurfaceEnergySetAT1"
+!!!
+!!!  
+!!!  MEF90GradDamageSurfaceEnergySetAT1:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageSurfaceEnergySetAT1(energy,alpha,meshScal,cellIS,internalLength,fractureToughness,elemScal,elemScalType,ierr)
+      PetscReal,Intent(OUT)                              :: energy
+      Type(SectionReal),Intent(IN)                       :: alpha
+      Type(DM),Intent(IN)                                :: meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      PetscReal                                          :: internalLength,fractureToughness
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemScalType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: alphaLoc
+      PetscReal                                          :: alphaElem
+      Type(MEF90_VECT)                                   :: gradAlphaElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscReal                                          :: C1, C2
+      PetscLogDouble                                     :: flops
+
+      
+      C1 = fractureToughness / internalLength * .375_Kr
+      C2 = fractureToughness * internalLength * .375_Kr
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(alphaloc(elemScalType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(alpha,meshScal,cellID(cell),elemScalType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elemScal(cell)%Gauss_C)
+               alphaElem     = 0.0_Kr
+               gradAlphaElem = 0.0_Kr
+               Do iDoF1 = 1,elemScalType%numDof
+                  alphaElem     = alphaElem     + alphaLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
+                  gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               energy = energy + elemScal(cell)%Gauss_C(iGauss) * (alphaElem * C1 + (gradAlphaElem .dotP. gradAlphaElem) * C2)
+            End Do ! Gauss
+         End Do ! cell
+         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(alphaloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90GradDamageSurfaceEnergySetAT1
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT2"
 !!!
 !!!  
@@ -582,7 +727,7 @@ Contains
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
-      PetscInt,Intent(IN)                                :: internalLength
+      PetscReal,Intent(IN)                               :: internalLength
       Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
@@ -674,7 +819,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: alpha
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
-      PetscInt,Intent(IN)                                :: internalLength
+      PetscReal,Intent(IN)                               :: internalLength
       Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
@@ -776,7 +921,7 @@ Contains
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
-      PetscInt,Intent(IN)                                :: internalLength
+      PetscReal,Intent(IN)                               :: internalLength
       Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
@@ -848,4 +993,56 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDamageRHSSetAT2
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageSurfaceEnergySetAT2"
+!!!
+!!!  
+!!!  MEF90GradDamageSurfaceEnergySetAT2:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageSurfaceEnergySetAT2(energy,alpha,meshScal,cellIS,internalLength,fractureToughness,elemScal,elemScalType,ierr)
+      PetscReal,Intent(OUT)                              :: energy
+      Type(SectionReal),Intent(IN)                       :: alpha
+      Type(DM),Intent(IN)                                :: meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      PetscReal                                          :: internalLength,fractureToughness
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemScalType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: alphaLoc
+      PetscReal                                          :: alphaElem
+      Type(MEF90_VECT)                                   :: gradAlphaElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscReal                                          :: C1, C2
+      PetscLogDouble                                     :: flops
+
+      
+      C1 = fractureToughness / internalLength * .5_Kr
+      C2 = fractureToughness * internalLength * .5_Kr
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(alphaloc(elemScalType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(alpha,meshScal,cellID(cell),elemScalType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elemScal(cell)%Gauss_C)
+               alphaElem     = 0.0_Kr
+               gradAlphaElem = 0.0_Kr
+               Do iDoF1 = 1,elemScalType%numDof
+                  alphaElem     = alphaElem     + alphaLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
+                  gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               energy = energy + elemScal(cell)%Gauss_C(iGauss) * (alphaElem**2 * C1 + (gradAlphaElem .dotP. gradAlphaElem) * C2)
+            End Do ! Gauss
+         End Do ! cell
+         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(alphaloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90GradDamageSurfaceEnergySetAT2
 End Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D

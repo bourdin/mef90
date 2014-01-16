@@ -1,4 +1,4 @@
-all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity mef90version.h
+all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef mef90version.h
 
 mef90version.h: ${MEF90_DIR}/.hg/dirstate
 	@echo \#define MEF90_HGVER \"`hg parents | head -1 | cut -d : -f 2,3 | tr -d ' '`\" > ${MEF90_DIR}/mef90version.h
@@ -26,6 +26,10 @@ m_Elasticity: MEF90 chkpaths
 ThermoElasticity: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../ThermoElasticity/Makefile ThermoElasticity
+
+vDef: MEF90 m_DefMech m_HeatXfer chkpaths
+	-@echo "Building $@"
+	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef
 
 tests: MEF90 chkpaths
 	-@echo "Building $@"
