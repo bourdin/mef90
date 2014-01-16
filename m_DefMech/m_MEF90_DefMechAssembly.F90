@@ -62,7 +62,7 @@ Contains
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',temperatureSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-         Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)          
+         Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)   
       Else
          temperatureSec%v = 0
       End If
@@ -90,8 +90,12 @@ Contains
       End If
 
       If (Associated(MEF90DefMechCtx%damage)) Then
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
-         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%temperature)) Then
+            Call SectionRealDuplicate(temperatureSec,damageSec,ierr);CHKERRQ(ierr)
+         Else
+            Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
+            Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+         End If
          Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
       Else
          damageSec%v = 0
@@ -400,7 +404,6 @@ Contains
    
       Type(SectionReal)                                  :: xSec
       Type(SectionReal)                                  :: forceSec,pressureForceSec
-      PetscReal,Dimension(:),Pointer                     :: xPtr
       Type(IS)                                           :: CellSetGlobalIS,setIS
       PetscInt,Dimension(:),Pointer                      :: setID
       PetscInt                                           :: set,QuadratureOrder,numCell
@@ -412,10 +415,8 @@ Contains
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
       Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
       PetscReal                                          :: myWork
-      PetscInt                                           :: dim
       
       
-      Call DMMeshGetDimension(MEF90DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%globalOptionsBag,globalOptions,ierr);CHKERRQ(ierr)
       !!! Create dof-based sections
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
@@ -494,7 +495,6 @@ Contains
    
       Type(SectionReal)                                  :: xSec
       Type(SectionReal)                                  :: damageSec,plasticStrainSec,temperatureSec
-      PetscReal,Dimension(:),Pointer                     :: xPtr
       Type(IS)                                           :: CellSetGlobalIS,setIS,setISdof,bcIS
       PetscInt,dimension(:),Pointer                      :: setID
       PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
@@ -505,11 +505,8 @@ Contains
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
       Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
-      PetscInt                                           :: p,dof,c,dim,numDof
-      PetscInt                                           :: nVal
       PetscReal                                          :: myenergy
 
-      Call DMMeshGetDimension(MEF90DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr)
       !!! Create dof-based sections
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
@@ -563,6 +560,7 @@ Contains
                Call MEF90ElasticityEnergySet(myenergy,xSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
                                              matpropSet%HookesLaw,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
+               Call MEF90Element_Destroy(elemScal,ierr)
             End If
          Case (MEF90DefMech_defectLawGradientDamage)
             If (elemDisplacementType%coDim == 0) Then
@@ -572,6 +570,7 @@ Contains
                Call MEF90GradDamageElasticEnergySet(myenergy,xSec,damageSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
                                              CellSetOptions%residualStiffness,matpropSet%HookesLaw,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
+               Call MEF90Element_Destroy(elemScal,ierr)
             End If
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -955,9 +954,66 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechSurfaceEnergy(ierr)
+   Subroutine MEF90DefMechSurfaceEnergy(alpha,MEF90DefMechCtx,energy,ierr)
+      Type(Vec),Intent(IN)                               :: alpha
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscReal,dimension(:),Pointer                     :: energy
       PetscErrorCode,Intent(OUT)                         :: ierr
+   
+      Type(SectionReal)                                  :: alphaSec
+      Type(IS)                                           :: CellSetGlobalIS,setIS,setISdof,bcIS
+      PetscInt,dimension(:),Pointer                      :: setID
+      PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
+      PetscInt                                           :: set,QuadratureOrder
+      Type(MEF90_MATPROP),pointer                        :: matpropSet
+      Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
+      Type(VecScatter)                                   :: ScatterSecToVecScal
+      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
+      Type(MEF90Element_Type)                            :: elemScalType
+      PetscReal                                          :: myenergy
 
+      !!! Create dof-based sections
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',alphaSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,alphaSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+
+      !!! Scatter data from Vec to Sec, or initialize
+      Call SectionRealToVec(alphaSec,ScatterSecToVecScal,SCATTER_REVERSE,alpha,ierr);CHKERRQ(ierr) 
+
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       
+      Do set = 1,size(setID)
+         myenergy = 0.0_Kr
+         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         elemScalType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDamage)
+
+         !!! Call proper local assembly depending on the type of damage law
+         Select Case (cellSetOptions%defectLaw)
+         Case (MEF90DefMech_defectLawGradientDamage)
+            If (elemScalType%coDim == 0) Then
+               Select Case(cellSetOptions%gradientDamageLaw)
+               Case(MEF90DefMech_defectLawGradientDamageAT1)
+                  QuadratureOrder = max(2 * elemScalType%order - 2, elemScalType%order)
+                  Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+                  Call MEF90GradDamageSurfaceEnergySetAT1(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
+                  Call MEF90Element_Destroy(elemScal,ierr)
+               Case(MEF90DefMech_defectLawGradientDamageAT2)
+                  QuadratureOrder = 2*elemScalType%order
+                  Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+                  Call MEF90GradDamageSurfaceEnergySetAT1(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
+                  Call MEF90Element_Destroy(elemScal,ierr)
+               End Select
+            End If
+         End Select
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+         Call MPI_AllReduce(MPI_IN_PLACE,myenergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         energy(set) = energy(set) + myenergy
+      End Do ! set
+
+      Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSurfaceEnergy
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D

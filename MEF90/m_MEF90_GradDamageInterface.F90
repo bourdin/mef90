@@ -47,9 +47,11 @@ Module m_MEF90_GradDamageInterface
    Public :: MEF90GradDamageDamageBilinearFormSetAT1
    Public :: MEF90GradDamageDamageOperatorSetAT1
    Public :: MEF90GradDamageDamageRHSSetAT1
+   Public :: MEF90GradDamageSurfaceEnergySetAT1
    Public :: MEF90GradDamageDamageBilinearFormSetAT2
    Public :: MEF90GradDamageDamageOperatorSetAT2
    Public :: MEF90GradDamageDamageRHSSetAT2
+   Public :: MEF90GradDamageSurfaceEnergySetAT2
    
    Interface MEF90GradDamageDispBilinearFormSet
       Module Procedure MEF90GradDamageDispBilinearFormSet_2D, MEF90GradDamageDispBilinearFormSet_3D
