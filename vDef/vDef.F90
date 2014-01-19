@@ -36,6 +36,7 @@ Program vDef
                                                          0,                   & ! plasticStrainOffset
                                                          0,                   & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,    & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
@@ -51,6 +52,7 @@ Program vDef
                                                          0,                   & ! plasticStrainOffset
                                                          0,                   & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,    & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
 
@@ -63,13 +65,13 @@ Program vDef
                                                          MEF90DefMech_defectLawGradientDamageAT1, & ! gradientDamageLaw
                                                          MEF90DefMech_defectLawPlasticityVonMises,& ! plasticityLaw
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         0.0_Kr,                                  & ! boundary Displacement
+                                                         [1.1_Kr,2.2_Kr,3.3_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
-                                                         0.0_Kr,                                  & ! Boundary Damage
+                                                         0._Kr,                                   & ! Boundary Damage
                                                          1.0D-9)                                    ! residualStiffness
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         0.0_Kr,                                  & ! boundary Displacement
+                                                         [1.1_Kr,2.2_Kr,3.3_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
                                                          0.0_Kr)                                    ! boundary Damage
 
@@ -297,6 +299,12 @@ Program vDef
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             !!! Save results
             Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
+         Case (MEF90HeatXfer_ModeNULL)
+            Continue
+         Case default
+            Write(IOBuffer,*) "Implemented HeatXfer mode: ", MEF90HeatXferGlobalOptions%mode, "\n"
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            STOP
          End Select
 
          !!! Solve for displacement
@@ -305,7 +313,7 @@ Program vDef
             !!! Update fields
             Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
             Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
-
+            Call MEF90DefMechUpdateboundaryDamage(MEF90DefMechCtx%damage,MEF90DefMechCtx,ierr)
             !!! Solve SNES
             Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
             Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
@@ -331,6 +339,12 @@ Program vDef
      
             !!! Save results and boundary Values
             Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+         Case (MEF90DefMech_ModeNULL)
+            Continue
+         Case default
+            Write(IOBuffer,*) "Implemented DefMech mode: ", MEF90DefMechGlobalOptions%mode, "\n"
+            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            STOP
          End Select
       End Do
    End If

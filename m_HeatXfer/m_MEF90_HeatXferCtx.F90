@@ -464,10 +464,10 @@ Contains
 
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')
-103 Format('Registering cell set ',I4,' prefix: ',A,'\n')
+103 Format('\nRegistering cell set ',I4,' prefix: ',A,'\n')
 200 Format('Vertex set ',I4)
 201 Format('vs',I4.4,'_')
-203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
+203 Format('\nRegistering vertex set ',I4,' prefix: ',A,'\n')
    End Subroutine MEF90HeatXferCtxSetFromOptions
    
 #undef __FUNCT__

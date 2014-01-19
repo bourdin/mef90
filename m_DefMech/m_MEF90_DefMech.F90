@@ -39,35 +39,49 @@ Contains
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
 
-      Select case (MEF90DefMechGlobalOptions%forceScaling)
-         Case (MEF90Scaling_File)
-            Call VecLoadExodusCell(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%force,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
-         Case (MEF90Scaling_Linear)
-            Call MEF90DefMechSetForceCst(MEF90DefMechCtx%force,MEF90DefMechCtx,ierr)
-            Call VecScale(MEF90DefMechCtx%force,time,ierr);CHKERRQ(ierr)
-         Case (MEF90Scaling_CST)
-            Call MEF90DefMechSetforceCst(MEF90DefMechCtx%force,MEF90DefMechCtx,ierr)
-      End Select
-      Select case (MEF90DefMechGlobalOptions%pressureForceScaling)
-         Case (MEF90Scaling_File)
-            Call VecLoadExodusCell(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
-         Case (MEF90Scaling_Linear)
-            Call MEF90DefMechSetPressureForceCst(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx,ierr)
-            Call VecScale(MEF90DefMechCtx%pressureForce,time,ierr);CHKERRQ(ierr)
-         Case (MEF90Scaling_CST)
-            Call MEF90DefMechSetforceCst(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx,ierr)
-      End Select
+      If (Associated(MEF90DefMechCtx%force)) Then
+         Select case (MEF90DefMechGlobalOptions%forceScaling)
+            Case (MEF90Scaling_File)
+               Call VecLoadExodusCell(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%force,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                      MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
+            Case (MEF90Scaling_Linear)
+               Call MEF90DefMechSetForceCst(MEF90DefMechCtx%force,MEF90DefMechCtx,ierr)
+               Call VecScale(MEF90DefMechCtx%force,time,ierr);CHKERRQ(ierr)
+            Case (MEF90Scaling_CST)
+               Call MEF90DefMechSetforceCst(MEF90DefMechCtx%force,MEF90DefMechCtx,ierr)
+         End Select
+      End If
+      If (Associated(MEF90DefMechCtx%pressureForce)) Then
+         Select case (MEF90DefMechGlobalOptions%pressureForceScaling)
+            Case (MEF90Scaling_File)
+               Call VecLoadExodusCell(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                      MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
+            Case (MEF90Scaling_Linear)
+               Call MEF90DefMechSetPressureForceCst(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx,ierr)
+               Call VecScale(MEF90DefMechCtx%pressureForce,time,ierr);CHKERRQ(ierr)
+            Case (MEF90Scaling_CST)
+               Call MEF90DefMechSetforceCst(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx,ierr)
+         End Select
+      End If
       Select case (MEF90DefMechGlobalOptions%boundaryDisplacementScaling)
          Case (MEF90Scaling_File)
-            Call VecLoadExodusVertex(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%boundaryDisplacement,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+            Call VecLoadExodusVertex(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
                                      MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDisplacementOffset,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_Linear)
             Call MEF90DefMechSetboundaryDisplacementCst(MEF90DefMechCtx%boundaryDisplacement,MEF90DefMechCtx,ierr)
             Call VecScale(MEF90DefMechCtx%boundaryDisplacement,time,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_CST)
             Call MEF90DefMechSetboundaryDisplacementCst(MEF90DefMechCtx%boundaryDisplacement,MEF90DefMechCtx,ierr)
+      End Select
+      Select case (MEF90DefMechGlobalOptions%boundaryDamageScaling)
+         Case (MEF90Scaling_File)
+            Call VecLoadExodusVertex(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                     MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDamageOffset,ierr);CHKERRQ(ierr)
+         Case (MEF90Scaling_CST)
+            Call MEF90DefMechSetboundaryDamageCst(MEF90DefMechCtx%boundaryDamage,MEF90DefMechCtx,ierr)
+         Case (MEF90Scaling_Linear)
+            Write(*,*) __FUNCT__,": linear scaling of damage variable does not make any sense."
+            STOP
       End Select
    End Subroutine MEF90DefMechSetTransients
 
@@ -260,6 +274,81 @@ Contains
    End Subroutine MEF90DefMechSetBoundaryDisplacementCst
 
 #undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechSetBoundaryDamageCst"
+!!!
+!!!  
+!!!  MEF90DefMechSetBoundaryDamageCst:
+!!!  
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechSetBoundaryDamageCst(x,MEF90DefMechCtx,ierr)
+      Type(Vec),Intent(IN)                               :: x
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+   
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
+      Type(MEF90DefMechVertexSetOptions_Type),pointer    :: vertexSetOptions
+      Type(IS)                                           :: VertexSetGlobalIS,setIS,setISdof,bcIS
+      Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
+      Type(IS)                                           :: CellSetGlobalIS
+      PetscInt,Dimension(:),Pointer                      :: setID
+      PetscInt,Dimension(:),Pointer                      :: setIdx
+      PetscInt                                           :: set,nval
+      PetscReal,Dimension(:),Pointer                     :: val
+      PetscInt,Dimension(:),Pointer                      :: cone
+      Type(MEF90Element_Type)                            :: elemType
+      PetscInt                                           :: cell
+      
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+      
+      !!! boundaryDamage is Vertex-centered
+      !!! We first set the boundary values inherited from cell sets, then that of vertex sets
+      !!!
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)   
+         If (cellSetOptions%Has_damageBC) Then
+            Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+            Call MEF90_ISCreateCelltoVertex(MEF90DefMechCtx%DMScal,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+            Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
+            Allocate(val(nval),stat=ierr)
+            val =  cellSetOptions%boundaryDamage
+            Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMScal,x,val,bcIS,1,INSERT_VALUES,ierr)
+            DeAllocate(Val)
+            Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+         End If! cellSetOptions%Has_BC
+      End Do ! set
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      
+      !!! Vertex Sets
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(MEF90DefMechCtx%vertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)   
+         If (vertexSetOptions%Has_damageBC) Then
+            Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Vertex Sets',setID(set),bcIS,ierr);CHKERRQ(iErr)
+            Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
+            Allocate(val(nval),stat=ierr)
+            val =  vertexSetOptions%boundaryDamage
+            Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMVect,x,val,bcIS,1,INSERT_VALUES,ierr)
+            DeAllocate(Val)
+            Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+         End If! cellSetOptions%Has_BC
+      End Do ! set
+      Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
+      Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechSetBoundaryDamageCst
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechUpdateboundaryDisplacement"
 !!!
 !!!  
@@ -339,6 +428,82 @@ Contains
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
 End Subroutine MEF90DefMechUpdateboundaryDisplacement
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechUpdateboundaryDamage"
+!!!
+!!!  
+!!!  MEF90DefMechUpdateboundaryDamage: Update the solution vector x with the boundary Displacement from 
+!!!                                          MEF90DefMechCtx%BoundaryDisplacement
+!!!  
+!!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechUpdateboundaryDamage(x,MEF90DefMechCtx,ierr)
+      Type(Vec),Intent(IN)                               :: x
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+   
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
+      Type(MEF90DefMechVertexSetOptions_Type),pointer    :: vertexSetOptions
+      Type(IS)                                           :: VertexSetGlobalIS,setIS,setISdof
+      Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
+      Type(IS)                                           :: CellSetGlobalIS,bcIS
+      PetscInt,Dimension(:),Pointer                      :: setID
+      PetscInt                                           :: set,nval
+      PetscReal,Dimension(:),Pointer                     :: boundaryDamagePtr
+      Type(MEF90Element_Type)                            :: elemType
+      
+   
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+      
+      !!!
+      !!! cell set Displacement first, followed vertex sets
+      !!!
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)   
+         If (cellSetOptions%Has_damageBC) Then
+            Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+            Call MEF90_ISCreateCelltoVertex(MEF90DefMechCtx%DMScal,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+            Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
+            Allocate(boundaryDamagePtr(nval),stat=ierr)
+            Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,boundaryDamagePtr,bcIS,1,ierr)
+            Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMScal,x,boundaryDamagePtr,bcIS,1,INSERT_VALUES,ierr)
+            DeAllocate(boundaryDamagePtr)
+            Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+         End If! cellSetOptions%Has_BC
+      End Do ! set
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+
+      !!! Vertex sets
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(MEF90DefMechCtx%vertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)   
+         If (vertexSetOptions%Has_damageBC) Then
+            Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Vertex Sets',setID(set),bcIS,ierr);CHKERRQ(iErr)
+            Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
+            Allocate(boundaryDamagePtr(nval),stat=ierr)
+            Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,boundaryDamagePtr,bcIS,1,ierr)
+            Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DM,x,boundaryDamagePtr,bcIS,1,INSERT_VALUES,ierr)
+            DeAllocate(boundaryDamagePtr)
+            Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+         End If! cellSetOptions%Has_BC
+      End Do ! set
+      Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
+
+      Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
+      Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
+End Subroutine MEF90DefMechUpdateboundaryDamage
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDisplacement"

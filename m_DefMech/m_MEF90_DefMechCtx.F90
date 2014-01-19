@@ -50,6 +50,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                         :: stressOffset
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscInt                         :: boundaryDisplacementScaling
+      PetscInt                         :: boundaryDamageScaling
       PetscInt                         :: forceScaling
       PetscInt                         :: pressureForceScaling
    End Type MEF90DefMechGlobalOptions_Type
@@ -248,7 +249,7 @@ Contains
       MEF90DefMech_ModeList(6) = ''
       
       MEF90DefMech_defectLawList(1) = 'Elasticity'
-      MEF90DefMech_defectLawList(2) = 'BrittleFracture'
+      MEF90DefMech_defectLawList(2) = 'GradientDamage'
       MEF90DefMech_defectLawList(3) = 'Plasticity'
       MEF90DefMech_defectLawList(4) = 'MEF90DefMech_defectLaw'
       MEF90DefMech_defectLawList(5) = '_MEF90DefMech_defectLaw'
@@ -256,8 +257,8 @@ Contains
 
       MEF90DefMech_defectLawGradientDamageList(1) = 'AT1'
       MEF90DefMech_defectLawGradientDamageList(2) = 'AT2'
-      MEF90DefMech_defectLawGradientDamageList(3) = 'MEF90DefMech_defectLawBrittleFracture'
-      MEF90DefMech_defectLawGradientDamageList(4) = '_MEF90DefMech_defectLawBrittleFracture'
+      MEF90DefMech_defectLawGradientDamageList(3) = 'MEF90DefMech_defectLawGradientDamage'
+      MEF90DefMech_defectLawGradientDamageList(4) = '_MEF90DefMech_defectLawGradientDamage'
       MEF90DefMech_defectLawGradientDamageList(5) = ''
       
       MEF90DefMech_defectLawPlasticityList(1) = 'Tresca'
@@ -569,10 +570,10 @@ Contains
       Type(MEF90DefMechGlobalOptions_Type),pointer      :: DefMechGlobalOptions
 
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(bag,DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-      Call PetscBagSetName(bag,trim(name),"DefMechGlobalOptions MEF90 Heat transfer global options",ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"DefMechGlobalOptions MEF90 Defect Mechanics global options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
-      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%mode,MEF90DefMech_ModeList,default%mode,'DefMech_mode','Type of heat transfer computation',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%mode,MEF90DefMech_ModeList,default%mode,'DefMech_mode','Type of defect mechanics computation',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'disp_addNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%displacementOffset,default%displacementOffset,'displacement_Offset','Position of displacement field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%damageOffset,default%damageOffset,'damage_Offset','Position of damage field in EXO file',ierr);CHKERRQ(ierr)
@@ -583,6 +584,8 @@ Contains
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDisplacementOffset,default%boundaryDisplacementOffset,'boundaryDisplacement_Offset','Position of boundary displacement field in EXO file',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDamageScaling,MEF90ScalingList,default%boundaryDamageScaling,'boundaryDamage_scaling','Boundary damage scaling',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%forceScaling,MEF90ScalingList,default%forceScaling,'force_scaling','Force scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%forceOffset,default%forceOffset,'force_Offset','Position of force field in EXO file',ierr);CHKERRQ(ierr)
@@ -608,7 +611,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),pointer      :: DefMechCellSetOptions
       
       Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(bag,DefMechCellSetOptions,ierr);CHKERRQ(ierr)
-      Call PetscBagSetName(bag,trim(name),"DefMechCellSetOptions MEF90 Heat transfer Cell Set options",ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"DefMechCellSetOptions MEF90 Defect Mechanics Cell Set options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
       
       DefMechCellSetOptions%force = default%Force
@@ -644,7 +647,7 @@ Contains
 
       Type(MEF90DefMechVertexSetOptions_Type),pointer       :: DefMechVertexSetOptions
       Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(bag,DefMechVertexSetOptions,ierr);CHKERRQ(ierr)
-      Call PetscBagSetName(bag,trim(name),"DefMechVertexSetOptions MEF90 Heat transfer Vertex Set options",ierr);CHKERRQ(ierr)
+      Call PetscBagSetName(bag,trim(name),"DefMechVertexSetOptions MEF90 Defect Mechanics Vertex Set options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
       DefMechVertexSetOptions%Has_displacementBC   = default%Has_displacementBC
@@ -744,9 +747,9 @@ Contains
 
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')
-103 Format('Registering cell set ',I4,' prefix: ',A,'\n')
+103 Format('\nRegistering cell set ',I4,' prefix: ',A,'\n')
 200 Format('Vertex set ',I4)
 201 Format('vs',I4.4,'_')
-203 Format('Registering vertex set ',I4,' prefix: ',A,'\n')
+203 Format('\nRegistering vertex set ',I4,' prefix: ',A,'\n')
    End Subroutine MEF90DefMechCtxSetFromOptions
 End Module m_MEF90_DefMechCtx
