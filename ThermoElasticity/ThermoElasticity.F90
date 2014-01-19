@@ -36,6 +36,7 @@ Program ThermoElasticity
                                                          0,                   & ! plasticStrainOffset
                                                          0,                   & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,    & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
@@ -51,6 +52,7 @@ Program ThermoElasticity
                                                          0,                   & ! plasticStrainOffset
                                                          0,                   & ! StressOffset
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,    & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear)   ! pressureForceScaling
 
