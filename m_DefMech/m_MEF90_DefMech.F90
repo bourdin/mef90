@@ -1022,7 +1022,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call VecDuplicate(LB,UB,ierr);CHKERRQ(ierr)
          Call VecSet(LB,0.0_Kr,ierr);CHKERRQ(ierr)
          Call VecSet(UB,1.0_Kr,ierr);CHKERRQ(ierr)
-         !Call SNESVISetVariableBounds(snesDamage,LB,UB,ierr);CHKERRQ(ierr)
+         Call SNESVISetVariableBounds(snesDamage,LB,UB,ierr);CHKERRQ(ierr)
 
 
          Call SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
