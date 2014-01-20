@@ -40,7 +40,8 @@ Program ThermoElasticity
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear, & ! pressureForceScaling
                                                          1e-4,                & ! damage_atol
-                                                         1000)                  ! maxit
+                                                         1000,                & ! maxit
+                                                         0.)                    ! irrevthres
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
@@ -59,7 +60,8 @@ Program ThermoElasticity
                                                          MEF90Scaling_Linear, & ! ForceScaling
                                                          MEF90Scaling_Linear, & ! pressureForceScaling
                                                          1e-4,                & ! damage_atol
-                                                         1000)                  ! maxit
+                                                         1000,                & ! maxit
+                                                         0.) 
 
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &

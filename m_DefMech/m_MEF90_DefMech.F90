@@ -944,7 +944,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearFormDisplacement,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          !atol = 1.0D-10
          !rtol = 1.0D-10
-         !Call SNESSetTolerances(snesDisp,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+         !Call SNESSetTolerances(snesDisp,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call SNESSetFromOptions(snesDisp,ierr);CHKERRQ(ierr)
       End If
       !!! 
@@ -1027,9 +1027,9 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 
          Call SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         !atol = 1.0D-10
+         atol = 1.0D-8
          !rtol = 1.0D-10
-         !Call SNESSetTolerances(snesDamage,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+         Call SNESSetTolerances(snesDamage,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call SNESSetFromOptions(snesDamage,ierr);CHKERRQ(ierr)
       End If
       !!! 
@@ -1058,4 +1058,43 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       !Call DMMeshRestoreCoordinatesF90(MEF90DefMechCtx%DMScal,coordPtr,ierr);CHKERRQ(ierr)
       !Call PCSetFromOptions(pcDamage,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechCreateSolversDamage
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechUpdateDamageBounds"
+!!!
+!!!  
+!!!  MEF90DefMechUpdateDamageBounds:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,snesDamage,alpha,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      Type(SNES),Intent(OUT)                             :: snesDamage
+      Type(Vec),Intent(IN)                               :: alpha
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(Vec)                                          :: LB,UB
+      PetscReal,Dimension(:),Pointer                     :: LBPtr
+      PetscInt                                           :: i
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)      
+      Call DMGetGlobalVector(MEF90DefMechCtx%DMScal,LB,ierr);CHKERRQ(ierr)
+      Call DMGetGlobalVector(MEF90DefMechCtx%DMScal,UB,ierr);CHKERRQ(ierr)
+
+      Call VecSet(UB,1.0_Kr,ierr);CHKERRQ(ierr)
+      Call VecCopy(alpha,LB,ierr);CHKERRQ(ierr)
+      If (MEF90DefMechGlobalOptions%irrevthres > 0.0_Kr) Then
+         Call VecGetArrayF90(LB,LBPtr,ierr);CHKERRQ(ierr)
+         Do i = 1, size(LBPtr)
+            If (LBPtr(i) <= MEF90DefMechGlobalOptions%irrevthres) Then
+               LBPtr(i) = 0.0_Kr
+            End If
+         End Do
+         Call VecRestoreArrayF90(LB,LBPtr,ierr);CHKERRQ(ierr)
+      End If
+      Call SNESVISetVariableBounds(snesDamage,LB,UB,ierr);CHKERRQ(ierr)
+      Call DMRestoreGlobalVector(MEF90DefMechCtx%DMScal,LB,ierr);CHKERRQ(ierr)
+      Call DMRestoreGlobalVector(MEF90DefMechCtx%DMScal,UB,ierr);CHKERRQ(ierr)      
+   End Subroutine MEF90DefMechUpdateDamageBounds
 End Module m_MEF90_DefMech
