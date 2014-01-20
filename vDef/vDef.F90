@@ -339,13 +339,6 @@ Program vDef
                Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
                Write(IOBuffer,*) "Displacement: SNESConvergedReason returned ",snesDispConvergedReason,"\n"
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-
-Call VecSet(MEF90DefMechCtx%displacement,0.0_Kr,ierr)
-Call VecSet(MEF90DefMechCtx%force,0.0_Kr,ierr)
-Call VecSet(MEF90DefMechCtx%pressureforce,0.0_Kr,ierr)
-Call VecSet(MEF90DefMechCtx%temperature,0.0_Kr,ierr)
-Call VecSet(MEF90DefMechCtx%plasticStrain,0.0_Kr,ierr)
-
                
                Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
                Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)

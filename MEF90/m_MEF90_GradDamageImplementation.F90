@@ -517,9 +517,11 @@ Contains
          Allocate(Gloc(elemType%numDof))
          Allocate(displacementLoc(elemDispType%numDof))
          Allocate(temperatureLoc(elemType%numDof))
-         Do cell = 1,size(cellID)      
+         Do cell = 1,size(cellID)     
+!Write(*,*) '===', cellID(cell) 
             Gloc = 0.0_Kr
             Call SectionRealRestrictClosure(alpha,mesh,cellID(cell),elemType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(displacement,meshDisp,cellID(cell),elemDispType%numDof,displacementLoc,ierr);CHKERRQ(ierr)
             If (temperature%v /= 0) Then
                Call SectionRealRestrictClosure(temperature,mesh,cellID(cell),elemType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
             End If
@@ -552,6 +554,10 @@ Contains
                   alphaElem     = alphaElem     + alphaLoc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
                   gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
                End Do
+!Write(*,*) 'strainElem    ', strainElem
+!Write(*,*) 'stressElem    ', stressElem
+!Write(*,*) 'alphaElem     ', alphaElem
+!Write(*,*) 'gradAlphaElem ', gradAlphaElem
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
                                  ((strainElem .dotP. stressElem) * elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
@@ -582,8 +588,9 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageRHSSetAT1(G,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageRHSSetAT1(G,scaling,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
+      PetscReal,Intent(IN)                               :: scaling
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
@@ -607,7 +614,7 @@ Contains
       PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
            
-      C2 = FractureToughness * internalLength * .375_Kr
+      C2 = FractureToughness / internalLength * .375_Kr
 
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -622,6 +629,7 @@ Contains
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
             End If
+            Call SectionRealRestrictClosure(displacement,meshDisp,cellID(cell),elemDispType%numDof,displacementLoc,ierr);CHKERRQ(ierr)
             
             Do iGauss = 1,size(elem(cell)%Gauss_C)
                temperatureElem   = 0.0_Kr
@@ -647,6 +655,7 @@ Contains
                                  ((strainElem .dotP. stressElem) - C2) * elem(cell)%BF(iDoF1,iGauss)
                End Do
             End Do ! iGauss
+            Gloc = Gloc * scaling
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
@@ -854,6 +863,7 @@ Contains
          Do cell = 1,size(cellID)      
             Gloc = 0.0_Kr
             Call SectionRealRestrictClosure(alpha,mesh,cellID(cell),elemType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(displacement,meshDisp,cellID(cell),elemDispType%numDof,displacementLoc,ierr);CHKERRQ(ierr)
             If (temperature%v /= 0) Then
                Call SectionRealRestrictClosure(temperature,mesh,cellID(cell),elemType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
             End If
@@ -888,8 +898,8 @@ Contains
                End Do
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                 ((strainElem .dotP. stressElem) * elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
-                                  ( C2 * (elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. gradAlphaElem))
+                                 (((strainElem .dotP. stressElem) + C1)* elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
+                                  ( C2 * (elem(cell)%Grad_BF(iDoF1,iGauss) .DotP. gradAlphaElem)) )
                End Do
             End Do ! iGauss
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -916,8 +926,9 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageRHSSetAT2(G,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageRHSSetAT2(G,scaling,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
+      PetscReal,Intent(IN)                               :: scaling
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
@@ -980,6 +991,7 @@ Contains
                                 (strainElem .dotP. stressElem) * elem(cell)%BF(iDoF1,iGauss) 
                End Do
             End Do ! iGauss
+            Gloc = Gloc * scaling
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)

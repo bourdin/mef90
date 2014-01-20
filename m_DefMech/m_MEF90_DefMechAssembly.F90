@@ -701,16 +701,16 @@ Contains
                   Call MEF90GradDamageDamageOperatorSetAT1(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
                                                            matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
                                                            elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-                  Call MEF90GradDamageDamageRHSSetAT1(residualSec,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                  Call MEF90GradDamageDamageRHSSetAT1(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
                                                       matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
                                                       elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
                Case(MEF90DefMech_defectLawGradientDamageAT2)
                   Call MEF90GradDamageDamageOperatorSetAT2(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, &
                                                            matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
                                                            elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-                  !Call MEF90GradDamageDamageRHSSetAT2(residualSec,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
-                  !                                    matPropSet%internalLength,negOne*matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                  !                                    elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+                  Call MEF90GradDamageDamageRHSSetAT2(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                      matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                      elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
                Case default
                   Print*,__FUNCT__,': Unimplemented gradient damage law',cellSetOptions%gradientDamageLaw
                   STOP  
