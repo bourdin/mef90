@@ -632,6 +632,7 @@ Contains
       PetscInt                                           :: p,dof,numDof
       PetscInt                                           :: nVal
 
+Write(*,*) "entering", __FUNCT__
       Call SNESGetDM(snesDamage,mesh,ierr);CHKERRQ(ierr)
       !!! Create dof-based sections and Scatter from the Vecs
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',alphaSec,ierr);CHKERRQ(ierr)
@@ -799,6 +800,7 @@ Contains
       Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)      
       Call VecScatterDestroy(ScatterSecToVecVect,ierr);CHKERRQ(ierr)   
       Call VecScatterDestroy(MEF90DefMechCtx%CellDMMatS,ierr);CHKERRQ(ierr)
+Write(*,*) "leaving", __FUNCT__
    End Subroutine MEF90DefMechOperatorDamage
 
 
@@ -834,6 +836,7 @@ Contains
       Type(IS)                                           :: bcIS
       PetscInt                                           :: cell,v,numBC,numDoF,numCell,c,dim
       
+Write(*,*) "entering", __FUNCT__
       Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
       Call SNESGetDM(snesDamage,mesh,ierr);CHKERRQ(ierr)
 
@@ -948,6 +951,7 @@ Contains
       End If
       
       flg = SAME_NONZERO_PATTERN
+Write(*,*) "leaving", __FUNCT__
    End Subroutine MEF90DefMechBilinearFormDamage
    
 
