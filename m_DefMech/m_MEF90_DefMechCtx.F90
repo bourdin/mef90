@@ -55,6 +55,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                         :: pressureForceScaling
       PetscReal                        :: damageATol
       PetscInt                         :: maxit
+      PetscReal                        :: irrevthres
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -596,6 +597,7 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%pressureForceOffset,default%pressureForceOffset,'pressureForce_Offset','Position of pressure force field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%damageATol,default%damageATol,'defmech_damage_atol','Absolute tolerance on damage error',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%maxit,default%maxit,'defmech_maxit','Maximum number of alternate minimizations for damage',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%irrevthres,default%irrevthres,'defmech_irrevThres','Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 
 #undef __FUNCT__
