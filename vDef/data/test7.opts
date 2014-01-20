@@ -1,7 +1,7 @@
 -verbose 0
 -cs0001_defectLaw_type gradientdamage
--cs0001_damageLaw_gradientDamage_type AT1
--cs0001_internalLength .1
+-cs0001_damageLaw_gradientDamage_type AT2
+-cs0001_internalLength .5
 -cs0010_displacementBC 1,1,1
 -cs0010_boundaryDisplacement -.5,0,0 
 -cs0010_damageBC 1
@@ -12,8 +12,8 @@
 -cs0020_boundaryDamage 1
 #
 -time_min 0 
--time_max 10
--time_numstep 11
+-time_max 1
+-time_numstep 2
 #
 -defMech_mode quasistatic
 -heatxfer_mode null

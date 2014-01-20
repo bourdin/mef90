@@ -110,7 +110,7 @@ Program vDef
    Type(IS)                                           :: setIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
-   PetscReal,Dimension(:),Pointer                     :: time,energy,work
+   PetscReal,Dimension(:),Pointer                     :: time,energy,surfaceEnergy,work
 
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
@@ -137,7 +137,7 @@ Program vDef
    Integer                                            :: step
    PetscInt                                           :: dim
    
-   PetscReal                                          :: alphaMaxChange
+   PetscReal                                          :: alphaMaxChange,alphamIn,alphaMax
       
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
@@ -206,6 +206,10 @@ Program vDef
    Call PetscObjectSetName(residualDisp,"residualDisp",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSolversDisp(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
 
+   Call VecDuplicate(MEF90DefMechCtx%damage,residualDamage,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
+   Call MEF90DefMechCreateSolversDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
+
    Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
    If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
@@ -224,6 +228,8 @@ Program vDef
    !!!
    Allocate(energy(size(MEF90DefMechCtx%CellSetOptionsBag)))
    energy = 0.0_Kr
+   Allocate(surfaceEnergy(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   surfaceEnergy = 0.0_Kr
    Allocate(work(size(MEF90DefMechCtx%CellSetOptionsBag)))
    work = 0.0_Kr
 
@@ -333,15 +339,27 @@ Program vDef
                Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
                Write(IOBuffer,*) "Displacement: SNESConvergedReason returned ",snesDispConvergedReason,"\n"
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+
+Call VecSet(MEF90DefMechCtx%displacement,0.0_Kr,ierr)
+Call VecSet(MEF90DefMechCtx%force,0.0_Kr,ierr)
+Call VecSet(MEF90DefMechCtx%pressureforce,0.0_Kr,ierr)
+Call VecSet(MEF90DefMechCtx%temperature,0.0_Kr,ierr)
+Call VecSet(MEF90DefMechCtx%plasticStrain,0.0_Kr,ierr)
+
                
                Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
                Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
-               Write(IOBuffer,*) "Damage:       SNESConvergedReason returned ",snesDispConvergedReason,"\n"
+               Write(IOBuffer,*) "Damage:       SNESConvergedReason returned ",snesDamageConvergedReason,"\n"
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
                Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
                Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
                Write(IOBuffer,*) "errV = ", damageMaxChange, "\n"
+               Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+
+               Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
+               Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
+               Write(IOBuffer,205) alphaMin,alphaMax
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                
                If ((damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) .OR. (AltMinIter > MEF90DefMechGlobalOptions%maxit)) Then
@@ -350,19 +368,22 @@ Program vDef
             End Do AltMin
             !!! Compute energies
             energy = 0.0_Kr
+            surfaceEnergy = 0.0_Kr
             work = 0.0_Kr
             Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
             Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
+            Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergy,ierr);CHKERRQ(ierr)
+            
             Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call MEF90_ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
-               Write(IOBuffer,201) setID(set),energy(set),work(set),energy(set)-work(set)
+               Write(IOBuffer,201) setID(set),energy(set),work(set),surfaceEnergy(set),energy(set)+surfaceEnergy(set)-work(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             End Do
             Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,202) sum(energy),sum(work),sum(energy)-sum(work)
+            Write(IOBuffer,202) sum(energy),sum(work),sum(surfaceEnergy),sum(energy)-sum(work)+sum(surfaceEnergy)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
      
             !!! Save results and boundary Values
@@ -376,11 +397,12 @@ Program vDef
          End Select
       End Do
    End If
-100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
+100 Format("\nSolving steady state step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
 102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
-201 Format("cell set ",I4," elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
-202 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
+201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+205 Format("alpha min / max: ",ES12.5," / ",ES12.5,"\n")
 
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%mode)
