@@ -923,7 +923,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Call DMMeshGetDimension(MEF90DefMechCtx%DMScal,dim,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMCreateMatrix(MEF90DefMechCtx%DMScal,MATAIJ,matDamage,iErr);CHKERRQ(iErr)
-      Call MatSetOptionsPrefix(matDamage,"Damage_",ierr);CHKERRQ(ierr)
+      Call MatSetOptionsPrefix(matDamage,"damage_",ierr);CHKERRQ(ierr)
       Call MatSetOption(matDamage,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
       Call MatSetOption(matDamage,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
       Call MatSetOption(matDamage,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
@@ -933,7 +933,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call SNESCreate(PETSC_COMM_WORLD,snesDamage,ierr);CHKERRQ(ierr)
          Call SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetDM(snesDamage,MEF90DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
-         Call SNESSetOptionsPrefix(snesDamage,'Damage_',ierr);CHKERRQ(ierr)
+         Call SNESSetOptionsPrefix(snesDamage,'damage_',ierr);CHKERRQ(ierr)
          !Call SNESSetType(snesDamage,SNESKSPONLY,ierr);CHKERRQ(ierr)
          
          !!! Set default bounds for the damage field

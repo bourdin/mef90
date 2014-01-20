@@ -1,6 +1,7 @@
 -verbose 0
 -cs0001_defectLaw_type gradientdamage
 -cs0001_damageLaw_gradientDamage_type AT1
+-cs0001_internalLength .1
 -cs0010_displacementBC 1,1,1
 -cs0010_boundaryDisplacement -.5,0,0 
 -cs0010_damageBC 1
@@ -10,12 +11,14 @@
 -cs0020_damageBC 1
 -cs0020_boundaryDamage 1
 #
--time_min 1 
--time_max 2
--time_numstep 2
+-time_min 0 
+-time_max 10
+-time_numstep 11
 #
 -defMech_mode quasistatic
 -heatxfer_mode null
 #
 -disp_snes_monitor
 -disp_ksp_converged_reason
+-damage_snes_monitor
+-damage_ksp_converged_reason
