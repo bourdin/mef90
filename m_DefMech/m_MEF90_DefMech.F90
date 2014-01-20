@@ -9,12 +9,18 @@ Module m_MEF90_DefMech
       MEF90DefMechOperatorDisplacement2D     => MEF90DefMechOperatorDisplacement,      &
       MEF90DefMechBilinearFormDisplacement2D => MEF90DefMechBilinearFormDisplacement,  &     
       MEF90DefMechWork2D                     => MEF90DefMechWork,                      &
-      MEF90DefMechElasticEnergy2D            => MEF90DefMechElasticEnergy
+      MEF90DefMechElasticEnergy2D            => MEF90DefMechElasticEnergy,             &
+      MEF90DefMechOperatorDamage2D           => MEF90DefMechOperatorDamage,            &
+      MEF90DefMechBilinearFormDamage2D       => MEF90DefMechBilinearFormDamage,        &
+      MEF90DefMechSurfaceEnergy2D            => MEF90DefMechSurfaceEnergy     
    Use m_MEF90_DefMechAssembly3D, &
       MEF90DefMechOperatorDisplacement3D     => MEF90DefMechOperatorDisplacement,      &
       MEF90DefMechBilinearFormDisplacement3D => MEF90DefMechBilinearFormDisplacement,  &     
       MEF90DefMechWork3D                     => MEF90DefMechWork,                      &
-      MEF90DefMechElasticEnergy3D            => MEF90DefMechElasticEnergy
+      MEF90DefMechElasticEnergy3D            => MEF90DefMechElasticEnergy,             &
+      MEF90DefMechOperatorDamage3D           => MEF90DefMechOperatorDamage,            &
+      MEF90DefMechBilinearFormDamage3D       => MEF90DefMechBilinearFormDamage,        &
+      MEF90DefMechSurfaceEnergy3D            => MEF90DefMechSurfaceEnergy     
 
    Implicit none
 
@@ -605,6 +611,81 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
    End Subroutine MEF90DefMechElasticEnergy
 
 #undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechOperatorDamage"
+!!!
+!!!  
+!!!  MEF90DefMechOperatorDamage: wraps calls to MEF90DefMechOperatorDamage from m_MEF90_DefMechAssembly
+!!!                        since overloading cannot be used here
+!!!  
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechOperatorDamage(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+      Type(SNES),Intent(IN)                              :: snesTemp
+      Type(Vec),Intent(IN)                               :: x
+      Type(Vec),Intent(INOUT)                            :: residual
+      Type(MEF90DefMechCtx_Type),Intent(IN)             :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90DefMechOperatorDamage2D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+      Else If (dim == 3) Then
+         Call MEF90DefMechOperatorDamage3D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+      End If      
+   End Subroutine MEF90DefMechOperatorDamage
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechBilinearFormDamage"
+!!!
+!!!  
+!!!  MEF90DefMechBilinearFormDamage: wraps calls to MEF90DefMechBilinearFormDamage from m_MEF90_DefMechAssembly
+!!!                            since overloading cannot be used here
+!!!  
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechBilinearFormDamage(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+      Type(SNES),Intent(IN)                              :: snesDispl
+      Type(Vec),Intent(IN)                               :: x
+      Type(Mat),Intent(INOUT)                            :: A,M
+      MatStructure,Intent(INOUT)                         :: flg
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr  
+
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90DefMechBilinearFormDamage2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+      Else If (dim == 3) Then
+         Call MEF90DefMechBilinearFormDamage3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+      End If      
+   End Subroutine MEF90DefMechBilinearFormDamage
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechSurfaceEnergy"
+!!!
+!!!  
+!!!  MEF90DefMechSurfaceEnergy: wraps calls to MEF90DefMechSurfaceEnergy from m_MEF90_DefMechAssembly
+!!                       since overloading cannot be used here
+!!!  
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechSurfaceEnergy(x,MEF90DefMechCtx,energy,ierr)
+      Type(Vec),Intent(IN)                               :: x
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscReal,dimension(:),Pointer                     :: energy
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90DefMechSurfaceEnergy2D(x,MEF90DefMechCtx,energy,ierr)
+      Else If (dim == 3) Then
+         Call MEF90DefMechSurfaceEnergy3D(x,MEF90DefMechCtx,energy,ierr)
+      End If      
+   End Subroutine MEF90DefMechSurfaceEnergy
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechViewEXO"
 !!!
 !!!  
@@ -941,11 +1022,11 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call VecDuplicate(LB,UB,ierr);CHKERRQ(ierr)
          Call VecSet(LB,0.0_Kr,ierr);CHKERRQ(ierr)
          Call VecSet(UB,1.0_Kr,ierr);CHKERRQ(ierr)
-         Call SNESVISetVariableBounds(snesDamage,LB,UB,ierr);CHKERRQ(ierr)
+         !Call SNESVISetVariableBounds(snesDamage,LB,UB,ierr);CHKERRQ(ierr)
 
 
-         !!!Call SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         !!!Call SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         Call SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+         Call SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          !atol = 1.0D-10
          !rtol = 1.0D-10
          !Call SNESSetTolerances(snesDamage,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)

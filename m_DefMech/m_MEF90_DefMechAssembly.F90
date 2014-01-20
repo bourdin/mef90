@@ -540,8 +540,12 @@ Contains
       End If
 
       If (Associated(MEF90DefMechCtx%damage)) Then
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
-         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%temperature)) Then
+            Call SectionRealDuplicate(temperatureSec,damageSec,ierr);CHKERRQ(ierr)
+         Else
+            Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
+            Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+         End If
          Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)          
       Else
          damageSec%v = 0
@@ -631,8 +635,8 @@ Contains
       Type(MEF90Element_Type)                            :: elemDisplacementType,elemDamageType
       PetscInt                                           :: p,dof,numDof
       PetscInt                                           :: nVal
+      PetscReal                                          :: negOne = -1.0_Kr
 
-Write(*,*) "entering", __FUNCT__
       Call SNESGetDM(snesDamage,mesh,ierr);CHKERRQ(ierr)
       !!! Create dof-based sections and Scatter from the Vecs
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',alphaSec,ierr);CHKERRQ(ierr)
@@ -704,9 +708,9 @@ Write(*,*) "entering", __FUNCT__
                   Call MEF90GradDamageDamageOperatorSetAT2(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, &
                                                            matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
                                                            elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-                  Call MEF90GradDamageDamageRHSSetAT2(residualSec,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
-                                                      matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                      elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+                  !Call MEF90GradDamageDamageRHSSetAT2(residualSec,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                  !                                    matPropSet%internalLength,negOne*matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                  !                                    elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
                Case default
                   Print*,__FUNCT__,': Unimplemented gradient damage law',cellSetOptions%gradientDamageLaw
                   STOP  
@@ -799,8 +803,9 @@ Write(*,*) "entering", __FUNCT__
 
       Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)      
       Call VecScatterDestroy(ScatterSecToVecVect,ierr);CHKERRQ(ierr)   
-      Call VecScatterDestroy(MEF90DefMechCtx%CellDMMatS,ierr);CHKERRQ(ierr)
-Write(*,*) "leaving", __FUNCT__
+      If (Associated(MEF90DefMechCtx%plasticStrain)) Then
+         Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+      End If
    End Subroutine MEF90DefMechOperatorDamage
 
 
@@ -834,9 +839,8 @@ Write(*,*) "leaving", __FUNCT__
       Type(MEF90Element_Type)                            :: elemDisplacementType,elemDamageType
       PetscInt,Dimension(:),Pointer                      :: setIdx,bcIdx,Cone
       Type(IS)                                           :: bcIS
-      PetscInt                                           :: cell,v,numBC,numDoF,numCell,c,dim
+      PetscInt                                           :: cell,v,numBC,numDoF!,!numCell,c,dim
       
-Write(*,*) "entering", __FUNCT__
       Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
       Call SNESGetDM(snesDamage,mesh,ierr);CHKERRQ(ierr)
 
@@ -860,7 +864,7 @@ Write(*,*) "entering", __FUNCT__
          PlasticStrainSec%v = 0
       End If
 
-      Call DMMeshGetDimension(mesh,dim,ierr);CHKERRQ(ierr)
+      !Call DMMeshGetDimension(mesh,dim,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -905,7 +909,7 @@ Write(*,*) "entering", __FUNCT__
       !!!
       !!! Boundary conditions at cell sets
       !!!
-      Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
+      !Call DMmeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
@@ -951,7 +955,6 @@ Write(*,*) "entering", __FUNCT__
       End If
       
       flg = SAME_NONZERO_PATTERN
-Write(*,*) "leaving", __FUNCT__
    End Subroutine MEF90DefMechBilinearFormDamage
    
 

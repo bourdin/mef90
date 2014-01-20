@@ -38,7 +38,10 @@ Program ThermoElasticity
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,    & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
-                                                         MEF90Scaling_Linear)   ! pressureForceScaling
+                                                         MEF90Scaling_Linear, & ! pressureForceScaling
+                                                         1e-4,                & ! damage_atol
+                                                         1000)                  ! maxit
+
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,          & ! disp_addNullSpace
@@ -54,7 +57,10 @@ Program ThermoElasticity
                                                          MEF90Scaling_Linear, & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,    & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear, & ! ForceScaling
-                                                         MEF90Scaling_Linear)   ! pressureForceScaling
+                                                         MEF90Scaling_Linear, & ! pressureForceScaling
+                                                         1e-4,                & ! damage_atol
+                                                         1000)                  ! maxit
+
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden

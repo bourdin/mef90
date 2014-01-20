@@ -345,7 +345,7 @@ Contains
                End If
                SalphaElem = eta + (1.0_Kr - alphaElem)**2
 
-               strainElem        = 0.0_Kr
+               strainElem = 0.0_Kr
                Do iDoF1 = 1,elemDisplacementType%numDof
                   strainElem = strainElem + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
                End Do
@@ -954,6 +954,7 @@ Contains
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
             End If
+            Call SectionRealRestrictClosure(displacement,meshDisp,cellID(cell),elemDIspType%numDof,displacementLoc,ierr);CHKERRQ(ierr)
             
             Do iGauss = 1,size(elem(cell)%Gauss_C)
                temperatureElem   = 0.0_Kr
