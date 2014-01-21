@@ -702,21 +702,21 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
 
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-      If (MEF90DefMechGlobalOptions%displacementOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%displacementOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-      End If
-
       If (MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) Then
          Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDisplacementOffset,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+      End If
+
+      If (MEF90DefMechGlobalOptions%displacementOffset > 0) Then
+         Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%displacementOffset,ierr);CHKERRQ(ierr)
          Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
       End If
 
@@ -806,18 +806,18 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
                      MEF90DefMechGlobalOptions%temperatureOffset)
       Allocate(nameV(numfield))
       nameV = "empty"
-      If (MEF90DefMechGlobalOptions%displacementOffset > 0) Then
-         nameV(MEF90DefMechGlobalOptions%displacementOffset+0)            = "Displacement_X"
-         nameV(MEF90DefMechGlobalOptions%displacementOffset+1)            = "Displacement_Y"
-         If (dim == 3) Then
-            nameV(MEF90DefMechGlobalOptions%displacementOffset+2)         = "Displacement_Z"
-         End If
-      End If
       If (MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) Then
          nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0)    = "Boundary_Displacement_X"
          nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1)    = "Boundary_Displacement_Y"
          If (dim == 3) Then
             nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+2) = "Boundary_Displacement_Z"
+         End If
+      End If
+      If (MEF90DefMechGlobalOptions%displacementOffset > 0) Then
+         nameV(MEF90DefMechGlobalOptions%displacementOffset+0)            = "Displacement_X"
+         nameV(MEF90DefMechGlobalOptions%displacementOffset+1)            = "Displacement_Y"
+         If (dim == 3) Then
+            nameV(MEF90DefMechGlobalOptions%displacementOffset+2)         = "Displacement_Z"
          End If
       End If
       If (MEF90DefMechGlobalOptions%damageOffset > 0) Then
