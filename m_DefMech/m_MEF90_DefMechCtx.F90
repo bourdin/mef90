@@ -32,6 +32,8 @@ Module m_MEF90_DefMechCtx_Type
       Type(DM)                         :: DMScal,DMVect           ! Remove all these
       Type(DM)                         :: cellDMScal,cellDMVect   ! after switching to 
       Type(DM)                         :: DMMatS,cellDMMatS       ! DMcomplex
+      Type(PetscViewer)                :: globalEnergyViewer
+      Type(PetscViewer),Dimension(:),Pointer :: setEnergyViewer
    End Type MEF90DefMechCtx_Type
    
    Type MEF90DefMechGlobalOptions_Type
@@ -293,7 +295,8 @@ Contains
       Type(IS)                                                 :: setIS
       PetscInt                                                 :: set,numSet
       PetscInt                                                 :: dim
-
+      Character(len=MEF90_MXSTRLEN)                            :: filename
+      
       Call MEF90DefMechCtxInitialize_Private(ierr)
       Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
       DefMechCtx%DM => Mesh
@@ -346,7 +349,30 @@ Contains
          Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90DefMechVertexSetOptions,DefMechCtx%VertexSetOptionsBag(set),ierr);CHKERRQ(ierr)
       End Do
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+
+
+      !!! 
+      !!! Create energy viewers
+      !!!      
+      Write(filename,100) trim(MEF90Ctx%prefix)
+      Call PetscViewerASCIIOpen(MEF90Ctx%comm,filename,DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIPrintf(DefMechCtx%globalEnergyViewer,"# step     load            elastic energy  work            surface energy  total energy\n",ierr);CHKERRQ(ierr)
+      Call PetscViewerFlush(DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
       
+      Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
+      Allocate(DefMechCtx%setEnergyViewer(numSet),stat=ierr)
+      Do set = 1, numSet
+         Write(filename,101) trim(MEF90Ctx%prefix),set
+         Call PetscViewerASCIIOpen(MEF90Ctx%comm,filename,DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
+         Call PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set),"# step     load            elastic energy  work            surface energy  total energy\n",ierr);CHKERRQ(ierr)
+         Call PetscViewerFlush(DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
+      End Do
+      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+100 Format(A,'.ener')
+101 Format(A,'-',I4.4,'.enerblk')
+
       Nullify(DefMechCtx%force)
       Nullify(DefMechCtx%pressureforce)
       Nullify(DefMechCtx%boundaryDisplacement)
@@ -540,6 +566,14 @@ Contains
       End Do
       DeAllocate(DefMechCtx%VertexSetOptionsBag)
       
+      !!! 
+      !!! Close energy viewers
+      !!!      
+      Call PetscViewerDestroy(DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
+      Do set = 1, size(DefMechCtx%setEnergyViewer)
+         Call PetscViewerDestroy(DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
+      End Do
+
       Nullify(DefMechCtx%force)
       Nullify(DefMechCtx%pressureforce)
       Nullify(DefMechCtx%boundaryDisplacement)
