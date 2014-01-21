@@ -251,7 +251,7 @@ Program vDef
    !!! Actual computations / time stepping
    !!!
    If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
-      Do step = 1,MEF90GlobalOptions%timeNumStep
+      mainloopQS: Do step = 1,MEF90GlobalOptions%timeNumStep
          !!! Solve for temperature
          Select Case (MEF90HeatXferGlobalOptions%mode)
          Case (MEF90HeatXFer_ModeSteadyState) 
@@ -327,7 +327,7 @@ Program vDef
             STOP
          End Select
 
-         !!! Solve for displacement
+         !!! Solve for displacement and damage
          Select case(MEF90DefMechGlobalOptions%mode)
          Case (MEF90DefMech_ModeQuasiStatic)
             Write(IOBuffer,200) step,time(step) 
@@ -375,6 +375,9 @@ Program vDef
             Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
             Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergy,ierr);CHKERRQ(ierr)
             
+            !!!
+            !!! Print and save energies
+            !!!
             Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call MEF90_ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -382,13 +385,22 @@ Program vDef
             Do set = 1, size(setID)
                Write(IOBuffer,201) setID(set),energy(set),work(set),surfaceEnergy(set),energy(set)+surfaceEnergy(set)-work(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               Write(IOBuffer,500) step,time(step),energy(set),work(set),surfaceEnergy(set),energy(set)+surfaceEnergy(set)-work(set)
+               Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
+               Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
             End Do
             Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Write(IOBuffer,202) sum(energy),sum(work),sum(surfaceEnergy),sum(energy)-sum(work)+sum(surfaceEnergy)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-     
+
+            Write(IOBuffer,500) step,time(step),sum(energy),sum(work),sum(surfaceEnergy),sum(energy)-sum(work)+sum(surfaceEnergy)
+            Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
+
+            !!!
             !!! Save results and boundary Values
+            !!!
             Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
          Case (MEF90DefMech_ModeNULL)
             Continue
@@ -397,7 +409,8 @@ Program vDef
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             STOP
          End Select
-      End Do
+         Call PetscLogView(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
+      End Do MainloopQS
    End If
 100 Format("\nHeat transfer: solving steady state step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
@@ -410,6 +423,7 @@ Program vDef
 208 Format("   Alt. Min. step ",I5," ")
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
 
+500 Format(I6, 5(ES16.5),"\n")
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%mode)
    Case (MEF90DefMech_ModeQuasiStatic)
