@@ -295,7 +295,7 @@ Contains
       Type(IS)                                                 :: setIS
       PetscInt                                                 :: set,numSet
       PetscInt                                                 :: dim
-      Character(len=MEF90_MXSTRLEN)                            :: filename
+      Character(len=MEF90_MXSTRLEN)                            :: filename,IOBuffer
       
       Call MEF90DefMechCtxInitialize_Private(ierr)
       Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
@@ -366,13 +366,15 @@ Contains
       Do set = 1, numSet
          Write(filename,101) trim(MEF90Ctx%prefix),set
          Call PetscViewerASCIIOpen(MEF90Ctx%comm,filename,DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
+         Write(IOBuffer,102) set
+         Call PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
          Call PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set),"# step     load            elastic energy  work            surface energy  total energy\n",ierr);CHKERRQ(ierr)
          Call PetscViewerFlush(DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
       End Do
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 100 Format(A,'.ener')
 101 Format(A,'-',I4.4,'.enerblk')
-
+102 Format("# cell set ",I4,"\n")
       Nullify(DefMechCtx%force)
       Nullify(DefMechCtx%pressureforce)
       Nullify(DefMechCtx%boundaryDisplacement)

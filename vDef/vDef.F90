@@ -28,7 +28,7 @@ Program vDef
                                                          PETSC_TRUE,          & ! disp_addNullSpace
                                                          3,                   & ! DisplacementOffset
                                                          2,                   & ! DamageOffset
-                                                         0,                   & ! boundaryDisplacementOffset
+                                                         3,                   & ! boundaryDisplacementOffset
                                                          0,                   & ! boundaryDamageOffset
                                                          1,                   & ! temperatureOffset
                                                          4,                   & ! ForceOffset
@@ -47,7 +47,7 @@ Program vDef
                                                          PETSC_TRUE,          & ! disp_addNullSpace
                                                          3,                   & ! DisplacementOffset
                                                          2,                   & ! DamageOffset
-                                                         0,                   & ! boundaryDisplacementOffset
+                                                         3,                   & ! boundaryDisplacementOffset
                                                          0,                   & ! boundaryDamageOffset
                                                          1,                   & ! temperatureOffset
                                                          4,                   & ! ForceOffset
@@ -367,6 +367,7 @@ Program vDef
                End If
                AltMinIter = AltMinIter + 1               
             End Do AltMin
+
             !!! Compute energies
             energy = 0.0_Kr
             surfaceEnergy = 0.0_Kr
