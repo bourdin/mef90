@@ -82,6 +82,8 @@ EXODUS_PATH = findLibExoPath()
 if os.uname()[0] == 'Darwin':
   NETCDF_SO = EXODUS_PATH + "libnetcdf.dylib"
   EXODUS_SO = EXODUS_PATH + "libexodus.dylib"
+  EXODUS_SO = os.path.join(os.getenv("MEF90_DIR"),"objs",os.getenv("PETSC_ARCH"),"libexodus.dylib")
+  EXODUS_SO = os.path.join(os.getenv("MEF90_DIR"),"python","libexodus.dylib")
 else:
   NETCDF_SO = EXODUS_PATH + "libnetcdf.so"
   EXODUS_SO = EXODUS_PATH + "libexodus.so"
