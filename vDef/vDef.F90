@@ -402,7 +402,7 @@ Program vDef
             !!!
             !!! Save results and boundary Values
             !!!
-            Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+            !Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
          Case (MEF90DefMech_ModeNULL)
             Continue
          Case default
