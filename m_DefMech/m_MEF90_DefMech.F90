@@ -702,7 +702,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
 
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-      If (MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) Then
+      If ((MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) .AND. &
+          (MEF90DefMechGlobalOptions%boundaryDisplacementOffset /= MEF90DefMechGlobalOptions%displacementOffset)) Then
          Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
@@ -729,7 +730,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
       End If
 
-      If (MEF90DefMechGlobalOptions%boundaryDamageOffset > 0) Then
+      If ((MEF90DefMechGlobalOptions%boundaryDamageOffset > 0) .AND. &
+          (MEF90DefMechGlobalOptions%boundaryDamageOffset /= MEF90DefMechGlobalOptions%damageOffset))Then
          Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
          Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
@@ -806,7 +808,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
                      MEF90DefMechGlobalOptions%temperatureOffset)
       Allocate(nameV(numfield))
       nameV = "empty"
-      If (MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) Then
+      If ((MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) .AND. &
+          (MEF90DefMechGlobalOptions%boundaryDisplacementOffset /= MEF90DefMechGlobalOptions%displacementOffset)) Then
          nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0)    = "Boundary_Displacement_X"
          nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1)    = "Boundary_Displacement_Y"
          If (dim == 3) Then
@@ -823,7 +826,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       If (MEF90DefMechGlobalOptions%damageOffset > 0) Then
          nameV(MEF90DefMechGlobalOptions%damageOffset)                    = "Damage"
       End If
-      If (MEF90DefMechGlobalOptions%boundaryDamageOffset > 0) Then
+      If ((MEF90DefMechGlobalOptions%boundaryDamageOffset > 0) .AND. &
+          (MEF90DefMechGlobalOptions%boundaryDamageOffset /= MEF90DefMechGlobalOptions%damageOffset))Then
          nameV(MEF90DefMechGlobalOptions%boundaryDamageOffset)            = "Boundary_Damage"
       End If
       If (MEF90DefMechGlobalOptions%temperatureOffset > 0) Then
