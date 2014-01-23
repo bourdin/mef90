@@ -64,7 +64,7 @@ def getAccessPath():
   """
   Return the base path of the exodus installation.
   """
-  accessPth = os.path.join(os.environ.get('PETSC_DIR'),os.environ.get('PETSC_ARCH'))
+  accessPth = os.path.join(os.environ.get('EXODUS_DIR'))
   return accessPth
 
 def findLibExoPath():
@@ -80,10 +80,9 @@ def findLibExoPath():
 
 EXODUS_PATH = findLibExoPath()
 if os.uname()[0] == 'Darwin':
-  NETCDF_SO = EXODUS_PATH + "libnetcdf.dylib"
-  EXODUS_SO = EXODUS_PATH + "libexodus.dylib"
-  EXODUS_SO = os.path.join(os.getenv("MEF90_DIR"),"objs",os.getenv("PETSC_ARCH"),"libexodus.dylib")
-  EXODUS_SO = os.path.join(os.getenv("MEF90_DIR"),"python","libexodus.dylib")
+  NETCDF_SO =  os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libnetcdf.dylib")
+  EXODUS_SO = os.path.join(os.getenv("EXODUS_DIR"),"lib","libexoIIv2c.dylib")
+  EXODUS_SO = EXODUS_PATH + "libexoIIv2c.dylib"
 else:
   NETCDF_SO = EXODUS_PATH + "libnetcdf.so"
   EXODUS_SO = EXODUS_PATH + "libexodus.so"
