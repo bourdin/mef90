@@ -1,7 +1,7 @@
 Program TestMaterials
 #include "finclude/petscdef.h"
    Use m_MEF90
-   Use m_MEF_Materials
+   Use m_MEF90_Materials
    Use petsc
    Implicit NONE   
 
@@ -17,7 +17,7 @@ Program TestMaterials
    
 
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90_Initialize(ierr=ierr)
+   Call MEF90Initialize(ierr)
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-n',numMat,flg,ierr);CHKERRQ(ierr);
    
    Allocate(matBag2D(numMat))
@@ -30,7 +30,7 @@ Program TestMaterials
       Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp2D,matBag2D(i),ierr)
       write(name,200) i
       write(prefix,201) i
-      Call PetscBagRegisterMEF90MatProp(matBag2D(i),name,prefix,MEF90_Mathium2D,ierr)
+      Call PetscBagRegisterMEF90MatProp(matBag2D(i),name,prefix,MEF90Mathium2D,ierr)
       Call PetscBagView(matBag2D(i),PETSC_VIEWER_STDOUT_WORLD,ierr)
       Call PetscBagGetDataMEF90MatProp(matBag2D(i),matProp2D,ierr)
       Call PetscPrintf(PETSC_COMM_WORLD,'\n',ierr)
@@ -45,7 +45,7 @@ Program TestMaterials
       write(name,300) i
       write(prefix,301) i
 
-      Call PetscBagRegisterMEF90MatProp(matBag3D(i),name,prefix,MEF90_Mathium3D,ierr)
+      Call PetscBagRegisterMEF90MatProp(matBag3D(i),name,prefix,MEF90Mathium3D,ierr)
       Call PetscBagView(matBag3D(i),PETSC_VIEWER_STDOUT_WORLD,ierr)
       Call PetscBagGetDataMEF90MatProp(matBag3D(i),matProp3D,ierr)
 
@@ -65,6 +65,6 @@ Program TestMaterials
 301 format('mat3D',I2.2,'_')
    DeAllocate(matBag2D)
    DeAllocate(matBag3D)
-   Call MEF90_Finalize(ierr)
+   Call MEF90Finalize(ierr)
    Call PetscFinalize()
 End Program TestMaterials

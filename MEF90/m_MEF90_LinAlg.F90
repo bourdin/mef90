@@ -102,26 +102,26 @@ Module m_MEF90_LinAlg
       PetscReal          :: ZZZZ
    End Type Tens4OS3D
    
-   Type(Vect2D),Parameter    :: MEF90_Vect2D_e1 = Vect2D(1.0_Kr,0.0_Kr)
-   Type(Vect2D),Parameter    :: MEF90_Vect2D_e2 = Vect2D(0.0_Kr,1.0_Kr)
+   Type(Vect2D),Parameter    :: MEF90Vect2De1 = Vect2D(1.0_Kr,0.0_Kr)
+   Type(Vect2D),Parameter    :: MEF90Vect2De2 = Vect2D(0.0_Kr,1.0_Kr)
 
-   Type(Vect3D),Parameter    :: MEF90_Vect3D_e1 = Vect3D(1.0_Kr,0.0_Kr,0.0_Kr)
-   Type(Vect3D),Parameter    :: MEF90_Vect3D_e2 = Vect3D(0.0_Kr,1.0_Kr,0.0_Kr)
-   Type(Vect3D),Parameter    :: MEF90_Vect3D_e3 = Vect3D(0.0_Kr,0.0_Kr,1.0_Kr)
+   Type(Vect3D),Parameter    :: MEF90Vect3De1 = Vect3D(1.0_Kr,0.0_Kr,0.0_Kr)
+   Type(Vect3D),Parameter    :: MEF90Vect3De2 = Vect3D(0.0_Kr,1.0_Kr,0.0_Kr)
+   Type(Vect3D),Parameter    :: MEF90Vect3De3 = Vect3D(0.0_Kr,0.0_Kr,1.0_Kr)
    
-   Type(Mat2D),Parameter     :: MEF90_Mat2D_Identity = Mat2D(1.0_Kr,0.0_Kr,          &
+   Type(Mat2D),Parameter     :: MEF90Mat2DIdentity = Mat2D(1.0_Kr,0.0_Kr,          &
                                                              0.0_Kr,1.0_Kr)
-   Type(MatS2D),Parameter    :: MEF90_MatS2D_Identity = MatS2D(1.0_Kr,1.0_Kr,0.0_Kr)
-   Type(Mat3D),Parameter     :: MEF90_Mat3D_Identity = Mat3D(1.0_Kr,0.0_Kr,0.0_Kr,   &
+   Type(MatS2D),Parameter    :: MEF90MatS2DIdentity = MatS2D(1.0_Kr,1.0_Kr,0.0_Kr)
+   Type(Mat3D),Parameter     :: MEF90Mat3DIdentity = Mat3D(1.0_Kr,0.0_Kr,0.0_Kr,   &
                                                              0.0_Kr,1.0_Kr,0.0_Kr,   &
                                                              0.0_Kr,0.0_Kr,1.0_Kr)
-   Type(MatS3D),Parameter    :: MEF90_MatS3D_Identity = MatS3D(1.0_Kr,1.0_Kr,1.0_Kr, &
+   Type(MatS3D),Parameter    :: MEF90MatS3DIdentity = MatS3D(1.0_Kr,1.0_Kr,1.0_Kr, &
                                                                0.0_Kr,0.0_Kr,0.0_Kr)
 
-   Type(Tens4OS2D),Parameter :: MEF90_Tens4OS2D_Identity = Tens4OS2D(1.0_Kr,0.0_Kr,0.0_Kr, &
+   Type(Tens4OS2D),Parameter :: MEF90Tens4OS2DIdentity = Tens4OS2D(1.0_Kr,0.0_Kr,0.0_Kr, &
                                                                      1.0_Kr,0.0_Kr,        & 
                                                                      1.0_Kr)
-   Type(Tens4OS3D),Parameter :: MEF90_Tens4OS3D_Identity = Tens4OS3D(1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, & ! 1111,1112,1113,1122,1123,1133
+   Type(Tens4OS3D),Parameter :: MEF90Tens4OS3DIdentity = Tens4OS3D(1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, & ! 1111,1112,1113,1122,1123,1133
                                                                      1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,        & ! 1212,1213,1222,1223,1233
                                                                      1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,               & ! 1313,1322,1323,1333
                                                                      1.0_Kr,0.0_Kr,0.0_Kr,                      & ! 2222,2223,2233
@@ -2267,7 +2267,7 @@ Contains
       !!! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
       TmpTensor = T
       Call Tens4OS2DGetArrayF90(TmpTensor,TmpArray)
-      Call GaussJordan_Inverse(TmpArray,ierr)
+      Call MEF90GaussJordanInverse(TmpArray,ierr)
       Call Tens4OS2DRestoreArrayF90(TmpTensor,TmpArray)
       InvertTens4OS2D = TmpTensor
       ! GaussJordan does not report flops,so there is no point in calling PetscLogFLops
@@ -2284,7 +2284,7 @@ Contains
       !!! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
       TmpTensor = T
       Call Tens4OS3DGetArrayF90(TmpTensor,TmpArray)
-      Call GaussJordan_Inverse(TmpArray,ierr)
+      Call MEF90GaussJordanInverse(TmpArray,ierr)
       Call Tens4OS3DRestoreArrayF90(TmpTensor,TmpArray)
       InvertTens4OS3D = TmpTensor
       ! GaussJordan does not report flops,so there is no point in calling PetscLogFLops

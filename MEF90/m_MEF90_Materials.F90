@@ -31,28 +31,28 @@ Module m_MEF90_Materials_Types
    
    !!! The Mathium is a bogus isotropic material whose material properties are all 1 
    !!! except for a Poisson Ratio of 0.3
-   Type(MEF90MatProp2D_Type),Parameter     :: MEF90_Mathium2D = MEF90MatProp2D_Type ( &
+   Type(MEF90MatProp2D_Type),Parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type ( &
       1.0_Kr,                                          & ! Density
       1.0_Kr,                                          & ! FractureToughness
       1.0_Kr,                                          & ! SpecificHeat
-      MEF90_MatS2D_Identity,                           & ! ThermalConductivity
-      MEF90_MatS2D_Identity,                           & ! LinearThermalExpansion
+      MEF90MatS2DIdentity,                             & ! ThermalConductivity
+      MEF90MatS2DIdentity,                             & ! LinearThermalExpansion
       Tens4OS2D( 1.09890_Kr,                           & ! A%XXXX
                  0.00000_Kr,                           & ! A%XXXY
                  0.32967_Kr,                           & ! A%XXYY
                  0.38462_Kr,                           & ! A%XYXY
                  0.00000_Kr,                           & ! A%XYYY
                  1.09890_Kr),                          & ! A%YYYY        & ! HookesLaw
-      !MEF90_Tens4OS2D_Identity,                        & ! HookesLaw
+      !MEF90Tens4OS2DIdentity,                        & ! HookesLaw
                  1.0_Kr,                               & ! Internal Length
-      "MEF90_Mathium2D")  
+      "MEF90Mathium2D")  
 
-   Type(MEF90MatProp3D_Type),Parameter     :: MEF90_Mathium3D = MEF90MatProp3D_Type ( &
+   Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type ( &
       1.0_Kr,                                          & ! Density
       1.0_Kr,                                          & ! FractureToughness
       1.0_Kr,                                          & ! SpecificHeat
-      MEF90_MatS3D_Identity,                           & ! ThermalConductivity
-      MEF90_MatS3D_Identity,                           & ! LinearThermalExpansion
+      MEF90MatS3DIdentity,                             & ! ThermalConductivity
+      MEF90MatS3DIdentity,                             & ! LinearThermalExpansion
       Tens4OS3D( 1.34615_Kr,                           &
                  0.00000_Kr,                           &
                  0.00000_Kr,                           &
@@ -74,9 +74,9 @@ Module m_MEF90_Materials_Types
                  0.38462_Kr,                           &
                  0.00000_Kr,                           &
                  1.34615_Kr),                          &
-      !MEF90_Tens4OS3D_Identity,                        & ! HookesLaw
+      !MEF90Tens4OS3DIdentity,                        & ! HookesLaw
                  1.0_Kr,                               & ! Internal Length
-      "MEF90_Mathium3D")  
+      "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
 
 Module m_MEF90_Materials_Interface2D
@@ -271,7 +271,7 @@ Contains
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Allocate(MEF90MatPropBag(numSet))
@@ -319,7 +319,7 @@ Contains
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Allocate(MEF90MatPropBag(numSet))
@@ -347,8 +347,8 @@ Contains
 
 !!! Subroutine generating various types of Hooke's laws 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_HookeLawIsoLambdaMu_2D"
-   Subroutine MEF90_HookeLawIsoLambdaMu_2D(A,lambda,mu) 
+#define __FUNCT__ "MEF90HookeLawIsoLambdaMu2D"
+   Subroutine MEF90HookeLawIsoLambdaMu2D(A,lambda,mu) 
       Type(Tens4OS2D),Intent(OUT)         :: A
       PetscReal,Intent(IN)                :: lambda,mu
       A = 0.0_Kr
@@ -357,11 +357,11 @@ Contains
       A%XXYY = lambda
       A%XYXY = mu
       A%YYYY = lambda + 2.0_Kr * mu
-   End Subroutine MEF90_HookeLawIsoLambdaMu_2D         
+   End Subroutine MEF90HookeLawIsoLambdaMu2D         
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_HookeLawIsoEnu_2DPlaneStress"
-   Subroutine MEF90_HookeLawIsoEnu_2DPlaneStress(A,E,nu) 
+#define __FUNCT__ "MEF90HookeLawIsoEnu2DPlaneStress"
+   Subroutine MEF90HookeLawIsoEnu2DPlaneStress(A,E,nu) 
       PetscReal,Intent(IN)                :: E,nu
       Type(Tens4OS2D),Intent(OUT)         :: A
       
@@ -374,11 +374,11 @@ Contains
       A%XXYY = lambda
       A%XYXY = mu
       A%YYYY = lambda + 2.0_Kr * mu
-   End Subroutine MEF90_HookeLawIsoEnu_2DPlaneStress         
+   End Subroutine MEF90HookeLawIsoEnu2DPlaneStress         
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_HookeLawIsoEnu_2DPlaneStrain"
-   Subroutine MEF90_HookeLawIsoEnu_2DPlaneStrain(A,E,nu) 
+#define __FUNCT__ "MEF90HookeLawIsoEnu2DPlaneStrain"
+   Subroutine MEF90HookeLawIsoEnu2DPlaneStrain(A,E,nu) 
       PetscReal,Intent(IN)                :: E,nu
       Type(Tens4OS2D),Intent(OUT)         :: A
       
@@ -391,11 +391,11 @@ Contains
       A%XXYY = lambda
       A%XYXY = mu
       A%YYYY = lambda + 2.0_Kr * mu
-   End Subroutine MEF90_HookeLawIsoEnu_2DPlaneStrain         
+   End Subroutine MEF90HookeLawIsoEnu2DPlaneStrain         
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_HookeLawIsoLambdaMu_3D"
-   Subroutine MEF90_HookeLawIsoLambdaMu_3D(A,lambda,mu)
+#define __FUNCT__ "MEF90HookeLawIsoLambdaMu3D"
+   Subroutine MEF90HookeLawIsoLambdaMu3D(A,lambda,mu)
       PetscReal,Intent(IN)                :: lambda,mu
       Type(Tens4OS3D),Intent(OUT)         :: A
    
@@ -414,11 +414,11 @@ Contains
       A%YZYZ = mu
       
       A%ZZZZ = lambda + mu * 2.0_Kr
-   End Subroutine MEF90_HookeLawIsoLambdaMu_3D
+   End Subroutine MEF90HookeLawIsoLambdaMu3D
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_HookeLawIsoENu_3D"
-   Subroutine MEF90_HookeLawIsoENu_3D(A,E,nu)
+#define __FUNCT__ "MEF90HookeLawIsoENu3D"
+   Subroutine MEF90HookeLawIsoENu3D(A,E,nu)
       PetscReal,Intent(IN)                :: E,nu
       Type(Tens4OS3D),Intent(OUT)         :: A
       
@@ -442,5 +442,5 @@ Contains
       A%YZYZ = mu
       
       A%ZZZZ = lambda + mu * 2.0_Kr
-   End Subroutine MEF90_HookeLawIsoENu_3D
+   End Subroutine MEF90HookeLawIsoENu3D
 End Module m_MEF90_Materials

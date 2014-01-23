@@ -333,7 +333,7 @@ Contains
       !!! NO: I need to allocate for the overall number of sets, not the local one
 
       Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Allocate(DefMechCtx%CellSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -342,7 +342,7 @@ Contains
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
       Call DMmeshGetLabelIdIS(Mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Allocate(DefMechCtx%VertexSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -360,7 +360,7 @@ Contains
       Call PetscViewerFlush(DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
       
       Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Allocate(DefMechCtx%setEnergyViewer(numSet),stat=ierr)
       Do set = 1, numSet
@@ -743,7 +743,7 @@ Contains
       !!! We override the default element type with that detected from the exodus file
       !!!
       Call DMmeshGetLabelIdIS(DefMechCtx%DMVect,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       
       Call EXOGetCellSetElementType_Scal(DefMechCtx%MEF90Ctx,ElemTypeScal,ierr)
@@ -771,7 +771,7 @@ Contains
       !!! We override the default element type with that detected from the exodus file
       !!!
       Call DMmeshGetLabelIdIS(DefMechCtx%DMVect,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       
       Do set = 1, size(setID)

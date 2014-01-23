@@ -87,9 +87,14 @@ Contains
    End Subroutine MEF90FindIndexOrderedPetscInt
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_ISAllGatherMerge"
-   !!! Merge all values of an IS, deleting duplicates
-   Subroutine MEF90_ISAllGatherMerge(Comm,labels,ierr)
+#define __FUNCT__ "MEF90ISAllGatherMerge"
+!!!
+!!!  
+!!!  MEF90ISAllGatherMerge: Merge all values of an IS, deleting duplicates
+!!!  
+!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90ISAllGatherMerge(Comm,labels,ierr)
       MPI_Comm,Intent(IN)              :: Comm
       Type(IS),intent(INOUT)           :: labels
       PetscErrorCode,intent(OUT)       :: ierr
@@ -106,19 +111,19 @@ Contains
       Call ISRestoreIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
       Call ISDestroy(tmplabels,ierr);CHKERRQ(ierr)
       ierr = 0
-   End Subroutine MEF90_ISAllGatherMerge
+   End Subroutine MEF90ISAllGatherMerge
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_ISCreateCelltoVertex"
+#define __FUNCT__ "MEF90ISCreateCelltoVertex"
 !!!
 !!!  
-!!!  MEF90_ISCreateCelltoVertex: Create an IS indexing all vertices associated with a cell set
+!!!  MEF90ISCreateCelltoVertex: Create an IS indexing all vertices associated with a cell set
 !!!                              Assume that the cone of an elements is made only of vertices
 !!!                              i.e. non  interpolated mesh
 !!!  
-!!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90_ISCreateCelltoVertex(mesh,comm,cellSetIS,vertexSetIS,ierr)
+   Subroutine MEF90ISCreateCelltoVertex(mesh,comm,cellSetIS,vertexSetIS,ierr)
       Type(DM),Intent(IN)                             :: mesh
       MPI_Comm,Intent(IN)                             :: Comm
       Type(IS),Intent(INOUT)                          :: cellSetIS,vertexSetIS
@@ -146,18 +151,18 @@ Contains
       Call ISCreateGeneral(Comm,numVertices,vertexSetIdx,PETSC_COPY_VALUES,vertexSetIS,ierr);CHKERRQ(ierr)
       DeAllocate(vertexSetIdx)
       Call ISRestoreIndicesF90(cellSetIS,cellSetIdx,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90_ISCreateCelltoVertex
+   End Subroutine MEF90ISCreateCelltoVertex
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_VecGetValuesISdof"
+#define __FUNCT__ "MEF90VecGetValuesISdof"
 !!!
 !!!  
-!!!  MEF90_VecGetValuesISdof: returns an array containing the values of a multi dof Vec at
+!!!  MEF90VecGetValuesISdof: returns an array containing the values of a multi dof Vec at
 !!!                           points defined by an IS
 !!!  
 !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90_VecGetValuesISdof(Mesh,V,val,setIS,dof,ierr)
+   Subroutine MEF90VecGetValuesISdof(Mesh,V,val,setIS,dof,ierr)
       Type(DM),Intent(IN)                 :: Mesh
       PetscReal,DImension(:),Pointer      :: val
       Type(Vec),Intent(IN)                :: V
@@ -184,18 +189,18 @@ Contains
       Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)   
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(Sec,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90_VecGetValuesISdof      
+   End Subroutine MEF90VecGetValuesISdof      
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_VecSetValuesISdof"
+#define __FUNCT__ "MEF90VecSetValuesISdof"
 !!!
 !!!  
-!!!  MEF90_VecGetValuesISdof: Set the values of a multi dof Vec at
+!!!  MEF90VecSetValuesISdof: Set the values of a multi dof Vec at
 !!!                           points defined by an IS
 !!!  
 !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90_VecSetValuesISdof(Mesh,V,x,setIS,dof,MODE,ierr)
+   Subroutine MEF90VecSetValuesISdof(Mesh,V,x,setIS,dof,MODE,ierr)
       Type(DM),Intent(IN)                 :: Mesh
       PetscReal,dimension(:),Pointer      :: x
       Type(Vec),Intent(IN)                :: V
@@ -216,11 +221,11 @@ Contains
       Call ISRestoreIndicesF90(setISdof,setIdxdof,ierr);CHKERRQ(ierr)   
       Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)   
-   End Subroutine MEF90_VecSetValuesISdof      
+   End Subroutine MEF90VecSetValuesISdof      
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_AskInt"
-   Subroutine MEF90_AskInt(val,msg,ArgUnit,IsBatch)
+#define __FUNCT__ "MEF90AskInt"
+   Subroutine MEF90AskInt(val,msg,ArgUnit,IsBatch)
       PetscInt                                  :: Val
       Character(len=*)                          :: msg 
       PetscInt                                  :: argunit
@@ -243,11 +248,11 @@ Contains
          End If
          Call MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
       End If
-   End Subroutine MEF90_AskInt   
+   End Subroutine MEF90AskInt   
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_AskReal"
-   Subroutine MEF90_AskReal(val,msg,ArgUnit,IsBatch)
+#define __FUNCT__ "MEF90AskReal"
+   Subroutine MEF90AskReal(val,msg,ArgUnit,IsBatch)
       PetscReal                                 :: Val
       Character(len=*)                          :: msg 
       PetscInt                                  :: argunit
@@ -269,15 +274,15 @@ Contains
          End If
          Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
       End If
-   End Subroutine MEF90_AskReal
+   End Subroutine MEF90AskReal
  
 
 !!! 
 !!! This should not be needed anywhere anymore
 !!!   
 #undef __FUNCT__
-#define __FUNCT__ "Uniq"
-   Subroutine Uniq(dComm, dMyVals, dVals)
+#define __FUNCT__ "MEF90Uniq"
+   Subroutine MEF90Uniq(dComm, dMyVals, dVals)
       MPI_Comm                         :: dComm
       PetscInt, Dimension(:), Pointer  :: dMyVals, dVals
       
@@ -321,11 +326,11 @@ Contains
       Else
          Allocate(dVals(0))
       End If
-   End Subroutine Uniq
+   End Subroutine MEF90Uniq
    
 #undef __FUNCT__
-#define __FUNCT__ "GaussJordan_Inverse"
-   Subroutine GaussJordan_Inverse(A, Status)
+#define __FUNCT__ "MEF90GaussJordanInverse"
+   Subroutine MEF90GaussJordanInverse(A, Status)
 !!!
 !!! TODO
 !!! Use Status correctly
@@ -420,11 +425,11 @@ Contains
       DeAllocate (lpiv)
       DeAllocate (dumc)
       DeAllocate (lmask)
-   End Subroutine GaussJordan_Inverse
+   End Subroutine MEF90GaussJordanInverse
 
 #undef __FUNCT__
-#define __FUNCT__ "GaussJordan_Solve"
-   Subroutine GaussJordan_Solve(A, b, Status)
+#define __FUNCT__ "MEF90GaussJordanSolve"
+   Subroutine MEF90GaussJordanSolve(A, b, Status)
       !
       ! Gauss Jordan inversion
       ! Very closely based on the routine from Numerical recipes
@@ -521,5 +526,5 @@ Contains
       DeAllocate (lpiv)
       DeAllocate (dumc)
       DeAllocate (lmask)
-   End Subroutine GaussJordan_Solve
+   End Subroutine MEF90GaussJordanSolve
 End Module m_MEF90_Utils
