@@ -14,10 +14,15 @@ Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
    Public :: MEF90GradDamageDispInelasticStrainRHSSetCell
    Public :: MEF90GradDamageElasticEnergySet   
 
+   Public :: MEF90GradDamageDamageBilinearFormSetAT1Elastic
+   Public :: MEF90GradDamageDamageOperatorSetAT1Elastic
+   Public :: MEF90GradDamageDamageRHSSetAT1Elastic
    Public :: MEF90GradDamageDamageBilinearFormSetAT1
    Public :: MEF90GradDamageDamageOperatorSetAT1
    Public :: MEF90GradDamageDamageRHSSetAT1
    Public :: MEF90GradDamageSurfaceEnergySetAT1
+   Public :: MEF90GradDamageDamageBilinearFormSetAT2Elastic
+   Public :: MEF90GradDamageDamageOperatorSetAT2Elastic
    Public :: MEF90GradDamageDamageBilinearFormSetAT2
    Public :: MEF90GradDamageDamageOperatorSetAT2
    Public :: MEF90GradDamageDamageRHSSetAT2
@@ -381,6 +386,166 @@ Contains
 
 !!! ============== Functions for the alpha problem ==============
 #undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT1Elastic"
+!!!
+!!!  
+!!!  MEF90GradDamageDamageBilinearFormSetAT1Elastic: the bilinear form for the surface energy term only
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageDamageBilinearFormSetAT1Elastic(K,mesh,cellIS,internalLength,FractureToughness,elem,elemType,ierr)
+      Type(Mat),Intent(IN)                               :: K 
+      Type(DM),Intent(IN)                                :: mesh
+      Type(IS),Intent(IN)                                :: cellIS
+      PetscReal,Intent(IN)                               :: internalLength,FractureToughness
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(SectionReal)                                  :: defaultSection
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iDoF2,iGauss
+      PetscReal,Dimension(:,:),Pointer                   :: MatElem
+      PetscReal                                          :: C2
+      PetscLogDouble                                     :: flops
+
+      !C1 = FractureToughness / internalLength * .75_Kr 
+      C2 = FractureToughness * internalLength * .75_Kr
+
+      Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(MatElem(elemType%numDof,elemType%numDof))
+         Do cell = 1,size(cellID) 
+            MatElem = 0.0_Kr  
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  Do iDoF2 = 1,elemType%numDof
+                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                    C2 * (elem(cell)%Grad_BF(iDof1,iGauss) .dotP. elem(cell)%Grad_BF(iDof2,iGauss))
+                  End Do
+               End Do
+            End Do
+            Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+         End Do ! cell
+         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(MatElem)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
+   End Subroutine MEF90GradDamageDamageBilinearFormSetAT1Elastic
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageDamageOperatorSetAT1Elastic"
+!!!
+!!!  
+!!!  MEF90GradDamageDamageOperatorSetAT1Elastic:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageDamageOperatorSetAT1Elastic(G,mesh,alpha,cellIS,internalLength,FractureToughness,elem,elemType,ierr)
+      Type(SectionReal),Intent(INOUT)                    :: G
+      Type(DM),Intent(IN)                                :: mesh
+      Type(SectionReal),Intent(IN)                       :: alpha
+      Type(IS),Intent(IN)                                :: cellIS
+      PetscReal,Intent(IN)                               :: internalLength,FractureToughness
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(SectionReal)                                  :: defaultSection
+      PetscReal,Dimension(:),Pointer                     :: Gloc
+      PetscReal,Dimension(:),Pointer                     :: alphaloc
+      Type(MEF90_VECT)                                   :: gradAlphaElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscReal                                          :: C2
+      PetscLogDouble                                     :: flops
+           
+      !C1 = FractureToughness / internalLength * .75_Kr 
+      C2 = FractureToughness * internalLength * .75_Kr
+
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(alphaLoc(elemType%numDof))
+         Allocate(Gloc(elemType%numDof))
+         Do cell = 1,size(cellID)     
+            Gloc = 0.0_Kr
+            Call SectionRealRestrictClosure(alpha,mesh,cellID(cell),elemType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               gradAlphaElem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               Do iDoF1 = 1,elemType%numDof
+                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                  ( C2 * (elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. gradAlphaElem)
+               End Do
+            End Do ! iGauss
+            Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+         End Do ! cell
+      
+         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Gloc)
+         DeAllocate(alphaLoc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90GradDamageDamageOperatorSetAT1Elastic
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageDamageRHSSetAT1Elastic"
+!!!
+!!!  
+!!!  MEF90GradDamageDamageRHSSetAT1Elastic:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageDamageRHSSetAT1Elastic(G,scaling,mesh,cellIS,internalLength,FractureToughness,elem,elemType,ierr)
+      Type(SectionReal),Intent(INOUT)                    :: G
+      PetscReal,Intent(IN)                               :: scaling
+      Type(DM),Intent(IN)                                :: mesh
+      Type(IS),Intent(IN)                                :: cellIS
+      PetscReal,Intent(IN)                               :: internalLength
+      PetscReal,Intent(IN)                               :: FractureToughness
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(SectionReal)                                  :: defaultSection
+      PetscReal,Dimension(:),Pointer                     :: Gloc
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscReal                                          :: C2
+      PetscLogDouble                                     :: flops
+           
+      C2 = FractureToughness / internalLength * .375_Kr
+
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(Gloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            Gloc = 0.0_Kr
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  Gloc(iDoF1) = Gloc(iDoF1) - elem(cell)%Gauss_C(iGauss) * C2 * elem(cell)%BF(iDoF1,iGauss)
+               End Do
+            End Do ! iGauss
+            Gloc = Gloc * scaling
+            Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+         End Do ! cell
+      
+         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Gloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90GradDamageDamageRHSSetAT1Elastic
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT1"
 !!!
 !!!  
@@ -518,7 +683,6 @@ Contains
          Allocate(displacementLoc(elemDispType%numDof))
          Allocate(temperatureLoc(elemType%numDof))
          Do cell = 1,size(cellID)     
-!Write(*,*) '===', cellID(cell) 
             Gloc = 0.0_Kr
             Call SectionRealRestrictClosure(alpha,mesh,cellID(cell),elemType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
             Call SectionRealRestrictClosure(displacement,meshDisp,cellID(cell),elemDispType%numDof,displacementLoc,ierr);CHKERRQ(ierr)
@@ -554,10 +718,6 @@ Contains
                   alphaElem     = alphaElem     + alphaLoc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
                   gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
                End Do
-!Write(*,*) 'strainElem    ', strainElem
-!Write(*,*) 'stressElem    ', stressElem
-!Write(*,*) 'alphaElem     ', alphaElem
-!Write(*,*) 'gradAlphaElem ', gradAlphaElem
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
                                  ((strainElem .dotP. stressElem) * elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
@@ -722,6 +882,123 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageSurfaceEnergySetAT1
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT2Elastic"
+!!!
+!!!  
+!!!  MEF90GradDamageDamageBilinearFormSetAT2Elastic:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageDamageBilinearFormSetAT2Elastic(K,mesh,cellIS,internalLength,FractureToughness,elem,elemType,ierr)
+      Type(Mat),Intent(IN)                               :: K 
+      Type(DM),Intent(IN)                                :: mesh
+      Type(IS),Intent(IN)                                :: cellIS
+      PetscReal,Intent(IN)                               :: internalLength
+      PetscReal,Intent(IN)                               :: FractureToughness
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(SectionReal)                                  :: defaultSection
+      PetscReal,Dimension(:),Pointer                     :: Gloc
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iDoF2,iGauss
+      PetscReal,Dimension(:,:),Pointer                   :: MatElem
+      PetscReal                                          :: C1,C2
+      PetscLogDouble                                     :: flops
+
+      C1 = FractureToughness / internalLength
+      C2 = FractureToughness * internalLength
+
+      Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(MatElem(elemType%numDof,elemType%numDof))
+         Do cell = 1,size(cellID)   
+            MatElem = 0.0_Kr
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  Do iDoF2 = 1,elemType%numDof
+                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                    (C1 * elem(cell)%BF(iDof1,iGauss) * elem(cell)%BF(iDof2,iGauss) + & 
+                                     C2 * (elem(cell)%Grad_BF(iDof1,iGauss) .dotP. elem(cell)%Grad_BF(iDof2,iGauss)))
+                  End Do
+               End Do
+            End Do
+            Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+         End Do ! cell
+         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(MatElem)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
+   End Subroutine MEF90GradDamageDamageBilinearFormSetAT2Elastic
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageDamageOperatorSetAT2Elastic"
+!!!
+!!!  
+!!!  MEF90GradDamageDamageOperatorSetAT2Elastic:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageDamageOperatorSetAT2Elastic(G,mesh,alpha,cellIS,internalLength,FractureToughness,elem,elemType,ierr)
+      Type(SectionReal),Intent(INOUT)                    :: G
+      Type(DM),Intent(IN)                                :: mesh
+      Type(SectionReal),Intent(IN)                       :: alpha
+      Type(IS),Intent(IN)                                :: cellIS
+      PetscReal,Intent(IN)                               :: internalLength,FractureToughness
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Type(SectionReal)                                  :: defaultSection
+      PetscReal,Dimension(:),Pointer                     :: Gloc
+      PetscReal,Dimension(:),Pointer                     :: alphaloc
+      PetscReal                                          :: alphaElem
+      Type(MEF90_VECT)                                   :: gradAlphaElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscReal                                          :: C1,C2
+      PetscLogDouble                                     :: flops
+           
+      C1 = FractureToughness / internalLength
+      C2 = FractureToughness * internalLength
+
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(alphaLoc(elemType%numDof))
+         Allocate(Gloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            Gloc = 0.0_Kr
+            Call SectionRealRestrictClosure(alpha,mesh,cellID(cell),elemType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               alphaElem     = 0.0_Kr
+               gradAlphaElem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  alphaElem     = alphaElem     + alphaLoc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
+                  gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               Do iDoF1 = 1,elemType%numDof
+                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                 ( C1* elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
+                                   C2 * (elem(cell)%Grad_BF(iDoF1,iGauss) .DotP. gradAlphaElem))
+               End Do
+            End Do ! iGauss
+            Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+         End Do ! cell
+      
+         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Gloc)
+         DeAllocate(alphaLoc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90GradDamageDamageOperatorSetAT2Elastic
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT2"
