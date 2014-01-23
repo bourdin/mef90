@@ -8,7 +8,7 @@ Program HokeLaw
    PetscBool               :: flg,mef90
    
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90_Initialize(ierr=ierr)
+   Call MEF90_Initialize(ierr)
    
    E = 1.0_Kr
    Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,'-E',E,flg,ierr);CHKERRQ(ierr);
