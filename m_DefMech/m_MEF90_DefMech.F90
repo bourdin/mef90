@@ -343,7 +343,7 @@ Contains
             Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
             Allocate(val(nval),stat=ierr)
             val =  vertexSetOptions%boundaryDamage
-            Call MEF90VecSetValuesISdof(MEF90DefMechCtx%DMVect,x,val,bcIS,1,INSERT_VALUES,ierr)
+            Call MEF90VecSetValuesISdof(MEF90DefMechCtx%DMScal,x,val,bcIS,1,INSERT_VALUES,ierr)
             DeAllocate(Val)
             Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
          End If! cellSetOptions%Has_BC
