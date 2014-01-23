@@ -127,7 +127,11 @@ Contains
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
          Case (MEF90DefMech_defectLawElasticity)
-            QuadratureOrder = 2 * elemDisplacementType%order
+            If (Associated(MEF90DefMechCtx%temperature)) Then
+               QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order)
+            Else
+               QuadratureOrder = 2 * elemDisplacementType%order - 2
+            End If
             Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
             Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
             !!! Contribution of the bilinear form
@@ -150,7 +154,11 @@ Contains
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemDamage,ierr)
          Case (MEF90DefMech_defectLawGradientDamage)
-            QuadratureOrder = 2 * (elemDisplacementType%order+elemDamageType%order)
+            If (Associated(MEF90DefMechCtx%temperature)) Then
+               QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order) + 2 * elemDamageType%order
+            Else
+               QuadratureOrder = 2 * elemDisplacementType%order - 2 + 2 * elemDamageType%order
+            End If
             Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
             Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
             !!! Contribution of the bilinear form
@@ -332,7 +340,7 @@ Contains
          Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
             !!! Elements of codim > 0 have no contribution to the bilinear form, so we may as well skip them
             If (ElemDisplacementType%coDim == 0) Then
-               QuadratureOrder = 2 * ElemDisplacementType%order
+               QuadratureOrder = 2 * elemDisplacementType%order
                Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90ElasticityBilinearFormSet(A,mesh,setIS,matPropSet%HookesLaw,elemDisplacement,ElemDisplacementType,ierr);CHKERRQ(ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
@@ -341,7 +349,7 @@ Contains
          !!! switch base don ATnum
             !!! Elements of codim > 0 have no contribution to the bilinear form, so we may as well skip them
             If (ElemDisplacementType%coDim == 0) Then
-               QuadratureOrder = 2 * ElemDisplacementType%order
+               QuadratureOrder = 2 * elemDisplacementType%order + 2 * ElemDamageType%order
                Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                Call MEF90GradDamageDispBilinearFormSet(A,mesh,MEF90DefMechCtx%DMScal,setIS,matPropSet%HookesLaw,damageSec, &
@@ -563,7 +571,11 @@ Contains
          Select Case (cellSetOptions%defectLaw)
          Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
             If (elemDisplacementType%coDim == 0) Then
-               QuadratureOrder = 2 * elemDisplacementType%order
+               If (Associated(MEF90DefMechCtx%temperature)) Then
+                  QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemScalType%order)
+               Else
+                  QuadratureOrder = 2 * elemDisplacementType%order - 2
+               End If
                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                Call MEF90ElasticityEnergySet(myenergy,xSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
@@ -573,7 +585,11 @@ Contains
             End If
          Case (MEF90DefMech_defectLawGradientDamage)
             If (elemDisplacementType%coDim == 0) Then
-               QuadratureOrder = 2 * elemDisplacementType%order
+               If (Associated(MEF90DefMechCtx%temperature)) Then
+                  QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemScalType%order) + 2 * elemScalType%order
+               Else
+                  QuadratureOrder = 2 * elemDisplacementType%order - 2 + 2 * elemScalType%order
+               End If
                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                Call MEF90GradDamageElasticEnergySet(myenergy,xSec,damageSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
@@ -692,10 +708,13 @@ Contains
             STOP      
          Case (MEF90DefMech_defectLawGradientDamage)
             If (elemDisplacementType%coDim == 0) Then
-               QuadratureOrder = 2 * (elemDisplacementType%order + elemDamageType%order)
+               If (Associated(MEF90DefMechCtx%temperature)) Then
+                  QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order) + 2 * elemDamageType%order
+               Else
+                  QuadratureOrder = 2 * elemDisplacementType%order - 2 + 2 * elemDamageType%order
+               End If
                Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-            
                Select Case(cellSetOptions%gradientDamageLaw)
                Case(MEF90DefMech_defectLawGradientDamageAT1)
                   Call MEF90GradDamageDamageOperatorSetAT1(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
@@ -882,7 +901,11 @@ Contains
          Case (MEF90DefMech_defectLawGradientDamage)
             !!! Elements of codim > 0 have no contribution to the bilinear form, so we need to skip them
             If (elemDamageType%coDim == 0) Then
-               QuadratureOrder = 2 * (elemDisplacementType%order + elemDamageType%order)
+               If (Associated(MEF90DefMechCtx%temperature)) Then
+                  QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order) + 2 * elemDamageType%order
+               Else
+                  QuadratureOrder = 2 * elemDisplacementType%order - 2 + 2 * elemDamageType%order
+               End If
                Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                Select Case(cellSetOptions%gradientDamageLaw)
