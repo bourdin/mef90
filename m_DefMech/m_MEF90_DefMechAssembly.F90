@@ -704,8 +704,24 @@ Contains
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
          Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
-            Print*,__FUNCT__,': Damage law is not based on a SNES ',cellSetOptions%defectLaw
-            STOP      
+            If (elemDisplacementType%coDim == 0) Then
+               Select Case(cellSetOptions%gradientDamageLaw)
+               Case(MEF90DefMech_defectLawGradientDamageAT1)
+                  QuadratureOrder = max(elemDisplacementType%order, 2 * elemDamageType%order - 2)
+                  Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+                  Call MEF90GradDamageDamageOperatorSetAT1Elastic(residualSec,mesh,alphaSec,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+                  Call MEF90GradDamageDamageRHSSetAT1Elastic(residualSec,negone,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+                  Call MEF90Element_Destroy(elemDamage,ierr)
+               Case(MEF90DefMech_defectLawGradientDamageAT2)
+                  QuadratureOrder = 2 * elemDamageType%order
+                  Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+                  Call MEF90GradDamageDamageOperatorSetAT2Elastic(residualSec,mesh,alphaSec,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+                  Call MEF90Element_Destroy(elemDamage,ierr)
+               Case default
+                  Print*,__FUNCT__,': Unimplemented gradient damage law',cellSetOptions%gradientDamageLaw
+                  STOP  
+               End Select                
+            End If
          Case (MEF90DefMech_defectLawGradientDamage)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -858,7 +874,7 @@ Contains
       Type(MEF90Element_Type)                            :: elemDisplacementType,elemDamageType
       PetscInt,Dimension(:),Pointer                      :: setIdx,bcIdx,Cone
       Type(IS)                                           :: bcIS
-      PetscInt                                           :: cell,v,numBC,numDoF!,!numCell,c,dim
+      PetscInt                                           :: cell,v,numBC,numDoF
       
       Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
       Call SNESGetDM(snesDamage,mesh,ierr);CHKERRQ(ierr)
@@ -883,7 +899,6 @@ Contains
          PlasticStrainSec%v = 0
       End If
 
-      !Call DMMeshGetDimension(mesh,dim,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -896,8 +911,20 @@ Contains
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
          Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
-            Print*,__FUNCT__,': Damage law is not based on a SNES ',cellSetOptions%defectLaw
-            STOP      
+            If (elemDamageType%coDim == 0) Then
+               Select Case(cellSetOptions%gradientDamageLaw)
+               Case(MEF90DefMech_defectLawGradientDamageAT1)
+                  QuadratureOrder = max(elemDisplacementType%order, 2 * elemDamageType%order - 2)
+                  Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+                  Call MEF90GradDamageDamageBilinearFormSetAT1Elastic(A,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+                  Call MEF90Element_Destroy(elemDamage,ierr)
+               Case(MEF90DefMech_defectLawGradientDamageAT2)
+                  QuadratureOrder = 2 * elemDamageType%order
+                  Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+                  Call MEF90GradDamageDamageBilinearFormSetAT2Elastic(A,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+                  Call MEF90Element_Destroy(elemDamage,ierr)
+               End Select
+            End If
          Case (MEF90DefMech_defectLawGradientDamage)
             !!! Elements of codim > 0 have no contribution to the bilinear form, so we need to skip them
             If (elemDamageType%coDim == 0) Then
