@@ -71,13 +71,13 @@ Program vDef
                                                          MEF90DefMech_defectLawGradientDamageAT1, & ! gradientDamageLaw
                                                          MEF90DefMech_defectLawPlasticityVonMises,& ! plasticityLaw
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         [1.1_Kr,2.2_Kr,3.3_Kr],                  & ! boundary Displacement
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
                                                          0._Kr,                                   & ! Boundary Damage
                                                          1.0D-9)                                    ! residualStiffness
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         [1.1_Kr,2.2_Kr,3.3_Kr],                  & ! boundary Displacement
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
                                                          0.0_Kr)                                    ! boundary Damage
 
@@ -420,7 +420,6 @@ Program vDef
 200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
 202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
-205 Format("alpha min / max: ",ES12.5," / ",ES12.5,"\n")
 208 Format("   Alt. Min. step ",I5," ")
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
 
