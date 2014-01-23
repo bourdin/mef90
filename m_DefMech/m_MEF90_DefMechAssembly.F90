@@ -109,7 +109,7 @@ Contains
       Call VecSet(residual,0.0_Kr,ierr);CHKERRQ(ierr)
 
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 
       !!!
@@ -121,8 +121,8 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         elemDisplacementType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDisplacement)
-         elemDamageType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDamage)
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
+         elemDamageType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
@@ -202,15 +202,15 @@ Contains
          Do c = 1, dim
             If (cellSetOptions%Has_DisplacementBC(c)) Then
                Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-               Call MEF90_ISCreateCelltoVertex(MEF90DefMechCtx%DMVect,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+               Call MEF90ISCreateCelltoVertex(MEF90DefMechCtx%DMVect,PETSC_COMM_WORLD,setIS,bcIS,ierr)
                Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
                Allocate(xPtr(nval),stat=ierr)
                Allocate(residualPtr(nval),stat=ierr)
                Allocate(boundaryDisplacementPtr(nval),stat=ierr)
-               Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMVect,x,xPtr,bcIS,c,ierr)
-               Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,boundaryDisplacementPtr,bcIS,c,ierr)
+               Call MEF90VecGetValuesISdof(MEF90DefMechCtx%DMVect,x,xPtr,bcIS,c,ierr)
+               Call MEF90VecGetValuesISdof(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,boundaryDisplacementPtr,bcIS,c,ierr)
                residualPtr = xPtr - boundaryDisplacementPtr
-               Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMVect,residual,residualPtr,bcIS,c,INSERT_VALUES,ierr)
+               Call MEF90VecSetValuesISdof(MEF90DefMechCtx%DMVect,residual,residualPtr,bcIS,c,INSERT_VALUES,ierr)
                DeAllocate(boundaryDisplacementPtr)
                DeAllocate(residualPtr)
                DeAllocate(xPtr)
@@ -227,7 +227,7 @@ Contains
       !!! Vertex set BC
       !!!
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
@@ -239,10 +239,10 @@ Contains
                Allocate(xPtr(nval),stat=ierr)
                Allocate(residualPtr(nval),stat=ierr)
                Allocate(boundaryDisplacementPtr(nval),stat=ierr)
-               Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMVect,x,xPtr,bcIS,c,ierr)
-               Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,boundaryDisplacementPtr,bcIS,c,ierr)
+               Call MEF90VecGetValuesISdof(MEF90DefMechCtx%DMVect,x,xPtr,bcIS,c,ierr)
+               Call MEF90VecGetValuesISdof(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,boundaryDisplacementPtr,bcIS,c,ierr)
                residualPtr = xPtr - boundaryDisplacementPtr
-               Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMVect,residual,residualPtr,bcIS,c,INSERT_VALUES,ierr)
+               Call MEF90VecSetValuesISdof(MEF90DefMechCtx%DMVect,residual,residualPtr,bcIS,c,INSERT_VALUES,ierr)
                DeAllocate(boundaryDisplacementPtr)
                DeAllocate(residualPtr)
                DeAllocate(xPtr)
@@ -327,14 +327,14 @@ Contains
 
       Call DMMeshGetDimension(mesh,dim,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         ElemDisplacementType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDisplacement)
-         ElemDamageType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDamage)
+         ElemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
+         ElemDamageType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
          Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
@@ -370,7 +370,7 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call MEF90_ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+         Call MEF90ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,bcIS,ierr)
          Do c = 1, dim
             If (cellSetOptions%Has_displacementBC(c)) Then
                Call DMMeshISCreateISglobaldof(mesh,bcIS,c-1,setISdof,ierr);CHKERRQ(ierr)
@@ -388,7 +388,7 @@ Contains
       !!! Boundary conditions at vertex sets
       !!!
       Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(MEF90DefMechCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
@@ -457,13 +457,13 @@ Contains
 
       Work   = 0.0_Kr
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          mywork = 0.0_Kr
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         elemDisplacementType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDisplacement)
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
 
          !!! Call proper local assembly depending on the type of damage law
          QuadratureOrder = elemDisplacementType%order
@@ -528,7 +528,7 @@ Contains
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr) 
 
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
@@ -564,8 +564,8 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         elemDisplacementType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDisplacement)
-         elemScalType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDamage)
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
+         elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
@@ -686,7 +686,7 @@ Contains
       Call VecSet(residual,0.0_Kr,ierr);CHKERRQ(ierr)
 
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 
       !!!
@@ -698,8 +698,8 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         elemDisplacementType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDisplacement)
-         elemDamageType       = MEF90_knownElements(cellSetOptions%elemTypeShortIDDamage)
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
+         elemDamageType       = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
@@ -754,15 +754,15 @@ Contains
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          If (cellSetOptions%Has_DamageBC) Then
             Call DMMeshGetStratumIS(MEF90DefMechCtx%DMScal,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call MEF90_ISCreateCelltoVertex(MEF90DefMechCtx%DMScal,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+            Call MEF90ISCreateCelltoVertex(MEF90DefMechCtx%DMScal,PETSC_COMM_WORLD,setIS,bcIS,ierr)
             Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
             Allocate(alphaPtr(nval),stat=ierr)
             Allocate(residualPtr(nval),stat=ierr)
             Allocate(boundaryDamagePtr(nval),stat=ierr)
-            Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMScal,alpha,alphaPtr,bcIS,1,ierr)
-            Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,boundaryDamagePtr,bcIS,1,ierr)
+            Call MEF90VecGetValuesISdof(MEF90DefMechCtx%DMScal,alpha,alphaPtr,bcIS,1,ierr)
+            Call MEF90VecGetValuesISdof(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,boundaryDamagePtr,bcIS,1,ierr)
             residualPtr = alphaPtr - boundaryDamagePtr
-            Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMScal,residual,residualPtr,bcIS,1,INSERT_VALUES,ierr)
+            Call MEF90VecSetValuesISdof(MEF90DefMechCtx%DMScal,residual,residualPtr,bcIS,1,INSERT_VALUES,ierr)
             DeAllocate(boundaryDamagePtr)
             DeAllocate(residualPtr)
             DeAllocate(alphaPtr)
@@ -778,7 +778,7 @@ Contains
       !!! Vertex set BC
       !!!
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
@@ -789,10 +789,10 @@ Contains
             Allocate(alphaPtr(nval),stat=ierr)
             Allocate(residualPtr(nval),stat=ierr)
             Allocate(boundaryDamagePtr(nval),stat=ierr)
-            Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMScal,alpha,alphaPtr,bcIS,1,ierr)
-            Call MEF90_VecGetValuesISdof(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,boundaryDamagePtr,bcIS,1,ierr)
+            Call MEF90VecGetValuesISdof(MEF90DefMechCtx%DMScal,alpha,alphaPtr,bcIS,1,ierr)
+            Call MEF90VecGetValuesISdof(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,boundaryDamagePtr,bcIS,1,ierr)
             residualPtr = alphaPtr - boundaryDamagePtr
-            Call MEF90_VecSetValuesISdof(MEF90DefMechCtx%DMScal,residual,residualPtr,bcIS,1,INSERT_VALUES,ierr)
+            Call MEF90VecSetValuesISdof(MEF90DefMechCtx%DMScal,residual,residualPtr,bcIS,1,INSERT_VALUES,ierr)
             DeAllocate(boundaryDamagePtr)
             DeAllocate(residualPtr)
             DeAllocate(alphaPtr)
@@ -885,14 +885,14 @@ Contains
 
       !Call DMMeshGetDimension(mesh,dim,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         elemDisplacementType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDisplacement)
-         elemDamageType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDamage)
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
+         elemDamageType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)
          Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
@@ -937,7 +937,7 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call MEF90_ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+         Call MEF90ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,bcIS,ierr)
          If (cellSetOptions%Has_damageBC) Then
             Call DMMeshISCreateISglobaldof(mesh,bcIS,0,setISdof,ierr);CHKERRQ(ierr)
             Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
@@ -953,7 +953,7 @@ Contains
       !!! Boundary conditions at vertex sets
       !!!
       Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(MEF90DefMechCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
@@ -1015,7 +1015,7 @@ Contains
       Call SectionRealToVec(alphaSec,ScatterSecToVecScal,SCATTER_REVERSE,alpha,ierr);CHKERRQ(ierr) 
 
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       
       Do set = 1,size(setID)
@@ -1023,7 +1023,7 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         elemScalType = MEF90_knownElements(cellSetOptions%elemTypeShortIDDamage)
+         elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%defectLaw)

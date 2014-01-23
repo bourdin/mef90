@@ -22,16 +22,16 @@ Program  TestMEF90Ctx
    MEF90GlobalOptions_default%fileFormat        = MEF90FileFormat_EXOSingle
 
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90_Initialize(ierr)
-   Call MEF90Ctx_Create(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
+   Call MEF90Initialize(ierr)
+   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
 
-   Call MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr)
+   Call MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr)
    Call DMView(Mesh,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
 
-   Call MEF90Ctx_OpenEXO(MEF90Ctx,Mesh,ierr)
-   Call MEF90Ctx_GetTime(MEF90Ctx,time,ierr)
+   Call MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
+   Call MEF90CtxGetTime(MEF90Ctx,time,ierr)
 
-   Call MEF90Ctx_Destroy(MEF90Ctx,ierr);CHKERRQ(ierr)
+   Call MEF90CtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)
    
    Call PetscOptionsHasName(PETSC_NULL_CHARACTER,"-verbose",flg,ierr);CHKERRQ(ierr)
    If (flg) Then
@@ -47,6 +47,6 @@ Program  TestMEF90Ctx
       Write(IOBuffer,*) "time_min is NOT set\n"
    End If
    Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-   Call MEF90_Finalize(ierr)
+   Call MEF90Finalize(ierr)
    Call PetscFinalize()
 End Program  TestMEF90Ctx

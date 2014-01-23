@@ -172,9 +172,9 @@ Program ThermoElasticity
 
    !!! Get material properties bags
    If (dim == 2) Then
-      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DMVect,MEF90_Mathium2D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DMVect,MEF90Mathium2D,MEF90Ctx,ierr)
    Else
-      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DMVect,MEF90_Mathium3D,MEF90Ctx,ierr)
+      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DMVect,MEF90Mathium3D,MEF90Ctx,ierr)
    End If   
    MEF90HeatXferCtx%MaterialPropertiesBag => MEF90DefMechCtx%MaterialPropertiesBag
 
@@ -253,7 +253,7 @@ Program ThermoElasticity
             !!! Compute thermal energy
             Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
             Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+            Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
                Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
@@ -290,7 +290,7 @@ Program ThermoElasticity
             !!! Compute thermal energy
             Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
             Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+            Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
                Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
@@ -323,7 +323,7 @@ Program ThermoElasticity
             Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
             Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
             Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+            Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
                Write(IOBuffer,201) setID(set),energy(set),work(set),energy(set)-work(set)

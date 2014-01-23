@@ -241,7 +241,7 @@ Contains
       !!! NO: I need to allocate for the overall number of sets, not the local one
 
       Call DMmeshGetLabelIdIS(mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Allocate(HeatXferCtx%CellSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -250,7 +250,7 @@ Contains
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
       Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Allocate(HeatXferCtx%VertexSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -421,7 +421,7 @@ Contains
       !!! We override the default element type with that detected from the exodus file
       !!!
       Call DMmeshGetLabelIdIS(heatXferCtx%DM,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(heatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(heatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       
       Call EXOGetCellSetElementType_Scal(heatXferCtx%MEF90Ctx,ElemType,ierr)
@@ -446,7 +446,7 @@ Contains
       !!! We override the default element type with that detected from the exodus file
       !!!
       Call DMmeshGetLabelIdIS(heatXferCtx%DM,'Vertex Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       
       Do set = 1, size(setID)

@@ -253,7 +253,7 @@ Module m_MEF90_Elements
    )
 
    Integer,Parameter,Public :: MEF90_numKnownElements = 24       
-   Type(MEF90Element_Type),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90_knownElements = [ &
+   Type(MEF90Element_Type),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90knownElements = [ &
       MEF90_P1_Lagrange_2D_Scal,          &  ! 1
       MEF90_P1_Lagrange_3D_Scal,          &  ! 2
       MEF90_P1_Lagrange_2D_Elast,         &  ! 3
@@ -533,9 +533,9 @@ Contains
       
       Integer                                     :: i
       PetscBool                                   :: knownID = PETSC_FALSE      
-      Do i = 1, size(MEF90_knownElements)
-         If (MEF90_knownElements(i)%shortID == elemID) Then
-            elemType = MEF90_knownElements(i)
+      Do i = 1, size(MEF90knownElements)
+         If (MEF90knownElements(i)%shortID == elemID) Then
+            elemType = MEF90knownElements(i)
             knownID  = PETSC_TRUE
             EXIT
          End If
@@ -555,9 +555,9 @@ Contains
 
       Integer                                     :: i
       PetscBool                                   :: knownID = PETSC_FALSE      
-      Do i = 1, size(MEF90_knownElements)
-         If (trim(MEF90_knownElements(i)%name) == trim(elemName)) Then
-            elemType = MEF90_knownElements(i)
+      Do i = 1, size(MEF90knownElements)
+         If (trim(MEF90knownElements(i)%name) == trim(elemName)) Then
+            elemType = MEF90knownElements(i)
             knownID  = PETSC_TRUE
             EXIT
          End If
@@ -673,7 +673,7 @@ Contains
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
+      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
    End Subroutine Element2D_Scal_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -685,7 +685,7 @@ Contains
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
+      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
    End Subroutine Element2D_Vect_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -697,7 +697,7 @@ Contains
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
+      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
    End Subroutine Element2D_Elast_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -709,7 +709,7 @@ Contains
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
+      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
    End Subroutine Element3D_Scal_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -721,7 +721,7 @@ Contains
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
+      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
    End Subroutine Element3D_Vect_InitSet_ByShortID
 
 #undef __FUNCT__
@@ -733,7 +733,7 @@ Contains
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90_knownElements(ShortID),ierr)
+      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
    End Subroutine Element3D_Elast_InitSet_ByShortID
 
 #undef __FUNCT__

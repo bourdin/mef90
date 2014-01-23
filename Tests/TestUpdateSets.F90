@@ -1,7 +1,7 @@
 Program TestUpdateSets
 #include "finclude/petscdef.h"
    Use m_MEF90
-   Use m_MEF_Materials
+   Use m_MEF90_Materials
    Use petsc
    Implicit NONE   
 
@@ -32,15 +32,15 @@ Program TestUpdateSets
 
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90_Initialize(ierr)
+   Call MEF90Initialize(ierr)
    Call MPI_Comm_Rank(PETSC_COMM_WORLD,rank,ierr)
 
    !!! Get all MEF90-wide options
-   Call MEF90Ctx_Create(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr);CHKERRQ(ierr)
+   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr);CHKERRQ(ierr)
    Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
 
    !!! Get DM from mesh
-   Call MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
+   Call MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
    dim = 1
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-dim',dim,flg,ierr);CHKERRQ(ierr);
    Call DMMeshSetMaxDof(Mesh,dim,ierr);CHKERRQ(ierr) 
@@ -56,7 +56,7 @@ Program TestUpdateSets
 
    !!! Copy From Vertex sets:
    Call DMmeshGetLabelIdIS(Mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
    Call ISGetIndicesF90(VertexSetGlobalIS,VertexSetGlobalIdx,ierr);CHKERRQ(ierr)   
    Write(IOBuffer,*) "VertexSetGlobalIdx: ",VertexSetGlobalIdx,"\n"
    Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
@@ -69,9 +69,9 @@ Program TestUpdateSets
       Call ISGetSize(setIS,nval,ierr);CHKERRQ(ierr)
       Allocate(Ptr(nval))
       Do c = 1, dim
-         Call MEF90_VecGetValuesISdof(Mesh,VecIn,Ptr,setIS,c,ierr)
+         Call MEF90VecGetValuesISdof(Mesh,VecIn,Ptr,setIS,c,ierr)
          Ptr = Ptr+set*10.0_Kr+c
-         Call MEF90_VecSetValuesISdof(Mesh,VecIn,Ptr,setIS,c,INSERT_VALUES,ierr)
+         Call MEF90VecSetValuesISdof(Mesh,VecIn,Ptr,setIS,c,INSERT_VALUES,ierr)
       End Do !c
       DeAllocate(Ptr)
       Call ISDestroy(SetIS,ierr);CHKERRQ(ierr)
@@ -87,7 +87,7 @@ Program TestUpdateSets
 
    !!! Same thing with cell sets
    Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
    Call ISGetIndicesF90(CellSetGlobalIS,CellSetGlobalIdx,ierr);CHKERRQ(ierr)   
    Write(IOBuffer,*) "CellSetGlobalIdx: ",CellSetGlobalIdx,"\n"
    Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
@@ -96,7 +96,7 @@ Program TestUpdateSets
    Call VecSet(VecIn,5000.0_Kr,ierr);CHKERRQ(ierr)
    Do set = 1,size(CellSetGlobalIdx)
       Call DMMeshGetStratumIS(Mesh,'Cell Sets',CellSetGlobalIdx(set),setIS,ierr);CHKERRQ(iErr)
-      Call MEF90_ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,closureIS,ierr)
+      Call MEF90ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,closureIS,ierr)
       Call ISGetIndicesF90(closureIS,closureIdx,ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) set,closureIdx,'\n'
       Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
@@ -105,9 +105,9 @@ Program TestUpdateSets
       Call ISGetSize(closureIS,nval,ierr);CHKERRQ(ierr)
       Allocate(Ptr(nval))
       Do c = 1, dim
-         Call MEF90_VecGetValuesISdof(Mesh,VecIn,Ptr,closureIS,c,ierr)
+         Call MEF90VecGetValuesISdof(Mesh,VecIn,Ptr,closureIS,c,ierr)
          Ptr = Ptr+set*10.0_Kr+c
-         Call MEF90_VecSetValuesISdof(Mesh,VecIn,Ptr,closureIS,c,INSERT_VALUES,ierr)
+         Call MEF90VecSetValuesISdof(Mesh,VecIn,Ptr,closureIS,c,INSERT_VALUES,ierr)
       End Do !c
       DeAllocate(Ptr)
 
@@ -126,7 +126,7 @@ Program TestUpdateSets
 
    Call PetscPrintf(PETSC_COMM_WORLD,"\n\n===== DMMeshISCreateISglobaldof for vertex sets ====\n",ierr)
    Call DMmeshGetLabelIdIS(Mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
    Call ISGetIndicesF90(VertexSetGlobalIS,VertexSetGlobalIdx,ierr);CHKERRQ(ierr)   
    Do set = 1,size(VertexSetGlobalIdx)
       Call DMMeshGetStratumIS(Mesh,'Vertex Sets',VertexSetGlobalIdx(set),setIS,ierr);CHKERRQ(iErr)
@@ -147,7 +147,7 @@ Program TestUpdateSets
 
    Call PetscPrintf(PETSC_COMM_WORLD,"\n\n===== DMMeshISCreateISglobaldof for cell sets ====\n",ierr)
    Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-   Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+   Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
    Call ISGetIndicesF90(CellSetGlobalIS,CellSetGlobalIdx,ierr);CHKERRQ(ierr)   
    Write(IOBuffer,*) "CellSetGlobalIdx: ",CellSetGlobalIdx,"\n"
    Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
@@ -176,8 +176,8 @@ Program TestUpdateSets
    Call VecDestroy(VecIn,ierr);CHKERRQ(ierr)
    Call VecDestroy(VecOut,ierr);CHKERRQ(ierr)
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
-   Call MEF90Ctx_Destroy(MEF90Ctx,ierr);CHKERRQ(ierr)   
-   Call MEF90_Finalize(ierr)
+   Call MEF90CtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)   
+   Call MEF90Finalize(ierr)
    Call PetscFinalize()
 
 End Program TestUpdateSets

@@ -1,7 +1,6 @@
 Program TestNSP
 #include "finclude/petscdef.h"
    Use m_MEF90
-   Use m_MEF_Materials
    Use petsc
    Implicit NONE   
 
@@ -33,16 +32,16 @@ Program TestNSP
 
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90_Initialize(ierr)
+   Call MEF90Initialize(ierr)
    Call MPI_Comm_Rank(PETSC_COMM_WORLD,rank,ierr)
    Call MPI_Comm_Size(PETSC_COMM_WORLD,numproc,ierr)
 
    !!! Get all MEF90-wide options
-   Call MEF90Ctx_Create(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr);CHKERRQ(ierr)
+   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr);CHKERRQ(ierr)
    Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
 
    !!! Get DM from mesh
-   Call MEF90Ctx_GetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
+   Call MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
    Call DMSetBlockSize(Mesh,dim,ierr);CHKERRQ(ierr)
    Call DMMeshSetMaxDof(Mesh,dim,ierr);CHKERRQ(ierr) 
@@ -112,7 +111,7 @@ Program TestNSP
    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
    Call VecDestroy(coordVec,ierr);CHKERRQ(ierr)
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
-   Call MEF90Ctx_Destroy(MEF90Ctx,ierr);CHKERRQ(ierr)   
-   Call MEF90_Finalize(ierr)
+   Call MEF90CtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)   
+   Call MEF90Finalize(ierr)
    Call PetscFinalize()
 End Program TestNSP

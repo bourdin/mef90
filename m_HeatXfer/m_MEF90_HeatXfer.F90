@@ -113,7 +113,7 @@ Contains
       
       !!! flux is cell-centered
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
@@ -161,7 +161,7 @@ Contains
       
       !!! externalTemperature is cell-centered
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
@@ -216,17 +216,17 @@ Contains
       !!!
       !!! Cell Sets
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)         
          If (cellSetOptions%Has_BC) Then
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%dm,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call MEF90_ISCreateCelltoVertex(MEF90HeatXferCtx%dm,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+            Call MEF90ISCreateCelltoVertex(MEF90HeatXferCtx%dm,PETSC_COMM_WORLD,setIS,bcIS,ierr)
             Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
             Allocate(val(nval),stat=ierr)
             val = cellSetOptions%boundaryTemp
-            Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,x,val,bcIS,1,INSERT_VALUES,ierr)
+            Call MEF90VecSetValuesISdof(MEF90HeatXferCtx%DM,x,val,bcIS,1,INSERT_VALUES,ierr)
             DeAllocate(val)
             Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -237,7 +237,7 @@ Contains
       
       !!! Vertex Sets
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),VertexSetOptions,ierr);CHKERRQ(ierr)
@@ -246,7 +246,7 @@ Contains
             Call ISGetSize(setIS,nval,ierr);CHKERRQ(ierr)
             Allocate(val(nval),stat=ierr)
             val = vertexSetOptions%boundaryTemp
-            Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,x,val,setIS,1,INSERT_VALUES,ierr)
+            Call MEF90VecSetValuesISdof(MEF90HeatXferCtx%DM,x,val,setIS,1,INSERT_VALUES,ierr)
             DeAllocate(val)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          EndIf
@@ -288,17 +288,17 @@ Contains
       
       !!! Cell Sets
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)         
          If (cellSetOptions%Has_BC) Then
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%dm,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call MEF90_ISCreateCelltoVertex(MEF90HeatXferCtx%dm,PETSC_COMM_WORLD,setIS,bcIS,ierr)
+            Call MEF90ISCreateCelltoVertex(MEF90HeatXferCtx%dm,PETSC_COMM_WORLD,setIS,bcIS,ierr)
             Call ISGetSize(bcIS,nval,ierr);CHKERRQ(ierr)
             Allocate(xPtr(nval),stat=ierr)
-            Call MEF90_VecGetValuesISdof(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,xPtr,bcIS,1,ierr)
-            Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,x,xPtr,bcIS,1,INSERT_VALUES,ierr)
+            Call MEF90VecGetValuesISdof(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,xPtr,bcIS,1,ierr)
+            Call MEF90VecSetValuesISdof(MEF90HeatXferCtx%DM,x,xPtr,bcIS,1,INSERT_VALUES,ierr)
             DeAllocate(xPtr)
             Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -309,7 +309,7 @@ Contains
       
       !!! Vertex Sets
       Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90_ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),VertexSetOptions,ierr);CHKERRQ(ierr)
@@ -317,8 +317,8 @@ Contains
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%dm,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             Call ISGetSize(setIS,nval,ierr);CHKERRQ(ierr)
             Allocate(xPtr(nval),stat=ierr)
-            Call MEF90_VecGetValuesISdof(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,xPtr,setIS,1,ierr)
-            Call MEF90_VecSetValuesISdof(MEF90HeatXferCtx%DM,x,xPtr,setIS,1,INSERT_VALUES,ierr)
+            Call MEF90VecGetValuesISdof(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,xPtr,setIS,1,ierr)
+            Call MEF90VecSetValuesISdof(MEF90HeatXferCtx%DM,x,xPtr,setIS,1,INSERT_VALUES,ierr)
             DeAllocate(xPtr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          EndIf
