@@ -58,6 +58,10 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                        :: damageATol
       PetscInt                         :: maxit
       PetscReal                        :: irrevthres
+      PetscEnum                        :: BTType
+      PetscInt                         :: BTInterval
+      PetscInt                         :: BTScope
+      PetscReal                        :: BTTol
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -206,6 +210,13 @@ Module m_MEF90_DefMechCtx
    Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_ModeList
    
    Enum,bind(c)
+      enumerator  :: MEF90DefMech_BTTypeNULL = 0,    &
+                     MEF90DefMech_BTTypeBackward, &
+                     MEF90DefMech_BTTypeForward
+   End Enum
+   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_BTTypeList
+   
+   Enum,bind(c)
       enumerator  :: MEF90DefMech_defectLawElasticity = 0, &
                      MEF90DefMech_defectLawGradientDamage, &
                      MEF90DefMech_defectLawPlasticity
@@ -249,9 +260,16 @@ Contains
       MEF90DefMech_ModeList(1) = 'Null'
       MEF90DefMech_ModeList(2) = 'QuasiStatic'
       MEF90DefMech_ModeList(3) = 'GradientFlow'
-      MEF90DefMech_ModeList(4) = 'MEF90_DefMech_Mode'
-      MEF90DefMech_ModeList(5) = '_MEF90_DefMech_Mode'
+      MEF90DefMech_ModeList(4) = 'MEF90DefMech_Mode'
+      MEF90DefMech_ModeList(5) = '_MEF90DefMech_Mode'
       MEF90DefMech_ModeList(6) = ''
+      
+      MEF90DefMech_BTTypeList(1) = 'Null'
+      MEF90DefMech_BTTypeList(2) = 'Backward'
+      MEF90DefMech_BTTypeList(3) = 'Forward'
+      MEF90DefMech_BTTypeList(4) = 'MEF90DefMech_BTType'
+      MEF90DefMech_BTTypeList(5) = '_MEF90DefMech_BTType'
+      MEF90DefMech_BTTypeList(6) = ''
       
       MEF90DefMech_defectLawList(1) = 'Elasticity'
       MEF90DefMech_defectLawList(2) = 'GradientDamage'
@@ -634,6 +652,11 @@ Contains
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%damageATol,default%damageATol,'defmech_damage_atol','Absolute tolerance on damage error',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%maxit,default%maxit,'defmech_maxit','Maximum number of alternate minimizations for damage',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%irrevthres,default%irrevthres,'defmech_irrevThres','Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%BTType,MEF90DefMech_BTTypeList,default%BTType,'BT_Type','Backtracking type',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%BTInterval,default%BTInterval,'BT_Interval','Interval at which Backtracking is run in inner loop (0 for outer loop)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%BTScope,default%BTScope,'BT_Scope','Backtracking scope (0 for unlimited)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%BTTol,default%BTTol,'BT_Tol','Backtracking relative tolerance',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 
 #undef __FUNCT__
