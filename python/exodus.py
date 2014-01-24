@@ -64,28 +64,36 @@ def getAccessPath():
   """
   Return the base path of the exodus installation.
   """
-  accessPth = os.path.join(os.environ.get('EXODUS_DIR'))
+  accessPth = os.path.join(os.environ.get('PETSC_DIR'),os.environ.get('PETSC_ARCH'))
   return accessPth
 
-def findLibExoPath():
-  # FIXME: this is a hack to try to find the ExodusII and NetCDF shared
-  #        libraries in an external ExodusII distribution; this could be made
-  #        portable if the shared libraries were built in the Sierra distribution
-  accessPth = getAccessPath()
-  trialShLibDirs = [ '/shlib/', '/lib/shared/', '/lib/' ]
-  for shLibDir in trialShLibDirs:
-    libExoPth = accessPth + shLibDir
-    if os.path.isdir(libExoPth): return libExoPth
-  raise Exception, "Shared library sub-directory not found in $ACCESS path: %s" % accessPth
-
-EXODUS_PATH = findLibExoPath()
 if os.uname()[0] == 'Darwin':
-  NETCDF_SO =  os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libnetcdf.dylib")
-  EXODUS_SO = os.path.join(os.getenv("EXODUS_DIR"),"lib","libexoIIv2c.dylib")
-  EXODUS_SO = EXODUS_PATH + "libexoIIv2c.dylib"
+  NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libnetcdf.dylib")
+  EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libexodus.dylib")
 else:
-  NETCDF_SO = EXODUS_PATH + "libnetcdf.so"
-  EXODUS_SO = EXODUS_PATH + "libexodus.so"
+  NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libnetcdf.so")
+  EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libexodus.so")
+
+
+###def findLibExoPath():
+###  # FIXME: this is a hack to try to find the ExodusII and NetCDF shared
+###  #        libraries in an external ExodusII distribution; this could be made
+###  #        portable if the shared libraries were built in the Sierra distribution
+###  accessPth = getAccessPath()
+###  trialShLibDirs = [ '/shlib/', '/lib/shared/', '/lib/' ]
+###  for shLibDir in trialShLibDirs:
+###    libExoPth = accessPth + shLibDir
+###    if os.path.isdir(libExoPth): return libExoPth
+###  raise Exception, "Shared library sub-directory not found in $ACCESS path: %s" % accessPth
+###
+###EXODUS_PATH = findLibExoPath()
+###if os.uname()[0] == 'Darwin':
+###  NETCDF_SO =  os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libnetcdf.dylib")
+###  EXODUS_SO = os.path.join(os.getenv("EXODUS_DIR"),"lib","libexoIIv2c.dylib")
+###  EXODUS_SO = EXODUS_PATH + "libexoIIv2c.dylib"
+###else:
+###  NETCDF_SO = EXODUS_PATH + "libnetcdf.so"
+###  EXODUS_SO = EXODUS_PATH + "libexodus.so"
 NETCDF_LIB = cdll.LoadLibrary(NETCDF_SO)
 EXODUS_LIB = cdll.LoadLibrary(EXODUS_SO)
   
