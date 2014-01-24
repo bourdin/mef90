@@ -25,43 +25,51 @@ Program ThermoElasticity
    Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
-                                                         PETSC_TRUE,          & ! disp_addNullSpace
-                                                         3,                   & ! DisplacementOffset
-                                                         2,                   & ! DamageOffset
-                                                         0,                   & ! boundaryDisplacementOffset
-                                                         0,                   & ! boundaryDamageOffset
-                                                         1,                   & ! temperatureOffset
-                                                         4,                   & ! ForceOffset
-                                                         3,                   & ! pressureForceOffset
-                                                         0,                   & ! plasticStrainOffset
-                                                         0,                   & ! StressOffset
-                                                         MEF90Scaling_Linear, & ! boundaryDisplacementScaling
-                                                         MEF90Scaling_CST,    & ! boundaryDamageScaling
-                                                         MEF90Scaling_Linear, & ! ForceScaling
-                                                         MEF90Scaling_Linear, & ! pressureForceScaling
-                                                         1e-4,                & ! damage_atol
-                                                         1000,                & ! maxit
-                                                         0.)                    ! irrevthres
+                                                         PETSC_TRUE,              & ! disp_addNullSpace
+                                                         3,                       & ! DisplacementOffset
+                                                         2,                       & ! DamageOffset
+                                                         0,                       & ! boundaryDisplacementOffset
+                                                         0,                       & ! boundaryDamageOffset
+                                                         1,                       & ! temperatureOffset
+                                                         4,                       & ! ForceOffset
+                                                         3,                       & ! pressureForceOffset
+                                                         0,                       & ! plasticStrainOffset
+                                                         0,                       & ! StressOffset
+                                                         MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,        & ! boundaryDamageScaling
+                                                         MEF90Scaling_Linear,     & ! ForceScaling
+                                                         MEF90Scaling_Linear,     & ! pressureForceScaling
+                                                         1e-4,                    & ! damage_atol
+                                                         1000,                    & ! maxit
+                                                         0.,                      & ! irrevThres 
+                                                         MEF90DefMech_BTTypeNULL, & ! BTType
+                                                         -1,                      & ! BTInt
+                                                         -1,                      & ! BTScope
+                                                         1.0e-2)                    ! BTTol
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
-                                                         PETSC_TRUE,          & ! disp_addNullSpace
-                                                         3,                   & ! DisplacementOffset
-                                                         2,                   & ! DamageOffset
-                                                         0,                   & ! boundaryDisplacementOffset
-                                                         0,                   & ! boundaryDamageOffset
-                                                         1,                   & ! temperatureOffset
-                                                         4,                   & ! ForceOffset
-                                                         3,                   & ! pressureForceOffset
-                                                         0,                   & ! plasticStrainOffset
-                                                         0,                   & ! StressOffset
-                                                         MEF90Scaling_Linear, & ! boundaryDisplacementScaling
-                                                         MEF90Scaling_CST,    & ! boundaryDamageScaling
-                                                         MEF90Scaling_Linear, & ! ForceScaling
-                                                         MEF90Scaling_Linear, & ! pressureForceScaling
-                                                         1e-4,                & ! damage_atol
-                                                         1000,                & ! maxit
-                                                         0.) 
+                                                         PETSC_TRUE,              & ! disp_addNullSpace
+                                                         3,                       & ! DisplacementOffset
+                                                         2,                       & ! DamageOffset
+                                                         0,                       & ! boundaryDisplacementOffset
+                                                         0,                       & ! boundaryDamageOffset
+                                                         1,                       & ! temperatureOffset
+                                                         4,                       & ! ForceOffset
+                                                         3,                       & ! pressureForceOffset
+                                                         0,                       & ! plasticStrainOffset
+                                                         0,                       & ! StressOffset
+                                                         MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,        & ! boundaryDamageScaling
+                                                         MEF90Scaling_Linear,     & ! ForceScaling
+                                                         MEF90Scaling_Linear,     & ! pressureForceScaling
+                                                         1e-4,                    & ! damage_atol
+                                                         1000,                    & ! maxit
+                                                         0.,                      & ! irrevThres 
+                                                         MEF90DefMech_BTTypeNULL, & ! BTType
+                                                         -1,                      & ! BTInt
+                                                         -1,                      & ! BTScope
+                                                         1.0e-2)                    ! BTTol
 
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
