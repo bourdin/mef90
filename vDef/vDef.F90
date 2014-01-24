@@ -155,7 +155,7 @@ Program vDef
    PetscReal                                          :: alphaMaxChange,alphamIn,alphaMax
    
    PetscBool                                          :: BTActive = Petsc_False
-   PetscInt                                           :: BTStep
+   PetscInt                                           :: BTStep,BTminStep,BTMaxSTep,BTDirection
       
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
@@ -408,9 +408,12 @@ Program vDef
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                
                ! Check for BT if necessary
-               If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &
+               BTCheck: If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &
                    (mod(AltMinIter,MEF90DefMechGlobalOptions%BTInterval) == 0) .AND. &
                    (MEF90DefMechGlobalOptions%BTType /= MEF90DefMech_BTTypeNULL)) Then
+                   !!!
+                   !!! Recompute all energies
+                   !!!
                   elasticEnergySet = 0.0_Kr
                   forceWorkSet     = 0.0_Kr
                   surfaceEnergySet = 0.0_Kr
@@ -421,17 +424,32 @@ Program vDef
                   forceWork(step)     = sum(forceWorkSet)
                   surfaceEnergy(step) = sum(surfaceEnergySet)
                   totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + surfaceEnergy(step)
-                  Do BTStep = step-1, max(1,step - MEF90DefMechGlobalOptions%BTScope), -1
+                  
+                  !!!
+                  !!! Check for a BT step
+                  !!!
+                  If (MEF90DefMechGlobalOptions% BTType == MEF90DefMech_BTTypeForward) Then
+                     BTMinStep   = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     BTMaxStep   = step - 1
+                     BTDirection = 1
+                  Else
+                     BTMinStep   = step - 1
+                     BTMaxStep   = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     BTDirection = -1
+                  End If
+                  Do BTStep = BTminStep,BTMaxSTep,BTDirection
                      If (time(step)**2 * (totalMechanicalEnergy(BTStep) - surfaceEnergy(step)) - time(BTStep)**2 * (elasticEnergy(step) - forceWork(step)) & 
                          > time(step)**2 * abs(totalMechanicalEnergy(step)) * MEF90DefMechGlobalOptions%BTtol ) Then
                          !!! current solution is a better test field for step BTstep, backtracking
                         BTActive = PETSC_TRUE
+                        Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,"\n\n",ierr);CHKERRQ(ierr)
+                        Write(IOBuffer,450) BTStep
+                        Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                         EXIT
                      End If
                   End Do
-               End If
+               End If BTCheck
                If (BTActive == PETSC_TRUE) Then
-                  Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,"\n\n",ierr);CHKERRQ(ierr)
                   EXIT
                End If
                If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
@@ -439,7 +457,7 @@ Program vDef
                End If
             End Do AltMin
 
-            If (BTActive == PETSC_FALSE) Then
+            EndStep: If (BTActive == PETSC_FALSE) Then
                !!! Compute energies
                elasticEnergySet = 0.0_Kr
                forceWorkSet     = 0.0_Kr
@@ -473,12 +491,41 @@ Program vDef
                Write(IOBuffer,500) step,time(step),elasticEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step)
                Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
                Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
-            End If
+               !!!
+               !!! Save results and boundary Values
+               !!!
+               Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
 
-            !!!
-            !!! Save results and boundary Values
-            !!!
-            Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+               !!!
+               !!! Check for a BT step
+               !!!
+               BTCheck2: If ((MEF90DefMechGlobalOptions%BTInterval == 0) .AND. &
+                   (MEF90DefMechGlobalOptions%BTType /= MEF90DefMech_BTTypeNULL)) Then
+                  !!!
+                  !!! Compute a BT step
+                  !!!
+                  If (MEF90DefMechGlobalOptions% BTType == MEF90DefMech_BTTypeForward) Then
+                     BTMinStep   = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     BTMaxStep   = step - 1
+                     BTDirection = 1
+                  Else
+                     BTMinStep   = step - 1
+                     BTMaxStep   = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     BTDirection = -1
+                  End If
+                  Do BTStep = BTminStep,BTMaxSTep,BTDirection
+                     If (time(step)**2 * (totalMechanicalEnergy(BTStep) - surfaceEnergy(step)) - time(BTStep)**2 * (elasticEnergy(step) - forceWork(step)) & 
+                         > time(step)**2 * abs(totalMechanicalEnergy(step)) * MEF90DefMechGlobalOptions%BTtol ) Then
+                         !!! current solution is a better test field for step BTstep, backtracking
+                        BTActive = PETSC_TRUE
+                        Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,"\n\n",ierr);CHKERRQ(ierr)
+                        Write(IOBuffer,450) BTStep
+                        Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                        EXIT
+                     End If
+                  End Do
+               End If BTCheck2
+            End If EndStep
          Case (MEF90DefMech_ModeNULL)
             Continue
          Case default
@@ -491,24 +538,12 @@ Program vDef
             EXIT
          ElseIf (BTActive == PETSC_TRUE) Then
             step = BTStep
+            BTActive = PETSC_FALSE
          Else
             step = step + 1
          End If
       End Do MainloopQS
    End If
-100 Format("\nHeat transfer: solving steady state step ",I4,", t=",ES12.5,"\n")
-101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
-102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
-110 Format("\nHeat transfer: step ",I4,", until t=",ES12.5,"\n")
-200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
-201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
-202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
-203 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
-208 Format("   Alt. Min. step ",I5," ")
-209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
-400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
-410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
-500 Format(I6, 5(ES16.5),"\n")
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%mode)
    Case (MEF90DefMech_ModeQuasiStatic)
@@ -549,4 +584,18 @@ Program vDef
    Call MEF90CtxDestroy(MEF90Ctx,ierr)
    Call MEF90Finalize(ierr)
    Call PetscFinalize(ierr)
+100 Format("\nHeat transfer: solving steady state step ",I4,", t=",ES12.5,"\n")
+101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
+102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
+110 Format("\nHeat transfer: step ",I4,", until t=",ES12.5,"\n")
+200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
+201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+203 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
+208 Format("   Alt. Min. step ",I5," ")
+209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
+400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
+410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
+450 Format("BT: going back to step ",I4,"\n")
+500 Format(I6, 5(ES16.5),"\n")
 End Program vDef
