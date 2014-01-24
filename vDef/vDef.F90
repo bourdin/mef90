@@ -449,7 +449,7 @@ Program vDef
                      End If
                   End Do
                End If BTCheck
-               If (BTActive == PETSC_TRUE) Then
+               If (BTActive) Then
                   EXIT
                End If
                If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
@@ -457,7 +457,7 @@ Program vDef
                End If
             End Do AltMin
 
-            EndStep: If (BTActive == PETSC_FALSE) Then
+            EndStep: If (.NOT. BTActive) Then
                !!! Compute energies
                elasticEnergySet = 0.0_Kr
                forceWorkSet     = 0.0_Kr
@@ -536,7 +536,7 @@ Program vDef
          Call PetscLogView(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
          If (step == MEF90GlobalOptions%timeNumStep) Then
             EXIT
-         ElseIf (BTActive == PETSC_TRUE) Then
+         ElseIf (BTActive) Then
             step = BTStep
             BTActive = PETSC_FALSE
          Else
@@ -591,7 +591,7 @@ Program vDef
 200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
 202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
-203 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
+!203 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
 208 Format("   Alt. Min. step ",I5," ")
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
