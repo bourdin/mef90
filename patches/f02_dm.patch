@@ -1,0 +1,29 @@
+*** petsc-3.3-p7/src/dm/interface/ftn-auto/dmf.c	2013-05-11 22:17:17.000000000 -0500
+--- petsc-3.3/src/dm/interface/ftn-auto/dmf.c	2014-01-23 14:15:12.597858647 -0600
+*************** extern void PetscRmPointer(void*);
+*** 74,79 ****
+--- 74,84 ----
+  #define dmgetblocksize_ dmgetblocksize
+  #endif
+  #ifdef PETSC_HAVE_FORTRAN_CAPS
++ #define dmsetblocksize_ DMSETBLOCKSIZE
++ #elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
++ #define dmsetblocksize_ dmsetblocksize
++ #endif
++ #ifdef PETSC_HAVE_FORTRAN_CAPS
+  #define dmcreateinterpolation_ DMCREATEINTERPOLATION
+  #elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
+  #define dmcreateinterpolation_ dmcreateinterpolation
+*************** void PETSC_STDCALL  dmgetblocksize_(DM d
+*** 269,274 ****
+--- 274,283 ----
+  *__ierr = DMGetBlockSize(
+  	(DM)PetscToPointer((dm) ),bs);
+  }
++ void PETSC_STDCALL  dmsetblocksize_(DM dm,PetscInt *bs, int *__ierr ){
++ *__ierr = DMSetBlockSize(
++ 	(DM)PetscToPointer((dm) ),*bs);
++ }
+  void PETSC_STDCALL  dmcreateinterpolation_(DM dm1,DM dm2,Mat *mat,Vec *vec, int *__ierr ){
+  *__ierr = DMCreateInterpolation(
+  	(DM)PetscToPointer((dm1) ),
