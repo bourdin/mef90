@@ -1,0 +1,30 @@
+*** petsc-3.3-p7/src/dm/impls/mesh/ftn-auto/sectionf.c	2013-05-11 22:17:17.000000000 -0500
+--- petsc-3.3/src/dm/impls/mesh/ftn-auto/sectionf.c	2014-01-23 14:15:12.308856680 -0600
+*************** extern void PetscRmPointer(void*);
+*** 168,173 ****
+--- 168,178 ----
+  #elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
+  #define sectionintgetfibration_ sectionintgetfibration
+  #endif
++ #ifdef PETSC_HAVE_FORTRAN_CAPS
++ #define dmmeshiscreateisglobaldof_ DMMESHISCREATEISGLOBALDOF
++ #elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
++ #define dmmeshiscreateisglobaldof_ dmmeshiscreateisglobaldof
++ #endif
+  
+  
+  /* Definitions of Fortran Wrapper routines */
+*************** void PETSC_STDCALL  sectionintgetfibrati
+*** 290,295 ****
+--- 295,305 ----
+  *__ierr = SectionIntGetFibration(
+  	(SectionInt)PetscToPointer((section) ),*field,subsection);
+  }
++ void PETSC_STDCALL  dmmeshiscreateisglobaldof_(DM dm,IS isin,int *dof,IS *isdof, int *__ierr ){
++ *__ierr = DMMeshISCreateISglobaldof(
++ 	(DM)PetscToPointer((dm) ),
++ 	(IS)PetscToPointer((isin) ),*dof,isdof);
++ }
+  #if defined(__cplusplus)
+  }
+  #endif
