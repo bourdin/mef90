@@ -25,42 +25,50 @@ Program vDef
    Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
-                                                         PETSC_TRUE,          & ! disp_addNullSpace
-                                                         3,                   & ! DisplacementOffset
-                                                         2,                   & ! DamageOffset
-                                                         3,                   & ! boundaryDisplacementOffset
-                                                         0,                   & ! boundaryDamageOffset
-                                                         1,                   & ! temperatureOffset
-                                                         4,                   & ! ForceOffset
-                                                         3,                   & ! pressureForceOffset
-                                                         0,                   & ! plasticStrainOffset
-                                                         0,                   & ! StressOffset
-                                                         MEF90Scaling_Linear, & ! boundaryDisplacementScaling
-                                                         MEF90Scaling_CST,    & ! boundaryDamageScaling
-                                                         MEF90Scaling_Linear, & ! ForceScaling
-                                                         MEF90Scaling_Linear, & ! pressureForceScaling
-                                                         1e-4,                & ! damage_atol
-                                                         1000,                & ! maxit
-                                                         0.) 
+                                                         PETSC_TRUE,              & ! disp_addNullSpace
+                                                         3,                       & ! DisplacementOffset
+                                                         2,                       & ! DamageOffset
+                                                         3,                       & ! boundaryDisplacementOffset
+                                                         0,                       & ! boundaryDamageOffset
+                                                         1,                       & ! temperatureOffset
+                                                         4,                       & ! ForceOffset
+                                                         3,                       & ! pressureForceOffset
+                                                         0,                       & ! plasticStrainOffset
+                                                         0,                       & ! StressOffset
+                                                         MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,        & ! boundaryDamageScaling
+                                                         MEF90Scaling_Linear,     & ! ForceScaling
+                                                         MEF90Scaling_Linear,     & ! pressureForceScaling
+                                                         1e-4,                    & ! damage_atol
+                                                         1000,                    & ! maxit
+                                                         0.,                      & ! irrevThres 
+                                                         MEF90DefMech_BTTypeNULL, & ! BTType
+                                                         -1,                      & ! BTInt
+                                                         -1,                      & ! BTScope
+                                                         1.0e-2)                    ! BTTol
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
-                                                         PETSC_TRUE,          & ! disp_addNullSpace
-                                                         3,                   & ! DisplacementOffset
-                                                         2,                   & ! DamageOffset
-                                                         3,                   & ! boundaryDisplacementOffset
-                                                         0,                   & ! boundaryDamageOffset
-                                                         1,                   & ! temperatureOffset
-                                                         4,                   & ! ForceOffset
-                                                         3,                   & ! pressureForceOffset
-                                                         0,                   & ! plasticStrainOffset
-                                                         0,                   & ! StressOffset
-                                                         MEF90Scaling_Linear, & ! boundaryDisplacementScaling
-                                                         MEF90Scaling_CST,    & ! boundaryDamageScaling
-                                                         MEF90Scaling_Linear, & ! ForceScaling
-                                                         MEF90Scaling_Linear, & ! pressureForceScaling
-                                                         1e-4,                & ! damage_atol
-                                                         1000,                & ! maxit
-                                                         0.) 
+                                                         PETSC_TRUE,              & ! disp_addNullSpace
+                                                         3,                       & ! DisplacementOffset
+                                                         2,                       & ! DamageOffset
+                                                         3,                       & ! boundaryDisplacementOffset
+                                                         0,                       & ! boundaryDamageOffset
+                                                         1,                       & ! temperatureOffset
+                                                         4,                       & ! ForceOffset
+                                                         3,                       & ! pressureForceOffset
+                                                         0,                       & ! plasticStrainOffset
+                                                         0,                       & ! StressOffset
+                                                         MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,        & ! boundaryDamageScaling
+                                                         MEF90Scaling_Linear,     & ! ForceScaling
+                                                         MEF90Scaling_Linear,     & ! pressureForceScaling
+                                                         1e-4,                    & ! damage_atol
+                                                         1000,                    & ! maxit
+                                                         0.,                      & ! irrevThres 
+                                                         MEF90DefMech_BTTypeNULL, & ! BTType
+                                                         -1,                      & ! BTInt
+                                                         -1,                      & ! BTScope
+                                                         1.0e-2)                    ! BTTol
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -112,7 +120,10 @@ Program vDef
    Type(IS)                                           :: setIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
-   PetscReal,Dimension(:),Pointer                     :: time,energy,surfaceEnergy,work
+   PetscReal,Dimension(:),Pointer                     :: time
+   PetscReal,Dimension(:),Pointer                     :: thermalEnergySet,heatFluxWorkSet
+   PetscReal,Dimension(:),Pointer                     :: elasticEnergySet,surfaceEnergySet,forceWorkSet
+   PetscReal,Dimension(:),Pointer                     :: elasticEnergy,surfaceEnergy,forceWork,totalMechanicalEnergy
 
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
@@ -124,7 +135,9 @@ Program vDef
    PetscReal                                          :: damageMaxChange
 
    Type(SNES)                                         :: snesTemp
+   SNESConvergedReason                                :: snesTempConvergedReason
    Type(TS)                                           :: tsTemp
+   TSConvergedReason                                  :: tsTempConvergedReason
    Type(TSAdapt)                                      :: tsAdaptTemp
    Type(Vec)                                          :: residualTemp
 
@@ -140,6 +153,9 @@ Program vDef
    PetscInt                                           :: dim
    
    PetscReal                                          :: alphaMaxChange,alphamIn,alphaMax
+   
+   PetscBool                                          :: BTActive = Petsc_False
+   PetscInt                                           :: BTStep
       
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
@@ -228,13 +244,26 @@ Program vDef
    !!! 
    !!! Allocate array of works and energies
    !!!
-   Allocate(energy(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   energy = 0.0_Kr
-   Allocate(surfaceEnergy(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   Allocate(elasticEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   elasticEnergySet = 0.0_Kr
+   Allocate(surfaceEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   surfaceEnergySet = 0.0_Kr
+   Allocate(forceWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   forceWorkSet = 0.0_Kr
+   Allocate(thermalEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   thermalEnergySet = 0.0_Kr
+   Allocate(heatFluxWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   heatFluxWorkSet = 0.0_Kr
+   
+   Allocate(elasticEnergy(MEF90GlobalOptions%timeNumStep))
+   elasticEnergy = 0.0_Kr
+   Allocate(forceWork(MEF90GlobalOptions%timeNumStep))
+   forceWork = 0.0_Kr
+   Allocate(surfaceEnergy(MEF90GlobalOptions%timeNumStep))
    surfaceEnergy = 0.0_Kr
-   Allocate(work(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   work = 0.0_Kr
-
+   Allocate(totalMechanicalEnergy(MEF90GlobalOptions%timeNumStep))
+   totalMechanicalEnergy = 0.0_Kr
+   
    !!!
    !!! Try to figure out if the file was formatted
    !!!
@@ -251,7 +280,9 @@ Program vDef
    !!! Actual computations / time stepping
    !!!
    If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
-      mainloopQS: Do step = 1,MEF90GlobalOptions%timeNumStep
+      step = 1
+      mainloopQS: Do
+         BTActive = PETSC_FALSE
          !!! Solve for temperature
          Select Case (MEF90HeatXferGlobalOptions%mode)
          Case (MEF90HeatXFer_ModeSteadyState) 
@@ -263,20 +294,25 @@ Program vDef
             !!! Solve SNES
             Call MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature,MEF90HeatXferCtx,ierr);
             Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
+            Call SNESGetConvergedReason(snesTemp,snesTempConvergedReason,ierr);CHKERRQ(ierr)
+            If (snesTempConvergedReason < 0) Then  
+               Write(IOBuffer,400) "temperature",snesTempConvergedReason
+               Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+            End If
 
             !!! Compute thermal energy
-            Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
+            Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,thermalEnergySet,heatFluxWorkSet,ierr);CHKERRQ(ierr)
             Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call PetscPrintf(MEF90Ctx%Comm,"\nThermal energies: \n",ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
-               Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
+               Write(IOBuffer,101) setID(set),thermalEnergySet(set),heatFluxWorkSet(set),thermalEnergySet(set)-heatFluxWorkSet(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             End Do
             Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
+            Write(IOBuffer,102) sum(thermalEnergySet),sum(heatFluxWorkSet),sum(thermalEnergySet)-sum(heatFluxWorkSet)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             !!! Save results
             Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
@@ -296,6 +332,11 @@ Program vDef
                   !!! when using gcc
                   Call TSSetDuration(tsTemp,10000,time(step),ierr);CHKERRQ(ierr)
                   Call TSSolve(tsTemp,MEF90HeatXferCtx%temperature,time(step),ierr);CHKERRQ(ierr)
+                  Call TSGetConvergedReason(tsTemp,tsTempConvergedReason,ierr);CHKERRQ(ierr)
+                  If (tsTempConvergedReason < 0) Then  
+                     Write(IOBuffer,410) "temperature",tsTempConvergedReason
+                     Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                  End If
                   Call TSGetTime(tsTemp,t,ierr);CHKERRQ(ierr)
                   time(step) = t
                Else
@@ -305,17 +346,18 @@ Program vDef
             End If
 
             !!! Compute thermal energy
-            Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,energy,work,ierr);CHKERRQ(ierr)
+            Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,thermalEnergySet,heatFluxWorkSet,ierr);CHKERRQ(ierr)
             Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(MEF90Ctx%Comm,"\nThermal energies: \n",ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
-               Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
+               Write(IOBuffer,101) setID(set),thermalEnergySet(set),heatFluxWorkSet(set),thermalEnergySet(set)-heatFluxWorkSet(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             End Do
             Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
+            Write(IOBuffer,102) sum(thermalEnergySet),sum(heatFluxWorkSet),sum(thermalEnergySet)-sum(heatFluxWorkSet)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             !!! Save results
             Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
@@ -332,10 +374,9 @@ Program vDef
          Case (MEF90DefMech_ModeQuasiStatic)
             Write(IOBuffer,200) step,time(step) 
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-            AltMinIter = 1
             damageMaxChange = 1.0D+20
             Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,snesDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-            AltMin: Do
+            AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
                Write(IObuffer,208) AltMinIter
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                !!! Update fields
@@ -345,15 +386,19 @@ Program vDef
 
                !!! Solve SNES
                Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
-               !Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
-               !Write(IOBuffer,*) "Displacement: SNESConvergedReason returned ",snesDispConvergedReason,"\n"
-               !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
+               If (snesDispConvergedReason < 0) Then  
+                  Write(IOBuffer,400) "displacement",snesDispConvergedReason
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               End If
                
                Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
                Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-               !Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
-               !Write(IOBuffer,*) "Damage:       SNESConvergedReason returned ",snesDamageConvergedReason,"\n"
-               !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
+               If (snesDamageConvergedReason < 0) Then
+                  Write(IOBuffer,400) "damage field",snesDamageConvergedReason
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               End If
 
                Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
                Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
@@ -362,42 +407,73 @@ Program vDef
                Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                
-               If ((damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) .OR. (AltMinIter > MEF90DefMechGlobalOptions%maxit)) Then
+               ! Check for BT if necessary
+               If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &
+                   (mod(AltMinIter,MEF90DefMechGlobalOptions%BTInterval) == 0) .AND. &
+                   (MEF90DefMechGlobalOptions%BTType /= MEF90DefMech_BTTypeNULL)) Then
+                  elasticEnergySet = 0.0_Kr
+                  forceWorkSet     = 0.0_Kr
+                  surfaceEnergySet = 0.0_Kr
+                  Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,elasticEnergySet,ierr);CHKERRQ(ierr)
+                  Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
+                  Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
+                  elasticEnergy(step) = sum(elasticEnergySet)
+                  forceWork(step)     = sum(forceWorkSet)
+                  surfaceEnergy(step) = sum(surfaceEnergySet)
+                  totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + surfaceEnergy(step)
+                  Do BTStep = step-1, max(1,step - MEF90DefMechGlobalOptions%BTScope), -1
+                     If (time(step)**2 * (totalMechanicalEnergy(BTStep) - surfaceEnergy(step)) - time(BTStep)**2 * (elasticEnergy(step) - forceWork(step)) & 
+                         > time(step)**2 * abs(totalMechanicalEnergy(step)) * MEF90DefMechGlobalOptions%BTtol ) Then
+                         !!! current solution is a better test field for step BTstep, backtracking
+                        BTActive = PETSC_TRUE
+                        EXIT
+                     End If
+                  End Do
+               End If
+               If (BTActive == PETSC_TRUE) Then
+                  Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,"\n\n",ierr);CHKERRQ(ierr)
                   EXIT
                End If
-               AltMinIter = AltMinIter + 1               
+               If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
+                  EXIT
+               End If
             End Do AltMin
 
-            !!! Compute energies
-            energy = 0.0_Kr
-            surfaceEnergy = 0.0_Kr
-            work = 0.0_Kr
-            Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
-            Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
-            Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergy,ierr);CHKERRQ(ierr)
-            
-            !!!
-            !!! Print and save energies
-            !!!
-            Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-            Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-            Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
-            Do set = 1, size(setID)
-               Write(IOBuffer,201) setID(set),energy(set),work(set),surfaceEnergy(set),energy(set)+surfaceEnergy(set)-work(set)
+            If (BTActive == PETSC_FALSE) Then
+               !!! Compute energies
+               elasticEnergySet = 0.0_Kr
+               forceWorkSet     = 0.0_Kr
+               surfaceEnergySet = 0.0_Kr
+               Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,elasticEnergySet,ierr);CHKERRQ(ierr)
+               Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
+               Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
+               elasticEnergy(step) = sum(elasticEnergySet)
+               forceWork(step)     = sum(forceWorkSet)
+               surfaceEnergy(step) = sum(surfaceEnergySet)
+               totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + surfaceEnergy(step)
+               !!!
+               !!! Print and save energies
+               !!!
+               Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+               Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+               Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+               Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
+               Do set = 1, size(setID)
+                  Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + surfaceEnergySet(set)
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                  Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + surfaceEnergySet(set)
+                  Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
+                  Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
+               End Do
+               Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+               Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+               Write(IOBuffer,202) elasticEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-               Write(IOBuffer,500) step,time(step),energy(set),work(set),surfaceEnergy(set),energy(set)+surfaceEnergy(set)-work(set)
-               Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
-               Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
-            End Do
-            Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-            Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,202) sum(energy),sum(work),sum(surfaceEnergy),sum(energy)-sum(work)+sum(surfaceEnergy)
-            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-            Write(IOBuffer,500) step,time(step),sum(energy),sum(work),sum(surfaceEnergy),sum(energy)-sum(work)+sum(surfaceEnergy)
-            Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
-            Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
+               Write(IOBuffer,500) step,time(step),elasticEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step)
+               Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
+               Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
+            End If
 
             !!!
             !!! Save results and boundary Values
@@ -411,6 +487,13 @@ Program vDef
             STOP
          End Select
          Call PetscLogView(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
+         If (step == MEF90GlobalOptions%timeNumStep) Then
+            EXIT
+         ElseIf (BTActive == PETSC_TRUE) Then
+            step = BTStep
+         Else
+            step = step + 1
+         End If
       End Do MainloopQS
    End If
 100 Format("\nHeat transfer: solving steady state step ",I4,", t=",ES12.5,"\n")
@@ -420,9 +503,11 @@ Program vDef
 200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
 202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+203 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
 208 Format("   Alt. Min. step ",I5," ")
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
-
+400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
+410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 500 Format(I6, 5(ES16.5),"\n")
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%mode)
@@ -445,9 +530,17 @@ Program vDef
 
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 
-   DeAllocate(time)
-   DeAllocate(energy)
-   DeAllocate(work)
+   DeAllocate(elasticEnergySet)
+   DeAllocate(surfaceEnergySet)
+   DeAllocate(forceWorkSet)
+   DeAllocate(thermalEnergySet)
+   DeAllocate(heatFluxWorkSet)
+   
+   DeAllocate(elasticEnergy)
+   DeAllocate(forceWork)
+   DeAllocate(surfaceEnergy)
+   DeAllocate(totalMechanicalEnergy)
+
    Call MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)

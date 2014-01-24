@@ -6,5 +6,6 @@ from pymef90 import *
 try:
     import visitmef90
 except ImportError:
-    print "visit not available, not importing visitmef90"
+    pass
+    #print "visit not available, not importing visitmef90"
 

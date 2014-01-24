@@ -2,7 +2,7 @@
 -cs0001_fracturetoughness 1
 -cs0001_residualstiffness 0.
 -cs0001_defectLaw_type gradientdamage
--cs0001_damageLaw_gradientDamage_type AT1
+-cs0001_defectLaw_gradientDamage_type AT1
 -cs0001_internalLength .5
 -cs0010_displacementBC 1,1,1
 -cs0010_boundaryDisplacement -.5,0,0 
