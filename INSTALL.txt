@@ -56,6 +56,7 @@ Note that the second command patches auto-generated fortran header files. If one
       --download-netcdf=1               \
       --download-parmetis=1             \
       --download-triangle=1             \
+      --download-yaml=1                 \
       --with-clanguage=C++              \
       --with-cmake=cmake                \
       --with-debugging=0                \
@@ -77,6 +78,7 @@ With intel 14.0 compilers, and MKL, I use
       --download-netcdf=1               \
       --download-parmetis=1             \
       --download-triangle=1             \
+      --download-yaml=1                 \
       --with-blas-lapack-dir=$MKLROOT   \
       --with-clanguage=C++              \
       --with-cmake=cmake                \
@@ -98,11 +100,11 @@ Note that all fortran tests will fail as they are not compatible with the "--wit
 
 ### Optional:
   The exodus python bindings in $MEF90_DIR/exodus.py require that exodusii be compiled as a shared library, which is not the case by default. It is possible to replace the static libraries with dynamic ones:
+  [bourdin@head petsc-3.3-p7]$ mkdir -p $MEF90_DIR/lib/$PETSC_ARCH/
   [bourdin@head petsc-3.3-p7]$ cd externalpackages/exodusii-5.22b/
-  [bourdin@head exodusii-5.22b]$ gcc -shared -L $PETSC_DIR/$PETSC_ARCH/lib -lnetcdf -o $PETSC_DIR/$PETSC_ARCH/lib/libexodus.so cbind/src/*.o
-  [bourdin@head exodusii-5.22b]$ gcc -shared -L $PETSC_DIR/$PETSC_ARCH/lib -lnetcdf -o $PETSC_DIR/$PETSC_ARCH/lib/libexoIIv2for.so forbind/src/*.o
-  [bourdin@head exodusii-5.22b]$ rm $PETSC_DIR/$PETSC_ARCH/lib/libexo*.a
+  [bourdin@head exodusii-5.22b]$ gcc -shared -L $PETSC_DIR/$PETSC_ARCH/lib -lnetcdf -o $MEF90_DIR/lib/$PETSC_ARCH/libexodus.so cbind/src/*.o
 
+  Use -dynamiclib and .dylib under mac OS
    
 ## Building vDef
 From there, it should be as simple as 
