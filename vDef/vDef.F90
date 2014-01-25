@@ -14,6 +14,7 @@ Program vDef
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
    Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
                                                          1,                             & ! verbose
+                                                         PETSC_FALSE,                   & ! helponly
                                                          MEF90TimeInterpolation_linear, & ! timeInterpolation
                                                          0.0_Kr,                        & ! timeMin
                                                          1.0_Kr,                        & ! timeMax
@@ -279,7 +280,8 @@ Program vDef
    !!!
    !!! Actual computations / time stepping
    !!!
-   If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
+   If ((MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) .AND. &
+       (.NOT. MEF90GlobalOptions%helponly)) Then
       step = 1
       mainloopQS: Do
          BTActive = PETSC_FALSE

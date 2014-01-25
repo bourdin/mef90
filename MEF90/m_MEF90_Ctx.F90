@@ -20,6 +20,7 @@ Module m_MEF90_Ctx_Type
    
    Type MEF90CtxGlobalOptions_Type
       PetscInt                                        :: verbose
+      PetscBool                                       :: helponly
       !Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
       !!! There seems to be an incompatibility between PetscBagRegisterString and intel fortran 13.0
       !!! Moving prefix to the context itself instead of the bag
@@ -81,7 +82,7 @@ Module m_MEF90_Ctx
          Use m_MEF90_Ctx_Type
          PetscBag                                     :: bag
          Type(MEF90CtxGlobalOptions_Type),pointer     :: data
-         PetscErrorCode                               :: ierr
+         PetscErrorCode,Intent(OUT)                   :: ierr
       End subroutine PetscBagGetData
    End interface
 
@@ -142,7 +143,7 @@ Contains
    Subroutine PetscBagGetDataMEF90CtxGlobalOptions(bag,data,ierr)
       PetscBag                                        :: bag
       Type(MEF90CtxGlobalOptions_Type),pointer        :: data
-      PetscErrorCode                                  :: ierr
+      PetscErrorCode,Intent(OUT)                      :: ierr
       
       Call PetscBagGetData(bag,data,ierr)
    End Subroutine PetscBagGetDataMEF90CtxGlobalOptions
@@ -167,6 +168,7 @@ Contains
       Call PetscBagSetName(bag,trim(name),"MEF90 Global options object",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%verbose,default%verbose,'verbose','Verbosity: level',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,MEF90CtxGlobalOptions%helponly,default%helponly,'helponly','Print help and quit when used in combination with -h',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%timeInterpolation,MEF90TimeInterpolationList,default%timeInterpolation,'time_interpolation','Time: interpolation type',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMin,default%timeMin,'time_min','Time: min',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
