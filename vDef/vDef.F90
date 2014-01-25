@@ -148,6 +148,7 @@ Program vDef
           
    PetscBool                                          :: flg
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+   Type(PetscViewer)                                  :: logViewer
    Integer                                            :: numfield
    
    Integer                                            :: step
@@ -535,7 +536,9 @@ Program vDef
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             STOP
          End Select
-         Call PetscLogView(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
+         Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90Ctx%prefix)//'.log',logViewer, ierr);CHKERRQ(ierr)
+         Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
+         Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
          If (step == MEF90GlobalOptions%timeNumStep) Then
             EXIT
          ElseIf (BTActive) Then
@@ -582,7 +585,9 @@ Program vDef
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)
 
-   Call PetscLogView(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
+   Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90Ctx%prefix)//'.log',logViewer, ierr);CHKERRQ(ierr)
+   Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
+   Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
    Call MEF90CtxDestroy(MEF90Ctx,ierr)
    Call MEF90Finalize(ierr)
    Call PetscFinalize(ierr)
