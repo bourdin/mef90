@@ -41,6 +41,7 @@ Contains
    
       Type(MEF90DefMechGlobalOptions_Type),pointer    :: MEF90DefMechGlobalOptions
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
+      Type(Vec)                                       :: localVec
 
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
@@ -71,8 +72,12 @@ Contains
       End If
       Select case (MEF90DefMechGlobalOptions%boundaryDisplacementScaling)
          Case (MEF90Scaling_File)
-            Call VecLoadExodusVertex(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+            Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+            Call VecLoadExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
                                      MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDisplacementOffset,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMVect,localVec,INSERT_VALUES,MEF90DefMechCtx%Displacement,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMVect,localVec,INSERT_VALUES,MEF90DefMechCtx%Displacement,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_Linear)
             Call MEF90DefMechSetboundaryDisplacementCst(MEF90DefMechCtx%boundaryDisplacement,MEF90DefMechCtx,ierr)
             Call VecScale(MEF90DefMechCtx%boundaryDisplacement,time,ierr);CHKERRQ(ierr)
@@ -81,8 +86,12 @@ Contains
       End Select
       Select case (MEF90DefMechGlobalOptions%boundaryDamageScaling)
          Case (MEF90Scaling_File)
-            Call VecLoadExodusVertex(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+            Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+            Call VecLoadExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
                                      MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDamageOffset,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
          Case (MEF90Scaling_CST)
             Call MEF90DefMechSetboundaryDamageCst(MEF90DefMechCtx%boundaryDamage,MEF90DefMechCtx,ierr)
          Case (MEF90Scaling_Linear)
