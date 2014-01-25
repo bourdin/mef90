@@ -31,6 +31,8 @@ def exoformat(e):
     for i in range(len(node_variable_name)):
         e.put_node_variable_name(node_variable_name[i],i+1)
     e.set_element_variable_number(len(element_variable_name))
+    for i in range(len(element_variable_name)):
+        e.put_element_variable_name(element_variable_name[i],i+1)
     return(0)
 
 def cart2polar(x, y):

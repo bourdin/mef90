@@ -11,11 +11,12 @@ Program HeatXfer
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
    Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
-                                                         1,             & ! verbose
-                                                         MEF90TimeInterpolation_linear, & ! timeInterpolation
-                                                         0.0_Kr,        & ! timeMin
-                                                         1.0_Kr,        & ! timeMax
-                                                         11,            & ! timeNumStep
+                                                         1,                               & ! verbose
+                                                         PETSC_FALSE,                     & ! helponly
+                                                         MEF90TimeInterpolation_linear,   & ! timeInterpolation
+                                                         0.0_Kr,                          & ! timeMin
+                                                         1.0_Kr,                          & ! timeMax
+                                                         11,                              & ! timeNumStep
                                                          MEF90FileFormat_EXOSingle) ! fileFormat
 
    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
