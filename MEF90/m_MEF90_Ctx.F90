@@ -11,7 +11,7 @@ Module m_MEF90_Ctx_Type
       MPI_Comm                                        :: comm
       MPI_Comm                                        :: IOcomm
       Integer                                         :: rank
-      Type(PetscViewer)                               :: logViewer
+      !Type(PetscViewer)                               :: logViewer
       !Type(PetscViewer)                               :: stdoutViewer
       Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
       Integer                                         :: fileExoUnit
@@ -203,7 +203,7 @@ Subroutine MEF90CtxCreate(comm,MEF90Ctx,default,ierr)
          STOP
          !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n",ierr)
       End If
-      Call PetscViewerASCIIOpen(comm,trim(MEF90Ctx%prefix)//'.log',MEF90Ctx%logViewer, ierr);CHKERRQ(ierr)
+      !Call PetscViewerASCIIOpen(comm,trim(MEF90Ctx%prefix)//'.log',MEF90Ctx%logViewer, ierr);CHKERRQ(ierr)
 
       Call PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
       Call PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr);CHKERRQ(ierr)
@@ -241,7 +241,7 @@ Subroutine MEF90CtxDestroy(MEF90Ctx,ierr)
    Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
    PetscErrorCode,Intent(OUT)                      :: ierr
 
-   Call PetscViewerDestroy(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
+   !Call PetscViewerDestroy(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
    Call PetscBagDestroy(MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
 End Subroutine MEF90CtxDestroy
 

@@ -53,6 +53,7 @@ Program HeatXfer
           
    PetscBool                                          :: flg
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+   Type(PetscViewer)                                  :: logViewer
    Integer                                            :: numfield
    
    Type(SNES)                                         :: snesTemp
@@ -207,7 +208,9 @@ Program HeatXfer
    DeAllocate(time)
    DeAllocate(energy)
    DeAllocate(work)
-   Call PetscLogView(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
+   Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90Ctx%prefix)//'.log',logViewer, ierr);CHKERRQ(ierr)
+   Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
+   Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)
    Call MEF90CtxDestroy(MEF90Ctx,ierr)
