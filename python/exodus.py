@@ -52,7 +52,7 @@ def getExodusVersion():
   Parse the exodusII.h header file and return the version number or 0 if not
   found.
   """
-  for line in open(getAccessPath() + '/include/exodusII.h'):
+  for line in open(os.path.join(os.environ.get('PETSC_DIR'),os.environ.get('PETSC_ARCH'),'include','exodusII.h')):
     fields = line.split()
     if (len(fields) == 3 and
         fields[0] == '#define' and
@@ -68,11 +68,11 @@ def getAccessPath():
   return accessPth
 
 if os.uname()[0] == 'Darwin':
-  NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libnetcdf.dylib")
-  EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libexodus.dylib")
-else:
-  NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libnetcdf.so")
-  EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib", "libexodus.so")
+  NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib","libnetcdf.dylib")
+  EXODUS_SO = os.path.join(os.getenv("MEF90_DIR"),"lib",os.getenv("PETSC_ARCH"), "libexodus.dylib")
+else:                                             
+  NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib","libnetcdf.so")
+  EXODUS_SO = os.path.join(os.getenv("MEF90_DIR"),"lib",os.getenv("PETSC_ARCH"), "libexodus.so")
 
 
 ###def findLibExoPath():
