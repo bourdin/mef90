@@ -14,7 +14,7 @@ Program vDef
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
    Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
                                                          1,                             & ! verbose
-                                                         PETSC_FALSE,                   & ! helponly
+                                                         PETSC_FALSE,                   & ! validate
                                                          MEF90TimeInterpolation_linear, & ! timeInterpolation
                                                          0.0_Kr,                        & ! timeMin
                                                          1.0_Kr,                        & ! timeMax
@@ -282,7 +282,7 @@ Program vDef
    !!! Actual computations / time stepping
    !!!
    If ((MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) .AND. &
-       (.NOT. MEF90GlobalOptions%helponly)) Then
+       (.NOT. MEF90GlobalOptions%dryrun)) Then
       step = 1
       mainloopQS: Do
          BTActive = PETSC_FALSE
@@ -371,7 +371,7 @@ Program vDef
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             STOP
          End Select
-
+         
          !!! Solve for displacement and damage
          Select case(MEF90DefMechGlobalOptions%mode)
          Case (MEF90DefMech_ModeQuasiStatic)
@@ -457,6 +457,9 @@ Program vDef
                End If
                If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
                   EXIT
+               End If
+               If (mod(AltMinIter,25) == 0) Then
+                  Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
                End If
             End Do AltMin
 

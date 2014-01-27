@@ -11,8 +11,6 @@ Module m_MEF90_Ctx_Type
       MPI_Comm                                        :: comm
       MPI_Comm                                        :: IOcomm
       Integer                                         :: rank
-      !Type(PetscViewer)                               :: logViewer
-      !Type(PetscViewer)                               :: stdoutViewer
       Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
       Integer                                         :: fileExoUnit
       PetscBag                                        :: GlobalOptionsBag      
@@ -20,7 +18,7 @@ Module m_MEF90_Ctx_Type
    
    Type MEF90CtxGlobalOptions_Type
       PetscInt                                        :: verbose
-      PetscBool                                       :: helponly
+      PetscBool                                       :: dryrun
       !Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
       !!! There seems to be an incompatibility between PetscBagRegisterString and intel fortran 13.0
       !!! Moving prefix to the context itself instead of the bag
@@ -168,7 +166,7 @@ Contains
       Call PetscBagSetName(bag,trim(name),"MEF90 Global options object",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%verbose,default%verbose,'verbose','Verbosity: level',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterBool(bag,MEF90CtxGlobalOptions%helponly,default%helponly,'helponly','Print help and quit when used in combination with -h',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,MEF90CtxGlobalOptions%dryrun,default%dryrun,'dryrun','Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%timeInterpolation,MEF90TimeInterpolationList,default%timeInterpolation,'time_interpolation','Time: interpolation type',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMin,default%timeMin,'time_min','Time: min',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
@@ -184,50 +182,49 @@ Contains
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine MEF90CtxCreate(comm,MEF90Ctx,default,ierr)
-      MPI_Comm,Intent(IN)                          :: comm
-      Type(MEF90Ctx_type),Intent(OUT)              :: MEF90Ctx
-      Type(MEF90CtxGlobalOptions_Type),Intent(IN)  :: default
-      PetscInt,Intent(OUT)                         :: ierr
+   Subroutine MEF90CtxCreate(comm,MEF90Ctx,default,ierr)
+         MPI_Comm,Intent(IN)                          :: comm
+         Type(MEF90Ctx_type),Intent(OUT)              :: MEF90Ctx
+         Type(MEF90CtxGlobalOptions_Type),Intent(IN)  :: default
+         PetscInt,Intent(OUT)                         :: ierr
        
-      Type(MEF90CtxGlobalOptions_Type),pointer     :: GlobalOptions
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-      PetscBool                                    :: flg
+         Type(MEF90CtxGlobalOptions_Type),pointer     :: GlobalOptions
+         Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+         PetscBool                                    :: flg
       
-      MEF90Ctx%comm = comm
-      Call MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr)
-      Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',MEF90Ctx%prefix,flg,ierr);CHKERRQ(ierr)
-      If (.NOT. flg) Then
-         Call PetscPrintf(PETSC_COMM_WORLD,"no file prefix given (-prefix)\n",ierr);CHKERRQ(ierr)
-         Call PetscFinalize(ierr)
-         STOP
-         !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n",ierr)
-      End If
-      !Call PetscViewerASCIIOpen(comm,trim(MEF90Ctx%prefix)//'.log',MEF90Ctx%logViewer, ierr);CHKERRQ(ierr)
+         MEF90Ctx%comm = comm
+         Call MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr)
+         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',MEF90Ctx%prefix,flg,ierr);CHKERRQ(ierr)
+         If (.NOT. flg) Then
+            Call PetscPrintf(PETSC_COMM_WORLD,"no file prefix given (-prefix)\n",ierr);CHKERRQ(ierr)
+            Call PetscFinalize(ierr)
+            STOP
+            !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n",ierr)
+         End If
 
-      Call PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr);CHKERRQ(ierr)
+         Call PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
+         Call PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr);CHKERRQ(ierr)
 
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
-      If (GlobalOptions%verbose > 0) Then
-         Write(IOBuffer,*) 'MEF90 Global Context: \n'
-         Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
-         Write(IOBuffer,100) trim(MEF90Ctx%prefix)
-         Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
-         Write(IOBuffer,102) trim(MEF90Ctx%prefix)//'.log'
-         Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
-         Call PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-         Call PetscPrintf(comm,"\n",ierr);CHKERRQ(ierr)
-      End If
-      If (GlobalOptions%fileformat == MEF90FileFormat_EXOSingle) Then
-         MEF90Ctx%IOComm = MEF90Ctx%comm
-      Else
-         MEF90Ctx%IOComm = PETSC_COMM_SELF
-      End If   
-      MEF90Ctx%fileexounit = 0
-   100 Format('  prefix:       ',(A),'\n')
-   102 Format('  log file:     ',(A),'\n')
-End Subroutine MEF90CtxCreate
+         Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+         If (GlobalOptions%verbose > 0) Then
+            Write(IOBuffer,*) 'MEF90 Global Context: \n'
+            Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,100) trim(MEF90Ctx%prefix)
+            Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,102) trim(MEF90Ctx%prefix)//'.log'
+            Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+            Call PetscPrintf(comm,"\n",ierr);CHKERRQ(ierr)
+         End If
+         If (GlobalOptions%fileformat == MEF90FileFormat_EXOSingle) Then
+            MEF90Ctx%IOComm = MEF90Ctx%comm
+         Else
+            MEF90Ctx%IOComm = PETSC_COMM_SELF
+         End If   
+         MEF90Ctx%fileexounit = 0
+      100 Format('  prefix:       ',(A),'\n')
+      102 Format('  log file:     ',(A),'\n')
+   End Subroutine MEF90CtxCreate
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxDestroy"
@@ -237,13 +234,18 @@ End Subroutine MEF90CtxCreate
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-Subroutine MEF90CtxDestroy(MEF90Ctx,ierr)
-   Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
-   PetscErrorCode,Intent(OUT)                      :: ierr
+   Subroutine MEF90CtxDestroy(MEF90Ctx,ierr)
+      Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
+      PetscErrorCode,Intent(OUT)                      :: ierr
 
-   !Call PetscViewerDestroy(MEF90Ctx%logViewer,ierr);CHKERRQ(ierr)
-   Call PetscBagDestroy(MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
-End Subroutine MEF90CtxDestroy
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      If (GlobalOptions%dryrun) Then
+         Call PetscOptionsLeft(ierr);CHKERRQ(ierr)
+      End If
+      Call PetscBagDestroy(MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90CtxDestroy
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxGetTime"

@@ -12,7 +12,7 @@ Program HeatXfer
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
    Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
                                                          1,                               & ! verbose
-                                                         PETSC_FALSE,                     & ! helponly
+                                                         PETSC_FALSE,                     & ! dryrun
                                                          MEF90TimeInterpolation_linear,   & ! timeInterpolation
                                                          0.0_Kr,                          & ! timeMin
                                                          1.0_Kr,                          & ! timeMax
