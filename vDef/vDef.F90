@@ -396,7 +396,7 @@ Program vDef
                End If
                
                Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-!!!               Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+               Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
                Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
                If (snesDamageConvergedReason < 0) Then
                   Write(IOBuffer,400) "damage field",snesDamageConvergedReason
@@ -538,7 +538,6 @@ Program vDef
          !!!
          !!! Save results and boundary Values
          !!!
-   Write(*,*) 'saving fields for step: ', step
          Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
          !!!
          !!! Save performance log file
