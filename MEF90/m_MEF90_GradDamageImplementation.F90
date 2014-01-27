@@ -242,10 +242,11 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDispInelasticStrainRHSSetCell(RHS,mesh,meshMatS,meshScal,e0,alpha,eta,cellIS,elem,elemType,elemScal,elemScalType,ierr)
+   Subroutine MEF90GradDamageDispInelasticStrainRHSSetCell(RHS,mesh,meshMatS,meshScal,e0,HookesLaw,alpha,eta,cellIS,elem,elemType,elemScal,elemScalType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh,meshMatS,meshScal
       Type(SectionReal),Intent(IN)                       :: e0
+      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
       Type(SectionReal),Intent(IN)                       :: alpha
       PetscReal,Intent(IN)                               :: eta
       Type(IS),Intent(IN)                                :: cellIS
@@ -280,7 +281,7 @@ Contains
                e0_elem = e0_loc
                Do iDoF1 = 1,elemType%numDof
                   RHSloc(iDoF1) = RHSloc(iDoF1) - elem(cell)%Gauss_C(iGauss) * SalphaElem * &
-                                 (elem(cell)%GradS_BF(iDoF1,iGauss) .DotP. e0_elem)
+                                 (elem(cell)%GradS_BF(iDoF1,iGauss) .DotP. (HookesLaw * e0_elem))
                End Do
             End Do
             Call SectionRealRestore(e0,cellID(cell),e0_loc,ierr);CHKERRQ(ierr)

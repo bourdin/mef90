@@ -287,10 +287,11 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine ElasticityInelasticStrainRHSSetCell(RHS,mesh,meshMatS,e0,cellIS,elem,elemType,ierr)
+   Subroutine ElasticityInelasticStrainRHSSetCell(RHS,mesh,meshMatS,e0,HookesLaw,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh,meshMatS
       Type(SectionReal),Intent(IN)                       :: e0
+      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
       Type(MEF90Element_Type),Intent(IN)                 :: elemType
@@ -314,7 +315,7 @@ Contains
                e0_elem = e0_loc
                Do iDoF1 = 1,elemType%numDof
                   RHSloc(iDoF1) = RHSloc(iDoF1) - elem(cell)%Gauss_C(iGauss) * &
-                                 (elem(cell)%GradS_BF(iDoF1,iGauss) .DotP. e0_elem)
+                                 (elem(cell)%GradS_BF(iDoF1,iGauss) .DotP. (HookesLaw * e0_elem))
                End Do
             End Do
             Call SectionRealRestore(e0,cellID(cell),e0_loc,ierr);CHKERRQ(ierr)

@@ -396,7 +396,7 @@ Program vDef
                End If
                
                Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-               Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+!!!               Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
                Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
                If (snesDamageConvergedReason < 0) Then
                   Write(IOBuffer,400) "damage field",snesDamageConvergedReason
@@ -497,10 +497,6 @@ Program vDef
                Write(IOBuffer,500) step,time(step),elasticEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step)
                Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
                Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
-               !!!
-               !!! Save results and boundary Values
-               !!!
-               Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
 
                !!!
                !!! Check for a BT step
@@ -539,9 +535,18 @@ Program vDef
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             STOP
          End Select
+         !!!
+         !!! Save results and boundary Values
+         !!!
+   Write(*,*) 'saving fields for step: ', step
+         Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+         !!!
+         !!! Save performance log file
+         !!!
          Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90Ctx%prefix)//'.log',logViewer, ierr);CHKERRQ(ierr)
          Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
          Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
+
          If (step == MEF90GlobalOptions%timeNumStep) Then
             EXIT
          ElseIf (BTActive) Then
