@@ -138,11 +138,11 @@ Contains
             Call MEF90ElasticityOperatorSet(residualSec,mesh,xSec,setIS,matPropSet%HookesLaw,elemDisplacement,elemDisplacementType,ierr);CHKERRQ(ierr)
             !!! temperature
             If (Associated(MEF90DefMechCtx%temperature)) Then
-               Call MEF90ElasticityInelasticStrainRHSSetVertex(residualSec,MEF90DefMechCtx%DM,MEF90DefMechCtx%DMScal,temperatureSec,matPropSet%LinearThermalExpansion,setIS,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
+               Call MEF90ElasticityInelasticStrainRHSSetVertex(residualSec,MEF90DefMechCtx%DM,MEF90DefMechCtx%DMScal,temperatureSec,matPropSet%HookesLaw*matPropSet%LinearThermalExpansion,setIS,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
             End If
             !!! plastic Strain
             If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-               Call MEF90ElasticityInelasticStrainRHSSetCell(residualSec,MEF90DefMechCtx%DM,MEF90DefMechCtx%CellDMMatS,plasticStrainSec,setIS,elemDisplacement,elemDisplacementType,ierr)
+               Call MEF90ElasticityInelasticStrainRHSSetCell(residualSec,MEF90DefMechCtx%DM,MEF90DefMechCtx%CellDMMatS,plasticStrainSec,matPropSet%HookesLaw,setIS,elemDisplacement,elemDisplacementType,ierr)
             End If
             !!! Force
             Call MEF90ElasticityForceRHSSetCell(residualSec,mesh,forceSec,setIS,elemDisplacement,elemDisplacementType,ierr);CHKERRQ(ierr)
@@ -165,11 +165,11 @@ Contains
             Call MEF90GradDamageDispOperatorSet(residualSec,mesh,MEF90DefMechCtx%DMScal,xSec,damageSec,cellSetOptions%residualStiffness,setIS,matPropSet%HookesLaw,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
             !!! temperature
             If (Associated(MEF90DefMechCtx%temperature)) Then
-               Call MEF90GradDamageDispInelasticStrainRHSSetVertex(residualSec,mesh,MEF90DefMechCtx%DMScal,temperatureSec,matPropSet%LinearThermalExpansion,damageSec,cellSetOptions%residualStiffness,setIS,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
+               Call MEF90GradDamageDispInelasticStrainRHSSetVertex(residualSec,mesh,MEF90DefMechCtx%DMScal,temperatureSec,matPropSet%HookesLaw*matPropSet%LinearThermalExpansion,damageSec,cellSetOptions%residualStiffness,setIS,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
             End If
             !!! plastic Strain
             If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-               Call MEF90GradDamageDispInelasticStrainRHSSetCell(residualSec,MEF90DefMechCtx%DM,MEF90DefMechCtx%CellDMMatS,MEF90DefMechCtx%DMScal,plasticStrainSec,damageSec,cellSetOptions%residualStiffness,setIS,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
+               Call MEF90GradDamageDispInelasticStrainRHSSetCell(residualSec,MEF90DefMechCtx%DM,MEF90DefMechCtx%CellDMMatS,MEF90DefMechCtx%DMScal,plasticStrainSec,matPropSet%HookesLaw,damageSec,cellSetOptions%residualStiffness,setIS,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
             End If
             !!! Force
             Call MEF90ElasticityForceRHSSetCell(residualSec,mesh,forceSec,setIS,elemDisplacement,elemDisplacementType,ierr);CHKERRQ(ierr)

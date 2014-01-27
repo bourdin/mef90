@@ -959,18 +959,19 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          !rtol = 1.0D-10
          !Call SNESSetTolerances(snesDisp,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call SNESSetFromOptions(snesDisp,ierr);CHKERRQ(ierr)
+
+         !!! 
+         !!! Set some KSP options
+         !!!
+         Call SNESGetKSP(snesDisp,kspDisp,ierr);CHKERRQ(ierr)
+         Call KSPSetType(kspDisp,KSPCG,ierr);CHKERRQ(ierr)
+         Call KSPSetInitialGuessNonzero(kspDisp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+         rtol = 1.0D-8
+         atol = 1.0D-8
+         dtol = 1.0D+10
+         Call KSPSetTolerances(kspDisp,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+         Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)
       End If
-      !!! 
-      !!! Set some KSP options
-      !!!
-      Call SNESGetKSP(snesDisp,kspDisp,ierr);CHKERRQ(ierr)
-      Call KSPSetType(kspDisp,KSPCG,ierr);CHKERRQ(ierr)
-      Call KSPSetInitialGuessNonzero(kspDisp,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      rtol = 1.0D-8
-      atol = 1.0D-8
-      dtol = 1.0D+10
-      Call KSPSetTolerances(kspDisp,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
-      Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)
 
       !!! set coordinates in PC for GAMG
       !!! For some reason, this makes gamg convergence worse, when the null space is specified.
@@ -1044,18 +1045,19 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          !rtol = 1.0D-10
          Call SNESSetTolerances(snesDamage,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call SNESSetFromOptions(snesDamage,ierr);CHKERRQ(ierr)
+
+         !!! 
+         !!! Set some KSP options
+         !!!
+         Call SNESGetKSP(snesDamage,kspDamage,ierr);CHKERRQ(ierr)
+         Call KSPSetType(kspDamage,KSPCG,ierr);CHKERRQ(ierr)
+         Call KSPSetInitialGuessNonzero(kspDamage,PETSC_TRUE,ierr);CHKERRQ(ierr)
+         rtol = 1.0D-8
+         atol = 1.0D-8
+         dtol = 1.0D+10
+         Call KSPSetTolerances(kspDamage,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+         Call KSPSetFromOptions(kspDamage,ierr);CHKERRQ(ierr)
       End If
-      !!! 
-      !!! Set some KSP options
-      !!!
-      Call SNESGetKSP(snesDamage,kspDamage,ierr);CHKERRQ(ierr)
-      Call KSPSetType(kspDamage,KSPCG,ierr);CHKERRQ(ierr)
-      Call KSPSetInitialGuessNonzero(kspDamage,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      rtol = 1.0D-8
-      atol = 1.0D-8
-      dtol = 1.0D+10
-      Call KSPSetTolerances(kspDamage,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
-      Call KSPSetFromOptions(kspDamage,ierr);CHKERRQ(ierr)
       
 
       !!! set coordinates in PC for GAMG
