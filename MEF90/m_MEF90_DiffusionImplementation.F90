@@ -276,7 +276,6 @@ Contains
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
-         !Allocate(Floc(1))
          Allocate(RHSloc(elemType%numDof))
          Do cell = 1,size(cellID)      
             RHSloc = 0.0_Kr
@@ -360,7 +359,6 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
-         !Allocate(x0loc(1))
          Do cell = 1,size(cellID)   
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
             Call SectionRealRestrict(x0,cellID(cell),x0loc,ierr);CHKERRQ(ierr)
@@ -381,7 +379,6 @@ Contains
          !flops = (2 * elemType%numDof + 6) * size(elem(1)%Gauss_C) * size(cellID) 
          !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
-         !DeAllocate(X0loc)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionEnergySet

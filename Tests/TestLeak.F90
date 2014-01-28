@@ -1,0 +1,57 @@
+Program TestNSP
+#include "finclude/petscdef.h"
+   Use m_MEF90
+   Use petsc
+   Implicit NONE   
+
+   PetscErrorCode                      :: ierr
+   Type(DM),target                     :: Mesh,MeshClone
+   Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+   Type(SectionReal)                   :: defaultSection,copySection
+   PetscBool                           :: flg
+   PetscInt                            :: i,dim
+   PetscReal                           :: val
+   Type(MEF90Ctx_Type)                 :: MEF90Ctx
+   Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
+   Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
+                                                         1,                             & ! verbose
+                                                         PETSC_FALSE,                   & ! validate
+                                                         MEF90TimeInterpolation_linear, & ! timeInterpolation
+                                                         0.0_Kr,                        & ! timeMin
+                                                         1.0_Kr,                        & ! timeMax
+                                                         11,                            & ! timeNumStep
+                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
+
+
+
+   !!! Initialize MEF90
+   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+   Call MEF90Initialize(ierr)
+
+   !!! Get all MEF90-wide options
+   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr);CHKERRQ(ierr)
+
+   !!! Get DM from mesh
+   Call MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
+   Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
+   Call DMSetBlockSize(Mesh,dim,ierr);CHKERRQ(ierr)
+   Call DMMeshSetMaxDof(Mesh,dim,ierr);CHKERRQ(ierr) 
+   Call DMMeshGetVertexSectionReal(Mesh,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(Mesh,"default",defaultSection,ierr);CHKERRQ(ierr)
+   !!!Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+
+   Do 
+      Call DMMeshGetSectionReal(Mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(defaultSection,copySection,ierr);CHKERRQ(ierr)
+      val = i + 1.234
+      Call SectionRealSet(defaultSection,val,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(copySection,ierr);CHKERRQ(ierr)
+   End Do
+
+
+   Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
+   Call MEF90CtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)   
+   Call MEF90Finalize(ierr)
+   Call PetscFinalize()
+End Program TestNSP
