@@ -263,7 +263,6 @@ Contains
       
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       End If
 
       If (Associated(MEF90DefMechCtx%pressureForce)) Then
@@ -273,7 +272,6 @@ Contains
       
       If (Associated(MEF90DefMechCtx%damage)) Then
          Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
-         Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       End If
       
       Call SectionRealDestroy(forceSec,ierr);CHKERRQ(ierr)
@@ -281,6 +279,7 @@ Contains
       Call SectionRealDestroy(residualSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
 
+      Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)      
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDisplacement
@@ -397,6 +396,8 @@ Contains
                Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
                Call DMMeshISCreateISglobaldof(mesh,setIS,c-1,setISdof,ierr);CHKERRQ(ierr)
                Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
+               Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
+               Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
             End If
          End Do
       End Do
@@ -484,6 +485,8 @@ Contains
          Call MPI_AllReduce(MPI_IN_PLACE,myWork,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
          work(set) = work(set) + mywork
       End Do ! set
+      Call ISrestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
@@ -612,8 +615,15 @@ Contains
 
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
-         Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       End If
+      
+      If (Associated(MEF90DefMechCtx%damage)) Then
+         Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
+      End If
+      
+      Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
    End Subroutine MEF90DefMechElasticEnergy
 
 #undef __FUNCT__
@@ -828,7 +838,6 @@ Contains
       
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       End If
 
       Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
@@ -838,9 +847,6 @@ Contains
 
       Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)      
       Call VecScatterDestroy(ScatterSecToVecVect,ierr);CHKERRQ(ierr)   
-      If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-         Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
-      End If
    End Subroutine MEF90DefMechOperatorDamage
 
 
@@ -963,15 +969,15 @@ Contains
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call MEF90ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,bcIS,ierr)
          If (cellSetOptions%Has_damageBC) Then
+            Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+            Call MEF90ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,bcIS,ierr)
             Call DMMeshISCreateISglobaldof(mesh,bcIS,0,setISdof,ierr);CHKERRQ(ierr)
             Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
             Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
+            Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If ! cellSetOptions%Has_damageBC
-         Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
-         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do     
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -988,6 +994,8 @@ Contains
             Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
             Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If
       End Do
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -1074,6 +1082,9 @@ Contains
          Call MPI_AllReduce(MPI_IN_PLACE,myenergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
          energy(set) = energy(set) + myenergy
       End Do ! set
+
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
 
       Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
