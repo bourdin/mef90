@@ -479,6 +479,7 @@ Contains
          If ((globalOptions%pressureForceScaling /= MEF90Scaling_Null) .AND. (elemDisplacementType%coDim > 0)) Then
             Call MEF90ElasticityPressureWorkSetCell(mywork,xSec,MEF90DefMechCtx%CellDMVect,pressureForceSec,setIS,elemDisplacement,elemDisplacementType,ierr)
          End If
+         
          Call MEF90Element_Destroy(elemDisplacement,ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
@@ -487,12 +488,13 @@ Contains
       End Do ! set
       Call ISrestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+
       Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(pressureForceSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(forceSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(forceSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(pressureForceSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechWork   
 
 #undef __FUNCT__
@@ -530,10 +532,6 @@ Contains
       !!! Scatter data from Vec to Sec, or initialize
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr) 
 
-      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
          Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
@@ -562,6 +560,9 @@ Contains
          damageSec%v = 0
       End If
 
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)      
       Do set = 1,size(setID)
          myenergy = 0.0_Kr
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
@@ -605,25 +606,21 @@ Contains
          Call MPI_AllReduce(MPI_IN_PLACE,myenergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
          energy(set) = energy(set) + myenergy
       End Do ! set
-
-      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      If (Associated(MEF90DefMechCtx%damage)) Then
+         Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
+      End If
+      Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+      If (Associated(MEF90DefMechCtx%temperature)) Then
+         Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
+      End If
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
          Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
          Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)                   
       End If
-
-      If (Associated(MEF90DefMechCtx%temperature)) Then
-         Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
-      End If
-      
-      If (Associated(MEF90DefMechCtx%damage)) Then
-         Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
-      End If
-      
-      Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechElasticEnergy
 
 #undef __FUNCT__
@@ -832,21 +829,18 @@ Contains
       Call VecAssemblyEnd(residual,ierr)
 
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-         Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
          Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)      
+         Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
       End If
-      
+      Call VecScatterDestroy(ScatterSecToVecVect,ierr);CHKERRQ(ierr)   
+      Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
       End If
-
-      Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(boundaryDamageSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(residualSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
-
       Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)      
-      Call VecScatterDestroy(ScatterSecToVecVect,ierr);CHKERRQ(ierr)   
+      Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDamage
 
 
@@ -1001,17 +995,16 @@ Contains
       Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
       
-      Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(ScatterSecToVecVect,ierr);CHKERRQ(ierr)
-      If (temperatureSec%v /= 0) Then
-         Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
-         Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-      End If
       If (plasticStrainSec%v /= 0) Then
-         Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
          Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+         Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
       End If
-      
+      Call VecScatterDestroy(ScatterSecToVecVect,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)      
+      If (temperatureSec%v /= 0) Then
+         Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+         Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
+      End If
       flg = SAME_NONZERO_PATTERN
    End Subroutine MEF90DefMechBilinearFormDamage
    
@@ -1052,7 +1045,6 @@ Contains
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      
       Do set = 1,size(setID)
          myenergy = 0.0_Kr
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
@@ -1082,11 +1074,10 @@ Contains
          Call MPI_AllReduce(MPI_IN_PLACE,myenergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
          energy(set) = energy(set) + myenergy
       End Do ! set
-
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
 
-      Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSurfaceEnergy
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D

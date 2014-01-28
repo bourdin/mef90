@@ -122,6 +122,7 @@ Contains
          DeAllocate(MatElem)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityBilinearFormSet
 
 #undef __FUNCT__
@@ -814,6 +815,7 @@ Contains
                End Do
                work = work + elem(cell)%Gauss_C(iGauss) * (xelem .DotP. fVect)
             End Do
+            Call SectionRealRestore(f,cellID(cell),floc,ierr);CHKERRQ(ierr)
          End Do
       
          !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
@@ -912,6 +914,7 @@ Contains
                End Do
                work = work + ploc(1) * elem(cell)%Gauss_C(iGauss) * (xelem .DotP. elem(cell)%OuterNormal)
             End Do
+            Call SectionRealRestore(P,cellID(cell),ploc,ierr);CHKERRQ(ierr)
          End Do
       
          !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 

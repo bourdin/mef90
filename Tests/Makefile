@@ -48,6 +48,14 @@ TestNSP: TestNSP.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
+TestLeak.o: ${MEF90_DIR}/Tests/TestLeak.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestLeak: TestLeak.o
+	-@echo "      $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
 HookeLaws.o: ${MEF90_DIR}/Tests/HookeLaws.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 

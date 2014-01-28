@@ -285,8 +285,8 @@ Contains
                                  (elem(cell)%GradS_BF(iDoF1,iGauss) .DotP. (HookesLaw * e0_elem))
                End Do
             End Do
-            Call SectionRealRestore(e0,cellID(cell),e0_loc,ierr);CHKERRQ(ierr)
             Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+            Call SectionRealRestore(e0,cellID(cell),e0_loc,ierr);CHKERRQ(ierr)
          End Do
          DeAllocate(alphaloc)
          DeAllocate(RHSloc)
