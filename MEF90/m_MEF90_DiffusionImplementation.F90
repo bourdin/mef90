@@ -360,7 +360,7 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
-         Allocate(x0loc(1))
+         !Allocate(x0loc(1))
          Do cell = 1,size(cellID)   
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
             Call SectionRealRestrict(x0,cellID(cell),x0loc,ierr);CHKERRQ(ierr)
@@ -375,11 +375,13 @@ Contains
                stress = A * strain
                energy = energy + elem(cell)%Gauss_C(iGauss) * ( (stress .dotP. strain) + lambda * xelem **2) *.5_Kr
             End Do
+            Call SectionRealRestore(x0,cellID(cell),x0loc,ierr);CHKERRQ(ierr)
          End Do      
          
          !flops = (2 * elemType%numDof + 6) * size(elem(1)%Gauss_C) * size(cellID) 
          !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
+         !DeAllocate(X0loc)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionEnergySet
@@ -461,6 +463,7 @@ Contains
                End Do
                work = work + elem(cell)%Gauss_C(iGauss) * xelem * Floc(1)
             End Do
+            Call SectionRealRestore(f,cellID(cell),floc,ierr);CHKERRQ(ierr)
          End Do
       
          flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
