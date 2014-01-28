@@ -100,6 +100,7 @@ Contains
          DeAllocate(MatElem)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDispBilinearFormSet
    
 #undef __FUNCT__
@@ -435,6 +436,7 @@ Contains
          DeAllocate(MatElem)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDamageBilinearFormSetAT1Elastic
 
 #undef __FUNCT__
@@ -635,6 +637,7 @@ Contains
          DeAllocate(MatElem)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDamageBilinearFormSetAT1
 
 #undef __FUNCT__
@@ -936,6 +939,7 @@ Contains
          DeAllocate(MatElem)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDamageBilinearFormSetAT2Elastic
 
 #undef __FUNCT__
@@ -1090,6 +1094,7 @@ Contains
          DeAllocate(MatElem)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDamageBilinearFormSetAT2
 
 #undef __FUNCT__

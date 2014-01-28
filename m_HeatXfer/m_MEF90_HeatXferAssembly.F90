@@ -352,11 +352,11 @@ Contains
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
       
-      Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(externalTemperatureSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(fluxSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXFerEnergy
 
 #undef __FUNCT__
