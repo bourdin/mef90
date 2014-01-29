@@ -10,8 +10,4 @@ diff -r ec5e51fd886c src/dm/impls/mesh/section.c
    if (--((PetscObject)(*section))->refct > 0) PetscFunctionReturn(0);
    ierr = PetscHeaderDestroy(section);CHKERRQ(ierr);
    PetscFunctionReturn(0);
-@@ -2050,3 +2052,55 @@
-   }
-   PetscFunctionReturn(0);
- }
 
