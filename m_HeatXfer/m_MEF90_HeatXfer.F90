@@ -513,6 +513,9 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
                                   MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
          End If
       Call DMRestoreLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferCtx%MEF90Ctx%rank == 0) Then
+         Call EXUPDA(MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,ierr)
+      End If
    End Subroutine MEF90HeatXferViewEXO
 
 #undef __FUNCT__

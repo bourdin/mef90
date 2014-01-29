@@ -784,6 +784,9 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
                                 MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%plasticStrainOffset,ierr);CHKERRQ(ierr)
          Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
       End If
+      If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
+         Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
+      End If
    End Subroutine MEF90DefMechViewEXO
    
 #undef __FUNCT__
