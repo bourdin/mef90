@@ -3,16 +3,19 @@ Solving steady state step    1, t= 0.00000E+00
 cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   30 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 Solving steady state step    2, t= 5.00000E-01 
   Linear solve converged due to CONVERGED_RTOL iterations 26
 cell set    1 thermal energy:  4.15917E-02 fluxes work:  8.31834E-02 total: -4.15917E-02 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   30 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  4.15917E-02 fluxes work:  8.31834E-02 total: -4.15917E-02 
 Solving steady state step    3, t= 1.00000E+00 
-  Linear solve converged due to CONVERGED_RTOL iterations 1
+  Linear solve converged due to CONVERGED_RTOL iterations 0
 cell set    1 thermal energy:  1.66367E-01 fluxes work:  3.32734E-01 total: -1.66367E-01 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   30 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  1.66367E-01 fluxes work:  3.32734E-01 total: -1.66367E-01 

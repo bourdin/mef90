@@ -5,7 +5,7 @@ cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 Solving steady state step    2, t= 5.00000E-01 
-  Linear solve converged due to CONVERGED_RTOL iterations 18
+  Linear solve converged due to CONVERGED_RTOL iterations 19
 cell set    1 thermal energy:  1.25000E-01 fluxes work:  0.00000E+00 total:  1.25000E-01 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 

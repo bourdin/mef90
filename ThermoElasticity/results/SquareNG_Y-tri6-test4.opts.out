@@ -1,14 +1,16 @@
 Solving steady state step    1, t= 5.00000E-01 
-  Linear solve converged due to CONVERGED_ATOL iterations 95
+  Linear solve converged due to CONVERGED_ATOL iterations 96
  SNESConvergedReason returned            5 
 cell set    1 elastic energy:  1.23452E-01 work:  0.00000E+00 total:  1.23452E-01 
 cell set   10 elastic energy:  0.00000E+00 work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 elastic energy:  0.00000E+00 work:  2.46905E-01 total: -2.46905E-01 
+cell set   30 elastic energy:  0.00000E+00 work:  0.00000E+00 total:  0.00000E+00 
 ======= Total elastic energy:  1.23452E-01 work:  2.46905E-01 total: -1.23452E-01 
 Solving steady state step    2, t= 1.00000E+00 
-  Linear solve converged due to CONVERGED_ATOL iterations 2
+  Linear solve converged due to CONVERGED_ATOL iterations 1
  SNESConvergedReason returned            5 
 cell set    1 elastic energy:  4.93810E-01 work:  0.00000E+00 total:  4.93810E-01 
 cell set   10 elastic energy:  0.00000E+00 work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 elastic energy:  0.00000E+00 work:  9.87620E-01 total: -9.87620E-01 
+cell set   30 elastic energy:  0.00000E+00 work:  0.00000E+00 total:  0.00000E+00 
 ======= Total elastic energy:  4.93810E-01 work:  9.87620E-01 total: -4.93810E-01 
