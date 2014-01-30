@@ -281,8 +281,7 @@ Program vDef
    !!!
    !!! Actual computations / time stepping
    !!!
-   If ((MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) .AND. &
-       (.NOT. MEF90GlobalOptions%dryrun)) Then
+   If (.NOT. MEF90GlobalOptions%dryrun) Then
       step = 1
       mainloopQS: Do
          BTActive = PETSC_FALSE
