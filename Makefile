@@ -47,4 +47,7 @@ bin/${PETSC_ARCH}:
 clean:
 	-@rm -Rf objs/${PETSC_ARCH}
 	-@rm -Rf bin/${PETSC_ARCH}
-
+	-@make -C HeatXfer testclean
+	-@make -C ThermoElasticity testclean
+	-@make -C vDef testclean
+	-@make -C Tests clean
