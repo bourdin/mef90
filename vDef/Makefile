@@ -3,22 +3,16 @@ all:
 	-@make -C ${MEF90_DIR} vDef
 test: test2D test3D
 test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/vDef
-	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
-	make -s testvDef PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testvDef PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testvDef PREFIX=SquareNG_Y-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testvDef PREFIX=SquareNG_Y-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	-@for OPTIONSFILE in test7.yaml test8.yaml; do \
+	make -s testvDef PREFIX=Beam1x10-tri3 OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testvDef PREFIX=Beam1x10-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 test3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/vDef
-	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
-	make -s testvDef PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testvDef PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testvDef PREFIX=CubeNG_Y-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testvDef PREFIX=CubeNG_Y-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testvDef PREFIX=CubeNG_Z-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testvDef PREFIX=CubeNG_Z-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
+	-@for OPTIONSFILE in test7.yaml test8.yaml; do \
+	make -s testvDef PREFIX=Beam1x10-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	done
+	#make -s testvDef PREFIX=Beam1x10-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
@@ -41,7 +35,7 @@ vDef.o: ${BASE_DIR}/vDef.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 
 testvDef:
 	@echo ;echo "Testing vDef with $${PREFIX} $${OPTIONSFILE}"
-	@ARGS="-prefix data/$${PREFIX} -options_file data/$${OPTIONSFILE}";\
+	@ARGS="-prefix data/$${PREFIX} -options_file_yaml data/$${OPTIONSFILE}";\
 	${MPIEXEC} -n ${NP} ${MEF90_DIR}/bin/${PETSC_ARCH}/vDef $${ARGS} | grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/vDef/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
 	else echo "Possible problem. Diffs above"; fi
@@ -53,7 +47,7 @@ m_DEFMECH:
 	make -C ${MEF90_DIR} m_DEFMECH
 	
 testclean::
-	-@rm -f data/*out.gen data/*log
+	-@rm -f data/*out.gen data/*log data/*ener*
 
 allclean: testclean
 	make -C ${MEF90_DIR} clean

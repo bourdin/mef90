@@ -53,7 +53,7 @@ m_DEFMECH:
 	make -C ${MEF90_DIR} m_DEFMECH
 	
 testclean::
-	-@rm -f data/*out.gen data/*log
+	-@rm -f data/*out.gen data/*log data/*ener*
 
 allclean: testclean
 	make -C ${MEF90_DIR} clean
