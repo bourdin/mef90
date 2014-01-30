@@ -94,8 +94,8 @@ Contains
             End Do
             Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do
-         !flops = 5 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = (3 * elemType%numDof**2 + 2 * elemType%numDof + 3) * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(alphaLoc)
          DeAllocate(MatElem)
       End If   
@@ -162,8 +162,8 @@ Contains
          DeAllocate(Gloc)
          DeAllocate(Uloc)
          DeAllocate(alphaLoc)
-         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = (5 * elemType%numDof + 3) * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDispOperatorSet
@@ -215,7 +215,7 @@ Contains
                SalphaElem = eta + (1.0_Kr - alphaElem)**2
                e0elem = 0.0_Kr
                Do iDoF1 = 1,elemScalType%numDof
-                  e0elem = e0elem + (e0loc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss))
+                  e0elem = e0elem + e0loc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
                End Do
                Do iDoF1 = 1,elemType%numDof
                   RHSloc(iDoF1) = RHSloc(iDoF1) - elem(cell)%Gauss_C(iGauss) * SalphaElem * &
@@ -228,8 +228,8 @@ Contains
          DeAllocate(RHSloc)
          DeAllocate(e0loc)
          DeAllocate(alphaloc)
-         !flops = 5 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = (7 * elemType%numDof + 3) * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDispInelasticStrainRHSSetVertex2
@@ -290,8 +290,8 @@ Contains
          End Do
          DeAllocate(alphaloc)
          DeAllocate(RHSloc)
-         !flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = (5 * elemType%numDof + 3) * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDispInelasticStrainRHSSetCell
@@ -377,8 +377,14 @@ Contains
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
             End If
          End Do ! cell
-         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = 7 * size(elemDisplacement(1)%Gauss_C) * size(cellID) 
+         If (alpha%v /= 0) Then
+            flops = flops + 2 * elemScalType%numDof * size(elemScal(1)%Gauss_C) * size(cellID) 
+         End If
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemScalType%numDof * size(elemScal(1)%Gauss_C) * size(cellID) 
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(temperatureloc)
          DeAllocate(alphaloc)
@@ -412,7 +418,6 @@ Contains
       PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
 
-      !C1 = FractureToughness / internalLength * .75_Kr 
       C2 = FractureToughness * internalLength * .75_Kr
 
       Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
@@ -431,8 +436,8 @@ Contains
             End Do
             Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do ! cell
-         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = 3 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(MatElem)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
@@ -484,14 +489,14 @@ Contains
                End Do
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                  ( C2 * (elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. gradAlphaElem)
+                                  C2 * (elem(cell)%Grad_BF(iDoF1,iGauss) .DotP. gradAlphaElem)
                End Do
             End Do ! iGauss
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do ! cell
       
-         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(Gloc)
          DeAllocate(alphaLoc)
       End If   
@@ -541,8 +546,8 @@ Contains
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do ! cell
       
-         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = (3 * elemType%numDof + 1) * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(Gloc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -581,7 +586,6 @@ Contains
       PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
 
-      !C1 = FractureToughness / internalLength * .75_Kr 
       C2 = FractureToughness * internalLength * .75_Kr
 
       Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
@@ -630,8 +634,11 @@ Contains
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
             End If
          End Do ! cell
-         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = 6 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID)
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(displacementloc)
          DeAllocate(temperatureloc)
          DeAllocate(MatElem)
@@ -725,7 +732,7 @@ Contains
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
                                  ((strainElem .dotP. stressElem) * elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
-                                  ( C2 * (elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. gradAlphaElem))
+                                  ( C2 * (elem(cell)%Grad_BF(iDoF1,iGauss) .DotP. gradAlphaElem)))
                End Do
             End Do ! iGauss
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -734,8 +741,11 @@ Contains
             End If
          End Do ! cell
       
-         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = 8 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID)
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(temperatureLoc)
          DeAllocate(displacementLoc)
          DeAllocate(Gloc)
@@ -826,8 +836,11 @@ Contains
             End If
          End Do ! cell
       
-         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = (4 * elemType%numDof * size(elem(1)%Gauss_C) + 1) * size(cellID) 
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(temperatureLoc)
          DeAllocate(displacementLoc)
          DeAllocate(Gloc)
@@ -880,8 +893,8 @@ Contains
                energy = energy + elemScal(cell)%Gauss_C(iGauss) * (alphaElem * C1 + (gradAlphaElem .dotP. gradAlphaElem) * C2)
             End Do ! Gauss
          End Do ! cell
-         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = (2 * elemScalType%numDof + 5 )* size(elemScal(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(alphaloc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -934,8 +947,8 @@ Contains
             End Do
             Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do ! cell
-         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = 6 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(MatElem)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
@@ -990,15 +1003,15 @@ Contains
                End Do
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                 ( C1* elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
+                                 ( C1 * elem(cell)%BF(iDoF1,iGauss) * alphaElem + &
                                    C2 * (elem(cell)%Grad_BF(iDoF1,iGauss) .DotP. gradAlphaElem))
                End Do
             End Do ! iGauss
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do ! cell
       
-         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = 8 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(Gloc)
          DeAllocate(alphaLoc)
       End If   
@@ -1087,8 +1100,11 @@ Contains
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
             End If
          End Do ! cell
-         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = 7 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(displacementloc)
          DeAllocate(temperatureloc)
          DeAllocate(MatElem)
@@ -1191,8 +1207,11 @@ Contains
             End If
          End Do ! cell
       
-         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = 9 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(temperatureLoc)
          DeAllocate(displacementLoc)
          DeAllocate(Gloc)
@@ -1281,8 +1300,11 @@ Contains
             End If
          End Do ! cell
       
-         !flops = 7 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = (3 * elemType%numDof * size(elem(1)%Gauss_C) + 1) * size(cellID) 
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(temperatureLoc)
          DeAllocate(displacementLoc)
          DeAllocate(Gloc)
@@ -1335,8 +1357,8 @@ Contains
                energy = energy + elemScal(cell)%Gauss_C(iGauss) * (alphaElem**2 * C1 + (gradAlphaElem .dotP. gradAlphaElem) * C2)
             End Do ! Gauss
          End Do ! cell
-         !flops = (4 * elemType%numDof + 3 )* size(elem(1)%Gauss_C) * size(cellID) 
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         flops = (2 * elemScalType%numDof + 6)* size(elemScal(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(alphaloc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)

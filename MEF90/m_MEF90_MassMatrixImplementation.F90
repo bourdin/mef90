@@ -48,7 +48,7 @@ Contains
             MatElem = MatElem * scaling
             Call DMmeshAssembleMatrix(M,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do ! cell
-         flops = elemType%numDof**2 * (3 * size(elem(1)%Gauss_C) + 1) * size(cellID)
+         flops = 3 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID)
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(MatElem,stat=ierr)
       End If 
