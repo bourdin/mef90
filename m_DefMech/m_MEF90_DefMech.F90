@@ -12,7 +12,8 @@ Module m_MEF90_DefMech
       MEF90DefMechElasticEnergy2D            => MEF90DefMechElasticEnergy,             &
       MEF90DefMechOperatorDamage2D           => MEF90DefMechOperatorDamage,            &
       MEF90DefMechBilinearFormDamage2D       => MEF90DefMechBilinearFormDamage,        &
-      MEF90DefMechSurfaceEnergy2D            => MEF90DefMechSurfaceEnergy     
+      MEF90DefMechSurfaceEnergy2D            => MEF90DefMechSurfaceEnergy,             &
+      MEF90DefMechStress2D                   => MEF90DefMechStress     
    Use m_MEF90_DefMechAssembly3D, &
       MEF90DefMechOperatorDisplacement3D     => MEF90DefMechOperatorDisplacement,      &
       MEF90DefMechBilinearFormDisplacement3D => MEF90DefMechBilinearFormDisplacement,  &     
@@ -20,7 +21,8 @@ Module m_MEF90_DefMech
       MEF90DefMechElasticEnergy3D            => MEF90DefMechElasticEnergy,             &
       MEF90DefMechOperatorDamage3D           => MEF90DefMechOperatorDamage,            &
       MEF90DefMechBilinearFormDamage3D       => MEF90DefMechBilinearFormDamage,        &
-      MEF90DefMechSurfaceEnergy3D            => MEF90DefMechSurfaceEnergy     
+      MEF90DefMechSurfaceEnergy3D            => MEF90DefMechSurfaceEnergy,             &
+      MEF90DefMechStress3D                   => MEF90DefMechStress          
 
    Implicit none
 
@@ -620,6 +622,30 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
    End Subroutine MEF90DefMechElasticEnergy
 
 #undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechStress"
+!!!
+!!!  
+!!!  MEF90DefMechStress: wraps calls to MEF90DefMechElasticEnergy from m_MEF90_DefMechAssembly
+!!                       since overloading cannot be used here
+!!!  
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechStress(x,MEF90DefMechCtx,stress,ierr)
+      Type(Vec),Intent(IN)                               :: x
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      Type(Vec),Intent(IN)                               :: stress
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscInt                                           :: dim      
+      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90DefMechStress2D(x,MEF90DefMechCtx,stress,ierr)
+      Else If (dim == 3) Then
+         Call MEF90DefMechStress3D(x,MEF90DefMechCtx,stress,ierr)
+      End If      
+   End Subroutine MEF90DefMechStress
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamage"
 !!!
 !!!  
@@ -784,6 +810,16 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
                                 MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%plasticStrainOffset,ierr);CHKERRQ(ierr)
          Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
       End If
+
+      If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
+         Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%stressOffset,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+      End If
+
       If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
          Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
       End If

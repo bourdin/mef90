@@ -316,6 +316,7 @@ Program vDef
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Write(IOBuffer,102) sum(thermalEnergySet),sum(heatFluxWorkSet),sum(thermalEnergySet)-sum(heatFluxWorkSet)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+
             !!! Save results
             Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
          Case (MEF90HeatXFer_ModeTransient)
@@ -537,6 +538,9 @@ Program vDef
          !!!
          !!! Save results and boundary Values
          !!!
+         If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
+            Call MEF90DefMechStress(MEF90DefMechCtx%displacement,MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr)
+         End If
          Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
          !!!
          !!! Save performance log file

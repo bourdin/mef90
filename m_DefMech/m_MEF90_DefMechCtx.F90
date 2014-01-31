@@ -22,6 +22,7 @@ Module m_MEF90_DefMechCtx_Type
       Type(Vec),pointer                :: force
       Type(Vec),pointer                :: pressureForce
       Type(Vec),Pointer                :: plasticStrain
+      Type(Vec),Pointer                :: stress
 
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
@@ -499,6 +500,12 @@ Contains
       Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(DefMechCtx%boundaryDamage,"boundaryDamage",ierr);CHKERRQ(ierr)
       Call VecSet(DefMechCtx%boundaryDamage,0.0_Kr,ierr);CHKERRQ(ierr)
+
+      Allocate(DefMechCtx%stress,stat=ierr)
+      Call DMCreateGlobalVector(DefMechCtx%CellDMMatS,DefMechCtx%stress,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(DefMechCtx%stress,"stress",ierr);CHKERRQ(ierr)
+      Call VecSet(DefMechCtx%stress,0.0_Kr,ierr);CHKERRQ(ierr)
+   
    End Subroutine MEF90DefMechCtxCreateVectors
 
 #undef __FUNCT__
@@ -559,6 +566,12 @@ Contains
          Call VecDestroy(DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)   
          DeAllocate(DefMechCtx%plasticStrain)
          Nullify(DefMechCtx%plasticStrain)
+      End If
+
+      If (Associated(DefMechCtx%stress)) Then 
+         Call VecDestroy(DefMechCtx%stress,ierr);CHKERRQ(ierr)   
+         DeAllocate(DefMechCtx%stress)
+         Nullify(DefMechCtx%stress)
       End If
    End Subroutine MEF90DefMechCtxDestroyVectors
 
