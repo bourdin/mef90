@@ -35,7 +35,7 @@ Program vDef
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
                                                          0,                       & ! plasticStrainOffset
-                                                         0,                       & ! StressOffset
+                                                         6,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
@@ -58,7 +58,7 @@ Program vDef
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
                                                          0,                       & ! plasticStrainOffset
-                                                         0,                       & ! StressOffset
+                                                         7,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
