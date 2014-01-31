@@ -12,7 +12,8 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
           MEF90DefMechElasticEnergy,            &
           MEF90DefMechOperatorDamage,           &
           MEF90DefMechBilinearFormDamage,       &
-          MEF90DefMechSurfaceEnergy
+          MEF90DefMechSurfaceEnergy,            &
+          MEF90DefMechStress
 
 Contains
 #undef __FUNCT__
@@ -622,6 +623,103 @@ Contains
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechElasticEnergy
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechStress"
+!!!
+!!!  
+!!!  MEF90DefMechStress: 
+!!!  
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechStress(x,MEF90DefMechCtx,stress,ierr)
+      Type(Vec),Intent(IN)                               :: x
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      Type(Vec),Intent(IN)                               :: stress
+         
+      Type(SectionReal)                                  :: xSec,stressSec
+      Type(SectionReal)                                  :: plasticStrainSec,temperatureSec
+      Type(IS)                                           :: CellSetGlobalIS,setIS,setISdof,bcIS
+      PetscInt,dimension(:),Pointer                      :: setID
+      PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
+      PetscInt                                           :: set,QuadratureOrder
+      Type(MEF90_MATPROP),pointer                        :: matpropSet
+      Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
+      Type(VecScatter)                                   :: ScatterSecToVec,ScatterSecToVecScal,ScatterSecToVecCellMatS
+      Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
+      Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
+
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',stressSec,ierr);CHKERRQ(ierr)
+      Call SectionRealSet(stressSec,0.0_Kr,ierr);CHKERRQ(ierr)
+      
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr) 
+      
+      If (Associated(MEF90DefMechCtx%plasticStrain)) Then
+         Call SectionRealDuplicate(stressSec,plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)          
+      Else
+         PlasticStrainSec%v = 0
+      End If
+
+      If (Associated(MEF90DefMechCtx%temperature)) Then
+         Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',temperatureSec,ierr);CHKERRQ(ierr)
+         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)          
+      Else
+         temperatureSec%v = 0
+      End If
+
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)      
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         Call DMMeshGetStratumIS(MEF90DefMechCtx%DMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
+         elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
+
+         !!! Call proper local assembly depending on the type of damage law
+         Select Case (cellSetOptions%defectLaw)
+         Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity,MEF90DefMech_defectLawGradientDamage)
+            If (elemDisplacementType%coDim == 0) Then
+               If (Associated(MEF90DefMechCtx%temperature)) Then
+                  QuadratureOrder = max(elemDisplacementType%order - 1, elemScalType%order)
+               Else
+                  QuadratureOrder = elemDisplacementType%order - 1
+               End If
+               Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90ElasticityStressSet(stressSec,xSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
+                                             matpropSet%HookesLaw,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+               Call MEF90Element_Destroy(elemDisplacement,ierr)
+               Call MEF90Element_Destroy(elemScal,ierr)
+            End If
+         End Select
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      End Do ! set
+      !!! No need to complete since stressSec is cell-based
+      Call SectionRealToVec(stressSec,ScatterSecToVecCellMatS,SCATTER_FORWARD,stress,ierr);CHKERRQ(ierr)          
+      
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      If (Associated(MEF90DefMechCtx%temperature)) Then
+         Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+      End If
+      If (Associated(MEF90DefMechCtx%plasticStrain)) Then
+         Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)                   
+      End If
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(stressSec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechStress
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamage"
