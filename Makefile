@@ -1,4 +1,4 @@
-all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef mef90version.h
+all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef
 
 mef90version.h: ${MEF90_DIR}/.hg/dirstate
 	@echo \#define MEF90_HGVER \"`hg parents | head -1 | cut -d : -f 2,3 | tr -d ' '`\" > ${MEF90_DIR}/mef90version.h
@@ -31,18 +31,25 @@ vDef: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@"
 	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef
 
-tests: MEF90 chkpaths
-	-@echo "Building $@"
-	-@make -C objs/${PETSC_ARCH} -f ../../Tests/Makefile all
+test: MEF90 chkpaths
+	-@make -s -C HeatXfer test
+	-@make -s -C ThermoElasticity test
+	-@make -s -C vDef test
 
 runtests: MEF90 chkpaths
 	-@make -C objs/${PETSC_ARCH} -f ../../Tests/Makefile runall
 
-chkpaths: objs/${PETSC_ARCH} bin/${PETSC_ARCH} mef90version.h
+chkpaths: objs/${PETSC_ARCH} bin/${PETSC_ARCH} lib/${PETSC_ARCH}
 objs/${PETSC_ARCH}:
 	-@mkdir -p objs/${PETSC_ARCH}
 bin/${PETSC_ARCH}:
 	-@mkdir -p bin/${PETSC_ARCH}
+lib/${PETSC_ARCH}:
+	-@mkdir -p lib/${PETSC_ARCH}
+
+tarball: clean
+	$(eval hgver := $(shell hg parents | head -1 | cut -d : -f 2 | tr -d ' '))
+	gtar --transform 's,^\.,mef90-${hgver},' --exclude-backups --exclude=.hg* --exclude=objs --exclude=lib --exclude=*pyc --exclude=bin/*/HeatXfer --exclude=bin/*/vDef --exclude=bin/*/ThermoElasticity --exclude=*so --exclude=*dylib -zcvhf ../mef90-${hgver}.tgz .
 
 clean:
 	-@rm -Rf objs/${PETSC_ARCH}
