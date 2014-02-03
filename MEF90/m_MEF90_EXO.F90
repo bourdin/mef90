@@ -377,9 +377,14 @@ Subroutine MEF90EXOFormat(exoid,NameG,NameC,NameV,ierr)
    Character(len=*),Dimension(:),Pointer,Intent(IN)   :: nameG,nameC,nameV
    PetscErrorCode,Intent(OUT)                         :: ierr
    
+   Integer                                            :: numCS,numVS
+   Real                                               :: rJunk
+   Character(len=MXSTLN)                              :: sJunk
    Integer                                            :: exoerr
+   Integer,Dimension(:,:),Pointer                     :: varTruthTable
    
    If (exoID > 0) Then
+      !!! Write variable names
       If (size(nameG) > 0) Then
          Call EXPVP (exoid,'g',size(nameG),ierr)
          Call EXPVAN(exoid,'g',size(nameG),NameG,ierr)
@@ -392,6 +397,13 @@ Subroutine MEF90EXOFormat(exoid,NameG,NameC,NameV,ierr)
          Call EXPVP (exoid,'n',size(nameV),ierr)
          Call EXPVAN(exoid,'n',size(nameV),nameV,ierr)
       End If
+
+      !!! Write truth tables
+      Call EXINQ(exoid,EXELBL,numCS,rjunk,sjunk,ierr)
+      Allocate(varTruthTable(size(nameC),numCS))
+      varTruthTable = 1
+      Call EXPVTT(exoid,numCS,size(nameC),varTruthTable,ierr)
+      DeAllocate(varTruthTable)
    End If
 End Subroutine MEF90EXOFormat
 End Module m_MEF90_EXO

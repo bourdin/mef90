@@ -737,6 +737,44 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
 
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+      !!! cell-based fields are located before nodal ones in exodus files, so saving them first.
+      If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
+         Call DMGetLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90DefMechCtx%cellDMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
+      End If
+
+      If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
+         Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+      End If
+
+      If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
+         Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%plasticStrainOffset,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+      End If
+
+      If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
+         Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+         Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%stressOffset,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+      End If
+
+
       If ((MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) .AND. &
           (MEF90DefMechGlobalOptions%boundaryDisplacementOffset /= MEF90DefMechGlobalOptions%displacementOffset)) Then
          Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
@@ -783,43 +821,6 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%temperatureOffset,ierr);CHKERRQ(ierr)
          Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
       End If
-
-      If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
-      End If
-
-      If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
-      End If
-
-      If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%plasticStrainOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
-      End If
-
-      If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%stressOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
-      End If
-
       If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
          Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
       End If
