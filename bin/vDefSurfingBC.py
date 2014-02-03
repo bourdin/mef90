@@ -22,10 +22,14 @@ def exoformat(e):
     global_variable_name = ["Elastic Energy","Work","Surface Energy","Total Energy"]
     if e.num_dimensions() == 2: 
         node_variable_name  = ["Temperature","Damage","Displacement_X","Displacement_Y"]
-        element_variable_name   = ["External_Temperature","Heat_Flux","Pressure_Force","Force_X","Force_Y"]
+        element_variable_name   = ["External_Temperature","Heat_Flux","Pressure_Force",
+                                   "Force_X","Force_Y",
+                                   "Stress_XX","Stress_YY","Stress_XY"]
     else:
         node_variable_name  = ["Temperature","Damage","Displacement_X","Displacement_Y","Displacement_Z"]
-        element_variable_name   = ["External_Temperature","Heat_Flux","Pressure_Force","Force_X","Force_Y","Force_Y"]
+        element_variable_name   = ["External_Temperature","Heat_Flux","Pressure_Force",
+                                   "Force_X","Force_Y","Force_Z",
+                                   "Stress_XX","Stress_YY","Stress_ZZ","Stress_YZ","Stress_XZ","Stress_XY"]
     e.set_global_variable_number(0)
     e.set_node_variable_number(len(node_variable_name))
     for i in range(len(node_variable_name)):
@@ -33,6 +37,7 @@ def exoformat(e):
     e.set_element_variable_number(len(element_variable_name))
     for i in range(len(element_variable_name)):
         e.put_element_variable_name(element_variable_name[i],i+1)
+    e.set_element_variable_truth_table([True] * e.numElemBlk.value * len(element_variable_name))
     return(0)
 
 def cart2polar(x, y):
