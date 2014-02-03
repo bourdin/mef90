@@ -35,7 +35,7 @@ Program vDef
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
                                                          0,                       & ! plasticStrainOffset
-                                                         0,                       & ! StressOffset
+                                                         6,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
@@ -58,7 +58,7 @@ Program vDef
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
                                                          0,                       & ! plasticStrainOffset
-                                                         0,                       & ! StressOffset
+                                                         7,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
@@ -281,8 +281,7 @@ Program vDef
    !!!
    !!! Actual computations / time stepping
    !!!
-   If ((MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) .AND. &
-       (.NOT. MEF90GlobalOptions%dryrun)) Then
+   If (.NOT. MEF90GlobalOptions%dryrun) Then
       step = 1
       mainloopQS: Do
          BTActive = PETSC_FALSE
@@ -317,6 +316,7 @@ Program vDef
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Write(IOBuffer,102) sum(thermalEnergySet),sum(heatFluxWorkSet),sum(thermalEnergySet)-sum(heatFluxWorkSet)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+
             !!! Save results
             Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
          Case (MEF90HeatXFer_ModeTransient)
@@ -538,6 +538,9 @@ Program vDef
          !!!
          !!! Save results and boundary Values
          !!!
+         If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
+            Call MEF90DefMechStress(MEF90DefMechCtx%displacement,MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr)
+         End If
          Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
          !!!
          !!! Save performance log file
