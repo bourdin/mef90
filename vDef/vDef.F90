@@ -189,6 +189,7 @@ Program vDef
    End If
    Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
    
+   
    !!! Create HeatXfer context, get all HeatXfer options
    Call MEF90HeatXferCtxCreate(MEF90HeatXferCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions, &
@@ -206,43 +207,44 @@ Program vDef
    !!! Create time array from global options
    Call MEF90CtxGetTime(MEF90Ctx,time,ierr)
 
-   !!! Set the data layout
+
+   !!! Create sections, vectors, and solvers for DefMech Context
    Call MEF90DefMechCtxSetSections(MEF90DefMechCtx,ierr)
-   Call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx,ierr)
-
-   !!! Create vectors
    Call MEF90DefMechCtxCreateVectors(MEF90DefMechCtx,ierr)
-   Call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx,ierr)
    Call VecDuplicate(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-
-   !!! Link the temperature field from teh DefMech context to that of the HeatXfer context
-   DeAllocate(MEF90DefMechCtx%temperature)
-   MEF90DefMechCtx%temperature => MEF90HeatXferCtx%temperature
-
-   !!! 
-   !!! Create SNES or TS, Mat and set KSP default options
-   !!!
    Call VecDuplicate(MEF90DefMechCtx%displacement,residualDisp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDisp,"residualDisp",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSolversDisp(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
-
    Call VecDuplicate(MEF90DefMechCtx%damage,residualDamage,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSolversDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
+   DeAllocate(MEF90DefMechCtx%temperature)
+   
+   
+   !!! As long as plasticity is not implemented, there is no point in keeping the pastic strain around
+   DeAllocate(MEF90DefMechCtx%plasticStrain)
 
-   Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
-   Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
-   If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
-      Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
-   Else
-      Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
-      tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
-      tsTempInitialTime = time(1)
-      Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
-      Call TSGetAdapt(tsTemp,tsAdaptTemp,ierr);CHKERRQ(ierr)
-      Call TSAdaptSetFromOptions(tsAdaptTemp,ierr);CHKERRQ(ierr)
-   End If
+   !!! Create sections, vectors, and solvers for HeatXfer Context
+   If (MEF90HeatXferGlobalOptions%mode /= MEF90HeatXfer_ModeNULL) Then
+      Call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx,ierr)
+      Call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx,ierr)
+      Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
+      Select Case(MEF90HeatXferGlobalOptions%mode)
+      Case (MEF90HeatXFer_ModeSteadyState)
+         Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
+      Case (MEF90HeatXFer_ModeTransient)
+         Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
+         tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
+         tsTempInitialTime = time(1)
+         Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
+         Call TSGetAdapt(tsTemp,tsAdaptTemp,ierr);CHKERRQ(ierr)
+         Call TSAdaptSetFromOptions(tsAdaptTemp,ierr);CHKERRQ(ierr)
+      End Select
 
+      !!! Link the temperature field in the DefMechContext with that of the HeatXfer
+      MEF90DefMechCtx%temperature => MEF90HeatXferCtx%temperature
+   End If   
    !!! 
    !!! Allocate array of works and energies
    !!!

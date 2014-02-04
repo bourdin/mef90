@@ -658,10 +658,10 @@ Contains
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr) 
       
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,stressSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
          Call SectionRealDuplicate(stressSec,plasticStrainSec,ierr);CHKERRQ(ierr)
-         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
-         Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)          
       Else
          PlasticStrainSec%v = 0
       End If
