@@ -739,87 +739,123 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       !!! cell-based fields are located before nodal ones in exodus files, so saving them first.
       If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%pressureForce)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusCell(MEF90DefMechCtx%cellDMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] force field not associated, not saving. Use -force_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
       End If
 
       If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%pressureForce)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] pressureForce field not associated, not saving. Use -pressureForce_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
       End If
 
       If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%plasticStrainOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%plasticStrain)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%plasticStrainOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] plasticStrain field not associated, not saving. Use -plasticStrain_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
       End If
 
       If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%stressOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%stress)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%stressOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] stress field not associated, not saving. Use -stress_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
       End If
 
 
       If ((MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) .AND. &
           (MEF90DefMechGlobalOptions%boundaryDisplacementOffset /= MEF90DefMechGlobalOptions%displacementOffset)) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDisplacementOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%boundaryDisplacement)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                     MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDisplacementOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] boundaryDisplacement field not associated, not saving. Use -boundaryDisplacement_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
       End If
 
       If (MEF90DefMechGlobalOptions%displacementOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%displacementOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%displacement)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                     MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%displacementOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] displacement field not associated, not saving. Use -displacement_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
       End If
 
       If (MEF90DefMechGlobalOptions%damageOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%damage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%damage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%damageOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%damage)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%damage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%damage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                     MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%damageOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] damage field not associated, not saving. Use -damage_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
       End If
 
       If ((MEF90DefMechGlobalOptions%boundaryDamageOffset > 0) .AND. &
           (MEF90DefMechGlobalOptions%boundaryDamageOffset /= MEF90DefMechGlobalOptions%damageOffset))Then
-         Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDamageOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%boundaryDamage)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                     MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDamageOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] boundaryDamage field not associated, not saving. Use -boundaryDamage_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
       End If
 
       If (MEF90DefMechGlobalOptions%temperatureOffset > 0) Then
-         Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-         Call VecViewExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%temperatureOffset,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+         If (Associated(MEF90DefMechCtx%temperature)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                     MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%temperatureOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] Temperature field not associated, not saving. Use -temperature_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
       End If
       If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
          Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
