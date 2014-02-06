@@ -13,6 +13,8 @@ def parse(args=None):
     parser.add_argument("-M","--stepmax",type=int,help="last time step")
     parser.add_argument("--old",action="store_true",default=False,help="old style energy file (no forces)")
     parser.add_argument("-r","--relative",action="store_true",default=False,help="offset surface energy")
+    parser.add_argument("--size",type=float,nargs=2,default=None,help="Figure size")
+    parser.add_arguments("--title",default=None,help="Figure title")
     return parser.parse_args()
 
 def main():
@@ -47,16 +49,38 @@ def main():
     
     if options.outputfile != None:
       matplotlib.use('Agg')
+      useTex=True
+    else:
+     useTex = False
+
     import matplotlib.pyplot as plt
+
+    
+    pymef90.matplotlibdefaults('medium',useTex)
+    fig = plt.figure(figsize=options.size)
     
     if options.relative:
       energies[:,4] -= energies[tmin,4]
       energies[:,5] -= energies[tmin,4]
     ### plot
-    pymef90.energies.plot(energies[tmin:tmax,:], options.forces)
+    plt.plot(energies[:,1], energies[:,2], label='Elastic energy')
+    plt.plot(energies[:,1], energies[:,4], label='Surface energy')
+    plt.plot(energies[:,1], energies[:,5],zorder=999,label='Total energy', lw=4)
+    if options.forces:
+        plt.plot(energies[:,1], energies[:,3], label='External Forces')
+    plt.grid()
+    plt.legend(loc=0)
+    plt.xlabel('t')
+    plt.ylabel('Energy')
+    if options.title:
+        plt.title(options.title)
+    else:
+        plt.title('Energies vs normalized time')
+    pymef90.setspines()
       
     ### export plot if needed
     if options.outputfile != None:
+      fig.tight_layout(pad=0.1)
       plt.savefig(options.outputfile)
     else:
       plt.show()
