@@ -118,6 +118,5 @@ This means that $PETSC_DIR/$PETSC_ARCH/lib needs to be readable from the compute
   Differences in number of iterations, or round-off error are acceptable
   
   Note that make test will try to run mpi jobs directly. It may be necessary to run make tests in an interactive MPI job session.
-  The MPI job launcher can be changed by setting the MPIEXEC environment variable.  
+  The MPI job launcher can be changed by setting the MPIEXEC environment variable, and the number of processors by setting NP
 
-## More testing:
