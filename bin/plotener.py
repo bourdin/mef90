@@ -52,7 +52,6 @@ def main():
       useTex=True
     else:
      useTex = False
-
     import matplotlib.pyplot as plt
 
     
