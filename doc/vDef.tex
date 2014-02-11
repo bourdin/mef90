@@ -1,0 +1,333 @@
+\documentclass[10pt,oneside]{memoir}
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{letterpaper}
+\usepackage{graphicx,floatflt,wrapfig}
+\usepackage{amssymb,amsmath,amsfonts,amsthm,accents}
+\usepackage{empheq}
+\usepackage{color}
+\usepackage{url}
+%\usepackage[notref,notcite]{showkeys}
+\usepackage[pdftex,
+            pdfauthor={Blaise Bourdin},
+            pdftitle={vDef manual},
+            pdfcreator={pdflatex},
+            bookmarks=true,         % show bookmarks bar?
+            unicode=false,          % non-Latin characters in Acrobat?s bookmarks
+            pdftoolbar=true,        % show Acrobat?s toolbar?
+            pdfmenubar=true,        % show Acrobat?s menu?
+            pdffitwindow=false,     % window fit to page when opened
+            pdfstartview={FitH},    % fits the width of the page to the window
+            pdfnewwindow=true,      % links in new window
+            colorlinks=true,
+            linkcolor=blue,         % color of internal links
+            citecolor=blue,         % color of links to bibliography
+            filecolor=blue,         % color of file links
+            urlcolor=blue,
+            pagebackref=false,
+            hyperfootnotes=true]{hyperref}
+\usepackage{paralist}
+
+
+
+\def\vDef{{\texttt{vDef}} }
+\def\argmin{\qopname\relax m{arg\,min}}
+
+\title{\vDef user manual}
+\author{Blaise Bourdin}
+\date{\today}
+
+\chapterstyle{section}
+\begin{document}
+\bibliographystyle{alpha}
+\maketitle
+
+\tableofcontents
+\chapter*{Introduction}
+\vDef is a reference implementation of the Variational Approach to Fracture~\cite{Francfort-Marigo-1998,Bourdin-Francfort-EtAl-2008b} and related problems. 
+
+
+This brief manual lists the main command line options for \vDef with default values are shown between angled brackets \verb+<>+. Note that auto--generated documentation can always be printed using the \texttt{-h} and  \texttt{-verbose 1} flags, possibly combined with \texttt{-dryrun}.
+
+
+\vDef uses the exodusII file format for its input and output. XDMF / HDF5--based export for very large data files is a planned feature but not available yet. Geometric entities corresponding to different materials, models or boundary conditions can be encoded using exodus ``element blocks'' (cell sets in \vDef lingo) and ``node sets'' (referred to as vertex sets). Note that exodusII ``side sets'' are not supported. Instead, \vDef uses cell sets of co-dimension 1.
+
+
+\newpage
+\chapter{Models and algorithms}
+\section{Heat transfer}
+\label{sec:HeatXfer}
+\vDef can solve diffusive linear steady-state or transient heat transfer problems. This heat transfer solver can be used as a standalone simulator, or the temperature field can be plugged in the elasticity of gradient damage simulators. In the sequel, we consider the problem of finding the temperature $T(x,t)$ of a body occupying a region $\Omega$ of the two or three--dimensional space and satisfying
+\begin{empheq}[left=\empheqlbrace]{align}
+	\rho(x) c_p(x) \frac{\partial T}{\partial t} &= \mathrm{div}\left( K(x) \nabla T\right) + f & \text{ in } \Omega,\\
+    K \frac{\partial T}{\partial n} (x,t)& = g(x,t) + H (T_e-T(x,t)) & \text{ on } \partial_n \Omega,\\
+    T(x,t) & = T_b(x,t) & \text{ on } \partial_d \Omega,\\
+    T(x,0) & = T_0. 
+\end{empheq}
+Where $f$ and $g$ denotes respectively the body and boundary fluxes, $T_b$ is a prescribed boundary temperature, $T_e$ is a constant surrounding temperature, and $T_0$ is a constant initial temperature. $\rho$ is the material's density, $c_p$ its specific heat, $K$ is the thermal conductivity, a symmetric tensor, and $H$ is the surface thermal conductivity. For steady state problems, time derivatives are ignored and the initial temperature is used as the initial guess of the iterative solver.
+
+
+\section{Gradient damage models}
+\label{sec:GradientDamageModels}
+The damage models implemented in \vDef are regularization of teh energy functional devised in the the variational approach to fracture~\cite{Ambrosio-Tortorelli-1990,Ambrosio-Tortorelli-1992,Giacomini-2005,Sicsic-Marigo-2013a}. These problems are formulated as rate independent unilateral minimization problems. In the time discrete formulation, the displacement and damage field at time step $t_i$ are given by
+\begin{equation}
+	\label{eq:globMin}
+	(u_i,\alpha_i) = \argmin_{v \in \mathcal{K}(t_i), \beta \in \mathcal{K}'(\alpha_{i-1},\eta)} F_\ell(v,\beta),
+\end{equation}
+where $\mathcal{K}(t_i)$ is the set of kinematically admissible displacement fields at step $t_i$, and $\mathcal{K}'(\alpha_{i-1},\eta)$ is the set of all damage field satisfying the irreversibility condition
+$$
+	\mathcal{K}'(\alpha_{i-1},\eta) = \left\{\alpha \ :\  0 \le \alpha(x) \ge \alpha_{i-1}(x) \le 1 \ \forall x \text{ such that } \alpha_{i-1}(x) \ge \eta\right\}.
+$$
+Note that with these notations, enforcing irreversibility through inequality constraints as proposed in~\cite{Giacomini-2005,Amor-Marigo-EtAl-2008a,Pham-Amor-EtAl-2011a} corresponds to $\eta = 0$ whereas equality constraints under a threshold as originally proposed in~\cite{Bourdin-Francfort-EtAl-2000a} corresponds to $\eta$ close to 1.
+
+\section{Backtracking algorithms}
+\label{sec:BT}
+
+\section{General limitations.}
+\begin{itemize}
+\item \vDef is based on PETSc-3.3~\cite{petsc-efficient,petsc-user-ref,petsc-web-page}. Unstructured meshes are handled using \texttt{Sieve}~\cite{Knepley-Karpeev-2009a}. A new version based on PETSc' \texttt{DMcomplex} is under development. PETSc-specific options are not described in this manual.
+\item \vDef only supports the \href{http://sourceforge.net/projects/exodusii/}{exodusII} file format. \href{http://cubit.sandia.gov}{Cubit}, or \href{http://www.csimsoft.com/trelis.jsp}{Trelis} can generate such files. \href{https://wci.llnl.gov/codes/visit/}{VisIt}, \href{http://paraview.org}{ParaView}, or \href{http://www.ceisoftware.com}{EnSight} can open such files.
+\item \vDef can handle linear and quadratic simplicial finite elements. Due to limitations of the exodus file formal, mixing element types is not supported at this point.
+\item \vDef can import element blocks of co-dimension 0 and 1, and node sets. \emph{Node sets may not overlap}.
+\item Boundary conditions can be specified on cell or vertex sets. Passing boundary conditions on vertex sets is slightly more efficient, but ensuring that vertex sets are disjoint can be difficult.
+\item Boundary condition handling is \emph{additive}. If a cell or vertex belong to several sets, the type of boundary conditions is given by performing a logical \verb+OR+ on the boundary conditions type of its parent entities. 
+\item Specifying loading may lead to inconsistent results. In general, the loading applied will be the one specified in the set written last in the exodus file. There may be boundary effects for parallel computations.
+\item Unilateral contact, work constrained evolution, multiple load sets, variational plasticity, thermodynamically consistent evolutions are not implemented in this version of vDef.
+\end{itemize}
+
+\chapter{Command line options}
+
+
+\section{Options strings vs. YAML files}
+Command line options can also be passed to vDef through an option file, using the \verb+-options_file+ command line flag. Machine readable \href{http://www.yaml.org}{YAML} files can be used with the flag \verb+-options_file_yaml+. YAML parsing is fragile, incomplete, and somewhat experimental (alias and links are not implemented, and error reporting is lacking), but much easier to parse. PETSc  uses  underscores as field delimiters in its options handling and keeps track of hierarchy of options through prefixes, Whereas YAML relies on indented lists. The correspondence between standard options and YAML file straightforward, with a few caveats: array arguments must be given as space delimited in PETSc options but comma delimited without spaces in YAML and boolean arguments can be given the value \verb+0,false,no+ or \verb+1,true,yes+ in PETSc but only \verb+0,no+ or \verb+1,yes+ are acceptable in a YAML option file. An example of translation from PETSC--like to YAML options is given in Table~\ref{tab:PETSctoYAML}.
+
+\begin{table}
+PETSc--like options string\\
+\small{
+\begin{boxedverbatim}
+-time_min 0 -time_max 1 -time_interpolation linear -time_numstep 11  -dryrun \
+-cs0001_hookeslaw 1. 0. 0. .5 0. 1. -cs0001_fractureToughness .1 \
+-cs0001_internalLength 01 -cs0001_residualStiffness 0.\
+-cs0001_defectLaw_type gradientDamage \
+-cs0001_defectLaw_gradientDamage_type AT1 \
+-cs0001_displacementBC true false false -cs0001_boundaryDisplacement 1. 0. 0. \
+-cs001_damageBC false
+\end{boxedverbatim}
+}
+Equivalent YAML file\\
+\small{
+\begin{boxedverbatim}
+time:
+    min: 0
+    max: 1
+    interpolation: linear
+    numstep: 11
+cs0001:
+    HookesLaw: 1.,0.,0.,.5,0.,1.
+    fractureToughness: .1
+    internalLength: .1
+    residualStiffness: 0.
+    defectLaw:
+        type: GradientDamage
+        gradientDamage:
+            type: AT1
+    displacementBC: yes,no,no
+    boundaryDisplacement: 1.,0.,0.
+    damageBC: no
+\end{boxedverbatim}
+}
+\caption{Translating PETSc options to YAML files}
+\label{tab:PETSctoYAML}
+\end{table}
+
+\section{General options}
+\begin{boxedverbatim}
+-prefix : File name prefix
+-verbose <1>: Verbosity: level 
+-dryrun <FALSE>: Dry run in order to validate the options file. 
+-file_format <EXOSingle>: (MEF90FileFormat) I/O: file format. 
+                          Choose one of EXOSingle EXOSplit
+\end{boxedverbatim}
+Notes: 
+\begin{compactenum}
+\item File names are not user configurable. \vDef will look for an input mesh is named \verb+<prefix>.gen+, results will be saved as \verb+<prefix>_out.gen+ or \verb+<prefix>-\%4i.gen+ if output in split files exodus files is chosen), energies will be saved in  \verb+<prefix>.ener+ for the entire domain and \verb+<prefix>-\%4i.enerblk+ for each cell set.
+\item If \verb+ -file_format EXOSplit+ is selected (not recommended), each core will save its own part of the geometry in a separate file. Continuity at the subdomain interfaces is not preserved (no ghost points or interface matching informations are saved).
+\end{compactenum}
+
+\subsection{Ordering of tensors}
+In all options, symmetric tensors or order 2 (symmetric matrices) are given in Voigt notations, \emph{i.e.} a $3\times 3$ symmetric matrix is represented by the array $A_{11},A_{22},A_{33},A_{23},A_{13},A_{12}$ and a $2\times 2$ symmetric matrix as $A_{11},A_{22},A_{12}$. Fourth odder symmetric tensors (Hooke's laws) are listed in alphabetical order. Redundant terms due to minor and major symmetries are not duplicated. The ordering of the coefficients of a two--dimensional Hooke's law $C$ is therefore $C_{1111}, C_{1112}, C_{1122}, C_{1212}, C_{1222}, C_{2222}$. The ordering of the coefficients of a three--dimensional Hooke's law $C$ is therefore $C_{1111}, C_{1112}, C_{1113}$, $C_{1122}, C_{1123}, C_{1133}, C_{1212}, C_{1213}, C_{1222}, C_{1223}, C_{1233}, C_{1313}, C_{1322}, C_{1323}, C_{1333}, C_{2222}, C_{2223}, C_{2233}$,\\
+$C_{2323}, C_{2333}, C_{3333}$. 
+
+
+\subsection{Time interpolation}
+\small{
+\begin{boxedverbatim}
+-time_min <0>: Time: min 
+-time_max <1>: Time: max 
+-time_numstep <11>: Time: number of time steps 
+-time_interpolation <linear>: Time: interpolation type. One of linear quadratic exo
+\end{boxedverbatim}
+}
+Notes: 
+\begin{compactenum}
+	\item If \verb+-time_interpolation exo+ is selected, analysis times will be loaded from the \emph{output} exodus file, which is expected to exist.
+	\item \verb+-time_interpolation quadratic+ corresponds to the natural time scaling in many heat transfer problems, i.e. $\tau$ is linearly interpolated between $\sqrt{t_{min}}$ and $\sqrt{t_{max}}$, and $t_i = \tau_i^2$.
+\end{compactenum}
+
+\subsection{Offset and scaling}
+It is possible to specify the order in which fields in an exodus file are saved by specifying and \emph{offset}. An offset of 0 can be used to indicate that a specific field is not to be saved in the file.
+
+Piecewise constant loadings functions (fluxes, forces, boundary values) can be passed through the command line. Their time dependence can be controlled using the keywords \verb+constant+, \verb+linear+, or \verb+null+. When the scaling is set to null, \vDef will skip assembly of teh field, when possible. th e\verb+EXO+ keywordd is used to indicate that the values are to be read from the \emph{output} file.
+
+\section{Problem description}
+Due to a bug in the ExodusII fortran bindings, \vDef can only import Exodus entities numbers and ignores their names. When passing command line options, Exodus' element blocks are abbreviated as \verb+cs+ (for Cell Sets) and nodes sets as \verb+vs+ (for Vertex Sets) concatenated with the entity number formatted with 4 digits. For instance, the prefix associated with exodusII element block 10 would be \verb+cs0010_+.
+
+\subsection{Material properties}
+Material properties for a cell set are passed by prefixing the following options with the cell set number (i.e. \verb+-cs0001_Density+, for instance). Materials names are not used at the moment. Substitute the \verb+cs0001_+ prefix with the appropriate reference.
+\small{
+\begin{boxedverbatim}
+-cs0001_Name <MEF90Mathium2D>:  
+-cs0001_Density <1>: [kg.m^(-2)] (rho) Density 
+-cs0001_FractureToughness <1>: [N.m^(-1)] (G_c) Fracture toughness 
+-cs0001_SpecificHeat <1>: [J.kg^(-1).K^(-1)] (Cp) Specific heat 
+-cs0001_ThermalConductivity <1 1 0 >: [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity 
+-cs0001_LinearThermalExpansion <1 1 0 >: [K^(-1)] (alpha) Linear thermal expansion  
+-cs0001_HookesLaw <1 0 0 .5 0 1 >: [N.m^(-2)] (A) Hooke's law 
+-cs0001_internalLength <1>: [m] (l) Internal Length 
+\end{boxedverbatim}
+}
+
+\subsection{Heat transfer options}
+\subsubsection{Global options}
+\small{\begin{boxedverbatim}
+-heatxfer_mode <SteadyState>:   Type of heat transfer computation 
+                                choose one of null SteadyState Transient
+-heatxfer_addNullSpace <FALSE>: Add null space to SNES 
+-temp_Offset <1>:               Position of temperature field in EXO file 
+-heatxfer_initialTemp <0>:      [K] (T): Initial Temperature 
+-boundaryTemp_scaling <linear>: Boundary temperature scaling 
+                                choose one of)  constant linear file null
+-boundaryTemp_Offset <0>:       Position of boundary temperature field in EXO file 
+-externalTemp_scaling <linear>: External Temperature scaling 
+                                choose one of constant linear file null
+-externalTemp_Offset <2>:       Position of external temperature field in EXO file 
+-flux_scaling <linear>:         Heat flux scaling 
+                                choose one of constant linear file null
+-flux_Offset <1>:               Position of heat flux field in EXO file 
+\end{boxedverbatim}}
+
+\subsubsection{Cell sets options}
+\small{\begin{boxedverbatim}
+-cs0001_ShortID <1>: Element type ShortID 
+-cs0001_Flux <0>: [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Body / surface heat flux 
+-cs0001_SurfaceThermalConductivity <0>: [J.s^(-2).m^(-1).K^(-1)]
+                                        (H) Surface Thermal Conductivity 
+-cs0001_externalTemp <0>: Surrounding temperature T [K] 
+-cs0001_TempBC <FALSE>:   Temperature has Dirichlet boundary Condition (Y/N) 
+-cs0001_boundaryTemp <0>: Temperature boundary value 
+\end{boxedverbatim}}
+Notes:
+\begin{compactenum}
+\item Element shortID should not be changed manually. 
+\item Surrounding temperature is assumed to be constant. This could easily be changed.
+\end{compactenum}
+
+\subsubsection{Vertex sets options}
+\small{\begin{boxedverbatim}
+-vs0500_TempBC <FALSE>:   Temperature has Dirichlet boundary Condition (Y/N) 
+-vs0500_boundaryTemp <0>: Temperature boundary value 
+\end{boxedverbatim}}
+
+\subsection{Gradient damage options}
+\subsubsection{Global options}
+\small{\begin{boxedverbatim}
+-DefMech_mode <QuasiStatic>: Type of defect mechanics computation. 
+                             Choose one of Null QuasiStatic GradientFlow
+-disp_addNullSpace <TRUE>: Add null space to SNES 
+-displacement_Offset <3>: Position of displacement field in EXO file 
+-damage_Offset <2>: Position of damage field in EXO file 
+-boundaryDamage_Offset <0>: Position of boundary damage field in EXO file 
+-stress_Offset <6>: Position of stress field in EXO file 
+-temperature_Offset <1>: Position of temperature field in EXO file 
+-plasticStrain_Offset <0>: Position of the plastic Strain field in EXO file 
+-boundaryDisplacement_scaling <linear>: Boundary displacement scaling.
+                                        Choose one of constant linear file null
+-boundaryDisplacement_Offset <3>: Position of boundary displacement field in EXO file 
+-boundaryDamage_scaling <constant>: Boundary damage scaling.
+                                    Choose one of constant linear file null
+-force_scaling <linear>: Force scaling. 
+                         Choose one of constant linear file null
+-force_Offset <4>: Position of force field in EXO file 
+-pressureForce_scaling <linear>: Pressure force scaling. 
+                                 Choose one of constant linear file null
+-pressureForce_Offset <3>: Position of pressure force field in EXO file 
+
+-defmech_damage_atol <0.0001>: Absolute tolerance on damage error 
+-defmech_maxit <1000>: Maximum number of alternate minimizations for damage 
+-defmech_irrevThres <0>: Threshold above which irreversibility is enforced 
+                        (0 for monotonicity, .99 for equality) 
+
+-BT_Type <Null>: Backtracking type.
+                 Choose one of Null Backward Forward
+-BT_Interval <-1>: Interval at which Backtracking is run in inner loop 
+                   (<0 for outer loop) 
+-BT_Scope <-1>: Backtracking scope (<0 for unlimited) 
+-BT_Tol <0.01>: Backtracking relative tolerance 
+\end{boxedverbatim}}
+Notes:
+\begin{compactenum}
+\item Element shortID should not be changed manually. 
+\item ``Forward backtracking'' is not implemented at this time.
+\item \verb+-BT_Interval 1+ is for \emph{deep} backtracking, \verb+-BT_Interval -1+ for a standard backtracking.
+\item \verb+-BT_Scope+ controls the scope of the backtracking \emph{search} \emph{i.e.} how far back the BT algorithm can search for a better test field.
+\end{compactenum}
+
+\subsubsection{Cell sets options}
+\small{\begin{boxedverbatim}
+-cs0001_ShortIDDisplacement <3>: Displacement element type ShortID 
+-cs0001_ShortIDDamage <1>: Damage field element type ShortID 
+-cs0001_Force <0 1 2 >: [N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force 
+-cs0001_pressureForce <0>: [N.m^(-2) / N.m^(-1)] (p): boundary pressure force 
+-cs0001_defectLaw_type <GradientDamage>: Type of defect law. Choose one of 
+                                         Elasticity GradientDamage Plasticity
+-cs0001_defectLaw_gradientDamage_type <AT1>: Ambrosio-Tortorelli variant. 
+                                             Choose one of AT1 AT2
+-cs0001_DisplacementBC <0 1 2 >: Displacement has Dirichlet boundary Condition (Y/N) 
+-cs0001_boundaryDisplacement <0 1 2 >: [m] (U): Displacement boundary value 
+-cs0001_DamageBC <FALSE>: Damage has Dirichlet boundary Condition (Y/N) 
+-cs0001_boundaryDamage <0>: [unit-less] (alpha): Damage boundary value 
+-cs0001_residualStiffness <1e-09>: [unit-less] (eta): residual stiffness multiplier 
+\end{boxedverbatim}}
+Notes:
+\begin{compactenum}
+\item Element shortID should not be changed manually.
+\item \verb+defectLaw+ and children have no effect on cell sets of codimension 1
+\item \verb+defectLaw_type plasticity+ is not implemented right now.
+\item \verb+defectLaw+, (and fracture toughness and internal length) must be given even when \verb+defectLaw_type elasticity+ is used. See Section~\ref{sec:GradientDamageModels} for details
+\end{compactenum}
+
+
+\subsubsection{Vertex sets options}
+\small{\begin{boxedverbatim}
+-vs0500_DisplacementBC <0 1 2 >: Displacement has Dirichlet boundary Condition (Y/N) 
+-vs0500_boundaryDisplacement <0 1 2 >: [m] (U): Displacement boundary value 
+-vs0500_DamageBC <FALSE>: Damage has Dirichlet boundary Condition (Y/N) 
+-vs0500_boundaryDamage <0>: [unit-less] (alpha): boundaryDamage 
+\end{boxedverbatim}}
+
+
+
+\chapter{Examples}
+\section{Uniaxial tension}
+
+\section{Double Cantilever Beam}
+
+\section{Cooling}
+
+\section{BiLayer}
+
+
+
+\bibliography{vDef}
+\end{document}  
