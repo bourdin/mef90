@@ -28,7 +28,7 @@
             pagebackref=false,
             hyperfootnotes=true]{hyperref}
 \usepackage{paralist}
-
+ \usepackage{verbatim}
 
 
 \def\vDef{{\texttt{vDef}} }
@@ -324,10 +324,49 @@ Notes:
 \section{Double Cantilever Beam}
 
 \section{Cooling}
-
-\section{BiLayer}
-
+This problem replicates the thermal shock experiment studied in depth in~\cite{Sicsic-Marigo-2013a,Bourdin-Marigo-EtAl-2014a}. A rectangular domain held at initial temperature $T_0$ is subject to the boundary temperature $T(x,t) = T_0 - \Delta T$ on its boundary. In two dimension, the behavior depends on a single parameter quantifying the intensity of the thermal shock in relation with the material thermo mechanical properties.
 
 
+\section{Bi-layer}
+
+\section{Surfing}
+We consider a rectangular domain occupying a domain $\Omega = [\L/2,L/2] \times [-H/2,H2]$ with a preexisting crack $[-L/2,x_c] \times \{0\}$.
+A \emph{surfing boundary condition} can be used to estimate effective fracture properties of heterogeneous materials~\cite{Hossein-Hsueh-EtAl-2014a} or as a verification numerical simulation for a brittle fracture simulator. 
+It is a translating plane-stress Mode-I asymptotic far field boundary displacement is applied on the boundary of the domain. 
+On $\partial \Omega$, and given a rate of loading $V$, one the boundary displacement $u(x,y,t) = U(x-Vt,y)$,  is given by (see~\cite{Zehnder-2012a})
+\begin{equation}
+\left\{
+\begin{array}{l}
+\displaystyle U_x = \frac{K_I}{2\mu}\sqrt{\frac{r}{2\pi}}(\kappa-\cos\theta)\cos{\frac{\theta}{2}}\\
+\displaystyle U_y =\frac{K_I}{2\mu}\sqrt{\frac{r}{2\pi}}(\kappa-\cos\theta)\sin{\frac{\theta}{2}},
+\end{array}
+\right.
+\end{equation}
+where $\kappa = \frac{3-\nu}{1+\nu}$, $\mu = \frac{E}{2(1+\nu)}$, and $(r , \theta)$ are polar coordinates emanating from $(x-Vt,y)$, and $K_I = \sqrt{G_c E}$ is the mode-I stress-intensity factor.
+
+For this loading, it is expected that a crack will start propagating along the $x$--axis at $t=x_c/V$, and that the rate of growth of the crack is exactly $V$.
+This loading cannot be described directly from the command line. A python script in \verb+$MEF90_DIR/bin/vDefSurfingBC.py+ can be use to write the proper boundary displacement in an exodusII file. 
+A sample YAML option file where the entity numbering is that of Figure~\ref{fig:Surfing} is as follow:
+%\begin{table}[h]
+%\label{tab:Surfing}
+\verbatiminput{Examples/Surfing/Surfing.yaml}
+%\caption{YAML option file for the surfing problem}
+%\end{table}
+
+\begin{figure}[h]
+\label{fig:Surfing}
+\centering
+\includegraphics[width=.45\textwidth]{Examples/Surfing/Surfing.png}
+\caption{Domain for the Surfing example. The numbers correspond to cubit entities.}
+\end{figure}
+
+
+
+Proposed numerical experimentations:
+\begin{compactenum}
+\item Check the qualitative fracture behavior in a surfing experiment (crack path, initial length at reactivation, ...).
+\item Study the effect of the damage boundary condition along the crack or at the crack tip on the crack propagation. Is activation always progressive?
+\item Study the effect of the numerical effective toughness on crack loading at initiation. Can this effect be accounted for \emph{a priori}?
+\end{compactenum}
 \bibliography{vDef}
 \end{document}  
