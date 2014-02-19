@@ -434,12 +434,20 @@ Program vDef
                   !!! Check for a BT step
                   !!!
                   If (MEF90DefMechGlobalOptions% BTType == MEF90DefMech_BTTypeForward) Then
-                     BTMinStep   = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     If (MEF90DefMechGlobalOptions%BTScope <= 0) Then
+                        BTMinStep = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     Else
+                         BTMinStep = 1
+                     End If 
                      BTMaxStep   = step - 1
                      BTDirection = 1
                   Else
                      BTMinStep   = step - 1
-                     BTMaxStep   = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     If (MEF90DefMechGlobalOptions%BTScope <= 0) Then
+                        BTMaxStep = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     Else
+                         BTMaxStep = step
+                     End If 
                      BTDirection = -1
                   End If
                   Do BTStep = BTminStep,BTMaxSTep,BTDirection
@@ -509,12 +517,21 @@ Program vDef
                   !!! Compute a BT step
                   !!!
                   If (MEF90DefMechGlobalOptions% BTType == MEF90DefMech_BTTypeForward) Then
-                     BTMinStep   = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     If (MEF90DefMechGlobalOptions%BTScope <= 0) Then
+                        BTMinStep = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     Else
+                         BTMinStep = 1
+                     End If 
                      BTMaxStep   = step - 1
                      BTDirection = 1
                   Else
                      BTMinStep   = step - 1
                      BTMaxStep   = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     If (MEF90DefMechGlobalOptions%BTScope <= 0) Then
+                        BTMaxStep = max(1,step - MEF90DefMechGlobalOptions%BTScope)
+                     Else
+                         BTMaxStep = step
+                     End If 
                      BTDirection = -1
                   End If
                   Do BTStep = BTminStep,BTMaxSTep,BTDirection

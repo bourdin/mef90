@@ -14,7 +14,7 @@ def parse(args=None):
     parser.add_argument("--old",action="store_true",default=False,help="old style energy file (no forces)")
     parser.add_argument("-r","--relative",action="store_true",default=False,help="offset surface energy")
     parser.add_argument("--size",type=float,nargs=2,default=None,help="Figure size")
-    parser.add_arguments("--title",default=None,help="Figure title")
+    parser.add_argument("--title",default=None,help="Figure title")
     return parser.parse_args()
 
 def main():
