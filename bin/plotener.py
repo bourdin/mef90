@@ -11,6 +11,8 @@ def parse(args=None):
     parser.add_argument("-d","--debug",action="store_true",default=False,help="Display useless debugging information")
     parser.add_argument("-m","--stepmin",type=int,help="first time step")
     parser.add_argument("-M","--stepmax",type=int,help="last time step")
+    parser.add_argument("-e","--Emin",type=float,help="Energy min")
+    parser.add_argument("-E","--Emax",type=float,help="Energy max")
     parser.add_argument("--old",action="store_true",default=False,help="old style energy file (no forces)")
     parser.add_argument("-r","--relative",action="store_true",default=False,help="offset surface energy")
     parser.add_argument("--size",type=float,nargs=2,default=None,help="Figure size")
@@ -76,7 +78,15 @@ def main():
     else:
         plt.title('Energies vs normalized time')
     pymef90.setspines()
-      
+
+    BB = plt.axis()
+    bb = [b for b in BB]
+    if options.Emin:
+        bb[2] = options.Emin      
+    if options.Emax:
+        bb[3] = options.Emax      
+    plt.axis(bb)
+
     ### export plot if needed
     if options.outputfile != None:
       fig.tight_layout(pad=0.1)
