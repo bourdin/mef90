@@ -5,16 +5,20 @@ Force_scaling: linear
 defmech:
     irrevthres: 0.
     mode: quasistatic
+    damage:
+        atol: 1e-3
 heatxfer:
     mode: null
+temperature:
+    offset: 0
 time:
     min: 0
     max: 1
-    numstep: 51
+    numstep: 21
 cs0001:
     hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
     FractureToughness: .01
-    internallength: .05
+    internallength: .2
     residualstiffness: 0.
     defectlaw:
         type: GradientDamage
@@ -25,7 +29,7 @@ cs0001:
 cs0002:
     hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
     FractureToughness: .01
-    internallength: .05
+    internallength: .2
     residualstiffness: 0.
     defectlaw:
         type: Elasticity
@@ -45,14 +49,14 @@ cs0003:
 cs0004:
     hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
     FractureToughness: .01
-    internallength: .05
+    internallength: .2
     defectlaw:
         type: Elasticity
         gradientdamage:
             type: AT1
     displacementbc: yes,yes,no
     boundaryDisplacement: 0,-1,0
-vs0060:
+cs0050:
     displacementbc: no,no,no
     damageBC: yes
     boundaryDamage: 1.
