@@ -7,6 +7,9 @@ reset
 #{yc = .01}
 #{H1 = 1.}
 #{H2 = 2.}
+#{Ri = .5}
+#{xi = 3.5}
+#{yi = 0}
 #{h=.05}
 #{hstr = tostring(h)}
 
@@ -33,20 +36,27 @@ delete surface 2
 create curve location {L1} {-H1} 0 location {L1} {H1} 0
 imprint surface all with curve {Id("curve")}
 
-block 1 surface 7
+create surface ellipse major radius {Ri} minor radius {Ri} zplane 
+move Surface {Id("surface")} location {xi} {yi} 0
+imprint surface all with curve in surface {Id("surface")}
+delete body 3
+
+block 1 surface 12 11
 block 2 surface 8 9
 block 3 surface 3
 block 4 surface 5
+#block 5 surface 11
 
-nodeset 50 curve 18 19 20 21
+block 50 curve 18 19 20 21
 
 draw block all
-hardcopy "DCB2BC-Inclusion.png" png 
+hardcopy "DCB2.png" png 
 
 surface all scheme tridelaunay size {h}
 tridelaunay point placement gq
 mesh surface all
 smooth surface all
+
 
 block 1 to 9 element type tri3
 block 10 to 99 element type bar2
@@ -57,7 +67,3 @@ block 1 to 9 element type tri6
 block 10 to 99 element type bar3
 #{filename = Quote("DCB2-"//hstr//"-tri6.gen")}
 export mesh {filename} dimension 2 block all overwrite
-
-
-
-

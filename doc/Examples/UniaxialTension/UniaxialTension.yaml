@@ -6,6 +6,8 @@ defmech:
     mode: quasistatic
 heatxfer:
     mode: null
+temperature:
+    offset: 0
 time:
     min: 0
     max: 10
