@@ -28,11 +28,13 @@
             pagebackref=false,
             hyperfootnotes=true]{hyperref}
 \usepackage{paralist}
- \usepackage{verbatim}
+\usepackage{verbatim}
+\usepackage{algorithm,algpseudocode}
 
 
 \def\vDef{{\texttt{vDef}} }
-\def\argmin{\qopname\relax m{arg\,min}}
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator{\e}{{\mathbf e}}
 
 \title{\vDef user manual}
 \author{Blaise Bourdin}
@@ -70,10 +72,30 @@ Where $f$ and $g$ denotes respectively the body and boundary fluxes, $T_b$ is a 
 
 \section{Gradient damage models}
 \label{sec:GradientDamageModels}
-The damage models implemented in \vDef are regularization of teh energy functional devised in the the variational approach to fracture~\cite{Ambrosio-Tortorelli-1990,Ambrosio-Tortorelli-1992,Giacomini-2005,Sicsic-Marigo-2013a}. These problems are formulated as rate independent unilateral minimization problems. In the time discrete formulation, the displacement and damage field at time step $t_i$ are given by
+The damage models implemented in \vDef are regularization of the energy functional devised in the the variational approach to fracture~\cite{Ambrosio-Tortorelli-1990,Ambrosio-Tortorelli-1992,Giacomini-2005,Sicsic-Marigo-2013a}. These problems are formulated as rate independent unilateral minimization problems of a total energy functional
+\begin{equation}
+	\label{eq:defEll}
+	\mathcal{E}_\ell(u,\alpha) := \int_\Omega s(\alpha) W(\e(u),T,\e^p)\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{k}{4c_w} \int_\Omega \frac{w(\alpha}{\ell} + \ell|\nabla \alpha|^2\, dx,
+\end{equation}
+where $u$, and $\alpha$ denote the displacement and damage fields, $T$, $f$, $\tau$, and $\e^p$ are given temperature, body force, surface force and plastic deformation, $\ell$ is the material internal length, $W$ is linear elastic potential:
+$$
+W(\e,T,\e^p) := \frac{1}{2} \mathbf{A}\left(\e-T \alpha_L-\e^p\right):\left(\e-T \alpha_L-\e^p\right).
+$$
+$\mathbf{A}$ is the material's Hooke's law, $\alpha_L$ its linear thermal expansion tensor (a symmatric matrix).
+The function $w$ is related to the energy dissipation function associated with a distributed damage field and the constant $c_w:= \int_0^1 \sqrt{w(s)}\, ds$ is a normalization constant.
+Two variants are implemented ($\eta$ being a small \emph{residual stiffness} possibly set to 0):
+\begin{itemize}
+\item
+	``AT1'': $s(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha$, and $c_w =2/3$.
+	``AT2'': $s(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha^2$, and $c_w = 1/2$.
+\end{itemize}
+For a comparison of the properties, refer to~\cite{Pham-Amor-EtAl-2011a}.
+
+
+ In the time discrete formulation, the displacement and damage field at time step $t_i$ are given by
 \begin{equation}
 	\label{eq:globMin}
-	(u_i,\alpha_i) = \argmin_{v \in \mathcal{K}(t_i), \beta \in \mathcal{K}'(\alpha_{i-1},\eta)} F_\ell(v,\beta),
+	(u_i,\alpha_i) = \argmin_{v \in \mathcal{K}(t_i), \beta \in \mathcal{K}'(\alpha_{i-1},\eta)} \mathcal{E}_\ell(v,\beta),
 \end{equation}
 where $\mathcal{K}(t_i)$ is the set of kinematically admissible displacement fields at step $t_i$, and $\mathcal{K}'(\alpha_{i-1},\eta)$ is the set of all damage field satisfying the irreversibility condition
 $$
@@ -83,6 +105,29 @@ Note that with these notations, enforcing irreversibility through inequality con
 
 \section{Backtracking algorithms}
 \label{sec:BT}
+Backtracking algorithms are based on enforcing necessary conditions for optimality for the entire time evolution~\cite{Bourdin-2007a}. They are based on a comparison principle: at each step, a test field admissible for all previous times is built and its energy compared to that of the previously computed ones. If the test field is of lesser energy that the previously computed one, the algorithm backtracks to this step and the alternate minimizations are restarted from the newly constructed test field. A standard and a \emph{deep} backtracking are implemented:
+
+\begin{algorithm}
+	\caption{Standard backtracking algorithm}
+	\label{algo:StdBT}
+		\begin{algorithmic}[1]
+			\State Given N, $t_0 < t_1 < \dots < t_N$, $\mathrm{BT}_{tol}$:
+			\State $i \leftarrow 0$
+			\Repeat
+				\State Compute $(u_i,\alpha_i)$ using alternate minimizations\label{altmin}
+				\For{$j = i-\mathrm{BT}_{scope} \text{ to } i-1$}
+					\If {$\frac{{t_j}^2}{{t_i}^2}\mathcal{U}_{t_j}(u_{t_i},\Gamma_{t_i}) + \mathcal{S}(\Gamma_t) \le \mathcal{U}_{t_j}(u_{t_j},\Gamma_{t_j}) + \mathcal{S}(\Gamma_{t_j}) - \mathrm{BT}_{tol}$}
+						\State $i \leftarrow j$
+						\State goto~\ref{altmin}
+					\EndIf	
+				\EndFor
+				
+			\Until{$i = n$}
+			\State $i \leftarrow i+1$
+		\end{algorithmic}
+\end{algorithm}
+
+In the deep backtracking, the exploration loop (lines 5-10) is moved into the alternate minimizations loop and executed every \verb+BT_Iinterval+ iterations. In addition, the exploration loop can be run forward (\verb+BT_Type Forward+) or backward (\verb+BT_Type Backward+).
 
 \section{General limitations.}
 \begin{itemize}
@@ -92,7 +137,7 @@ Note that with these notations, enforcing irreversibility through inequality con
 \item \vDef can import element blocks of co-dimension 0 and 1, and node sets. \emph{Node sets may not overlap}.
 \item Boundary conditions can be specified on cell or vertex sets. Passing boundary conditions on vertex sets is slightly more efficient, but ensuring that vertex sets are disjoint can be difficult.
 \item Boundary condition handling is \emph{additive}. If a cell or vertex belong to several sets, the type of boundary conditions is given by performing a logical \verb+OR+ on the boundary conditions type of its parent entities. 
-\item Specifying loading may lead to inconsistent results. In general, the loading applied will be the one specified in the set written last in the exodus file. There may be boundary effects for parallel computations.
+%\item may lead to inconsistent results. In general, the loading applied will be the one specified in the set written last in the exodus file. There may be boundary effects for parallel computations.
 \item Unilateral contact, work constrained evolution, multiple load sets, variational plasticity, thermodynamically consistent evolutions are not implemented in this version of vDef.
 \end{itemize}
 
@@ -112,7 +157,7 @@ PETSc--like options string\\
 -cs0001_defectLaw_type gradientDamage \
 -cs0001_defectLaw_gradientDamage_type AT1 \
 -cs0001_displacementBC true false false -cs0001_boundaryDisplacement 1. 0. 0. \
--cs001_damageBC false
+-cs0001_damageBC false
 \end{boxedverbatim}
 }
 Equivalent YAML file\\
@@ -156,8 +201,28 @@ Notes:
 \end{compactenum}
 
 \subsection{Ordering of tensors}
-In all options, symmetric tensors or order 2 (symmetric matrices) are given in Voigt notations, \emph{i.e.} a $3\times 3$ symmetric matrix is represented by the array $A_{11},A_{22},A_{33},A_{23},A_{13},A_{12}$ and a $2\times 2$ symmetric matrix as $A_{11},A_{22},A_{12}$. Fourth odder symmetric tensors (Hooke's laws) are listed in alphabetical order. Redundant terms due to minor and major symmetries are not duplicated. The ordering of the coefficients of a two--dimensional Hooke's law $C$ is therefore $C_{1111}, C_{1112}, C_{1122}, C_{1212}, C_{1222}, C_{2222}$. The ordering of the coefficients of a three--dimensional Hooke's law $C$ is therefore $C_{1111}, C_{1112}, C_{1113}$, $C_{1122}, C_{1123}, C_{1133}, C_{1212}, C_{1213}, C_{1222}, C_{1223}, C_{1233}, C_{1313}, C_{1322}, C_{1323}, C_{1333}, C_{2222}, C_{2223}, C_{2233}$,\\
+In all options, symmetric tensors or order 2 (symmetric matrices) are given in Voigt notations, \emph{i.e.} a $3\times 3$ symmetric matrix is represented by the array $A_{11},A_{22},A_{33},A_{23},A_{13},A_{12}$ and a $2\times 2$ symmetric matrix as $A_{11},A_{22},A_{12}$. Fourth odder symmetric tensors (Hooke's laws) are listed in alphabetical order. Redundant terms due to minor and major symmetries are not duplicated. The ordering of the coefficients of a two--dimensional Hooke's law $C$ is therefore $C_{1111}, C_{1112}, C_{1122}, C_{1212}, C_{1222}, C_{2222}$ and that of  a three--dimensional Hooke's law, $C_{1111}, C_{1112}, C_{1113}$, $C_{1122}, C_{1123}, C_{1133}, C_{1212}, C_{1213}$, $C_{1222}, C_{1223}, C_{1233}, C_{1313}, C_{1322}, C_{1323}, C_{1333}, C_{2222}, C_{2223}, C_{2233}$,
 $C_{2323}, C_{2333}, C_{3333}$. 
+
+A small utility in \verb+$MEF90_DIR/Tests/HookeLaws+ can be used to compute the coefficients of isotropic Hooke's laws:
+\begin{boxedverbatim}
+blaise@MacBook-Pro-3:Tests $ ./HookeLaws -E 1 -nu .3
+ # MEF90: hg changeset 1634:5fef53534dac 
+ # Copyright (c) 2014 B. Bourdin bourdin@lsu.edu 
+ # PETSC_ARCH=Darwin-intel14.0-mef90-O 
+ # PETSC_DIR=/opt/HPC/petsc-3.3 
+Hooke's laws for E= 1.00E+00 nu= 3.00E-01
+ 3D isotropic
+ 1.34615E+00, 0.00000E+00, 0.00000E+00, 5.76923E-01, 0.00000E+00, 5.76923E-01, 
+ 3.84615E-01, 0.00000E+00, 0.00000E+00, 0.00000E+00, 0.00000E+00, 3.84615E-01, 
+ 0.00000E+00, 0.00000E+00, 0.00000E+00, 1.34615E+00, 0.00000E+00, 5.76923E-01, 
+ 3.84615E-01, 0.00000E+00, 1.34615E+00
+ 2D plane stress
+ 1.09890E+00, 0.00000E+00, 3.29670E-01, 3.84615E-01, 0.00000E+00, 1.09890E+00
+ 2D plane strain
+ 1.34615E+00, 0.00000E+00, 5.76923E-01, 3.84615E-01, 0.00000E+00, 1.34615E+00
+\end{boxedverbatim}
+
 
 
 \subsection{Time interpolation}
@@ -178,7 +243,7 @@ Notes:
 \subsection{Offset and scaling}
 It is possible to specify the order in which fields in an exodus file are saved by specifying and \emph{offset}. An offset of 0 can be used to indicate that a specific field is not to be saved in the file.
 
-Piecewise constant loadings functions (fluxes, forces, boundary values) can be passed through the command line. Their time dependence can be controlled using the keywords \verb+constant+, \verb+linear+, or \verb+null+. When the scaling is set to null, \vDef will skip assembly of teh field, when possible. th e\verb+EXO+ keywordd is used to indicate that the values are to be read from the \emph{output} file.
+Piecewise constant loadings functions (fluxes, forces, boundary values) can be passed through the command line. Their time dependence can be controlled using the keywords \verb+constant+, \verb+linear+, or \verb+null+. When the scaling is set to null, \vDef will skip assembly of the field, when possible. The \verb+EXO+ keyword is used to indicate that the values are to be read from the \emph{output} file.
 
 \section{Problem description}
 Due to a bug in the ExodusII fortran bindings, \vDef can only import Exodus entities numbers and ignores their names. When passing command line options, Exodus' element blocks are abbreviated as \verb+cs+ (for Cell Sets) and nodes sets as \verb+vs+ (for Vertex Sets) concatenated with the entity number formatted with 4 digits. For instance, the prefix associated with exodusII element block 10 would be \verb+cs0010_+.
@@ -278,9 +343,7 @@ Notes:
 Notes:
 \begin{compactenum}
 \item Element shortID should not be changed manually. 
-\item ``Forward backtracking'' is not implemented at this time.
 \item \verb+-BT_Interval 1+ is for \emph{deep} backtracking, \verb+-BT_Interval -1+ for a standard backtracking.
-\item \verb+-BT_Scope+ controls the scope of the backtracking \emph{search} \emph{i.e.} how far back the BT algorithm can search for a better test field.
 \end{compactenum}
 
 \subsubsection{Cell sets options}
@@ -320,14 +383,46 @@ Notes:
 
 \chapter{Examples}
 \section{Uniaxial tension}
+This example is studied in depth in~\cite[Section 3.1]{Bourdin-Francfort-EtAl-2008b} in the Griffith setting and in~\cite{Pham-Amor-EtAl-2011a} for gradient damage models.
+
+
+We consider a rectangular domain $\Omega = (-L/2,L/2) \times (-H/2,H/2)$ subject to a monotonically increasing uniaxial displacement or surface force on its lateral edges. 
+
+
+\begin{figure}[H]
+\centering
+	\includegraphics[width = \textwidth]{Examples/UniaxialTension/Geometry.pdf}
+\caption{Domain for the uniaxial tension example. The numbers correspond to cubit entities.}
+\label{fig:Uniaxial}
+\end{figure}
+
+Trelis journal files for this problem are located in \verb+Examples/UniaxialTension/UniaxialTension2D.jou+ and \verb+Examples/UniaxialTension/UniaxialTension3D.jou+. A sample YAML option file is located at \verb+Examples/UniaxialTension/UniaxialTension.yaml+
+
+\section*{Proposed numerical experimentations:}
+\begin{enumerate}
+	\item	Using \verb+defectLaw_type AT1+ and \verb+defectLaw_type AT1+, study the interaction between mesh size and regularization length. For a given mesh, see how the surface energy depends on $\ell$. Check that this dependency can be avoiding by using an effective fracture toughness.
+	\item Notice that the numerical solution without backtracking does not satisfy energy continuity and cannot be a global minimizer. Use a backtracking algorithm to compute a global minimizer.
+	\item Without backtracking, see how the loading upon which crack nucleate depends on $\ell$.
+	\item See how force driven computations will fail as soon as a critical force is reached.
+	\item Compare algorithmic complexity, parallel performances of linear and quadratic finite elements for this problem.
+\end{enumerate}
 
 \section{Double Cantilever Beam}
+It is well known that crack propagation in a standard shaped double cantilever beam sample is not stable. We consider a tapered geometry as shown in Figure~\ref{fig:DCB}. Various Trelis journal files for this problem are located in \verb+Examples/DCB/UniaxialTension2D.jou+ and \verb+Examples/UniaxialTension/UniaxialTension3D.jou+. Sample YAML option files are located at \verb+Examples/DCB/UniaxialTension.yaml+
+\begin{figure}[H]
+\centering
+	\includegraphics[width = .5\textwidth]{Examples/DCB/Geometry.pdf}
+\caption{Domain for the DCB example. The numbers correspond to cubit entities.}
+\label{fig:DCB}
+\end{figure}
 
-\section{Cooling}
-This problem replicates the thermal shock experiment studied in depth in~\cite{Sicsic-Marigo-2013a,Bourdin-Marigo-EtAl-2014a}. A rectangular domain held at initial temperature $T_0$ is subject to the boundary temperature $T(x,t) = T_0 - \Delta T$ on its boundary. In two dimension, the behavior depends on a single parameter quantifying the intensity of the thermal shock in relation with the material thermo mechanical properties.
+\section*{Proposed numerical experimentations:}
+\begin{itemize}
+	\item Prescribe the $y$ component of the displacement in cell sets 3 and 4. A symmetry argument could be used to infer that propagation will take place along the symmetry axis. Is this the case? 
+	\item Fix both components of the displacement field on cell sets 3 and 4. 
+	\item Add an inclusion in the crack path. See how varying the toughness and stiffness of the inclusion will either capture or divert the propagating crack.
+\end{itemize}
 
-
-\section{Bi-layer}
 
 \section{Surfing}
 We consider a rectangular domain occupying a domain $\Omega = [\L/2,L/2] \times [-H/2,H2]$ with a preexisting crack $[-L/2,x_c] \times \{0\}$.
@@ -349,24 +444,60 @@ This loading cannot be described directly from the command line. A python script
 A sample YAML option file where the entity numbering is that of Figure~\ref{fig:Surfing} is as follow:
 %\begin{table}[h]
 %\label{tab:Surfing}
-\verbatiminput{Examples/Surfing/Surfing.yaml}
+%\verbatiminput{Examples/Surfing/Surfing.yaml}
 %\caption{YAML option file for the surfing problem}
 %\end{table}
 
-\begin{figure}[h]
-\label{fig:Surfing}
+\begin{figure}[H]
 \centering
-\includegraphics[width=.45\textwidth]{Examples/Surfing/Surfing.png}
+\includegraphics[width=.45\textwidth]{Examples/Surfing/Geometry.png}
 \caption{Domain for the Surfing example. The numbers correspond to cubit entities.}
+\label{fig:Surfing}
 \end{figure}
 
 
 
-Proposed numerical experimentations:
-\begin{compactenum}
+\section*{Proposed numerical experimentations:}
+\begin{enumerate}
 \item Check the qualitative fracture behavior in a surfing experiment (crack path, initial length at reactivation, ...).
 \item Study the effect of the damage boundary condition along the crack or at the crack tip on the crack propagation. Is activation always progressive?
 \item Study the effect of the numerical effective toughness on crack loading at initiation. Can this effect be accounted for \emph{a priori}?
-\end{compactenum}
+\end{enumerate}
+
+\section{Enforcing Displacement boundary conditions}
+Consider the domain from figure~\ref{fig:BC}. Prescribe the vertical component of the displacement along the left edge, while the lower edges are clamped. See how if the damage is left free on the lower edge, the surface energy of a boundary crack is mis-calculated.
+\begin{figure}[H]
+\centering
+\includegraphics[width=.45\textwidth]{Examples/BC/Geometry.png}
+\caption{Domain for the Surfing example. The numbers correspond to cubit entities.}
+\label{fig:BC}
+\end{figure}
+
+
+
+\section{Cooling}
+This problem replicates the thermal shock experiment studied in depth in~\cite{Sicsic-Marigo-2013a,Bourdin-Marigo-EtAl-2014a}. A rectangular domain held at initial temperature $T_0$ is subject to the boundary temperature $T(x,t) = T_0 - \Delta T$ on its boundary. In two dimension, the behavior depends on a single parameter quantifying the intensity of the thermal shock in relation with the material thermo-mechanical properties.
+
+The renormalized material properties for this problem are $E = 3.4\times 10^5 \mathrm{Nmm}^{-2}$, $\nu = .22$, $k = .0424 \mathrm{Nmm}^{-1}$, $\alpha_L = 8\times10^{-6} \mathbf{I}\mathrm{K}^{-1}$, $\ell = .05\mathrm{mm}$. For a domain of size $50 \mathrm{mm} \times 10 \mathrm{mm}$, assuming a unit thermal conductivity and a temperature contrast of $380\mathrm{K}$, the crack evolution should take place within $1\mathrm{s}$.
+
+
+Journal and data files are located in  \verb+Examples/Cooling+
+
+\section*{Proposed activities}
+\begin{itemize}
+\item Approximate a semi-infinite domain by applying a prescribe temperature along the long edge of the domain, and null flux and roller displacement boundary conditions along all other edges. See how distributed damage arises only above above a critical temperature contrast.
+\item See how distributed damage evolves into localized damaged areas then into cracks, and how the crack spacing and depth depend on the internal length.
+\item Highlight the ``parking'' selection mechanism.
+\item Re-run on a full or quarter domain.
+\end{itemize}
+
+\section{Bi-layer}
+Consider a domain consisting of two layers with a pre-existing crack on the upper layer. Create an inelastic strain by applying a constant temperature field to the layers and applying different elasticity modulii and thermal expansion coefficients to each layer.
+
+\section*{Proposed numerical experimentations:}
+By varying the displacement boundary condition on the lower edge (roller of stress free), and relative mechanical properties in the layers, multiple fracture behaviors can be exhibited: nucleation of periodic crack in the upper later as in the cooling problem, a single crack penetrating in the lower layer before branching, a crack propagating along the interface,...
+Alternatively, the python script from the surfing example could be used to apply a pre-computed inelastic strain.
+
+
 \bibliography{vDef}
 \end{document}  

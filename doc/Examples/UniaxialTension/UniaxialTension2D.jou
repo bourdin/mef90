@@ -1,0 +1,28 @@
+reset
+#{L=1}
+#{H=.1}
+#{h=.01}
+#{hstr = tostring(h)}
+
+
+create surface rectangle width {L} height {H} zplane
+surface 1 scheme tridelaunay size {h}
+tridelaunay point placement gq
+
+block 1 surface 1
+block 20 curve 2
+block 30 curve 4
+mesh surface 1
+smooth surface 1
+
+block 1 element type tri3
+block 20 30 element type bar2
+#{filename = Quote("Uniaxial2D-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+block 1 element type tri6
+block 20 30 element type bar3
+#{filename = Quote("Uniaxial2D-"//hstr//"-tri6.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+

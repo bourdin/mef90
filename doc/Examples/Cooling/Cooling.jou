@@ -1,0 +1,36 @@
+reset
+# PRL: quarter: lx = 25, ly = 5
+#      2D-3D:   lx = 5,  ly = 1
+#      h=.01
+#{Lx=5}
+#{Ly=1}
+#{h=.025}
+#{hstr = tostring(h)}
+
+create surface rectangle width {Lx} height {Ly} zplane
+surface 1 scheme tridelaunay size {h}
+tridelaunay point placement gq
+
+block 1 surface 1
+block 10 curve 1
+block 20 curve 2
+block 30 curve 3
+block 40 curve 4
+mesh surface 1
+smooth surface 1
+
+block 1 to 9 element type tri3
+block 10 to 99 element type bar2
+#{filename = Quote("Cooling2D-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+block 1 to 9 element type tri6
+block 10 to 99 element type bar3
+#{filename = Quote("Cooling2D-"//hstr//"-tri6.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+
+
+
+
+

@@ -1,0 +1,37 @@
+reset
+# PRL: quarter: lx = 25, ly = 5
+#      2D-3D:   lx = 5,  ly = 1
+#      h=.01
+#{Lx=10}
+#{Ly1=1}
+#{Ly2=.5}
+#{lc = .5}
+#{h=.05}
+#{hstr = tostring(h)}
+
+create surface rectangle width {Lx} height {Ly1+Ly2} zplane
+move Surface 1 y {(Ly2-Ly1)/2.} include_merged
+split surface 1 across location position {-Lx/2} 0 0 location position {Lx/2} 0 0
+create curve location 0 {Ly2} 0 location 0 {Ly2*(1-lc)} 0
+imprint tolerant surface 2 with curve {Id("curve")}
+
+surface all scheme tridelaunay size {h}
+tridelaunay point placement gq
+
+block 1 surface 2
+block 2 surface 3
+block 10 curve 11 13
+block 20 curve 3
+block 30 curve 12
+mesh surface all
+smooth surface all
+
+block 1 to 9 element type tri3
+block 10 to 99 element type bar2
+#{filename = Quote("BiLayer-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+
+
+
+

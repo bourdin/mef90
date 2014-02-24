@@ -1,0 +1,54 @@
+### global options
+verbose: 1
+boundaryDisplacement_scaling: linear
+Force_scaling: linear
+defmech:
+    irrevthres: 0.
+    mode: quasistatic
+heatxfer:
+    mode: null
+temperature:
+  offset: 0
+time:
+    min: 0
+    max: 5.
+    numstep: 21
+cs0001:
+    hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
+    FractureToughness: .1
+    internallength: .4
+    residualstiffness: 0.
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: no,no,no
+    damageBC: no
+cs0020:
+    hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
+    fracturetoughness: 1.
+    internallength: .4
+    residualstiffness: 0.
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: yes,yes,no
+    boundaryDisplacement: 0,.5,0
+    damageBC: yes
+    boundaryDamage: 0.
+cs0030:
+    hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
+    fracturetoughness: .1
+    internallength: .4
+    residualstiffness: 0.
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: yes,yes,no
+    boundaryDisplacement: 0,0.,0
+    damageBC: yes
+    boundaryDamage: 0.
+
+

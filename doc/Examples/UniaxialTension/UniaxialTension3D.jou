@@ -1,0 +1,29 @@
+reset
+#{L=1}
+#{H=.1}
+#{h=.01}
+#{hstr = tostring(h)}
+
+
+create brick X {L} Y {H} Z {H}
+surface all scheme tridelaunay size {h}
+tridelaunay point placement gq
+volume all scheme tetmesh
+
+block 1 volume 1
+block 20 surface 4
+block 30 surface 6
+mesh surface all
+smooth surface all
+mesh volume 1
+
+block 1 element type tetra4
+block 20 30 element type tri3
+#{filename = Quote("Uniaxial3D-"//hstr//"-tetra4.gen")}
+export mesh {filename} dimension 3 block all overwrite
+
+block 1 element type tetra10
+block 20 30 element type tri6
+#{filename = Quote("Uniaxial3D-"//hstr//"-tetra10.gen")}
+export mesh {filename} dimension 3 block all overwrite
+
