@@ -1,0 +1,38 @@
+reset
+#{L=2}
+#{xc = .2}
+#{H1=0.5}
+#{H2=1.5}
+#{h=.025}
+#{hstr = tostring(h)}
+
+
+create vertex 0 {-H1} 0
+create vertex {L} {-H2} 0
+create vertex {L} {H2} 0
+create vertex 0 {H1} 0
+
+create surface vertex 1 2 3 4
+create curve location 0 0 0 location {xc} 0 0
+imprint tolerant surface 1 with curve 5
+
+block 1 surface 1
+block 20 curve 6
+block 30 curve 8
+block 40 curve 7
+nodeset 500 vertex 1 4
+nodeset 600 vertex at 0 0 0
+
+surface all scheme tridelaunay size {h}
+tridelaunay point placement gq
+mesh surface 1
+
+block 1 element type tri3
+block 20 30 40 element type bar2
+#{filename = Quote("DCB-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+block 1 element type tri6
+block 20 30 40 element type bar3
+#{filename = Quote("DCB-"//hstr//"-tri6.gen")}
+export mesh {filename} dimension 2 block all overwrite

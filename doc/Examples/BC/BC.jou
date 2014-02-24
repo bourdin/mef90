@@ -1,0 +1,43 @@
+reset
+#{Lx = 10}
+#{Ly = 5}
+#{R = 2}
+#{h = .1}
+#{hstr = tostring(h)}
+
+create surface rectangle width {Lx} height {2*Ly} zplane
+webcut volume 1 with cylinder radius {R} axis z
+webcut volume all with plane yplane imprint merge
+webcut volume all with plane yplane offset -1 imprint merge
+webcut volume all with plane xplane offset {-Lx/2+1} imprint merge
+delete surface 11 13 14 18
+
+surface all scheme tridelaunay size {h}
+tridelaunay point placement gq
+
+block 1 surface 15
+block 20 curve 43
+block 30 curve 7 16 44
+draw block all
+hardcopy "BC1.png" png 
+
+
+mesh surface 15
+smooth surface 15
+block 1 to 9 element type tri3
+block 10 to 99 element type bar2
+draw block all
+hardcopy "BC2.png" png 
+
+#{filename = Quote("BC1-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+delete block 20 30
+block 2 surface 16
+block 3 surface 7 10 12 17
+mesh surface 7 10 12 16 17
+smooth surface all
+block 1 to 9 element type tri3
+block 10 to 99 element type bar2
+#{filename = Quote("BC2-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite

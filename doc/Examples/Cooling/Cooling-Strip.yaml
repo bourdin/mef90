@@ -1,0 +1,71 @@
+### global options
+verbose: 1
+boundaryDisplacement:
+  scaling: linear
+boundaryTemp:
+  scaling: constant
+defmech:
+    irrevthres: 0.
+    mode: quasistatic
+    damage:
+      atol: 1e-3
+heatxfer:
+    mode: transient
+    initialTemp: 0
+temp:
+  ts_monitor:
+time:
+    min: 0
+    max: .1
+    numstep: 101
+    interpolation: quadratic
+cs0001:
+    hookeslaw: 3.57293E+05,0.00000E+00,7.86045E+04,1.39344E+05,0.00000E+00,3.57293E+05
+    # isotropic 2D plane stress, E = 3.4E+05, nu = .22
+    FractureToughness: 4.24E-02
+    internallength: .0625
+    # PRL: 5E-2
+    residualstiffness: 0.
+    LinearThermalExpansion: 8E-6,8E-6,0
+    ThermalConductivity: 1,1,0
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: no,no,no
+    damageBC: no
+cs0010:
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: yes,yes,no
+    boundaryDisplacement: 0,0,0
+    damageBC: no
+    tempBC: no
+cs0020:
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: yes,no,no
+    boundaryDisplacement: 0,0,0
+    damageBC: no
+    tempBC: no
+cs0030:
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: no,no,no
+    damageBC: no
+    tempBC: yes
+    boundaryTemp: -380
+cs0040:
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: yes,no,no
+    damageBC: no
+    tempBC: no
