@@ -1,0 +1,34 @@
+reset
+#{L=1}
+#{R=.2}
+#{h=.01}
+#{hstr = tostring(h)}
+
+
+create surface rectangle width {L} height {L} zplane
+create curve arc radius {R} center location 0 0 0 normal 0 0 1 start angle 0 stop angle 360
+imprint tolerant surface 1 with curve 5 merge
+
+surface all scheme tridelaunay size {h}
+tridelaunay point placement gq
+
+block 1 surface 3
+block 2 surface 2
+block 30 curve 2 4
+block 40 curve 1 3
+
+color background white
+draw block all nodeset all
+hardcopy "Inclusion2D.png" png 
+
+mesh surface all
+smooth surface all
+
+block all element type tri3
+
+#{filename = Quote("Inclusion2D-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+
+
+
