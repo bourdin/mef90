@@ -1,0 +1,62 @@
+verbose: 1
+boundaryDisplacement:
+  scaling: linear
+boundaryTemp:
+  scaling: linear
+defmech:
+    irrevthres: 0.
+    mode: quasistatic
+    damage:
+      atol: 1e-3
+heatxfer:
+    mode: steadystate
+time:
+    min: 000
+    max: 200
+    numstep: 21
+    interpolation: linear
+cs0001:
+    name: Matrix
+    hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
+    FractureToughness: 1e-4
+    internallength: .04
+    residualstiffness: 0.
+    LinearThermalExpansion: 0,1e-3,0
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: no,no,no
+    damageBC: no
+    tempBC: yes
+    boundaryTemp: 0
+cs0002:
+    name: Inclusion
+    # inclusion
+    hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
+    FractureToughness: 5e-5
+    internallength: .04
+    residualstiffness: 0.
+    LinearThermalExpansion: 1e-3,0,0
+    defectlaw:
+        type: GradientDamage
+        gradientdamage:
+            type: AT1
+    displacementbc: no,no,no
+    damageBC: no
+    tempBC: yes
+    boundaryTemp: -1.
+cs0030:
+    # left/right edges
+    name: LS_Edges
+    displacementbc: no,no,no
+    boundaryDisplacement: 0,0,0
+    damageBC: no
+    tempBC: no
+cs0040:
+    # top/bottom edges
+    name: TB_edges
+    displacementbc: no,no,no
+    boundaryDisplacement: 0,0,0
+    damageBC: no
+    tempBC: no

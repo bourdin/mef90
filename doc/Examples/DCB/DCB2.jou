@@ -4,7 +4,7 @@ reset
 #{L3 = 1}
 #{R = .25}
 #{xc = 2.}
-#{yc = .01}
+#{yc = .1}
 #{H1 = 1.}
 #{H2 = 2.}
 #{Ri = .5}
@@ -67,3 +67,4 @@ block 1 to 9 element type tri6
 block 10 to 99 element type bar3
 #{filename = Quote("DCB2-"//hstr//"-tri6.gen")}
 export mesh {filename} dimension 2 block all overwrite
+
