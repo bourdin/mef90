@@ -126,8 +126,8 @@ Contains
          elemDamageType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
-         Select Case (cellSetOptions%defectLaw)
-         Case (MEF90DefMech_defectLawElasticity)
+         Select Case (cellSetOptions%damageType)
+         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic)
             If (Associated(MEF90DefMechCtx%temperature)) Then
                QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order)
             Else
@@ -154,7 +154,8 @@ Contains
             End If
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemDamage,ierr)
-         Case (MEF90DefMech_defectLawGradientDamage)
+
+         Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
             If (Associated(MEF90DefMechCtx%temperature)) Then
                QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order) + 2 * elemDamageType%order
             Else
@@ -182,8 +183,8 @@ Contains
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemDamage,ierr)
          
-         Case (MEF90DefMech_defectLawPlasticity)
-            Print*,__FUNCT__,': Unimplemented Damage law',cellSetOptions%defectLaw
+         Case default
+            Print*,__FUNCT__,': Unimplemented damage type',cellSetOptions%damageType
             STOP      
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -336,8 +337,8 @@ Contains
          ElemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
          ElemDamageType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
          !!! Call proper local assembly depending on the type of damage law
-         Select Case (cellSetOptions%defectLaw)
-         Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
+         Select Case (cellSetOptions%damageType)
+         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic)
             !!! Elements of codim > 0 have no contribution to the bilinear form, so we may as well skip them
             If (ElemDisplacementType%coDim == 0) Then
                QuadratureOrder = 2 * elemDisplacementType%order
@@ -345,8 +346,7 @@ Contains
                Call MEF90ElasticityBilinearFormSet(A,mesh,setIS,matPropSet%HookesLaw,elemDisplacement,ElemDisplacementType,ierr);CHKERRQ(ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
             End If
-         Case (MEF90DefMech_defectLawGradientDamage)
-         !!! switch base don ATnum
+         Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
             !!! Elements of codim > 0 have no contribution to the bilinear form, so we may as well skip them
             If (ElemDisplacementType%coDim == 0) Then
                QuadratureOrder = 2 * elemDisplacementType%order + 2 * ElemDamageType%order
@@ -357,6 +357,9 @@ Contains
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemDamage,ierr)
             End If
+         Case default
+            Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
+            STOP  
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do     
@@ -573,8 +576,8 @@ Contains
          elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
-         Select Case (cellSetOptions%defectLaw)
-         Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
+         Select Case (cellSetOptions%damageType)
+         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemScalType%order)
@@ -588,7 +591,7 @@ Contains
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
-         Case (MEF90DefMech_defectLawGradientDamage)
+         Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemScalType%order) + 2 * elemScalType%order
@@ -602,6 +605,9 @@ Contains
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
+         Case default
+            Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
+            STOP  
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          Call MPI_AllReduce(MPI_IN_PLACE,myenergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
@@ -685,8 +691,9 @@ Contains
          elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
-         Select Case (cellSetOptions%defectLaw)
-         Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity,MEF90DefMech_defectLawGradientDamage)
+         Select Case (cellSetOptions%damageType)
+         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic, &
+               MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = max(elemDisplacementType%order - 1, elemScalType%order)
@@ -700,6 +707,9 @@ Contains
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
+         Case default
+            Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
+            STOP  
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do ! set
@@ -807,27 +817,23 @@ Contains
          elemDamageType       = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
-         Select Case (cellSetOptions%defectLaw)
-         Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
+         Select Case (cellSetOptions%damageType)
+         Case (MEF90DefMech_damageTypeAT1Elastic)
             If (elemDisplacementType%coDim == 0) Then
-               Select Case(cellSetOptions%gradientDamageLaw)
-               Case(MEF90DefMech_defectLawGradientDamageAT1)
-                  QuadratureOrder = max(elemDisplacementType%order, 2 * elemDamageType%order - 2)
-                  Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-                  Call MEF90GradDamageDamageOperatorSetAT1Elastic(residualSec,mesh,alphaSec,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
-                  Call MEF90GradDamageDamageRHSSetAT1Elastic(residualSec,negone,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
-                  Call MEF90Element_Destroy(elemDamage,ierr)
-               Case(MEF90DefMech_defectLawGradientDamageAT2)
-                  QuadratureOrder = 2 * elemDamageType%order
-                  Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-                  Call MEF90GradDamageDamageOperatorSetAT2Elastic(residualSec,mesh,alphaSec,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
-                  Call MEF90Element_Destroy(elemDamage,ierr)
-               Case default
-                  Print*,__FUNCT__,': Unimplemented gradient damage law',cellSetOptions%gradientDamageLaw
-                  STOP  
-               End Select                
+               QuadratureOrder = max(elemDisplacementType%order, 2 * elemDamageType%order - 2)
+               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90GradDamageDamageOperatorSetAT1Elastic(residualSec,mesh,alphaSec,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+               Call MEF90GradDamageDamageRHSSetAT1Elastic(residualSec,negone,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+               Call MEF90Element_Destroy(elemDamage,ierr)
             End If
-         Case (MEF90DefMech_defectLawGradientDamage)
+         Case (MEF90DefMech_damageTypeAT2Elastic)
+            If (elemDisplacementType%coDim == 0) Then
+               QuadratureOrder = 2 * elemDamageType%order
+               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90GradDamageDamageOperatorSetAT2Elastic(residualSec,mesh,alphaSec,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+               Call MEF90Element_Destroy(elemDamage,ierr)
+            End If         
+         Case (MEF90DefMech_damageTypeAT1)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order) + 2 * elemDamageType%order
@@ -836,28 +842,36 @@ Contains
                End If
                Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Select Case(cellSetOptions%gradientDamageLaw)
-               Case(MEF90DefMech_defectLawGradientDamageAT1)
-                  Call MEF90GradDamageDamageOperatorSetAT1(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
-                                                           matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                           elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-                  Call MEF90GradDamageDamageRHSSetAT1(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
-                                                      matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                      elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-               Case(MEF90DefMech_defectLawGradientDamageAT2)
-                  Call MEF90GradDamageDamageOperatorSetAT2(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, &
-                                                           matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                           elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-                  Call MEF90GradDamageDamageRHSSetAT2(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
-                                                      matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                      elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-               Case default
-                  Print*,__FUNCT__,': Unimplemented gradient damage law',cellSetOptions%gradientDamageLaw
-                  STOP  
-               End Select                
+               Call MEF90GradDamageDamageOperatorSetAT1(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
+                                                        matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                        elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Call MEF90GradDamageDamageRHSSetAT1(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                   matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                   elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemDamage,ierr)
             End If
+         Case (MEF90DefMech_damageTypeAT2)
+            If (elemDisplacementType%coDim == 0) Then
+               If (Associated(MEF90DefMechCtx%temperature)) Then
+                  QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order) + 2 * elemDamageType%order
+               Else
+                  QuadratureOrder = 2 * elemDisplacementType%order - 2 + 2 * elemDamageType%order
+               End If
+               Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90GradDamageDamageOperatorSetAT2(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                        matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                        elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Call MEF90GradDamageDamageRHSSetAT2(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                   matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                   elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Call MEF90Element_Destroy(elemDisplacement,ierr)
+               Call MEF90Element_Destroy(elemDamage,ierr)
+            End If
+         Case default
+            Print*,__FUNCT__,': Unimplemented damage model',cellSetOptions%damageType
+            STOP  
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do   
@@ -1007,23 +1021,22 @@ Contains
          elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
          elemDamageType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
          !!! Call proper local assembly depending on the type of damage law
-         Select Case (cellSetOptions%defectLaw)
-         Case (MEF90DefMech_defectLawElasticity,MEF90DefMech_defectLawPlasticity)
+         Select Case (cellSetOptions%damageType)
+         Case (MEF90DefMech_damageTypeAT1Elastic)
             If (elemDamageType%coDim == 0) Then
-               Select Case(cellSetOptions%gradientDamageLaw)
-               Case(MEF90DefMech_defectLawGradientDamageAT1)
-                  QuadratureOrder = max(elemDisplacementType%order, 2 * elemDamageType%order - 2)
-                  Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-                  Call MEF90GradDamageDamageBilinearFormSetAT1Elastic(A,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
-                  Call MEF90Element_Destroy(elemDamage,ierr)
-               Case(MEF90DefMech_defectLawGradientDamageAT2)
-                  QuadratureOrder = 2 * elemDamageType%order
-                  Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-                  Call MEF90GradDamageDamageBilinearFormSetAT2Elastic(A,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
-                  Call MEF90Element_Destroy(elemDamage,ierr)
-               End Select
+               QuadratureOrder = max(elemDisplacementType%order, 2 * elemDamageType%order - 2)
+               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90GradDamageDamageBilinearFormSetAT1Elastic(A,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+               Call MEF90Element_Destroy(elemDamage,ierr)
             End If
-         Case (MEF90DefMech_defectLawGradientDamage)
+         Case (MEF90DefMech_damageTypeAT2Elastic)
+            If (elemDamageType%coDim == 0) Then
+               QuadratureOrder = 2 * elemDamageType%order
+               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90GradDamageDamageBilinearFormSetAT2Elastic(A,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
+               Call MEF90Element_Destroy(elemDamage,ierr)
+            End If
+         Case (MEF90DefMech_damageTypeAT1)
             !!! Elements of codim > 0 have no contribution to the bilinear form, so we need to skip them
             If (elemDamageType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -1033,22 +1046,31 @@ Contains
                End If
                Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Select Case(cellSetOptions%gradientDamageLaw)
-               Case(MEF90DefMech_defectLawGradientDamageAT1)
-                  Call MEF90GradDamageDamageBilinearFormSetAT1(A,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
-                                                           matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                           elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-               Case(MEF90DefMech_defectLawGradientDamageAT2)
-                  Call MEF90GradDamageDamageBilinearFormSetAT2(A,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
-                                                           matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                           elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-               Case default
-                  Print*,__FUNCT__,': Unimplemented gradient damage law',cellSetOptions%gradientDamageLaw
-                  STOP  
-               End Select    
+               Call MEF90GradDamageDamageBilinearFormSetAT1(A,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
+                                                        matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                        elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemDamage,ierr)
             End If
+         Case (MEF90DefMech_damageTypeAT2)
+            !!! Elements of codim > 0 have no contribution to the bilinear form, so we need to skip them
+            If (elemDamageType%coDim == 0) Then
+               If (Associated(MEF90DefMechCtx%temperature)) Then
+                  QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order) + 2 * elemDamageType%order
+               Else
+                  QuadratureOrder = 2 * elemDisplacementType%order - 2 + 2 * elemDamageType%order
+               End If
+               Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90GradDamageDamageBilinearFormSetAT2(A,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
+                                                        matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                        elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Call MEF90Element_Destroy(elemDisplacement,ierr)
+               Call MEF90Element_Destroy(elemDamage,ierr)
+            End If
+         Case default
+            Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
+            STOP  
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do     
@@ -1151,21 +1173,20 @@ Contains
          elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          !!! Call proper local assembly depending on the type of damage law
-         Select Case (cellSetOptions%defectLaw)
-         Case (MEF90DefMech_defectLawGradientDamage)
+         Select Case (cellSetOptions%damageType)
+         Case (MEF90DefMech_damageTypeAT1)
             If (elemScalType%coDim == 0) Then
-               Select Case(cellSetOptions%gradientDamageLaw)
-               Case(MEF90DefMech_defectLawGradientDamageAT1)
-                  QuadratureOrder = max(2 * elemScalType%order - 2, elemScalType%order)
-                  Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-                  Call MEF90GradDamageSurfaceEnergySetAT1(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
-                  Call MEF90Element_Destroy(elemScal,ierr)
-               Case(MEF90DefMech_defectLawGradientDamageAT2)
-                  QuadratureOrder = 2*elemScalType%order
-                  Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-                  Call MEF90GradDamageSurfaceEnergySetAT1(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
-                  Call MEF90Element_Destroy(elemScal,ierr)
-               End Select
+               QuadratureOrder = max(2 * elemScalType%order - 2, elemScalType%order)
+               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90GradDamageSurfaceEnergySetAT1(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
+               Call MEF90Element_Destroy(elemScal,ierr)
+            End If
+         Case (MEF90DefMech_damageTypeAT2)
+            If (elemScalType%coDim == 0) Then
+               QuadratureOrder = 2*elemScalType%order
+               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90GradDamageSurfaceEnergySetAT2(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
+               Call MEF90Element_Destroy(elemScal,ierr)
             End If
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)

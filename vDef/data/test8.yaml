@@ -16,10 +16,10 @@ cs0001:
   residualstiffness: 0.
   internalLength: .5
   linearThermalexpansion: 1e-4,1e-2,0
-  defectLaw:
-    type: gradientdamage
-    gradientDamage:
-      type: AT1
+  damage:
+    type: AT1
+  plasticity:
+    type: NONE
 cs0010:
   displacementBC: 1,1,1
   boundaryDisplacement: -.5,0,0 
