@@ -76,9 +76,8 @@ Program vDef
                                                          -1,                                      & ! elemTypeShortIDDamage will be overriden
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! force
                                                          0.0_Kr,                                  & ! pressureForce
-                                                         MEF90DefMech_defectLawGradientDamage,    & ! defect law
-                                                         MEF90DefMech_defectLawGradientDamageAT1, & ! gradientDamageLaw
-                                                         MEF90DefMech_defectLawPlasticityVonMises,& ! plasticityLaw
+                                                         MEF90DefMech_damageTypeAT1,              & ! damageType
+                                                         MEF90DefMech_plasticityTypeNone,         & ! plasticityType
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC

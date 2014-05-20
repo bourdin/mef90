@@ -70,9 +70,9 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                         :: elemTypeShortIDDamage
       PetscReal,Dimension(3)           :: force
       PetscReal                        :: pressureForce
-      PetscEnum                        :: defectLaw
-      PetscEnum                        :: gradientDamageLaw
-      PetscEnum                        :: plasticityLaw
+      !PetscEnum                        :: defectLaw
+      PetscEnum                        :: damageType
+      PetscEnum                        :: plasticityType
       PetscBool,Dimension(3)           :: Has_displacementBC
       PetscReal,Dimension(3)           :: boundaryDisplacement
       PetscBool                        :: Has_damageBC
@@ -212,29 +212,25 @@ Module m_MEF90_DefMechCtx
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_BTTypeNULL = 0,    &
-                     MEF90DefMech_BTTypeBackward, &
+                     MEF90DefMech_BTTypeBackward,    &
                      MEF90DefMech_BTTypeForward
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_BTTypeList
    
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_defectLawElasticity = 0, &
-                     MEF90DefMech_defectLawGradientDamage, &
-                     MEF90DefMech_defectLawPlasticity
+      enumerator  :: MEF90DefMech_damageTypeAT1 = 0,     &
+                     MEF90DefMech_damageTypeAT2,         &
+                     MEf90DefMech_damageTypeAT1Elastic,  &
+                     MEf90DefMech_damageTypeAT2Elastic
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_defectLawList
+   Character(len = MEF90_MXSTRLEN),Dimension(7),protected   :: MEF90DefMech_damageTypeList
    
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_defectLawGradientDamageAT1 = 0, &
-                     MEF90DefMech_defectLawGradientDamageAT2
+      enumerator  :: MEF90DefMech_plasticityTypeNone = 0,   &
+                     MEF90DefMech_plasticityTypeTresca,     &
+                     MEF90DefMech_plasticityTypeVonMises
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_defectLawGradientDamageList
-   
-   Enum,bind(c)
-      enumerator  :: MEF90DefMech_defectLawPlasticityTresca = 0, &
-                     MEF90DefMech_defectLawPlasticityVonMises
-   End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_defectLawPlasticityList
+   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_plasticityTypeList
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxInitialize_Private"
@@ -272,24 +268,20 @@ Contains
       MEF90DefMech_BTTypeList(5) = '_MEF90DefMech_BTType'
       MEF90DefMech_BTTypeList(6) = ''
       
-      MEF90DefMech_defectLawList(1) = 'Elasticity'
-      MEF90DefMech_defectLawList(2) = 'GradientDamage'
-      MEF90DefMech_defectLawList(3) = 'Plasticity'
-      MEF90DefMech_defectLawList(4) = 'MEF90DefMech_defectLaw'
-      MEF90DefMech_defectLawList(5) = '_MEF90DefMech_defectLaw'
-      MEF90DefMech_defectLawList(6) = ''
-
-      MEF90DefMech_defectLawGradientDamageList(1) = 'AT1'
-      MEF90DefMech_defectLawGradientDamageList(2) = 'AT2'
-      MEF90DefMech_defectLawGradientDamageList(3) = 'MEF90DefMech_defectLawGradientDamage'
-      MEF90DefMech_defectLawGradientDamageList(4) = '_MEF90DefMech_defectLawGradientDamage'
-      MEF90DefMech_defectLawGradientDamageList(5) = ''
+      MEF90DefMech_damageTypeList(1) = 'AT1'
+      MEF90DefMech_damageTypeList(2) = 'AT2'
+      MEF90DefMech_damageTypeList(3) = 'AT1Elastic'
+      MEF90DefMech_damageTypeList(4) = 'AT2Elastic'
+      MEF90DefMech_damageTypeList(5) = 'MEF90DefMech_damageType'
+      MEF90DefMech_damageTypeList(6) = '_MEF90DefMech_damageType'
+      MEF90DefMech_damageTypeList(7) = ''
       
-      MEF90DefMech_defectLawPlasticityList(1) = 'Tresca'
-      MEF90DefMech_defectLawPlasticityList(2) = 'VonMises'
-      MEF90DefMech_defectLawPlasticityList(3) = 'MEF90DefMech_defectLawPlasticity'
-      MEF90DefMech_defectLawPlasticityList(4) = '_MEF90DefMech_defectLawPlasticity'
-      MEF90DefMech_defectLawPlasticityList(5) = ''
+      MEF90DefMech_plasticityTypeList(1) = 'None'
+      MEF90DefMech_plasticityTypeList(2) = 'Tresca'
+      MEF90DefMech_plasticityTypeList(3) = 'VonMises'
+      MEF90DefMech_plasticityTypeList(4) = 'MEF90DefMech_plasticityType'
+      MEF90DefMech_plasticityTypeList(5) = '_MEF90DefMech_plasticityType'
+      MEF90DefMech_plasticityTypeList(6) = ''
    End Subroutine MEF90DefMechCtxInitialize_Private
    
 #undef __FUNCT__
@@ -700,8 +692,8 @@ Contains
       Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortIDDamage,default%ElemTypeShortIDDamage,'ShortIDDamage','Damage field element type ShortID',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%force,3,'Force','[N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%pressureForce,default%pressureForce,'pressureForce','[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%defectLaw,MEF90DefMech_defectLawList,default%defectLaw,'defectLaw_type','Type of defect law',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%GradientDamageLaw,MEF90DefMech_defectLawGradientDamageList,default%GradientDamageLaw,'defectLaw_gradientDamage_type','Ambrosio-Tortorelli variant',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%damageType,MEF90DefMech_damageTypeList,default%damageType,'damage_type','Type of damage law',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%plasticityType,MEF90DefMech_plasticityTypeList,default%plasticityType,'plasticity_type','Type of plasticity law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)

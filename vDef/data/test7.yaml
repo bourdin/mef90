@@ -13,10 +13,10 @@ cs0001:
     fracturetoughness: 1
     residualstiffness: 0.
     internalLength: .5
-    defectLaw:
-        type: gradientdamage
-        gradientDamage:
-            type: AT1
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE 
 cs0010:
     displacementBC: 1,1,1
     boundaryDisplacement: -.5,0,0 
