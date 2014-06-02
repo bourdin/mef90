@@ -1565,7 +1565,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2DBoundary_Elast_Init"
    Subroutine Element_P_Lagrange_2DBoundary_Elast_Init(dElem,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element2D_Elast)                  :: dElem
+      Type(MEF90Element2D_Elast)             :: dElem
       PetscReal,Dimension(:,:),Pointer       :: dCoord      ! coord(i,j)=ith coord of jth vertice
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
       PetscErrorCode,Intent(OUT)             :: ierr
@@ -1949,7 +1949,7 @@ Contains
       DeAllocate(Vertices)
 
       Select Case (dQuadratureOrder)
-      Case(1)
+      Case(0,1)
          Nb_Gauss = 1
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
