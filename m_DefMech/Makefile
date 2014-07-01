@@ -2,8 +2,9 @@ MEF90_DIM=2
 all:
 	-@make -C ${MEF90_DIR} m_DefMech
 
-include ${PETSC_DIR}/conf/rules
-include ${PETSC_DIR}/conf/variables
+#include ${PETSC_DIR}/conf/rules
+#include ${PETSC_DIR}/conf/variables
+include ${TAO_DIR}/conf/tao_base
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 BASE_DIR=${MEF90_DIR}/m_DefMech

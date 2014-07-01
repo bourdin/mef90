@@ -57,7 +57,7 @@ def main():
     import matplotlib.pyplot as plt
 
     
-    pymef90.matplotlibdefaults('medium',useTex)
+    #pymef90.matplotlibdefaults('medium',useTex)
     fig = plt.figure(figsize=options.size)
     
     if options.relative:

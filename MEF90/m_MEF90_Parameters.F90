@@ -4,8 +4,7 @@ Module m_MEF90_Parameters
 
    Use petsc
    IMPLICIT NONE
-
-   include "exodusII.inc"  
+#include "exodusII.inc"  
    
    ! The following ensures that mef90 and PETSC real types are compatible:
    ! thanks to Michael Metcalf in comp.lang.fortran
