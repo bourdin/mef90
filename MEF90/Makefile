@@ -1,8 +1,9 @@
 all:
 	-@make -C ${MEF90_DIR} MEF90
 
-include ${PETSC_DIR}/conf/variables
-include ${PETSC_DIR}/conf/rules
+#include ${PETSC_DIR}/conf/variables
+#include ${PETSC_DIR}/conf/rules
+include ${TAO_DIR}/conf/tao_base
 include ${MEF90_DIR}/Makefile.include
 
 ${MEF90_DIR}/mef90version.h: ${MEF90_DIR}/.hg/dirstate

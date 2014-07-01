@@ -14,8 +14,10 @@ test3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/vDef
 	done
 	#make -s testvDef PREFIX=Beam1x10-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 
-include ${PETSC_DIR}/conf/rules
-include ${PETSC_DIR}/conf/variables
+#include ${PETSC_DIR}/conf/rules
+#include ${PETSC_DIR}/conf/variables
+include ${TAO_DIR}/conf/tao_base
+
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
@@ -27,7 +29,7 @@ vDef:${MEF90_DIR}/bin/${PETSC_ARCH}/vDef
 
 ${MEF90_DIR}/bin/${PETSC_ARCH}/vDef: vDef.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}
 	-@echo "      $@"
-	-@${FLINKER} -o $@ vDef.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	-@${FLINKER} -o $@ vDef.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${TAO_LIB} ${PETSC_LIB} 
 
 vDef.o: ${BASE_DIR}/vDef.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	@echo "      $<"
