@@ -5,7 +5,7 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
    Use m_MEF90
    Use m_MEF90_DefMechCtx
    Implicit none
-#include "finclude/taosolver.h"
+!#include "finclude/taosolver.h"
    Private
    Public MEF90DefMechOperatorDisplacement,     &
           MEF90DefMechBilinearFormDisplacement, &
@@ -14,9 +14,6 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
           MEF90DefMechOperatorDamage,           &
           MEF90DefMechBilinearFormDamage,       &
           MEF90DefMechSurfaceEnergy,            &
-          MEF90DefMechTAOObjectiveFunction,     &
-          MEF90DefMechTAOGradient,              &
-          MEF90DefMechTAOHessian,               &
           MEF90DefMechStress
 
 Contains
@@ -1202,75 +1199,4 @@ Contains
       Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSurfaceEnergy
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechTAOObjectiveFunction"
-!!!
-!!!  
-!!!  MEF90DefMechObjectiveFunction:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechTAOObjectiveFunction(taoDamage,alpha,objectiveFunction,MEF90DefMechCtx,ierr)
-      TaoSolver                                          :: taoDamage
-      Type(Vec),Intent(IN)                               :: alpha
-      PetscReal,Intent(OUT)                              :: objectiveFunction
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscErrorCode,Intent(OUT)                         :: ierr
-      
-      PetscReal,dimension(:),Pointer                     :: elasticEnergySet,surfaceEnergySet
-
-      objectiveFunction = 0.0_Kr
-      Allocate(elasticEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
-      elasticEnergySet = 0.0_Kr
-      Allocate(surfaceEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
-      surfaceEnergySet = 0.0_Kr      
-      
-      Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%Displacement,MEF90DefMechCtx,elasticEnergySet,ierr)
-      Call MEF90DefMechSurfaceEnergy(alpha,MEF90DefMechCtx,surfaceEnergySet,ierr)
-      ObjectiveFunction = sum(elasticEnergySet) + sum(surfaceEnergySet)
-      deAllocate(elasticEnergySet)
-      deAllocate(surfaceEnergySet)
-   End Subroutine MEF90DefMechTAOObjectiveFunction
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechTAOGradient"
-!!!
-!!!  
-!!!  MEF90DefMechGradient:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechTAOGradient(taoDamage,alpha,gradient,MEF90DefMechCtx,ierr)
-      TaoSolver                                          :: taoDamage
-      Type(Vec),Intent(IN)                               :: alpha
-      Type(Vec),Intent(INOUT)                            :: gradient
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscErrorCode,Intent(OUT)                         :: ierr
-
-      Type(SNES)                                         :: dummySNES
-
-      Call MEF90DefMechOperatorDamage(dummySNES,alpha,gradient,MEF90DefMechCtx,ierr)      
-   End Subroutine MEF90DefMechTAOGradient
-   
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechTAOHessian"
-!!!
-!!!  
-!!!  MEF90DefMechTAOHessian:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechTAOHessian(taoDamage,alpha,A,M,flg,MEF90DefMechCtx,ierr)
-      TaoSolver                                          :: taoDamage
-      Type(Vec),Intent(IN)                               :: alpha
-      Type(Mat),Intent(INOUT)                            :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscErrorCode,Intent(OUT)                         :: ierr  
-
-      Type(SNES)                                         :: dummySNES
-      
-      Call MEF90DefMechBilinearFormDamage(dummySNES,alpha,A,M,flg,MEF90DefMechCtx,ierr)
-   End Subroutine MEF90DefMechTAOHessian
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
