@@ -102,14 +102,17 @@ Contains
       PetscInt, Dimension(:), Pointer  :: tmplabels_ptr
       PetscInt                         :: numval
       
+      !!! Switch to ISSortRemoveDups as soon as it become available in
+      !!! the release version of petsc
       Call ISAllGather(labels,tmplabels,ierr);CHKERRQ(ierr)
       Call ISGetSize(tmplabels,numval,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
       Call PetscSortRemoveDupsInt(numval,tmplabels_ptr,ierr);CHKERRQ(ierr)
-      call ISDestroy(labels,ierr);CHKERRQ(ierr)
+      Call ISDestroy(labels,ierr);CHKERRQ(ierr)
       Call ISCreateGeneral(Comm,numval,tmplabels_ptr,PETSC_COPY_VALUES,labels,ierr);CHKERRQ(ierr)
       Call ISRestoreIndicesF90(tmplabels,tmplabels_ptr,ierr);CHKERRQ(ierr)
       Call ISDestroy(tmplabels,ierr);CHKERRQ(ierr)
+      
       ierr = 0
    End Subroutine MEF90ISAllGatherMerge
    
