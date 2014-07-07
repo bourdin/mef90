@@ -13,9 +13,9 @@ Module m_MEF90_DefMech
       MEF90DefMechOperatorDamage2D           => MEF90DefMechOperatorDamage,            &
       MEF90DefMechBilinearFormDamage2D       => MEF90DefMechBilinearFormDamage,        &
       MEF90DefMechSurfaceEnergy2D            => MEF90DefMechSurfaceEnergy,             &
-      MEF90DefMechTAOObjectiveFunction2D     => MEF90DefMechTAOObjectiveFunction,      &
-      MEF90DefMechTAOGradient2D              => MEF90DefMechTAOGradient,               &
-      MEF90DefMechTAOHessian2D               => MEF90DefMechTAOHessian,                &
+      !MEF90DefMechTAOObjectiveFunction2D     => MEF90DefMechTAOObjectiveFunction,      &
+      !MEF90DefMechTAOGradient2D              => MEF90DefMechTAOGradient,               &
+      !MEF90DefMechTAOHessian2D               => MEF90DefMechTAOHessian,                &
       MEF90DefMechStress2D                   => MEF90DefMechStress     
    Use m_MEF90_DefMechAssembly3D, &
       MEF90DefMechOperatorDisplacement3D     => MEF90DefMechOperatorDisplacement,      &
@@ -25,9 +25,9 @@ Module m_MEF90_DefMech
       MEF90DefMechOperatorDamage3D           => MEF90DefMechOperatorDamage,            &
       MEF90DefMechBilinearFormDamage3D       => MEF90DefMechBilinearFormDamage,        &
       MEF90DefMechSurfaceEnergy3D            => MEF90DefMechSurfaceEnergy,             &
-      MEF90DefMechTAOObjectiveFunction3D     => MEF90DefMechTAOObjectiveFunction,      &
-      MEF90DefMechTAOGradient3D              => MEF90DefMechTAOGradient,               &
-      MEF90DefMechTAOHessian3D               => MEF90DefMechTAOHessian,                &
+      !MEF90DefMechTAOObjectiveFunction3D     => MEF90DefMechTAOObjectiveFunction,      &
+      !MEF90DefMechTAOGradient3D              => MEF90DefMechTAOGradient,               &
+      !MEF90DefMechTAOHessian3D               => MEF90DefMechTAOHessian,                &
       MEF90DefMechStress3D                   => MEF90DefMechStress          
 
    Implicit none
@@ -40,7 +40,7 @@ Module m_MEF90_DefMech
 
    Public :: MEF90DefMechOperatorDamage
    Public :: MEF90DefMechBilinearFormDamage
-   Public :: MEF90DefMechCreateTAODamage
+   !Public :: MEF90DefMechCreateTAODamage
    Public :: MEF90DefMechCreateSNESDamage
    Public :: MEF90DefMechUpdateDamageBounds
    Public :: MEF90DefMechUpdateboundaryDamage
@@ -50,11 +50,11 @@ Module m_MEF90_DefMech
    Public :: MEF90DefMechSurfaceEnergy
    Public :: MEF90DefMechElasticEnergy
    Public :: MEF90DefMechWork
-   Public :: MEF90DefMechTAOObjectiveFunction
-   Public :: MEF90DefMechTAOGradient
-   Public :: MEF90DefMechTAOHessian
+   !Public :: MEF90DefMechTAOObjectiveFunction
+   !Public :: MEF90DefMechTAOGradient
+   !Public :: MEF90DefMechTAOHessian
    Public :: MEF90DefMechStress
-#include "finclude/taosolver.h"
+!#include "finclude/taosolver.h"
 
 Contains
 #undef __FUNCT__
@@ -1180,76 +1180,76 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       !Call PCSetFromOptions(pcDamage,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechCreateSNESDamage
 
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCreateTAODamage"
-!!!
-!!!  
-!!!  MEF90DefMechCreateTAODamage:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechCreateTAODamage(MEF90DefMechCtx,taoDamage,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      TaoSolver                                          :: taoDamage
-      PetscErrorCode,Intent(OUT)                         :: ierr
-      
-      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-      Type(Mat)                                          :: matDamage
-      !Type(SectionReal)                                  :: CoordSec
-      !Type(Vec)                                          :: CoordVec
-      !PetscReal,Dimension(:,:),Pointer                   :: CoordPtr
-      !Type(VecScatter)                                   :: ScatterSecToVec
-      !Type(Vec)                                          :: residualDamage
-      Type(KSP)                                          :: kspDamage
-      !Type(PC)                                           :: pcDamage
-      PetscReal                                          :: atol,rtol,dtol
-      !PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
-      !PetscInt                                           :: dim
-      Type(Vec)                                          :: LB,UB
-      
-      !Call DMMeshGetDimension(MEF90DefMechCtx%DMScal,dim,ierr);CHKERRQ(ierr)
-      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMCreateMatrix(MEF90DefMechCtx%DMScal,MATAIJ,matDamage,iErr);CHKERRQ(iErr)
-      Call MatSetOptionsPrefix(matDamage,"damage_",ierr);CHKERRQ(ierr)
-      Call MatSetOption(matDamage,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      Call MatSetOption(matDamage,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      Call MatSetOption(matDamage,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      Call MatSetFromOptions(matDamage,ierr);CHKERRQ(ierr)
-
-      If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
-         Call TAOCreate(PETSC_COMM_WORLD,taoDamage,ierr);CHKERRQ(ierr)
-         Call TaoSetApplicationContext(taoDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         Call TAOSetOptionsPrefix(TAODamage,'damage_',ierr);CHKERRQ(ierr)
-         Call TAOSetType(TAODamage,'tao_blmvm',ierr);CHKERRQ(ierr)
-         
-         !!! Set default bounds for the damage field
-         Call DMCreateGlobalVector(MEF90DefMechCtx%DMScal,LB,ierr);CHKERRQ(ierr)
-         Call VecDuplicate(LB,UB,ierr);CHKERRQ(ierr)
-         Call VecSet(LB,0.0_Kr,ierr);CHKERRQ(ierr)
-         Call VecSet(UB,1.0_Kr,ierr);CHKERRQ(ierr)
-         Call TAOSetVariableBounds(taoDamage,LB,UB,ierr);CHKERRQ(ierr)
-
-         Call TaoSetObjectiveRoutine(taoDamage,MEF90DefMechTAOObjectiveFunction,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         Call TaoSetGradientRoutine(taoDamage,MEF90DefMechTAOGradient,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         Call TaoSetHessianRoutine(taoDamage,matDamage,matDamage,MEF90DefMechTAOHessian,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         atol = 1.0D-8
-         !rtol = 1.0D-10
-         !Call SNESSetTolerances(snesDamage,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
-         Call TAOSetFromOptions(taoDamage,ierr);CHKERRQ(ierr)
-
-         !!! 
-         !!! Set some KSP options
-         !!!
-         !Call TAOGetKSP(taoDamage,kspDamage,ierr);CHKERRQ(ierr)
-         !Call KSPSetType(kspDamage,KSPCG,ierr);CHKERRQ(ierr)
-         !Call KSPSetInitialGuessNonzero(kspDamage,PETSC_TRUE,ierr);CHKERRQ(ierr)
-         !rtol = 1.0D-8
-         !atol = 1.0D-8
-         !dtol = 1.0D+10
-         !Call KSPSetTolerances(kspDamage,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
-         !Call KSPSetFromOptions(kspDamage,ierr);CHKERRQ(ierr)
-      End If   
-   End Subroutine MEF90DefMechCreateTAODamage   
+!#undef __FUNCT__
+!#define __FUNCT__ "MEF90DefMechCreateTAODamage"
+!!!!
+!!!!  
+!!!!  MEF90DefMechCreateTAODamage:
+!!!!  
+!!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!!
+!   Subroutine MEF90DefMechCreateTAODamage(MEF90DefMechCtx,taoDamage,ierr)
+!      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+!      TaoSolver                                          :: taoDamage
+!      PetscErrorCode,Intent(OUT)                         :: ierr
+!      
+!      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+!      Type(Mat)                                          :: matDamage
+!      !Type(SectionReal)                                  :: CoordSec
+!      !Type(Vec)                                          :: CoordVec
+!      !PetscReal,Dimension(:,:),Pointer                   :: CoordPtr
+!      !Type(VecScatter)                                   :: ScatterSecToVec
+!      !Type(Vec)                                          :: residualDamage
+!      Type(KSP)                                          :: kspDamage
+!      !Type(PC)                                           :: pcDamage
+!      PetscReal                                          :: atol,rtol,dtol
+!      !PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
+!      !PetscInt                                           :: dim
+!      Type(Vec)                                          :: LB,UB
+!      
+!      !Call DMMeshGetDimension(MEF90DefMechCtx%DMScal,dim,ierr);CHKERRQ(ierr)
+!      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+!      Call DMCreateMatrix(MEF90DefMechCtx%DMScal,MATAIJ,matDamage,iErr);CHKERRQ(iErr)
+!      Call MatSetOptionsPrefix(matDamage,"damage_",ierr);CHKERRQ(ierr)
+!      Call MatSetOption(matDamage,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
+!      Call MatSetOption(matDamage,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
+!      Call MatSetOption(matDamage,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
+!      Call MatSetFromOptions(matDamage,ierr);CHKERRQ(ierr)
+!
+!      If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
+!         Call TAOCreate(PETSC_COMM_WORLD,taoDamage,ierr);CHKERRQ(ierr)
+!         Call TaoSetApplicationContext(taoDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+!         Call TAOSetOptionsPrefix(TAODamage,'damage_',ierr);CHKERRQ(ierr)
+!         Call TAOSetType(TAODamage,'tao_blmvm',ierr);CHKERRQ(ierr)
+!         
+!         !!! Set default bounds for the damage field
+!         Call DMCreateGlobalVector(MEF90DefMechCtx%DMScal,LB,ierr);CHKERRQ(ierr)
+!         Call VecDuplicate(LB,UB,ierr);CHKERRQ(ierr)
+!         Call VecSet(LB,0.0_Kr,ierr);CHKERRQ(ierr)
+!         Call VecSet(UB,1.0_Kr,ierr);CHKERRQ(ierr)
+!         Call TAOSetVariableBounds(taoDamage,LB,UB,ierr);CHKERRQ(ierr)
+!
+!         Call TaoSetObjectiveRoutine(taoDamage,MEF90DefMechTAOObjectiveFunction,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+!         Call TaoSetGradientRoutine(taoDamage,MEF90DefMechTAOGradient,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+!         Call TaoSetHessianRoutine(taoDamage,matDamage,matDamage,MEF90DefMechTAOHessian,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
+!         atol = 1.0D-8
+!         !rtol = 1.0D-10
+!         !Call SNESSetTolerances(snesDamage,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+!         Call TAOSetFromOptions(taoDamage,ierr);CHKERRQ(ierr)
+!
+!         !!! 
+!         !!! Set some KSP options
+!         !!!
+!         !Call TAOGetKSP(taoDamage,kspDamage,ierr);CHKERRQ(ierr)
+!         !Call KSPSetType(kspDamage,KSPCG,ierr);CHKERRQ(ierr)
+!         !Call KSPSetInitialGuessNonzero(kspDamage,PETSC_TRUE,ierr);CHKERRQ(ierr)
+!         !rtol = 1.0D-8
+!         !atol = 1.0D-8
+!         !dtol = 1.0D+10
+!         !Call KSPSetTolerances(kspDamage,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+!         !Call KSPSetFromOptions(kspDamage,ierr);CHKERRQ(ierr)
+!      End If   
+!   End Subroutine MEF90DefMechCreateTAODamage   
 
 
 #undef __FUNCT__
@@ -1291,79 +1291,79 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Call DMRestoreGlobalVector(MEF90DefMechCtx%DMScal,UB,ierr);CHKERRQ(ierr)      
    End Subroutine MEF90DefMechUpdateDamageBounds
    
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechTAOObjectiveFunction"
-!!!
-!!!  
-!!!  MEF90DefMechObjectiveFunction:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechTAOObjectiveFunction(taoDamage,alpha,objectiveFunction,MEF90DefMechCtx,ierr)
-      TaoSolver                                          :: taoDamage
-      Type(Vec),Intent(IN)                               :: alpha
-      PetscReal,Intent(OUT)                              :: objectiveFunction
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscErrorCode,Intent(OUT)                         :: ierr
-
-      PetscInt                                           :: dim 
-      
-      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
-      If (dim == 2) Then
-         Call MEF90DefMechTAOObjectiveFunction2D(taoDamage,alpha,objectiveFunction,MEF90DefMechCtx,ierr)
-      Else If (dim == 3) Then
-         Call MEF90DefMechTAOObjectiveFunction3D(taoDamage,alpha,objectiveFunction,MEF90DefMechCtx,ierr)
-      End If      
-   End Subroutine MEF90DefMechTAOObjectiveFunction
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechTAOGradient"
-!!!
-!!!  
-!!!  MEF90DefMechGradient:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechTAOGradient(taoDamage,alpha,gradient,MEF90DefMechCtx,ierr)
-      TaoSolver                                          :: taoDamage
-      Type(Vec),Intent(IN)                               :: alpha
-      Type(Vec),Intent(INOUT)                            :: gradient
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscErrorCode,Intent(OUT)                         :: ierr
-
-      PetscInt                                           :: dim 
-      
-      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
-      If (dim == 2) Then
-         Call MEF90DefMechTAOGradient2D(taoDamage,alpha,gradient,MEF90DefMechCtx,ierr)
-      Else If (dim == 3) Then
-         Call MEF90DefMechTAOGradient3D(taoDamage,alpha,gradient,MEF90DefMechCtx,ierr)
-      End If      
-   End Subroutine MEF90DefMechTAOGradient
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechTAOHessian"
-!!!
-!!!  
-!!!  MEF90DefMechTAOHessian:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechTAOHessian(taoDamage,alpha,A,M,flg,MEF90DefMechCtx,ierr)
-      TaoSolver                                          :: taoDamage
-      Type(Vec),Intent(IN)                               :: alpha
-      Type(Mat),Intent(INOUT)                            :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscErrorCode,Intent(OUT)                         :: ierr  
-
-      PetscInt                                           :: dim 
-      
-      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
-      If (dim == 2) Then
-         Call MEF90DefMechTAOHessian2D(taoDamage,alpha,A,M,flg,MEF90DefMechCtx,ierr)
-      Else If (dim == 3) Then
-         Call MEF90DefMechTAOHessian3D(taoDamage,alpha,A,M,flg,MEF90DefMechCtx,ierr)
-      End If
-   End Subroutine MEF90DefMechTAOHessian
+!#undef __FUNCT__
+!#define __FUNCT__ "MEF90DefMechTAOObjectiveFunction"
+!!!!
+!!!!  
+!!!!  MEF90DefMechObjectiveFunction:
+!!!!  
+!!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!!
+!   Subroutine MEF90DefMechTAOObjectiveFunction(taoDamage,alpha,objectiveFunction,MEF90DefMechCtx,ierr)
+!      TaoSolver                                          :: taoDamage
+!      Type(Vec),Intent(IN)                               :: alpha
+!      PetscReal,Intent(OUT)                              :: objectiveFunction
+!      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+!      PetscErrorCode,Intent(OUT)                         :: ierr
+!
+!      PetscInt                                           :: dim 
+!      
+!      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+!      If (dim == 2) Then
+!         Call MEF90DefMechTAOObjectiveFunction2D(taoDamage,alpha,objectiveFunction,MEF90DefMechCtx,ierr)
+!      Else If (dim == 3) Then
+!         Call MEF90DefMechTAOObjectiveFunction3D(taoDamage,alpha,objectiveFunction,MEF90DefMechCtx,ierr)
+!      End If      
+!   End Subroutine MEF90DefMechTAOObjectiveFunction
+!
+!#undef __FUNCT__
+!#define __FUNCT__ "MEF90DefMechTAOGradient"
+!!!!
+!!!!  
+!!!!  MEF90DefMechGradient:
+!!!!  
+!!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!!
+!   Subroutine MEF90DefMechTAOGradient(taoDamage,alpha,gradient,MEF90DefMechCtx,ierr)
+!      TaoSolver                                          :: taoDamage
+!      Type(Vec),Intent(IN)                               :: alpha
+!      Type(Vec),Intent(INOUT)                            :: gradient
+!      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+!      PetscErrorCode,Intent(OUT)                         :: ierr
+!
+!      PetscInt                                           :: dim 
+!      
+!      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+!      If (dim == 2) Then
+!         Call MEF90DefMechTAOGradient2D(taoDamage,alpha,gradient,MEF90DefMechCtx,ierr)
+!      Else If (dim == 3) Then
+!         Call MEF90DefMechTAOGradient3D(taoDamage,alpha,gradient,MEF90DefMechCtx,ierr)
+!      End If      
+!   End Subroutine MEF90DefMechTAOGradient
+!
+!#undef __FUNCT__
+!#define __FUNCT__ "MEF90DefMechTAOHessian"
+!!!!
+!!!!  
+!!!!  MEF90DefMechTAOHessian:
+!!!!  
+!!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!!
+!   Subroutine MEF90DefMechTAOHessian(taoDamage,alpha,A,M,flg,MEF90DefMechCtx,ierr)
+!      TaoSolver                                          :: taoDamage
+!      Type(Vec),Intent(IN)                               :: alpha
+!      Type(Mat),Intent(INOUT)                            :: A,M
+!      MatStructure,Intent(INOUT)                         :: flg
+!      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+!      PetscErrorCode,Intent(OUT)                         :: ierr  
+!
+!      PetscInt                                           :: dim 
+!      
+!      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+!      If (dim == 2) Then
+!         Call MEF90DefMechTAOHessian2D(taoDamage,alpha,A,M,flg,MEF90DefMechCtx,ierr)
+!      Else If (dim == 3) Then
+!         Call MEF90DefMechTAOHessian3D(taoDamage,alpha,A,M,flg,MEF90DefMechCtx,ierr)
+!      End If
+!   End Subroutine MEF90DefMechTAOHessian
 End Module m_MEF90_DefMech

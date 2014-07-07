@@ -8,7 +8,7 @@ Program vDef
    Use m_MEF90_HeatXferCtx
    Use petsc
    Implicit NONE   
-#include "finclude/taosolver.h"
+!  #include "finclude/taosolver.h"
 
    PetscErrorCode                                     :: ierr
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
@@ -129,8 +129,8 @@ Program vDef
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
-   TaoSolver                                          :: taoDamage
-   TaoSolverTerminationReason                         :: taoDamageTerminationReason
+   !!!TaoSolver                                          :: taoDamage
+   !!!TaoSolverTerminationReason                         :: taoDamageTerminationReason
    Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
    Type(Vec)                                          :: residualDamage,damageOld
@@ -163,7 +163,7 @@ Program vDef
       
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call TAOInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
+   !!!Call TAOInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
    Call MEF90Initialize(ierr)
    Call PetscPrintf(PETSC_COMM_WORLD," # vDef: numerical implementation of variational models of Defect Mechanics\n",ierr);CHKERRQ(ierr)
    
@@ -221,8 +221,8 @@ Program vDef
    Call VecDuplicate(MEF90DefMechCtx%damage,residualDamage,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
-   Call MEF90DefMechCreateTAODamage(MEF90DefMechCtx,taoDamage,ierr)
-   Call TaoSetInitialVector(taoDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+   !!!Call MEF90DefMechCreateTAODamage(MEF90DefMechCtx,taoDamage,ierr)
+   !!!Call TaoSetInitialVector(taoDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
    DeAllocate(MEF90DefMechCtx%temperature)
    
    
@@ -408,13 +408,13 @@ Program vDef
                End If
                
                Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-               !Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-               !Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
-               !If (snesDamageConvergedReason < 0) Then
-               !   Write(IOBuffer,400) "damage field",snesDamageConvergedReason
-               !   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-               !End If
-               Call TAOSolve(taoDamage,ierr);CHKERRQ(ierr)
+               Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+               Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
+               If (snesDamageConvergedReason < 0) Then
+                  Write(IOBuffer,400) "damage field",snesDamageConvergedReason
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               End If
+               !Call TAOSolve(taoDamage,ierr);CHKERRQ(ierr)
 
                Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
                Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
