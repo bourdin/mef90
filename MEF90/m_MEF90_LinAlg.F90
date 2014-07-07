@@ -60,16 +60,14 @@ Module m_MEF90_LinAlg
  !! After much hesitation,
  !! - the terms are numbered in alphabetical order (i.e. XXYX and not XYXX) 
  !! - the terms are stored in alphabetical order
+ !! 2014-07: Changed ordering to rows of the upper triangular part
+ !!          and naming to be consistent with Voigt notations
    Type Tens4OS2D
       Sequence
-      PetscReal          :: XXXX
-      PetscReal          :: XXXY
-      PetscReal          :: XXYY
+      PetscReal          :: XXXX,XXYY,XXXY
+      PetscReal          ::      YYYY,YYXY
+      PetscReal          ::           XYXY
       
-      PetscReal          :: XYXY
-      PetscReal          :: XYYY
-      
-      PetscReal          :: YYYY
    End Type Tens4OS2D
  
    Type Tens4OS3D
@@ -325,13 +323,14 @@ Contains
       PetscInt                                    :: ierr
       
       SumTens4OS2D%XXXX = T1%XXXX + T2%XXXX
-      SumTens4OS2D%XXXY = T1%XXXY + T2%XXXY
       SumTens4OS2D%XXYY = T1%XXYY + T2%XXYY
-      
-      SumTens4OS2D%XYXY = T1%XYXY + T2%XYXY
-      SumTens4OS2D%XYYY = T1%XYYY + T2%XYYY
+      SumTens4OS2D%XXXY = T1%XXXY + T2%XXXY
       
       SumTens4OS2D%YYYY = T1%YYYY + T2%YYYY
+      SumTens4OS2D%YYXY = T1%YYXY + T2%YYXY
+
+      SumTens4OS2D%XYXY = T1%XYXY + T2%XYXY
+      
       flops = 6.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function SumTens4OS2D
@@ -467,14 +466,14 @@ Contains
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
       
-      DifTens4OS2D%XXXX = T1%XXXX - T2%XXXX
-      DifTens4OS2D%XXXY = T1%XXXY - T2%XXXY
-      DifTens4OS2D%XXYY = T1%XXYY - T2%XXYY
+      DifTens4OS2D%XXXX = T1%XXXX + T2%XXXX
+      DifTens4OS2D%XXYY = T1%XXYY + T2%XXYY
+      DifTens4OS2D%XXXY = T1%XXXY + T2%XXXY
       
-      DifTens4OS2D%XYXY = T1%XYXY - T2%XYXY
-      DifTens4OS2D%XYYY = T1%XYYY - T2%XYYY
+      DifTens4OS2D%YYYY = T1%YYYY + T2%YYYY
+      DifTens4OS2D%YYXY = T1%YYXY + T2%YYXY
       
-      DifTens4OS2D%YYYY = T1%YYYY - T2%YYYY
+      DifTens4OS2D%XYXY = T1%XYXY + T2%XYXY
       flops = 6.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function DifTens4OS2D
@@ -714,7 +713,7 @@ Contains
       DbleXTens4OS2D%XXYY = D1 * T1%XXYY
       
       DbleXTens4OS2D%XYXY = D1 * T1%XYXY
-      DbleXTens4OS2D%XYYY = D1 * T1%XYYY
+      DbleXTens4OS2D%YYXY = D1 * T1%YYXY
       
       DbleXTens4OS2D%YYYY = D1 * T1%YYYY
       flops = 6.0
@@ -770,7 +769,7 @@ Contains
       Tens4OS2DXDble%XXYY = D1 * T1%XXYY
       
       Tens4OS2DXDble%XYXY = D1 * T1%XYXY
-      Tens4OS2DXDble%XYYY = D1 * T1%XYYY
+      Tens4OS2DXDble%YYXY = D1 * T1%YYXY
       
       Tens4OS2DXDble%YYYY = D1 * T1%YYYY
       flops = 6.0
@@ -876,8 +875,8 @@ Contains
       PetscInt                                    :: ierr
       
       Tens4OS2DXMatS2D%XX = T1%XXXX * M1%XX + T1%XXYY * M1%YY + T1%XXXY * M1%XY * 2.0_Kr
-      Tens4OS2DXMatS2D%YY = T1%XXYY * M1%XX + T1%YYYY * M1%YY + T1%XYYY * M1%XY * 2.0_Kr
-      Tens4OS2DXMatS2D%XY = T1%XXXY * M1%XX + T1%XYYY * M1%YY + T1%XYXY * M1%XY * 2.0_Kr
+      Tens4OS2DXMatS2D%YY = T1%XXYY * M1%XX + T1%YYYY * M1%YY + T1%YYXY * M1%XY * 2.0_Kr
+      Tens4OS2DXMatS2D%XY = T1%XXXY * M1%XX + T1%YYXY * M1%YY + T1%XYXY * M1%XY * 2.0_Kr
       flops = 18.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Tens4OS2DXMatS2D
@@ -1079,7 +1078,7 @@ Contains
       Tens4OS2DQuot%XXYY = T1%XXYY / D1
       
       Tens4OS2DQuot%XYXY = T1%XYXY / D1
-      Tens4OS2DQuot%XYYY = T1%XYYY / D1
+      Tens4OS2DQuot%YYXY = T1%YYXY / D1
       
       Tens4OS2DQuot%YYYY = T1%YYYY / D1
       flops = 6.0
@@ -1571,7 +1570,7 @@ Contains
       T1%XXYY = T2%XXYY
       
       T1%XYXY = T2%XYXY
-      T1%XYYY = T2%XYYY
+      T1%YYXY = T2%YYXY
       
       T1%YYYY = T2%YYYY
    End Subroutine Tens4OS2DEQ
@@ -1617,7 +1616,7 @@ Contains
       T1%XXYY = D1
       
       T1%XYXY = D1
-      T1%XYYY = D1
+      T1%YYXY = D1
       
       T1%YYYY = D1
    End Subroutine Tens4OS2D_Get_Real
@@ -1668,8 +1667,8 @@ Contains
       A(1,3) = T%XXYY
       A(3,1) = T%XXYY
       A(2,2) = T%XYXY * 2.0_Kr
-      A(2,3) = T%XYYY * sqrt2
-      A(3,2) = T%XYYY * sqrt2
+      A(2,3) = T%YYXY * sqrt2
+      A(3,2) = T%YYXY * sqrt2
       A(3,3) = T%YYYY
    End Subroutine Tens4OS2DGetArrayF90
 
@@ -1735,7 +1734,7 @@ Contains
       T%XXXY = A(1,2) * sqrt2over2
       T%XXYY = A(1,3) 
       T%XYXY = A(2,2) * .5_Kr 
-      T%XYYY = A(2,3) * sqrt2over2 
+      T%YYXY = A(2,3) * sqrt2over2 
       T%YYYY = A(3,3)
       DeAllocate(A)
    End Subroutine Tens4OS2DRestoreArrayF90
@@ -2331,14 +2330,14 @@ Contains
       A(1,2,1,1) = T%XXXY
       A(1,2,1,2) = T%XYXY
       A(1,2,2,1) = T%XYXY
-      A(1,2,2,2) = T%XYYY
+      A(1,2,2,2) = T%YYXY
       A(2,1,1,1) = T%XXXY
       A(2,1,1,2) = T%XYXY
       A(2,1,2,1) = T%XYXY
-      A(2,1,2,2) = T%XYYY
+      A(2,1,2,2) = T%YYXY
       A(2,2,1,1) = T%XXYY
-      A(2,2,1,2) = T%XYYY
-      A(2,2,2,1) = T%XYYY
+      A(2,2,1,2) = T%YYXY
+      A(2,2,2,1) = T%YYXY
       A(2,2,2,2) = T%YYYY
       
       C = 0.0_Kr
@@ -2364,7 +2363,7 @@ Contains
        Tens4OS2DTransform%XXXY = C(1,1,1,2) 
        Tens4OS2DTransform%XXYY = C(1,1,2,2) 
        Tens4OS2DTransform%XYXY = C(1,2,1,2) 
-       Tens4OS2DTransform%XYYY = C(1,2,2,2) 
+       Tens4OS2DTransform%YYXY = C(1,2,2,2) 
        Tens4OS2DTransform%YYYY = C(2,2,2,2) 
    End Function Tens4OS2DTransform
 End Module m_MEF90_LinAlg
