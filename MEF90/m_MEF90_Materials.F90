@@ -37,12 +37,12 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                          & ! SpecificHeat
       MEF90MatS2DIdentity,                             & ! ThermalConductivity
       MEF90MatS2DIdentity,                             & ! LinearThermalExpansion
-      Tens4OS2D( 1.09890_Kr,                           & ! A%XXXX
-                 0.00000_Kr,                           & ! A%XXXY
+      Tens4OS2D( 1.09890_Kr,                           & ! A%XXXX ! HookesLaw
                  0.32967_Kr,                           & ! A%XXYY
-                 0.38462_Kr,                           & ! A%XYXY
-                 0.00000_Kr,                           & ! A%XYYY
-                 1.09890_Kr),                          & ! A%YYYY        & ! HookesLaw
+                 0.00000_Kr,                           & ! A%XXXY
+                 1.09890_Kr,                           & ! A%YYYY
+                 0.00000_Kr,                           & ! A%YYXY
+                 0.38462_Kr),                          & ! A%XYXY        
       !MEF90Tens4OS2DIdentity,                        & ! HookesLaw
                  1.0_Kr,                               & ! Internal Length
       "MEF90Mathium2D")  
