@@ -79,6 +79,7 @@ Program vDef
                                                          0.0_Kr,                                  & ! pressureForce
                                                          MEF90DefMech_damageTypeAT1,              & ! damageType
                                                          MEF90DefMech_plasticityTypeNone,         & ! plasticityType
+                                                         MEF90DefMech_unilateralContactTypeNone,  & ! unilateralContactType
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
@@ -129,8 +130,6 @@ Program vDef
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
-   !!!TaoSolver                                          :: taoDamage
-   !!!TaoSolverTerminationReason                         :: taoDamageTerminationReason
    Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
    Type(Vec)                                          :: residualDamage,damageOld
@@ -414,7 +413,6 @@ Program vDef
                   Write(IOBuffer,400) "damage field",snesDamageConvergedReason
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                End If
-               !Call TAOSolve(taoDamage,ierr);CHKERRQ(ierr)
 
                Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
                Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
