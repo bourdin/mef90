@@ -70,9 +70,9 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                         :: elemTypeShortIDDamage
       PetscReal,Dimension(3)           :: force
       PetscReal                        :: pressureForce
-      !PetscEnum                        :: defectLaw
       PetscEnum                        :: damageType
       PetscEnum                        :: plasticityType
+      PetscEnum                        :: unilateralContactType
       PetscBool,Dimension(3)           :: Has_displacementBC
       PetscReal,Dimension(3)           :: boundaryDisplacement
       PetscBool                        :: Has_damageBC
@@ -231,6 +231,13 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_plasticityTypeVonMises
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_plasticityTypeList
+   
+   Enum,bind(c)
+      enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,            &
+                     MEF90DefMech_unilateralContactTypeSphericalDeviatoric, &
+                     MEF90DefMech_unilateralContactTypePrincipalStrains
+   End Enum
+   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_unilateralContactTypeList
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxInitialize_Private"
@@ -282,6 +289,13 @@ Contains
       MEF90DefMech_plasticityTypeList(4) = 'MEF90DefMech_plasticityType'
       MEF90DefMech_plasticityTypeList(5) = '_MEF90DefMech_plasticityType'
       MEF90DefMech_plasticityTypeList(6) = ''
+
+      MEF90DefMech_unilateralContactTypeList(1) = 'None'
+      MEF90DefMech_unilateralContactTypeList(2) = 'SphericalDeviatoric'
+      MEF90DefMech_unilateralContactTypeList(3) = 'PrincipalStrains'
+      MEF90DefMech_unilateralContactTypeList(4) = 'MEF90DefMech_unilateralContactTypeList'
+      MEF90DefMech_unilateralContactTypeList(5) = '_MEF90DefMech_unilateralContactTypeList'
+      MEF90DefMech_unilateralContactTypeList(6) = ''
    End Subroutine MEF90DefMechCtxInitialize_Private
    
 #undef __FUNCT__
@@ -694,6 +708,7 @@ Contains
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%pressureForce,default%pressureForce,'pressureForce','[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%damageType,MEF90DefMech_damageTypeList,default%damageType,'damage_type','Type of damage law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%plasticityType,MEF90DefMech_plasticityTypeList,default%plasticityType,'plasticity_type','Type of plasticity law',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%unilateralContactType,MEF90DefMech_unilateralContactTypeList,default%unilateralContactType,'unilateralContact_type','Type of handling of unilateral contact',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
