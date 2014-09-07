@@ -68,7 +68,7 @@ Contains
       
       Write(IOBuffer,*) "# This software is released under the 2-clause BSD license (aka ""Simplified BSD"" \n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,*) "#  or ""FreeBSD"") license. see the LICENSE file in the root of the software distribution\n"
+      Write(IOBuffer,*) "# or ""FreeBSD"") license. See the LICENSE file in the root of the software distribution\n\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
       
       !!! Individual modules runtime initialization should be called here

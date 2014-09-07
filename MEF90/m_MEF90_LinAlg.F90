@@ -1,4 +1,4 @@
-Module m_MEF90_LinAlg
+ Module m_MEF90_LinAlg
 #include "finclude/petscdef.h"
    Use m_MEF90_Parameters
    Use m_MEF90_Utils
@@ -72,32 +72,12 @@ Module m_MEF90_LinAlg
  
    Type Tens4OS3D
       Sequence
-      PetscReal          :: XXXX
-      PetscReal          :: XXXY
-      PetscReal          :: XXXZ
-      PetscReal          :: XXYY
-      PetscReal          :: XXYZ
-      PetscReal          :: XXZZ
-      
-      PetscReal          :: XYXY
-      PetscReal          :: XYXZ
-      PetscReal          :: XYYY
-      PetscReal          :: XYYZ
-      PetscReal          :: XYZZ
- 
-      PetscReal          :: XZXZ
-      PetscReal          :: XZYY
-      PetscReal          :: XZYZ
-      PetscReal          :: XZZZ
-      
-      PetscReal          :: YYYY
-      PetscReal          :: YYYZ
-      PetscReal          :: YYZZ
-      
-      PetscReal          :: YZYZ
-      PetscReal          :: YZZZ
-      
-      PetscReal          :: ZZZZ
+      PetscReal          :: XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY
+      PetscReal          ::      YYYY,YYZZ,YYYZ,YYXZ,YYXY
+      PetscReal          ::           ZZZZ,ZZYZ,ZZXZ,ZZXY
+      PetscReal          ::                YZYZ,YZXZ,YZXY
+      PetscReal          ::                     XZXZ,XZXY
+      PetscReal          ::                          XYXY
    End Type Tens4OS3D
    
    Type(Vect2D),Parameter    :: MEF90Vect2De1 = Vect2D(1.0_Kr,0.0_Kr)
@@ -117,14 +97,14 @@ Module m_MEF90_LinAlg
                                                              0.0_Kr,0.0_Kr,0.0_Kr)
 
    Type(Tens4OS2D),Parameter :: MEF90Tens4OS2DIdentity = Tens4OS2D(1.0_Kr,0.0_Kr,0.0_Kr, &
-                                                                   1.0_Kr,0.0_Kr,        & 
-                                                                   1.0_Kr)
-   Type(Tens4OS3D),Parameter :: MEF90Tens4OS3DIdentity = Tens4OS3D(1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, & ! 1111,1112,1113,1122,1123,1133
-                                                                   1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,        & ! 1212,1213,1222,1223,1233
-                                                                   1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,               & ! 1313,1322,1323,1333
-                                                                   1.0_Kr,0.0_Kr,0.0_Kr,                      & ! 2222,2223,2233
-                                                                   1.0_Kr,0.0_Kr,                             & ! 2323,2333
-                                                                   1.0_Kr)                                      ! 3333
+                                                                          1.0_Kr,0.0_Kr, & 
+                                                                                 0.5_Kr)
+   Type(Tens4OS3D),Parameter :: MEF90Tens4OS3DIdentity = Tens4OS3D(1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, &
+                                                                          1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, &
+                                                                                 1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, &
+                                                                                        0.5_Kr,0.0_Kr,0.0_Kr, &
+                                                                                               0.5_Kr,0.0_Kr, &
+                                                                                                      0.5_Kr)
 
    Interface Operator (+)
       Module Procedure SumVect2D,SumVect3D,SumMat2D,SumMat3D,SumMatS2D,SumMatS3D,SumTens4OS2D,SumTens4OS3D
@@ -226,7 +206,6 @@ Module m_MEF90_LinAlg
 
 
 Contains
-
   ! Overloading "-"
    Function SumVect2D (V1,V2)
       Type(Vect2D),intent(IN)                     :: V1
@@ -342,31 +321,31 @@ Contains
       PetscInt                                    :: ierr
       
       SumTens4OS3D%XXXX = T1%XXXX + T2%XXXX  
-      SumTens4OS3D%XXXY = T1%XXXY + T2%XXXY
-      SumTens4OS3D%XXXZ = T1%XXXZ + T2%XXXZ  
       SumTens4OS3D%XXYY = T1%XXYY + T2%XXYY  
-      SumTens4OS3D%XXYZ = T1%XXYZ + T2%XXYZ  
       SumTens4OS3D%XXZZ = T1%XXZZ + T2%XXZZ  
-          
-      SumTens4OS3D%XYXY = T1%XYXY + T2%XYXY  
-      SumTens4OS3D%XYXZ = T1%XYXZ + T2%XYXZ  
-      SumTens4OS3D%XYYY = T1%XYYY + T2%XYYY  
-      SumTens4OS3D%XYYZ = T1%XYYZ + T2%XYYZ  
-      SumTens4OS3D%XYZZ = T1%XYZZ + T2%XYZZ  
-          
-      SumTens4OS3D%XZXZ = T1%XZXZ + T2%XZXZ  
-      SumTens4OS3D%XZYY = T1%XZYY + T2%XZYY  
-      SumTens4OS3D%XZYZ = T1%XZYZ + T2%XZYZ  
-      SumTens4OS3D%XZZZ = T1%XZZZ + T2%XZZZ  
+      SumTens4OS3D%XXYZ = T1%XXYZ + T2%XXYZ  
+      SumTens4OS3D%XXXZ = T1%XXXZ + T2%XXXZ  
+      SumTens4OS3D%XXXY = T1%XXXY + T2%XXXY
           
       SumTens4OS3D%YYYY = T1%YYYY + T2%YYYY  
-      SumTens4OS3D%YYYZ = T1%YYYZ + T2%YYYZ  
       SumTens4OS3D%YYZZ = T1%YYZZ + T2%YYZZ  
-          
-      SumTens4OS3D%YZYZ = T1%YZYZ + T2%YZYZ  
-      SumTens4OS3D%YZZZ = T1%YZZZ + T2%YZZZ  
+      SumTens4OS3D%YYYZ = T1%YYYZ + T2%YYYZ  
+      SumTens4OS3D%YYXZ = T1%YYXZ + T2%YYXZ  
+      SumTens4OS3D%YYXY = T1%YYXY + T2%YYXY  
           
       SumTens4OS3D%ZZZZ = T1%ZZZZ + T2%ZZZZ  
+      SumTens4OS3D%ZZYZ = T1%ZZYZ + T2%ZZYZ  
+      SumTens4OS3D%ZZXZ = T1%ZZXZ + T2%ZZXZ  
+      SumTens4OS3D%ZZXY = T1%ZZXY + T2%ZZXY  
+          
+      SumTens4OS3D%YZYZ = T1%YZYZ + T2%YZYZ 
+      SumTens4OS3D%YZXZ = T1%YZXZ + T2%YZXZ  
+      SumTens4OS3D%YZXY = T1%YZXY + T2%YZXY  
+          
+      SumTens4OS3D%XZXZ = T1%XZXZ + T2%XZXZ  
+      SumTens4OS3D%XZXY = T1%XZXY + T2%XZXY  
+          
+      SumTens4OS3D%XYXY = T1%XYXY + T2%XYXY  
       flops = 21.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function SumTens4OS3D
@@ -485,31 +464,31 @@ Contains
       PetscInt                                    :: ierr
       
       DifTens4OS3D%XXXX = T1%XXXX - T2%XXXX  
-      DifTens4OS3D%XXXY = T1%XXXY - T2%XXXY
-      DifTens4OS3D%XXXZ = T1%XXXZ - T2%XXXZ  
       DifTens4OS3D%XXYY = T1%XXYY - T2%XXYY  
-      DifTens4OS3D%XXYZ = T1%XXYZ - T2%XXYZ  
       DifTens4OS3D%XXZZ = T1%XXZZ - T2%XXZZ  
-          
-      DifTens4OS3D%XYXY = T1%XYXY - T2%XYXY  
-      DifTens4OS3D%XYXZ = T1%XYXZ - T2%XYXZ  
-      DifTens4OS3D%XYYY = T1%XYYY - T2%XYYY  
-      DifTens4OS3D%XYYZ = T1%XYYZ - T2%XYYZ  
-      DifTens4OS3D%XYZZ = T1%XYZZ - T2%XYZZ  
-          
-      DifTens4OS3D%XZXZ = T1%XZXZ - T2%XZXZ  
-      DifTens4OS3D%XZYY = T1%XZYY - T2%XZYY  
-      DifTens4OS3D%XZYZ = T1%XZYZ - T2%XZYZ  
-      DifTens4OS3D%XZZZ = T1%XZZZ - T2%XZZZ  
-          
+      DifTens4OS3D%XXYZ = T1%XXYZ - T2%XXYZ  
+      DifTens4OS3D%XXXZ = T1%XXXZ - T2%XXXZ  
+      DifTens4OS3D%XXXY = T1%XXXY - T2%XXXY
+      
       DifTens4OS3D%YYYY = T1%YYYY - T2%YYYY  
-      DifTens4OS3D%YYYZ = T1%YYYZ - T2%YYYZ  
       DifTens4OS3D%YYZZ = T1%YYZZ - T2%YYZZ  
-          
-      DifTens4OS3D%YZYZ = T1%YZYZ - T2%YZYZ  
-      DifTens4OS3D%YZZZ = T1%YZZZ - T2%YZZZ  
-          
+      DifTens4OS3D%YYYZ = T1%YYYZ - T2%YYYZ  
+      DifTens4OS3D%YYXZ = T1%YYXZ - T2%YYXZ  
+      DifTens4OS3D%YYXY = T1%YYXY - T2%YYXY  
+      
       DifTens4OS3D%ZZZZ = T1%ZZZZ - T2%ZZZZ  
+      DifTens4OS3D%ZZYZ = T1%ZZYZ - T2%ZZYZ  
+      DifTens4OS3D%ZZXZ = T1%ZZXZ - T2%ZZXZ  
+      DifTens4OS3D%ZZXY = T1%ZZXY - T2%ZZXY  
+      
+      DifTens4OS3D%YZYZ = T1%YZYZ - T2%YZYZ 
+      DifTens4OS3D%YZXZ = T1%YZXZ - T2%YZXZ  
+      DifTens4OS3D%YZXY = T1%YZXY - T2%YZXY  
+      
+      DifTens4OS3D%XZXZ = T1%XZXZ - T2%XZXZ  
+      DifTens4OS3D%XZXY = T1%XZXY - T2%XZXY  
+      
+      DifTens4OS3D%XYXY = T1%XYXY - T2%XYXY  
       flops = 21.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function DifTens4OS3D
@@ -728,31 +707,31 @@ Contains
       PetscInt                                    :: ierr
       
       DbleXTens4OS3D%XXXX = D1 * T1%XXXX  
-      DbleXTens4OS3D%XXXY = D1 * T1%XXXY
-      DbleXTens4OS3D%XXXZ = D1 * T1%XXXZ  
-      DbleXTens4OS3D%XXYY = D1 * T1%XXYY  
-      DbleXTens4OS3D%XXYZ = D1 * T1%XXYZ  
+      DbleXTens4OS3D%XXYY = D1 * T1%XXYY
       DbleXTens4OS3D%XXZZ = D1 * T1%XXZZ  
-          
-      DbleXTens4OS3D%XYXY = D1 * T1%XYXY  
-      DbleXTens4OS3D%XYXZ = D1 * T1%XYXZ  
-      DbleXTens4OS3D%XYYY = D1 * T1%XYYY  
-      DbleXTens4OS3D%XYYZ = D1 * T1%XYYZ  
-      DbleXTens4OS3D%XYZZ = D1 * T1%XYZZ  
-          
-      DbleXTens4OS3D%XZXZ = D1 * T1%XZXZ  
-      DbleXTens4OS3D%XZYY = D1 * T1%XZYY  
-      DbleXTens4OS3D%XZYZ = D1 * T1%XZYZ  
-      DbleXTens4OS3D%XZZZ = D1 * T1%XZZZ  
+      DbleXTens4OS3D%XXYZ = D1 * T1%XXYZ  
+      DbleXTens4OS3D%XXXZ = D1 * T1%XXXZ  
+      DbleXTens4OS3D%XXXY = D1 * T1%XXXY  
           
       DbleXTens4OS3D%YYYY = D1 * T1%YYYY  
-      DbleXTens4OS3D%YYYZ = D1 * T1%YYYZ  
       DbleXTens4OS3D%YYZZ = D1 * T1%YYZZ  
-          
-      DbleXTens4OS3D%YZYZ = D1 * T1%YZYZ  
-      DbleXTens4OS3D%YZZZ = D1 * T1%YZZZ  
+      DbleXTens4OS3D%YYYZ = D1 * T1%YYYZ  
+      DbleXTens4OS3D%YYXZ = D1 * T1%YYXZ  
+      DbleXTens4OS3D%YYXY = D1 * T1%YYXY  
           
       DbleXTens4OS3D%ZZZZ = D1 * T1%ZZZZ  
+      DbleXTens4OS3D%ZZYZ = D1 * T1%ZZYZ  
+      DbleXTens4OS3D%ZZXZ = D1 * T1%ZZXZ  
+      DbleXTens4OS3D%ZZXY = D1 * T1%ZZXY  
+          
+      DbleXTens4OS3D%YZYZ = D1 * T1%YZYZ  
+      DbleXTens4OS3D%YZXZ = D1 * T1%YZXZ  
+      DbleXTens4OS3D%YZXY = D1 * T1%YZXY  
+          
+      DbleXTens4OS3D%XZXZ = D1 * T1%XZXZ  
+      DbleXTens4OS3D%XZXY = D1 * T1%XZXY  
+          
+      DbleXTens4OS3D%XYXY = D1 * T1%XYXY  
       flops = 21.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function DbleXTens4OS3D
@@ -784,31 +763,31 @@ Contains
       PetscInt                                    :: ierr
       
       Tens4OS3DXDble%XXXX = D1 * T1%XXXX  
-      Tens4OS3DXDble%XXXY = D1 * T1%XXXY
-      Tens4OS3DXDble%XXXZ = D1 * T1%XXXZ  
-      Tens4OS3DXDble%XXYY = D1 * T1%XXYY  
-      Tens4OS3DXDble%XXYZ = D1 * T1%XXYZ  
+      Tens4OS3DXDble%XXYY = D1 * T1%XXYY
       Tens4OS3DXDble%XXZZ = D1 * T1%XXZZ  
-          
-      Tens4OS3DXDble%XYXY = D1 * T1%XYXY  
-      Tens4OS3DXDble%XYXZ = D1 * T1%XYXZ  
-      Tens4OS3DXDble%XYYY = D1 * T1%XYYY  
-      Tens4OS3DXDble%XYYZ = D1 * T1%XYYZ  
-      Tens4OS3DXDble%XYZZ = D1 * T1%XYZZ  
-          
-      Tens4OS3DXDble%XZXZ = D1 * T1%XZXZ  
-      Tens4OS3DXDble%XZYY = D1 * T1%XZYY  
-      Tens4OS3DXDble%XZYZ = D1 * T1%XZYZ  
-      Tens4OS3DXDble%XZZZ = D1 * T1%XZZZ  
+      Tens4OS3DXDble%XXYZ = D1 * T1%XXYZ  
+      Tens4OS3DXDble%XXXZ = D1 * T1%XXXZ  
+      Tens4OS3DXDble%XXXY = D1 * T1%XXXY  
           
       Tens4OS3DXDble%YYYY = D1 * T1%YYYY  
-      Tens4OS3DXDble%YYYZ = D1 * T1%YYYZ  
       Tens4OS3DXDble%YYZZ = D1 * T1%YYZZ  
-          
-      Tens4OS3DXDble%YZYZ = D1 * T1%YZYZ  
-      Tens4OS3DXDble%YZZZ = D1 * T1%YZZZ  
+      Tens4OS3DXDble%YYYZ = D1 * T1%YYYZ  
+      Tens4OS3DXDble%YYXZ = D1 * T1%YYXZ  
+      Tens4OS3DXDble%YYXY = D1 * T1%YYXY  
           
       Tens4OS3DXDble%ZZZZ = D1 * T1%ZZZZ  
+      Tens4OS3DXDble%ZZYZ = D1 * T1%ZZYZ  
+      Tens4OS3DXDble%ZZXZ = D1 * T1%ZZXZ  
+      Tens4OS3DXDble%ZZXY = D1 * T1%ZZXY  
+          
+      Tens4OS3DXDble%YZYZ = D1 * T1%YZYZ  
+      Tens4OS3DXDble%YZXZ = D1 * T1%YZXZ  
+      Tens4OS3DXDble%YZXY = D1 * T1%YZXY  
+          
+      Tens4OS3DXDble%XZXZ = D1 * T1%XZXZ  
+      Tens4OS3DXDble%XZXY = D1 * T1%XZXY  
+          
+      Tens4OS3DXDble%XYXY = D1 * T1%XYXY  
       flops = 21.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Tens4OS3DXDble
@@ -888,21 +867,19 @@ Contains
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
       
-      Tens4OS3DXMatS3D%XX = T1%XXXX * M1%XX + T1%XXXY * M1%XY * 2.0_Kr + T1%XXXZ * M1%XZ * 2.0_Kr &
-                          + T1%XXYY * M1%YY + T1%XXYZ * M1%YZ * 2.0_Kr + T1%XXZZ * M1%ZZ 
-      Tens4OS3DXMatS3D%XY = T1%XXXY * M1%XX + T1%XYXY * M1%XY * 2.0_Kr + T1%XYXZ * M1%XZ * 2.0_Kr &
-                          + T1%XYYY * M1%YY + T1%XYYZ * M1%YZ * 2.0_Kr + T1%XYZZ * M1%ZZ 
-      Tens4OS3DXMatS3D%XZ = T1%XXXZ * M1%XX + T1%XYXZ * M1%XY * 2.0_Kr + T1%XZXZ * M1%XZ * 2.0_Kr &
-                          + T1%XZYY * M1%YY + T1%XZYZ * M1%YZ * 2.0_Kr + T1%XZZZ * M1%ZZ 
-      
-      Tens4OS3DXMatS3D%YY = T1%XXYY * M1%XX + T1%XYYY * M1%XY * 2.0_Kr + T1%XZYY * M1%XZ * 2.0_Kr &
-                          + T1%YYYY * M1%YY + T1%YYYZ * M1%YZ * 2.0_Kr + T1%YYZZ * M1%ZZ 
-      Tens4OS3DXMatS3D%YZ = T1%XXYZ * M1%XX + T1%XYYZ * M1%XY * 2.0_Kr + T1%XZYZ * M1%XZ * 2.0_Kr &
-                          + T1%YYYZ * M1%YY + T1%YZYZ * M1%YZ * 2.0_Kr + T1%YZZZ * M1%ZZ 
-      
-      Tens4OS3DXMatS3D%ZZ = T1%XXZZ * M1%XX + T1%XYZZ * M1%XY * 2.0_Kr + T1%XZZZ * M1%XZ * 2.0_Kr &
-                          + T1%YYZZ * M1%YY + T1%YZZZ * M1%YZ * 2.0_Kr + T1%ZZZZ * M1%ZZ 
-      flops = 84.0
+      Tens4OS3DXMatS3D%XX =  T1%XXXX * M1%XX + T1%YYYY * M1%YY + T1%ZZZZ * M1%ZZ &
+                          + (T1%XXYZ * M1%YZ + T1%XXXZ * M1%XZ + T1%XXXY * M1%XY) * 2.0_Kr
+      Tens4OS3DXMatS3D%YY =  T1%XXYY * M1%XX + T1%YYYY * M1%YY + T1%YYZZ * M1%ZZ &
+                          + (T1%YYYZ * M1%YZ + T1%YYXZ * M1%XZ + T1%YYXY * M1%XY) * 2.0_Kr
+      Tens4OS3DXMatS3D%ZZ =  T1%XXZZ * M1%XX + T1%YYZZ * M1%YY + T1%ZZZZ * M1%ZZ &
+                          + (T1%ZZYZ * M1%YZ + T1%ZZXZ * M1%XZ + T1%ZZXY * M1%XY) * 2.0_Kr
+      Tens4OS3DXMatS3D%YZ =  T1%XXYZ * M1%XX + T1%YYYZ * M1%YY + T1%ZZYZ * M1%ZZ &
+                          + (T1%YZYZ * M1%YZ + T1%YZXZ * M1%XZ + T1%YZXY * M1%XY) * 2.0_Kr
+      Tens4OS3DXMatS3D%XZ =  T1%XXXZ * M1%XX + T1%YYXZ * M1%YY + T1%ZZXZ * M1%ZZ &
+                          + (T1%YZXZ * M1%YZ + T1%XZXZ * M1%XZ + T1%XZXY * M1%XY) * 2.0_Kr
+      Tens4OS3DXMatS3D%XY =  T1%XXXY * M1%XX + T1%YYXY * M1%YY + T1%ZZXY * M1%ZZ &
+                          + (T1%YZXY * M1%YZ + T1%XZXY * M1%XZ + T1%XYXY * M1%XY) * 2.0_Kr
+      flops = 66.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Tens4OS3DXMatS3D
    
@@ -1093,31 +1070,31 @@ Contains
       PetscInt                                    :: ierr
       
       Tens4OS3DQuot%XXXX = T1%XXXX / D1  
-      Tens4OS3DQuot%XXXY = T1%XXXY / D1
-      Tens4OS3DQuot%XXXZ = T1%XXXZ / D1  
-      Tens4OS3DQuot%XXYY = T1%XXYY / D1  
-      Tens4OS3DQuot%XXYZ = T1%XXYZ / D1  
+      Tens4OS3DQuot%XXYY = T1%XXYY / D1
       Tens4OS3DQuot%XXZZ = T1%XXZZ / D1  
-          
-      Tens4OS3DQuot%XYXY = T1%XYXY / D1  
-      Tens4OS3DQuot%XYXZ = T1%XYXZ / D1  
-      Tens4OS3DQuot%XYYY = T1%XYYY / D1  
-      Tens4OS3DQuot%XYYZ = T1%XYYZ / D1  
-      Tens4OS3DQuot%XYZZ = T1%XYZZ / D1  
-          
-      Tens4OS3DQuot%XZXZ = T1%XZXZ / D1  
-      Tens4OS3DQuot%XZYY = T1%XZYY / D1  
-      Tens4OS3DQuot%XZYZ = T1%XZYZ / D1  
-      Tens4OS3DQuot%XZZZ = T1%XZZZ / D1  
+      Tens4OS3DQuot%XXYZ = T1%XXYZ / D1  
+      Tens4OS3DQuot%XXXZ = T1%XXXZ / D1  
+      Tens4OS3DQuot%XXXY = T1%XXXY / D1  
           
       Tens4OS3DQuot%YYYY = T1%YYYY / D1  
-      Tens4OS3DQuot%YYYZ = T1%YYYZ / D1  
       Tens4OS3DQuot%YYZZ = T1%YYZZ / D1  
-          
-      Tens4OS3DQuot%YZYZ = T1%YZYZ / D1  
-      Tens4OS3DQuot%YZZZ = T1%YZZZ / D1  
+      Tens4OS3DQuot%YYYZ = T1%YYYZ / D1  
+      Tens4OS3DQuot%YYXZ = T1%YYXZ / D1  
+      Tens4OS3DQuot%YYXY = T1%YYXY / D1  
           
       Tens4OS3DQuot%ZZZZ = T1%ZZZZ / D1  
+      Tens4OS3DQuot%ZZYZ = T1%ZZYZ / D1  
+      Tens4OS3DQuot%ZZXZ = T1%ZZXZ / D1  
+      Tens4OS3DQuot%ZZXY = T1%ZZXY / D1  
+          
+      Tens4OS3DQuot%YZYZ = T1%YZYZ / D1  
+      Tens4OS3DQuot%YZXZ = T1%YZXZ / D1  
+      Tens4OS3DQuot%YZXY = T1%YZXY / D1  
+          
+      Tens4OS3DQuot%XZXZ = T1%XZXZ / D1  
+      Tens4OS3DQuot%XZXY = T1%XZXY / D1  
+          
+      Tens4OS3DQuot%XYXY = T1%XYXY / D1  
       flops = 21.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Tens4OS3DQuot
@@ -1580,31 +1557,31 @@ Contains
       Type(Tens4OS3D),Intent(IN)                  :: T2
       
       T1%XXXX = T2%XXXX  
-      T1%XXXY = T2%XXXY
-      T1%XXXZ = T2%XXXZ  
-      T1%XXYY = T2%XXYY  
-      T1%XXYZ = T2%XXYZ  
+      T1%XXYY = T2%XXYY
       T1%XXZZ = T2%XXZZ  
-          
-      T1%XYXY = T2%XYXY  
-      T1%XYXZ = T2%XYXZ
-      T1%XYYY = T2%XYYY
-      T1%XYYZ = T2%XYYZ
-      T1%XYZZ = T2%XYZZ
-          
-      T1%XZXZ = T2%XZXZ  
-      T1%XZYY = T2%XZYY
-      T1%XZYZ = T2%XZYZ
-      T1%XZZZ = T2%XZZZ
-          
-      T1%YYYY = T2%YYYY
-      T1%YYYZ = T2%YYYZ
+      T1%XXYZ = T2%XXYZ  
+      T1%XXXZ = T2%XXXZ  
+      T1%XXXY = T2%XXXY  
+         
+      T1%YYYY = T2%YYYY  
       T1%YYZZ = T2%YYZZ
-          
-      T1%YZYZ = T2%YZYZ  
-      T1%YZZZ = T2%YZZZ
-          
-      T1%ZZZZ = T2%ZZZZ 
+      T1%YYYZ = T2%YYYZ
+      T1%YYXZ = T2%YYXZ
+      T1%YYXY = T2%YYXY
+         
+      T1%ZZZZ = T2%ZZZZ  
+      T1%ZZYZ = T2%ZZYZ
+      T1%ZZXZ = T2%ZZXZ
+      T1%ZZXY = T2%ZZXY
+         
+      T1%YZYZ = T2%YZYZ
+      T1%YZXZ = T2%YZXZ
+      T1%YZXY = T2%YZXY
+         
+      T1%XZXZ = T2%XZXZ  
+      T1%XZXY = T2%XZXY
+         
+      T1%XYXY = T2%XYXY 
    End Subroutine Tens4OS3DEQ
    
    Subroutine Tens4OS2D_Get_Real(T1,D1)
@@ -1626,56 +1603,64 @@ Contains
       PetscReal,intent(IN)                        :: D1
       
       T1%XXXX = D1  
-      T1%XXXY = D1
-      T1%XXXZ = D1  
-      T1%XXYY = D1  
-      T1%XXYZ = D1  
+      T1%XXYY = D1
       T1%XXZZ = D1  
-          
-      T1%XYXY = D1  
-      T1%XYXZ = D1  
-      T1%XYYY = D1  
-      T1%XYYZ = D1  
-      T1%XYZZ = D1  
-          
-      T1%XZXZ = D1  
-      T1%XZYY = D1  
-      T1%XZYZ = D1  
-      T1%XZZZ = D1  
-          
+      T1%XXYZ = D1  
+      T1%XXXZ = D1  
+      T1%XXXY = D1  
+         
       T1%YYYY = D1  
-      T1%YYYZ = D1  
       T1%YYZZ = D1  
-          
-      T1%YZYZ = D1  
-      T1%YZZZ = D1  
-          
+      T1%YYYZ = D1  
+      T1%YYXZ = D1  
+      T1%YYXY = D1  
+         
       T1%ZZZZ = D1  
+      T1%ZZYZ = D1  
+      T1%ZZXZ = D1  
+      T1%ZZXY = D1  
+         
+      T1%YZYZ = D1  
+      T1%YZXZ = D1  
+      T1%YZXY = D1  
+         
+      T1%XZXZ = D1  
+      T1%XZXY = D1  
+         
+      T1%XYXY = D1  
   End Subroutine Tens4OS3D_Get_Real
   
    Subroutine Tens4OS2DGetArrayF90(T,A)
       Type(Tens4OS2D),Intent(IN)                  :: T
       PetscReal,Dimension(:,:),Pointer            :: A
 
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       PetscReal                                   :: sqrt2
       
       sqrt2 = sqrt(2.0_Kr)
       Allocate(A(3,3))
       A(1,1) = T%XXXX
-      A(1,2) = T%XXXY * sqrt2
-      A(2,1) = T%XXXY * sqrt2
-      A(1,3) = T%XXYY
-      A(3,1) = T%XXYY
-      A(2,2) = T%XYXY * 2.0_Kr
+      A(1,2) = T%XXYY
+      A(1,3) = T%XXXY * sqrt2
+
+      A(2,1) = A(1,2)
+      A(2,2) = T%YYYY
       A(2,3) = T%YYXY * sqrt2
-      A(3,2) = T%YYXY * sqrt2
-      A(3,3) = T%YYYY
+
+      A(3,1) = A(3,1)
+      A(3,2) = A(2,3)
+      A(3,3) = T%XYXY * 2.0_Kr
+      flops = 4
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine Tens4OS2DGetArrayF90
 
    Subroutine Tens4OS3DGetArrayF90(T,A)
       Type(Tens4OS3D),Intent(IN)                  :: T
       PetscReal,Dimension(:,:),Pointer            :: A
       
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       PetscReal                                   :: sqrt2
    
       sqrt2 = sqrt(2.0_Kr)
@@ -1683,96 +1668,108 @@ Contains
       A(1,1) = T%XXXX
       A(1,2) = T%XXYY
       A(1,3) = T%XXZZ
-      A(1,4) = T%XXXY * sqrt2
-      A(1,5) = T%XXYZ * sqrt2
-      A(1,6) = T%XXXZ * sqrt2
+      A(1,4) = T%XXYZ * sqrt2
+      A(1,5) = T%XXXZ * sqrt2
+      A(1,6) = T%XXXY * sqrt2
 
       A(2,1) = A(1,1)
       A(2,2) = T%YYYY
       A(2,3) = T%YYZZ
-      A(2,4) = T%XYYY * sqrt2
-      A(2,5) = T%YYYZ * sqrt2
-      A(2,6) = T%XYYZ * sqrt2
+      A(2,4) = T%YYYZ * sqrt2
+      A(2,5) = T%YYXZ * sqrt2
+      A(2,6) = T%YYXY * sqrt2
 
       A(3,1) = A(1,3)
       A(3,2) = A(2,3)
       A(3,3) = T%ZZZZ
-      A(3,4) = T%XYZZ * sqrt2
-      A(3,5) = T%YZZZ * sqrt2
-      A(3,6) = T%XZZZ * sqrt2
+      A(3,4) = T%ZZYZ * sqrt2
+      A(3,5) = T%ZZXZ * sqrt2
+      A(3,6) = T%ZZXY * sqrt2
    
       A(4,1) = A(1,4)
       A(4,2) = A(2,4)
       A(4,3) = A(3,4)
-      A(4,4) = T%XYXY * 2.0_Kr
-      A(4,5) = T%XYYZ * 2.0_Kr
-      A(4,6) = T%XXYZ * 2.0_Kr
+      A(4,4) = T%YZYZ * 2.0_Kr
+      A(4,5) = T%YZXZ * 2.0_Kr
+      A(4,6) = T%YZXY * 2.0_Kr
    
       A(5,1) = A(1,5)
       A(5,2) = A(2,5)
       A(5,3) = A(3,5)
       A(5,4) = A(4,5)
-      A(5,5) = T%YYZZ * 2.0_Kr
-      A(5,6) = T%XYZZ * 2.0_Kr
+      A(5,5) = T%XZXZ * 2.0_Kr
+      A(5,6) = T%XZXY * 2.0_Kr
    
       A(6,1) = A(1,6)
       A(2,6) = A(2,6)
       A(3,6) = A(3,6)
       A(4,6) = A(4,6)
       A(5,6) = A(5,6)
-      A(6,6) = T%XXZZ * 2.0_Kr
+      A(6,6) = T%XYXY * 2.0_Kr
+      flops = 16
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine Tens4OS3DGetArrayF90
 
    Subroutine Tens4OS2DRestoreArrayF90(T,A)
       Type(Tens4OS2D),Intent(OUT)                 :: T
       PetscReal,Dimension(:,:),Pointer            :: A
 
+      PetscInt                                    :: ierr
+      PetscLogDouble                              :: flops
       PetscReal                                   :: sqrt2over2
 
       sqrt2over2 = sqrt(2.0_Kr) * 0.5_Kr
       T%XXXX = A(1,1) 
-      T%XXXY = A(1,2) * sqrt2over2
-      T%XXYY = A(1,3) 
-      T%XYXY = A(2,2) * .5_Kr 
+      T%XXYY = A(1,2)
+      T%XXXY = A(1,3) * sqrt2over2
+      
+      T%YYYY = A(2,2)
       T%YYXY = A(2,3) * sqrt2over2 
-      T%YYYY = A(3,3)
+
+      T%XYXY = A(3,3) * .5_Kr 
       DeAllocate(A)
+      flops = 5
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine Tens4OS2DRestoreArrayF90
 
    Subroutine Tens4OS3DRestoreArrayF90(T,A)
       Type(Tens4OS3D),Intent(OUT)                 :: T
       PetscReal,Dimension(:,:),Pointer            :: A
 
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       PetscReal                                   :: sqrt2over2
 
       sqrt2over2 = sqrt(2.0_Kr) * 0.5_Kr
       T%XXXX = A(1,1)
       T%XXYY = A(1,2)
       T%XXZZ = A(1,3)
-      T%XXXY = A(1,4) * sqrt2over2
-      T%XXYZ = A(1,5) * sqrt2over2
-      T%XXXZ = A(1,6) * sqrt2over2
+      T%XXYZ = A(1,4) * sqrt2over2
+      T%XXXZ = A(1,5) * sqrt2over2
+      T%XXXY = A(1,6) * sqrt2over2
 
       T%YYYY = A(2,2) 
       T%YYZZ = A(2,3) 
-      T%XYYY = A(2,4) * sqrt2over2
-      T%YYYZ = A(2,5) * sqrt2over2
-      T%XYYZ = A(2,6) * sqrt2over2
+      T%YYYZ = A(2,4) * sqrt2over2
+      T%YYXZ = A(2,5) * sqrt2over2
+      T%YYXY = A(2,6) * sqrt2over2
 
       T%ZZZZ = A(3,3) 
-      T%XYZZ = A(3,4) * sqrt2over2
-      T%YZZZ = A(3,5) * sqrt2over2
-      T%XZZZ = A(3,6) * sqrt2over2
+      T%ZZYZ = A(3,4) * sqrt2over2
+      T%ZZXZ = A(3,5) * sqrt2over2
+      T%ZZXY = A(3,6) * sqrt2over2
    
-      T%XYXY = A(4,4) * 0.5_Kr
-      T%XYYZ = A(4,5) * 0.5_Kr
-      T%XXYZ = A(4,6) * 0.5_Kr
+      T%YZYZ = A(4,4) * 0.5_Kr
+      T%YZXZ = A(4,5) * 0.5_Kr
+      T%YZXY = A(4,6) * 0.5_Kr
    
-      T%YYZZ = A(5,5) * 0.5_Kr
-      T%XYZZ = A(5,6) * 0.5_Kr
+      T%XZXZ = A(5,5) * 0.5_Kr
+      T%XZXY = A(5,6) * 0.5_Kr
    
-      T%XXZZ = A(6,6) * 0.5_Kr
+      T%XYXY = A(6,6) * 0.5_Kr
       DeAllocate(A)
+      flops = 17.0
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine Tens4OS3DRestoreArrayF90
 
    !!! Overloading euclidian norm of derived types
@@ -2249,7 +2246,7 @@ Contains
    Subroutine simplexNormal2D(Coord,n,ierr)
       Type(Vect2D),Dimension(:),Pointer               :: Coord
       Type(Vect2D),Intent(OUT)                        :: n
-      PetscErrorCode,Intent(OUT)                      :: ierr
+      PetscInt      ,Intent(OUT)                      :: ierr
 
       PetscLogDouble                                  :: flops
 
@@ -2270,7 +2267,7 @@ Contains
    Subroutine simplexNormal3D(Coord,n,ierr)
       Type(Vect3D),Dimension(:),Pointer               :: Coord
       Type(Vect3D),Intent(OUT)                        :: n
-      PetscErrorCode,Intent(OUT)                      :: ierr
+      PetscInt      ,Intent(OUT)                      :: ierr
 
       n = (Coord(2)-Coord(1)) .crossP. (Coord(1)-Coord(3))
       n = n / norm(n)
