@@ -1,20 +1,11 @@
-all: TestMaterials TestMEF90Ctx TestHeatXfer
-runall: runTestMaterials runTestMEF90Ctx runTestHeatXfer
+all: TestMaterials TestMEF90Ctx 
+runall: runTestMaterials runTestMEF90Ctx 
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
-
-TestHeatXfer: TestHeatXfer.o
-	-@echo "      $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-	-@${RM} $<
-
-TestHeatXfer.o: TestHeatXfer.F90 ${MEF90_HEATXFER_OBJS} MEF90 m_HeatXfer
-	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 TestMaterials: TestMaterials.o
 	-@echo "      $@"
@@ -82,56 +73,6 @@ runTestMEF90Ctx: TestMEF90Ctx
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out SquareNG-tri3*
 	
-runTestHeatXfer: TestHeatXfer
-	@echo "         Running " $@
-	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
-	-@ARGS='-verbose 1 -prefix SquareNG-tri3 -time_numstep 51';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
-	${RM} -f $@.out SquareNG-tri3*
-	
-runSimplePoissonNG2D-1: 
-	make -C ${MEF90_DIR} SimplePoissonNG2D
-	@echo "         Running " $@
-	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
-	-@ARGS='-verbose 1 -prefix SquareNG-tri3 -options_file ../SimplePoissonNG/opt1.txt';\
-	${MPIEXEC} -n 2 ../bin/${PETSC_ARCH}/SimplePoissonNG2D $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
-	${RM} -f $@.out SquareNG-tri3*
-
-runSimplePoissonNG2D-1TS: 
-	make -C ${MEF90_DIR} SimplePoissonNG2D
-	@echo "         Running " $@
-	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
-	-@ARGS='-verbose 1 -prefix SquareNG-tri3 -options_file ../SimplePoissonNG/opt1TS.txt';\
-	${MPIEXEC} -n 2 ../bin/${PETSC_ARCH}/SimplePoissonNG2D $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
-	${RM} -f $@.out SquareNG-tri3*
-
-runSimplePoissonNG2D-2: 
-	make -C ${MEF90_DIR} SimplePoissonNG2D
-	@echo "         Running " $@
-	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
-	-@ARGS='-verbose 1 -prefix SquareNG-tri3 -options_file ../SimplePoissonNG/opt2.txt';\
-	${MPIEXEC} -n 2 ../bin/${PETSC_ARCH}/SimplePoissonNG2D $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
-	${RM} -f $@.out SquareNG-tri3*
-
-runSimplePoissonNG2D-3: 
-	make -C ${MEF90_DIR} SimplePoissonNG2D
-	@echo "         Running " $@
-	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
-	-@ARGS='-verbose 1 -prefix SquareNG-tri3 -options_file ../SimplePoissonNG/opt3.txt';\
-	${MPIEXEC} -n 2 ../bin/${PETSC_ARCH}/SimplePoissonNG2D $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
-	${RM} -f $@.out SquareNG-tri3*
-
-
 MEF90:
 	make -C ${MEF90_DIR} MEF90
 m_HeatXfer:

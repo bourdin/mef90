@@ -37,45 +37,25 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                          & ! SpecificHeat
       MEF90MatS2DIdentity,                             & ! ThermalConductivity
       MEF90MatS2DIdentity,                             & ! LinearThermalExpansion
-      Tens4OS2D( 1.09890_Kr,                           & ! A%XXXX ! HookesLaw
-                 0.32967_Kr,                           & ! A%XXYY
-                 0.00000_Kr,                           & ! A%XXXY
-                 1.09890_Kr,                           & ! A%YYYY
-                 0.00000_Kr,                           & ! A%YYXY
-                 0.38462_Kr),                          & ! A%XYXY        
-      !MEF90Tens4OS2DIdentity,                        & ! HookesLaw
+      Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,      & ! HookesLaw XXXX,XXYY,XXXY
+                           1.09890_Kr,0.00000_Kr,      & !                YYYY,YYXY
+                                      0.38462_Kr),     & !                     XYXY        
                  1.0_Kr,                               & ! Internal Length
       "MEF90Mathium2D")  
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type ( &
-      1.0_Kr,                                          & ! Density
-      1.0_Kr,                                          & ! FractureToughness
-      1.0_Kr,                                          & ! SpecificHeat
-      MEF90MatS3DIdentity,                             & ! ThermalConductivity
-      MEF90MatS3DIdentity,                             & ! LinearThermalExpansion
-      Tens4OS3D( 1.34615_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.57692_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.57692_Kr,                           &
-                 0.38462_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.38462_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.00000_Kr,                           &
-                 1.34615_Kr,                           &
-                 0.00000_Kr,                           &
-                 0.57692_Kr,                           &
-                 0.38462_Kr,                           &
-                 0.00000_Kr,                           &
-                 1.34615_Kr),                          &
-      !MEF90Tens4OS3DIdentity,                        & ! HookesLaw
-                 1.0_Kr,                               & ! Internal Length
+      1.0_Kr,                                                                       & ! Density
+      1.0_Kr,                                                                       & ! FractureToughness
+      1.0_Kr,                                                                       & ! SpecificHeat
+      MEF90MatS3DIdentity,                                                          & ! ThermalConductivity
+      MEF90MatS3DIdentity,                                                          & ! LinearThermalExpansion
+      Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY 
+                           1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !      YYYY,YYZZ,YYYZ,YYXZ,YYXY 
+                                      1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !           ZZZZ ZZYZ,ZZXZ,ZZXY 
+                                                 0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                YXYX,YZXZ,YZXY 
+                                                            0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY 
+                                                                       0.38462_Kr), & !                          XYXY 
+                 1.0_Kr,                                                            & ! Internal Length
       "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
 
