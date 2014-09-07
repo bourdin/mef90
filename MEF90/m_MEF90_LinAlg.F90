@@ -142,7 +142,7 @@
    End Interface
    
    Interface Invert
-      Module Procedure InvertMat2D,InvertMatS2D,InvertMat3D,InvertMatS3D,InvertTens4OS2D,InvertTens4OS3D
+      Module Procedure InvertMat2D,InvertMatS2D,InvertMat3D,InvertMatS3D!,InvertTens4OS2D,InvertTens4OS3D
    End Interface
 
    Interface Operator (.TensP.)
@@ -867,7 +867,7 @@ Contains
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
       
-      Tens4OS3DXMatS3D%XX =  T1%XXXX * M1%XX + T1%YYYY * M1%YY + T1%ZZZZ * M1%ZZ &
+      Tens4OS3DXMatS3D%XX =  T1%XXXX * M1%XX + T1%XXYY * M1%YY + T1%XXZZ * M1%ZZ &
                           + (T1%XXYZ * M1%YZ + T1%XXXZ * M1%XZ + T1%XXXY * M1%XY) * 2.0_Kr
       Tens4OS3DXMatS3D%YY =  T1%XXYY * M1%XX + T1%YYYY * M1%YY + T1%YYZZ * M1%ZZ &
                           + (T1%YYYZ * M1%YZ + T1%YYXZ * M1%XZ + T1%YYXY * M1%XY) * 2.0_Kr
@@ -2282,6 +2282,7 @@ Contains
       Type(Tens4OS2D)                             :: TmpTensor
       PetscReal,Dimension(:,:),Pointer            :: TmpArray
 
+      Write(*,*) "InvertTens4OS2D is broken. DO NOT USE"
       !!! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
       TmpTensor = T
       Call Tens4OS2DGetArrayF90(TmpTensor,TmpArray)
@@ -2299,6 +2300,7 @@ Contains
       Type(Tens4OS3D)                             :: TmpTensor
       PetscReal,Dimension(:,:),Pointer            :: TmpArray
 
+      Write(*,*) "InvertTens4OS3D is broken. DO NOT USE"
       !!! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
       TmpTensor = T
       Call Tens4OS3DGetArrayF90(TmpTensor,TmpArray)
