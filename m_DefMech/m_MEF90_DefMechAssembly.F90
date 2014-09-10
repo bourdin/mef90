@@ -352,8 +352,8 @@ Contains
                QuadratureOrder = 2 * elemDisplacementType%order + 2 * ElemDamageType%order
                Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageDispBilinearFormSet(A,mesh,MEF90DefMechCtx%DMScal,setIS,matPropSet%HookesLaw,damageSec, &
-                    cellSetOptions%residualStiffness,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
+               Call MEF90GradDamageDispBilinearFormSet(A,mesh,MEF90DefMechCtx%DMScal,damageSec,cellSetOptions%residualStiffness,setIS,matPropSet%HookesLaw, &
+                    elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemDamage,ierr)
             End If
@@ -843,12 +843,25 @@ Contains
                End If
                Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageDamageOperatorSetAT1(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
-                                                        matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                        elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-               Call MEF90GradDamageDamageRHSSetAT1(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
-                                                   matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                   elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Select Case(cellSetOptions%unilateralContactType)
+               Case (MEF90DefMech_unilateralContactTypeNone)
+                  Call MEF90GradDamageDamageOperatorSetAT1(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
+                                                           matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                           elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+                  Call MEF90GradDamageDamageRHSSetAT1(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                      matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                      elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Case (MEF90DefMech_unilateralContactTypeSphericalDeviatoric)
+                  Call MEF90GradDamageDamageOperatorSetAT1UnilateralSD(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
+                                                           matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                           elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+                  Call MEF90GradDamageDamageRHSSetAT1UnilateralSD(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                      matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                      elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
+                  Write(*,*) "Error in "//__FUNCT__//": MEF90DefMech_unilateralContactTypePrincipalStrains not implemented yet"
+                  STOP
+               End Select
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemDamage,ierr)
             End If
@@ -861,12 +874,25 @@ Contains
                End If
                Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageDamageOperatorSetAT2(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, &
-                                                        matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                        elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-               Call MEF90GradDamageDamageRHSSetAT2(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
-                                                   matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                   elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Select Case(cellSetOptions%unilateralContactType)
+               Case (MEF90DefMech_unilateralContactTypeNone)
+                  Call MEF90GradDamageDamageOperatorSetAT2(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                           matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                           elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+                  Call MEF90GradDamageDamageRHSSetAT2(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                      matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                      elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Case (MEF90DefMech_unilateralContactTypeSphericalDeviatoric)
+                  Call MEF90GradDamageDamageOperatorSetAT2UnilateralSD(residualSec,mesh,MEF90DefMechCtx%DMVect,alphaSec,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                           matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                           elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+                  Call MEF90GradDamageDamageRHSSetAT2UnilateralSD(residualSec,negone,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, &
+                                                      matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
+                                                      elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
+               Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
+                  Write(*,*) "Error in "//__FUNCT__//": MEF90DefMech_unilateralContactTypePrincipalStrains not implemented yet"
+                  STOP
+               End Select
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemDamage,ierr)
             End If

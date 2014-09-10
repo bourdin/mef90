@@ -12,79 +12,79 @@ Module m_MEF90_DefMechCtx_Type
    
    Type MEF90DefMechCtx_Type
       !!!  vertex based vec
-      Type(Vec),pointer                :: displacement
-      Type(Vec),pointer                :: damage
-      Type(Vec),pointer                :: boundaryDisplacement
-      Type(Vec),pointer                :: boundaryDamage
-      Type(Vec),Pointer                :: temperature
-
-      !!! cell based vec
-      Type(Vec),pointer                :: force
-      Type(Vec),pointer                :: pressureForce
-      Type(Vec),Pointer                :: plasticStrain
-      Type(Vec),Pointer                :: stress
-
-      PetscBag                         :: GlobalOptionsBag
-      PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
-      PetscBag,Dimension(:),Pointer    :: VertexSetOptionsBag
-      PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
-      Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
-      Type(DM),pointer                 :: DM
-      Type(DM)                         :: DMScal,DMVect           ! Remove all these
-      Type(DM)                         :: cellDMScal,cellDMVect   ! after switching to 
-      Type(DM)                         :: DMMatS,cellDMMatS       ! DMcomplex
-      Type(PetscViewer)                :: globalEnergyViewer
+      Type(Vec),pointer                      :: displacement
+      Type(Vec),pointer                      :: damage
+      Type(Vec),pointer                      :: boundaryDisplacement
+      Type(Vec),pointer                      :: boundaryDamage
+      Type(Vec),Pointer                      :: temperature
+      
+      !!! cell based vec      
+      Type(Vec),pointer                      :: force
+      Type(Vec),pointer                      :: pressureForce
+      Type(Vec),Pointer                      :: plasticStrain
+      Type(Vec),Pointer                      :: stress
+      
+      PetscBag                               :: GlobalOptionsBag
+      PetscBag,Dimension(:),Pointer          :: CellSetOptionsBag
+      PetscBag,Dimension(:),Pointer          :: VertexSetOptionsBag
+      PetscBag,Dimension(:),Pointer          :: MaterialPropertiesBag
+      Type(MEF90Ctx_Type),pointer            :: MEF90Ctx
+      Type(DM),pointer                       :: DM
+      Type(DM)                               :: DMScal,DMVect           ! Remove all these
+      Type(DM)                               :: cellDMScal,cellDMVect   ! after switching to 
+      Type(DM)                               :: DMMatS,cellDMMatS       ! DMcomplex
+      Type(PetscViewer)                      :: globalEnergyViewer
       Type(PetscViewer),Dimension(:),Pointer :: setEnergyViewer
    End Type MEF90DefMechCtx_Type
    
    Type MEF90DefMechGlobalOptions_Type
-      PetscInt                         :: mode
-      PetscBool                        :: addDisplacementNullSpace
+      PetscInt                               :: mode
+      PetscBool                              :: addDisplacementNullSpace
       !!! Position of vertex-based vecs in exo file
-      PetscInt                         :: displacementOffset
-      PetscInt                         :: damageOffset
-      PetscInt                         :: boundaryDisplacementOffset
-      PetscInt                         :: boundaryDamageOffset
-      PetscInt                         :: temperatureOffset
+      PetscInt                               :: displacementOffset
+      PetscInt                               :: damageOffset
+      PetscInt                               :: boundaryDisplacementOffset
+      PetscInt                               :: boundaryDamageOffset
+      PetscInt                               :: temperatureOffset
       !!! Position of cell-based vecs in exo files
-      PetscInt                         :: forceOffset
-      PetscInt                         :: pressureForceOffset
-      PetscInt                         :: plasticStrainOffset
-      PetscInt                         :: stressOffset
+      PetscInt                               :: forceOffset
+      PetscInt                               :: pressureForceOffset
+      PetscInt                               :: plasticStrainOffset
+      PetscInt                               :: stressOffset
       !!! scaling = time (step) scaling law currently CST, Linear, or File
-      PetscInt                         :: boundaryDisplacementScaling
-      PetscInt                         :: boundaryDamageScaling
-      PetscInt                         :: forceScaling
-      PetscInt                         :: pressureForceScaling
-      PetscReal                        :: damageATol
-      PetscInt                         :: maxit
-      PetscReal                        :: irrevthres
-      PetscEnum                        :: BTType
-      PetscInt                         :: BTInterval
-      PetscInt                         :: BTScope
-      PetscReal                        :: BTTol
+      PetscInt                               :: boundaryDisplacementScaling
+      PetscInt                               :: boundaryDamageScaling
+      PetscInt                               :: forceScaling
+      PetscInt                               :: pressureForceScaling
+      PetscReal                              :: damageATol
+      PetscInt                               :: maxit
+      PetscReal                              :: irrevthres
+      PetscEnum                              :: BTType
+      PetscInt                               :: BTInterval
+      PetscInt                               :: BTScope
+      PetscReal                              :: BTTol
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
-      PetscInt                         :: elemTypeShortIDDisplacement
-      PetscInt                         :: elemTypeShortIDDamage
-      PetscReal,Dimension(3)           :: force
-      PetscReal                        :: pressureForce
-      PetscEnum                        :: damageType
-      PetscEnum                        :: plasticityType
-      PetscEnum                        :: unilateralContactType
-      PetscBool,Dimension(3)           :: Has_displacementBC
-      PetscReal,Dimension(3)           :: boundaryDisplacement
-      PetscBool                        :: Has_damageBC
-      PetscReal                        :: boundaryDamage
-      PetscReal                        :: residualStiffness
+      PetscInt                               :: elemTypeShortIDDisplacement
+      PetscInt                               :: elemTypeShortIDDamage
+      PetscReal,Dimension(3)                 :: force
+      PetscReal                              :: pressureForce
+      PetscEnum                              :: damageType
+      PetscEnum                              :: plasticityType
+      PetscEnum                              :: unilateralContactType
+      PetscBool,Dimension(3)                 :: Has_displacementBC
+      PetscReal,Dimension(3)                 :: boundaryDisplacement
+      PetscBool                              :: Has_damageBC
+      PetscReal                              :: boundaryDamage
+      PetscReal                              :: residualStiffness
    End Type MEF90DefMechCellSetOptions_Type
 
    Type MEF90DefMechVertexSetOptions_Type
-      PetscBool,Dimension(3)           :: Has_displacementBC
-      PetscReal,Dimension(3)           :: boundaryDisplacement
-      PetscBool                        :: Has_damageBC
-      PetscReal                        :: boundaryDamage
+      PetscBool,Dimension(3)                 :: Has_displacementBC
+      PetscReal,Dimension(3)                 :: boundaryDisplacement
+      PetscBool                              :: Has_damageBC
+      PetscReal                              :: boundaryDamage
    End Type MEF90DefMechVertexSetOptions_Type 
 End Module m_MEF90_DefMechCtx_Type
 
