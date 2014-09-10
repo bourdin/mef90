@@ -9,6 +9,7 @@ Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
    Private
 
    Public :: MEF90GradDamageDispBilinearFormSet
+   Public :: MEF90GradDamageDispBilinearFormSetUnilateralSD
    Public :: MEF90GradDamageDispOperatorSet
    Public :: MEF90GradDamageDispInelasticStrainRHSSetVertex2
    Public :: MEF90GradDamageDispInelasticStrainRHSSetCell
@@ -18,20 +19,20 @@ Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
    Public :: MEF90GradDamageDamageOperatorSetAT1Elastic
    Public :: MEF90GradDamageDamageRHSSetAT1Elastic
    Public :: MEF90GradDamageDamageBilinearFormSetAT1
-   Public :: MEF90GradDamageDamageBilinearFormSetAT1Unilateral
+   Public :: MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD
    Public :: MEF90GradDamageDamageOperatorSetAT1
-   Public :: MEF90GradDamageDamageOperatorSetAT1Unilateral
+   Public :: MEF90GradDamageDamageOperatorSetAT1UnilateralSD
    Public :: MEF90GradDamageDamageRHSSetAT1
-   Public :: MEF90GradDamageDamageRHSSetAT1Unilateral
+   Public :: MEF90GradDamageDamageRHSSetAT1UnilateralSD
    Public :: MEF90GradDamageSurfaceEnergySetAT1
    Public :: MEF90GradDamageDamageBilinearFormSetAT2Elastic
    Public :: MEF90GradDamageDamageOperatorSetAT2Elastic
    Public :: MEF90GradDamageDamageBilinearFormSetAT2
-   Public :: MEF90GradDamageDamageBilinearFormSetAT2Unilateral
+   Public :: MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD
    Public :: MEF90GradDamageDamageOperatorSetAT2
-   Public :: MEF90GradDamageDamageOperatorSetAT2Unilateral
+   Public :: MEF90GradDamageDamageOperatorSetAT2UnilateralSD
    Public :: MEF90GradDamageDamageRHSSetAT2
-   Public :: MEF90GradDamageDamageRHSSetAT2Unilateral
+   Public :: MEF90GradDamageDamageRHSSetAT2UnilateralSD
    Public :: MEF90GradDamageSurfaceEnergySetAT2
 
 !!! The Euler-Lagrange equation for the alpha problem for AT1 is
@@ -55,16 +56,17 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDispBilinearFormSet(K,mesh,meshScal,cellIS,A,alpha,eta,elem,elemType,elemScal,elemScalType,ierr)
+   Subroutine MEF90GradDamageDispBilinearFormSet(K,mesh,meshScal,alpha,eta,cellIS,A,elem,elemType,elemScal,elemScalType,ierr)
       Type(Mat),Intent(IN)                               :: K 
       Type(DM),Intent(IN)                                :: mesh,meshScal
-      Type(IS),Intent(IN)                                :: cellIS
-      Type(MEF90_TENS4OS),Intent(IN)                     :: A
       Type(SectionReal),Intent(IN)                       :: alpha
       PetscReal,Intent(IN)                               :: eta
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_TENS4OS),Intent(IN)                     :: A
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType,elemScalType
+      Type(MEF90Element_Type),Intent(IN)                 :: elemScalType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -107,6 +109,89 @@ Contains
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageDispBilinearFormSet
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageDispBilinearFormSetUnilateralSD"
+!!!
+!!!  
+!!!  MEF90GradDamageDispBilinearFormSetUnilateralSD:
+!!!      This routine does not handle inelastic strain because of all the possible combinations of definition of the fields)
+!!!      If unilateral contact is needed with inelastic strains is needed, the proper functions need to be written in applications
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90GradDamageDispBilinearFormSetUnilateralSD(K,mesh,meshScal,U,alpha,eta,cellIS,A,elem,elemType,elemScal,elemScalType,ierr)
+      Type(Mat),Intent(IN)                               :: K 
+      Type(DM),Intent(IN)                                :: mesh,meshScal
+      Type(SectionReal),Intent(IN)                       :: U,alpha
+      PetscReal,Intent(IN)                               :: eta
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_TENS4OS),Intent(IN)                     :: A
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemScalType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscReal,Dimension(:,:),Pointer                   :: MatElem
+      PetscReal,Dimension(:),Pointer                     :: Uloc
+      PetscReal,Dimension(:),Pointer                     :: alphaLoc
+      Type(MEF90_MATS)                                   :: strainElem
+      PetscReal                                          :: alphaElem,SalphaElem
+      PetscInt                                           :: iDoF1,iDoF2,iGauss
+      Type(SectionReal)                                  :: defaultSection
+      PetscLogDouble                                     :: flops
+     
+      Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(ULoc(elemType%numDof))
+         Allocate(alphaLoc(elemScalType%numDof))
+         Allocate(MatElem(elemType%numDof,elemType%numDof))
+         Do cell = 1,size(cellID)   
+            MatElem = 0.0_Kr
+            Call SectionRealRestrictClosure(U,mesh,cellID(cell),elemType%numDof,Uloc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(alpha,meshScal,cellID(cell),elemScalType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               alphaElem = 0.0_Kr
+               Do iDoF1 = 1, elemScalType%numDof
+                  alphaElem = alphaElem + alphaLoc(iDoF1) * elemScal(cell)%BF(iDoF1,iGauss)
+               End Do ! iDoF1
+               SalphaElem = eta + (1.0_Kr - alphaElem)**2
+               strainElem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  strainElem = strainElem + Uloc(iDof1) * elem(cell)%GradS_BF(iDoF1,iGauss)
+               End Do
+               If (Trace(strainElem) >= 0.0_Kr) Then
+                  Do iDoF1 = 1,elemType%numDof
+                     Do iDoF2 = 1,elemType%numDof
+                        MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * SalphaElem * &
+                                       ((A * elem(cell)%GradS_BF(iDoF1,iGauss)) .DotP. elem(cell)%GradS_BF(iDoF2,iGauss))
+                     End Do
+                  End Do
+               Else
+                  Do iDoF1 = 1,elemType%numDof
+                     Do iDoF2 = 1,elemType%numDof
+                        MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * ( SalphaElem * &
+                                       ( (A * DeviatoricPart(elem(cell)%GradS_BF(iDoF1,iGauss))) .DotP. DeviatoricPart(elem(cell)%GradS_BF(iDoF2,iGauss)) ) &
+                                     + ( (A * SphericalPart(elem(cell)%GradS_BF(iDoF1,iGauss))) .DotP. SphericalPart(elem(cell)%GradS_BF(iDoF2,iGauss)) ))
+                     End Do
+                  End Do
+               End If               
+            End Do
+            Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+         End Do
+         flops = (3 * elemType%numDof**2 + 2 * elemType%numDof + 3) * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(ULoc)
+         DeAllocate(alphaLoc)
+         DeAllocate(MatElem)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90GradDamageDispBilinearFormSetUnilateralSD
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDispOperatorSet"   
@@ -653,14 +738,14 @@ Contains
    End Subroutine MEF90GradDamageDamageBilinearFormSetAT1
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT1Unilateral"
+#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD"
 !!!
 !!!  
-!!!  MEF90GradDamageDamageBilinearFormSetAT1Unilateral:
+!!!  MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageBilinearFormSetAT1Unilateral(K,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD(K,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(Mat),Intent(IN)                               :: K 
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(IS),Intent(IN)                                :: cellIS
@@ -748,7 +833,7 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageDamageBilinearFormSetAT1Unilateral
+   End Subroutine MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDamageOperatorSetAT1"
@@ -858,14 +943,14 @@ Contains
    End Subroutine MEF90GradDamageDamageOperatorSetAT1
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageDamageOperatorSetAT1Unilateral"
+#define __FUNCT__ "MEF90GradDamageDamageOperatorSetAT1UnilateralSD"
 !!!
 !!!  
-!!!  MEF90GradDamageDamageOperatorSetAT1Unilateral:
+!!!  MEF90GradDamageDamageOperatorSetAT1UnilateralSD:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageOperatorSetAT1Unilateral(G,mesh,meshDisp,alpha,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageOperatorSetAT1UnilateralSD(G,mesh,meshDisp,alpha,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(SectionReal),Intent(IN)                       :: alpha
@@ -966,7 +1051,7 @@ Contains
          DeAllocate(alphaLoc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageDamageOperatorSetAT1Unilateral
+   End Subroutine MEF90GradDamageDamageOperatorSetAT1UnilateralSD
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDamageRHSSetAT1"
@@ -1063,14 +1148,14 @@ Contains
    End Subroutine MEF90GradDamageDamageRHSSetAT1
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageDamageRHSSetAT1Unilateral"
+#define __FUNCT__ "MEF90GradDamageDamageRHSSetAT1UnilateralSD"
 !!!
 !!!  
-!!!  MEF90GradDamageDamageRHSSetAT1Unilateral:
+!!!  MEF90GradDamageDamageRHSSetAT1UnilateralSD:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageRHSSetAT1Unilateral(G,scaling,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageRHSSetAT1UnilateralSD(G,scaling,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
       PetscReal,Intent(IN)                               :: scaling
       Type(DM),Intent(IN)                                :: mesh,meshDisp
@@ -1158,7 +1243,7 @@ Contains
          DeAllocate(Gloc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageDamageRHSSetAT1Unilateral
+   End Subroutine MEF90GradDamageDamageRHSSetAT1UnilateralSD
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageSurfaceEnergySetAT1"
@@ -1426,14 +1511,14 @@ Contains
    End Subroutine MEF90GradDamageDamageBilinearFormSetAT2
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT2Unilateral"
+#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD"
 !!!
 !!!  
-!!!  MEF90GradDamageDamageBilinearFormSetAT2Unilateral:
+!!!  MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageBilinearFormSetAT2Unilateral(K,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD(K,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(Mat),Intent(IN)                               :: K 
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(IS),Intent(IN)                                :: cellIS
@@ -1522,7 +1607,7 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageDamageBilinearFormSetAT2Unilateral
+   End Subroutine MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDamageOperatorSetAT2"
@@ -1632,14 +1717,14 @@ Contains
    End Subroutine MEF90GradDamageDamageOperatorSetAT2
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageDamageOperatorSetAT2Unilateral"
+#define __FUNCT__ "MEF90GradDamageDamageOperatorSetAT2UnilateralSD"
 !!!
 !!!  
-!!!  MEF90GradDamageDamageOperatorSetAT2Unilateral:
+!!!  MEF90GradDamageDamageOperatorSetAT2UnilateralSD:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageOperatorSetAT2Unilateral(G,mesh,meshDisp,alpha,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageOperatorSetAT2UnilateralSD(G,mesh,meshDisp,alpha,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(SectionReal),Intent(IN)                       :: alpha
@@ -1740,7 +1825,7 @@ Contains
          DeAllocate(alphaLoc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageDamageOperatorSetAT2Unilateral
+   End Subroutine MEF90GradDamageDamageOperatorSetAT2UnilateralSD
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageDamageRHSSetAT2"
@@ -1835,14 +1920,14 @@ Contains
    End Subroutine MEF90GradDamageDamageRHSSetAT2
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageDamageRHSSetAT2Unilateral"
+#define __FUNCT__ "MEF90GradDamageDamageRHSSetAT2UnilateralSD"
 !!!
 !!!  
-!!!  MEF90GradDamageDamageRHSSetAT2Unilateral:
+!!!  MEF90GradDamageDamageRHSSetAT2UnilateralSD:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90GradDamageDamageRHSSetAT2Unilateral(G,scaling,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageRHSSetAT2UnilateralSD(G,scaling,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
       PetscReal,Intent(IN)                               :: scaling
       Type(DM),Intent(IN)                                :: mesh,meshDisp
@@ -1928,7 +2013,7 @@ Contains
          DeAllocate(Gloc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageDamageRHSSetAT2Unilateral
+   End Subroutine MEF90GradDamageDamageRHSSetAT2UnilateralSD
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GradDamageSurfaceEnergySetAT2"
