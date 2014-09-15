@@ -14,6 +14,7 @@ Module m_MEF90_Materials_Types
       Type(MatS2D)                  :: LinearThermalExpansion     ! alpha
       Type(Tens4OS2D)               :: HookesLaw                  ! A
       PetscReal                     :: internalLength             ! l
+      PetscReal                     :: residualStiffness          ! eta
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
@@ -26,24 +27,26 @@ Module m_MEF90_Materials_Types
       Type(MatS3D)                  :: LinearThermalExpansion     ! alpha
       Type(Tens4OS3D)               :: HookesLaw                  ! A
       PetscReal                     :: internalLength             ! l
+      PetscReal                     :: residualStiffness          ! eta
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
    
    !!! The Mathium is a bogus isotropic material whose material properties are all 1 
    !!! except for a Poisson Ratio of 0.3
-   Type(MEF90MatProp2D_Type),Parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type ( &
-      1.0_Kr,                                          & ! Density
-      1.0_Kr,                                          & ! FractureToughness
-      1.0_Kr,                                          & ! SpecificHeat
-      MEF90MatS2DIdentity,                             & ! ThermalConductivity
-      MEF90MatS2DIdentity,                             & ! LinearThermalExpansion
-      Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,      & ! HookesLaw XXXX,XXYY,XXXY
-                           1.09890_Kr,0.00000_Kr,      & !                YYYY,YYXY
-                                      0.38462_Kr),     & !                     XYXY        
-                 1.0_Kr,                               & ! Internal Length
+   Type(MEF90MatProp2D_Type),Parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type( &
+      1.0_Kr,                                                                       & ! Density
+      1.0_Kr,                                                                       & ! FractureToughness
+      1.0_Kr,                                                                       & ! SpecificHeat
+      MEF90MatS2DIdentity,                                                          & ! ThermalConductivity
+      MEF90MatS2DIdentity,                                                          & ! LinearThermalExpansion
+      Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,                                   & ! HookesLaw XXXX,XXYY,XXXY
+                           1.09890_Kr,0.00000_Kr,                                   & !                YYYY,YYXY
+                                      0.38462_Kr),                                  & !                     XYXY        
+                 1.0_Kr,                                                            & ! Internal Length
+                 1.0D-9,                                                            & ! Residual Stiffness
       "MEF90Mathium2D")  
 
-   Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type ( &
+   Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type( &
       1.0_Kr,                                                                       & ! Density
       1.0_Kr,                                                                       & ! FractureToughness
       1.0_Kr,                                                                       & ! SpecificHeat
@@ -56,6 +59,7 @@ Module m_MEF90_Materials_Types
                                                             0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY 
                                                                        0.38462_Kr), & !                          XYXY 
                  1.0_Kr,                                                            & ! Internal Length
+                 1.0D-9,                                                            & ! Residual Stiffness
       "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
 
@@ -191,6 +195,7 @@ Contains
       matprop%HookesLaw = default%HookesLaw
       Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
+      Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
 
