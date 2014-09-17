@@ -78,17 +78,16 @@ Program ThermoElasticity
                                                          -1,                                      & ! elemTypeShortIDDamage will be overriden
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! force
                                                          0.0_Kr,                                  & ! pressureForce
-                                                         MEF90DefMech_defectLawElasticity,        & ! defect law
-                                                         MEF90DefMech_defectLawGradientDamageAT1, & ! gradientDamageLaw
-                                                         MEF90DefMech_defectLawPlasticityVonMises,& ! plasticityLaw
+                                                         MEF90DefMech_damageTypeAT1Elastic,       & ! damageType
+                                                         MEF90DefMech_plasticityTypeNone,         & ! plasticityType
+                                                         MEF90DefMech_unilateralContactTypeNone,  & ! unilateralContactType
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         0.0_Kr,                                  & ! boundary Displacement
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
-                                                         0.0_Kr,                                  & ! Boundary Damage
-                                                         1.0D-9)                                    ! residualStiffness
+                                                         0._Kr)                                     ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         0.0_Kr,                                  & ! boundary Displacement
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
                                                          0.0_Kr)                                    ! boundary Damage
 
@@ -208,7 +207,7 @@ Program ThermoElasticity
    !!!
    Call VecDuplicate(MEF90DefMechCtx%displacement,residualDisp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDisp,"residualDisp",ierr);CHKERRQ(ierr)
-   Call MEF90DefMechCreateSolversDisp(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
+   Call MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
 
    Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
