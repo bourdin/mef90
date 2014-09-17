@@ -839,7 +839,7 @@ Contains
       Allocate(dElem(size(cellID)),stat=ierr)
       Allocate(elemCoord(elemType%numVertex,elemType%dim),stat=ierr)
       If (size(CellID) > 0) Then
-         iELoc = CellID(1)
+         !iELoc = CellID(1)
          Do_Elem_iE: Do iELoc = 1,size(CellID)
             Call DMMeshGetConeF90(mesh,cellID(iEloc),Cone,ierr);CHKERRQ(ierr)
             Do i = 1, elemType%numVertex
