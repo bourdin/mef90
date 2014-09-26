@@ -630,7 +630,6 @@ Contains
          Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
       End If      
       flg = SAME_NONZERO_PATTERN
-Call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)      
    End Subroutine MEF90DefMechBilinearFormDisplacement
 
 #undef __FUNCT__
@@ -758,7 +757,6 @@ Call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
       Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
 
-Call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)      
       flg = SAME_NONZERO_PATTERN
    End Subroutine MEF90DefMechBilinearFormDisplacementOld
    
