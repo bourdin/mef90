@@ -8,7 +8,6 @@ Module m_MEF90_GradDamageInterface
 
    Use m_MEF90_GradDamageImplementation_2D , &
       MEF90GradDamageDispBilinearFormSet_2D                  => MEF90GradDamageDispBilinearFormSet, &
-      MEF90GradDamageDispBilinearFormSetUnilateralSD_2D      => MEF90GradDamageDispBilinearFormSetUnilateralSD, &
       MEF90GradDamageDispOperatorSet_2D                      => MEF90GradDamageDispOperatorSet, &
       MEF90GradDamageDispInelasticStrainRHSSetVertex2_2D     => MEF90GradDamageDispInelasticStrainRHSSetVertex2, &
       MEF90GradDamageDispInelasticStrainRHSSetCell_2D        => MEF90GradDamageDispInelasticStrainRHSSetCell, &
@@ -17,25 +16,18 @@ Module m_MEF90_GradDamageInterface
       MEF90GradDamageDamageOperatorSetAT1Elastic_2D          => MEF90GradDamageDamageOperatorSetAT1Elastic, &
       MEF90GradDamageDamageRHSSetAT1Elastic_2D               => MEF90GradDamageDamageRHSSetAT1Elastic, &
       MEF90GradDamageDamageBilinearFormSetAT1_2D             => MEF90GradDamageDamageBilinearFormSetAT1, &
-      MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD_2D => MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD, &
       MEF90GradDamageDamageOperatorSetAT1_2D                 => MEF90GradDamageDamageOperatorSetAT1, &
-      MEF90GradDamageDamageOperatorSetAT1UnilateralSD_2D     => MEF90GradDamageDamageOperatorSetAT1UnilateralSD, &
       MEF90GradDamageDamageRHSSetAT1_2D                      => MEF90GradDamageDamageRHSSetAT1, &
-      MEF90GradDamageDamageRHSSetAT1UnilateralSD_2D          => MEF90GradDamageDamageRHSSetAT1UnilateralSD, &
       MEF90GradDamageSurfaceEnergySetAT1_2D                  => MEF90GradDamageSurfaceEnergySetAT1, &
       MEF90GradDamageDamageBilinearFormSetAT2Elastic_2D      => MEF90GradDamageDamageBilinearFormSetAT2Elastic, &
       MEF90GradDamageDamageOperatorSetAT2Elastic_2D          => MEF90GradDamageDamageOperatorSetAT2Elastic, &
       MEF90GradDamageDamageBilinearFormSetAT2_2D             => MEF90GradDamageDamageBilinearFormSetAT2, &
-      MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD_2D => MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD, &
       MEF90GradDamageDamageOperatorSetAT2_2D                 => MEF90GradDamageDamageOperatorSetAT2, &
-      MEF90GradDamageDamageOperatorSetAT2UnilateralSD_2D     => MEF90GradDamageDamageOperatorSetAT2UnilateralSD, &
       MEF90GradDamageDamageRHSSetAT2_2D                      => MEF90GradDamageDamageRHSSetAT2, &
-      MEF90GradDamageDamageRHSSetAT2UnilateralSD_2D          => MEF90GradDamageDamageRHSSetAT2UnilateralSD, &
       MEF90GradDamageSurfaceEnergySetAT2_2D                  => MEF90GradDamageSurfaceEnergySetAT2
         
    Use m_MEF90_GradDamageImplementation_3D , &  
       MEF90GradDamageDispBilinearFormSet_3D                  => MEF90GradDamageDispBilinearFormSet, &
-      MEF90GradDamageDispBilinearFormSetUnilateralSD_3D      => MEF90GradDamageDispBilinearFormSetUnilateralSD, &
       MEF90GradDamageDispOperatorSet_3D                      => MEF90GradDamageDispOperatorSet, &
       MEF90GradDamageDispInelasticStrainRHSSetVertex2_3D     => MEF90GradDamageDispInelasticStrainRHSSetVertex2, &
       MEF90GradDamageDispInelasticStrainRHSSetCell_3D        => MEF90GradDamageDispInelasticStrainRHSSetCell, &
@@ -44,27 +36,20 @@ Module m_MEF90_GradDamageInterface
       MEF90GradDamageDamageOperatorSetAT1Elastic_3D          => MEF90GradDamageDamageOperatorSetAT1Elastic, &
       MEF90GradDamageDamageRHSSetAT1Elastic_3D               => MEF90GradDamageDamageRHSSetAT1Elastic, &
       MEF90GradDamageDamageBilinearFormSetAT1_3D             => MEF90GradDamageDamageBilinearFormSetAT1, &
-      MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD_3D => MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD, &
       MEF90GradDamageDamageOperatorSetAT1_3D                 => MEF90GradDamageDamageOperatorSetAT1, &
-      MEF90GradDamageDamageOperatorSetAT1UnilateralSD_3D     => MEF90GradDamageDamageOperatorSetAT1UnilateralSD, &
       MEF90GradDamageDamageRHSSetAT1_3D                      => MEF90GradDamageDamageRHSSetAT1, &
-      MEF90GradDamageDamageRHSSetAT1UnilateralSD_3D          => MEF90GradDamageDamageRHSSetAT1UnilateralSD, &
       MEF90GradDamageSurfaceEnergySetAT1_3D                  => MEF90GradDamageSurfaceEnergySetAT1, &
       MEF90GradDamageDamageBilinearFormSetAT2Elastic_3D      => MEF90GradDamageDamageBilinearFormSetAT2Elastic, &
       MEF90GradDamageDamageOperatorSetAT2Elastic_3D          => MEF90GradDamageDamageOperatorSetAT2Elastic, &
       MEF90GradDamageDamageBilinearFormSetAT2_3D             => MEF90GradDamageDamageBilinearFormSetAT2, &
-      MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD_3D => MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD, &
       MEF90GradDamageDamageOperatorSetAT2_3D                 => MEF90GradDamageDamageOperatorSetAT2, &
-      MEF90GradDamageDamageOperatorSetAT2UnilateralSD_3D     => MEF90GradDamageDamageOperatorSetAT2UnilateralSD, &
       MEF90GradDamageDamageRHSSetAT2_3D                      => MEF90GradDamageDamageRHSSetAT2, &
-      MEF90GradDamageDamageRHSSetAT2UnilateralSD_3D          => MEF90GradDamageDamageRHSSetAT2UnilateralSD, &
       MEF90GradDamageSurfaceEnergySetAT2_3D                  => MEF90GradDamageSurfaceEnergySetAT2
       
    IMPLICIT NONE
    Private
    
    Public :: MEF90GradDamageDispBilinearFormSet
-   Public :: MEF90GradDamageDispBilinearFormSetUnilateralSD
    Public :: MEF90GradDamageDispOperatorSet
    Public :: MEF90GradDamageDispInelasticStrainRHSSetVertex
    Public :: MEF90GradDamageDispInelasticStrainRHSSetCell
@@ -73,28 +58,18 @@ Module m_MEF90_GradDamageInterface
    Public :: MEF90GradDamageDamageOperatorSetAT1Elastic
    Public :: MEF90GradDamageDamageRHSSetAT1Elastic
    Public :: MEF90GradDamageDamageBilinearFormSetAT1
-   Public :: MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD
    Public :: MEF90GradDamageDamageOperatorSetAT1
-   Public :: MEF90GradDamageDamageOperatorSetAT1UnilateralSD
    Public :: MEF90GradDamageDamageRHSSetAT1
-   Public :: MEF90GradDamageDamageRHSSetAT1UnilateralSD
    Public :: MEF90GradDamageSurfaceEnergySetAT1
    Public :: MEF90GradDamageDamageBilinearFormSetAT2Elastic
    Public :: MEF90GradDamageDamageOperatorSetAT2Elastic
    Public :: MEF90GradDamageDamageBilinearFormSetAT2
-   Public :: MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD
    Public :: MEF90GradDamageDamageOperatorSetAT2
-   Public :: MEF90GradDamageDamageOperatorSetAT2UnilateralSD
    Public :: MEF90GradDamageDamageRHSSetAT2
-   Public :: MEF90GradDamageDamageRHSSetAT2UnilateralSD
    Public :: MEF90GradDamageSurfaceEnergySetAT2
    
    Interface MEF90GradDamageDispBilinearFormSet
       Module Procedure MEF90GradDamageDispBilinearFormSet_2D, MEF90GradDamageDispBilinearFormSet_3D
-   End Interface
-   
-   Interface MEF90GradDamageDispBilinearFormSetUnilateralSD
-      Module Procedure MEF90GradDamageDispBilinearFormSetUnilateralSD_2D, MEF90GradDamageDispBilinearFormSetUnilateralSD_3D
    End Interface
    
    Interface MEF90GradDamageDispOperatorSet
@@ -129,24 +104,12 @@ Module m_MEF90_GradDamageInterface
       Module Procedure MEF90GradDamageDamageBilinearFormSetAT1_2D, MEF90GradDamageDamageBilinearFormSetAT1_3D
    End Interface 
 
-   Interface MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD
-      Module Procedure MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD_2D, MEF90GradDamageDamageBilinearFormSetAT1UnilateralSD_3D
-   End Interface 
-
    Interface MEF90GradDamageDamageOperatorSetAT1
       Module Procedure MEF90GradDamageDamageOperatorSetAT1_2D, MEF90GradDamageDamageOperatorSetAT1_3D
    End Interface 
 
-   Interface MEF90GradDamageDamageOperatorSetAT1UnilateralSD
-      Module Procedure MEF90GradDamageDamageOperatorSetAT1UnilateralSD_2D, MEF90GradDamageDamageOperatorSetAT1UnilateralSD_3D
-   End Interface 
-
    Interface MEF90GradDamageDamageRHSSetAT1
       Module Procedure MEF90GradDamageDamageRHSSetAT1_2D, MEF90GradDamageDamageRHSSetAT1_3D
-   End Interface 
-
-   Interface MEF90GradDamageDamageRHSSetAT1UnilateralSD
-      Module Procedure MEF90GradDamageDamageRHSSetAT1UnilateralSD_2D, MEF90GradDamageDamageRHSSetAT1UnilateralSD_3D
    End Interface 
 
    Interface MEF90GradDamageSurfaceEnergySetAT1
@@ -165,24 +128,12 @@ Module m_MEF90_GradDamageInterface
       Module Procedure MEF90GradDamageDamageBilinearFormSetAT2_2D, MEF90GradDamageDamageBilinearFormSetAT2_3D
    End Interface 
 
-   Interface MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD
-      Module Procedure MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD_2D, MEF90GradDamageDamageBilinearFormSetAT2UnilateralSD_3D
-   End Interface 
-
    Interface MEF90GradDamageDamageOperatorSetAT2
       Module Procedure MEF90GradDamageDamageOperatorSetAT2_2D, MEF90GradDamageDamageOperatorSetAT2_3D
    End Interface 
 
-   Interface MEF90GradDamageDamageOperatorSetAT2UnilateralSD
-      Module Procedure MEF90GradDamageDamageOperatorSetAT2UnilateralSD_2D, MEF90GradDamageDamageOperatorSetAT2UnilateralSD_3D
-   End Interface 
-
    Interface MEF90GradDamageDamageRHSSetAT2
       Module Procedure MEF90GradDamageDamageRHSSetAT2_2D, MEF90GradDamageDamageRHSSetAT2_3D
-   End Interface 
-
-   Interface MEF90GradDamageDamageRHSSetAT2UnilateralSD
-      Module Procedure MEF90GradDamageDamageRHSSetAT2UnilateralSD_2D, MEF90GradDamageDamageRHSSetAT2UnilateralSD_3D
    End Interface 
 
    Interface MEF90GradDamageSurfaceEnergySetAT2
