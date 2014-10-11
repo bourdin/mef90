@@ -375,6 +375,7 @@ Contains
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)   
 
+		Nullify(TemperatureDof)
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDuplicate(damageSec,temperatureSec,ierr);CHKERRQ(ierr)
          !Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
@@ -670,6 +671,7 @@ Contains
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)   
 
+		Nullify(temperatureDof)
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDuplicate(damageSec,temperatureSec,ierr);CHKERRQ(ierr)
          !Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
@@ -1158,21 +1160,21 @@ Contains
 
       PetscInt                                           :: iDof1,iDof2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
-      Type(MEF90_MATS)                                   :: inelasticStrainGauss
+      Type(MEF90_MATS)                                   :: strainGauss
       PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
-      numGauss = size(elemDisplacement%BF,2)
+      numGauss = size(elemDamage%BF,2)
       
-      C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength
+      C2 = matprop%fractureToughness * matprop%internalLength * .75
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
-         inelasticStrainGauss = 0.0_Kr
+         strainGauss = 0.0_Kr
          Do iDoF1 = 1,numDofDisplacement
-            inelasticStrainGauss = inelasticStrainGauss + elemDisplacement%GradS_BF(iDof1,iGauss) * displacementDof(iDof1)
+            strainGauss = strainGauss + elemDisplacement%GradS_BF(iDof1,iGauss) * displacementDof(iDof1)
          End Do
          temperatureGauss = 0.0_Kr
          If (Associated(temperatureDof)) Then
@@ -1180,8 +1182,8 @@ Contains
                temperatureGauss = temperatureGauss + elemDamage%BF(iDof1,iGauss) * temperatureDof(iDof1)
             End Do
          End If
-         inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
-         elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
+         strainGauss = strainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
+         elasticEnergyDensityGauss = (matprop%HookesLaw * strainGauss) .DotP. strainGauss
          !!! This is really twice the elastic energy density
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
@@ -1219,7 +1221,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
 
-      C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength
+      C2 = matprop%fractureToughness * matprop%internalLength * .75_Kr
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
          Do iDoF1 = 1,numDofDamage
@@ -1261,7 +1263,7 @@ Contains
       numGauss = size(elemDisplacement%BF,2)
       
       C1 = matprop%fractureToughness / matprop%internalLength 
-      C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength
+      C2 = matprop%fractureToughness * matprop%internalLength
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
          inelasticStrainGauss = 0.0_Kr
@@ -1314,7 +1316,7 @@ Contains
       numGauss = size(elemDisplacement%BF,2)
       
       C1 = matprop%fractureToughness / matprop%internalLength 
-      C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength
+      C2 = matprop%fractureToughness * matprop%internalLength
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
          Do iDoF1 = 1,numDofDamage
@@ -1579,180 +1581,6 @@ Contains
       Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDamage
 
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormDamageOld"
-!!!
-!!!  
-!!!  MEF90DefMechBilinearFormDamageOld:
-!!!  
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechBilinearFormDamageOld(snesDamage,alpha,A,M,flg,MEF90DefMechCtx,ierr)
-      Type(SNES),Intent(IN)                              :: snesDamage
-      Type(Vec),Intent(IN)                               :: alpha
-      Type(Mat),Intent(INOUT)                            :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscErrorCode,Intent(OUT)                         :: ierr  
-         
-      Type(SectionReal)                                  :: displacementSec,temperatureSec,plasticStrainSec   
-      Type(VecScatter)                                   :: ScatterSecToVecVect,ScatterSecToVecScal,ScatterSecToVecCellMatS
-      Type(IS)                                           :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
-      PetscInt,dimension(:),Pointer                      :: setID
-      PetscInt                                           :: set,QuadratureOrder
-      Type(MEF90_MATPROP),Pointer                        :: matpropSet
-      Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
-      Type(MEF90DefMechVertexSetOptions_Type),Pointer    :: vertexSetOptions
-      Type(DM)                                           :: mesh
-      Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemDamage
-      Type(MEF90Element_Type)                            :: elemDisplacementType,elemDamageType
-      PetscInt,Dimension(:),Pointer                      :: setIdx,bcIdx,Cone
-      Type(IS)                                           :: bcIS
-      PetscInt                                           :: cell,v,numBC,numDoF
-      
-      Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
-      !Call SNESGetDM(snesDamage,mesh,ierr);CHKERRQ(ierr)
-      mesh%v = MEF90DefMechCtx%DMScal%v
-
-      If (Associated(MEF90DefMechCtx%temperature)) Then
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',temperatureSec,ierr);CHKERRQ(ierr)
-         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-         Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)          
-      Else
-         temperatureSec%v = 0
-      End If
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',displacementSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,displacementSec,ScatterSecToVecVect,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(displacementSec,ScatterSecToVecVect,SCATTER_REVERSE,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)          
-      
-      !!! Create cell based sections, and allocate required Pointers
-      If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
-         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
-         Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)          
-      Else
-         PlasticStrainSec%v = 0
-      End If
-
-      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Do set = 1,size(setID)
-         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
-         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
-         elemDamageType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
-         !!! Call proper local assembly depending on the type of damage law
-         Select Case (cellSetOptions%damageType)
-         Case (MEF90DefMech_damageTypeAT1Elastic)
-            If (elemDamageType%coDim == 0) Then
-               QuadratureOrder = max(elemDisplacementType%order, 2 * elemDamageType%order - 2)
-               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageDamageBilinearFormSetAT1Elastic(A,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
-               Call MEF90Element_Destroy(elemDamage,ierr)
-            End If
-         Case (MEF90DefMech_damageTypeAT2Elastic)
-            If (elemDamageType%coDim == 0) Then
-               QuadratureOrder = 2 * elemDamageType%order
-               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageDamageBilinearFormSetAT2Elastic(A,mesh,setIS,matPropSet%internalLength,matPropSet%FractureToughness,elemDamage,elemDamageType,ierr)
-               Call MEF90Element_Destroy(elemDamage,ierr)
-            End If
-         Case (MEF90DefMech_damageTypeAT1)
-            !!! Elements of codim > 0 have no contribution to the bilinear form, so we need to skip them
-            If (elemDamageType%coDim == 0) Then
-               If (Associated(MEF90DefMechCtx%temperature)) Then
-                  QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order) + 2 * elemDamageType%order
-               Else
-                  QuadratureOrder = 2 * elemDisplacementType%order - 2 + 2 * elemDamageType%order
-               End If
-               Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageDamageBilinearFormSetAT1(A,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
-                                                        matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                        elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-               Call MEF90Element_Destroy(elemDisplacement,ierr)
-               Call MEF90Element_Destroy(elemDamage,ierr)
-            End If
-         Case (MEF90DefMech_damageTypeAT2)
-            !!! Elements of codim > 0 have no contribution to the bilinear form, so we need to skip them
-            If (elemDamageType%coDim == 0) Then
-               If (Associated(MEF90DefMechCtx%temperature)) Then
-                  QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemDamageType%order) + 2 * elemDamageType%order
-               Else
-                  QuadratureOrder = 2 * elemDisplacementType%order - 2 + 2 * elemDamageType%order
-               End If
-               Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-               Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageDamageBilinearFormSetAT2(A,mesh,MEF90DefMechCtx%DMVect,setIS,displacementSec,temperatureSec,plasticStrainSec, & 
-                                                        matPropSet%internalLength,matPropSet%HookesLaw,matPropSet%LinearThermalExpansion,matPropSet%FractureToughness, &
-                                                        elemDamage,elemDamageType,elemDisplacement,elemDisplacementType,ierr)
-               Call MEF90Element_Destroy(elemDisplacement,ierr)
-               Call MEF90Element_Destroy(elemDamage,ierr)
-            End If
-         Case default
-            Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
-            STOP  
-         End Select
-         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-      End Do     
-      Call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
-      Call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
-      !!!
-      !!! Boundary conditions at cell sets
-      !!!
-      Do set = 1,size(setID)
-         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
-         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         If (cellSetOptions%Has_damageBC) Then
-            Call DMMeshGetStratumIS(mesh,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call MEF90ISCreateCelltoVertex(mesh,PETSC_COMM_WORLD,setIS,bcIS,ierr)
-            Call DMMeshISCreateISglobaldof(mesh,bcIS,0,setISdof,ierr);CHKERRQ(ierr)
-            Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
-            Call ISDestroy(bcIS,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-         End If ! cellSetOptions%Has_damageBC
-      End Do     
-      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-   
-      !!!
-      !!! Boundary conditions at vertex sets
-      !!!
-      Call DMmeshGetLabelIdIS(mesh,'Vertex Sets',VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,VertexSetGlobalIS,ierr);CHKERRQ(ierr) 
-      Call ISGetIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Do set = 1,size(setID)
-         Call PetscBagGetDataMEF90DefMechCtxVertexSetOptions(MEF90DefMechCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
-         If (vertexSetOptions%Has_damageBC) Then
-            Call DMMeshGetStratumIS(mesh,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-            Call DMMeshISCreateISglobaldof(mesh,setIS,0,setISdof,ierr);CHKERRQ(ierr)
-            Call MatZeroRowsColumnsIS(A,setISdof,1.0_Kr,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-         End If
-      End Do
-      Call ISRestoreIndicesF90(VertexSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(VertexSetGlobalIS,ierr);CHKERRQ(ierr)
-      
-      If (plasticStrainSec%v /= 0) Then
-         Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
-         Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
-      End If
-      Call VecScatterDestroy(ScatterSecToVecVect,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)      
-      If (temperatureSec%v /= 0) Then
-         Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-         Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
-      End If
-      flg = SAME_NONZERO_PATTERN
-   End Subroutine MEF90DefMechBilinearFormDamageOld
-   
-
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDamage"
 !!!
@@ -1806,6 +1634,7 @@ Contains
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,damage,ierr);CHKERRQ(ierr)   
 
+		Nullify(temperatureDof)
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDuplicate(damageSec,temperatureSec,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)   
@@ -1876,7 +1705,7 @@ Contains
             End Select
 
             !!! Allocate storage for fields at dof and Gauss points
-            Allocate(Aloc(ElemDisplacementType%numDof,ElemDisplacementType%numDof))
+            Allocate(Aloc(ElemDamageType%numDof,ElemDamageType%numDof))
             Allocate(displacementDof(ElemDisplacementType%numDof))
             Allocate(damageDof(ElemDamageType%numDof))
             If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -1897,17 +1726,18 @@ Contains
                   Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                   plasticStrainCell = plasticStrainLoc
                Else
-                  plasticStrainCell = 0.0_Kr
+                 plasticStrainCell = 0.0_Kr
                End If
                   
                Aloc = 0.0_Kr
                Call localAssemblyFunction(Aloc,damageDof,displacementDof,nullPtr,temperatureDof,plasticStrainCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
-               Call DMmeshAssembleMatrix(A,mesh,displacementSec,cellID(cell),ALoc,ADD_VALUES,ierr);CHKERRQ(ierr)
+               Call DMmeshAssembleMatrix(A,mesh,damageSec,cellID(cell),ALoc,ADD_VALUES,ierr);CHKERRQ(ierr)
 
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
                   Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                End If
             End Do
+
             DeAllocate(displacementDof)
             DeAllocate(damageDof)
             If (Associated(MEF90DefMechCtx%temperature)) Then
