@@ -69,6 +69,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
 
       PetscInt                                           :: iDof1,iDof2,iGauss,numDofDisplacement,numGauss
+      Type(MEF90_MATS)                                   :: sigma
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
@@ -77,9 +78,9 @@ Contains
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
          Do iDoF1 = 1,numDofDisplacement
+            sigma = matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss)
             Do iDoF2 = 1,numDofDisplacement
-               Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * &
-                                  ((matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss)) .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
             End Do
          End Do
       End Do
@@ -105,6 +106,7 @@ Contains
 
       PetscInt                                           :: iDof1,iDof2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: stiffness
+      Type(MEF90_MATS)                                   :: sigma
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
@@ -119,14 +121,14 @@ Contains
          End Do
          stiffness = (1.0_Kr - stiffness)**2 + matProp%residualStiffness
          Do iDoF1 = 1,numDofDisplacement
+            sigma = stiffness * matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss)
             Do iDoF2 = 1,numDofDisplacement
-               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * &
-                                   stiffness * ((matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss)) .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
             End Do
          End Do
       End Do
-      flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
+      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDisplacementATLoc
    
 #undef __FUNCT__
@@ -146,9 +148,9 @@ Contains
       Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
 
       PetscInt                                           :: iDof1,iDof2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: stiffness
+      PetscReal                                          :: stiffnessS,stiffnessD
       PetscReal                                          :: inelasticStrainTrace
-      Type(MEF90_MATS)                                   :: plasticStrain
+      Type(MEF90_MATS)                                   :: plasticStrain,sigma
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
@@ -169,19 +171,23 @@ Contains
          Do iDoF1 = 1,numDofDisplacement
             inelasticStrainTrace = inelasticStrainTrace + xDof(iDof1) * trace(elemDisplacement%GradS_BF(iDoF1,iGauss))
          End Do
+         stiffnessD = 0.0_Kr
+         Do iDof1 = 1,numDofDamage
+            stiffnessD = stiffnessD + damageDof(iDof1) * elemDamage%BF(iDof1,iGauss)
+         End Do
+         stiffnessD = (1.0_Kr - stiffnessD)**2 + matProp%residualStiffness
+
          If (inelasticStrainTrace < 0.0_Kr) Then
-            stiffness = 1.0_Kr
+            stiffnessS = 1.0_Kr
          Else
-            stiffness = 0.0_Kr
-            Do iDof1 = 1,numDofDamage
-               stiffness = stiffness + damageDof(iDof1) * elemDamage%BF(iDof1,iGauss)
-            End Do
-            stiffness = (1.0_Kr - stiffness)**2 + matProp%residualStiffness
+            stiffnessS = stiffnessD
          End If
+         
          Do iDoF1 = 1,numDofDisplacement
+            sigma = stiffnessD * sphericalPart(elemDisplacement%GradS_BF(iDoF1,iGauss)) + stiffnessD * deviatoricPart(elemDisplacement%GradS_BF(iDoF1,iGauss))
+            sigma = matProp%HookesLaw * sigma
             Do iDoF2 = 1,numDofDisplacement
-               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * &
-                                   stiffness * ((matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss)) .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
             End Do
          End Do
       End Do
@@ -205,7 +211,7 @@ Contains
       Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
 
-      Type(MEF90_MATS)                                   :: gradSUGauss
+      Type(MEF90_MATS)                                   :: sigma
       PetscInt                                           :: iDof1,iDof2,iGauss,numDofDisplacement,numGauss
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
@@ -214,13 +220,13 @@ Contains
       numGauss = size(elemDisplacement%BF,2)
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
-         gradSUGauss = 0.0_Kr
+         sigma = 0.0_Kr
          Do iDoF1 = 1,numDofDisplacement
-            gradSUGauss = gradSUGauss + xDof(iDof1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
+            sigma = sigma + xDof(iDof1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
          End Do
+         sigma = matProp%HookesLaw * sigma
          Do iDoF2 = 1,numDofDisplacement
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * &
-                               ((matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF2,iGauss)) .DotP. gradSUGauss)
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
          End Do
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
