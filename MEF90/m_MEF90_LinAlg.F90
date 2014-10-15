@@ -184,8 +184,8 @@
       Module Procedure DeviatoricPart2D,DeviatoricPart2DS,DeviatoricPart3D,DeviatoricPart3DS
    End Interface
 
-   Interface SphericalPart
-      Module Procedure SphericalPart2D,SphericalPart2DS,SphericalPart3D,SphericalPart3DS
+   Interface HydrostaticPart
+      Module Procedure HydrostaticPart2D,HydrostaticPart2DS,HydrostaticPart3D,HydrostaticPart3DS
    End Interface
    
    Interface Norm
@@ -1918,84 +1918,84 @@ Contains
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function DeviatoricPart3DS
 
-   Function SphericalPart2D(M1)
+   Function HydrostaticPart2D(M1)
       Type(Mat2D),Intent(IN)                      :: M1
-      Type(Mat2D)                                 :: SphericalPart2D
+      Type(Mat2D)                                 :: HydrostaticPart2D
       
       PetscReal                                   :: M1_Trace
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
       
       M1_Trace = Trace(M1)
-      SphericalPart2D%XX = M1_Trace * 0.5_Kr
-      SphericalPart2D%XY = 0.0_Kr
-      SphericalPart2D%YX = 0.0_Kr
-      SphericalPart2D%YY = M1_Trace * 0.5_Kr
+      HydrostaticPart2D%XX = M1_Trace * 0.5_Kr
+      HydrostaticPart2D%XY = 0.0_Kr
+      HydrostaticPart2D%YX = 0.0_Kr
+      HydrostaticPart2D%YY = M1_Trace * 0.5_Kr
       flops = 2.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function SphericalPart2D
+   End Function HydrostaticPart2D
 
 
-   Function SphericalPart2DS(M1)
+   Function HydrostaticPart2DS(M1)
       Type(MatS2D),Intent(IN)                     :: M1
-      Type(MatS2D)                                :: SphericalPart2DS
+      Type(MatS2D)                                :: HydrostaticPart2DS
       
       PetscReal                                   :: M1_Trace
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
       
       M1_Trace = Trace(M1)
-      SphericalPart2DS%XX = M1_Trace * 0.5_Kr
-      SphericalPart2DS%YY = M1_Trace * 0.5_Kr
-      SphericalPart2DS%XY = 0.0_Kr
+      HydrostaticPart2DS%XX = M1_Trace * 0.5_Kr
+      HydrostaticPart2DS%YY = M1_Trace * 0.5_Kr
+      HydrostaticPart2DS%XY = 0.0_Kr
       flops = 2.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function SphericalPart2DS
+   End Function HydrostaticPart2DS
 
-   Function SphericalPart3D(M1)
+   Function HydrostaticPart3D(M1)
       Type(Mat3D),Intent(IN)                      :: M1
-      Type(Mat3D)                                 :: SphericalPart3D
+      Type(Mat3D)                                 :: HydrostaticPart3D
       
       PetscReal                                   :: M1_Trace
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
       
       M1_Trace = Trace(M1)
-      SphericalPart3D%XX = M1_Trace / 3.0_Kr
-      SphericalPart3D%XY = 0.0_Kr
-      SphericalPart3D%XZ = 0.0_Kr
+      HydrostaticPart3D%XX = M1_Trace / 3.0_Kr
+      HydrostaticPart3D%XY = 0.0_Kr
+      HydrostaticPart3D%XZ = 0.0_Kr
 
-      SphericalPart3D%YX = 0.0_Kr
-      SphericalPart3D%YY = M1_Trace / 3.0_Kr
-      SphericalPart3D%YZ = 0.0_Kr
+      HydrostaticPart3D%YX = 0.0_Kr
+      HydrostaticPart3D%YY = M1_Trace / 3.0_Kr
+      HydrostaticPart3D%YZ = 0.0_Kr
                          
-      SphericalPart3D%ZX = 0.0_Kr
-      SphericalPart3D%ZY = 0.0_Kr
-      SphericalPart3D%ZZ = M1_Trace / 3.0_Kr
+      HydrostaticPart3D%ZX = 0.0_Kr
+      HydrostaticPart3D%ZY = 0.0_Kr
+      HydrostaticPart3D%ZZ = M1_Trace / 3.0_Kr
       flops = 6.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function SphericalPart3D
+   End Function HydrostaticPart3D
 
 
-   Function SphericalPart3DS(M1)
+   Function HydrostaticPart3DS(M1)
       Type(MatS3D),Intent(IN)                     :: M1
-      Type(MatS3D)                                :: SphericalPart3DS
+      Type(MatS3D)                                :: HydrostaticPart3DS
       
       PetscReal                                   :: M1_Trace
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
       
       M1_Trace = Trace(M1)
-      SphericalPart3DS%XX = M1_Trace / 3.0_Kr
-      SphericalPart3DS%YY = M1_Trace / 3.0_Kr
-      SphericalPart3DS%ZZ = M1_Trace / 3.0_Kr
+      HydrostaticPart3DS%XX = M1_Trace / 3.0_Kr
+      HydrostaticPart3DS%YY = M1_Trace / 3.0_Kr
+      HydrostaticPart3DS%ZZ = M1_Trace / 3.0_Kr
 
-      SphericalPart3DS%YZ = 0.0_Kr
-      SphericalPart3DS%XZ = 0.0_Kr
-      SphericalPart3DS%XY = 0.0_Kr
+      HydrostaticPart3DS%YZ = 0.0_Kr
+      HydrostaticPart3DS%XZ = 0.0_Kr
+      HydrostaticPart3DS%XY = 0.0_Kr
       flops = 6.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function SphericalPart3DS
+   End Function HydrostaticPart3DS
 
 !====================================================================
 !             END OF OPERATOR OVERLOADING
