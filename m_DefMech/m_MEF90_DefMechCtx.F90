@@ -232,8 +232,8 @@ Module m_MEF90_DefMechCtx
    Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_plasticityTypeList
    
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,            &
-                     MEF90DefMech_unilateralContactTypeSphericalDeviatoric, &
+      enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,              &
+                     MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric, &
                      MEF90DefMech_unilateralContactTypePrincipalStrains
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_unilateralContactTypeList
@@ -290,7 +290,7 @@ Contains
       MEF90DefMech_plasticityTypeList(6) = ''
 
       MEF90DefMech_unilateralContactTypeList(1) = 'None'
-      MEF90DefMech_unilateralContactTypeList(2) = 'SphericalDeviatoric'
+      MEF90DefMech_unilateralContactTypeList(2) = 'HydrostaticDeviatoric'
       MEF90DefMech_unilateralContactTypeList(3) = 'PrincipalStrains'
       MEF90DefMech_unilateralContactTypeList(4) = 'MEF90DefMech_unilateralContactTypeList'
       MEF90DefMech_unilateralContactTypeList(5) = '_MEF90DefMech_unilateralContactTypeList'
@@ -712,7 +712,6 @@ Contains
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','[unit-less] (alpha): Damage boundary value',ierr);CHKERRQ(ierr)
-      !Call PetscBagRegisterReal(bag,DefMechCellSetOptions%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta): residual stiffness multiplier',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions
 
 #undef __FUNCT__
