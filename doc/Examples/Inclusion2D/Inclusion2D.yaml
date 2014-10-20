@@ -17,15 +17,15 @@ time:
     interpolation: linear
 cs0001:
     name: Matrix
-    hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
+    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
     FractureToughness: 1e-4
     internallength: .04
     residualstiffness: 0.
     LinearThermalExpansion: 0,1e-3,0
-    defectlaw:
-        type: GradientDamage
-        gradientdamage:
-            type: AT1
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
     displacementbc: no,no,no
     damageBC: no
     tempBC: yes
@@ -33,15 +33,15 @@ cs0001:
 cs0002:
     name: Inclusion
     # inclusion
-    hookeslaw: 1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
+    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
     FractureToughness: 5e-5
     internallength: .04
     residualstiffness: 0.
     LinearThermalExpansion: 1e-3,0,0
-    defectlaw:
-        type: GradientDamage
-        gradientdamage:
-            type: AT1
+    damage:
+        type: AT1Elastic
+    plasticity:
+        type: NONE
     displacementbc: no,no,no
     damageBC: no
     tempBC: yes

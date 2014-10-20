@@ -229,6 +229,7 @@ Contains
       matprop%HookesLaw = default%HookesLaw
       Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
+      Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
 
