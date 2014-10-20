@@ -20,7 +20,7 @@ time:
     numstep: 51
     interpolation: quadratic
 cs0001:
-    hookeslaw: 3.57293E+05,0.00000E+00,7.86045E+04,1.39344E+05,0.00000E+00,3.57293E+05
+    hookeslaw: 3.57293e+05,7.86045e+04,0.00000e+00,3.57293e+05,0.00000e+00,1.39344e+05
     # isotropic 2D plane stress, E = 3.4E+05, nu = .22
     FractureToughness: 4.24E-02
     internallength: .1
@@ -28,44 +28,44 @@ cs0001:
     residualstiffness: 0.
     LinearThermalExpansion: 8E-6,8E-6,0
     ThermalConductivity: 1,1,0
-    defectlaw:
-        type: GradientDamage
-        gradientdamage:
-            type: AT1
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
     displacementbc: no,no,no
     damageBC: no
 cs0010:
-    defectlaw:
-        type: GradientDamage
-        gradientdamage:
-            type: AT1
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
     displacementbc: no,yes,no
     boundaryDisplacement: 0,0,0
     damageBC: no
     tempBC: no
 cs0020:
-    defectlaw:
-        type: GradientDamage
-        gradientdamage:
-            type: AT1
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
     displacementbc: no,no,no
     damageBC: no
     tempBC: yes
     boundaryTemp: 0
 cs0030:
-    defectlaw:
-        type: GradientDamage
-        gradientdamage:
-            type: AT1
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
     displacementbc: no,no,no
     damageBC: no
     tempBC: yes
     boundaryTemp: 0
 cs0040:
-    defectlaw:
-        type: GradientDamage
-        gradientdamage:
-            type: AT1
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
     displacementbc: no,yes,no
     boundaryDisplacement: 0,0,0
     damageBC: no

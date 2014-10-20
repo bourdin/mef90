@@ -14,15 +14,15 @@ temperature:
 plasticStrain:
   offset: 0
 cs0001:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,1.00000e+00
+    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
     linearThermalExpansion: 0,0,0
     fracturetoughness: .888
     residualstiffness: 0.
     internalLength: .45
-    defectLaw:
-        type: gradientDamage
-        gradientDamage:
-            type: AT1
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
 cs0020:
     displacementBC: 1,1,1
     damageBC: 1
