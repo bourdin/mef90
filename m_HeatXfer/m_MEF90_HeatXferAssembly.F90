@@ -189,6 +189,7 @@ Contains
       Call SectionRealDestroy(boundaryTemperatureSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVecCell,ierr);CHKERRQ(ierr)      
+      DeAllocate(modifiedFluxPtr)
    End Subroutine MEF90HeatXferOperator
    
 #undef __FUNCT__

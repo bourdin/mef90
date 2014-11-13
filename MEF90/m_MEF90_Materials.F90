@@ -239,7 +239,7 @@ Contains
 !!!
 !!!  
 !!!  MEF90MatPropBagSetFromOptionsierr:
-!!!MEF90MatPropBagSetFromOptions2D
+!!!  MEF90MatPropBagSetFromOptions2D
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90MatPropBagSetFromOptions2D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
