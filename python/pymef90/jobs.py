@@ -69,9 +69,9 @@ def PrepareJob(Geometry,Parameters,debug=False):
     ### 
     for root in ['/',submitdir,os.path.dirname(os.path.abspath(__file__))]:
         if debug:
-            print 'searching for argfile in %s'%root
-        if os.path.isfile(os.path.join(root,Parameters['argfile'])):
-            Parameters['argfile'] = os.path.join(root,Parameters['argfile'])
+            print 'searching for yamlfile in %s'%root
+        if os.path.isfile(os.path.join(root,Parameters['yamlfile'])):
+            Parameters['yamlfile'] = os.path.join(root,Parameters['yamlfile'])
             break
 
     ###

@@ -241,11 +241,13 @@ Contains
       Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
-      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numGauss
+      PetscReal                                          :: temperature
+      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
       numDofDisplacement = size(elemDisplacement%BF,1)
+      numDofDamage       = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
@@ -253,7 +255,11 @@ Contains
          Do iDoF1 = 1,numDofDisplacement
             sigma = sigma + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
          End Do
-         sigma = matProp%HookesLaw * sigma
+         temperature = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            temperature = temperature + temperatureDoF(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+         End Do
+         sigma = matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion)
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
          End Do
@@ -279,7 +285,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
-      PetscReal                                          :: stiffness
+      PetscReal                                          :: stiffness,temperature
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
@@ -300,7 +306,11 @@ Contains
          Do iDoF1 = 1,numDofDisplacement
             sigma = sigma + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
          End Do
-         sigma = stiffness * matProp%HookesLaw * sigma
+         temperature = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            temperature = temperature + temperatureDoF(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+         End Do
+         sigma = stiffness * matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion)
 
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
@@ -478,7 +488,7 @@ Contains
       Nullify(TemperatureDof)
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDuplicate(damageSec,temperatureSec,ierr);CHKERRQ(ierr)
-         !Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)   
       Else
          temperatureSec%v = 0
