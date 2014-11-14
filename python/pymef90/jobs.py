@@ -1,3 +1,30 @@
+def HookeLawIsotropicEnu3D(E,nu):
+    lmbda = E * nu / (1. + nu) / (1. - 2. * nu)
+    mu    = E / (1. + nu) * .5
+    A=(lmbda + 2. * mu,lmbda,          lmbda,         0.,0.,0.,
+                       lmbda + 2. * mu,lmbda,         0.,0.,0.,
+                                       lmbda + 2.*mu, 0.,0.,0.,
+                                                      mu,0.,0.,
+                                                         mu,0.,
+                                                            mu)
+    return(A)
+                                                            
+def HookeLawIsotropicEnu2DPlainStress(E,nu):
+    lmbda = E * nu / (1. - nu*nu)
+    mu    = E / (1. + nu) * .5
+    A=(lmbda + 2. * mu,lmbda,          0.,
+                       lmbda + 2. * mu,0.,
+                                       mu)
+    return(A)
+                                                            
+def HookeLawIsotropicEnu2DPlainStrain(E,nu):
+    lmbda = E * nu / (1. + nu) / (1. - 2. * nu)
+    mu    = E / (1. + nu) * .5
+    A=(lmbda + 2. * mu,lmbda,          0.,
+                       lmbda + 2. * mu,0.,
+                                       mu)
+    return(A)
+
 def PrepareJob(Geometry,Parameters,debug=False):
     import hashlib
     import shutil
