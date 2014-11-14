@@ -256,9 +256,11 @@ Contains
             sigma = sigma + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
          End Do
          temperature = 0.0_Kr
-         Do iDoF1 = 1,numDofDamage
-            temperature = temperature + temperatureDoF(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-         End Do
+         If (Associated(temperatureDof)) Then
+            Do iDoF1 = 1,numDofDamage
+               temperature = temperature + temperatureDoF(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+            End Do
+         End If
          sigma = matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion)
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
@@ -307,9 +309,11 @@ Contains
             sigma = sigma + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
          End Do
          temperature = 0.0_Kr
-         Do iDoF1 = 1,numDofDamage
-            temperature = temperature + temperatureDoF(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-         End Do
+         If (Associated(temperatureDof)) Then
+            Do iDoF1 = 1,numDofDamage
+               temperature = temperature + temperatureDoF(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+            End Do
+         End If
          sigma = stiffness * matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion)
 
          Do iDoF2 = 1,numDofDisplacement
@@ -571,6 +575,8 @@ Contains
             Allocate(damageDof(ElemDamageType%numDof))
             If (Associated(MEF90DefMechCtx%temperature)) Then
                Allocate(temperatureDof(ElemDamageType%numDof))
+            Else
+               Nullify(temperatureDof)
             End If
 
             !!! Allocate elements 
