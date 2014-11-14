@@ -23,6 +23,13 @@ def getnumproc(prefix,pattern='%s-%04i.gen'):
 def argsWrite(infilename,outfilename,Dict):
     infile=open(infilename,'r')
     outfile=open(outfilename,'w')
+    outfile.write(infile.read().format(**Dict))
+    outfile.close()
+    infile.close()
+
+def argsWriteOldStyle(infilename,outfilename,Dict):
+    infile=open(infilename,'r')
+    outfile=open(outfilename,'w')
     outfile.write(infile.read()%Dict)
     outfile.close()
     infile.close()
