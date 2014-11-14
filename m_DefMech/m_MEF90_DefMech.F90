@@ -1014,6 +1014,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Type(Vec)                                          :: residualDisp
       Type(KSP)                                          :: kspDisp
       Type(PC)                                           :: pcDisp
+      SNESLineSearch                                     :: lsDisp
       PetscReal                                          :: atol,rtol,dtol
       PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
       PetscInt                                           :: dim
@@ -1046,13 +1047,16 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call SNESSetApplicationContext(snesDisp,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetDM(snesDisp,MEF90DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
          Call SNESSetOptionsPrefix(snesDisp,'Disp_',ierr);CHKERRQ(ierr)
-         Call SNESSetType(snesDisp,SNESKSPONLY,ierr);CHKERRQ(ierr)
-
+         !Call SNESSetType(snesDisp,SNESKSPONLY,ierr);CHKERRQ(ierr)
+         Call SNESSetType(snesDisp,SNESLS,ierr);CHKERRQ(ierr)
+         Call SNESGetSNESLineSearch(snesDisp,lsDisp,ierr);CHKERRQ(ierr)
+         Call SNESLineSearchSetType(lsDisp,SNESLINESEARCHL2,ierr);CHKERRQ(ierr)
+         
          Call SNESSetFunction(snesDisp,residual,MEF90DefMechOperatorDisplacement,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearFormDisplacement,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         !atol = 1.0D-10
-         !rtol = 1.0D-10
-         !Call SNESSetTolerances(snesDisp,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+         atol = 1.0D-8
+         rtol = 1.0D-8
+         Call SNESSetTolerances(snesDisp,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call SNESSetFromOptions(snesDisp,ierr);CHKERRQ(ierr)
 
          !!! 
