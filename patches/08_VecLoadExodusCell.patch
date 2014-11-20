@@ -1,0 +1,14 @@
+diff -r 122bd20de8a3 src/dm/impls/mesh/meshexodus.c
+--- a/src/dm/impls/mesh/meshexodus.c	Mon Mar 04 20:57:22 2013 -0600
++++ b/src/dm/impls/mesh/meshexodus.c	Wed Nov 19 18:28:49 2014 -0600
+@@ -1798,7 +1798,9 @@ PetscErrorCode VecLoadExodusCell(DM dm,V
+         /*
+           Get the size of the size of the set on cpu 0 and create a Vec to receive values
+         */
+-        ierr = ex_get_elem_block(exoid,setsID_zero[set],junk,&num_cells_zero,&junk1,&junk2);
++        if (rank == 0) {
++          ierr = ex_get_elem_block(exoid,setsID_zero[set],junk,&num_cells_zero,&junk1,&junk2);
++        }
+         ierr = VecCreateSeq(PETSC_COMM_SELF,num_cells_zero,&vdof_set_zero);CHKERRQ(ierr);
+   
+         /*
