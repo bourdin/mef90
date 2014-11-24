@@ -1,4 +1,4 @@
-Program HokeLaw
+Program HookeLaw
 #include "finclude/petscdef.h"
    Use m_MEF90
    IMPLICIT NONE
@@ -7,7 +7,7 @@ Program HokeLaw
    Type(Tens4OS2D)                  :: HookeLaw2D
    Type(Tens4OS3D)                  :: HookeLaw3D
    PetscBool                        :: flg,mef90
-   Character(len=1024)               :: IOBuffer
+   Character(len=1024)              :: IOBuffer
    PetscInt                         :: ierr
 
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
@@ -63,4 +63,4 @@ Program HokeLaw
            25(" "),F8.5,"_Kr ]    !           XYXY\n")
    Call MEF90Finalize(ierr)
    Call PetscFinalize()
-End Program HokeLaw
+End Program HookeLaw

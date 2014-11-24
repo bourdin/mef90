@@ -2325,7 +2325,7 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc
       Type(MEF90_MATS)                                   :: plasticStrainCell
       Type(IS)                                           :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof,bcIS
-      PetscInt,dimension(:),Pointer                      :: setID,cellID
+      PetscInt,Dimension(:),Pointer                      :: setID,cellID
       PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
       PetscInt                                           :: set,QuadratureOrder,cell
       Type(MEF90_MATPROP),Pointer                        :: matpropSet

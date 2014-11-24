@@ -16,7 +16,6 @@ test3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/vDef
 
 include ${PETSC_DIR}/conf/rules
 include ${PETSC_DIR}/conf/variables
-#include ${TAO_DIR}/conf/tao_base
 
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
