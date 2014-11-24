@@ -6,6 +6,7 @@ include ${PETSC_DIR}/conf/variables
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
+include ${MEF90_DIR}/m_DefMech/Makefile.include
 
 TestMaterials: TestMaterials.o
 	-@echo "      $@"
@@ -53,6 +54,14 @@ HookeLaws.o: ${MEF90_DIR}/Tests/HookeLaws.F90 MEF90
 HookeLaws: HookeLaws.o
 	-@echo "      $@"
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
+TestQuadrature.o: ${MEF90_DIR}/Tests/TestQuadrature.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestQuadrature: TestQuadrature.o
+	-@echo "      $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${MEF90_DEFMECH_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
 runTestMaterials: TestMaterials
