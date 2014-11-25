@@ -110,7 +110,6 @@ Program TestQuadrature
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90Initialize(ierr)
-   Call PetscPrintf(PETSC_COMM_WORLD," # vDef: numerical implementation of variational models of Defect Mechanics\n",ierr);CHKERRQ(ierr)
    
 
    !!! Get all MEF90-wide options
@@ -141,6 +140,9 @@ Program TestQuadrature
    Call DMMeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
    QuadOrderMax = 4
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-order',QuadOrderMax,flg,ierr);CHKERRQ(ierr);
+   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-i',i,flg,ierr);CHKERRQ(ierr);
+   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-j',j,flg,ierr);CHKERRQ(ierr);
+   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-k',k,flg,ierr);CHKERRQ(ierr);
    Do QuadOrder = QuadOrderMax, QuadOrderMax
       Do k = 0, (dim-2) * QuadOrderMax
          Do j = 0, QuadOrderMax
@@ -161,8 +163,20 @@ Program TestQuadrature
          End Do
       End Do
    End Do
+!   Do QuadOrder = 0, QuadOrderMax
+!      If (dim ==2) Then
+!         Call Integrate2D_Scal(MEF90DefMechCtx,i,j,QuadOrder,Scal,v2d,ierr)
+!      Else
+!         Call Integrate3D_Scal(MEF90DefMechCtx,i,j,k,QuadOrder,Scal,v3d,ierr)
+!      End If
+!      Write(IOBuffer,200) i,j,k,QuadOrder,Scal
+!      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)   
+!   End Do
+   
    100 Format('Integrating x^',I1,' * Y^',I1,' * Z^', I1,' at order ',I4,' : ',2ES12.5,': relative error ',ES12.5,"\n")
+   200 Format('Integrating x^',I1,' * Y^',I1,' * Z^', I1,' at order ',I4,' : ',ES12.5,'\n')
 
+   
    Call MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)   
    Call MEF90Finalize(ierr)
