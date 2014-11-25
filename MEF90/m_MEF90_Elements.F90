@@ -1188,7 +1188,6 @@ Contains
          Xi(1)%X = 1.0_Kr / 3.0_Kr
          Xi(1)%Y = 1.0_Kr / 3.0_Kr
          dElem%Gauss_C = detBinv / 2.0_Kr
-
       Case(2)
          Nb_Gauss = 3
          Allocate(Xi(Nb_Gauss),stat=ierr)
@@ -1197,36 +1196,29 @@ Contains
          Xi(2) = [ 2.0_Kr / 3.0_Kr,1.0_Kr / 6.0_Kr ]
          Xi(3) = [ 1.0_Kr / 6.0_Kr,2.0_Kr / 3.0_Kr ]
          dElem%Gauss_C = detBinv / 6.0_Kr
-
       Case(3)
          Nb_Gauss = 4
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-         dElem%Gauss_C    =  detBinv * 25.0_Kr / 96.0_Kr
-         dElem%Gauss_C(1) = -detBinv * 9.0_Kr / 32.0_Kr
          Xi(1) = [ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr ]
          Xi(2) = [ 3.0_Kr / 5.0_Kr,1.0_Kr / 5.0_Kr ]
          Xi(3) = [ 1.0_Kr / 5.0_Kr,3.0_Kr / 5.0_Kr ]
          Xi(4) = [ 1.0_Kr / 5.0_Kr,1.0_Kr / 5.0_Kr ]
-      Case(-4)
-         Nb_Gauss = 7
+         dElem%Gauss_C(1)   = -detBinv * 9.0_Kr / 32.0_Kr
+         dElem%Gauss_C(2:4) =  detBinv * 25.0_Kr / 96.0_Kr
+      Case(4)
+         Nb_Gauss = 6
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-         dElem%Gauss_C(1) = detBinv / 40.0_Kr
-         dElem%Gauss_C(2) = detBinv / 15.0_Kr
-         dElem%Gauss_C(3) = detBinv / 40.0_Kr
-         dElem%Gauss_C(4) = detBinv / 15.0_Kr
-         dElem%Gauss_C(5) = detBinv / 40.0_Kr
-         dElem%Gauss_C(6) = detBinv / 15.0_Kr
-         dElem%Gauss_C(7) = detBinv * 9.0_Kr / 40.0_Kr
-         Xi(1) = [ 0.0_Kr,0.0_Kr ]
-         Xi(2) = [ 0.5_Kr,0.0_Kr ]
-         Xi(3) = [ 1.0_Kr,0.0_Kr ]
-         Xi(4) = [ 0.5_Kr,0.5_Kr ]
-         Xi(5) = [ 0.0_Kr,1.0_Kr ]
-         Xi(6) = [ 0.0_Kr,0.5_Kr ]
-         Xi(7) = [ 1.0_Kr / 3.0_Kr,1.0_Kr / 3.0_Kr ]
-      Case(4,5)
+         Xi(1) = [ 0.816847572980459_Kr,  0.091576213509771_Kr ]
+         Xi(2) = [ 0.091576213509771_Kr,  0.816847572980459_Kr ]
+         Xi(3) = [ 0.091576213509771_Kr,  0.091576213509771_Kr ]
+         Xi(4) = [ 0.108103018168070_Kr,  0.445948490915965_Kr ]
+         Xi(5) = [ 0.445948490915965_Kr,  0.108103018168070_Kr ]
+         Xi(6) = [ 0.445948490915965_Kr,  0.445948490915965_Kr ]
+         dElem%Gauss_C(1:3) = 0.109951743655322 / 2.0_Kr * detBinv
+         dElem%Gauss_C(4:6) = 0.223381589678011 / 2.0_Kr * detBinv
+      Case(5)
          Nb_Gauss = 7
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
@@ -1241,21 +1233,41 @@ Contains
          dElem%Gauss_C(2:4) = 0.13239415278850616 / 2.0_Kr * detBinv
          dElem%Gauss_C(5:7) = 0.12593918054482717 / 2.0_Kr * detBinv
       Case(-6)
+         !!! It seems to me that this is really a quadrature rule of order 5...
          Nb_Gauss = 9
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-         Xi(1) = [ 0.124949503233232_Kr, 0.437525248383384_Kr ]
-         Xi(2) = [ 0.437525248383384_Kr, 0.124949503233232_Kr ]
-         Xi(3) = [ 0.437525248383384_Kr, 0.437525248383384_Kr ]
-         Xi(4) = [ 0.797112651860071_Kr, 0.165409927389841_Kr ]
-         Xi(5) = [ 0.797112651860071_Kr, 0.037477420750088_Kr ]
-         Xi(6) = [ 0.165409927389841_Kr, 0.797112651860071_Kr ]
-         Xi(7) = [ 0.165409927389841_Kr, 0.037477420750088_Kr ]
-         Xi(8) = [ 0.037477420750088_Kr, 0.797112651860071_Kr ]
-         Xi(9) = [ 0.037477420750088_Kr, 0.165409927389841_Kr ]
+         Xi(1) = [ 0.124949503233232_Kr,  0.437525248383384_Kr ]
+         Xi(2) = [ 0.437525248383384_Kr,  0.124949503233232_Kr ]
+         Xi(3) = [ 0.437525248383384_Kr,  0.437525248383384_Kr ]
+         Xi(4) = [ 0.797112651860071_Kr,  0.165409927389841_Kr ]
+         Xi(5) = [ 0.797112651860071_Kr,  0.037477420750088_Kr ]
+         Xi(6) = [ 0.165409927389841_Kr,  0.797112651860071_Kr ]
+         Xi(7) = [ 0.165409927389841_Kr,  0.037477420750088_Kr ]
+         Xi(8) = [ 0.037477420750088_Kr,  0.797112651860071_Kr ]
+         Xi(9) = [ 0.037477420750088_Kr,  0.165409927389841_Kr ]
          dElem%Gauss_C(1:3) = 0.205950504760887_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(4:9) = 0.063691414286223_Kr / 2.0_Kr * detBinv
-      Case(6,7)
+      Case(6)
+         Nb_Gauss = 12
+         Allocate(Xi(Nb_Gauss),stat=ierr)
+         Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+         Xi(1)  = [ 0.873821971016996_Kr,  0.063089014491502_Kr ]
+         Xi(2)  = [ 0.063089014491502_Kr,  0.873821971016996_Kr ]
+         Xi(3)  = [ 0.063089014491502_Kr,  0.063089014491502_Kr ]
+         Xi(4)  = [ 0.501426509658179_Kr,  0.249286745170910_Kr ]
+         Xi(5)  = [ 0.249286745170910_Kr,  0.501426509658179_Kr ]
+         Xi(6)  = [ 0.249286745170910_Kr,  0.249286745170910_Kr ]
+         Xi(7)  = [ 0.636502499121399_Kr,  0.310352451033785_Kr ]
+         Xi(8)  = [ 0.636502499121399_Kr,  0.053145049844816_Kr ]
+         Xi(9)  = [ 0.310352451033785_Kr,  0.636502499121399_Kr ]
+         Xi(10) = [ 0.310352451033785_Kr,  0.053145049844816_Kr ]
+         Xi(11) = [ 0.053145049844816_Kr,  0.636502499121399_Kr ]
+         Xi(12) = [ 0.053145049844816_Kr,  0.310352451033785_Kr ]
+         dElem%Gauss_C(1:3)  = 0.050844906370207_Kr / 2.0_Kr * detBinv
+         dElem%Gauss_C(4:6)  = 0.116786275726379_Kr / 2.0_Kr * detBinv
+         dElem%Gauss_C(7:12) = 0.082851075618374_Kr / 2.0_Kr * detBinv
+      Case(7)
          Nb_Gauss = 13
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
@@ -1721,22 +1733,10 @@ Contains
          Xi(14) = [0.4334498464263357_Kr,  0.0665501535736643_Kr,  0.4334498464263357_Kr]
          Xi(15) = [0.4334498464263357_Kr,  0.4334498464263357_Kr,  0.0665501535736643_Kr]
          dElem%Gauss_C(1)  = 0.1817020685825351_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(2)  = 0.0361607142857143_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(3)  = 0.0361607142857143_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(4)  = 0.0361607142857143_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(5)  = 0.0361607142857143_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(6)  = 0.0698714945161738_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(7)  = 0.0698714945161738_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(8)  = 0.0698714945161738_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(9)  = 0.0698714945161738_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(10) = 0.0656948493683187_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(11) = 0.0656948493683187_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(12) = 0.0656948493683187_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(13) = 0.0656948493683187_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(14) = 0.0656948493683187_Kr / 6.0_Kr * detBinv
-         dElem%Gauss_C(15) = 0.0656948493683187_Kr / 6.0_Kr * detBinv
-      Case(-6)
-         !!! This doe not seem correct
+         dElem%Gauss_C(2:5)  = 0.0361607142857143_Kr / 6.0_Kr * detBinv
+         dElem%Gauss_C(6:9)  = 0.0698714945161738_Kr / 6.0_Kr * detBinv
+         dElem%Gauss_C(10:15) = 0.0656948493683187_Kr / 6.0_Kr * detBinv
+      Case(6)
          Nb_Gauss = 24
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
@@ -1760,7 +1760,7 @@ Contains
          Xi(18) = [0.0636610018750175_Kr,  0.0636610018750175_Kr,  0.6030056647916491_Kr]
          Xi(19) = [0.0636610018750175_Kr,  0.2696723314583159_Kr,  0.6030056647916491_Kr]
          Xi(20) = [0.2696723314583159_Kr,  0.6030056647916491_Kr,  0.0636610018750175_Kr]
-         Xi(11) = [0.6030056647916491_Kr,  0.0636610018750175_Kr,  0.2696723314583159_Kr]
+         Xi(21) = [0.6030056647916491_Kr,  0.0636610018750175_Kr,  0.2696723314583159_Kr]
          Xi(22) = [0.0636610018750175_Kr,  0.6030056647916491_Kr,  0.2696723314583159_Kr]
          Xi(23) = [0.2696723314583159_Kr,  0.0636610018750175_Kr,  0.6030056647916491_Kr]
          Xi(24) = [0.6030056647916491_Kr,  0.2696723314583159_Kr,  0.0636610018750175_Kr]
@@ -1768,7 +1768,7 @@ Contains
          dElem%Gauss_C(5:8)   = 0.0100772110553207_Kr / 6.0_Kr * detBinv
          dElem%Gauss_C(9:12)  = 0.0553571815436544_Kr / 6.0_Kr * detBinv
          dElem%Gauss_C(13:24) = 0.0482142857142857_Kr / 6.0_Kr * detBinv
-      Case(6,7)
+      Case(7)
          Nb_Gauss = 31
          Allocate(Xi(Nb_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
