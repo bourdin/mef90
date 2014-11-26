@@ -684,7 +684,6 @@ Contains
             End Select
 
             !!! Allocate storage for fields at dof and Gauss points
-            !!! Leaving plasticstrain aside until I can remember how it is supposed to be dealt with
             Allocate(residualLoc(ElemDisplacementType%numDof))
             Allocate(displacementDof(ElemDisplacementType%numDof))
             Allocate(damageDof(ElemDamageType%numDof))

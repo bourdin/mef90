@@ -389,13 +389,15 @@ Program vDef
             Else
                Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,snesDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
             EndIf
+
+            !!! Update fields
+            Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
+            Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
+            Call MEF90DefMechUpdateboundaryDamage(MEF90DefMechCtx%damage,MEF90DefMechCtx,ierr)
+
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
                Write(IObuffer,208) AltMinIter
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-               !!! Update fields
-               Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
-               Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
-               Call MEF90DefMechUpdateboundaryDamage(MEF90DefMechCtx%damage,MEF90DefMechCtx,ierr)
 
                !!! Solve SNES
                Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
