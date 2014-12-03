@@ -1,0 +1,60 @@
+reset
+#{L=10}
+#{T=2}
+#{lc=2}
+#{epsc=.01}
+#{h=.2}
+#{hstr = tostring(h)}
+
+tridelaunay point placement gq
+
+create vertex x {L/2.-lc} Y 0 Z 0
+create vertex x {L/2.} Y {-epsc} z 0
+create vertex x {L/2.} Y {-L/2.} z 0
+create vertex x {-L/2.} Y {-L/2.} z 0
+create vertex x {-L/2.} Y {L/2.} z 0
+create vertex x {L/2.} Y {L/2.} z 0
+create vertex x {L/2.} Y {epsc} z 0
+
+create surface vertex all
+sweep surface 1 perpendicular distance {T}
+
+
+block 1 volume 1
+block 20 surface 3
+block 30 surface 7
+nodeset 400 curve 10
+
+draw block all nodeset all
+hardcopy "UnilateralContact3D.png" png
+
+volume 1 scheme tetmesh size {2.*h}
+#mesh surface all
+#surface all smooth scheme laplacian free 
+#smooth surface all
+mesh volume 1
+volume all smooth scheme laplacian free 
+smooth volume 1
+
+block 1 to 9 element type tetra10
+block 10 to 99 element type tri6
+#{filename = Quote("UnilateralContact3D-"//hstr//"-tetra10.gen")}
+export mesh {filename} dimension 3 block all overwrite
+
+delete mesh
+volume 1 scheme tetmesh size {h}
+mesh volume 1
+smooth volume 1
+
+block 1 to 9 element type tetra4
+block 10 to 99 element type tri3
+#{filename = Quote("UnilateralContact3D-"//hstr//"-tetra4.gen")}
+export mesh {filename} dimension 3 block all overwrite
+
+#quit
+
+
+
+
+
+
