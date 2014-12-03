@@ -1,0 +1,50 @@
+### global options
+verbose: 1
+boundaryDisplacement_scaling: linear
+defmech:
+    irrevthres: 0.
+    mode: quasistatic
+heatxfer:
+    mode: null
+temperature:
+    offset: 0
+time:
+    min: 0
+    max: 1
+    numstep: 41
+cs0001:
+    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
+    FractureToughness: 1.e-2
+    internallength: .3
+    residualstiffness: 0.
+    damage:
+        type: AT1
+    plasticity:
+        type: none
+    unilateralContact:
+        type: HydrostaticDeviatoric
+    displacementbc: no,no,no
+    damageBC: no
+cs0020:
+    damage:
+        type: AT1Elastic
+    plasticity:
+        type: NONE
+    displacementbc: yes,yes,yes
+    boundaryDisplacement: .5,0,0
+    damageBC: yes
+    boundaryDamage: 0.
+cs0030:
+    damage:
+        type: AT1Elastic
+    plasticity:
+        type: NONE
+    displacementbc: yes,yes,yes
+    boundaryDisplacement: -.5,0,0
+    damageBC: yes
+    boundaryDamage: 0.
+vs0400:
+    displacementbc: no,no,no
+    damageBC: yes
+    boundaryDamage: 1.
+
