@@ -31,7 +31,7 @@ cs0020:
     plasticity:
         type: NONE
     displacementbc: yes,yes,yes
-    boundaryDisplacement: .5,0,0
+    boundaryDisplacement: .5,.125,0
     damageBC: yes
     boundaryDamage: 0.
 cs0030:
@@ -40,7 +40,7 @@ cs0030:
     plasticity:
         type: NONE
     displacementbc: yes,yes,yes
-    boundaryDisplacement: -.5,0,0
+    boundaryDisplacement: -.5,-.125,0
     damageBC: yes
     boundaryDamage: 0.
 vs0400:
