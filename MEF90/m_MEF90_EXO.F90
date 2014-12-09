@@ -347,6 +347,7 @@ Contains
    Subroutine EXOWriteCase(prefix,formatstring,numprocs)
       Character(len=*)                               :: prefix,formatstring
       PetscInt                                       :: numprocs
+      Integer                                        :: F_out = 999
       
       Character(len=MEF90_MXSTRLEN)                  :: casefile
       

@@ -56,6 +56,14 @@ HookeLaws: HookeLaws.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
+TestHookeLaws.o: ${MEF90_DIR}/Tests/TestHookeLaws.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestHookeLaws: TestHookeLaws.o
+	-@echo "      $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
 TestQuadrature.o: ${MEF90_DIR}/Tests/TestQuadrature.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
