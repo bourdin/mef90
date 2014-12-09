@@ -142,7 +142,7 @@
    End Interface
    
    Interface Invert
-      Module Procedure InvertMat2D,InvertMatS2D,InvertMat3D,InvertMatS3D!,InvertTens4OS2D,InvertTens4OS3D
+      Module Procedure InvertMat2D,InvertMatS2D,InvertMat3D,InvertMatS3D,InvertTens4OS2D,InvertTens4OS3D
    End Interface
 
    Interface Operator (.TensP.)
@@ -172,8 +172,9 @@
          Mat2DEQ,Mat3DEQ,MatS2D_Get_Real,MatS3D_Get_Real,            &
          MatS2DEQ,MatS3DEQ,MatS2D_Get_VectR,MatS3D_Get_VectR,        &
          VectR_Get_MatS2D,VectR_Get_MatS3D,                          &
-         Tens4OS2D_Get_Real,Tens4OS2DEQ,                             &
-         Tens4OS3D_Get_Real,Tens4OS3DEQ   
+         Tens4OS2D_Get_Real,Tens4OS3D_Get_Real,                      &
+         Tens4OS2DToArray,ArrayToTens4OS2D,                          &
+         Tens4OS3DToArray,ArrayToTens4OS3D
    End Interface
   
    Interface Symmetrize
@@ -1628,63 +1629,71 @@ Contains
       T1%XZXY = D1  
          
       T1%XYXY = D1  
-  End Subroutine Tens4OS3D_Get_Real
+   End Subroutine Tens4OS3D_Get_Real
   
-   Subroutine Tens4OS2DGetArrayF90(T,A)
+   Subroutine Tens4OS2DToArray(A,T)
+      PetscReal,Dimension(3,3),Intent(OUT)        :: A
       Type(Tens4OS2D),Intent(IN)                  :: T
-      PetscReal,Dimension(:,:),Pointer            :: A
 
-      PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
-      PetscReal                                   :: sqrt2
       
-      sqrt2 = sqrt(2.0_Kr)
-      Allocate(A(3,3))
       A(1,1) = T%XXXX
       A(1,2) = T%XXYY
-      A(1,3) = T%XXXY * sqrt2
+      A(1,3) = T%XXXY * 2.0_Kr
 
       A(2,1) = A(1,2)
       A(2,2) = T%YYYY
-      A(2,3) = T%YYXY * sqrt2
+      A(2,3) = T%YYXY * 2.0_Kr
 
       A(3,1) = A(3,1)
       A(3,2) = A(2,3)
       A(3,3) = T%XYXY * 2.0_Kr
-      flops = 4
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine Tens4OS2DGetArrayF90
+      Call PetscLogFlops(3_PFlop,ierr);CHKERRQ(ierr)
+   End Subroutine Tens4OS2DToArray
 
-   Subroutine Tens4OS3DGetArrayF90(T,A)
-      Type(Tens4OS3D),Intent(IN)                  :: T
-      PetscReal,Dimension(:,:),Pointer            :: A
-      
-      PetscLogDouble                              :: flops
+   Subroutine ArrayToTens4OS2D(T,A)
+      Type(Tens4OS2D),Intent(OUT)                 :: T
+      PetscReal,Dimension(3,3),Intent(IN)         :: A
+
       PetscInt                                    :: ierr
-      PetscReal                                   :: sqrt2
-   
-      sqrt2 = sqrt(2.0_Kr)
-      Allocate(A(6,6))
+
+      T%XXXX = A(1,1) 
+      T%XXYY = A(1,2)
+      T%XXXY = A(1,3) * .5_Kr
+      
+      T%YYYY = A(2,2)
+      T%YYXY = A(2,3) * .5_Kr 
+
+      T%XYXY = A(3,3) * .5_Kr 
+      Call PetscLogFlops(3_PFlop,ierr);CHKERRQ(ierr)
+   End Subroutine ArrayToTens4OS2D
+
+   Subroutine Tens4OS3DToArray(A,T)
+      PetscReal,Dimension(6,6),Intent(OUT)        :: A
+      Type(Tens4OS3D),Intent(IN)                  :: T
+
+      PetscInt                                    :: ierr
+      
       A(1,1) = T%XXXX
       A(1,2) = T%XXYY
       A(1,3) = T%XXZZ
-      A(1,4) = T%XXYZ * sqrt2
-      A(1,5) = T%XXXZ * sqrt2
-      A(1,6) = T%XXXY * sqrt2
+      A(1,4) = T%XXYZ * 2.0_Kr
+      A(1,5) = T%XXXZ * 2.0_Kr
+      A(1,6) = T%XXXY * 2.0_Kr
 
-      A(2,1) = A(1,1)
+      A(2,1) = A(1,2)
       A(2,2) = T%YYYY
       A(2,3) = T%YYZZ
-      A(2,4) = T%YYYZ * sqrt2
-      A(2,5) = T%YYXZ * sqrt2
-      A(2,6) = T%YYXY * sqrt2
+      A(2,4) = T%YYYZ * 2.0_Kr
+      A(2,5) = T%YYXZ * 2.0_Kr
+      A(2,6) = T%YYXY * 2.0_Kr
 
       A(3,1) = A(1,3)
       A(3,2) = A(2,3)
       A(3,3) = T%ZZZZ
-      A(3,4) = T%ZZYZ * sqrt2
-      A(3,5) = T%ZZXZ * sqrt2
-      A(3,6) = T%ZZXY * sqrt2
+      A(3,4) = T%ZZYZ * 2.0_Kr
+      A(3,5) = T%ZZXZ * 2.0_Kr
+      A(3,6) = T%ZZXY * 2.0_Kr
    
       A(4,1) = A(1,4)
       A(4,2) = A(2,4)
@@ -1701,76 +1710,48 @@ Contains
       A(5,6) = T%XZXY * 2.0_Kr
    
       A(6,1) = A(1,6)
-      A(2,6) = A(2,6)
-      A(3,6) = A(3,6)
-      A(4,6) = A(4,6)
-      A(5,6) = A(5,6)
+      A(6,2) = A(2,6)
+      A(6,3) = A(3,6)
+      A(6,4) = A(4,6)
+      A(6,5) = A(5,6)
       A(6,6) = T%XYXY * 2.0_Kr
-      flops = 16
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine Tens4OS3DGetArrayF90
+      Call PetscLogFlops(15_PFlop,ierr);CHKERRQ(ierr)
+   End Subroutine Tens4OS3DToArray
 
-   Subroutine Tens4OS2DRestoreArrayF90(T,A)
-      Type(Tens4OS2D),Intent(OUT)                 :: T
-      PetscReal,Dimension(:,:),Pointer            :: A
-
-      PetscInt                                    :: ierr
-      PetscLogDouble                              :: flops
-      PetscReal                                   :: sqrt2over2
-
-      sqrt2over2 = sqrt(2.0_Kr) * 0.5_Kr
-      T%XXXX = A(1,1) 
-      T%XXYY = A(1,2)
-      T%XXXY = A(1,3) * sqrt2over2
-      
-      T%YYYY = A(2,2)
-      T%YYXY = A(2,3) * sqrt2over2 
-
-      T%XYXY = A(3,3) * .5_Kr 
-      DeAllocate(A)
-      flops = 5
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine Tens4OS2DRestoreArrayF90
-
-   Subroutine Tens4OS3DRestoreArrayF90(T,A)
+   Subroutine ArrayToTens4OS3D(T,A)
       Type(Tens4OS3D),Intent(OUT)                 :: T
-      PetscReal,Dimension(:,:),Pointer            :: A
+      PetscReal,Dimension(6,6),Intent(IN)         :: A
 
-      PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
-      PetscReal                                   :: sqrt2over2
 
-      sqrt2over2 = sqrt(2.0_Kr) * 0.5_Kr
       T%XXXX = A(1,1)
       T%XXYY = A(1,2)
       T%XXZZ = A(1,3)
-      T%XXYZ = A(1,4) * sqrt2over2
-      T%XXXZ = A(1,5) * sqrt2over2
-      T%XXXY = A(1,6) * sqrt2over2
+      T%XXYZ = A(1,4) * .5_Kr
+      T%XXXZ = A(1,5) * .5_Kr
+      T%XXXY = A(1,6) * .5_Kr
 
       T%YYYY = A(2,2) 
       T%YYZZ = A(2,3) 
-      T%YYYZ = A(2,4) * sqrt2over2
-      T%YYXZ = A(2,5) * sqrt2over2
-      T%YYXY = A(2,6) * sqrt2over2
+      T%YYYZ = A(2,4) * .5_Kr
+      T%YYXZ = A(2,5) * .5_Kr
+      T%YYXY = A(2,6) * .5_Kr
 
       T%ZZZZ = A(3,3) 
-      T%ZZYZ = A(3,4) * sqrt2over2
-      T%ZZXZ = A(3,5) * sqrt2over2
-      T%ZZXY = A(3,6) * sqrt2over2
+      T%ZZYZ = A(3,4) * .5_Kr
+      T%ZZXZ = A(3,5) * .5_Kr
+      T%ZZXY = A(3,6) * .5_Kr
    
-      T%YZYZ = A(4,4) * 0.5_Kr
-      T%YZXZ = A(4,5) * 0.5_Kr
-      T%YZXY = A(4,6) * 0.5_Kr
+      T%YZYZ = A(4,4) * .5_Kr
+      T%YZXZ = A(4,5) * .5_Kr
+      T%YZXY = A(4,6) * .5_Kr
    
-      T%XZXZ = A(5,5) * 0.5_Kr
-      T%XZXY = A(5,6) * 0.5_Kr
+      T%XZXZ = A(5,5) * .5_Kr
+      T%XZXY = A(5,6) * .5_Kr
    
-      T%XYXY = A(6,6) * 0.5_Kr
-      DeAllocate(A)
-      flops = 17.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine Tens4OS3DRestoreArrayF90
+      T%XYXY = A(6,6) * .5_Kr
+      Call PetscLogFlops(15_PFlop,ierr);CHKERRQ(ierr)
+   End Subroutine ArrayToTens4OS3D
 
    !!! Overloading euclidian norm of derived types
    PetscReal Function Vect2DNorm(V)
@@ -2267,7 +2248,7 @@ Contains
    Subroutine simplexNormal3D(Coord,n,ierr)
       Type(Vect3D),Dimension(:),Pointer               :: Coord
       Type(Vect3D),Intent(OUT)                        :: n
-      PetscInt      ,Intent(OUT)                      :: ierr
+      PetscInt,Intent(OUT)                            :: ierr
 
       n = (Coord(2)-Coord(1)) .crossP. (Coord(1)-Coord(3))
       n = n / norm(n)
@@ -2279,17 +2260,15 @@ Contains
       Type(Tens4OS2D)                             :: InvertTens4OS2D
       
       PetscInt                                    :: ierr
-      Type(Tens4OS2D)                             :: TmpTensor
-      PetscReal,Dimension(:,:),Pointer            :: TmpArray
+      PetscReal,Dimension(3,3)                    :: TmpArray
+      PetscInt,Dimension(3)                       :: ipiv
+      PetscReal,Dimension(3)                      :: work
 
-      Write(*,*) "InvertTens4OS2D is broken. DO NOT USE"
       !!! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
-      TmpTensor = T
-      Call Tens4OS2DGetArrayF90(TmpTensor,TmpArray)
-      Call MEF90GaussJordanInverse(TmpArray,ierr)
-      Call Tens4OS2DRestoreArrayF90(TmpTensor,TmpArray)
-      InvertTens4OS2D = TmpTensor
-      ! GaussJordan does not report flops,so there is no point in calling PetscLogFLops
+      TmpArray = T
+      Call DGETRF(3,3,TmpArray,3,ipiv,ierr)
+      Call DGETRI(3,TmpArray,3,ipiv,work,3,ierr)
+      InvertTens4OS2D = TmpArray
    End Function InvertTens4OS2D
 
    Function InvertTens4OS3D(T)
@@ -2297,17 +2276,15 @@ Contains
       Type(Tens4OS3D)                             :: InvertTens4OS3D
       
       PetscInt                                    :: ierr
-      Type(Tens4OS3D)                             :: TmpTensor
-      PetscReal,Dimension(:,:),Pointer            :: TmpArray
+      PetscReal,Dimension(6,6)                    :: TmpArray
+      PetscInt,Dimension(6)                       :: ipiv
+      PetscReal,Dimension(6)                      :: work
 
-      Write(*,*) "InvertTens4OS3D is broken. DO NOT USE"
       !!! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
-      TmpTensor = T
-      Call Tens4OS3DGetArrayF90(TmpTensor,TmpArray)
-      Call MEF90GaussJordanInverse(TmpArray,ierr)
-      Call Tens4OS3DRestoreArrayF90(TmpTensor,TmpArray)
-      InvertTens4OS3D = TmpTensor
-      ! GaussJordan does not report flops,so there is no point in calling PetscLogFLops
+      TmpArray = T
+      Call DGETRF(6,6,TmpArray,6,ipiv,ierr)
+      Call DGETRI(6,TmpArray,6,ipiv,work,6,ierr)
+      InvertTens4OS3D = TmpArray
    End Function InvertTens4OS3D
    
    Function Tens4OS2DTransform(T,M)

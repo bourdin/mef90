@@ -14,12 +14,8 @@ Module m_MEF90_Parameters
    PetscInt,Parameter                  :: PInt = 1
    Integer,Parameter,Public            :: Ki = Selected_Int_Kind(PInt)
    
-   Integer,Parameter,Public            :: F_In   = 60
-   ! Default unit used to read in files
-   
-   Integer,Parameter,Public            :: F_Out  = 61
-   ! Default unit to write files
-   
-   PetscInt,Public                     :: MEF90_GaussOrder
+   PetscLogDouble,Parameter            :: flop = 1.0
+   Integer,Parameter,Public            :: PFlop = Selected_Real_Kind(Precision(flop))
+                                         
    PetscInt,Parameter,Public           :: MEF90_MXSTRLEN = 256
 End Module m_MEF90_Parameters

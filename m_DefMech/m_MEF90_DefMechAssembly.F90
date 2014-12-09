@@ -20,10 +20,10 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
          Use m_MEF90_DefMechCtx
          PetscReal,Dimension(:,:),Pointer                   :: Aloc
          PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-         Type(MEF90_MATS)                                   :: plasticStrainCell
-         Type(MEF90_MATPROP)                                :: matprop
-         Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-         Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+         Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+         Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+         Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+         Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
       End Subroutine MEF90DefMechBilinearFormLoc
    End Interface
 
@@ -32,10 +32,10 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
          Use m_MEF90_DefMechCtx
          PetscReal,Dimension(:),Pointer                     :: residualLoc
          PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-         Type(MEF90_MATS)                                   :: plasticStrainCell
-         Type(MEF90_MATPROP)                                :: matprop
-         Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-         Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+         Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+         Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+         Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+         Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
       End Subroutine MEF90DefMechOperatorLoc
    End Interface
 
@@ -44,44 +44,55 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
          Use m_MEF90_DefMechCtx
          PetscReal,Dimension(:),Pointer                     :: residualLoc
          PetscReal,Dimension(:),Pointer                     :: xDof
-         Type(MEF90_VECT)                                   :: forceCell
-         PetscReal                                          :: pressureCell
-         Type(MEF90_MATPROP)                                :: matprop
-         Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
+         Type(MEF90_VECT),Intent(IN)                        :: forceCell
+         PetscReal,Intent(IN)                               :: pressureCell
+         Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+         Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
       End Subroutine MEF90DefMechRHSLoc
    End Interface
    
-Contains
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormNull"
-   Subroutine MEF90DefMechBilinearFormNull(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
-      PetscReal,Dimension(:,:),Pointer                   :: Aloc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
-      
-      Print*,__FUNCT__,': Unimplemented Bilinear Form local assembly function'
-      STOP  
-   End Subroutine MEF90DefMechBilinearFormNull
+   Abstract Interface
+      Subroutine MEF90DefMechEnergyLoc(energyLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+         Use m_MEF90_DefMechCtx
+         PetscReal,Dimension(:),Pointer                     :: residualLoc
+         PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+         Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+         Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+         Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+         Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+      End Subroutine MEF90DefMechEnergyLoc
+   End Interface
 
+Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorNull"
    Subroutine MEF90DefMechOperatorNull(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       Use m_MEF90_DefMechCtx
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+         Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+         Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+         Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+         Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       Print*,__FUNCT__,': Unimplemented Operator local assembly function'
       STOP
    End Subroutine MEF90DefMechOperatorNull
 
-
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechBilinearFormNull"
+   Subroutine MEF90DefMechBilinearFormNull(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+      PetscReal,Dimension(:,:),Pointer                   :: Aloc
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+      
+      Print*,__FUNCT__,': Unimplemented Bilinear Form local assembly function'
+      STOP  
+   End Subroutine MEF90DefMechBilinearFormNull
+   
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDisplacementElasticLoc"
 !!!
@@ -93,10 +104,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDisplacementElasticLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numGauss
       Type(MEF90_MATS)                                   :: sigma
@@ -129,10 +140,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDisplacementATLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: ALoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: stiffness
@@ -157,8 +168,8 @@ Contains
             End Do
          End Do
       End Do
-      !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
-      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      flops = numGauss * ( 2. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDisplacementATLoc
    
 #undef __FUNCT__
@@ -172,10 +183,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralHDLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: ALoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: stiffnessH,stiffnessD
@@ -235,10 +246,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralDeviatoricLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: ALoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: stiffnessD
@@ -292,10 +303,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPHDLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: ALoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: stiffness
@@ -353,10 +364,10 @@ Contains
    Subroutine MEF90DefMechOperatorDisplacementElasticLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
       PetscReal                                          :: temperature
@@ -399,10 +410,10 @@ Contains
    Subroutine MEF90DefMechOperatorDisplacementATLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
       PetscReal                                          :: stiffness,temperature
@@ -453,10 +464,10 @@ Contains
    Subroutine MEF90DefMechOperatorDisplacementATUnilateralHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: temperature,stiffnessH,stiffnessD
@@ -515,10 +526,10 @@ Contains
    Subroutine MEF90DefMechOperatorDisplacementATUnilateralPHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: temperature,stiffness
@@ -575,10 +586,10 @@ Contains
    Subroutine MEF90DefMechOperatorDisplacementATUnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: temperature,stiffnessD
@@ -631,10 +642,10 @@ Contains
    Subroutine MEF90DefMechRHSDisplacementLoc(residualLoc,xDof,forceCell,pressureForceCell,matprop,elemDisplacement)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof
-      Type(MEF90_VECT)                                   :: forceCell
-      PetscReal                                          :: pressureForceCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
+      Type(MEF90_VECT),Intent(IN)                        :: forceCell
+      PetscReal,Intent(IN)                               :: pressureForceCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
       
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numGauss
       PetscLogDouble                                     :: flops
@@ -1510,10 +1521,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT1Loc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
@@ -1567,10 +1578,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT1ElasticLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numGauss
       PetscReal                                          :: C2 
@@ -1605,10 +1616,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT1UnilateralHDLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
@@ -1667,10 +1678,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT1UnilateralDeviatoricLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
@@ -1725,10 +1736,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT1UnilateralPHDLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
@@ -1787,10 +1798,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT2Loc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
@@ -1845,10 +1856,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT2ElasticLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numGauss
       PetscReal                                          :: C1,C2
@@ -1885,10 +1896,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT2UnilateralHDLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
@@ -1948,10 +1959,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT2UnilateralDeviatoricLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
@@ -2007,10 +2018,10 @@ Contains
    Subroutine MEF90DefMechBilinearFormDamageAT2UnilateralPHDLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
@@ -2070,10 +2081,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT1Loc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
@@ -2135,10 +2146,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT1ElasticLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numGauss
       Type(MEF90_VECT)                                   :: gradientDamageGauss
@@ -2179,10 +2190,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT1UnilateralHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
@@ -2248,10 +2259,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT1UnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
@@ -2313,10 +2324,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT1UnilateralPHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
@@ -2382,10 +2393,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT2Loc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
@@ -2447,10 +2458,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT2ElasticLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numGauss
       PetscReal                                          :: damageGauss
@@ -2494,10 +2505,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT2UnilateralHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
@@ -2563,10 +2574,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT2UnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
@@ -2628,10 +2639,10 @@ Contains
    Subroutine MEF90DefMechOperatorDamageAT2UnilateralPHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      TYPE(MEF90_MATS)                                   :: plasticStrainCell
-      Type(MEF90_MATPROP)                                :: matprop
-      Type(MEF90_ELEMENT_ELAST)                          :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL)                           :: elemDamage
+      TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss

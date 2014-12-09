@@ -156,7 +156,7 @@ m_MEF90_MassMatrixImplementation_MEF90Element3D_Scal.o: ${MEF90_DIR}/MEF90/m_MEF
         m_MEF90_Elements.o \
         m_MEF90_Parameters.o \
         m_MEF90_Utils.o
-	@echo "      $< MEF90Element3DScal"
+	@echo "      $< MEF90Element3D_Scal"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Scal -c -o $@ $<
 m_MEF90_MassMatrixImplementation_MEF90Element3D_Vect.o: ${MEF90_DIR}/MEF90/m_MEF90_MassMatrixImplementation.F90 \
         m_MEF90_Elements.o \
