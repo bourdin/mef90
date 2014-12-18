@@ -2469,7 +2469,7 @@ Contains
          damageGauss = 0.0_Kr
          gradientDamageGauss = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
-            damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * (xDof(iDoF1) - 1.0_Kr)
+            damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) *  xDof(iDoF1)
             gradientDamageGauss = gradientDamageGauss + elemDamage%Grad_BF(iDoF1,iGauss) * xDof(iDoF1)
          End Do
 
@@ -3043,10 +3043,10 @@ Contains
             !!! select the proper local assembly routine, compute proper integration order
             Select Case (cellSetOptions%damageType)
             Case (MEF90DefMech_damageTypeAT1Elastic)
-               QuadratureOrder = max(elemDisplacementType%order, 2 * (elemDamageType%order - 1))
+               QuadratureOrder = max(elemDamageType%order, 2 * (elemDamageType%order - 1))
                localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1ElasticLoc
             Case (MEF90DefMech_damageTypeAT2Elastic)
-               QuadratureOrder = 2 * elemDisplacementType%order
+               QuadratureOrder = 2 * elemDamageType%order
                localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2ElasticLoc
             Case (MEF90DefMech_damageTypeAT1)
                If (Associated(MEF90DefMechCtx%temperature)) Then
