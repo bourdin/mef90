@@ -197,6 +197,10 @@
    Interface simplexNormal
       Module Procedure simplexNormal2D,simplexNormal3D
    End Interface simplexNormal
+   
+   Interface sqrt
+      Module Procedure Tens4OS2DSquareRoot, Tens4OS3DSquareRoot
+   End Interface
 
 !!$  Type(Vect2D),Parameter       :: e1_2D = (/ 1.0_Kr,0.0_Kr /)
 !!$  Type(Vect2D),Parameter       :: e2_2D = (/ 0.0_Kr,1.0_Kr /)
@@ -2342,4 +2346,68 @@ Contains
        Tens4OS2DTransform%YYXY = C(1,2,2,2) 
        Tens4OS2DTransform%YYYY = C(2,2,2,2) 
    End Function Tens4OS2DTransform
+   
+   Function Tens4OS2DSquareRoot(T)
+      Type(Tens4OS2D),Intent(IN)                  :: T
+
+      Integer,Parameter                           :: n = 3
+      Integer                                     :: i,j
+      PetscReal,Dimension(n,n)                    :: A,Pt      
+      Type(Tens4OS2D)                             :: Tens4OS2DSquareRoot
+
+      PetscReal,Dimension(n)                      :: lmbda
+      PetscReal                                   :: d
+      PetscInt                                    :: lwork = 2*n**2+6*n+1
+      PetscReal,Dimension(2*n**2+6*n+1)           :: work
+      PetscInt                                    :: liwork = 5*n+3
+      PetscInt,Dimension(5*n+3)                   :: iwork
+      PetscInt                                    :: info
+
+      A = T
+      Call DSYEVD('V','L',n,A,n,lmbda,work,lwork,iwork,liwork,info)
+      Pt = transpose(A)
+      Do i = 1, n
+         d = sqrt(lmbda(i))
+         If (d < 0.0_Kr) Then
+            Write(*,*) 'ERROR in Tens4OSDSquareRoot, negative eigenvalue ', lmbda(i)
+         Else
+            Do j = 1, n
+               Pt(i,j) = A(j,i) * d
+            End Do
+         End If
+      End Do
+      Tens4OS2DSquareRoot = matmul(A,Pt)
+   End Function Tens4OS2DSquareRoot
+
+   Function Tens4OS3DSquareRoot(T)
+      Type(Tens4OS3D),Intent(IN)                  :: T
+
+      Integer,Parameter                           :: n = 6
+      Integer                                     :: i,j
+      PetscReal,Dimension(n,n)                    :: A,Pt      
+      Type(Tens4OS3D)                             :: Tens4OS3DSquareRoot
+
+      PetscReal,Dimension(n)                      :: lmbda
+      PetscReal                                   :: d
+      PetscInt                                    :: lwork = 2*n**2+6*n+1
+      PetscReal,Dimension(2*n**2+6*n+1)           :: work
+      PetscInt                                    :: liwork = 5*n+3
+      PetscInt,Dimension(5*n+3)                   :: iwork
+      PetscInt                                    :: info
+
+      A = T
+      Call DSYEVD('V','L',n,A,n,lmbda,work,lwork,iwork,liwork,info)
+      Pt = transpose(A)
+      Do i = 1, n
+         d = sqrt(lmbda(i))
+         If (d < 0.0_Kr) Then
+            Write(*,*) 'ERROR in Tens4OSDSquareRoot, negative eigenvalue ', lmbda(i)
+         Else
+            Do j = 1, n
+               Pt(i,j) = A(j,i) * d
+            End Do
+         End If
+      End Do
+      Tens4OS3DSquareRoot = matmul(A,Pt)
+   End Function Tens4OS3DSquareRoot
 End Module m_MEF90_LinAlg
