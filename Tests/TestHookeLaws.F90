@@ -51,6 +51,26 @@ Program HookeLaw
       Write(*,*) i, norm(epsilon2D),norm(epsilon3D)
    End Do
 
+   HookeLawInv2D = sqrt(HookeLaw2D)
+   HookeLawInv3D = sqrt(HookeLaw3D)
+   Do i = 1,n
+      Call PetscRandomGetValue(RdmCtx,epsilon2D%XX,ierr);CHKERRQ(ierr)
+      Call PetscRandomGetValue(RdmCtx,epsilon2D%YY,ierr);CHKERRQ(ierr)
+      Call PetscRandomGetValue(RdmCtx,epsilon2D%XY,ierr);CHKERRQ(ierr)
+      sigma2D = HookeLaw2D * epsilon2D
+      epsilon2D = sigma2D - HookeLawInv2D * (HookeLawInv2D * epsilon2D)
+
+      Call PetscRandomGetValue(RdmCtx,epsilon3D%XX,ierr);CHKERRQ(ierr)
+      Call PetscRandomGetValue(RdmCtx,epsilon3D%YY,ierr);CHKERRQ(ierr)
+      Call PetscRandomGetValue(RdmCtx,epsilon3D%ZZ,ierr);CHKERRQ(ierr)
+      Call PetscRandomGetValue(RdmCtx,epsilon3D%YZ,ierr);CHKERRQ(ierr)
+      Call PetscRandomGetValue(RdmCtx,epsilon3D%XZ,ierr);CHKERRQ(ierr)
+      Call PetscRandomGetValue(RdmCtx,epsilon3D%XY,ierr);CHKERRQ(ierr)
+      sigma3D = HookeLaw3D * epsilon3D
+      epsilon3D = sigma3D - HookeLawInv3D * (HookeLawInv3D * epsilon3D)
+      Write(*,*) i, norm(epsilon2D),norm(epsilon3D)
+   End Do
+
    Call PetscRandomDestroy(RdmCtx,ierr);CHKERRQ(ierr)
    Call MEF90Finalize(ierr)
    Call PetscFinalize()
