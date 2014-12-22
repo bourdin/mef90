@@ -1889,7 +1889,7 @@ Contains
          Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          PhiHat(1,:)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
-         PhiHat(2,:)  = Xi%X * (2.0_Kr *  Xi%X - 1.0_Kr)
+         PhiHat(2,:)  = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
          PhiHat(3,:)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
          PhiHat(4,:)  = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
          PhiHat(5,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X

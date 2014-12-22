@@ -174,7 +174,9 @@
          VectR_Get_MatS2D,VectR_Get_MatS3D,                          &
          Tens4OS2D_Get_Real,Tens4OS3D_Get_Real,                      &
          Tens4OS2DToArray,ArrayToTens4OS2D,                          &
-         Tens4OS3DToArray,ArrayToTens4OS3D
+         Tens4OS3DToArray,ArrayToTens4OS3D,                          &
+         MatS2DGetArray,MatS3DGetArray,                              &
+         ArrayGetMatS2D,ArrayGetMatS3D
    End Interface
   
    Interface Symmetrize
@@ -201,6 +203,10 @@
    Interface sqrt
       Module Procedure Tens4OS2DSquareRoot, Tens4OS3DSquareRoot
    End Interface
+   
+   Interface SpectralDecomposition
+      Module Procedure MatS2DSpectralDecomposition,MatS3DSpectralDecomposition
+   End Interface
 
 !!$  Type(Vect2D),Parameter       :: e1_2D = (/ 1.0_Kr,0.0_Kr /)
 !!$  Type(Vect2D),Parameter       :: e2_2D = (/ 0.0_Kr,1.0_Kr /)
@@ -213,8 +219,8 @@
 Contains
   ! Overloading "-"
    Function SumVect2D (V1,V2)
-      Type(Vect2D),intent(IN)                     :: V1
-      Type(Vect2D),intent(IN)                     :: V2
+      Type(Vect2D),Intent(IN)                     :: V1
+      Type(Vect2D),Intent(IN)                     :: V2
       Type(Vect2D)                                :: SumVect2D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -226,7 +232,7 @@ Contains
    End Function SumVect2D
 
    Function SumVect3D (V1,V2)
-      Type(Vect3D),intent(IN)                     :: V1,V2
+      Type(Vect3D),Intent(IN)                     :: V1,V2
       Type(Vect3D)                                :: SumVect3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -357,8 +363,8 @@ Contains
 
    ! Overloading "-"
    Function DifVect2D (V1,V2)
-      Type(Vect2D),intent(IN)                     :: V1
-      Type(Vect2D),intent(IN)                     :: V2
+      Type(Vect2D),Intent(IN)                     :: V1
+      Type(Vect2D),Intent(IN)                     :: V2
       Type(Vect2D)                                :: DifVect2D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -370,7 +376,7 @@ Contains
    End Function DifVect2D
    
    Function DifVect3D (V1,V2)
-      Type(Vect3D),intent(IN)                     :: V1,V2
+      Type(Vect3D),Intent(IN)                     :: V1,V2
       Type(Vect3D)                                :: DifVect3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -500,8 +506,8 @@ Contains
 
    ! Overloading "*"
    Function DbleXVect2D(D1,V1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Vect2D),intent(IN)                     :: V1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Vect2D),Intent(IN)                     :: V1
       Type(Vect2D)                                :: DbleXVect2D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -513,8 +519,8 @@ Contains
    End Function DbleXVect2D
    
    Function Vect2DXDble(V1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Vect2D),intent(IN)                     :: V1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Vect2D),Intent(IN)                     :: V1
       Type(Vect2D)                                :: Vect2DXDble
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -526,8 +532,8 @@ Contains
    End Function Vect2DXDble
    
    Function DbleXVect3D(D1,V1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Vect3D),intent(IN)                     :: V1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Vect3D),Intent(IN)                     :: V1
       Type(Vect3D)                                :: DbleXVect3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -540,8 +546,8 @@ Contains
    End Function DbleXVect3D
    
    Function Vect3DXDble(V1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Vect3D),intent(IN)                     :: V1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Vect3D),Intent(IN)                     :: V1
       Type(Vect3D)                                :: Vect3DXDble
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -554,8 +560,8 @@ Contains
    End Function Vect3DXDble
    
    Function DbleXMat2D(D1,M1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Mat2D),intent(IN)                      :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Mat2D),Intent(IN)                      :: M1
       Type(Mat2D)                                 :: DbleXMat2D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -569,8 +575,8 @@ Contains
    End Function DbleXMat2D
    
    Function Mat2DXDble(M1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Mat2D),intent(IN)                      :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Mat2D),Intent(IN)                      :: M1
       Type(Mat2D)                                 :: Mat2DXDble
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -584,8 +590,8 @@ Contains
    End Function Mat2DXDble
    
    Function DbleXMatS2D(D1,M1)
-      PetscReal,intent(IN)                        :: D1
-      Type(MatS2D),intent(IN)                     :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(MatS2D),Intent(IN)                     :: M1
       Type(MatS2D)                                :: DbleXMatS2D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -598,8 +604,8 @@ Contains
    End Function DbleXMatS2D
    
    Function MatS2DXDble(M1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(MatS2D),intent(IN)                     :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(MatS2D),Intent(IN)                     :: M1
       Type(MatS2D)                                :: MatS2DXDble
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -612,8 +618,8 @@ Contains
    End Function MatS2DXDble
    
    Function DbleXMat3D(D1,M1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Mat3D),intent(IN)                      :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Mat3D),Intent(IN)                      :: M1
       Type(Mat3D)                                 :: DbleXMat3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -632,8 +638,8 @@ Contains
    End Function DbleXMat3D
    
    Function Mat3DXDble(M1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Mat3D),intent(IN)                      :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Mat3D),Intent(IN)                      :: M1
       Type(Mat3D)                                 :: Mat3DXDble
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -652,8 +658,8 @@ Contains
    End Function Mat3DXDble
    
    Function DbleXMatS3D(D1,M1)
-      PetscReal,intent(IN)                        :: D1
-      Type(MatS3D),intent(IN)                     :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(MatS3D),Intent(IN)                     :: M1
       Type(MatS3D)                                :: DbleXMatS3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -669,8 +675,8 @@ Contains
    End Function DbleXMatS3D
    
    Function MatS3DXDble(M1,D1)
-      Real(Kind = Kr),intent(IN)                  :: D1
-      Type(MatS3D),intent(IN)                     :: M1
+      Real(Kind = Kr),Intent(IN)                  :: D1
+      Type(MatS3D),Intent(IN)                     :: M1
       Type(MatS3D)                                :: MatS3DXDble
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -686,7 +692,7 @@ Contains
    End Function MatS3DXDble
    
    Function DbleXTens4OS2D (D1,T1)
-      PetscReal,intent(IN)                        :: D1
+      PetscReal,Intent(IN)                        :: D1
       Type(Tens4OS2D),Intent(IN)                  :: T1
       Type(Tens4OS2D)                             :: DbleXTens4OS2D
       PetscLogDouble                              :: flops
@@ -705,7 +711,7 @@ Contains
    End Function DbleXTens4OS2D
    
    Function DbleXTens4OS3D (D1,T1)
-      PetscReal,intent(IN)                        :: D1
+      PetscReal,Intent(IN)                        :: D1
       Type(Tens4OS3D),Intent(IN)                  :: T1
       Type(Tens4OS3D)                             :: DbleXTens4OS3D
       PetscLogDouble                              :: flops
@@ -742,7 +748,7 @@ Contains
    End Function DbleXTens4OS3D
    
    Function Tens4OS2DXDble (T1,D1)
-      PetscReal,intent(IN)                        :: D1
+      PetscReal,Intent(IN)                        :: D1
       Type(Tens4OS2D),Intent(IN)                  :: T1
       Type(Tens4OS2D)                             :: Tens4OS2DXDble
       PetscLogDouble                              :: flops
@@ -762,7 +768,7 @@ Contains
    
    Function Tens4OS3DXDble (T1,D1)
       Type(Tens4OS3D),Intent(IN)                  :: T1
-      PetscReal,intent(IN)                        :: D1
+      PetscReal,Intent(IN)                        :: D1
       Type(Tens4OS3D)                             :: Tens4OS3DXDble
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -798,8 +804,8 @@ Contains
    End Function Tens4OS3DXDble
    
    Function  MatXVect2D(M1,V1)
-      Type(Mat2D),intent(IN)                      :: M1
-      Type(Vect2D),intent(IN)                     :: V1
+      Type(Mat2D),Intent(IN)                      :: M1
+      Type(Vect2D),Intent(IN)                     :: V1
       Type(Vect2D)                                :: MatXVect2D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -811,8 +817,8 @@ Contains
    End Function MatXVect2D
    
    Function  MatXVect2DS(M1,V1)
-      Type(MatS2D),intent(IN)                     :: M1
-      Type(Vect2D),intent(IN)                     :: V1
+      Type(MatS2D),Intent(IN)                     :: M1
+      Type(Vect2D),Intent(IN)                     :: V1
       Type(Vect2D)                               :: MatXVect2DS
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -824,8 +830,8 @@ Contains
    End Function MatXVect2DS
    
    Function  MatXVect3D(M1,V1)
-      Type(Mat3D),intent(IN)                      :: M1
-      Type(Vect3D),intent(IN)                     :: V1
+      Type(Mat3D),Intent(IN)                      :: M1
+      Type(Vect3D),Intent(IN)                     :: V1
       Type(Vect3D)                                :: MatXVect3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -838,8 +844,8 @@ Contains
    End Function MatXVect3D
    
    Function  MatXVect3DS(M1,V1)
-      Type(MatS3D),intent(IN)                     :: M1
-      Type(Vect3D),intent(IN)                     :: V1
+      Type(MatS3D),Intent(IN)                     :: M1
+      Type(Vect3D),Intent(IN)                     :: V1
       Type(Vect3D)                                :: MatXVect3DS
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -956,8 +962,8 @@ Contains
    
    ! Overloading "/"
    Function Vect2DQuot(V1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Vect2D),intent(IN)                     :: V1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Vect2D),Intent(IN)                     :: V1
       Type(Vect2D)                                :: Vect2DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -969,8 +975,8 @@ Contains
    End Function Vect2DQuot
    
    Function Vect3DQuot(V1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Vect3D),intent(IN)                     :: V1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Vect3D),Intent(IN)                     :: V1
       Type(Vect3D)                                :: Vect3DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -983,8 +989,8 @@ Contains
    End Function Vect3DQuot
    
    Function Mat2DQuot(M1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Mat2D),intent(IN)                      :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Mat2D),Intent(IN)                      :: M1
       Type(Mat2D)                                 :: Mat2DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -998,8 +1004,8 @@ Contains
    End Function Mat2DQuot
    
    Function MatS2DQuot(M1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(MatS2D),intent(IN)                     :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(MatS2D),Intent(IN)                     :: M1
       Type(MatS2D)                                :: MatS2DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -1012,8 +1018,8 @@ Contains
    End Function MatS2DQuot
    
    Function Mat3DQuot(M1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(Mat3D),intent(IN)                      :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(Mat3D),Intent(IN)                      :: M1
       Type(Mat3D)                                 :: Mat3DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -1032,8 +1038,8 @@ Contains
    End Function Mat3DQuot
    
    Function MatS3DQuot(M1,D1)
-      PetscReal,intent(IN)                        :: D1
-      Type(MatS3D),intent(IN)                     :: M1
+      PetscReal,Intent(IN)                        :: D1
+      Type(MatS3D),Intent(IN)                     :: M1
       Type(MatS3D)                                :: MatS3DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -1050,7 +1056,7 @@ Contains
    
    Function Tens4OS2DQuot(T1,D1)
       Type(Tens4OS2D),Intent(IN)                  :: T1
-      PetscReal,intent(IN)                        :: D1
+      PetscReal,Intent(IN)                        :: D1
       Type(Tens4OS2D)                             :: Tens4OS2DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -1069,7 +1075,7 @@ Contains
    
    Function Tens4OS3DQuot (T1,D1)
       Type(Tens4OS3D),Intent(IN)                  :: T1
-      PetscReal,intent(IN)                        :: D1
+      PetscReal,Intent(IN)                        :: D1
       Type(Tens4OS3D)                             :: Tens4OS3DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -1220,8 +1226,8 @@ Contains
    
    ! Tensor product
    Function TensPVect2D (V1,V2)
-      Type(Vect2D),intent(IN)                     :: V1
-      Type(Vect2D),intent(IN)                     :: V2
+      Type(Vect2D),Intent(IN)                     :: V1
+      Type(Vect2D),Intent(IN)                     :: V2
       Type(Mat2D)                                 :: TensPVect2D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -1235,7 +1241,7 @@ Contains
    End Function TensPVect2D
    
    Function TensPVect3D (V1,V2)
-      Type(Vect3D),intent(IN)                     :: V1,V2
+      Type(Vect3D),Intent(IN)                     :: V1,V2
       Type(Mat3D)                                 :: TensPVect3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -1317,14 +1323,14 @@ Contains
    
    ! Symmetrized product
    Function SymPVect2D (V1,V2)
-      Type(Vect2D),intent(IN)                     :: V1,V2
+      Type(Vect2D),Intent(IN)                     :: V1,V2
       Type(MatS2D)                                :: SymPVect2D
       
       SymPVect2D = Symmetrize(V1 .TensP. V2)
    End Function SymPVect2D
    
    Function SymPVect3D (V1,V2)
-      Type(Vect3D),intent(IN)                     :: V1,V2
+      Type(Vect3D),Intent(IN)                     :: V1,V2
       Type(MatS3D)                                :: SymPVect3D
       
       SymPVect3D = Symmetrize(V1 .TensP. V2)
@@ -1387,16 +1393,16 @@ Contains
    End Function Trace3DS
    
    Subroutine Vect2D_Get_Real(V1,R1)
-      Type(Vect2D),intent(OUT)                    :: V1
-      PetscReal,intent(IN)                        :: R1
+      Type(Vect2D),Intent(OUT)                    :: V1
+      PetscReal,Intent(IN)                        :: R1
       
       V1%X = R1
       V1%Y = R1
    End Subroutine Vect2D_Get_Real
    
    Subroutine Vect3D_Get_Real(V1,R1)
-      Type(Vect3D),intent(OUT)                    :: V1
-      PetscReal,intent(IN)                        :: R1
+      Type(Vect3D),Intent(OUT)                    :: V1
+      PetscReal,Intent(IN)                        :: R1
       
       V1%X = R1
       V1%Y = R1
@@ -1404,7 +1410,7 @@ Contains
    End Subroutine Vect3D_Get_Real
    
    Subroutine Vect2D_Get_VectR(V1,R1)
-      Type(Vect2D),intent(OUT)                    :: V1
+      Type(Vect2D),Intent(OUT)                    :: V1
       PetscReal,      Dimension(2),Intent(IN)     :: R1
       
       V1%X = R1(1)
@@ -1412,7 +1418,7 @@ Contains
    End Subroutine Vect2D_Get_VectR
    
    Subroutine Vect3D_Get_VectR(V1,R1)
-      Type(Vect3D),intent(OUT)                    :: V1
+      Type(Vect3D),Intent(OUT)                    :: V1
       PetscReal,      Dimension(3),Intent(IN)     :: R1
       
       V1%X = R1(1)
@@ -1421,7 +1427,7 @@ Contains
    End Subroutine Vect3D_Get_VectR
    
    Subroutine Vect2DEQ(V1,V2)
-      Type(Vect2D),intent(OUT)                    :: V1
+      Type(Vect2D),Intent(OUT)                    :: V1
       Type(Vect2D),Intent(IN)                     :: V2
       
       V1%X = V2%X
@@ -1429,7 +1435,7 @@ Contains
    End Subroutine Vect2DEQ
    
    Subroutine Vect3DEQ(V1,V2)
-      Type(Vect3D),intent(OUT)                    :: V1
+      Type(Vect3D),Intent(OUT)                    :: V1
       Type(Vect3D),Intent(IN)                     :: V2
       
       V1%X = V2%X
@@ -1438,16 +1444,16 @@ Contains
    End Subroutine Vect3DEQ
    
    Subroutine Mat2D_Get_Real(M1,R1)
-      Type(Mat2D),intent(OUT)                     :: M1
-      PetscReal,intent(IN)                        :: R1
+      Type(Mat2D),Intent(OUT)                     :: M1
+      PetscReal,Intent(IN)                        :: R1
       
       M1%XX = R1 ;M1%XY = R1
       M1%YX = R1 ;M1%YY = R1
    End Subroutine Mat2D_Get_Real
    
    Subroutine Mat3D_Get_Real(M1,R1)
-      Type(Mat3D),intent(OUT)                     :: M1
-      PetscReal,intent(IN)                        :: R1
+      Type(Mat3D),Intent(OUT)                     :: M1
+      PetscReal,Intent(IN)                        :: R1
       
       M1%XX = R1 ;M1%XY = R1 ;M1%XZ = R1
       M1%YX = R1 ;M1%YY = R1 ;M1%YZ = R1
@@ -1472,15 +1478,15 @@ Contains
    End Subroutine Mat3DEQ
    
    Subroutine MatS2D_Get_Real(M1,R1)
-      Type(MatS2D),intent(OUT)                    :: M1
-      PetscReal,intent(IN)                        :: R1
+      Type(MatS2D),Intent(OUT)                    :: M1
+      PetscReal,Intent(IN)                        :: R1
       
       M1%XX = R1 ;M1%YY = R1 ;M1%XY = R1 
    End Subroutine MatS2D_Get_Real
    
    Subroutine MatS3D_Get_Real(M1,R1)
-      Type(MatS3D),intent(OUT)                    :: M1
-      PetscReal,intent(IN)                        :: R1
+      Type(MatS3D),Intent(OUT)                    :: M1
+      PetscReal,Intent(IN)                        :: R1
       
       M1%XX = R1 ;M1%YY = R1 ;M1%ZZ = R1
       M1%YZ = R1 ;M1%XZ = R1 ;M1%XY = R1
@@ -1543,6 +1549,52 @@ Contains
       R1(6) = M1%XY
    End Subroutine VectR_Get_MatS3D
    
+   Subroutine MatS2DGetArray(M,A)
+      Type(MatS2D),Intent(OUT)                    :: M
+      PetscReal,Dimension(2,2),Intent(IN)         :: A
+      
+      M%XX = A(1,1)
+      M%YY = A(2,2)
+      M%XY = A(1,2)
+   End Subroutine MatS2DGetArray
+   
+   Subroutine MatS3DGetArray(M,A)
+      Type(MatS3D),Intent(OUT)                    :: M
+      PetscReal,Dimension(3,3),Intent(IN)         :: A
+      
+      M%XX = A(1,1)
+      M%YY = A(2,2)
+      M%ZZ = A(3,3)
+      M%YZ = A(2,3)
+      M%XZ = A(1,3)
+      M%XY = A(1,2)
+   End Subroutine MatS3DGetArray
+   
+   Subroutine ArrayGetMatS2D(A,M)
+      PetscReal,Dimension(2,2),Intent(OUT)        :: A
+      Type(MatS2D),Intent(IN)                     :: M
+      
+      A(1,1) = M%XX 
+      A(1,2) = M%XY 
+      A(2,1) = M%XY 
+      A(2,2) = M%YY 
+   End Subroutine ArrayGetMatS2D
+   
+   Subroutine ArrayGetMatS3D(A,M)
+      PetscReal,Dimension(3,3),Intent(OUT)        :: A
+      Type(MatS3D),Intent(IN)                     :: M
+      
+      A(1,1) = M%XX
+      A(1,2) = M%XY
+      A(1,3) = M%XZ
+      A(2,1) = M%XY
+      A(2,2) = M%YY
+      A(2,3) = M%YZ
+      A(3,1) = M%XZ
+      A(3,2) = M%YZ
+      A(3,3) = M%ZZ
+   End Subroutine ArrayGetMatS3D
+   
    Subroutine Tens4OS2DEQ(T1,T2)
       Type(Tens4OS2D),Intent(OUT)                 :: T1
       Type(Tens4OS2D),Intent(IN)                  :: T2
@@ -1591,7 +1643,7 @@ Contains
    
    Subroutine Tens4OS2D_Get_Real(T1,D1)
       Type(Tens4OS2D),Intent(OUT)                 :: T1
-      PetscReal,intent(IN)                        :: D1
+      PetscReal,Intent(IN)                        :: D1
       
       T1%XXXX = D1
       T1%XXXY = D1
@@ -1605,7 +1657,7 @@ Contains
    
    Subroutine Tens4OS3D_Get_Real(T1,D1)
       Type(Tens4OS3D),Intent(OUT)                 :: T1
-      PetscReal,intent(IN)                        :: D1
+      PetscReal,Intent(IN)                        :: D1
       
       T1%XXXX = D1  
       T1%XXYY = D1
@@ -2088,7 +2140,7 @@ Contains
    End Function ValP2DS
    
    Function DetMat2D(M)
-      Type(Mat2D),intent(IN)                      :: M
+      Type(Mat2D),Intent(IN)                      :: M
       PetscReal                                   :: DetMat2D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -2099,7 +2151,7 @@ Contains
    End Function DetMat2D
    
    Function DetMatS2D(M)
-      Type(MatS2D),intent(IN)                     :: M
+      Type(MatS2D),Intent(IN)                     :: M
       PetscReal                                   :: DetMatS2D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -2111,7 +2163,7 @@ Contains
    
    
    Function DetMat3D(M)
-      Type(Mat3D),intent(IN)                      :: M
+      Type(Mat3D),Intent(IN)                      :: M
       PetscReal                                   :: DetMat3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -2122,7 +2174,7 @@ Contains
    End Function DetMat3D
    
    Function DetMatS3D(M)
-      Type(MatS3D),intent(IN)                     :: M
+      Type(MatS3D),Intent(IN)                     :: M
       PetscReal                                   :: DetMatS3D
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -2349,12 +2401,11 @@ Contains
    
    Function Tens4OS2DSquareRoot(T)
       Type(Tens4OS2D),Intent(IN)                  :: T
+      Type(Tens4OS2D)                             :: Tens4OS2DSquareRoot
 
       Integer,Parameter                           :: n = 3
       Integer                                     :: i,j
       PetscReal,Dimension(n,n)                    :: A,Pt      
-      Type(Tens4OS2D)                             :: Tens4OS2DSquareRoot
-
       PetscReal,Dimension(n)                      :: lmbda
       PetscReal                                   :: d
       PetscInt                                    :: lwork = 2*n**2+6*n+1
@@ -2381,12 +2432,11 @@ Contains
 
    Function Tens4OS3DSquareRoot(T)
       Type(Tens4OS3D),Intent(IN)                  :: T
+      Type(Tens4OS3D)                             :: Tens4OS3DSquareRoot
 
       Integer,Parameter                           :: n = 6
       Integer                                     :: i,j
       PetscReal,Dimension(n,n)                    :: A,Pt      
-      Type(Tens4OS3D)                             :: Tens4OS3DSquareRoot
-
       PetscReal,Dimension(n)                      :: lmbda
       PetscReal                                   :: d
       PetscInt                                    :: lwork = 2*n**2+6*n+1
@@ -2410,4 +2460,55 @@ Contains
       End Do
       Tens4OS3DSquareRoot = matmul(A,Pt)
    End Function Tens4OS3DSquareRoot
+   
+   Subroutine MatS2DSpectralDecomposition(M,ppleValues,ppleDirections)
+      Type(MatS2D),Intent(IN)                     :: M
+      PetscReal,Dimension(2),Intent(OUT)          :: ppleValues
+      Type(MatS2D),Dimension(2),Intent(OUT)       :: ppleDirections
+      
+      Integer,Parameter                           :: n = 2
+      PetscReal,Dimension(n,n)                    :: A,Pt      
+      Integer                                     :: i
+      PetscReal                                   :: d
+      PetscInt                                    :: lwork = 2*n**2+6*n+1
+      PetscReal,Dimension(2*n**2+6*n+1)           :: work
+      PetscInt                                    :: liwork = 5*n+3
+      PetscInt,Dimension(5*n+3)                   :: iwork
+      PetscInt                                    :: info
+
+      A = M
+      Call DSYEVD('V','L',n,A,n,ppleValues,work,lwork,iwork,liwork,info)
+      Do i = 1, n
+         ppleDirections(i)%XX = A(1,i)**2
+         ppleDirections(i)%YY = A(2,i)**2
+         ppleDirections(i)%XY = A(1,i) * A(2,i)
+      End Do
+   End Subroutine MatS2DSpectralDecomposition
+
+   Subroutine MatS3DSpectralDecomposition(M,ppleValues,ppleDirections)
+      Type(MatS3D),Intent(IN)                     :: M
+      PetscReal,Dimension(3),Intent(OUT)          :: ppleValues
+      Type(MatS3D),Dimension(3),Intent(OUT)       :: ppleDirections
+      
+      Integer,Parameter                           :: n = 3
+      PetscReal,Dimension(n,n)                    :: A,Pt      
+      Integer                                     :: i
+      PetscReal                                   :: d
+      PetscInt                                    :: lwork = 2*n**2+6*n+1
+      PetscReal,Dimension(2*n**2+6*n+1)           :: work
+      PetscInt                                    :: liwork = 5*n+3
+      PetscInt,Dimension(5*n+3)                   :: iwork
+      PetscInt                                    :: info
+
+      A = M
+      Call DSYEVD('V','L',n,A,n,ppleValues,work,lwork,iwork,liwork,info)
+      Do i = 1, n
+         ppleDirections(i)%XX = A(1,i)**2
+         ppleDirections(i)%YY = A(2,i)**2
+         ppleDirections(i)%ZZ = A(3,i)**2
+         ppleDirections(i)%YZ = A(2,i) * A(3,i)
+         ppleDirections(i)%XZ = A(1,i) * A(3,i)
+         ppleDirections(i)%XY = A(1,i) * A(2,i)
+      End Do
+   End Subroutine MatS3DSpectralDecomposition
 End Module m_MEF90_LinAlg

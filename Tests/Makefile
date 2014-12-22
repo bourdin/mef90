@@ -72,6 +72,14 @@ TestQuadrature: TestQuadrature.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${MEF90_DEFMECH_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
+TestSpectralDecomposition.o: ${MEF90_DIR}/Tests/TestSpectralDecomposition.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestSpectralDecomposition: TestSpectralDecomposition.o
+	-@echo "      $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${MEF90_DEFMECH_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
 runTestMaterials: TestMaterials
 	@echo "         Running " $@
 	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
