@@ -9,7 +9,6 @@ Program vDef
    Use m_vDef
    Use petsc
    Implicit NONE   
-!  #include "finclude/taosolver.h"
 
    PetscErrorCode                                     :: ierr
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
