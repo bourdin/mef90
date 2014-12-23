@@ -30,11 +30,7 @@ ${MEF90_DIR}/bin/${PETSC_ARCH}/vDef: vDef.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}
 	-@echo "      $@"
 	-@${FLINKER} -o $@ vDef.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${TAO_LIB} ${PETSC_LIB} 
 
-m_vDef.o: ${BASE_DIR}/m_vDef.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
-	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
-
-vDef.o: ${BASE_DIR}/vDef.F90 m_vDef.o ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
+vDef.o: ${BASE_DIR}/vDef.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
