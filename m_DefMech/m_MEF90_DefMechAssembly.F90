@@ -308,6 +308,74 @@ Contains
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
+      PetscInt                                           :: i,iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
+      PetscReal                                          :: stiffness
+      PetscReal                                          :: inelasticStrainTrace
+      Type(MEF90_MATS)                                   :: plasticStrain,sigma
+      PetscReal, Dimension(MEF90_DIM)                    :: PpalStrain
+      Type(MEF90_MATS),Dimension(MEF90_DIM)              :: PpalDirection
+      PetscLogDouble                                     :: flops
+      PetscErrorCode                                     :: ierr
+
+      numDofDisplacement = size(elemDisplacement%BF,1)
+      numDofDamage = size(elemDamage%BF,1)
+      numGauss = size(elemDisplacement%BF,2)
+
+      ALoc = 0.0_Kr
+      Do iGauss = 1,numGauss
+         inelasticStrainTrace = 0.0_Kr
+         If (Associated(temperatureDof)) Then
+            Do iDoF1 = 1,numDofDamage
+               inelasticStrainTrace = inelasticStrainTrace - damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+            End Do         
+            inelasticStrainTrace = inelasticStrainTrace * trace(matProp%LinearThermalExpansion)
+         End If
+         Do iDoF1 = 1,numDofDisplacement
+            inelasticStrainTrace = inelasticStrainTrace + xDof(iDoF1) * trace(elemDisplacement%GradS_BF(iDoF1,iGauss))
+         End Do
+         stiffness = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+         End Do
+         stiffness = 1.0_Kr - stiffness + matProp%residualStiffness
+         
+         Do iDoF1 = 1,numDofDisplacement
+            sigma = stiffness * elemDisplacement%GradS_BF(iDoF1,iGauss)
+            Call SpectralDecomposition(sigma,PpalStrain,PpalDirection)
+            sigma = 0.0_Kr
+            Do i = 1,MEF90_DIM 
+               If (PpalStrain(i) < 0.0_Kr) Then
+                  sigma = sigma + (PpalStrain(i) * PpalDirection(i))
+               Else
+                  sigma = sigma + Stiffness * (PpalStrain(i) * PpalDirection(i))
+               End If
+            End Do
+            sigma = matProp%HookesLaw * sigma
+            Do iDoF2 = 1,numDofDisplacement
+               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+            End Do
+         End Do
+      End Do
+      !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
+      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPHDLoc
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc"
+!!!
+!!!  
+!!!  MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+      PetscReal,Dimension(:,:),Pointer                   :: ALoc
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: stiffness
       PetscReal                                          :: inelasticStrainTrace
@@ -351,7 +419,7 @@ Contains
       End Do
       !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPHDLoc
+   End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDisplacementElasticLoc"
@@ -803,14 +871,14 @@ Contains
                   QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%order
                End If
                Select Case(cellSetOptions%unilateralContactType)
-               Case (MEF90DefMech_unilateralContactTypeNone)
+               Case (MEF90DefMech_unilateralContactTypeNone,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATLoc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
-                  localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralPHDLoc
+               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
+                  localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localOperatorFunction => MEF90DefMechOperatorNull
                End Select
@@ -1076,14 +1144,14 @@ Contains
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
                QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * ElemDamageType%order
                Select Case(cellSetOptions%unilateralContactType)
-               Case (MEF90DefMech_unilateralContactTypeNone)
+               Case (MEF90DefMech_unilateralContactTypeNone,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATLoc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralPHDLoc
+               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
+                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localAssemblyFunction => MEF90DefMechBilinearFormNull
                End Select
@@ -2809,12 +2877,12 @@ Contains
                Select Case(cellSetOptions%unilateralContactType)
                Case (MEF90DefMech_unilateralContactTypeNone)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1Loc
-               Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
-                  localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralPHDLoc
+               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
+                  localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localOperatorFunction => MEF90DefMechOperatorNull
                End Select
@@ -2827,12 +2895,12 @@ Contains
                Select Case(cellSetOptions%unilateralContactType)
                Case (MEF90DefMech_unilateralContactTypeNone)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT2Loc
-               Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT2UnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
-                  localOperatorFunction => MEF90DefMechOperatorDamageAT2UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT2UnilateralPHDLoc
+               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
+                  localOperatorFunction => MEF90DefMechOperatorDamageAT2UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localOperatorFunction => MEF90DefMechOperatorNull
                End Select
@@ -3068,12 +3136,12 @@ Contains
                Select Case(cellSetOptions%unilateralContactType)
                Case (MEF90DefMech_unilateralContactTypeNone)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1Loc
-               Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralPHDLoc
+               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
+                  localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localAssemblyFunction => MEF90DefMechBilinearFormNull
                End Select
@@ -3086,12 +3154,12 @@ Contains
                Select Case(cellSetOptions%unilateralContactType)
                Case (MEF90DefMech_unilateralContactTypeNone)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2Loc
-               Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2UnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2UnilateralPHDLoc
+               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
+                  localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localAssemblyFunction => MEF90DefMechBilinearFormNull
                End Select
