@@ -204,7 +204,7 @@ Contains
          inelasticStrainTrace = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
-               inelasticStrainTrace = inelasticStrainTrace - damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+               inelasticStrainTrace = inelasticStrainTrace - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
             End Do         
             inelasticStrainTrace = inelasticStrainTrace * trace(matProp%LinearThermalExpansion)
          End If
@@ -267,7 +267,7 @@ Contains
          inelasticStrainTrace = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
-               inelasticStrainTrace = inelasticStrainTrace - damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+               inelasticStrainTrace = inelasticStrainTrace - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
             End Do         
             inelasticStrainTrace = inelasticStrainTrace * trace(matProp%LinearThermalExpansion)
          End If
@@ -326,30 +326,25 @@ Contains
          inelasticStrainTrace = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
-               inelasticStrainTrace = inelasticStrainTrace - damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+               inelasticStrainTrace = inelasticStrainTrace - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
             End Do         
             inelasticStrainTrace = inelasticStrainTrace * trace(matProp%LinearThermalExpansion)
          End If
          Do iDoF1 = 1,numDofDisplacement
             inelasticStrainTrace = inelasticStrainTrace + xDof(iDoF1) * trace(elemDisplacement%GradS_BF(iDoF1,iGauss))
          End Do
-         stiffness = 0.0_Kr
-         Do iDoF1 = 1,numDofDamage
-            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-         End Do
-         stiffness = 1.0_Kr - stiffness + matProp%residualStiffness
+         If (inelasticStrainTrace < 0.0_Kr) Then
+            stiffness = 1.0_Kr
+         Else
+            stiffness = 0.0_Kr
+            Do iDoF1 = 1,numDofDamage
+               stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+            End Do
+            stiffness = (1.0_Kr - stiffness)**2 + matProp%residualStiffness
+         End If
          
          Do iDoF1 = 1,numDofDisplacement
             sigma = stiffness * elemDisplacement%GradS_BF(iDoF1,iGauss)
-            Call SpectralDecomposition(sigma,PpalStrain,PpalDirection)
-            sigma = 0.0_Kr
-            Do i = 1,MEF90_DIM 
-               If (PpalStrain(i) < 0.0_Kr) Then
-                  sigma = sigma + (PpalStrain(i) * PpalDirection(i))
-               Else
-                  sigma = sigma + Stiffness * (PpalStrain(i) * PpalDirection(i))
-               End If
-            End Do
             sigma = matProp%HookesLaw * sigma
             Do iDoF2 = 1,numDofDisplacement
                ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
@@ -376,10 +371,11 @@ Contains
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
-      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
+      PetscInt                                           :: i,iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: stiffness
-      PetscReal                                          :: inelasticStrainTrace
-      Type(MEF90_MATS)                                   :: plasticStrain,sigma
+      Type(MEF90_MATS)                                   :: sigma,inelasticStrain
+      PetscReal, Dimension(MEF90_DIM)                    :: PpalStrain
+      Type(MEF90_MATS),Dimension(MEF90_DIM)              :: PpalDirection
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
@@ -389,28 +385,34 @@ Contains
 
       ALoc = 0.0_Kr
       Do iGauss = 1,numGauss
-         inelasticStrainTrace = 0.0_Kr
+         stiffness = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+         End Do
+         stiffness = 1.0_Kr - stiffness + matProp%residualStiffness
+   
+         inelasticStrain = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
-               inelasticStrainTrace = inelasticStrainTrace - damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+               inelasticStrain = inelasticStrain - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss) * matProp%LinearThermalExpansion
             End Do         
-            inelasticStrainTrace = inelasticStrainTrace * trace(matProp%LinearThermalExpansion)
          End If
          Do iDoF1 = 1,numDofDisplacement
-            inelasticStrainTrace = inelasticStrainTrace + xDof(iDoF1) * trace(elemDisplacement%GradS_BF(iDoF1,iGauss))
+            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
          End Do
-         If (inelasticStrainTrace < 0.0_Kr) Then
-            stiffness = 1.0_Kr
-         Else
-            stiffness = 0.0_Kr
-            Do iDoF1 = 1,numDofDamage
-               stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-            End Do
-            stiffness = (1.0_Kr - stiffness)**2 + matProp%residualStiffness
-         End If
-         
+         inelasticStrain = inelasticStrain - plasticStrainCell
+
+         Call SpectralDecomposition(inelasticStrain,PpalStrain,PpalDirection)
+
          Do iDoF1 = 1,numDofDisplacement
-            sigma = stiffness * elemDisplacement%GradS_BF(iDoF1,iGauss)
+            sigma = 0.0_Kr
+            Do i = 1,MEF90_DIM 
+               If (PpalStrain(i) < 0.0_Kr) Then
+                  sigma = sigma + (PpalStrain(i) * PpalDirection(i))
+               Else
+                  sigma = sigma + Stiffness * (PpalStrain(i) * PpalDirection(i))
+               End If
+            End Do
             sigma = matProp%HookesLaw * sigma
             Do iDoF2 = 1,numDofDisplacement
                ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
