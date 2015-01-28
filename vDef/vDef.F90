@@ -166,7 +166,6 @@ Program vDef
 
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   !!!Call TAOInitialize(PETSC_NULL_CHARACTER,ierr);CHKERRQ(ierr)
    Call MEF90Initialize(ierr)
    Call PetscPrintf(PETSC_COMM_WORLD," # vDef: numerical implementation of variational models of Defect Mechanics\n",ierr);CHKERRQ(ierr)
    
@@ -224,8 +223,6 @@ Program vDef
    Call VecDuplicate(MEF90DefMechCtx%damage,residualDamage,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
-   !!!Call MEF90DefMechCreateTAODamage(MEF90DefMechCtx,taoDamage,ierr)
-   !!!Call TaoSetInitialVector(taoDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
    DeAllocate(MEF90DefMechCtx%temperature)
    
    
