@@ -389,7 +389,7 @@ Contains
          Do iDoF1 = 1,numDofDamage
             stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
          End Do
-         stiffness = 1.0_Kr - stiffness + matProp%residualStiffness
+         stiffness = (1.0_Kr - stiffness + matProp%residualStiffness)**2
    
          inelasticStrain = 0.0_Kr
          If (Associated(temperatureDof)) Then
@@ -403,7 +403,6 @@ Contains
          inelasticStrain = inelasticStrain - plasticStrainCell
 
          Call SpectralDecomposition(inelasticStrain,PpalStrain,PpalDirection)
-
          Do iDoF1 = 1,numDofDisplacement
             sigma = 0.0_Kr
             Do i = 1,MEF90_DIM 
@@ -700,6 +699,73 @@ Contains
       !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDisplacementATUnilateralDeviatoricLoc
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralPSLoc"
+!!!
+!!!  
+!!!  MEF90DefMechOperatorDisplacementATUnilateralPSLoc:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechOperatorDisplacementATUnilateralPSLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+      PetscReal,Dimension(:),Pointer                     :: residualLoc
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+
+      PetscInt                                           :: i,iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
+      PetscReal                                          :: temperature,stiffness
+      Type(MEF90_MATS)                                   :: inelasticStrain,sigma
+      PetscReal, Dimension(MEF90_DIM)                    :: PpalStrain
+      Type(MEF90_MATS),Dimension(MEF90_DIM)              :: PpalDirection
+      PetscLogDouble                                     :: flops
+      PetscErrorCode                                     :: ierr
+
+      numDofDisplacement = size(elemDisplacement%BF,1)
+      numDofDamage = size(elemDamage%BF,1)
+      numGauss = size(elemDisplacement%BF,2)
+
+      residualLoc = 0.0_Kr
+      Do iGauss = 1,numGauss
+         temperature = 0.0_Kr
+         inelasticStrain = 0.0_Kr
+         If (Associated(temperatureDof)) Then
+            Do iDoF1 = 1,numDofDamage
+               temperature = temperature - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+            End Do         
+            inelasticStrain = matProp%LinearThermalExpansion * temperature
+         End If
+         Do iDoF1 = 1,numDofDisplacement
+            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
+         End Do
+         inelasticStrain = inelasticStrain - plasticStrainCell
+         
+         stiffness = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+         End Do
+         stiffness = (1.0_Kr - stiffness + matProp%residualStiffness)**2
+   
+         Call SpectralDecomposition(inelasticStrain,PpalStrain,PpalDirection)
+         sigma = 0.0_Kr
+         Do i = 1,MEF90_DIM 
+            If (PpalStrain(i) < 0.0_Kr) Then
+               sigma = sigma + (PpalStrain(i) * PpalDirection(i))
+            Else
+               sigma = sigma + Stiffness * (PpalStrain(i) * PpalDirection(i))
+            End If
+         End Do
+         sigma = matProp%HookesLaw * sigma
+         Do iDoF2 = 1,numDofDisplacement
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+         End Do
+      End Do
+      !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
+      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechOperatorDisplacementATUnilateralPSLoc
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechRHSDisplacementLoc"
