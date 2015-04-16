@@ -9,6 +9,7 @@
 #define MEF90_MAT           Mat3D
 #define MEF90_MATS          MatS3D
 #define MEF90_TENS4OS       Tens4OS3D
+#define MEF90_HOOKESLAW     MEF90HookesLaw3D
 #define MEF90_MATPROP       MEF90MatProp3D_Type
 #define SIZEOFMEF90_VECT    3
 #define SIZEOFMEF90_MAT     9
@@ -25,6 +26,7 @@
 #define MEF90_MAT           Mat2D
 #define MEF90_MATS          MatS2D
 #define MEF90_TENS4OS       Tens4OS2D
+#define MEF90_HOOKESLAW     MEF90HookesLaw2D
 #define MEF90_MATPROP       MEF90MatProp2D_Type
 #define SIZEOFMEF90_VECT    2
 #define SIZEOFMEF90_MAT     4

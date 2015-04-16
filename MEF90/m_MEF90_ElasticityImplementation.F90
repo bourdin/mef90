@@ -5,6 +5,7 @@ Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D
    Use m_MEF90_Parameters
    Use m_MEF90_Elements
    Use m_MEF90_Utils
+   Use m_MEF90_Materials
    Use petsc
    IMPLICIT NONE
 
@@ -90,7 +91,7 @@ Contains
       Type(Mat),Intent(IN)                               :: K 
       Type(DM),Intent(IN)                                :: mesh
       Type(IS),Intent(IN)                                :: cellIS
-      Type(MEF90_TENS4OS),Intent(IN)                     :: A
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: A
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
       Type(MEF90Element_Type),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
@@ -139,7 +140,7 @@ Contains
       Type(DM),Intent(IN)                                :: mesh
       Type(SectionReal),Intent(IN)                       :: U
       Type(IS),Intent(IN)                                :: cellIS
-      Type(MEF90_TENS4OS),Intent(IN)                     :: A
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: A
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
       Type(MEF90Element_Type),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
@@ -293,7 +294,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh,meshMatS
       Type(SectionReal),Intent(IN)                       :: e0
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
       Type(MEF90Element_Type),Intent(IN)                 :: elemType
@@ -940,7 +941,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: x,plasticStrain,temperature
       Type(DM),Intent(IN)                                :: mesh,meshScal
       Type(IS),Intent(IN)                                :: cellIS
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
@@ -1015,7 +1016,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: stress,x,plasticStrain,temperature
       Type(DM),Intent(IN)                                :: mesh,meshScal
       Type(IS),Intent(IN)                                :: cellIS
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
