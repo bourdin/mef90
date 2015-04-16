@@ -70,6 +70,7 @@ m_MEF90_DiffusionInterface.o: ${MEF90_DIR}/MEF90/m_MEF90_DiffusionInterface.F90 
 
 m_MEF90_ElasticityImplementation_2D.o: ${MEF90_DIR}/MEF90/m_MEF90_ElasticityImplementation.F90 \
         m_MEF90_Elements.o \
+        m_MEF90_Materials.o \
         m_MEF90_Parameters.o \
         m_MEF90_Utils.o
 	@echo "      $< 2D"
@@ -77,6 +78,7 @@ m_MEF90_ElasticityImplementation_2D.o: ${MEF90_DIR}/MEF90/m_MEF90_ElasticityImpl
 
 m_MEF90_ElasticityImplementation_3D.o: ${MEF90_DIR}/MEF90/m_MEF90_ElasticityImplementation.F90 \
         m_MEF90_Elements.o \
+        m_MEF90_Materials.o \
         m_MEF90_Parameters.o \
         m_MEF90_Utils.o
 	@echo "      $< 3D"

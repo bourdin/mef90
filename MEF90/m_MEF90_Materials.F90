@@ -8,7 +8,7 @@ Module m_MEF90_Materials_Types
    Type MEF90HookesLaw2D
       Sequence
       Type(Tens4OS2D)    :: fullTensor
-      PetscReal          :: lambda,mu
+      PetscReal          :: lambda,mu,E,nu
       PetscEnum          :: type
       PetscBool          :: isPlaneStress
    End Type MEF90HookesLaw2D
@@ -16,7 +16,7 @@ Module m_MEF90_Materials_Types
    Type MEF90HookesLaw3D
       Sequence
       Type(Tens4OS3D)    :: fullTensor
-      PetscReal          :: lambda,mu
+      PetscReal          :: lambda,mu,E,nu
       PetscEnum          :: type
    End Type MEF90HookesLaw3D
 
@@ -63,9 +63,7 @@ Module m_MEF90_Materials_Types
          Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,                                & ! HookesLaw XXXX,XXYY,XXXY
                               1.09890_Kr,0.00000_Kr,                                & !                YYYY,YYXY
                                          0.38462_Kr),                               & !                     XYXY        
-         !!! EVIL HACK: we store the lame coefficients but query E,nu from the command line
-         !!!            the proper conversion is done in PetscBagGetDataMEF90MatProp2D
-         1.0_Kr, .3_Kr,                                                             & ! lambda, mu
+         0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                & ! lambda, mu, E, nu (lambda, mu will be recomputed)
          MEF90HookesLawTypeIsotropic,                                               & ! type
          .FALSE.),                                                                  & ! isPlaneStress
       1.0_Kr,                                                                       & ! Internal Length
@@ -85,9 +83,7 @@ Module m_MEF90_Materials_Types
                                                     0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                YXYX,YZXZ,YZXY 
                                                                0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY 
                                                                           0.38462_Kr), & !                          XYXY 
-         !!! EVIL HACK: we store the lame coefficients but query E,nu from the command line
-         !!!            the proper conversion is done in PetscBagGetDataMEF90MatProp3D
-         1.0_Kr, .3_Kr,                                                                & ! lambda, mu
+         0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                   & ! lambda, mu, E, nu (lambda, mu will be recomputed)
          MEF90HookesLawTypeIsotropic),                                                 & ! type
       1.0_Kr,                                                                          & ! Internal Length
       1.0D-9,                                                                          & ! Residual Stiffness
@@ -112,25 +108,24 @@ Module m_MEF90_Materials_Interface2D
       End subroutine PetscBagGetData
    End interface
 Contains
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagGetDataMEF90MatProp2D"
    Subroutine PetscBagGetDataMEF90MatProp2D(bag,data,ierr)
       PetscBag                                :: bag
       type(MEF90MatProp2D_Type),pointer       :: data
       PetscErrorCode                          :: ierr
-      PetscReal                               :: E,nu
       
       Call PetscBagGetData(bag,data,ierr)
       Select case(data%HookesLaw%type)
          Case(MEF90HookesLawTypeFull)
             Continue
          Case(MEF90HookesLawTypeIsotropic)
-            E  = data%HookesLaw%lambda
-            nu = data%HookesLaw%mu
             If (data%HookesLaw%isPlaneStress) Then
-               data%HookesLaw%lambda = E * nu / (1.0_Kr - nu**2) 
-               data%HookesLaw%mu     = E / (1.0_Kr + nu) * .5_Kr
+               data%HookesLaw%lambda = data%HookesLaw%E * data%HookesLaw%nu / (1.0_Kr - data%HookesLaw%nu**2) 
+               data%HookesLaw%mu     = data%HookesLaw%E / (1.0_Kr + data%HookesLaw%nu) * .5_Kr
             Else
-               data%HookesLaw%lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - 2.0_Kr * nu)
-               data%HookesLaw%mu     = E / (1.0_Kr + nu) * .5_Kr      
+               data%HookesLaw%lambda = data%HookesLaw%E * data%HookesLaw%nu / (1.0_Kr + data%HookesLaw%nu) / (1.0_Kr - 2.0_Kr * data%HookesLaw%nu)
+               data%HookesLaw%mu     = data%HookesLaw%E / (1.0_Kr + data%HookesLaw%nu) * .5_Kr      
             End If
       End Select
    End Subroutine PetscBagGetDataMEF90MatProp2D
@@ -154,21 +149,20 @@ Module m_MEF90_Materials_Interface3D
       End subroutine PetscBagGetData
    End interface
 Contains
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagGetDataMEF90MatProp3D"
    Subroutine PetscBagGetDataMEF90MatProp3D(bag,data,ierr)
       PetscBag                                :: bag
       type(MEF90MatProp3D_Type),pointer       :: data
       PetscErrorCode                          :: ierr
       
-      PetscReal                               :: E, nu
       Call PetscBagGetData(bag,data,ierr)
       Select case(data%HookesLaw%type)
          Case(MEF90HookesLawTypeFull)
             Continue
          Case(MEF90HookesLawTypeIsotropic)
-            E  = data%HookesLaw%lambda
-            nu = data%HookesLaw%mu
-            data%HookesLaw%lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - 2.0_Kr * nu)
-            data%HookesLaw%mu     = E / (1.0_Kr + nu) * .5_Kr      
+            data%HookesLaw%lambda = data%HookesLaw%E * data%HookesLaw%nu / (1.0_Kr + data%HookesLaw%nu) / (1.0_Kr - 2.0_Kr * data%HookesLaw%nu)
+            data%HookesLaw%mu     = data%HookesLaw%E / (1.0_Kr + data%HookesLaw%nu) * .5_Kr      
       End Select
    End Subroutine PetscBagGetDataMEF90MatProp3D
 End Module m_MEF90_Materials_Interface3D
@@ -270,13 +264,11 @@ Contains
       Call PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr);CHKERRQ(ierr)
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
-            matprop%HookesLaw = default%HookesLaw
-            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+            matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
+            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
          Case(MEF90HookesLawTypeIsotropic)
-            !!! EVIL HACK: we store the lame coefficients but query E,nu from the command line
-            !!!            the proper conversion is done in PetscBagGetDataMEF90MatProp2D
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%lambda,default%HookesLaw%lambda,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%mu,default%HookesLaw%mu,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%E,default%HookesLaw%E,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%nu,default%HookesLaw%nu,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
             Call PetscBagRegisterBool(bag,matprop%HookesLaw%isPlaneStress,default%HookesLaw%isPlaneStress,'planeStress','Use plane stress elasticity',ierr);CHKERRQ(ierr)
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
@@ -314,13 +306,11 @@ Contains
       Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
-            matprop%HookesLaw = default%HookesLaw
-            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+            matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
+            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
          Case(MEF90HookesLawTypeIsotropic)
-            !!! EVIL HACK: we store the lame coefficients but query E,nu from the command line
-            !!!            the proper conversion is done in PetscBagGetDataMEF90MatProp3D
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%lambda,default%HookesLaw%lambda,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%mu,default%HookesLaw%mu,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%E,default%HookesLaw%E,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%nu,default%HookesLaw%nu,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)

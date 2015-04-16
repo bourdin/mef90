@@ -5,6 +5,7 @@ Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
    Use m_MEF90_Parameters
    Use m_MEF90_Elements
    Use m_MEF90_Utils
+   Use m_MEF90_Materials
    IMPLICIT NONE
    Private
 
@@ -55,7 +56,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: alpha
       PetscReal,Intent(IN)                               :: eta
       Type(IS),Intent(IN)                                :: cellIS
-      Type(MEF90_TENS4OS),Intent(IN)                     :: A
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: A
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
       Type(MEF90Element_Type),Intent(IN)                 :: elemType
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
@@ -117,7 +118,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: U,alpha
       PetscReal,Intent(IN)                               :: eta
       Type(IS),Intent(IN)                                :: cellIS
-      Type(MEF90_TENS4OS),Intent(IN)                     :: A
+      Type(MEF90_HOOKESLAW),Intent(IN)                     :: A
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
       Type(MEF90Element_Type),Intent(IN)                 :: elemType,elemScalType
@@ -247,7 +248,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh,meshMatS,meshScal
       Type(SectionReal),Intent(IN)                       :: e0
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(SectionReal),Intent(IN)                       :: alpha
       PetscReal,Intent(IN)                               :: eta
       Type(IS),Intent(IN)                                :: cellIS
@@ -312,7 +313,7 @@ Contains
       Type(DM),Intent(IN)                                :: mesh,meshScal
       Type(IS),Intent(IN)                                :: cellIS
       PetscReal                                          :: eta
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
@@ -567,7 +568,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
       PetscReal,Intent(IN)                               :: internalLength
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
@@ -662,7 +663,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
       PetscReal,Intent(IN)                               :: internalLength
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
@@ -769,7 +770,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
       PetscReal,Intent(IN)                               :: internalLength
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
@@ -1032,7 +1033,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
       PetscReal,Intent(IN)                               :: internalLength
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
@@ -1128,7 +1129,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
       PetscReal,Intent(IN)                               :: internalLength
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
@@ -1235,7 +1236,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(SectionReal),Intent(IN)                       :: displacement,temperature,plasticStrain
       PetscReal,Intent(IN)                               :: internalLength
-      Type(MEF90_TENS4OS),Intent(IN)                     :: HookesLaw
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: LinearThermalExpansion
       PetscReal,Intent(IN)                               :: FractureToughness
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elem
