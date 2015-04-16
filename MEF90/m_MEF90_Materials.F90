@@ -5,6 +5,21 @@ Module m_MEF90_Materials_Types
    Use petsc
    IMPLICIT NONE
 
+   Type MEF90HookesLaw2D
+      Sequence
+      Type(Tens4OS2D)    :: fullTensor
+      PetscReal          :: lambda,mu
+      PetscEnum          :: type
+      PetscBool          :: isPlaneStress
+   End Type MEF90HookesLaw2D
+   
+   Type MEF90HookesLaw3D
+      Sequence
+      Type(Tens4OS3D)    :: fullTensor
+      PetscReal          :: lambda,mu
+      PetscEnum          :: type
+   End Type MEF90HookesLaw3D
+
    Type MEF90MatProp2D_Type
       Sequence
       PetscReal                     :: Density                    ! rho
@@ -12,7 +27,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: SpecificHeat               ! Cp
       Type(MatS2D)                  :: ThermalConductivity        ! K
       Type(MatS2D)                  :: LinearThermalExpansion     ! alpha
-      Type(Tens4OS2D)               :: HookesLaw                  ! A
+      Type(MEF90HookesLaw2D)        :: HookesLaw                  ! A
       PetscReal                     :: internalLength             ! l
       PetscReal                     :: residualStiffness          ! eta
       Character(len=MEF90_MXSTRLEN) :: Name
@@ -25,12 +40,17 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: SpecificHeat               ! Cp
       Type(MatS3D)                  :: ThermalConductivity        ! K
       Type(MatS3D)                  :: LinearThermalExpansion     ! alpha
-      Type(Tens4OS3D)               :: HookesLaw                  ! A
+      Type(MEF90HookesLaw3D)        :: HookesLaw                  ! A
       PetscReal                     :: internalLength             ! l
       PetscReal                     :: residualStiffness          ! eta
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
-   
+
+   Enum,bind(c)
+      enumerator :: MEF90HookesLawTypeFull = 0, &
+                    MEF90HookesLawTypeIsotropic
+   End Enum
+
    !!! The Mathium is a bogus isotropic material whose material properties are all 1 
    !!! except for a Poisson Ratio of 0.3
    Type(MEF90MatProp2D_Type),Parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type( &
@@ -39,27 +59,38 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                       & ! SpecificHeat
       MEF90MatS2DIdentity,                                                          & ! ThermalConductivity
       MEF90MatS2DIdentity,                                                          & ! LinearThermalExpansion
-      Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,                                   & ! HookesLaw XXXX,XXYY,XXXY
-                           1.09890_Kr,0.00000_Kr,                                   & !                YYYY,YYXY
-                                      0.38462_Kr),                                  & !                     XYXY        
-                 1.0_Kr,                                                            & ! Internal Length
-                 1.0D-9,                                                            & ! Residual Stiffness
+      MEF90HookesLaw2D(                                                             & 
+         Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,                                & ! HookesLaw XXXX,XXYY,XXXY
+                              1.09890_Kr,0.00000_Kr,                                & !                YYYY,YYXY
+                                         0.38462_Kr),                               & !                     XYXY        
+         !!! EVIL HACK: we store the lame coefficients but query E,nu from the command line
+         !!!            the proper conversion is done in PetscBagGetDataMEF90MatProp2D
+         1.0_Kr, .3_Kr,                                                             & ! lambda, mu
+         MEF90HookesLawTypeIsotropic,                                               & ! type
+         .FALSE.),                                                                  & ! isPlaneStress
+      1.0_Kr,                                                                       & ! Internal Length
+      1.0D-9,                                                                       & ! Residual Stiffness
       "MEF90Mathium2D")  
 
-   Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type( &
-      1.0_Kr,                                                                       & ! Density
-      1.0_Kr,                                                                       & ! FractureToughness
-      1.0_Kr,                                                                       & ! SpecificHeat
-      MEF90MatS3DIdentity,                                                          & ! ThermalConductivity
-      MEF90MatS3DIdentity,                                                          & ! LinearThermalExpansion
-      Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY 
-                           1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !      YYYY,YYZZ,YYYZ,YYXZ,YYXY 
-                                      1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !           ZZZZ ZZYZ,ZZXZ,ZZXY 
-                                                 0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                YXYX,YZXZ,YZXY 
-                                                            0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY 
-                                                                       0.38462_Kr), & !                          XYXY 
-                 1.0_Kr,                                                            & ! Internal Length
-                 1.0D-9,                                                            & ! Residual Stiffness
+   Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &  
+      1.0_Kr,                                                                          & ! Density
+      1.0_Kr,                                                                          & ! FractureToughness
+      1.0_Kr,                                                                          & ! SpecificHeat
+      MEF90MatS3DIdentity,                                                             & ! ThermalConductivity
+      MEF90MatS3DIdentity,                                                             & ! LinearThermalExpansion
+      MEF90HookesLaw3D(                                                                & 
+         Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY 
+                              1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !      YYYY,YYZZ,YYYZ,YYXZ,YYXY 
+                                         1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !           ZZZZ ZZYZ,ZZXZ,ZZXY 
+                                                    0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                YXYX,YZXZ,YZXY 
+                                                               0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY 
+                                                                          0.38462_Kr), & !                          XYXY 
+         !!! EVIL HACK: we store the lame coefficients but query E,nu from the command line
+         !!!            the proper conversion is done in PetscBagGetDataMEF90MatProp3D
+         1.0_Kr, .3_Kr,                                                                & ! lambda, mu
+         MEF90HookesLawTypeIsotropic),                                                 & ! type
+      1.0_Kr,                                                                          & ! Internal Length
+      1.0D-9,                                                                          & ! Residual Stiffness
       "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
 
@@ -82,11 +113,26 @@ Module m_MEF90_Materials_Interface2D
    End interface
 Contains
    Subroutine PetscBagGetDataMEF90MatProp2D(bag,data,ierr)
-      PetscBag                              :: bag
-      type(MEF90MatProp2D_Type),pointer     :: data
-      PetscErrorCode                        :: ierr
+      PetscBag                                :: bag
+      type(MEF90MatProp2D_Type),pointer       :: data
+      PetscErrorCode                          :: ierr
+      PetscReal                               :: E,nu
       
       Call PetscBagGetData(bag,data,ierr)
+      Select case(data%HookesLaw%type)
+         Case(MEF90HookesLawTypeFull)
+            Continue
+         Case(MEF90HookesLawTypeIsotropic)
+            E  = data%HookesLaw%lambda
+            nu = data%HookesLaw%mu
+            If (data%HookesLaw%isPlaneStress) Then
+               data%HookesLaw%lambda = E * nu / (1.0_Kr - nu**2) 
+               data%HookesLaw%mu     = E / (1.0_Kr + nu) * .5_Kr
+            Else
+               data%HookesLaw%lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - 2.0_Kr * nu)
+               data%HookesLaw%mu     = E / (1.0_Kr + nu) * .5_Kr      
+            End If
+      End Select
    End Subroutine PetscBagGetDataMEF90MatProp2D
 End Module m_MEF90_Materials_Interface2D
 
@@ -109,11 +155,21 @@ Module m_MEF90_Materials_Interface3D
    End interface
 Contains
    Subroutine PetscBagGetDataMEF90MatProp3D(bag,data,ierr)
-      PetscBag                              :: bag
-      type(MEF90MatProp3D_Type),pointer     :: data
-      PetscErrorCode                        :: ierr
+      PetscBag                                :: bag
+      type(MEF90MatProp3D_Type),pointer       :: data
+      PetscErrorCode                          :: ierr
       
+      PetscReal                               :: E, nu
       Call PetscBagGetData(bag,data,ierr)
+      Select case(data%HookesLaw%type)
+         Case(MEF90HookesLawTypeFull)
+            Continue
+         Case(MEF90HookesLawTypeIsotropic)
+            E  = data%HookesLaw%lambda
+            nu = data%HookesLaw%mu
+            data%HookesLaw%lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - 2.0_Kr * nu)
+            data%HookesLaw%mu     = E / (1.0_Kr + nu) * .5_Kr      
+      End Select
    End Subroutine PetscBagGetDataMEF90MatProp3D
 End Module m_MEF90_Materials_Interface3D
 
@@ -138,9 +194,17 @@ Module m_MEF90_Materials
       Module Procedure MEF90MatPropBagSetFromOptions2D,MEF90MatPropBagSetFromOptions3D
    End Interface
    
+   Interface  Operator (*)
+      Module Procedure MEF90HookesLaw2DXMatS2D,MEF90HookesLaw3DXMatS3D
+   End Interface
+   
    PetscSizeT,protected   :: sizeofMEF90MatProp2D
    PetscSizeT,protected   :: sizeofMEF90MatProp3D
 
+   PetscSizeT,protected   :: sizeofMEF90HookesLaw2D
+   PetscSizeT,protected   :: sizeofMEF90HookesLaw3D
+   
+   Character(len =  MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90HookesLawTypeList
 
 Contains
 #undef __FUNCT__
@@ -156,12 +220,22 @@ Contains
 
       Type(MEF90MatProp2D_Type),Target    :: matProp2D
       Type(MEF90MatProp3D_Type),Target    :: matProp3D
+      Type(MEF90HookesLaw2D),Target       :: HookesLaw2D
+      Type(MEF90HookesLaw3D),Target       :: HookesLaw3D
       character(len=1),pointer            :: dummychar(:)
       PetscSizeT                          :: sizeofchar
    
       Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
       sizeofMEF90MatProp2D = size(transfer(matProp2D,dummychar))*sizeofchar
       sizeofMEF90MatProp3D = size(transfer(matProp3D,dummychar))*sizeofchar
+      sizeofMEF90HookesLaw2D = size(transfer(HookesLaw2D,dummychar))*sizeofchar
+      sizeofMEF90HookesLaw3D = size(transfer(HookesLaw3D,dummychar))*sizeofchar
+      
+      MEF90HookesLawTypeList(1) = 'Full'
+      MEF90HookesLawTypeList(2) = 'Isotropic'
+      MEF90HookesLawTypeList(3) = 'MEF90HookesLawTypeList'
+      MEF90HookesLawTypeList(4) = '_MEF90HookesLawTypeList'
+      MEF90HookesLawTypeList(5) = ''
    End Subroutine MEF90MaterialsInitialize_Private
 
 #undef __FUNCT__
@@ -192,8 +266,20 @@ Contains
       Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
       Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
-      matprop%HookesLaw = default%HookesLaw
-      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+      
+      Call PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr);CHKERRQ(ierr)
+      Select case(matprop%HookesLaw%type)
+         Case (MEF90HookesLawTypeFull)
+            matprop%HookesLaw = default%HookesLaw
+            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+         Case(MEF90HookesLawTypeIsotropic)
+            !!! EVIL HACK: we store the lame coefficients but query E,nu from the command line
+            !!!            the proper conversion is done in PetscBagGetDataMEF90MatProp2D
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%lambda,default%HookesLaw%lambda,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%mu,default%HookesLaw%mu,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
+            Call PetscBagRegisterBool(bag,matprop%HookesLaw%isPlaneStress,default%HookesLaw%isPlaneStress,'planeStress','Use plane stress elasticity',ierr);CHKERRQ(ierr)
+            matprop%HookesLaw%fulltensor = -1.D+30
+      End Select
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
@@ -226,8 +312,17 @@ Contains
       Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
       Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
-      matprop%HookesLaw = default%HookesLaw
-      Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+      Select case(matprop%HookesLaw%type)
+         Case (MEF90HookesLawTypeFull)
+            matprop%HookesLaw = default%HookesLaw
+            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+         Case(MEF90HookesLawTypeIsotropic)
+            !!! EVIL HACK: we store the lame coefficients but query E,nu from the command line
+            !!!            the proper conversion is done in PetscBagGetDataMEF90MatProp3D
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%lambda,default%HookesLaw%lambda,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%mu,default%HookesLaw%mu,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
+            matprop%HookesLaw%fulltensor = -1.D+30
+      End Select
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
@@ -429,4 +524,74 @@ Contains
       
       A%ZZZZ = lambda + mu * 2.0_Kr
    End Subroutine MEF90HookeLawIsoENu3D
+   
+!!! Overloading linear algebra functions with Hookes Laws.
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HookesLaw2DXMatS2D"
+!!!
+!!!  
+!!!  MEF90HookesLaw2DXMatS2D:
+!!!  
+!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function MEF90HookesLaw2DXMatS2D(A,X)
+      Type(MEF90HookesLaw2D), Intent(IN)           :: A
+      Type(MatS2D), Intent(IN)                     :: X
+      Type(MatS2D)                                 :: MEF90HookesLaw2DXMatS2D
+      
+      
+      PetscErrorCode                               :: ierr
+      Real(Kind = Kr)                              :: C1, C2
+      PetscLogDouble                               :: flops
+
+      Select case(A%type)
+         Case(MEF90HookesLawTypeIsotropic)
+            C1 = A%lambda + 2.0_Kr * A%mu
+            C2 = 2.0_Kr * A%mu
+            MEF90HookesLaw2DXMatS2D%XX = C1 * X%XX + A%lambda * X%YY
+            MEF90HookesLaw2DXMatS2D%YY = A%lambda * X%XX + C1 * X%YY
+            MEF90HookesLaw2DXMatS2D%XY = C2 * X%XY
+            flops = 10.0
+            Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Case(MEF90HookesLawTypeFull)
+            MEF90HookesLaw2DXMatS2D = A%fullTensor * X
+            ! flops are counted in m_MEF90_LinAlg
+      End Select
+   End Function MEF90HookesLaw2DXMatS2D
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HookesLaw2DXMatS3D"
+!!!
+!!!  
+!!!  MEF90HookesLaw2DXMatS3D:
+!!!  
+!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function MEF90HookesLaw3DXMatS3D(A,X)
+      Type(MEF90HookesLaw3D), Intent(IN)           :: A
+      Type(MatS3D), Intent(IN)                     :: X
+      Type(MatS3D)                                 :: MEF90HookesLaw3DXMatS3D
+      
+      PetscErrorCode                               :: ierr
+      Real(Kind = Kr)                              :: C1, C2
+      PetscLogDouble                               :: flops
+
+      Select case(A%type)
+         Case(MEF90HookesLawTypeIsotropic)
+            C1 = A%lambda + 2.0_Kr * A%mu
+            C2 = 2.0_Kr * A%mu
+            MEF90HookesLaw3DXMatS3D%XX = C1 * X%XX + A%lambda * X%YY + A%lambda * X%ZZ
+            MEF90HookesLaw3DXMatS3D%YY = A%lambda * X%XX + C1 * X%YY * A%lambda * X%ZZ
+            MEF90HookesLaw3DXMatS3D%YY = A%lambda * X%XX + A%lambda * X%YY * C1 * X%ZZ
+            MEF90HookesLaw3DXMatS3D%YZ = C2 * X%YZ
+            MEF90HookesLaw3DXMatS3D%XZ = C2 * X%XZ
+            MEF90HookesLaw3DXMatS3D%XY = C2 * X%XY
+            flops = 21.0
+            Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         Case(MEF90HookesLawTypeFull)
+            MEF90HookesLaw3DXMatS3D = A%fullTensor * X
+            ! flops are counted in m_MEF90_LinAlg
+      End Select
+   End Function MEF90HookesLaw3DXMatS3D
+
 End Module m_MEF90_Materials
