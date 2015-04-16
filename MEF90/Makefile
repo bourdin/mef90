@@ -111,6 +111,10 @@ m_MEF90_GradDamageInterface.o: ${MEF90_DIR}/MEF90/m_MEF90_GradDamageInterface.F9
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
+m_MEF90_HookesLaw.o: ${MEF90_DIR}/MEF90/m_MEF90_HookesLaw.F90 m_MEF90_LinAlg.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
 m_MEF90_Elements.o: ${MEF90_DIR}/MEF90/m_MEF90_Elements.F90 \
         m_MEF90_LinAlg.o \
         m_MEF90_Parameters.o \

@@ -33,6 +33,7 @@ Program TestMaterials
       Call PetscBagRegisterMEF90MatProp(matBag2D(i),name,prefix,MEF90Mathium2D,ierr)
       Call PetscBagView(matBag2D(i),PETSC_VIEWER_STDOUT_WORLD,ierr)
       Call PetscBagGetDataMEF90MatProp(matBag2D(i),matProp2D,ierr)
+      Write(*,*) 'MatProp2D: ',matProp2D
       Call PetscPrintf(PETSC_COMM_WORLD,'\n',ierr)
    EndDo
 
@@ -48,6 +49,7 @@ Program TestMaterials
       Call PetscBagRegisterMEF90MatProp(matBag3D(i),name,prefix,MEF90Mathium3D,ierr)
       Call PetscBagView(matBag3D(i),PETSC_VIEWER_STDOUT_WORLD,ierr)
       Call PetscBagGetDataMEF90MatProp(matBag3D(i),matProp3D,ierr)
+      Write(*,*) 'MatProp3D: ',matProp3D
 
       matProp3D%Density = -123456.0
       Call PetscBagSetFromOptions(matBag3D(i),ierr)
