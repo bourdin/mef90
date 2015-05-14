@@ -1,5 +1,8 @@
 all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef
 
+${MEF90_DIR}/.hg/dirstate:
+	@mkdir -p ${MEF90_DIR}/.hg; touch ${MEF90_DIR}/.hg/dirstate
+	
 mef90version.h: ${MEF90_DIR}/.hg/dirstate
 	@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 
