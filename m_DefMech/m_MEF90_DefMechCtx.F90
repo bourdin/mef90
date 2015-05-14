@@ -220,9 +220,12 @@ Module m_MEF90_DefMechCtx
       enumerator  :: MEF90DefMech_damageTypeAT1 = 0,     &
                      MEF90DefMech_damageTypeAT2,         &
                      MEf90DefMech_damageTypeAT1Elastic,  &
-                     MEf90DefMech_damageTypeAT2Elastic
+                     MEf90DefMech_damageTypeAT2Elastic,  &
+!!erwan-->!!                     
+                     MEF90DefMech_damageTypeATk 
+!!<--erwan!!                     
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(7),protected   :: MEF90DefMech_damageTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(8),protected   :: MEF90DefMech_damageTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_plasticityTypeNone = 0,   &
@@ -281,10 +284,12 @@ Contains
       MEF90DefMech_damageTypeList(2) = 'AT2'
       MEF90DefMech_damageTypeList(3) = 'AT1Elastic'
       MEF90DefMech_damageTypeList(4) = 'AT2Elastic'
-      MEF90DefMech_damageTypeList(5) = 'MEF90DefMech_damageType'
-      MEF90DefMech_damageTypeList(6) = '_MEF90DefMech_damageType'
-      MEF90DefMech_damageTypeList(7) = ''
-      
+!!erwan-->!!  
+      MEF90DefMech_damageTypeList(5) = 'ATk'
+      MEF90DefMech_damageTypeList(6) = 'MEF90DefMech_damageType'
+      MEF90DefMech_damageTypeList(7) = '_MEF90DefMech_damageType'
+      MEF90DefMech_damageTypeList(8) = ''
+!!<--erwan!!     
       MEF90DefMech_plasticityTypeList(1) = 'None'
       MEF90DefMech_plasticityTypeList(2) = 'Tresca'
       MEF90DefMech_plasticityTypeList(3) = 'VonMises'
