@@ -936,6 +936,7 @@ Contains
    !!!  
    !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
    !!!
+   
    Subroutine ElasticityEnergySet(energy,x,plasticStrain,temperature,mesh,meshScal,cellIS,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
       PetscReal,Intent(OUT)                              :: energy
       Type(SectionReal),Intent(IN)                       :: x,plasticStrain,temperature
