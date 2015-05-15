@@ -173,18 +173,6 @@ Module m_MEF90_GradDamageInterface
 
 !!erwan-->!!
 
-!   Interface MEF90GradDamageDamageBilinearFormSetATkElastic
-!      Module Procedure MEF90GradDamageDamageBilinearFormSetATkElastic_2D, MEF90GradDamageDamageBilinearFormSetATkElastic_3D
-!   End Interface 
-
-!   Interface MEF90GradDamageDamageOperatorSetATkElastic
-!      Module Procedure MEF90GradDamageDamageOperatorSetATkElastic_2D, MEF90GradDamageDamageOperatorSetATkElastic_3D
-!   End Interface 
-
-!   Interface MEF90GradDamageDamageRHSSetATkElastic
-!      Module Procedure MEF90GradDamageDamageRHSSetATkElastic_2D, MEF90GradDamageDamageRHSSetATkElastic_3D
-!   End Interface 
-
    Interface MEF90GradDamageDamageBilinearFormSetATk
       Module Procedure MEF90GradDamageDamageBilinearFormSetATk_2D, MEF90GradDamageDamageBilinearFormSetATk_3D
    End Interface 

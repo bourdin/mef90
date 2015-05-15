@@ -203,13 +203,13 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
       ALoc = 0.0_Kr
-      k = 2.0_Kr
+      k = 2.0
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
             stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
          End Do
-         stiffness = (1.0_Kr - stiffness)**2.0 /(1.0_Kr+( k - 1.0_Kr )*(1.0_Kr - (1.0_Kr - stiffness)**2.0 ) ) + matProp%residualStiffness
+         stiffness = (1.0_Kr - stiffness)**2 /(1.0_Kr + ( k - 1.0 ) * ( 1.0_Kr - (1.0_Kr - stiffness)**2 ) ) + matProp%residualStiffness
          Do iDoF1 = 1,numDofDisplacement
             sigma = stiffness * (matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss))
             Do iDoF2 = 1,numDofDisplacement
@@ -221,7 +221,6 @@ Contains
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDisplacementATkLoc
    
-
 !!<--erwan!!
 
 
@@ -611,14 +610,14 @@ Contains
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
-      k=2.0_Kr
+      k=2.
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
             stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
          End Do
-         stiffness = (1.0_Kr - stiffness)**2.0 /(1.0_Kr+( k - 1.0_Kr )*(1.0_Kr - (1.0_Kr - stiffness)**2.0 ) )+ matProp%residualStiffness
+         stiffness = (1.0_Kr - stiffness)**2 /( 1.0_Kr + ( k - 1. )*(1.0_Kr - (1.0_Kr - stiffness)**2 ) )+ matProp%residualStiffness
 
          sigma = 0.0_Kr
          Do iDoF1 = 1,numDofDisplacement
@@ -1060,8 +1059,9 @@ Contains
                localRHSFunction => MEF90DefMechRHSDisplacementLoc
 !!erwan-->!!
             Case (MEF90DefMech_damageTypeATk)
-                  QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%order
-                  localOperatorFunction => MEF90DefMechOperatorDisplacementATkLoc
+               QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%order
+               localOperatorFunction => MEF90DefMechOperatorDisplacementATkLoc
+               localRHSFunction => MEF90DefMechRHSDisplacementLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
                If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -1888,15 +1888,15 @@ Contains
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
-      PetscReal                                          :: k,damageGauss,Gateaux_derivative_of_a
+      PetscReal                                          :: k,damageGauss,C0Bilinear
 
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
       
       k = 2.0
-      C1 = matprop%fractureToughness / matprop%internalLength * .6366198
-      C2 = matprop%fractureToughness * matprop%internalLength * .6366198
+      C1 = matprop%fractureToughness / matprop%internalLength * .6366197724
+      C2 = matprop%fractureToughness * matprop%internalLength * .6366197724
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
          temperatureGauss = 0.0_Kr
@@ -1916,10 +1916,12 @@ Contains
          !!! This is really twice the elastic energy density
          Do iDoF1 = 1,numDofDamage
             damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
-            Gateaux_derivative_of_a = k*(3.0*(damageGauss*elemDamage%BF(iDoF1,iGauss))**2.0+k*(- 4.0 - 3.0*damageGauss*elemDamage%BF(iDoF1,iGauss)*(-2.0+damageGauss*elemDamage%BF(iDoF1,iGauss))))/(-1.0+(-1.0+k)*damageGauss*elemDamage%BF(iDoF1,iGauss)*(-2.0+damageGauss*elemDamage%BF(iDoF1,iGauss)))**3.0
+            C0Bilinear = 2.0*k*( 3.0 * (damageGauss - 1.0_Kr)**2 - k* ( 4.0_Kr + 3.0*damageGauss*(- 2.0_Kr + damageGauss)))/&
+                        (- 1.0_Kr+ (-1. + k )*damageGauss*(- 2.0_Kr + damageGauss))**3
             Do iDoF2 = 1,numDofDamage
-               Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
-                                       elasticEnergyDensityGauss*Gateaux_derivative_of_a - C1)* elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss))
+               Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( ( &
+                                       elasticEnergyDensityGauss*C0Bilinear - C1)* elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) &
+                              + C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
       End Do
@@ -2529,7 +2531,7 @@ Contains
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       Type(MEF90_VECT)                                   :: gradientDamageGauss
-      PetscReal                                          :: C1,C2,k
+      PetscReal                                          :: C1,C2,k,C0Operator
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
@@ -2563,12 +2565,13 @@ Contains
          Do iDoF1 = 1,numDofDamage
             damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
             gradientDamageGauss = gradientDamageGauss + elemDamage%Grad_BF(iDoF1,iGauss) * xDof(iDoF1)
+            C0Operator=2.*k*(damageGauss - 1.0_Kr)/(- 1.0_Kr + (-1.0+k)*(-2.0_Kr+damageGauss)*damageGauss)**2
          End Do
 
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
-                                  (elasticEnergyDensityGauss * (damageGauss - 1.0_Kr)/(-1.0+(-1.0+k)*(-2.0+damageGauss)*damageGauss) - C1*(damageGauss - 1.0_Kr)) * elemDamage%BF(iDoF2,iGauss) + &
-                                  C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                  (elasticEnergyDensityGauss * C0Operator + C1*(1.0_Kr - damageGauss)) * elemDamage%BF(iDoF2,iGauss)& 
+                                  + C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
@@ -3717,6 +3720,7 @@ Contains
 !!erwan-->!!
          Case (MEF90DefMech_damageTypeATk)
             If (elemScalType%coDim == 0) Then
+               ! Which QuadratureOdre chose for ATk
                QuadratureOrder = 2 * (elemScalType%order - 1)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                Call MEF90GradDamageSurfaceEnergySetATk(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
