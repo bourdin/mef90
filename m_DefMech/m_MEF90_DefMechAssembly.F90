@@ -1882,9 +1882,14 @@ Contains
 #define __FUNCT__ "MEF90DefMechBilinearFormDamageATkLoc"
 !!!
 !!!  
-!!!  MEF90DefMechBilinearFormDamageATkLoc:
+!!!  MEF90DefMechBilinearFormDamageATkLoc: Assembles the bilinear form for ATk, that is:
+!!!    <K(alpha) beta , delta> = \int a''(\alpha) W(e(u)) \beta \delta 
+!!!                            + Gc/pi/\ell w''(alpha) \beta \delta
+!!!                            + 2 Gc/pi*\ell \nabla \beta \nabla \delta
+!!! with a(\alpha) = (1-w(\alpha)) / ( 1 + (k-1) w(\alpha)) and w(\alpha) = 1 - (1-\alpha)^2
+!!! i.e. a''(\alpha) = 2 k * ( k + 3(k-1) v^2) / [k + (1-k) v^2]^3, w''(\alpha) = -2
 !!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2014-2015 Erwan Tanne erwan.tanne@gmail.com, Blaise Bourdin bourdin@lsu.edu
 !!!
 
    Subroutine MEF90DefMechBilinearFormDamageATkLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
@@ -1901,15 +1906,15 @@ Contains
       PetscReal                                          :: C2,C1
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
-      PetscReal                                          :: k,C0Bilinear
+      PetscReal                                          :: k,C0
 
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
       
       k = 2.0_Kr
-      C1 = matprop%fractureToughness / matprop%internalLength * .6366197724
-      C2 = matprop%fractureToughness * matprop%internalLength * .6366197724
+      C1 = 2.0_Kr * matprop%fractureToughness / matprop%internalLength / PETSC_PI
+      C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength / PETSC_PI
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
          temperatureGauss = 0.0_Kr
@@ -1926,14 +1931,17 @@ Contains
          inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
          elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
 
+         damageGauss = 0.0_Kr
+         Do iDof1 = 1, numDofDamage
+            damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
+         End Do
+         C0 = k * (k + 3.0_Kr * (k - 1.0_Kr) * (1.0_Kr - damageGauss)**2) / &
+              (k + (1.0_Kr - k) * (1.0_Kr - damageGauss)**2)**3
          !!! This is really twice the elastic energy density
          Do iDoF1 = 1,numDofDamage
-            damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
-            C0Bilinear = 2.0* k *( 3.0 * (damageGauss - 1.0_Kr )**2 + k* ( - 4.0_Kr - 3.0*damageGauss*(- 2.0_Kr + damageGauss)))/&
-                        (- 1.0_Kr + (- 1.0 + k )*damageGauss*(- 2.0_Kr + damageGauss))**3
             Do iDoF2 = 1,numDofDamage
-               Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( ( &
-                                       elasticEnergyDensityGauss*C0Bilinear - C1)* elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) &
+               Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( & 
+                                  (elasticEnergyDensityGauss * C0 - C1) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) &
                               + C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
@@ -2527,9 +2535,12 @@ Contains
 #define __FUNCT__ "MEF90DefMechOperatorDamageATkLoc"
 !!!
 !!!  
-!!!  MEF90DefMechOperatorDamageATkLoc:
+!!!  MEF90DefMechOperatorDamageATkLoc: Assembles the operator for ATk:
+!!!    F(\alpha)\beta = \int [k(\alpha-1)W(e(u))] / [k-(k-1)(1-\alpha)^2]^2 \beta 
+!!!                   + 2Gc/pi (1-\alpha) \beta / \ell 
+!!!                   + 2Gc/pi \nabla \alpha \nabla \beta * \ell
 !!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2014-2015 Erwan Tanne erwan.tanne@gmail.com, Blaise Bourdin bourdin@lsu.edu
 !!!
 
    Subroutine MEF90DefMechOperatorDamageATkLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
@@ -2553,8 +2564,8 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
       
-      C1 = matprop%fractureToughness / matprop%internalLength * .6366197724
-      C2 = matprop%fractureToughness * matprop%internalLength * .6366197724
+      C1 = 2.0_Kr * matprop%fractureToughness / matprop%internalLength / PETSC_PI
+      C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength / PETSC_PI
       k = 2.0_Kr
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
@@ -2578,12 +2589,13 @@ Contains
          Do iDoF1 = 1,numDofDamage
             damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
             gradientDamageGauss = gradientDamageGauss + elemDamage%Grad_BF(iDoF1,iGauss) * xDof(iDoF1)
-            C0Operator=2.0_Kr*k*(damageGauss - 1.0_Kr)/(- 1.0_Kr + (- 1.0_Kr+k )*(- 2.0_Kr+damageGauss)*damageGauss)**2
          End Do
+         C0Operator = k * (damageGauss - 1.0_Kr) * elasticEnergyDensityGauss / &
+                     (k + (1.0_Kr - k) * (1.0_kr - damageGauss)**2)**2
 
          Do iDoF2 = 1,numDofDamage
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
-                                  (elasticEnergyDensityGauss * C0Operator + C1*(1.0_Kr - damageGauss)) * elemDamage%BF(iDoF2,iGauss)& 
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * (                       &
+                                  (C0Operator + C1 * (1.0_Kr - damageGauss)) * elemDamage%BF(iDoF2,iGauss) & 
                                   + C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
@@ -3284,7 +3296,7 @@ Contains
                End Select
 !!erwan-->!!
             Case (MEF90DefMech_damageTypeATk)
-               QuadratureOrder = 5 * elemDamageType%order + 5 * (elemDisplacementType%order - 1)
+               QuadratureOrder = 9! 5 * elemDamageType%order + 5 * (elemDisplacementType%order - 1)
                localOperatorFunction => MEF90DefMechOperatorDamageATkLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT2)
@@ -3531,7 +3543,7 @@ Contains
                localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2ElasticLoc
 !!erwan-->!!
             Case (MEF90DefMech_damageTypeATk)
-               QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
+               QuadratureOrder = 9 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
                localAssemblyFunction => MEF90DefMechBilinearFormDamageATkLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT1)

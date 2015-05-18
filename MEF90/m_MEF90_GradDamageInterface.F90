@@ -93,9 +93,9 @@ Module m_MEF90_GradDamageInterface
 !   Public :: MEF90GradDamageDamageBilinearFormSetATkElastic
 !   Public :: MEF90GradDamageDamageOperatorSetATkElastic
 !   Public :: MEF90GradDamageDamageRHSSetATkElastic
-   Public :: MEF90GradDamageDamageBilinearFormSetATk
-   Public :: MEF90GradDamageDamageOperatorSetATk
-   Public :: MEF90GradDamageDamageRHSSetATk
+!   Public :: MEF90GradDamageDamageBilinearFormSetATk
+!   Public :: MEF90GradDamageDamageOperatorSetATk
+!   Public :: MEF90GradDamageDamageRHSSetATk
    Public :: MEF90GradDamageSurfaceEnergySetATk
 !!<--erwan!!
    
