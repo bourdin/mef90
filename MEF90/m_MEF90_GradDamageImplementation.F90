@@ -1417,7 +1417,7 @@ Contains
       PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
 
-      C2 = FractureToughness * internalLength * .75_Kr
+      C2 = FractureToughness * internalLength * .6366197724_Kr
 
       Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -1517,7 +1517,7 @@ Contains
       PetscLogDouble                                     :: flops
            
       !C1 = FractureToughness / internalLength * .75_Kr 
-      C2 = FractureToughness * internalLength * .75_Kr
+      C2 = FractureToughness * internalLength * .6366197724_Kr
 
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -1621,7 +1621,7 @@ Contains
       PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
            
-      C2 = FractureToughness / internalLength * .375_Kr
+      !C2 = FractureToughness / internalLength * .3183098862_Kr
 
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -1659,7 +1659,8 @@ Contains
 
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                 ((strainElem .dotP. stressElem) - C2) * elem(cell)%BF(iDoF1,iGauss)
+                                 ((strainElem .dotP. stressElem) ) * elem(cell)%BF(iDoF1,iGauss)
+                                 !((strainElem .dotP. stressElem) - C2) * elem(cell)%BF(iDoF1,iGauss)
                End Do
             End Do ! iGauss
             Gloc = Gloc * scaling
@@ -1724,7 +1725,7 @@ Contains
                   alphaElem     = alphaElem     + alphaLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
                   gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
                End Do
-               energy = energy + elemScal(cell)%Gauss_C(iGauss) * ((1.0_Kr - (1.0_Kr- alphaElem)**2.0)* C1 + (gradAlphaElem .dotP. gradAlphaElem) * C2)
+               energy = energy + elemScal(cell)%Gauss_C(iGauss) * ((1.0_Kr - (1.0_Kr- alphaElem)**2 )* C1 + (gradAlphaElem .dotP. gradAlphaElem) * C2)
             End Do ! Gauss
          End Do ! cell
          flops = (2 * elemScalType%numDof + 5 )* size(elemScal(1)%Gauss_C) * size(cellID) 

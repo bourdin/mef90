@@ -90,7 +90,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
       
       Print*,__FUNCT__,': Unimplemented Bilinear Form local assembly function'
-      STOP  
+      STOP 
    End Subroutine MEF90DefMechBilinearFormNull
    
 #undef __FUNCT__
@@ -203,13 +203,13 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
       ALoc = 0.0_Kr
-      k = 2.0
+      k = 2.0_Kr
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
             stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
          End Do
-         stiffness = (1.0_Kr - stiffness)**2 /(1.0_Kr + ( k - 1.0 ) * ( 1.0_Kr - (1.0_Kr - stiffness)**2 ) ) + matProp%residualStiffness
+         stiffness = (1.0_Kr - stiffness)**2 /(1.0_Kr + ( k - 1.0_Kr ) * ( 1.0_Kr - (1.0_Kr - stiffness)**2 ) ) + matProp%residualStiffness
          Do iDoF1 = 1,numDofDisplacement
             sigma = stiffness * (matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss))
             Do iDoF2 = 1,numDofDisplacement
@@ -610,14 +610,14 @@ Contains
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
-      k=2.
+      k=2.0_Kr
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
             stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
          End Do
-         stiffness = (1.0_Kr - stiffness)**2 /( 1.0_Kr + ( k - 1. )*(1.0_Kr - (1.0_Kr - stiffness)**2 ) )+ matProp%residualStiffness
+         stiffness = (1.0_Kr - stiffness)**2 /( 1.0_Kr + ( k - 1.0_Kr )*(1.0_Kr - (1.0_Kr - stiffness)**2 ) )+ matProp%residualStiffness
 
          sigma = 0.0_Kr
          Do iDoF1 = 1,numDofDisplacement
@@ -1059,7 +1059,7 @@ Contains
                localRHSFunction => MEF90DefMechRHSDisplacementLoc
 !!erwan-->!!
             Case (MEF90DefMech_damageTypeATk)
-               QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%order
+               QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
                localOperatorFunction => MEF90DefMechOperatorDisplacementATkLoc
                localRHSFunction => MEF90DefMechRHSDisplacementLoc
 !!<--erwan!!
@@ -1343,7 +1343,7 @@ Contains
                localAssemblyFunction => MEF90DefMechBilinearFormDisplacementElasticLoc
 !!erwan-->!!
             Case (MEF90DefMech_damageTypeATk)
-               QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * ElemDamageType%order
+               QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * ElemDamageType%order
                localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATkLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
@@ -1649,9 +1649,9 @@ Contains
          Case (MEF90DefMech_damageTypeATk)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
-                  QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemScalType%order)
+                  QuadratureOrder = 5 * max(elemDisplacementType%order - 1, elemScalType%order)
                Else
-                  QuadratureOrder = 2 * (elemDisplacementType%order - 1)
+                  QuadratureOrder = 5 ! * (elemDisplacementType%order - 1)
                End If
                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
@@ -1764,9 +1764,23 @@ Contains
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%damageType)
 !!erwan-->!!
-         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic, &
-               MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2,MEF90DefMech_damageTypeATk)
+         Case (MEF90DefMech_damageTypeATk)
+            If (elemDisplacementType%coDim == 0) Then
+               If (Associated(MEF90DefMechCtx%temperature)) Then
+                  QuadratureOrder = max(elemDisplacementType%order - 1, elemScalType%order)
+               Else
+                  QuadratureOrder = 5 !*elemDisplacementType%order - 1
+               End If
+               Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90ElasticityStressSet(stressSec,xSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
+                                             matpropSet%HookesLaw,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+               Call MEF90Element_Destroy(elemDisplacement,ierr)
+               Call MEF90Element_Destroy(elemScal,ierr)
+            End If
 !!<--erwan!!
+         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic, &
+               MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = max(elemDisplacementType%order - 1, elemScalType%order)
@@ -1882,19 +1896,18 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       PetscReal                                          :: C2,C1
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
-
-      PetscReal                                          :: k,damageGauss,C0Bilinear
+      PetscReal                                          :: k,C0Bilinear
 
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
       
-      k = 2.0
+      k = 2.0_Kr
       C1 = matprop%fractureToughness / matprop%internalLength * .6366197724
       C2 = matprop%fractureToughness * matprop%internalLength * .6366197724
       Aloc = 0.0_Kr
@@ -1916,8 +1929,8 @@ Contains
          !!! This is really twice the elastic energy density
          Do iDoF1 = 1,numDofDamage
             damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
-            C0Bilinear = 2.0*k*( 3.0 * (damageGauss - 1.0_Kr)**2 - k* ( 4.0_Kr + 3.0*damageGauss*(- 2.0_Kr + damageGauss)))/&
-                        (- 1.0_Kr+ (-1. + k )*damageGauss*(- 2.0_Kr + damageGauss))**3
+            C0Bilinear = 2.0* k *( 3.0 * (damageGauss - 1.0_Kr )**2 + k* ( - 4.0_Kr - 3.0*damageGauss*(- 2.0_Kr + damageGauss)))/&
+                        (- 1.0_Kr + (- 1.0 + k )*damageGauss*(- 2.0_Kr + damageGauss))**3
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( ( &
                                        elasticEnergyDensityGauss*C0Bilinear - C1)* elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) &
@@ -2542,7 +2555,7 @@ Contains
       
       C1 = matprop%fractureToughness / matprop%internalLength * .6366197724
       C2 = matprop%fractureToughness * matprop%internalLength * .6366197724
-      k = 2.0
+      k = 2.0_Kr
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
          temperatureGauss = 0.0_Kr
@@ -2565,7 +2578,7 @@ Contains
          Do iDoF1 = 1,numDofDamage
             damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
             gradientDamageGauss = gradientDamageGauss + elemDamage%Grad_BF(iDoF1,iGauss) * xDof(iDoF1)
-            C0Operator=2.*k*(damageGauss - 1.0_Kr)/(- 1.0_Kr + (-1.0+k)*(-2.0_Kr+damageGauss)*damageGauss)**2
+            C0Operator=2.0_Kr*k*(damageGauss - 1.0_Kr)/(- 1.0_Kr + (- 1.0_Kr+k )*(- 2.0_Kr+damageGauss)*damageGauss)**2
          End Do
 
          Do iDoF2 = 1,numDofDamage
@@ -3271,7 +3284,7 @@ Contains
                End Select
 !!erwan-->!!
             Case (MEF90DefMech_damageTypeATk)
-               QuadratureOrder = 2 * elemDamageType%order + 2 * (elemDisplacementType%order - 1)
+               QuadratureOrder = 5 * elemDamageType%order + 5 * (elemDisplacementType%order - 1)
                localOperatorFunction => MEF90DefMechOperatorDamageATkLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT2)
@@ -3518,7 +3531,7 @@ Contains
                localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2ElasticLoc
 !!erwan-->!!
             Case (MEF90DefMech_damageTypeATk)
-               QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%order
+               QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
                localAssemblyFunction => MEF90DefMechBilinearFormDamageATkLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT1)
@@ -3721,7 +3734,7 @@ Contains
          Case (MEF90DefMech_damageTypeATk)
             If (elemScalType%coDim == 0) Then
                ! Which QuadratureOdre chose for ATk
-               QuadratureOrder = 2 * (elemScalType%order - 1)
+               QuadratureOrder = 5 !* (elemScalType%order - 1)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                Call MEF90GradDamageSurfaceEnergySetATk(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
