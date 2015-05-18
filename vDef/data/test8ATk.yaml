@@ -1,0 +1,36 @@
+verbose: 0
+time:
+  min: 0
+  max: 15
+  numstep: 21
+heatxfer:
+  mode: steadystate
+defmech:
+  mode: quasistatic
+boundaryDisplacement:
+  scaling: linear
+boundaryTemp:
+  scaling: linear
+cs0001:
+  fracturetoughness: 1
+  residualstiffness: 0.
+  internalLength: .5
+  linearThermalexpansion: 1e-4,1e-2,0
+  damage:
+    type: ATk
+  plasticity:
+    type: NONE
+cs0010:
+  displacementBC: 1,1,1
+  boundaryDisplacement: -.5,0,0 
+  damageBC: 1
+  boundaryDamage: 0
+  tempBC: 1
+  boundaryTemp: 0
+cs0020:
+  displacementBC: 1,0,1
+  boundaryDisplacement: .5,0,0 
+  damageBC: 1
+  boundaryDamage: 0
+  tempBC: 1
+  boundaryTemp: 100

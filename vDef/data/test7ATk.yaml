@@ -1,0 +1,31 @@
+verbose: 0
+time:
+    min: 0
+    max: 12
+    numstep: 40
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+temperature:
+    offset: 0
+cs0001:
+    YoungsModulus: 1.
+    PoissonRatio: 0.
+    fracturetoughness: 1
+    residualstiffness: 0.
+    internalLength: .6
+    damage:
+        type: ATk
+    plasticity:
+        type: NONE 
+cs0010:
+    displacementBC: 1,1,1
+    boundaryDisplacement: -.5,0,0 
+    damageBC: 1
+    boundaryDamage: 0
+cs0020:
+    displacementBC: 1,1,1
+    boundaryDisplacement: .5,0,0 
+    damageBC: 1
+    boundaryDamage: 0
