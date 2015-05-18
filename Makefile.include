@@ -1,6 +1,7 @@
 ifneq (,${findstring gcc,${PETSC_ARCH}})
    FC_FLAGS+= -ffree-line-length-none -ffixed-line-length-none -ffree-form
    FC_FLAGS+= -Wno-unused-dummy-argument
+   FC_FLAGS+= -Wno-unused-function
 endif
 #ifneq (,${findstring intel,${PETSC_ARCH}})
 #   FLINKER+= -Wl,-no_pie
