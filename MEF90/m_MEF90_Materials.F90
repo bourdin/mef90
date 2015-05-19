@@ -29,6 +29,9 @@ Module m_MEF90_Materials_Types
       Type(MatS2D)                  :: LinearThermalExpansion     ! alpha
       Type(MEF90HookesLaw2D)        :: HookesLaw                  ! A
       PetscReal                     :: internalLength             ! l
+!!erwan-->!!
+      PetscReal                     :: k_for_ATk                  ! k
+!!<--erwan!!
       PetscReal                     :: residualStiffness          ! eta
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
@@ -42,6 +45,9 @@ Module m_MEF90_Materials_Types
       Type(MatS3D)                  :: LinearThermalExpansion     ! alpha
       Type(MEF90HookesLaw3D)        :: HookesLaw                  ! A
       PetscReal                     :: internalLength             ! l
+!!erwan-->!!
+      PetscReal                     :: k_for_ATk                  ! k
+!!<--erwan!!
       PetscReal                     :: residualStiffness          ! eta
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
@@ -67,6 +73,7 @@ Module m_MEF90_Materials_Types
          MEF90HookesLawTypeIsotropic,                                               & ! type
          .FALSE.),                                                                  & ! isPlaneStress
       1.0_Kr,                                                                       & ! Internal Length
+      2.0_Kr,                                                                       & ! k_for_ATk
       1.0D-9,                                                                       & ! Residual Stiffness
       "MEF90Mathium2D")  
 
@@ -86,6 +93,7 @@ Module m_MEF90_Materials_Types
          0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                   & ! lambda, mu, E, nu (lambda, mu will be recomputed)
          MEF90HookesLawTypeIsotropic),                                                 & ! type
       1.0_Kr,                                                                          & ! Internal Length
+      2.0_Kr,                                                                          & ! k_for_ATk
       1.0D-9,                                                                          & ! Residual Stiffness
       "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
@@ -273,6 +281,9 @@ Contains
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
+!!erwan-->!!
+      Call PetscBagRegisterReal(bag,matprop%k_for_ATk,default%k_for_ATk,'k_for_ATk','[] (k) Linear softening coefficient for ATk',ierr)
+!!<--erwan!!
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
@@ -314,6 +325,9 @@ Contains
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
+!!erwan-->!!
+      Call PetscBagRegisterReal(bag,matprop%k_for_ATk,default%k_for_ATk,'k_for_ATk','[] (k) Linear softening coefficient for ATk',ierr)
+!!<--erwan!!
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D

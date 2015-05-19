@@ -203,7 +203,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
       ALoc = 0.0_Kr
-      k = 2.0_Kr
+      k = matprop%k_for_ATk
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
@@ -610,7 +610,7 @@ Contains
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
-      k=2.0_Kr
+      k = matprop%k_for_ATk
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
@@ -1912,7 +1912,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
       
-      k = 2.0_Kr
+      k = matprop%k_for_ATk
       C1 = 2.0_Kr * matprop%fractureToughness / matprop%internalLength / PETSC_PI
       C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength / PETSC_PI
       Aloc = 0.0_Kr
@@ -2566,7 +2566,7 @@ Contains
       
       C1 = 2.0_Kr * matprop%fractureToughness / matprop%internalLength / PETSC_PI
       C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength / PETSC_PI
-      k = 2.0_Kr
+      k = matprop%k_for_ATk
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
          temperatureGauss = 0.0_Kr
