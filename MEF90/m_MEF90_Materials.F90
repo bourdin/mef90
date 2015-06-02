@@ -8,7 +8,7 @@ Module m_MEF90_Materials_Types
    Type MEF90HookesLaw2D
       Sequence
       Type(Tens4OS2D)    :: fullTensor
-      PetscReal          :: lambda,mu,E,nu
+      PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio
       PetscEnum          :: type
       PetscBool          :: isPlaneStress
    End Type MEF90HookesLaw2D
@@ -16,7 +16,7 @@ Module m_MEF90_Materials_Types
    Type MEF90HookesLaw3D
       Sequence
       Type(Tens4OS3D)    :: fullTensor
-      PetscReal          :: lambda,mu,E,nu
+      PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio
       PetscEnum          :: type
    End Type MEF90HookesLaw3D
 
@@ -129,11 +129,11 @@ Contains
             Continue
          Case(MEF90HookesLawTypeIsotropic)
             If (data%HookesLaw%isPlaneStress) Then
-               data%HookesLaw%lambda = data%HookesLaw%E * data%HookesLaw%nu / (1.0_Kr - data%HookesLaw%nu**2) 
-               data%HookesLaw%mu     = data%HookesLaw%E / (1.0_Kr + data%HookesLaw%nu) * .5_Kr
+               data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr - data%HookesLaw%PoissonRatio**2) 
+               data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
             Else
-               data%HookesLaw%lambda = data%HookesLaw%E * data%HookesLaw%nu / (1.0_Kr + data%HookesLaw%nu) / (1.0_Kr - 2.0_Kr * data%HookesLaw%nu)
-               data%HookesLaw%mu     = data%HookesLaw%E / (1.0_Kr + data%HookesLaw%nu) * .5_Kr      
+               data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr + data%HookesLaw%PoissonRatio) / (1.0_Kr - 2.0_Kr * data%HookesLaw%PoissonRatio)
+               data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr      
             End If
       End Select
    End Subroutine PetscBagGetDataMEF90MatProp2D
@@ -169,8 +169,8 @@ Contains
          Case(MEF90HookesLawTypeFull)
             Continue
          Case(MEF90HookesLawTypeIsotropic)
-            data%HookesLaw%lambda = data%HookesLaw%E * data%HookesLaw%nu / (1.0_Kr + data%HookesLaw%nu) / (1.0_Kr - 2.0_Kr * data%HookesLaw%nu)
-            data%HookesLaw%mu     = data%HookesLaw%E / (1.0_Kr + data%HookesLaw%nu) * .5_Kr      
+            data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr + data%HookesLaw%PoissonRatio) / (1.0_Kr - 2.0_Kr * data%HookesLaw%PoissonRatio)
+            data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr      
       End Select
    End Subroutine PetscBagGetDataMEF90MatProp3D
 End Module m_MEF90_Materials_Interface3D
@@ -275,8 +275,8 @@ Contains
             matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
             Call PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
          Case(MEF90HookesLawTypeIsotropic)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%E,default%HookesLaw%E,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%nu,default%HookesLaw%nu,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
             Call PetscBagRegisterBool(bag,matprop%HookesLaw%isPlaneStress,default%HookesLaw%isPlaneStress,'planeStress','Use plane stress elasticity',ierr);CHKERRQ(ierr)
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
@@ -315,13 +315,15 @@ Contains
       Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
       Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
+
+      Call PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr);CHKERRQ(ierr)
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
             matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
             Call PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
          Case(MEF90HookesLawTypeIsotropic)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%E,default%HookesLaw%E,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%nu,default%HookesLaw%nu,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
+            Call PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'PoissonRatio','[] (nu) Poisson Modulus',ierr)
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
@@ -543,20 +545,17 @@ Contains
       Type(MatS2D), Intent(IN)                     :: X
       Type(MatS2D)                                 :: MEF90HookesLaw2DXMatS2D
       
-      
       PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
-      PetscLogDouble                               :: flops
 
       Select case(A%type)
          Case(MEF90HookesLawTypeIsotropic)
             C1 = A%lambda + 2.0_Kr * A%mu
             C2 = 2.0_Kr * A%mu
-            MEF90HookesLaw2DXMatS2D%XX = C1 * X%XX + A%lambda * X%YY
+            MEF90HookesLaw2DXMatS2D%XX = C1 * X%XX       + A%lambda * X%YY
             MEF90HookesLaw2DXMatS2D%YY = A%lambda * X%XX + C1 * X%YY
             MEF90HookesLaw2DXMatS2D%XY = C2 * X%XY
-            flops = 10.0
-            Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+            Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw2DXMatS2D = A%fullTensor * X
             ! flops are counted in m_MEF90_LinAlg
@@ -578,20 +577,19 @@ Contains
       
       PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
-      PetscLogDouble                               :: flops
 
       Select case(A%type)
          Case(MEF90HookesLawTypeIsotropic)
             C1 = A%lambda + 2.0_Kr * A%mu
             C2 = 2.0_Kr * A%mu
-            MEF90HookesLaw3DXMatS3D%XX = C1 * X%XX + A%lambda * X%YY + A%lambda * X%ZZ
-            MEF90HookesLaw3DXMatS3D%YY = A%lambda * X%XX + C1 * X%YY * A%lambda * X%ZZ
-            MEF90HookesLaw3DXMatS3D%YY = A%lambda * X%XX + A%lambda * X%YY * C1 * X%ZZ
+            MEF90HookesLaw3DXMatS3D%XX = C1 * X%XX       + A%lambda * X%YY + A%lambda * X%ZZ
+            MEF90HookesLaw3DXMatS3D%YY = A%lambda * X%XX + C1 * X%YY       + A%lambda * X%ZZ
+            MEF90HookesLaw3DXMatS3D%ZZ = A%lambda * X%XX + A%lambda * X%YY + C1 * X%ZZ
             MEF90HookesLaw3DXMatS3D%YZ = C2 * X%YZ
             MEF90HookesLaw3DXMatS3D%XZ = C2 * X%XZ
             MEF90HookesLaw3DXMatS3D%XY = C2 * X%XY
-            flops = 21.0
-            Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+
+            Call PetscLogFlops(21._pflop,ierr);CHKERRQ(ierr)
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw3DXMatS3D = A%fullTensor * X
             ! flops are counted in m_MEF90_LinAlg
