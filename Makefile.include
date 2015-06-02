@@ -3,6 +3,9 @@ ifneq (,${findstring gcc,${PETSC_ARCH}})
    FC_FLAGS+= -Wno-unused-dummy-argument
    FC_FLAGS+= -Wno-unused-function
 endif
+ifneq (,${findstring ntel,${PETSC_ARCH}})
+  FC_FLAGS+= -diag-disable 6380
+endif
 #ifneq (,${findstring intel,${PETSC_ARCH}})
 #   FLINKER+= -Wl,-no_pie
 #endif
