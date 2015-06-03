@@ -88,7 +88,7 @@ Contains
                Call MEF90DefMechSetPressureForceCst(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx,ierr)
                Call VecScale(MEF90DefMechCtx%pressureForce,time,ierr);CHKERRQ(ierr)
             Case (MEF90Scaling_CST)
-               Call MEF90DefMechSetforceCst(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx,ierr)
+               Call MEF90DefMechSetPressureForceCst(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx,ierr)
          End Select
       End If
       Select case (MEF90DefMechGlobalOptions%boundaryDisplacementScaling)
