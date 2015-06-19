@@ -80,6 +80,15 @@ TestSpectralDecomposition: TestSpectralDecomposition.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${MEF90_DEFMECH_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
+TestSNLP.o: ${MEF90_DIR}/Tests/TestSNLP.F90 MEF90
+	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -I ${SNLP_INCLUDE} -c -o $@ $<
+
+TestSNLP: TestSNLP.o
+	-@echo "      $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS}  ${MEF90_DEFMECH_OBJS}  ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
+
 runTestMaterials: TestMaterials
 	@echo "         Running " $@
 	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
