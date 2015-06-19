@@ -11,4 +11,8 @@ endif
 #endif
 MEF90_INCLUDE=${MEF90_DIR}/objs/${PETSC_ARCH}
 
-
+ifneq (${SNLP_DIR},)
+	FC_FLAGS+= -DMEF90_HAVE_SNLP -I${SNLP_DIR}/include
+	C_FLAGS+= -I${SNLP_DIR}/include
+	SNLP_LIB:= -L${SNLP_DIR}/lib -lsnlp -lsnlpF90
+endif

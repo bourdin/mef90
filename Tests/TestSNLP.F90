@@ -1,6 +1,6 @@
 module TestSNLPF90_mod
 #include "finclude/petscdef.h"
-   Use m_MEF90
+   use m_MEF90
    implicit NONE
    !!! note that this type is NOT C interoperable, which is not an issue, since we only
    !!! need SNLP to carry its address
@@ -12,7 +12,8 @@ module TestSNLPF90_mod
 contains
    subroutine fhg(x,f,h,g,myctx) bind(c)
       use,intrinsic :: iso_c_binding
-      real(kind=c_double)           :: x(*)
+    use m_MEF90
+     real(kind=c_double)           :: x(*)
       real(kind=c_double)           :: f(*)
       real(kind=c_double)           :: h(*)
       real(kind=c_double)           :: g(*)
@@ -38,6 +39,7 @@ contains
 
    subroutine Dfhg(x,Df,Dh,Dg,myctx) bind(c)
       use,intrinsic :: iso_c_binding
+   use m_MEF90
       real(kind=c_double)           :: x(*)
       real(kind=c_double)           :: Df(*)
       type(c_ptr)                   :: Dh
@@ -77,9 +79,10 @@ end module TestSNLPF90_mod
 program testSNLP
 #include "finclude/petscdef.h"
    use,intrinsic :: iso_c_binding
-   use SNLPF90
    use TestSNLPF90_mod
    use m_MEF90
+#ifdef MEF90_HAVE_SNLP   
+   use SNLPF90
    implicit NONE
    
    integer(kind=c_int)  :: n = 3
@@ -112,4 +115,7 @@ program testSNLP
    write(*,*) 'x:         ',x
    call SNLPDelete(s)
    deallocate(x)
+#else
+   write(*,*) 'This example needs SNLP'
+#endif
 end program testSNLP
