@@ -2,13 +2,7 @@
 Module m_MEF90_DefMechCtx_Type
 #include "finclude/petscdef.h"
    Use m_MEF90
-   Use,Intrinsic :: iso_c_binding
    Implicit none
-   !Private  
-   !Public :: MEF90DefMechCtx_Type
-   !Public :: MEF90DefMechGlobalOptions_Type
-   !Public :: MEF90DefMechCellSetOptions_Type
-   !Public :: MEF90DefMechVertexSetOptions_Type
    
    Type MEF90DefMechCtx_Type
       !!!  vertex based vec

@@ -5,7 +5,7 @@ module TestVonMises_mod
    !!! note that this type is NOT C interoperable, which is not an issue, since we only
    !!! need SNLP to carry its address
    type :: ctx 
-      Type(Tens4OS3D)        :: A
+      Type(MEF90HookesLaw3D) :: HookesLaw
       Type(MatS3D)           :: sigma_D,p
       real(Kind = Kr)        :: sigmac
    end type ctx
@@ -67,12 +67,12 @@ contains
       call c_f_pointer(myctx,myctx_ptr)      
       
       write(*,*) 'x:         ',x3D
-      write(*,*) 'A:         ',myctx_ptr%A
+      write(*,*) 'A:         ',myctx_ptr%HookesLaw
       !write(*,*) 'sigma_D:         ',ctx_ptr%sigma_D
 
       !f(1) = Trace(Tens4OS3DXMatS3D(myctx_ptr%A,(x3D-myctx_ptr%p)))
 
-      f(1) = Trace(myctx_ptr%A * x3D)
+      f(1) = Trace(myctx_ptr%HookesLaw * x3D)
 
       !((myctx_ptr%A * (x3D-myctx_ptr%p)) .DotP. (x3D-myctx_ptr%p) )/2.
 
@@ -133,7 +133,7 @@ program testVonMises
    use,intrinsic :: iso_c_binding
    use TestVonMises_mod
    use m_MEF90
-!#ifdef MEF90_HAVE_SNLP   
+#ifdef MEF90_HAVE_SNLP   
    use SNLPF90
    implicit NONE
    
@@ -156,38 +156,12 @@ program testVonMises
    !allocate(ctx_ptr%A(6,6))
    !call Hookelaw(ctx_ptr,1.0,1.0)
 
-
-   ctx_ptr%A = 0.0_Kr
-   ctx_ptr%A%XXXX = 3.0_Kr
-   ctx_ptr%A%XXYY = 1.0_Kr
-   ctx_ptr%A%XXZZ = 1.0_Kr
-   ctx_ptr%A%XYXY = 1.0_Kr
-   ctx_ptr%A%XZXZ = 1.0_Kr
-   ctx_ptr%A%YYYY = 3.0_Kr
-   ctx_ptr%A%YYZZ = 1.0_Kr
-   ctx_ptr%A%YZYZ = 1.0_Kr
-   ctx_ptr%A%ZZZZ = 3.0_Kr
-   !ctx_ptr%A%XXYZ = 0.0_Kr
-   !ctx_ptr%A%XXXZ = 0.0_Kr
-   !ctx_ptr%A%XXXY = 0.0_Kr
-   !ctx_ptr%A%YYXY = 0.0_Kr
-   !ctx_ptr%A%YZXY = 0.0_Kr
-   !ctx_ptr%A%ZZXY = 0.0_Kr
-   !ctx_ptr%A%YYYZ = 0.0_Kr
-   !ctx_ptr%A%YYXZ = 0.0_Kr
-   !ctx_ptr%A%ZZYZ = 0.0_Kr
-   !ctx_ptr%A%ZZXZ = 0.0_Kr
-   !ctx_ptr%A%YZXZ = 0.0_Kr
-   !ctx_ptr%A%XZXY = 0.0_Kr
-   ctx_ptr%A=Tens4OS3D( 1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, &
-                               1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, &
-                                      1.0_Kr,0.0_Kr,0.0_Kr,0.0_Kr, &
-                                             0.5_Kr,0.0_Kr,0.0_Kr, &
-                                                    0.5_Kr,0.0_Kr, &
-                                                           0.5_Kr)
-
-
-
+   ctx_ptr%HookesLaw%type = MEF90HookesLawTypeIsotropic
+   ctx_ptr%HookesLaw%YoungsModulus    = 1.0_Kr
+   ctx_ptr%HookesLaw%PoissonRatio     = 0.22_Kr
+   ctx_ptr%HookesLaw%lambda = ctx_ptr%HookesLaw%YoungsModulus * ctx_ptr%HookesLaw%PoissonRatio / (1.0_Kr + ctx_ptr%HookesLaw%PoissonRatio) / (1.0_Kr - 2.0_Kr * ctx_ptr%HookesLaw%PoissonRatio)
+   ctx_ptr%HookesLaw%mu     = ctx_ptr%HookesLaw%YoungsModulus / (1.0_Kr + ctx_ptr%HookesLaw%PoissonRatio) * .5_Kr      
+   
    ctx_ptr%sigma_D = 0.0_Kr
    ctx_ptr%sigma_D%XX = 3.0_Kr
 
@@ -209,7 +183,7 @@ program testVonMises
    write(*,*) 'x:         ',x
    call SNLPDelete(s)
    deallocate(x)
-!#else
-!   write(*,*) 'This example needs SNLP'
-!#endif
+#else
+   write(*,*) 'This example needs SNLP'
+#endif
 end program testVonmises

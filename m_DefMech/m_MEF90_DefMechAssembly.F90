@@ -68,8 +68,8 @@ Contains
 #define __FUNCT__ "MEF90DefMechOperatorNull"
    Subroutine MEF90DefMechOperatorNull(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       Use m_MEF90_DefMechCtx
-      PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                        :: residualLoc
+      PetscReal,Dimension(:),Pointer                        :: xDof,displacementDof,damageDof,temperatureDof
          Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
          Type(MEF90_MATPROP),Intent(IN)                     :: matprop
          Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
