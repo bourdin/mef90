@@ -89,11 +89,11 @@ TestSNLP: TestSNLP.o
 	-@${RM} $<
 
 TestVonMises.o: ${MEF90_DIR}/Tests/TestVonMises.F90 MEF90
-	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -I /Users/TANNE/Code/snlp/obj -I /Users/TANNE/Code/snlp/include  -c -o $@ $<
+	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 TestVonMises: TestVonMises.o
 	-@echo " $@"
-	-${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} -I /Users/TANNE/Code/snlp/obj -L /Users/TANNE/Code/snlp/lib -lsnlp -lsnlpf90 ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 runTestMaterials: TestMaterials

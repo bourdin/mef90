@@ -33,6 +33,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: k_for_ATk                  ! k
 !!<--erwan!!
       PetscReal                     :: residualStiffness          ! eta
+      PetscReal                     :: sigmac                     ! yield stress
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
@@ -49,6 +50,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: k_for_ATk                  ! k
 !!<--erwan!!
       PetscReal                     :: residualStiffness          ! eta
+      PetscReal                     :: sigmac                     ! yield stress
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
 
@@ -75,6 +77,7 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                       & ! Internal Length
       2.0_Kr,                                                                       & ! k_for_ATk
       1.0D-9,                                                                       & ! Residual Stiffness
+      1.0_Kr,                                                                       & ! sigmac
       "MEF90Mathium2D")  
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &  
@@ -95,6 +98,7 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                          & ! Internal Length
       2.0_Kr,                                                                          & ! k_for_ATk
       1.0D-9,                                                                          & ! Residual Stiffness
+      1.0_Kr,                                                                       & ! sigmac
       "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
 
@@ -284,6 +288,7 @@ Contains
 !!erwan-->!!
       Call PetscBagRegisterReal(bag,matprop%k_for_ATk,default%k_for_ATk,'k_for_ATk','[] (k) Linear softening coefficient for ATk',ierr)
 !!<--erwan!!
+      Call PetscBagRegisterReal(bag,matprop%sigmac,default%sigmac,'sigmac','[N.m^(-2)] (sigma_c) stress threshold for plasticity',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
@@ -330,6 +335,7 @@ Contains
 !!erwan-->!!
       Call PetscBagRegisterReal(bag,matprop%k_for_ATk,default%k_for_ATk,'k_for_ATk','[] (k) Linear softening coefficient for ATk',ierr)
 !!<--erwan!!
+      Call PetscBagRegisterReal(bag,matprop%sigmac,default%sigmac,'sigmac','[N.m^(-2)] (sigma_c) stress threshold for plasticity',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
