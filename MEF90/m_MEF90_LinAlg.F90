@@ -1825,25 +1825,25 @@ Contains
    PetscReal Function Mat2DNorm(M)
       Type(Mat2D),Intent(IN)                      :: M
       
-      Mat2DNorm = sqrt(M%XY**2 + M%XY**2 + M%YX**2 + M%YY**2)
+      Mat2DNorm = sqrt(M%XX**2 + M%XY**2 + M%YX**2 + M%YY**2)
    End Function Mat2DNorm
    
    PetscReal Function MatS2DNorm(M)
       Type(MatS2D),Intent(IN)                     :: M
       
-      MatS2DNorm = sqrt(M%XY**2 + 2.0_Kr * M%XY**2 + M%YY**2)
+      MatS2DNorm = sqrt(M%XX**2 + 2.0_Kr * M%XY**2 + M%YY**2)
    End Function MatS2DNorm
    
    PetscReal Function Mat3DNorm(M)
       Type(Mat3D),Intent(IN)                      :: M
       
-      Mat3DNorm = sqrt(M%XY**2 + M%XY**2 + M%XZ**2 + M%YX**2 + M%YY**2 + M%YZ**2 + M%ZX**2 + M%ZY**2 + M%ZZ**2)
+      Mat3DNorm = sqrt(M%XX**2 + M%XY**2 + M%XZ**2 + M%YX**2 + M%YY**2 + M%YZ**2 + M%ZX**2 + M%ZY**2 + M%ZZ**2)
    End Function Mat3DNorm
    
    PetscReal Function MatS3DNorm(M)
       Type(MatS3D),Intent(IN)                     :: M
       
-      MatS3DNorm = sqrt(M%XY**2 + 2.0_Kr * M%XY**2 + 2.0_Kr * M%XZ**2 + M%YY**2 + 2.0_Kr * M%YZ**2 + M%ZZ**2 )
+      MatS3DNorm = sqrt(M%XX**2 + 2.0_Kr * M%XY**2 + 2.0_Kr * M%XZ**2 + M%YY**2 + 2.0_Kr * M%YZ**2 + M%ZZ**2 )
    End Function MatS3DNorm
    
    Function Symmetrize2D(M1)
