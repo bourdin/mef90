@@ -1,4 +1,4 @@
-module TestVonMises_mod
+module TestTresca_mod
 #include "finclude/petscdef.h"
    use m_MEF90
    implicit NONE
@@ -25,6 +25,10 @@ contains
       type(c_ptr),intent(in),value  :: myctx
       type(ctx),pointer             :: myctx_ptr
       type(MatS3D)                  :: x6D
+      type(Mat3D)                   :: MatProj
+      type(MatS3D)                  :: MatDiag
+      type(Mat3D)                   :: MatPrincipal
+
 
       x6D%XX = x(1)
       x6D%YY = x(2)
@@ -36,15 +40,30 @@ contains
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx,myctx_ptr)      
       
-      !write(*,*) 'x:         ',x6D
-      !write(*,*) 'HookesLaw:         ',myctx_ptr%HookesLaw
-      !write(*,*) 'sigma_D:         ',ctx_ptr%sigma_D
 
       f(1) = ( (myctx_ptr%HookesLaw * (x6D-myctx_ptr%OldPlasticStrain)) .DotP. (x6D-myctx_ptr%OldPlasticStrain) ) /2.
 
       h(1) = Trace(x6D)
 
-      g(1) = sqrt(3.0*trace(  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%Strain-x6D))  *  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%Strain-x6D)) )/2.0) - myctx_ptr%YieldStress
+
+
+      !write(*,*) 'Strain:         ', myctx_ptr%Strain
+      call EigenVectorValues(myctx_ptr%HookesLaw*myctx_ptr%Strain,MatProj,MatDiag)
+
+      ! D=P^(-1).A.P 
+
+
+      MatPrincipal = Transpose(MatProj)*MatSymToMat(myctx_ptr%HookesLaw*myctx_ptr%Strain - x6D)*MatProj
+
+      !write(*,*) 'MatProj:          ', MatProj
+
+      
+      g(1) = +(MatPrincipal%XX-MatPrincipal%YY) - myctx_ptr%YieldStress
+      g(2) = -(MatPrincipal%XX-MatPrincipal%YY) - myctx_ptr%YieldStress
+      g(3) = +(MatPrincipal%YY-MatPrincipal%ZZ) - myctx_ptr%YieldStress
+      g(4) = -(MatPrincipal%YY-MatPrincipal%ZZ) - myctx_ptr%YieldStress
+      g(5) = +(MatPrincipal%XX-MatPrincipal%ZZ) - myctx_ptr%YieldStress
+      g(6) = -(MatPrincipal%XX-MatPrincipal%ZZ) - myctx_ptr%YieldStress
 
 
    end subroutine fhg
@@ -86,12 +105,12 @@ contains
 !]      Dgptr(1:3,6) = [0., -1.,  1.]
 !]
 !]   end subroutine Dfhg
-end module TestVonMises_mod
+end module TestTresca_mod
 
-program testVonMises
+program testTresca
 #include "finclude/petscdef.h"
    use,intrinsic :: iso_c_binding
-   use TestVonMises_mod
+   use TestTresca_mod
    use m_MEF90
 #ifdef MEF90_HAVE_SNLP
    use SNLPF90
@@ -99,7 +118,7 @@ program testVonMises
 
    integer(kind=c_int)  :: n = 6
    integer(kind=c_int)  :: m = 1
-   integer(kind=c_int)  :: p = 1
+   integer(kind=c_int)  :: p = 6
    type(SNLP),pointer   :: s
    integer              :: i,j
    integer(kind=c_int)  :: exit_code
@@ -114,6 +133,12 @@ program testVonMises
 
    ctx_ptr%Strain = 0.0_Kr
    ctx_ptr%Strain%XX = 2.0_Kr
+   ctx_ptr%Strain%YY = 0.0_Kr
+   ctx_ptr%Strain%ZZ = 0.0_Kr
+   ctx_ptr%Strain%YZ = 0.0_Kr
+   ctx_ptr%Strain%XY = 0.0_Kr
+   
+
 
    ctx_ptr%OldPlasticStrain = 0.0_Kr
    ctx_ptr%PlasticStrain = 0.0_Kr
@@ -135,4 +160,4 @@ program testVonMises
 #else
    write(*,*) 'This example needs SNLP'
 #endif
-end program testVonmises
+end program testTresca
