@@ -48,12 +48,12 @@ contains
 
 
       !write(*,*) 'Strain:         ', myctx_ptr%Strain
-      call EigenVectorValues(myctx_ptr%HookesLaw*myctx_ptr%Strain,MatProj,MatDiag)
+      call EigenVectorValues(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%Strain),MatProj,MatDiag)
 
       ! D=P^(-1).A.P 
 
 
-      MatPrincipal = Transpose(MatProj)*MatSymToMat(myctx_ptr%HookesLaw*myctx_ptr%Strain - x6D)*MatProj
+      MatPrincipal = Transpose(MatProj)*MatSymToMat(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%Strain) - x6D)*MatProj
 
       !write(*,*) 'MatProj:          ', MatProj
 
