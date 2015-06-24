@@ -44,11 +44,11 @@ contains
       h(1) = Trace(x3D)
 
       !write(*,*) 'A.e(u):         ', myctx_ptr%HookesLaw*myctx_ptr%Strain
-      call EigenVectorValues(myctx_ptr%HookesLaw*myctx_ptr%Strain,MatProj,MatDiag)
+      call EigenVectorValues(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%Strain),MatProj,MatDiag)
 
       ! D=P^(-1).A.P 
 
-      MatPrincipal = Transpose(MatProj)*MatSymToMat(myctx_ptr%HookesLaw*myctx_ptr%Strain - x3D)*MatProj
+      MatPrincipal = Transpose(MatProj)*MatSymToMat(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%Strain) - x3D)*MatProj
 
       write(*,*) 'MatPrincipal:          ', MatPrincipal
 
@@ -128,6 +128,7 @@ program testTresca2D
 
    ctx_ptr%Strain = 0.0_Kr
    ctx_ptr%Strain%XX = 2.0_Kr
+   
 
    ctx_ptr%OldPlasticStrain = 0.0_Kr
    ctx_ptr%PlasticStrain = 0.0_Kr
