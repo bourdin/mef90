@@ -209,11 +209,11 @@
    End Interface
 
    Interface EigenVectorValues
-      Module Procedure MatS3DEigenVectorValues
+      Module Procedure MatS3DEigenVectorValues,MatS2DEigenVectorValues
    End Interface
 
    Interface MatSymToMat
-      Module Procedure MatS3DToMat3D
+      Module Procedure MatS3DToMat3D,MatS2DToMat2D
    End Interface
 
 
@@ -2562,6 +2562,38 @@ Contains
    End Subroutine MatS3DEigenVectorValues
 
 
+   Subroutine MatS2DEigenVectorValues(M,MatProj,MatDiag)
+      Type(MatS2D),Intent(IN)                     :: M
+      PetscReal,Dimension(2)                      :: ppleValues
+      Type(Mat2D),Intent(OUT)                     :: MatProj
+      Type(MatS2D),Intent(OUT)                    :: MatDiag
+      
+      Integer,Parameter                           :: n = 2
+      PetscReal,Dimension(n,n)                    :: A,Pt      
+      Integer                                     :: i
+      PetscReal                                   :: d
+      PetscInt                                    :: lwork = 2*n**2+6*n+1
+      PetscReal,Dimension(2*n**2+6*n+1)           :: work
+      PetscInt                                    :: liwork = 5*n+3
+      PetscInt,Dimension(5*n+3)                   :: iwork
+      PetscInt                                    :: info
+
+      A = M
+      Call DSYEVD('V','L',n,A,n,ppleValues,work,lwork,iwork,liwork,info)
+
+      MatDiag=0.0_Kr
+      MatDiag%XX=ppleValues(1)
+      MatDiag%YY=ppleValues(2)
+
+      MatProj%XX = A(1,1)     !! MatProj%XX = A(1,1)
+      MatProj%YX = A(2,1)     !! MatProj%XY = A(2,1)
+      MatProj%XY = A(1,2)     !! MatProj%YX = A(1,2)
+      MatProj%YY = A(2,2)     !! MatProj%YY = A(2,2)
+
+   End Subroutine MatS2DEigenVectorValues
+
+
+
    Function MatS3DToMat3D(A)
       Type(MatS3D),Intent(IN)                    :: A
       Type(Mat3D)                                :: MatS3DToMat3D
@@ -2577,5 +2609,17 @@ Contains
       MatS3DToMat3D%ZZ = A%ZZ
 
    End Function MatS3DToMat3D
+
+
+   Function MatS2DToMat2D(A)
+      Type(MatS2D),Intent(IN)                    :: A
+      Type(Mat2D)                                :: MatS2DToMat2D
+
+      MatS2DToMat2D%XX = A%XX
+      MatS2DToMat2D%XY = A%XY
+      MatS2DToMat2D%YX = A%XY
+      MatS2DToMat2D%YY = A%YY
+
+   End Function MatS2DToMat2D
 
 End Module m_MEF90_LinAlg

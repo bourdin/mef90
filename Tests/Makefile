@@ -88,18 +88,34 @@ TestSNLP: TestSNLP.o
 	-${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
-TestVonMises.o: ${MEF90_DIR}/Tests/TestVonMises.F90 MEF90
+TestVonMises3D.o: ${MEF90_DIR}/Tests/TestVonMises3D.F90 MEF90
 	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
-TestVonMises: TestVonMises.o
+TestVonMises3D: TestVonMises3D.o
 	-@echo " $@"
 	-${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
-TestTresca.o: ${MEF90_DIR}/Tests/TestTresca.F90 MEF90
+TestTresca3D.o: ${MEF90_DIR}/Tests/TestTresca3D.F90 MEF90
 	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
-TestTresca: TestTresca.o
+TestTresca3D: TestTresca3D.o
+	-@echo " $@"
+	-${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
+TestTresca2D.o: ${MEF90_DIR}/Tests/TestTresca2D.F90 MEF90
+	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestTresca2D: TestTresca2D.o
+	-@echo " $@"
+	-${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
+TestVonMises2D.o: ${MEF90_DIR}/Tests/TestVonMises2D.F90 MEF90
+	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestVonMises2D: TestVonMises2D.o
 	-@echo " $@"
 	-${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
