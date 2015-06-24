@@ -96,6 +96,14 @@ TestVonMises: TestVonMises.o
 	-${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
+TestTresca.o: ${MEF90_DIR}/Tests/TestTresca.F90 MEF90
+	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestTresca: TestTresca.o
+	-@echo " $@"
+	-${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
 runTestMaterials: TestMaterials
 	@echo "         Running " $@
 	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .

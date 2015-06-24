@@ -208,6 +208,15 @@
       Module Procedure MatS2DSpectralDecomposition,MatS3DSpectralDecomposition
    End Interface
 
+   Interface EigenVectorValues
+      Module Procedure MatS3DEigenVectorValues
+   End Interface
+
+   Interface MatSymToMat
+      Module Procedure MatS3DToMat3D
+   End Interface
+
+
 !!$  Type(Vect2D),Parameter       :: e1_2D = (/ 1.0_Kr,0.0_Kr /)
 !!$  Type(Vect2D),Parameter       :: e2_2D = (/ 0.0_Kr,1.0_Kr /)
 !!$
@@ -1223,6 +1232,7 @@ Contains
       Transpose3D%ZY = M1%YZ
       Transpose3D%ZZ = M1%ZZ
    End Function Transpose3D
+
    
    ! Tensor product
    Function TensPVect2D (V1,V2)
@@ -2511,4 +2521,61 @@ Contains
          ppleDirections(i)%XY = A(1,i) * A(2,i)
       End Do
    End Subroutine MatS3DSpectralDecomposition
+
+
+
+   Subroutine MatS3DEigenVectorValues(M,MatProj,MatDiag)
+      Type(MatS3D),Intent(IN)                     :: M
+      PetscReal,Dimension(3)                      :: ppleValues
+      Type(Mat3D),Intent(OUT)                     :: MatProj
+      Type(MatS3D),Intent(OUT)                    :: MatDiag
+      
+      Integer,Parameter                           :: n = 3
+      PetscReal,Dimension(n,n)                    :: A,Pt      
+      Integer                                     :: i
+      PetscReal                                   :: d
+      PetscInt                                    :: lwork = 2*n**2+6*n+1
+      PetscReal,Dimension(2*n**2+6*n+1)           :: work
+      PetscInt                                    :: liwork = 5*n+3
+      PetscInt,Dimension(5*n+3)                   :: iwork
+      PetscInt                                    :: info
+
+      A = M
+      Call DSYEVD('V','L',n,A,n,ppleValues,work,lwork,iwork,liwork,info)
+
+      MatDiag=0.0_Kr
+      MatDiag%XX=ppleValues(1)
+      MatDiag%YY=ppleValues(2)
+      MatDiag%ZZ=ppleValues(3)
+
+
+      MatProj%XX = A(1,1)     !! MatProj%XX = A(1,1)
+      MatProj%YX = A(2,1)     !! MatProj%XY = A(2,1)
+      MatProj%ZX = A(3,1)     !! MatProj%XZ = A(3,1)
+      MatProj%XY = A(1,2)     !! MatProj%YX = A(1,2)
+      MatProj%YY = A(2,2)     !! MatProj%YY = A(2,2)
+      MatProj%ZY = A(3,2)     !! MatProj%YZ = A(3,2)
+      MatProj%XZ = A(1,3)     !! MatProj%ZX = A(1,3)
+      MatProj%YZ = A(2,3)     !! MatProj%ZY = A(2,3)
+      MatProj%ZZ = A(3,3)     !! MatProj%ZZ = A(3,3)
+
+   End Subroutine MatS3DEigenVectorValues
+
+
+   Function MatS3DToMat3D(A)
+      Type(MatS3D),Intent(IN)                    :: A
+      Type(Mat3D)                                :: MatS3DToMat3D
+
+      MatS3DToMat3D%XX = A%XX
+      MatS3DToMat3D%XY = A%XY
+      MatS3DToMat3D%XZ = A%XZ
+      MatS3DToMat3D%YX = A%XY
+      MatS3DToMat3D%YY = A%YY
+      MatS3DToMat3D%YZ = A%YZ
+      MatS3DToMat3D%ZX = A%XZ
+      MatS3DToMat3D%ZY = A%YZ
+      MatS3DToMat3D%ZZ = A%ZZ
+
+   End Function MatS3DToMat3D
+
 End Module m_MEF90_LinAlg
