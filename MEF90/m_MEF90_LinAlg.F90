@@ -2548,16 +2548,15 @@ Contains
       MatDiag%YY=ppleValues(2)
       MatDiag%ZZ=ppleValues(3)
 
-
-      MatProj%XX = A(1,1)     !! MatProj%XX = A(1,1)
-      MatProj%YX = A(2,1)     !! MatProj%XY = A(2,1)
-      MatProj%ZX = A(3,1)     !! MatProj%XZ = A(3,1)
-      MatProj%XY = A(1,2)     !! MatProj%YX = A(1,2)
-      MatProj%YY = A(2,2)     !! MatProj%YY = A(2,2)
-      MatProj%ZY = A(3,2)     !! MatProj%YZ = A(3,2)
-      MatProj%XZ = A(1,3)     !! MatProj%ZX = A(1,3)
-      MatProj%YZ = A(2,3)     !! MatProj%ZY = A(2,3)
-      MatProj%ZZ = A(3,3)     !! MatProj%ZZ = A(3,3)
+      MatProj%XX = A(1,1)
+      MatProj%YX = A(2,1)
+      MatProj%ZX = A(3,1)
+      MatProj%XY = A(1,2)
+      MatProj%YY = A(2,2)
+      MatProj%ZY = A(3,2)
+      MatProj%XZ = A(1,3)
+      MatProj%YZ = A(2,3)
+      MatProj%ZZ = A(3,3)
 
    End Subroutine MatS3DEigenVectorValues
 
@@ -2585,10 +2584,10 @@ Contains
       MatDiag%XX=ppleValues(1)
       MatDiag%YY=ppleValues(2)
 
-      MatProj%XX = A(1,1)     !! MatProj%XX = A(1,1)
-      MatProj%YX = A(2,1)     !! MatProj%XY = A(2,1)
-      MatProj%XY = A(1,2)     !! MatProj%YX = A(1,2)
-      MatProj%YY = A(2,2)     !! MatProj%YY = A(2,2)
+      MatProj%XX = A(1,1)
+      MatProj%YX = A(2,1)
+      MatProj%XY = A(1,2)
+      MatProj%YY = A(2,2)
 
    End Subroutine MatS2DEigenVectorValues
 

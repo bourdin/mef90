@@ -1,4 +1,4 @@
-module TestVonMises_mod
+module TestVonMises3D_mod
 #include "finclude/petscdef.h"
    use m_MEF90
    implicit NONE
@@ -86,12 +86,12 @@ contains
 !]      Dgptr(1:3,6) = [0., -1.,  1.]
 !]
 !]   end subroutine Dfhg
-end module TestVonMises_mod
+end module TestVonMises3D_mod
 
 program testVonMises
 #include "finclude/petscdef.h"
    use,intrinsic :: iso_c_binding
-   use TestVonMises_mod
+   use TestVonMises3D_mod
    use m_MEF90
 #ifdef MEF90_HAVE_SNLP
    use SNLPF90
