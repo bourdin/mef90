@@ -38,9 +38,7 @@ contains
       !write(*,*) 'sigma_D:         ',ctx_ptr%sigma_D
 
       f(1) = ( (myctx_ptr%HookesLaw * (x3D-myctx_ptr%OldPlasticStrain)) .DotP. (x3D-myctx_ptr%OldPlasticStrain) ) /2.
-
       h(1) = Trace(x3D)
-
       g(1) = sqrt( 2.0*trace(  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%Strain-x3D))  *  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%Strain-x3D)) )) - myctx_ptr%YieldStress
 
 
@@ -120,6 +118,7 @@ program testVonMises2D
    x = ctx_ptr%PlasticStrain
    
    call SNLPNew(s,n,m,p,c_funloc(fhg),c_null_funptr,c_loc(ctx_ptr))
+   call SNLPSolve(s,n,m,p,c_funloc(fhg),c_null_funptr,c_loc(ctx_ptr))
    s%show_progress = 1
    
    exit_code = SNLPL1SQP(s,x)
