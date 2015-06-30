@@ -13,7 +13,7 @@ Module m_MEF90_DefMechPlasticity_Type
    type :: ctx 
       Type(MEF90HookesLaw2D)  :: HookesLaw
       real(Kind = Kr)         :: YieldStress
-      Type(MatS2D)            :: Strain
+      Type(MatS2D)            :: InelasticStrain
       Type(MatS2D)            :: PlasticStrainOld
       Type(MatS2D)            :: PlasticStrain
    end type ctx
@@ -25,7 +25,7 @@ contains
 
 
 #undef __FUNCT__
-#define __FUNCT__ "fhg"
+#define __FUNCT__ "fhg_VonMises2D"
 
 !!!
 !!!  
@@ -52,7 +52,7 @@ contains
       call c_f_pointer(myctx,myctx_ptr)      
       f(1) = ( (myctx_ptr%HookesLaw * (x3D-myctx_ptr%PlasticStrainOld)) .DotP. (x3D-myctx_ptr%PlasticStrainOld) ) /2.
       h(1) = Trace(x3D)
-      g(1) = sqrt( 2.0*trace(  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%Strain-x3D))  *  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%Strain-x3D)) )) - myctx_ptr%YieldStress
+      g(1) = sqrt( 2.0*trace(  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x3D))  *  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x3D)) )) - myctx_ptr%YieldStress
    end subroutine fhg_VonMises2D
 
 
@@ -72,7 +72,7 @@ contains
 
    PetscErrorCode,Intent(OUT)                         :: ierr
    Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-   Type(DM),target,Intent(IN)                               :: Mesh
+   Type(DM),target,Intent(IN)                         :: Mesh
 
    Type(Vec)                                          :: PlasticStrainOld !!! p_{i-1}
    Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec
@@ -93,6 +93,15 @@ contains
    Type(MEF90_MATPROP),Pointer                        :: matpropSet
    Type(MEF90Element_Type)                            :: elemDisplacementType
    Type(MEF90MatProp2D_Type),pointer                  :: matProp2D
+   !Adding type needs for inelastic strain
+   PetscReal,Dimension(:),Pointer                     :: InelasticStrainLoc
+   Type(SectionReal)                                  :: InelasticStrainSec
+   Type(SectionReal)                                  :: xSec,temperatureSec
+   Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
+   Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
+   Type(MEF90Element_Type)                            :: elemScalType
+
+
 
    Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
    Call SectionRealDuplicate(plasticStrainSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)
@@ -115,58 +124,64 @@ contains
       Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
       If ((Size(cellID) > 0) .AND. (elemDisplacementType%coDim == 0)) Then
 
-      !!! Call proper local assembly depending on the type of damage law
-      Select Case (cellSetOptions%plasticityType)
-         case(MEF90DefMech_plasticityTypeVonMises)
-         ! Faire bloucle pour dim2 et dim 3
-         ctx_ptr%HookesLaw = MatProp2D%HookesLaw
-         snlp_Dfhg = c_null_funptr
-         snlp_fhg  = c_funloc(fhg_VonMises2D)
-         snlp_n    = 3
-         snlp_m    = 1
-         snlp_p    = 1
-         snlp_ctx  = c_loc(ctx_ptr)
-      End select
+         !!! Call proper local assembly depending on the type of damage law
+         Select Case (cellSetOptions%plasticityType)
+            case(MEF90DefMech_plasticityTypeVonMises)
+            ! Faire bloucle pour dim2 et dim 3
+            ctx_ptr%HookesLaw = MatProp2D%HookesLaw
+            snlp_Dfhg = c_null_funptr
+            snlp_fhg  = c_funloc(fhg_VonMises2D)
+            snlp_n    = 3
+            snlp_m    = 1
+            snlp_p    = 1
+            snlp_ctx  = c_loc(ctx_ptr)
+         End select
+   
+         !! Remplissage du Ctx
 
-      ctx_ptr%YieldStress = 1.0_Kr
-      ctx_ptr%PlasticStrain = plasticStrainLoc
-      ctx_ptr%Strain = 0.0_Kr
-   
-   
-      ctx_ptr%PlasticStrainOld = 0.0_Kr
-      ctx_ptr%PlasticStrain = 0.0_Kr
-   
+         ctx_ptr%YieldStress = 1.0_Kr
+         ctx_ptr%PlasticStrain = plasticStrainLoc
+         ctx_ptr%InelasticStrain = 0.0_Kr
+         ctx_ptr%PlasticStrainOld = 0.0_Kr
+         ctx_ptr%PlasticStrain = 0.0_Kr
       
-      allocate(x(snlp_n))
-      x = ctx_ptr%PlasticStrain
-      
-
+         
+         allocate(x(snlp_n))
+         x = ctx_ptr%PlasticStrain
+         
    
-      call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
-      s%show_progress = 1
-      
-      !exit_code = SNLPL1SQP(s,x)
-      write(*,*) 'exit_code: ',exit_code
-      write(*,*) 'x:         ',x
-      deallocate(x)
-
-      if (dim == 2) then
-         Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
-      else
-         Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
-      End If
+         if (dim == 2) then
+            Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
+         else
+            Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
+         End If
       End If
 
       Do cell = 1,size(cellID)
+         !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
          Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
          Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
-         ctx_ptr%PlasticStrainOld = plasticStrainOldLoc
-         !call SNLPSolve(plasticStrainLoc,snlp_fhg,snlp_Dfhg,snlp_ctx)
-         !call SNLPL1SQP(s,x)
+         !! need inelastic strain e(u)= \nabla_s u - e_therm
+         Call SectionRealRestrict(InelasticStrainSec,cellID(cell),InelasticStrainLoc,ierr);CHKERRQ(ierr)
+         
+         Call MEF90InelasticStrainCell(InelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,cell &
+                                       ,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+
+         ctx_ptr%PlasticStrainOld   =   plasticStrainOldLoc
+         ctx_ptr%PlasticStrain      =   plasticStrainLoc
+         ctx_ptr%InelasticStrain    =   InelasticStrainLoc
+
+         s%show_progress = 0
+         exit_code = SNLPL1SQP(s,x)
+         ctx_ptr%PlasticStrain = x
+
+         Call SectionRealRestore(InelasticStrainSec,cellID(cell),InelasticStrainLoc,ierr);CHKERRQ(ierr)
          Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
          Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
+      
       End Do !cell
       call SNLPDelete(s)
+      deallocate(x)
    End Do !! set
 
    Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
