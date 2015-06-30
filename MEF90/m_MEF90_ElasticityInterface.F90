@@ -25,7 +25,8 @@ Module m_MEF90_ElasticityInterface
          !ElasticityPressureWorkSetCst_2D => ElasticityPressureWorkSetCst, &
          ElasticityPressureWorkSetCell_2D => ElasticityPressureWorkSetCell, &
          !ElasticityWorkPressureSetVertex_2D => ElasticityPressureWorkSetVertex
-         ElasticityStressSet_2D => ElasticityStressSet
+         ElasticityStressSet_2D => ElasticityStressSet, &
+         InelasticStrainCell_2D => InelasticStrainCell
    Use m_MEF90_ElasticityImplementation_3D, &
          ElasticityOperatorSet_3D => ElasticityOperatorSet, &
          ElasticityBilinearFormSet_3D => ElasticityBilinearFormSet, &
@@ -47,7 +48,8 @@ Module m_MEF90_ElasticityInterface
          !ElasticityPressureWorkSetCst_3D => ElasticityPressureWorkSetCst, &
          ElasticityPressureWorkSetCell_3D => ElasticityPressureWorkSetCell, &
          !ElasticityWorkPressureSetVertex_3D => ElasticityPressureWorkSetVertex
-         ElasticityStressSet_3D => ElasticityStressSet
+         ElasticityStressSet_3D => ElasticityStressSet, &
+         InelasticStrainCell_3D => InelasticStrainCell
    Use petsc
 
    IMPLICIT NONE
@@ -73,6 +75,8 @@ Module m_MEF90_ElasticityInterface
    Public :: MEF90ElasticityPressureWorkSetCell
    !Public :: MEF90ElasticityPressureWorkSetVertex
    Public :: MEF90ElasticityStressSet
+   Public :: MEF90InelasticStrainCell
+
    
    Interface MEF90ElasticityBilinearFormSet
       Module Procedure ElasticityBilinearFormSet_2D, ElasticityBilinearFormSet_3D
@@ -154,4 +158,9 @@ Module m_MEF90_ElasticityInterface
    Interface MEF90ElasticityStressSet
       Module procedure ElasticityStressSet_2D, ElasticityStressSet_3D
    End Interface 
+
+   Interface MEF90InelasticStrainCell
+      Module procedure InelasticStrainCell_2D, InelasticStrainCell_3D
+   End Interface 
+
 End Module m_MEF90_ElasticityInterface
