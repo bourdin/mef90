@@ -23,6 +23,7 @@ Module m_MEF90_DefMech
       MEF90DefMechBilinearFormDamage3D       => MEF90DefMechBilinearFormDamage,        &
       MEF90DefMechSurfaceEnergy3D            => MEF90DefMechSurfaceEnergy,             &
       MEF90DefMechStress3D                   => MEF90DefMechStress          
+   Use m_MEF90_DefMechPlasticity
 
    Implicit none
    Private
@@ -44,6 +45,7 @@ Module m_MEF90_DefMech
    Public :: MEF90DefMechElasticEnergy
    Public :: MEF90DefMechWork
    Public :: MEF90DefMechStress
+   Public :: MEF90DefMechPlasticStrainUpdate
 
 Contains
 #undef __FUNCT__
