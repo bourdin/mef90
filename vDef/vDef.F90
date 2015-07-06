@@ -35,6 +35,7 @@ Program vDef
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
+   Type(Vec)                                          :: plasticStrainOld
    Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
    Type(Vec)                                          :: residualDamage,damageOld
@@ -227,8 +228,9 @@ Program vDef
    
    
    !!! As long as plasticity is not implemented, there is no point in keeping the pastic strain around
-   DeAllocate(MEF90DefMechCtx%plasticStrain)
-
+   !!!DeAllocate(MEF90DefMechCtx%plasticStrain)
+   Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+   
    !!! Create sections, vectors, and solvers for HeatXfer Context
    If (MEF90HeatXferGlobalOptions%mode /= MEF90HeatXfer_ModeNULL) Then
       Call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx,ierr)
@@ -423,6 +425,8 @@ Program vDef
                Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                
+               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,PlasticStrainOld,ierr);CHKERRQ(ierr)
+
                ! Check for BT if necessary
                BTCheck: If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &
                    (mod(AltMinIter,MEF90DefMechGlobalOptions%BTInterval) == 0) .AND. &
