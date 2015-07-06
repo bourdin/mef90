@@ -19,7 +19,7 @@ Module m_MEF90_DefMechPlasticity_Type
    end type ctx
 
 
-!#ifdef REMOVETHIS
+#ifdef REMOVETHIS
 
 contains
 
@@ -49,7 +49,7 @@ contains
       x3D%YY = x(2)
       x3D%XY = x(3)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
-      call c_f_pointer(myctx,myctx_ptr)      
+      call c_f_pointer(myctx,myctx_ptr)
       f(1) = ( (myctx_ptr%HookesLaw * (x3D-myctx_ptr%PlasticStrainOld)) .DotP. (x3D-myctx_ptr%PlasticStrainOld) ) /2.
       h(1) = Trace(x3D)
       g(1) = sqrt( 2.0*trace(  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x3D))  *  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x3D)) )) - myctx_ptr%YieldStress
@@ -143,7 +143,9 @@ contains
          ctx_ptr%PlasticStrain = plasticStrainLoc
          ctx_ptr%InelasticStrain = 0.0_Kr
          ctx_ptr%PlasticStrainOld = 0.0_Kr
-         ctx_ptr%PlasticStrain = 0.0_Kr
+
+         ctx_ptr%PlasticStrain    = 0.0_Kr
+         ctx_ptr%PlasticStrain%XX = 1.0_Kr
       
          
          allocate(x(snlp_n))
@@ -164,12 +166,12 @@ contains
          !! need inelastic strain e(u)= \nabla_s u - e_therm
          Call SectionRealRestrict(InelasticStrainSec,cellID(cell),InelasticStrainLoc,ierr);CHKERRQ(ierr)
          
-         Call MEF90InelasticStrainCell(InelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,cell &
-                                       ,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+         !Call MEF90InelasticStrainCell(InelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,cell &
+         !                                 ,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
 
          ctx_ptr%PlasticStrainOld   =   plasticStrainOldLoc
          ctx_ptr%PlasticStrain      =   plasticStrainLoc
-         ctx_ptr%InelasticStrain    =   InelasticStrainLoc
+         ctx_ptr%InelasticStrain    =   1.0
 
          s%show_progress = 0
          exit_code = SNLPL1SQP(s,x)
@@ -194,6 +196,6 @@ contains
    write(*,*) 'This example needs SNLP'
 #endif
    End Subroutine MEF90DefMechPlasticStrainUpdate
-!#endif
+#endif
 
 End module m_MEF90_DefMechPlasticity_Type

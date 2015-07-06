@@ -120,6 +120,15 @@ TestVonMises2D: TestVonMises2D.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
+TestInelasticStrainCell.o: ${MEF90_DIR}/Tests/TestInelasticStrainCell.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $< 
+
+TestInelasticStrainCell: TestInelasticStrainCell.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
+	-@${RM} $<
+
+
 runTestMaterials: TestMaterials
 	@echo "         Running " $@
 	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
