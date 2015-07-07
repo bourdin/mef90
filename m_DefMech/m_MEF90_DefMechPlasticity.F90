@@ -68,14 +68,14 @@ contains
 !!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
 !!!
 
-   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,PlasticStrain,PlasticStrainOld,ierr)
+   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,PlasticStrain,x,PlasticStrainOld,ierr)
    use,intrinsic :: iso_c_binding
 #ifdef MEF90_HAVE_SNLP
    use SNLPF90
 
    PetscErrorCode,Intent(OUT)                         :: ierr
    Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-   Type(Vec)                                          :: PlasticStrain,PlasticStrainOld
+   Type(Vec)                                          :: PlasticStrain,x,PlasticStrainOld
 
    Type(DM)                                           :: Mesh
    Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec
@@ -87,7 +87,7 @@ contains
    integer                                            :: i,j
    integer(kind=c_int)                                :: exit_code
    type(ctx),target                                   :: ctx_ptr
-   type(VecScatter)                                   :: ScatterSecToVecCellMatS
+   type(VecScatter)                                   :: ScatterSecToVecCellMatS,ScatterSecToVec,ScatterSecToVecScal
    PetscInt                                           :: dim,set,cell,QuadratureOrder
    Type(IS)                                           :: cellSetGlobalIS,setIS
    PetscInt,dimension(:),Pointer                      :: setID,cellID
@@ -103,10 +103,23 @@ contains
 
    Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
    Call SectionRealDuplicate(plasticStrainSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)
+   Call SectionRealDuplicate(plasticStrainSec,inelasticStrainSec,ierr);CHKERRQ(ierr)
    Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
    Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrain,ierr);CHKERRQ(ierr)
    Call SectionRealToVec(plasticStrainOldSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr)
    
+   Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
+   Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+   Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)         
+
+   If (Associated(MEF90DefMechCtx%temperature)) Then
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',temperatureSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)          
+   Else
+      temperatureSec%v = 0
+   End If
+
    Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
    Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
    Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -198,7 +211,14 @@ contains
 
    Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(plasticStrainOldSec,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(inelasticStrainSec,ierr);CHKERRQ(ierr)
    Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+   If (Associated(MEF90DefMechCtx%temperature)) Then
+      Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+   End If
 #else
    write(*,*) 'This example needs SNLP'
 #endif
