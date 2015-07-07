@@ -33,7 +33,8 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: k_for_ATk                  ! k
 !!<--erwan!!
       PetscReal                     :: residualStiffness          ! eta
-      PetscReal                     :: sigmac                     ! yield stress
+      PetscReal                     :: yieldStress                ! yield stress
+      PetscReal                     :: cohesiveStiffness          
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
@@ -50,7 +51,8 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: k_for_ATk                  ! k
 !!<--erwan!!
       PetscReal                     :: residualStiffness          ! eta
-      PetscReal                     :: sigmac                     ! yield stress
+      PetscReal                     :: yieldStress                ! yield stress
+      PetscReal                     :: cohesiveStiffness          
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
 
@@ -61,23 +63,24 @@ Module m_MEF90_Materials_Types
 
    !!! The Mathium is a bogus isotropic material whose material properties are all 1 
    !!! except for a Poisson Ratio of 0.3
-   Type(MEF90MatProp2D_Type),Parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type( &
-      1.0_Kr,                                                                       & ! Density
-      1.0_Kr,                                                                       & ! FractureToughness
-      1.0_Kr,                                                                       & ! SpecificHeat
-      MEF90MatS2DIdentity,                                                          & ! ThermalConductivity
-      MEF90MatS2DIdentity,                                                          & ! LinearThermalExpansion
-      MEF90HookesLaw2D(                                                             & 
-         Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,                                & ! HookesLaw XXXX,XXYY,XXXY
-                              1.09890_Kr,0.00000_Kr,                                & !                YYYY,YYXY
-                                         0.38462_Kr),                               & !                     XYXY        
-         0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                & ! lambda, mu, E, nu (lambda, mu will be recomputed)
-         MEF90HookesLawTypeIsotropic,                                               & ! type
-         .FALSE.),                                                                  & ! isPlaneStress
-      1.0_Kr,                                                                       & ! Internal Length
-      2.0_Kr,                                                                       & ! k_for_ATk
-      1.0D-9,                                                                       & ! Residual Stiffness
-      1.0_Kr,                                                                       & ! sigmac
+   Type(MEF90MatProp2D_Type),Parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type(    &
+      1.0_Kr,                                                                          & ! Density
+      1.0_Kr,                                                                          & ! FractureToughness
+      1.0_Kr,                                                                          & ! SpecificHeat
+      MEF90MatS2DIdentity,                                                             & ! ThermalConductivity
+      MEF90MatS2DIdentity,                                                             & ! LinearThermalExpansion
+      MEF90HookesLaw2D(                                                                & 
+         Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,                                   & ! HookesLaw XXXX,XXYY,XXXY
+                              1.09890_Kr,0.00000_Kr,                                   & !                YYYY,YYXY
+                                         0.38462_Kr),                                  & !                     XYXY        
+         0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                   & ! lambda, mu, E, nu (lambda, mu will be recomputed)
+         MEF90HookesLawTypeIsotropic,                                                  & ! type
+         .FALSE.),                                                                     & ! isPlaneStress
+      1.0_Kr,                                                                          & ! Internal Length
+      2.0_Kr,                                                                          & ! k_for_ATk
+      1.0D-9,                                                                          & ! Residual Stiffness
+      1.0_Kr,                                                                          & ! Yield Stress
+      0.0_Kr,                                                                          & ! cohesive stiffness
       "MEF90Mathium2D")  
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &  
@@ -98,7 +101,8 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                          & ! Internal Length
       2.0_Kr,                                                                          & ! k_for_ATk
       1.0D-9,                                                                          & ! Residual Stiffness
-      1.0_Kr,                                                                       & ! sigmac
+      1.0_Kr,                                                                          & ! Yield Stress
+      0.0_Kr,                                                                          & ! cohesive stiffness
       "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
 
@@ -288,7 +292,8 @@ Contains
 !!erwan-->!!
       Call PetscBagRegisterReal(bag,matprop%k_for_ATk,default%k_for_ATk,'k_for_ATk','[] (k) Linear softening coefficient for ATk',ierr)
 !!<--erwan!!
-      Call PetscBagRegisterReal(bag,matprop%sigmac,default%sigmac,'sigmac','[N.m^(-2)] (sigma_c) stress threshold for plasticity',ierr)
+      Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
+      Call PetscBagRegisterReal(bag,matprop%yieldStress,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
@@ -335,7 +340,8 @@ Contains
 !!erwan-->!!
       Call PetscBagRegisterReal(bag,matprop%k_for_ATk,default%k_for_ATk,'k_for_ATk','[] (k) Linear softening coefficient for ATk',ierr)
 !!<--erwan!!
-      Call PetscBagRegisterReal(bag,matprop%sigmac,default%sigmac,'sigmac','[N.m^(-2)] (sigma_c) stress threshold for plasticity',ierr)
+      Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
+      Call PetscBagRegisterReal(bag,matprop%yieldStress,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
