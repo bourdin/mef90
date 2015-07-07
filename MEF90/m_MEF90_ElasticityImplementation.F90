@@ -31,7 +31,7 @@ Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D
    Public :: ElasticityPressureWorkSetCell
    !Public :: ElasticityPressureWorkSetVertex
    Public :: ElasticityStressSet
-   Public :: InelasticStrainCell
+   Public :: InelasticStrainSet
 
    
 
@@ -786,6 +786,7 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine ElasticityWorkSetCell(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
@@ -1086,26 +1087,29 @@ Contains
          DeAllocate(stressPtr)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine ElasticityStressSet   
+   End Subroutine ElasticityStressSet
+
+
+
+
 
 
 #undef __FUNCT__
-#define __FUNCT__ "InelasticStrainCell"
+#define __FUNCT__ "InelasticStrainSet"
+
 !!!
 !!!  
-!!!  InelasticStrainCell: Compute the cell-averaged inelasticstrain field associated with given displacement, temperature 
-!!!
-!!! 
+!!!  InelasticStrainSet: Compute the cell-averaged inelasticstrain field associated with given displacement, temperature and plastic strain fields
+!!!             
 !!!  
-!!!  (c) 2015 erwan tanné
+!!!  (c) 2014 Erwan TANNE erwan.tanne@gmail.com
 !!!
 
-   Subroutine InelasticStrainCell(InelasticStrain,x,temperature,mesh,meshScal,cellIS,cell,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
-      Type(SectionReal),Intent(INOUT)                    :: InelasticStrain
-      Type(SectionReal),Intent(IN)                       :: x,temperature
+   Subroutine InelasticStrainSet(InelasticStrain,x,plasticStrain,temperature,mesh,meshScal,cellIS,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
+      Type(SectionReal),Intent(OUT)                      :: InelasticStrain
+      Type(SectionReal),Intent(IN)                       :: x,plasticStrain,temperature
       Type(DM),Intent(IN)                                :: mesh,meshScal
       Type(IS),Intent(IN)                                :: cellIS
-      PetscInt,Intent(IN)                                :: cell
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
@@ -1117,42 +1121,52 @@ Contains
       Type(MEF90_MATS)                                   :: StrainElem,plasticStrainElem,InelasticStrainLoc
       PetscReal                                          :: cellSize
       PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
-
-      !
       
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemDisplacementType%numDof))
          Allocate(temperatureloc(elemTemperatureType%numDof))
-         Allocate(InelasticStrainPtr(SIZEOFMEF90_MATS))      
-         cellSize = 0.0_Kr 
-         InelasticStrainLoc = 0.0_Kr          
-         Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
-         If (temperature%v /= 0) Then
-            Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
-         End If
-
-         Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
-            temperatureElem   = 0.0_Kr
-            strainElem        = 0.0_Kr
-            Do iDoF1 = 1,elemDisplacementType%numDof
-               strainElem = strainElem + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
-            End Do
+         Allocate(InelasticStrainPtr(SIZEOFMEF90_MATS))
+         Do cell = 1,size(cellID)
+            cellSize = 0.0_Kr 
+            InelasticStrainLoc = 0.0_Kr
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
             If (temperature%v /= 0) Then
-               Do iDoF1 = 1,elemtemperatureType%numDof
-                  temperatureElem = temperatureElem + temperatureLoc(iDof1) * elemTemperature(cell)%BF(iDof1,iGauss)
-               End Do
-               strainElem = strainElem - (temperatureElem * ThermalExpansion)
+               Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
             End If
-            InelasticStrainLoc = InelasticStrainLoc + elemDisplacement(cell)%Gauss_C(iGauss) * strainElem          
-            cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
-         End Do ! Gauss
-
-         InelasticStrainPtr = InelasticStrainLoc / cellSize          
-         Call SectionRealUpdate(InelasticStrain,cellID(cell),InelasticStrainPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)    
-         flops = size(elemDisplacement(1)%Gauss_C) * size(cellID) 
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+            Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
+               temperatureElem   = 0.0_Kr
+               plasticStrainElem = 0.0_Kr
+               strainElem        = 0.0_Kr
+               Do iDoF1 = 1,elemDisplacementType%numDof
+                  strainElem = strainElem + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
+               End Do
+               If (temperature%v /= 0) Then
+                  Do iDoF1 = 1,elemtemperatureType%numDof
+                     temperatureElem = temperatureElem + temperatureLoc(iDof1) * elemTemperature(cell)%BF(iDof1,iGauss)
+                  End Do
+                  strainElem = strainElem - (temperatureElem * thermalExpansion)
+               End If
+               If (plasticStrain%v /= 0) Then
+                  plasticStrainElem = plasticStrainLoc
+                  strainElem = strainElem - plasticStrainElem
+               End If
+               InelasticStrainLoc = InelasticStrainLoc + elemDisplacement(cell)%Gauss_C(iGauss) * strainElem
+               cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
+            End Do ! Gauss
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+            InelasticStrainPtr = InelasticStrainLoc / cellSize
+            Call SectionRealUpdate(InelasticStrain,cellID(cell),InelasticStrainPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
+         End Do ! cell
+         flops = size(elemDisplacement(1)%Gauss_C) * size(cellID)
          If (temperature%v /= 0) Then
             flops = flops + 2 * elemtemperatureType%numDof * size(elemtemperature(1)%Gauss_C) * size(cellID)
          End If
@@ -1160,11 +1174,9 @@ Contains
          DeAllocate(xloc)
          DeAllocate(temperatureloc)
          DeAllocate(InelasticStrainPtr)
-      End If
+      End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine InelasticStrainCell
-
-
+   End Subroutine InelasticStrainSet
 
 
 End Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D
