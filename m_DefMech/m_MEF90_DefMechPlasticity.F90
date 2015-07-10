@@ -130,12 +130,14 @@ contains
    use,intrinsic :: iso_c_binding
 #ifdef MEF90_HAVE_SNLP
    use SNLPF90
+#endif
 
    PetscErrorCode,Intent(OUT)                         :: ierr
    Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
    Type(Vec),Intent(INOUT)                            :: PlasticStrain
    Type(Vec),Intent(IN)                               :: x,PlasticStrainOld
 
+#ifdef MEF90_HAVE_SNLP
    Type(DM)                                           :: Mesh
    Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec
    PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,inelasticStrainLoc
