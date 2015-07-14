@@ -47,7 +47,8 @@ Program ThermoElastoPlasticity
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
-                                                         1.0e-2)                    ! BTTol
+                                                         1.0e-2,                  & ! BTTol
+                                                         1.0e-4)                    ! plasticAtol
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
@@ -71,8 +72,8 @@ Program ThermoElastoPlasticity
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
-                                                         1.0e-2)                    ! BTTol
-
+                                                         1.0e-2,                  & ! BTTol
+                                                         1.0e-4)                    ! plasticAtol
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -117,21 +118,18 @@ Program ThermoElastoPlasticity
    Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: MEF90HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
                                                          PETSC_FALSE,   & ! Has BC
                                                          0.0_Kr)          ! boundaryTemp
-
    
    Type(DM),target                                    :: Mesh
    Type(IS)                                           :: setIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
    PetscReal,Dimension(:),Pointer                     :: time,energy,work
-
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
 
    !! Plastic
    Type(Vec)                                          :: plasticStrainOld
-
    Type(SNES)                                         :: snesTemp
    Type(TS)                                           :: tsTemp
    Type(TSAdapt)                                      :: tsAdaptTemp
@@ -145,9 +143,14 @@ Program ThermoElastoPlasticity
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
    Type(PetscViewer)                                  :: logViewer
    Integer                                            :: numfield
-   
    Integer                                            :: step
    PetscInt                                           :: dim
+
+   !!! Alternate minimization 
+   PetscInt                                           :: AltMinIter
+   PetscReal                                          :: PlasticStrainMaxChange
+   Type(Vec)                                          :: plasticStrainCumulatedDuringAltMin
+   Type(Vec)                                          :: plasticstrainerror
       
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
@@ -259,11 +262,6 @@ Program ThermoElastoPlasticity
    End If
 
 
-! <--- modification
-
-
-
-
    !!! 
    !!! Allocate array of works and energies
    !!!
@@ -361,18 +359,58 @@ Program ThermoElastoPlasticity
             !!! Update fields
             Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
             Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
+            
 
-            !!! Solve SNES
-            Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
-            Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,*) "SNESConvergedReason returned ",snesDispConvergedReason,"\n"
-            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-            !!! Solve PlasticProjection
-            write(*,*) 'MEF90DefMechCtx%PlasticStrain:          ', PlasticStrainOld
 
-            Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,ierr);CHKERRQ(ierr)
-         
+
+            !!! beginning of the alternate minimization
+            AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
+               Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               !! Duplicated PlasticStraincumulated 
+               !Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainCumulatedDuringAltMin,ierr);CHKERRQ(ierr)
+
+               !!! Solve SNES
+               Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+               Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
+               If (snesDispConvergedReason < 0) Then  
+                  Write(IOBuffer,*) "SNESConvergedReason returned ",snesDispConvergedReason,"\n"
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               End If
+               !!! Solve PlasticProjection
+               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,ierr);CHKERRQ(ierr)
+               
+               !!! Calculate the Infinity norm in error on PlasticStrain
+               Call VecNorm(MEF90DefMechCtx%plasticStrain,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
+               
+               write(*,*) 'PlasticStrainMaxChange:          ',PlasticStrainMaxChange
+
+               !!! calculate the plasticstraincumulatedduringaltmin equal to the sum of plasticstrain for each altmin
+               !Call VecAxPy(plasticStrainCumulatedDuringAltMin,1.0_Kr,MEF90DefMechCtx%plasticStrain)
+
+               If (PlasticStrainMaxChange <= MEF90DefMechGlobalOptions%plasticATol) Then
+                  EXIT
+               End If
+
+               If (mod(AltMinIter,25) == 0) Then
+                  Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+               End If
+
+            End Do AltMin
+            !!! update plasticstrainold --> doesn't works (not read in MEF90DefMechPlasticStrainUpdate)
+            Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+            !Call VecDuplicate(plasticStrainCumulatedDuringAltMin,plasticStrainOld,ierr);CHKERRQ(ierr)
+            !Call VecDestroy(plasticStrainCumulatedDuringAltMin,ierr);CHKERRQ(ierr)
+            !!! --> end of the alternate minimization
+
+
+
+
+
+
+
+
+
             !!! Compute energies
             energy = 0.0_Kr
             work = 0.0_Kr
@@ -385,15 +423,21 @@ Program ThermoElastoPlasticity
                Write(IOBuffer,201) setID(set),energy(set),work(set),energy(set)-work(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             End Do
+
             Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Write(IOBuffer,202) sum(energy),sum(work),sum(energy)-sum(work)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-     
+
             !!! Save results and boundary Values
+            If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
+               Call MEF90DefMechStress(MEF90DefMechCtx%displacement,MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr)
+            End If
+
             Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
          End Select
-      End Do
+
+      End Do !!step
    End If
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")

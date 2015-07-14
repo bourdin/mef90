@@ -86,7 +86,7 @@ Program vDef
                                                          1,                       & ! temperatureOffset
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
-                                                         0,                       & ! plasticStrainOffset
+                                                         6,                       & ! plasticStrainOffset
                                                          6,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
@@ -98,7 +98,8 @@ Program vDef
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
-                                                         1.0e-2)                    ! BTTol
+                                                         1.0e-2,                  & ! BTTol
+                                                         1.0e-4)                    ! plasticAtol
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
@@ -121,7 +122,8 @@ Program vDef
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
-                                                         1.0e-2)                    ! BTTol
+                                                         1.0e-2,                  & ! BTTol
+                                                         1.0e-4)                    ! plasticAtol
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -194,7 +196,6 @@ Program vDef
                                          vDefDefMechDefaultCellSetOptions,vDefDefMechDefaultVertexSetOptions,ierr)
    End If
    Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-   
    
    !!! Create HeatXfer context, get all HeatXfer options
    Call MEF90HeatXferCtxCreate(MEF90HeatXferCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
@@ -287,7 +288,7 @@ Program vDef
       !!! Will have to figure out this one
    End If
    
-   !!!
+   !
    !!! Actual computations / time stepping
    !!!
    If (.NOT. MEF90GlobalOptions%dryrun) Then
@@ -425,7 +426,7 @@ Program vDef
                Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-!Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,ierr);CHKERRQ(ierr)               
+               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,ierr);CHKERRQ(ierr)
 
                ! Check for BT if necessary
                BTCheck: If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &

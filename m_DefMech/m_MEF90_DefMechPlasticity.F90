@@ -53,7 +53,7 @@ contains
       !write(*,*) 'FHG: PlasticStrainOld', myctx_ptr%PlasticStrainOld
       f(1) = ( (myctx_ptr%HookesLaw * (x2D-myctx_ptr%PlasticStrainOld)) .DotP. (x2D-myctx_ptr%PlasticStrainOld) ) /2.
       h(1) = Trace(x2D)
-      g(1) = sqrt( 2.0*trace(  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D))  *  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D)) )) - myctx_ptr%YieldStress
+      g(1) = sqrt( 2.0*trace(  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D))  *  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D)) ) ) - myctx_ptr%YieldStress
       !!!!write(*,*) 'FHG: f,h,g           ', f(1),h(1),g(1)
       !write(*,*)
    end subroutine fhg_VonMises2D
@@ -126,7 +126,7 @@ contains
 !!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
 !!!
 
-   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,PlasticStrain,x,PlasticStrainOld,ierr)
+   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,ierr)
    use,intrinsic :: iso_c_binding
 #ifdef MEF90_HAVE_SNLP
    use SNLPF90
@@ -134,7 +134,7 @@ contains
 
    PetscErrorCode,Intent(OUT)                         :: ierr
    Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-   Type(Vec),Intent(INOUT)                            :: PlasticStrain
+   Type(Vec),Intent(INOUT)                            :: plasticStrain
    Type(Vec),Intent(IN)                               :: x,PlasticStrainOld
 
 #ifdef MEF90_HAVE_SNLP
@@ -259,7 +259,7 @@ contains
             s%show_progress = 0
             !plasticStrainLoc = [0._Kr,0._Kr,0.0_Kr]
       
-
+            write(*,*) 'Plastic Strain Old step: ', PlasticStrainOldLoc
             write(*,*) 'Plastic Strain before: ', PlasticStrainLoc
 
             !write(*,*) 'Plastic Strain: Old    ', ctx_ptr%PlasticStrainOld

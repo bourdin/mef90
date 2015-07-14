@@ -57,6 +57,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                               :: BTInterval
       PetscInt                               :: BTScope
       PetscReal                              :: BTTol
+      PetscReal                              :: plasticATol
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -679,6 +680,9 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%BTInterval,default%BTInterval,'BT_Interval','Interval at which Backtracking is run in inner loop (0 for outer loop)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%BTScope,default%BTScope,'BT_Scope','Backtracking scope (0 for unlimited)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%BTTol,default%BTTol,'BT_Tol','Backtracking relative tolerance',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticATol,default%plasticATol,'defmech_plastic_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
+
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 
 #undef __FUNCT__
