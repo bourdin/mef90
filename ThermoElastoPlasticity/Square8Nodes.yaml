@@ -1,15 +1,19 @@
 verbose: 0
 time:
     min: 0
-    max: 1
-    numstep: 10
+    max: 2
+    numstep: 4
 heatxfer:
   mode: null
 defmech:
   mode: quasistatic
+  plastic:
+    atol: 1e-4
 temperature:
     offset: 0
 plasticStrain:
+    offset: 3
+Stress:
     offset: 3
 cs0001:
     fracturetoughness: 1
@@ -26,11 +30,11 @@ cs0001:
     yieldStress: 1
 cs0002:
     displacementBC: 1,1,1
-    boundaryDisplacement: -2.,0.,0.
+    boundaryDisplacement: 0.,0.,0.
     damageBC: 1
     boundaryDamage: 0.
 cs0003:
     displacementBC: 1,1,1
-    boundaryDisplacement: 2.,0.,0.
+    boundaryDisplacement: 0.,-1.,0.
     damageBC: 1
     boundaryDamage: 0.

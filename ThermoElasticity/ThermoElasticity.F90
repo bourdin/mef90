@@ -46,7 +46,8 @@ Program ThermoElasticity
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
-                                                         1.0e-2)                    ! BTTol
+                                                         1.0e-2,                  & ! BTTol
+                                                         1.0e-4)                    ! damage_atol
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
@@ -70,7 +71,8 @@ Program ThermoElasticity
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
-                                                         1.0e-2)                    ! BTTol
+                                                         1.0e-2,                  & ! BTTol
+                                                         1.0e-4)                    ! plastic_atol
 
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
