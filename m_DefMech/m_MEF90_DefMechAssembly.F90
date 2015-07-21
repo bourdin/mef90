@@ -28,10 +28,10 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
    End Interface
 
    Abstract Interface
-      Subroutine MEF90DefMechOperatorLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+      Subroutine MEF90DefMechOperatorLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
          Use m_MEF90_DefMechCtx
          PetscReal,Dimension(:),Pointer                     :: residualLoc
-         PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+         PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
          Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
          Type(MEF90_MATPROP),Intent(IN)                     :: matprop
          Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -66,10 +66,10 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorNull"
-   Subroutine MEF90DefMechOperatorNull(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorNull(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       Use m_MEF90_DefMechCtx
       PetscReal,Dimension(:),Pointer                        :: residualLoc
-      PetscReal,Dimension(:),Pointer                        :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                        :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
          Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
          Type(MEF90_MATPROP),Intent(IN)                     :: matprop
          Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -83,7 +83,7 @@ Contains
 #define __FUNCT__ "MEF90DefMechBilinearFormNull"
    Subroutine MEF90DefMechBilinearFormNull(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -489,16 +489,16 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementElasticLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDisplacementElasticLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
-      Type(MEF90_VECT)                                   :: U
+      Type(MEF90_VECT)                                   :: U,U0
       PetscReal                                          :: temperature
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscLogDouble                                     :: flops
@@ -516,6 +516,15 @@ Contains
             U     = U + xDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
          End Do
          U = U * matprop%residualStiffness
+
+         U0 = 0.0_Kr
+         If (Associated(boundaryDisplacementDof)) Then
+            Do iDoF1 = 1,numDofDisplacement
+               U0 = U0 + boundaryDisplacementDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
+            End Do
+            U0 = U0 * matprop%cohesiveStiffness
+         End If
+
          temperature = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
@@ -526,6 +535,11 @@ Contains
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss)) + U * elemDisplacement%BF(iDoF2,iGauss))
          End Do
+         If (Associated(boundaryDisplacementDof)) Then
+            Do iDoF2 = 1,numDofDisplacement
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((U-U0) * elemDisplacement%BF(iDoF2,iGauss))
+            End Do
+         End If
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
@@ -540,16 +554,16 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementATLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDisplacementATLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
-      Type(MEF90_VECT)                                   :: U
+      Type(MEF90_VECT)                                   :: U,U0
       PetscReal                                          :: stiffness,temperature
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscLogDouble                                     :: flops
@@ -575,6 +589,14 @@ Contains
          End Do
          U = U * matprop%residualStiffness
 
+         U0 = 0.0_Kr
+         If (Associated(boundaryDisplacementDof)) Then
+            Do iDoF1 = 1,numDofDisplacement
+               U0 = U0 + boundaryDisplacementDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
+            End Do
+            U0 = U0 * matprop%cohesiveStiffness
+         End If
+
          temperature = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
@@ -586,6 +608,11 @@ Contains
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss)) + U * elemDisplacement%BF(iDoF2,iGauss))
          End Do
+         If (Associated(boundaryDisplacementDof)) Then
+            Do iDoF2 = 1,numDofDisplacement
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((U-U0) * elemDisplacement%BF(iDoF2,iGauss))
+            End Do
+         End If
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
@@ -601,16 +628,16 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementATkLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDisplacementATkLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
-      Type(MEF90_VECT)                                   :: U
+      Type(MEF90_VECT)                                   :: U,U0
       PetscReal                                          :: stiffness,temperature
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscLogDouble                                     :: flops
@@ -637,6 +664,14 @@ Contains
          End Do
          U = U * matprop%residualStiffness
 
+         U0 = 0.0_Kr
+         If (Associated(boundaryDisplacementDof)) Then
+            Do iDoF1 = 1,numDofDisplacement
+               U0 = U0 + boundaryDisplacementDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
+            End Do
+            U0 = U0 * matprop%cohesiveStiffness
+         End If
+
          temperature = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
@@ -648,6 +683,11 @@ Contains
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss)) + U * elemDisplacement%BF(iDoF2,iGauss))
          End Do
+         If (Associated(boundaryDisplacementDof)) Then
+            Do iDoF2 = 1,numDofDisplacement
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((U-U0) * elemDisplacement%BF(iDoF2,iGauss))
+            End Do
+         End If
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
@@ -665,9 +705,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementATUnilateralHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDisplacementATUnilateralHDLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -728,9 +768,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementATUnilateralPHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDisplacementATUnilateralPHDLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -789,9 +829,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementATUnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDisplacementATUnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -846,9 +886,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementATUnilateralPSLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDisplacementATUnilateralPSLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -965,7 +1005,7 @@ Contains
       Type(SectionReal)                                  :: boundaryDisplacementSec,forceSec,pressureForceSec
       PetscReal,Dimension(:),Pointer                     :: displacementPtr,residualPtr
       PetscReal,Dimension(:),Pointer                     :: boundaryDisplacementPtr
-      PetscReal,Dimension(:),Pointer                     :: displacementDof,damageDof,temperatureDof,residualLoc
+      PetscReal,Dimension(:),Pointer                     :: boundaryDisplacementDof,displacementDof,damageDof,temperatureDof,residualLoc
       PetscReal,Dimension(:),Pointer                     :: pressureForceLoc
       PetscReal                                          :: pressureForceCell
       PetscReal,Dimension(:),Pointer                     :: forceLoc
@@ -1001,6 +1041,7 @@ Contains
       Call SectionRealDuplicate(displacementSec,boundaryDisplacementSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(displacementSec,ScatterSecToVec,SCATTER_REVERSE,displacement,ierr);CHKERRQ(ierr) 
       Call SectionRealToVec(boundaryDisplacementSec,ScatterSecToVec,SCATTER_REVERSE,MEF90DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
+
 
       Call SectionRealSet(residualSec,0.0_Kr,ierr);CHKERRQ(ierr)
       Call VecSet(residual,0.0_Kr,ierr);CHKERRQ(ierr)
@@ -1101,6 +1142,11 @@ Contains
             !!! Allocate storage for fields at dof and Gauss points
             Allocate(residualLoc(ElemDisplacementType%numDof))
             Allocate(displacementDof(ElemDisplacementType%numDof))
+            If (matpropSet%cohesiveStiffness /= 0.0_Kr) Then
+               Allocate(boundaryDisplacementDof(ElemDisplacementType%numDof))
+            Else
+               Nullify(boundaryDisplacementDof)
+            End If
             Allocate(damageDof(ElemDamageType%numDof))
             If (Associated(MEF90DefMechCtx%temperature)) Then
                Allocate(temperatureDof(ElemDamageType%numDof))
@@ -1115,6 +1161,9 @@ Contains
                !!! Get value of each field at each Dof of the local element
                Call SectionRealRestrictClosure(displacementSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,displacementDof,ierr);CHKERRQ(ierr)
                Call SectionRealRestrictClosure(damageSec,MEF90DefMechCtx%DMScal,cellID(cell),elemDamageType%numDof,damageDof,ierr);CHKERRQ(ierr)
+               If (matpropSet%cohesiveStiffness /= 0.0_Kr) Then
+                  Call SectionRealRestrictClosure(boundaryDisplacementSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,boundaryDisplacementDof,ierr);CHKERRQ(ierr)
+               End If
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   Call SectionRealRestrictClosure(temperatureSec,MEF90DefMechCtx%DMScal,cellID(cell),elemDamageType%numDof,temperatureDof,ierr);CHKERRQ(ierr)
                End If
@@ -1138,7 +1187,7 @@ Contains
                End If
                   
                residualLoc = 0.0_Kr
-               Call localOperatorFunction   (residualLoc,displacementDof,nullPtr,damageDof,temperatureDof,plasticStrainCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
+               Call localOperatorFunction   (residualLoc,displacementDof,nullPtr,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
                Call localRHSFunction        (residualLoc,displacementDof,forceCell,pressureForceCell,matpropSet,elemDisplacement(cell))
                Call SectionRealUpdateClosure(residualSec,MEF90DefMechCtx%DMVect,cellID(cell),residualLoc,ADD_VALUES,ierr);CHKERRQ(iErr)
 
@@ -1154,6 +1203,9 @@ Contains
             End Do
 
             DeAllocate(displacementDof)
+            If (matpropSet%cohesiveStiffness /= 0.0_Kr) Then
+               DeAllocate(boundaryDisplacementDof)
+            End If
             DeAllocate(damageDof)
             If (Associated(MEF90DefMechCtx%temperature)) Then
                DeAllocate(temperatureDof)
@@ -2486,9 +2538,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageAT1Loc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT1Loc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -2557,9 +2609,9 @@ Contains
 !!!  (c) 2014-2015 Erwan Tanne erwan.tanne@gmail.com, Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageATkLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageATkLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -2627,9 +2679,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageAT1ElasticLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT1ElasticLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -2672,9 +2724,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageAT1UnilateralHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT1UnilateralHDLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -2742,9 +2794,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageAT1UnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT1UnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -2808,9 +2860,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageAT1UnilateralPHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT1UnilateralPHDLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -2878,9 +2930,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageAT2Loc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT2Loc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -2943,9 +2995,9 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechOperatorDamageAT2ElasticLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT2ElasticLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -2990,9 +3042,9 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechOperatorDamageAT2UnilateralHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT2UnilateralHDLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -3059,9 +3111,9 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechOperatorDamageAT2UnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT2UnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -3125,9 +3177,9 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageAT2UnilateralPHDLoc(residualLoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT2UnilateralPHDLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
@@ -3360,7 +3412,7 @@ Contains
                End If
                   
                residualLoc = 0.0_Kr
-               Call localOperatorFunction   (residualLoc,damageDof,displacementDof,nullPtr,temperatureDof,plasticStrainCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
+               Call localOperatorFunction   (residualLoc,damageDof,displacementDof,nullPtr,nullPtr,temperatureDof,plasticStrainCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
                Call SectionRealUpdateClosure(residualSec,MEF90DefMechCtx%DMScal,cellID(cell),residualLoc,ADD_VALUES,ierr);CHKERRQ(iErr)
 
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then

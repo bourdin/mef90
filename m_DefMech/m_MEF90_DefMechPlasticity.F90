@@ -215,6 +215,8 @@ contains
                snlp_p    = 6
                snlp_ctx  = c_loc(ctx_ptr)
 
+            case(MEF90DefMech_plasticityTypeNONE)
+               return
             case default
                Print*,__FUNCT__,': Unimplemented plasticity Type',cellSetOptions%PlasticityType
                STOP  

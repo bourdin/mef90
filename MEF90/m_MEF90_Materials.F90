@@ -293,7 +293,7 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%k_for_ATk,default%k_for_ATk,'k_for_ATk','[] (k) Linear softening coefficient for ATk',ierr)
 !!<--erwan!!
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
-      Call PetscBagRegisterReal(bag,matprop%yieldStress,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
+      Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
@@ -341,7 +341,7 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%k_for_ATk,default%k_for_ATk,'k_for_ATk','[] (k) Linear softening coefficient for ATk',ierr)
 !!<--erwan!!
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
-      Call PetscBagRegisterReal(bag,matprop%yieldStress,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
+      Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
