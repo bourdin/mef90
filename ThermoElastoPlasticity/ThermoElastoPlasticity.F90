@@ -43,12 +43,13 @@ Program ThermoElastoPlasticity
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
+                                                         10,                      & ! PCLag
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticAtol
+                                                         1.0e-4)                    ! plasticStrainAtol
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
@@ -68,12 +69,13 @@ Program ThermoElastoPlasticity
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
+                                                         10,                      & ! PCLag
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticAtol
+                                                         1.0e-4)                    ! plasticStrainAtol
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -388,7 +390,7 @@ Program ThermoElastoPlasticity
                !!! calculate the plasticstraincumulatedduringaltmin equal to the sum of plasticstrain for each altmin
                !Call VecAxPy(plasticStrainCumulatedDuringAltMin,1.0_Kr,MEF90DefMechCtx%plasticStrain)
 
-               If (PlasticStrainMaxChange <= MEF90DefMechGlobalOptions%plasticATol) Then
+               If (PlasticStrainMaxChange <= MEF90DefMechGlobalOptions%plasticStrainATol) Then
                   EXIT
                End If
 
