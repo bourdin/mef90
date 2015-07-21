@@ -52,12 +52,13 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                               :: pressureForceScaling
       PetscReal                              :: damageATol
       PetscInt                               :: maxit
+      PetscInt                               :: PCLag
       PetscReal                              :: irrevthres
       PetscEnum                              :: BTType
       PetscInt                               :: BTInterval
       PetscInt                               :: BTScope
       PetscReal                              :: BTTol
-      PetscReal                              :: plasticATol
+      PetscReal                              :: plasticStrainATol
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -674,6 +675,7 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%pressureForceOffset,default%pressureForceOffset,'pressureForce_Offset','Position of pressure force field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%damageATol,default%damageATol,'defmech_damage_atol','Absolute tolerance on damage error',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%maxit,default%maxit,'defmech_maxit','Maximum number of alternate minimizations for damage',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%PCLag,default%PCLag,'defmech_pclag','Interval at which the PC is recomputed during alternate minimization',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%irrevthres,default%irrevthres,'defmech_irrevThres','Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%BTType,MEF90DefMech_BTTypeList,default%BTType,'BT_Type','Backtracking type',ierr);CHKERRQ(ierr)
@@ -681,7 +683,7 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%BTScope,default%BTScope,'BT_Scope','Backtracking scope (0 for unlimited)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%BTTol,default%BTTol,'BT_Tol','Backtracking relative tolerance',ierr);CHKERRQ(ierr)
 
-      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticATol,default%plasticATol,'defmech_plastic_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticStrainATol,default%plasticStrainATol,'defmech_plasticstrain_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
 
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 

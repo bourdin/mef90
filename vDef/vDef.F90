@@ -94,12 +94,13 @@ Program vDef
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
+                                                         10,                      & ! PCLag
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticAtol
+                                                         1.0e-4)                    ! plasticStrainAtol
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
@@ -118,12 +119,13 @@ Program vDef
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
+                                                         10,                      & ! PCLag
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticAtol
+                                                         1.0e-4)                    ! plasticStrainAtol
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -400,12 +402,19 @@ Program vDef
             Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
             Call MEF90DefMechUpdateboundaryDamage(MEF90DefMechCtx%damage,MEF90DefMechCtx,ierr)
 
+            Call SNESSetLagPreconditioner(snesDamage,1,ierr);CHKERRQ(ierr)
+            Call SNESSetLagPreconditioner(snesDisp,1,ierr);CHKERRQ(ierr)
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
                Write(IObuffer,208) AltMinIter
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
                !!! Solve SNES
+               If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
+                  Call SNESSetLagPreconditioner(snesDisp,-2,ierr);CHKERRQ(ierr)
+                  Call SNESSetLagPreconditioner(snesDamage,-2,ierr);CHKERRQ(ierr)
+               End If 
                Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+
                Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
                If (snesDispConvergedReason < 0) Then  
                   Write(IOBuffer,400) "displacement",snesDispConvergedReason
@@ -428,6 +437,8 @@ Program vDef
 
                Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,ierr);CHKERRQ(ierr)
 
+               !Call SNESSetLagPreconditioner(snesDisp,-1,ierr);CHKERRQ(ierr)
+               !Call SNESSetLagPreconditioner(snesDamage,-1,ierr);CHKERRQ(ierr)
                ! Check for BT if necessary
                BTCheck: If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &
                    (mod(AltMinIter,MEF90DefMechGlobalOptions%BTInterval) == 0) .AND. &
