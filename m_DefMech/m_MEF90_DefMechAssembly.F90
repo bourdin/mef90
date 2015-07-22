@@ -9,6 +9,7 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
    Public MEF90DefMechOperatorDisplacement,     &
           MEF90DefMechBilinearFormDisplacement, &
           MEF90DefMechWork,                     &
+          MEF90DefMechCohesiveEnergy,           &
           MEF90DefMechElasticEnergy,            &
           MEF90DefMechOperatorDamage,           &
           MEF90DefMechBilinearFormDamage,       &
@@ -498,7 +499,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
-      Type(MEF90_VECT)                                   :: U,U0
+      Type(MEF90_VECT)                                   :: UU0
       PetscReal                                          :: temperature
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscLogDouble                                     :: flops
@@ -510,19 +511,16 @@ Contains
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
          sigma = 0.0_Kr
-         U = 0.0_Kr
          Do iDoF1 = 1,numDofDisplacement
             sigma = sigma + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
-            U     = U + xDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
          End Do
-         U = U * matprop%residualStiffness
 
-         U0 = 0.0_Kr
+         UU0 = 0.0_Kr
          If (Associated(boundaryDisplacementDof)) Then
             Do iDoF1 = 1,numDofDisplacement
-               U0 = U0 + boundaryDisplacementDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
+               UU0 = UU0 + (xDof(iDoF1) - boundaryDisplacementDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss)
             End Do
-            U0 = U0 * matprop%cohesiveStiffness
+            UU0 = UU0 * matprop%cohesiveStiffness
          End If
 
          temperature = 0.0_Kr
@@ -533,11 +531,11 @@ Contains
          End If
          sigma = matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion)
          Do iDoF2 = 1,numDofDisplacement
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss)) + U * elemDisplacement%BF(iDoF2,iGauss))
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
          End Do
          If (Associated(boundaryDisplacementDof)) Then
             Do iDoF2 = 1,numDofDisplacement
-               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((U-U0) * elemDisplacement%BF(iDoF2,iGauss))
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (UU0 .DotP. elemDisplacement%BF(iDoF2,iGauss))
             End Do
          End If
       End Do
@@ -563,7 +561,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
-      Type(MEF90_VECT)                                   :: U,U0
+      Type(MEF90_VECT)                                   :: UU0
       PetscReal                                          :: stiffness,temperature
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscLogDouble                                     :: flops
@@ -582,19 +580,16 @@ Contains
          stiffness = (1.0_Kr - stiffness)**2 + matProp%residualStiffness
 
          sigma = 0.0_Kr
-         U = 0.0_Kr
          Do iDoF1 = 1,numDofDisplacement
             sigma = sigma + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
-            U     = U + xDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
          End Do
-         U = U * matprop%residualStiffness
 
-         U0 = 0.0_Kr
+         UU0 = 0.0_Kr
          If (Associated(boundaryDisplacementDof)) Then
             Do iDoF1 = 1,numDofDisplacement
-               U0 = U0 + boundaryDisplacementDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
+               UU0 = UU0 + (xDof(iDoF1) - boundaryDisplacementDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss)
             End Do
-            U0 = U0 * matprop%cohesiveStiffness
+            UU0 = UU0 * matprop%cohesiveStiffness
          End If
 
          temperature = 0.0_Kr
@@ -606,11 +601,11 @@ Contains
          sigma = stiffness * (matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion))
 
          Do iDoF2 = 1,numDofDisplacement
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss)) + U * elemDisplacement%BF(iDoF2,iGauss))
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
          End Do
          If (Associated(boundaryDisplacementDof)) Then
             Do iDoF2 = 1,numDofDisplacement
-               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((U-U0) * elemDisplacement%BF(iDoF2,iGauss))
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (UU0 .DotP. elemDisplacement%BF(iDoF2,iGauss))
             End Do
          End If
       End Do
@@ -637,7 +632,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       Type(MEF90_MATS)                                   :: sigma
-      Type(MEF90_VECT)                                   :: U,U0
+      Type(MEF90_VECT)                                   :: UU0
       PetscReal                                          :: stiffness,temperature
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscLogDouble                                     :: flops
@@ -657,19 +652,16 @@ Contains
          stiffness = (1.0_Kr - stiffness)**2 /( 1.0_Kr + ( k - 1.0_Kr )*(1.0_Kr - (1.0_Kr - stiffness)**2 ) )+ matProp%residualStiffness
 
          sigma = 0.0_Kr
-         U = 0.0_Kr
          Do iDoF1 = 1,numDofDisplacement
             sigma = sigma + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
-            U     = U + xDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
          End Do
-         U = U * matprop%residualStiffness
 
-         U0 = 0.0_Kr
+         UU0 = 0.0_Kr
          If (Associated(boundaryDisplacementDof)) Then
             Do iDoF1 = 1,numDofDisplacement
-               U0 = U0 + boundaryDisplacementDof(iDoF1) * elemDisplacement%BF(iDoF1,iGauss)
+               UU0 = UU0 + (xDof(iDoF1) - boundaryDisplacementDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss)
             End Do
-            U0 = U0 * matprop%cohesiveStiffness
+            UU0 = UU0 * matprop%cohesiveStiffness
          End If
 
          temperature = 0.0_Kr
@@ -681,11 +673,11 @@ Contains
          sigma = stiffness * (matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion))
 
          Do iDoF2 = 1,numDofDisplacement
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss)) + U * elemDisplacement%BF(iDoF2,iGauss))
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
          End Do
          If (Associated(boundaryDisplacementDof)) Then
             Do iDoF2 = 1,numDofDisplacement
-               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ((U-U0) * elemDisplacement%BF(iDoF2,iGauss))
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (UU0 .DotP. elemDisplacement%BF(iDoF2,iGauss))
             End Do
          End If
       End Do
@@ -1619,6 +1611,76 @@ Contains
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechWork   
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCohesiveEnergy"
+!!!
+!!!  
+!!!  MEF90DefMechCohesiveEnergy:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine MEF90DefMechCohesiveEnergy(xVec,MEF90DefMechCtx,cohesiveEnergy,ierr)
+      Type(Vec),Intent(IN)                               :: xVec
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscReal,Dimension(:),Pointer                     :: cohesiveEnergy
+      PetscErrorCode,Intent(OUT)                         :: ierr
+   
+      Type(SectionReal)                                  :: xSec
+      Type(SectionReal)                                  :: boundaryDisplacementSec
+      Type(IS)                                           :: CellSetGlobalIS,setIS
+      PetscInt,Dimension(:),Pointer                      :: setID
+      PetscInt                                           :: set,QuadratureOrder,numCell
+      Type(MEF90_MATPROP),Pointer                        :: matpropSet
+      Type(VecScatter)                                   :: ScatterSecToVec
+      Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
+      Type(MEF90Element_Type)                            :: elemDisplacementType
+      Type(MEF90DefMechGlobalOptions_Type),Pointer       :: globalOptions
+      Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
+      PetscReal                                          :: mycohesiveEnergy
+      
+      
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%globalOptionsBag,globalOptions,ierr);CHKERRQ(ierr)
+      !!! Create dof-based sections
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(xSec,boundaryDisplacementSec,ierr);CHKERRQ(ierr)
+      
+      !!! Scatter data from Vec to Sec, or initialize
+      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,xVec,ierr);CHKERRQ(ierr)         
+      Call SectionRealToVec(boundaryDisplacementSec,ScatterSecToVec,SCATTER_REVERSE,MEF90DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
+
+      cohesiveEnergy   = 0.0_Kr
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         mycohesiveEnergy = 0.0_Kr
+         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
+
+         !!! Call proper local assembly depending on the type of damage law
+         QuadratureOrder = elemDisplacementType%order
+         Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+
+         Call MEF90ElasticityCohesiveEnergySet(mycohesiveEnergy,xSec,MEF90DefMechCtx%CellDMVect,boundaryDisplacementSec,setIS,elemDisplacement,elemDisplacementType,ierr)
+
+         Call MEF90Element_Destroy(elemDisplacement,ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+
+         Call MPI_AllReduce(MPI_IN_PLACE,mycohesiveEnergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         cohesiveEnergy(set) = cohesiveEnergy(set) + mycohesiveEnergy * matpropSet%cohesiveStiffness
+      End Do ! set
+      Call ISrestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+
+      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(boundaryDisplacementSec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechCohesiveEnergy   
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechElasticEnergy"

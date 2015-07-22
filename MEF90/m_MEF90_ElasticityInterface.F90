@@ -22,6 +22,7 @@ Module m_MEF90_ElasticityInterface
          ElasticityWorkSetCst_2D => ElasticityWorkSetCst, &
          ElasticityWorkSetCell_2D => ElasticityWorkSetCell, &
          ElasticityWorkSetVertex_2D => ElasticityWorkSetVertex, &
+         ElasticityCohesiveEnergySet_2D => ElasticityCohesiveEnergySet, &
          !ElasticityPressureWorkSetCst_2D => ElasticityPressureWorkSetCst, &
          ElasticityPressureWorkSetCell_2D => ElasticityPressureWorkSetCell, &
          !ElasticityWorkPressureSetVertex_2D => ElasticityPressureWorkSetVertex
@@ -47,6 +48,7 @@ Module m_MEF90_ElasticityInterface
          ElasticityWorkSetCst_3D => ElasticityWorkSetCst, &
          ElasticityWorkSetCell_3D => ElasticityWorkSetCell, &
          ElasticityWorkSetVertex_3D => ElasticityWorkSetVertex, &
+         ElasticityCohesiveEnergySet_3D => ElasticityCohesiveEnergySet, &
          !ElasticityPressureWorkSetCst_3D => ElasticityPressureWorkSetCst, &
          ElasticityPressureWorkSetCell_3D => ElasticityPressureWorkSetCell, &
          !ElasticityWorkPressureSetVertex_3D => ElasticityPressureWorkSetVertex
@@ -73,6 +75,7 @@ Module m_MEF90_ElasticityInterface
    Public :: MEF90ElasticityWorkSetCst
    Public :: MEF90ElasticityWorkSetCell
    Public :: MEF90ElasticityWorkSetVertex
+   Public :: MEF90ElasticityCohesiveEnergySet
    !Public :: MEF90ElasticityPressureWorkSetCst
    Public :: MEF90ElasticityPressureWorkSetCell
    !Public :: MEF90ElasticityPressureWorkSetVertex
@@ -145,6 +148,10 @@ Module m_MEF90_ElasticityInterface
    Interface MEF90ElasticityWorkSetVertex
       Module procedure ElasticityWorkSetVertex_2D, ElasticityWorkSetVertex_3D
    End Interface 
+   
+   Interface MEF90ElasticityCohesiveEnergySet
+      Module Procedure ElasticityCohesiveEnergySet_2D, ElasticityCohesiveEnergySet_3D
+   End Interface
 
    !Interface MEF90ElasticityPressureWorkSetCst
    !   Module procedure ElasticityPressureWorkSetCst_2D, ElasticityPressureWorkSetCst_3D

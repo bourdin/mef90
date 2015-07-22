@@ -29,8 +29,8 @@ Program vDef
    PetscInt                                           :: numset,set
    PetscReal,Dimension(:),Pointer                     :: time
    PetscReal,Dimension(:),Pointer                     :: thermalEnergySet,heatFluxWorkSet
-   PetscReal,Dimension(:),Pointer                     :: elasticEnergySet,surfaceEnergySet,forceWorkSet
-   PetscReal,Dimension(:),Pointer                     :: elasticEnergy,surfaceEnergy,forceWork,totalMechanicalEnergy
+   PetscReal,Dimension(:),Pointer                     :: elasticEnergySet,surfaceEnergySet,forceWorkSet,cohesiveEnergySet
+   PetscReal,Dimension(:),Pointer                     :: elasticEnergy,surfaceEnergy,forceWork,cohesiveEnergy,totalMechanicalEnergy
 
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
@@ -264,6 +264,8 @@ Program vDef
    surfaceEnergySet = 0.0_Kr
    Allocate(forceWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
    forceWorkSet = 0.0_Kr
+   Allocate(cohesiveEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   cohesiveEnergySet = 0.0_Kr
    Allocate(thermalEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
    thermalEnergySet = 0.0_Kr
    Allocate(heatFluxWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
@@ -271,10 +273,12 @@ Program vDef
    
    Allocate(elasticEnergy(MEF90GlobalOptions%timeNumStep))
    elasticEnergy = 0.0_Kr
-   Allocate(forceWork(MEF90GlobalOptions%timeNumStep))
-   forceWork = 0.0_Kr
    Allocate(surfaceEnergy(MEF90GlobalOptions%timeNumStep))
    surfaceEnergy = 0.0_Kr
+   Allocate(forceWork(MEF90GlobalOptions%timeNumStep))
+   forceWork = 0.0_Kr
+   Allocate(cohesiveEnergy(MEF90GlobalOptions%timeNumStep))
+   cohesiveEnergy = 0.0_Kr
    Allocate(totalMechanicalEnergy(MEF90GlobalOptions%timeNumStep))
    totalMechanicalEnergy = 0.0_Kr
    
@@ -437,8 +441,6 @@ Program vDef
 
                Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,ierr);CHKERRQ(ierr)
 
-               !Call SNESSetLagPreconditioner(snesDisp,-1,ierr);CHKERRQ(ierr)
-               !Call SNESSetLagPreconditioner(snesDamage,-1,ierr);CHKERRQ(ierr)
                ! Check for BT if necessary
                BTCheck: If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &
                    (mod(AltMinIter,MEF90DefMechGlobalOptions%BTInterval) == 0) .AND. &
@@ -446,16 +448,19 @@ Program vDef
                    !!!
                    !!! Recompute all energies
                    !!!
-                  elasticEnergySet = 0.0_Kr
-                  forceWorkSet     = 0.0_Kr
-                  surfaceEnergySet = 0.0_Kr
+                  elasticEnergySet  = 0.0_Kr
+                  forceWorkSet      = 0.0_Kr
+                  surfaceEnergySet  = 0.0_Kr
+                  cohesiveEnergySet = 0.0_Kr
                   Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,elasticEnergySet,ierr);CHKERRQ(ierr)
                   Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
                   Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
-                  elasticEnergy(step) = sum(elasticEnergySet)
-                  forceWork(step)     = sum(forceWorkSet)
-                  surfaceEnergy(step) = sum(surfaceEnergySet)
-                  totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + surfaceEnergy(step)
+                  Call MEF90DefMechCohesiveEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,cohesiveEnergySet,ierr);CHKERRQ(ierr)
+                  elasticEnergy(step)  = sum(elasticEnergySet)
+                  forceWork(step)      = sum(forceWorkSet)
+                  surfaceEnergy(step)  = sum(surfaceEnergySet)
+                  cohesiveEnergy(step) = sum(cohesiveEnergySet)
+                  totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + cohesiveEnergy(step) + surfaceEnergy(step)
                   
                   !!!
                   !!! Check for a BT step
@@ -502,16 +507,19 @@ Program vDef
 
             EndStep: If (.NOT. BTActive) Then
                !!! Compute energies
-               elasticEnergySet = 0.0_Kr
-               forceWorkSet     = 0.0_Kr
-               surfaceEnergySet = 0.0_Kr
+               elasticEnergySet  = 0.0_Kr
+               forceWorkSet      = 0.0_Kr
+               surfaceEnergySet  = 0.0_Kr
+               cohesiveEnergySet = 0.0_Kr
                Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,elasticEnergySet,ierr);CHKERRQ(ierr)
                Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
                Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
-               elasticEnergy(step) = sum(elasticEnergySet)
-               forceWork(step)     = sum(forceWorkSet)
-               surfaceEnergy(step) = sum(surfaceEnergySet)
-               totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + surfaceEnergy(step)
+               Call MEF90DefMechCohesiveEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,cohesiveEnergySet,ierr);CHKERRQ(ierr)
+               elasticEnergy(step)  = sum(elasticEnergySet)
+               forceWork(step)      = sum(forceWorkSet)
+               surfaceEnergy(step)  = sum(surfaceEnergySet)
+               cohesiveEnergy(step) = sum(cohesiveEnergySet)
+               totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + cohesiveEnergy(step) + surfaceEnergy(step)
                !!!
                !!! Print and save energies
                !!!
@@ -520,18 +528,18 @@ Program vDef
                Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
                Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
                Do set = 1, size(setID)
-                  Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + surfaceEnergySet(set)
+                  Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-                  Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + surfaceEnergySet(set)
+                  Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
                   Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
                   Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
                End Do
                Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
                Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-               Write(IOBuffer,202) elasticEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step)
+               Write(IOBuffer,202) elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-               Write(IOBuffer,500) step,time(step),elasticEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step)
+               Write(IOBuffer,500) step,time(step),elasticEnergy(step),cohesiveEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step)
                Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
                Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
 
@@ -629,11 +637,13 @@ Program vDef
    DeAllocate(elasticEnergySet)
    DeAllocate(surfaceEnergySet)
    DeAllocate(forceWorkSet)
+   DeAllocate(cohesiveEnergySet)
    DeAllocate(thermalEnergySet)
    DeAllocate(heatFluxWorkSet)
    
    DeAllocate(elasticEnergy)
    DeAllocate(forceWork)
+   DeAllocate(cohesiveEnergy)
    DeAllocate(surfaceEnergy)
    DeAllocate(totalMechanicalEnergy)
 
@@ -652,12 +662,12 @@ Program vDef
 102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
 110 Format("\nHeat transfer: step ",I4,", until t=",ES12.5,"\n")
 200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
-201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
-202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
 208 Format("   Alt. Min. step ",I5," ")
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 450 Format("BT: going back to step ",I4,"\n")
-500 Format(I6, 5(ES16.5),"\n")
+500 Format(I6, 6(ES16.5),"\n")
 End Program vDef

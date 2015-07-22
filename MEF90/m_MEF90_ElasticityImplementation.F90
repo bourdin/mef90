@@ -27,6 +27,7 @@ Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D
    Public :: ElasticityWorkSetCst
    Public :: ElasticityWorkSetCell
    Public :: ElasticityWorkSetVertex
+   Public :: ElasticityCohesiveEnergySet
    !Public :: ElasticityPressureWorkSetCst
    Public :: ElasticityPressureWorkSetCell
    !Public :: ElasticityPressureWorkSetVertex
@@ -880,6 +881,56 @@ Contains
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityWorkSetVertex
+
+#undef __FUNCT__
+#define __FUNCT__ "ElasticityCohesiveEnergySet"
+!!!
+!!!  
+!!!  ElasticityCohesiveEnergySet:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine ElasticityCohesiveEnergySet(cohesiveEnergy,x,mesh,x0,cellIS,elem,elemType,ierr)
+      PetscReal,Intent(OUT)                              :: cohesiveEnergy
+      Type(SectionReal),Intent(IN)                       :: x
+      Type(DM),Intent(IN)                                :: mesh
+      Type(SectionReal),Intent(IN)                       :: x0
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: xloc,x0loc
+      Type(MEF90_VECT)                                   :: xx0elem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+     
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemType%numDof))
+         Allocate(x0loc(elemType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrictClosure(x0,mesh,cellID(cell),elemType%numDof,x0loc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               xx0elem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  xx0elem  = xx0elem  + (xloc(iDof1) - x0loc(iDof1))  * elem(cell)%BF(iDof1,iGauss)
+               End Do
+               cohesiveEnergy = cohesiveEnergy + elem(cell)%Gauss_C(iGauss) * (xx0elem .dotP. xx0elem)
+            End Do
+         End Do
+      
+         flops = elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(x0loc)
+      End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine ElasticityCohesiveEnergySet
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticitypressureWorkSetCell"
