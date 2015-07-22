@@ -9,6 +9,7 @@ Module m_MEF90_DefMech
       MEF90DefMechOperatorDisplacement2D     => MEF90DefMechOperatorDisplacement,      &
       MEF90DefMechBilinearFormDisplacement2D => MEF90DefMechBilinearFormDisplacement,  &     
       MEF90DefMechWork2D                     => MEF90DefMechWork,                      &
+      MEF90DefMechCohesiveEnergy2D           => MEF90DefMechCohesiveEnergy,            &
       MEF90DefMechElasticEnergy2D            => MEF90DefMechElasticEnergy,             &
       MEF90DefMechOperatorDamage2D           => MEF90DefMechOperatorDamage,            &
       MEF90DefMechBilinearFormDamage2D       => MEF90DefMechBilinearFormDamage,        &
@@ -18,6 +19,7 @@ Module m_MEF90_DefMech
       MEF90DefMechOperatorDisplacement3D     => MEF90DefMechOperatorDisplacement,      &
       MEF90DefMechBilinearFormDisplacement3D => MEF90DefMechBilinearFormDisplacement,  &     
       MEF90DefMechWork3D                     => MEF90DefMechWork,                      &
+      MEF90DefMechCohesiveEnergy3D           => MEF90DefMechCohesiveEnergy,            &
       MEF90DefMechElasticEnergy3D            => MEF90DefMechElasticEnergy,             &
       MEF90DefMechOperatorDamage3D           => MEF90DefMechOperatorDamage,            &
       MEF90DefMechBilinearFormDamage3D       => MEF90DefMechBilinearFormDamage,        &
@@ -44,6 +46,7 @@ Module m_MEF90_DefMech
    Public :: MEF90DefMechSurfaceEnergy
    Public :: MEF90DefMechElasticEnergy
    Public :: MEF90DefMechWork
+   Public :: MEF90DefMechCohesiveEnergy
    Public :: MEF90DefMechStress
    Public :: MEF90DefMechPlasticStrainUpdate
 
@@ -617,6 +620,30 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call MEF90DefMechWork3D(DisplacementVec,MEF90DefMechCtx,work,ierr)
       End If      
    End Subroutine MEF90DefMechWork
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCohesiveEnergy"
+!!!
+!!!  
+!!!  MEF90DefMechCohesiveEnergy: wraps calls to MEF90DefMechCohesiveEnergy from m_MEF90_DefMechAssembly
+!!                       since overloading cannot be used here
+!!!  
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechCohesiveEnergy(DisplacementVec,MEF90DefMechCtx,cohesiveEnergy,ierr)
+      Type(Vec),Intent(IN)                            :: DisplacementVec
+      Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
+      PetscReal,Dimension(:),Pointer                  :: cohesiveEnergy
+      PetscErrorCode,Intent(OUT)                      :: ierr
+
+      PetscInt                                        :: dim      
+      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
+      If (dim == 2) Then
+         Call MEF90DefMechCohesiveEnergy2D(DisplacementVec,MEF90DefMechCtx,cohesiveEnergy,ierr)
+      Else If (dim == 3) Then
+         Call MEF90DefMechCohesiveEnergy3D(DisplacementVec,MEF90DefMechCtx,cohesiveEnergy,ierr)
+      End If      
+   End Subroutine MEF90DefMechCohesiveEnergy
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechElasticEnergy"
