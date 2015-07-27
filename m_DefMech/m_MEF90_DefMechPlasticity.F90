@@ -251,7 +251,7 @@ contains
             !!! You don't need the Section, only the local version.
             !!! Modify your function so that it computes the inelastic strain in a given cell, given local (stress, strain, temp etc) fields
 
-            !!ctx_ptr%plasticStrainOld = plasticStrainLoc
+            ctx_ptr%PlasticStrainOld = plasticStrainOldLoc
             ctx_ptr%InelasticStrain = InelasticStrainLoc  ![10.0_Kr,0.0_Kr,0.0_Kr]
 
             !ctx_ptr%PlasticStrainOld   =   plasticStrainOldLoc

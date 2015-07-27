@@ -1,14 +1,14 @@
 verbose: 0
 time:
     min: 0
-    max: 2
-    numstep: 4
+    max: 4
+    numstep: 8
 heatxfer:
   mode: null
 defmech:
   mode: quasistatic
-  plastic:
-    atol: 1e-4
+  plasticStrain:
+    atol: 1e-1
 temperature:
     offset: 0
 plasticStrain:
