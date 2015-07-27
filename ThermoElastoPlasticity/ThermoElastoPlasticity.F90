@@ -151,8 +151,8 @@ Program ThermoElastoPlasticity
    !!! Alternate minimization 
    PetscInt                                           :: AltMinIter
    PetscReal                                          :: PlasticStrainMaxChange
-   Type(Vec)                                          :: plasticStrainCumulatedDuringAltMin
    Type(Vec)                                          :: plasticstrainerror
+   Type(Vec)                                          :: plasticStrainPrevious
       
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
@@ -225,6 +225,7 @@ Program ThermoElastoPlasticity
 
 
    Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
 
 
 ! ---> modification
@@ -367,6 +368,7 @@ Program ThermoElastoPlasticity
 
 
             !!! beginning of the alternate minimization
+            
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                !! Duplicated PlasticStraincumulated 
@@ -379,16 +381,21 @@ Program ThermoElastoPlasticity
                   Write(IOBuffer,*) "SNESConvergedReason returned ",snesDispConvergedReason,"\n"
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                End If
+
+               !!! Save the PlasticStrainPrevious
+               Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                !!! Solve PlasticProjection
                Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,ierr);CHKERRQ(ierr)
-               
+
                !!! Calculate the Infinity norm in error on PlasticStrain
                Call VecNorm(MEF90DefMechCtx%plasticStrain,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
                
-               write(*,*) 'PlasticStrainMaxChange:          ',PlasticStrainMaxChange
+               !!! Sum The PlasticStrainPrevious with PlasticStrain
+               Call VecAxPy(MEF90DefMechCtx%plasticStrain,1.0_Kr,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+               Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
 
-               !!! calculate the plasticstraincumulatedduringaltmin equal to the sum of plasticstrain for each altmin
-               !Call VecAxPy(plasticStrainCumulatedDuringAltMin,1.0_Kr,MEF90DefMechCtx%plasticStrain)
+
+               write(*,*) 'PlasticStrainMaxChange:          ',PlasticStrainMaxChange
 
                If (PlasticStrainMaxChange <= MEF90DefMechGlobalOptions%plasticStrainATol) Then
                   EXIT
@@ -399,10 +406,10 @@ Program ThermoElastoPlasticity
                End If
 
             End Do AltMin
-            !!! update plasticstrainold --> doesn't works (not read in MEF90DefMechPlasticStrainUpdate)
-            Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
-            !Call VecDuplicate(plasticStrainCumulatedDuringAltMin,plasticStrainOld,ierr);CHKERRQ(ierr)
-            !Call VecDestroy(plasticStrainCumulatedDuringAltMin,ierr);CHKERRQ(ierr)
+            !!! update plasticstrainold
+            Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+            !Call VecView(plasticStrainOld,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+
             !!! --> end of the alternate minimization
 
 
@@ -466,6 +473,8 @@ Program ThermoElastoPlasticity
    Call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx,ierr)
    Call VecDestroy(residualDisp,ierr);CHKERRQ(ierr)
    Call VecDestroy(residualTemp,ierr);CHKERRQ(ierr)
+   !!! destroy plastic StrainPrevious
+   Call VecDestroy(plasticStrainPrevious,ierr);CHKERRQ(ierr)
 
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 
