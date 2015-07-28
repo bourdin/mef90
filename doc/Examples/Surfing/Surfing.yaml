@@ -14,7 +14,10 @@ temperature:
 plasticStrain:
   offset: 0
 cs0001:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
     linearThermalExpansion: 0,0,0
     fracturetoughness: .888
     residualstiffness: 0.
@@ -27,7 +30,7 @@ cs0020:
     displacementBC: 1,1,1
     damageBC: 1
     boundaryDamage: 0.
-cs0030:
+vs0500:
     displacementBC: 0,0,0
     damageBC: 1
     boundaryDamage: 1.
