@@ -7,6 +7,8 @@ defmech:
     mode: quasistatic
     damage:
         atol: 1e-3
+stress:
+    offset: 9
 heatxfer:
     mode: null
 temperature:
@@ -16,7 +18,10 @@ time:
     max: 1
     numstep: 21
 cs0001:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
     FractureToughness: .01
     internallength: .2
     residualstiffness: 0.
@@ -27,7 +32,10 @@ cs0001:
     displacementbc: no,no,no
     damageBC: no
 cs0002:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
     FractureToughness: .01
     internallength: .2
     residualstiffness: 0.
@@ -37,7 +45,10 @@ cs0002:
         type: NONE
     displacementbc: no,no,no
 cs0003:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
     FractureToughness: .01
     internallength: .05
     damage:
@@ -47,7 +58,10 @@ cs0003:
     displacementbc: yes,yes,no
     boundaryDisplacement: 0,1,0
 cs0004:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
     FractureToughness: .01
     internallength: .2
     damage:
