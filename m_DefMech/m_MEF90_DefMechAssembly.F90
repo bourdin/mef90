@@ -124,6 +124,9 @@ Contains
             sigma = matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss)
             Do iDoF2 = 1,numDofDisplacement
                ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+               If (matprop%cohesiveStiffness /= 0.0_Kr) Then
+                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesivestiffness * (elemDisplacement%BF(iDoF1,iGauss) .DotP. elemDisplacement%BF(iDoF2,iGauss))
+               End If            
             End Do
          End Do
       End Do
@@ -168,6 +171,9 @@ Contains
             sigma = stiffness * (matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss))
             Do iDoF2 = 1,numDofDisplacement
                ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss)) + matprop%cohesiveStiffness * elemDisplacement%BF(iDoF2,iGauss) * elemDisplacement%BF(iDoF1,iGauss))
+               If (matprop%cohesiveStiffness /= 0.0_Kr) Then
+                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesivestiffness * (elemDisplacement%BF(iDoF1,iGauss) .DotP. elemDisplacement%BF(iDoF2,iGauss))
+               End If            
             End Do
          End Do
       End Do
@@ -215,6 +221,9 @@ Contains
             sigma = stiffness * (matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss))
             Do iDoF2 = 1,numDofDisplacement
                ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss)) + matprop%cohesiveStiffness * elemDisplacement%BF(iDoF2,iGauss) * elemDisplacement%BF(iDoF1,iGauss))
+               If (matprop%cohesiveStiffness /= 0.0_Kr) Then
+                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesivestiffness * (elemDisplacement%BF(iDoF1,iGauss) .DotP. elemDisplacement%BF(iDoF2,iGauss))
+               End If            
             End Do
          End Do
       End Do

@@ -920,7 +920,7 @@ Contains
                Do iDoF1 = 1,elemType%numDof
                   xx0elem  = xx0elem  + (xloc(iDof1) - x0loc(iDof1))  * elem(cell)%BF(iDof1,iGauss)
                End Do
-               cohesiveEnergy = cohesiveEnergy + elem(cell)%Gauss_C(iGauss) * (xx0elem .dotP. xx0elem)
+               cohesiveEnergy = cohesiveEnergy + elem(cell)%Gauss_C(iGauss) * (xx0elem .dotP. xx0elem) *.5_Kr
             End Do
          End Do
       
