@@ -1158,9 +1158,10 @@ Contains
 !!!  (c) 2014 Erwan TANNE erwan.tanne@gmail.com
 !!!
 
-   Subroutine InelasticStrainSet(InelasticStrain,x,plasticStrain,temperature,mesh,meshScal,cellIS,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
+   Subroutine InelasticStrainSet(InelasticStrain,x,temperature,mesh,meshScal,cellIS,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
       Type(SectionReal),Intent(OUT)                      :: InelasticStrain
-      Type(SectionReal),Intent(IN)                       :: x,plasticStrain,temperature
+      Type(SectionReal),Intent(IN)                       :: x,temperature
+      !Type(SectionReal),Intent(IN)                       :: plasticStrain
       Type(DM),Intent(IN)                                :: mesh,meshScal
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
@@ -1169,9 +1170,12 @@ Contains
       Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
-      PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,plasticStrainLoc,InelasticStrainPtr
+      PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,InelasticStrainPtr
+      !PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc
       PetscReal                                          :: temperatureElem
-      Type(MEF90_MATS)                                   :: StrainElem,plasticStrainElem,InelasticStrainLoc
+      Type(MEF90_MATS)                                   :: StrainElem,InelasticStrainLoc
+
+      !Type(MEF90_MATS)                                   :: plasticStrainElem
       PetscReal                                          :: cellSize
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
@@ -1190,12 +1194,12 @@ Contains
             If (temperature%v /= 0) Then
                Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
             End If
-            If (plasticStrain%v /= 0) Then
-               Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
-            End If
+            !If (plasticStrain%v /= 0) Then
+            !   Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            !End If
             Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
                temperatureElem   = 0.0_Kr
-               plasticStrainElem = 0.0_Kr
+               !plasticStrainElem = 0.0_Kr
                strainElem        = 0.0_Kr
                Do iDoF1 = 1,elemDisplacementType%numDof
                   strainElem = strainElem + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
@@ -1206,16 +1210,16 @@ Contains
                   End Do
                   strainElem = strainElem - (temperatureElem * thermalExpansion)
                End If
-               If (plasticStrain%v /= 0) Then
-                  plasticStrainElem = plasticStrainLoc
-                  strainElem = strainElem - plasticStrainElem
-               End If
+               !If (plasticStrain%v /= 0) Then
+               !   plasticStrainElem = plasticStrainLoc
+               !   strainElem = strainElem - plasticStrainElem
+               !End If
                InelasticStrainLoc = InelasticStrainLoc + elemDisplacement(cell)%Gauss_C(iGauss) * strainElem
                cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
             End Do ! Gauss
-            If (plasticStrain%v /= 0) Then
-               Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
-            End If
+            !If (plasticStrain%v /= 0) Then
+            !   Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            !End If
             InelasticStrainPtr = InelasticStrainLoc / cellSize
             Call SectionRealUpdate(InelasticStrain,cellID(cell),InelasticStrainPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
          End Do ! cell

@@ -387,12 +387,13 @@ Program ThermoElastoPlasticity
                !!! Solve PlasticProjection
                Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,ierr);CHKERRQ(ierr)
 
+               Call VecAxPy(plasticStrainPrevious,-1.0_Kr,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
                !!! Calculate the Infinity norm in error on PlasticStrain
-               Call VecNorm(MEF90DefMechCtx%plasticStrain,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
+               Call VecNorm(plasticStrainPrevious,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
                
                !!! Sum The PlasticStrainPrevious with PlasticStrain
-               Call VecAxPy(MEF90DefMechCtx%plasticStrain,1.0_Kr,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-               Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+               !Call VecAxPy(MEF90DefMechCtx%plasticStrain,1.0_Kr,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+               !Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
 
 
                write(*,*) 'PlasticStrainMaxChange:          ',PlasticStrainMaxChange

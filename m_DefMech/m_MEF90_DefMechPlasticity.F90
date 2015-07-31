@@ -53,7 +53,7 @@ contains
       !write(*,*) 'FHG: PlasticStrainOld', myctx_ptr%PlasticStrainOld
       f(1) = ( (myctx_ptr%HookesLaw * (x2D-myctx_ptr%PlasticStrainOld)) .DotP. (x2D-myctx_ptr%PlasticStrainOld) ) /2.
       h(1) = Trace(x2D)
-      g(1) = sqrt( 2.0*trace(  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D))  *  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D)) ) ) - myctx_ptr%YieldStress
+      g(1) =  2.0* ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D)) )  - myctx_ptr%YieldStress**2
       !!!!write(*,*) 'FHG: f,h,g           ', f(1),h(1),g(1)
       !write(*,*)
    end subroutine fhg_VonMises2D
@@ -237,7 +237,7 @@ contains
          write(*,*) 'QuadratureOrder:  ', QuadratureOrder
          Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
          Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-         Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matprop2D%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+         Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matprop2D%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
          Call MEF90Element_Destroy(elemDisplacement,ierr)
          Call MEF90Element_Destroy(elemScal,ierr)
 
@@ -265,7 +265,7 @@ contains
             write(*,*) 'Plastic Strain before: ', PlasticStrainLoc
 
             !write(*,*) 'Plastic Strain: Old    ', ctx_ptr%PlasticStrainOld
-            !write(*,*) 'Inelastic Strain:      ', ctx_ptr%InelasticStrain
+            write(*,*) 'Inelastic Strain:      ', InelasticStrainLoc
             !Write(*,*) 'HookesLaw               ', ctx_ptr%HookesLaw
          
             !!! This is a bit dangerous:

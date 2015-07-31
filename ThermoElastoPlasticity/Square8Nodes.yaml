@@ -29,12 +29,12 @@ cs0001:
         PoissonRatio:  0.
     yieldStress: 1
 cs0002:
-    displacementBC: 1,1,1
+    displacementBC: 0,1,0
     boundaryDisplacement: 0.,0.,0.
     damageBC: 1
     boundaryDamage: 0.
 cs0003:
-    displacementBC: 1,1,1
-    boundaryDisplacement: 0.,-1.,0.
+    displacementBC: 0,1,0
+    boundaryDisplacement: 0.,1.,0.
     damageBC: 1
     boundaryDamage: 0.
