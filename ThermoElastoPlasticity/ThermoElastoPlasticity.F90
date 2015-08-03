@@ -125,7 +125,7 @@ Program ThermoElastoPlasticity
    Type(IS)                                           :: setIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
-   PetscReal,Dimension(:),Pointer                     :: time,energy,work
+   PetscReal,Dimension(:),Pointer                     :: time,energy,work,plasticenergy
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
@@ -270,6 +270,10 @@ Program ThermoElastoPlasticity
    !!!
    Allocate(energy(size(MEF90DefMechCtx%CellSetOptionsBag)))
    energy = 0.0_Kr
+
+   Allocate(plasticenergy(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   plasticenergy = 0.0_Kr
+
    Allocate(work(size(MEF90DefMechCtx%CellSetOptionsBag)))
    work = 0.0_Kr
 
@@ -407,8 +411,7 @@ Program ThermoElastoPlasticity
                End If
 
             End Do AltMin
-            !!! update plasticstrainold
-            Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+
             !Call VecView(plasticStrainOld,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
 
             !!! --> end of the alternate minimization
@@ -423,14 +426,20 @@ Program ThermoElastoPlasticity
 
             !!! Compute energies
             energy = 0.0_Kr
+            plasticenergy = 0.0_Kr
             work = 0.0_Kr
             Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
             Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
+            
+Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr)
+            Call MEF90DefMechPlasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticenergy,ierr);CHKERRQ(ierr)
+
+
             Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
-               Write(IOBuffer,201) setID(set),energy(set),work(set),energy(set)-work(set)
+               Write(IOBuffer,201) setID(set),energy(set),work(set),energy(set)-work(set),plasticenergy(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             End Do
 
@@ -442,18 +451,25 @@ Program ThermoElastoPlasticity
             !!! Save results and boundary Values
             If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
                Call MEF90DefMechStress(MEF90DefMechCtx%displacement,MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr)
+               Call VecView(MEF90DefMechCtx%stress,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
             End If
 
             Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
          End Select
+
+
+
+         !!! update plasticstrainold
+         Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
 
       End Do !!step
    End If
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
 102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
-201 Format("cell set ",I4," elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
+201 Format("cell set ",I4," elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5," plasticenergy: ",ES12.5,"\n")
 202 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
+
 
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%mode)
@@ -481,7 +497,9 @@ Program ThermoElastoPlasticity
 
    DeAllocate(time)
    DeAllocate(energy)
+   DeAllocate(plasticenergy)
    DeAllocate(work)
+
    Call MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)

@@ -53,7 +53,7 @@ contains
       !write(*,*) 'FHG: PlasticStrainOld', myctx_ptr%PlasticStrainOld
       f(1) = ( (myctx_ptr%HookesLaw * (x2D-myctx_ptr%PlasticStrainOld)) .DotP. (x2D-myctx_ptr%PlasticStrainOld) ) /2.
       h(1) = Trace(x2D)
-      g(1) =  2.0* ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D)) )  - myctx_ptr%YieldStress**2
+      g(1) =  sqrt(2.0* ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x2D)) ))  - myctx_ptr%YieldStress
       !!!!write(*,*) 'FHG: f,h,g           ', f(1),h(1),g(1)
       !write(*,*)
    end subroutine fhg_VonMises2D
@@ -283,6 +283,7 @@ contains
    End Do !! set
 
    Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
+
 
    Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
    Call SectionRealDestroy(plasticStrainOldSec,ierr);CHKERRQ(ierr)

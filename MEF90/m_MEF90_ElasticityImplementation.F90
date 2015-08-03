@@ -33,6 +33,7 @@ Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D
    !Public :: ElasticityPressureWorkSetVertex
    Public :: ElasticityStressSet
    Public :: InelasticStrainSet
+   Public :: PlasticityEnergySet
 
    
 
@@ -1234,6 +1235,98 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine InelasticStrainSet
+
+
+
+#undef __FUNCT__
+#define __FUNCT__ "PlasticityEnergySet"
+   !!!
+   !!!  
+   !!!  PlasticityEnergySet:  Contribution of a cell set to plastic energy. 
+   !!!                        It is assumed that the temperature is interpolated on the FE space while the plastic strain 
+   !!!                        is cell-based
+   !!!
+   !!!         Stress : (plasticStrain-plasticStrainOld)
+   !!!  
+   !!!  (c) 2015 Erwan TANNE erwan.tanne@gmail.com
+   !!!
+   
+   Subroutine PlasticityEnergySet(energy,x,plasticStrain,plasticStrainOld,temperature,mesh,meshScal,cellIS,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
+      PetscReal,Intent(OUT)                              :: energy
+      Type(SectionReal),Intent(IN)                       :: x,plasticStrain,temperature
+      Type(SectionReal),Intent(IN)                       :: plasticStrainOld
+      Type(DM),Intent(IN)                                :: mesh,meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
+      Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
+      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,plasticStrainLoc,plasticStrainOldLoc
+      PetscReal                                          :: temperatureElem
+      Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem,plasticStrainOldElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+     
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemDisplacementType%numDof))
+         Allocate(temperatureloc(elemTemperatureType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
+            If (temperature%v /= 0) Then
+               Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+            End If
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+               Call SectionRealRestrict(plasticStrainOld,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
+            End If
+            Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
+               temperatureElem   = 0.0_Kr
+               plasticStrainElem = 0.0_Kr
+               strainElem        = 0.0_Kr
+               Do iDoF1 = 1,elemDisplacementType%numDof
+                  strainElem = strainElem + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
+               End Do
+               If (temperature%v /= 0) Then
+                  Do iDoF1 = 1,elemtemperatureType%numDof
+                     temperatureElem = temperatureElem + temperatureLoc(iDof1) * elemTemperature(cell)%BF(iDof1,iGauss)
+                  End Do
+                  strainElem = strainElem - (temperatureElem * thermalExpansion)
+               End If
+               If (plasticStrain%v /= 0) Then
+                  plasticStrainElem = plasticStrainLoc
+                  plasticStrainOldElem = plasticStrainOldLoc
+                  strainElem = strainElem - plasticStrainElem
+                  if (igauss==1) Then
+write(*,*) __FUNCT__,'plasticStrainLoc',plasticStrainLoc
+write(*,*) __FUNCT__,'plasticStrainOldLoc',plasticStrainOldLoc
+                  end if
+               End If
+               stressElem = HookesLaw * strainElem
+
+               energy = energy + (stressElem .dotP. ( plasticStrainElem - plasticStrainOldElem) )
+            End Do ! Gauss
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+               Call SectionRealRestore(plasticStrainOld,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
+            End If
+         End Do ! cell
+         flops = 3 * size(elemDisplacement(1)%Gauss_C) * size(cellID) 
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemtemperatureType%numDof * size(elemtemperature(1)%Gauss_C) * size(cellID)
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(temperatureloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine PlasticityEnergySet
+   
 
 
 End Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D
