@@ -1,7 +1,7 @@
 verbose: 0
 time:
-    min: 0
-    max: 4
+    min: 4
+    max: 0
     numstep: 8
 heatxfer:
   mode: null

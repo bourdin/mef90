@@ -12,35 +12,19 @@ include ${MEF90_DIR}/m_DefMech/Makefile.include
 ThermoElastoPlasticity.o: ${MEF90_DIR}/ThermoElastoPlasticity/ThermoElastoPlasticity.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $< 
 
-ThermoElastoPlasticity: ThermoElastoPlasticity.o
+ThermoElastoPlasticity: ThermoElastoPlasticity.o  ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
 	-@echo " $@"
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@${RM} $<
 
 
-runTestMaterials: TestMaterials
-	@echo "         Running " $@
-	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
-	-@ARGS='';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
-	${RM} -f $@.out
-
-runTestMEF90Ctx: TestMEF90Ctx
-	@echo "         Running " $@
-	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
-	-@ARGS='-verbose 1 -prefix ${MEF90_DIR}/TestMeshes/SquareNG-tri3';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
-	${RM} -f $@.out SquareNG-tri3*
-	
 MEF90:
 	make -C ${MEF90_DIR} MEF90
 m_HeatXfer:
 	make -C ${MEF90_DIR} m_HeatXfer
-	
+m_DEFMECH:
+	make -C ${MEF90_DIR} m_DEFMECH
+
 clean::
 	-@rm -f TestMaterials TestMEF90Ctx testHeatXfer testLeak
 allclean:

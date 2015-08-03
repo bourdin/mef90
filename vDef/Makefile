@@ -26,7 +26,7 @@ BASE_DIR=${MEF90_DIR}/vDef
 vDef:${MEF90_DIR}/bin/${PETSC_ARCH}/vDef
 	-@echo "      $@"
 
-${MEF90_DIR}/bin/${PETSC_ARCH}/vDef: vDef.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}
+${MEF90_DIR}/bin/${PETSC_ARCH}/vDef: vDef.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 	-@${FLINKER} -o $@ vDef.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 
@@ -44,9 +44,10 @@ testvDef:
 	
 MEF90:
 	make -C ${MEF90_DIR} MEF90
+m_HeatXfer:
+	make -C ${MEF90_DIR} m_HeatXfer
 m_DEFMECH:
 	make -C ${MEF90_DIR} m_DEFMECH
-	
 testclean::
 	-@rm -f data/*out.gen data/*log data/*ener*
 
