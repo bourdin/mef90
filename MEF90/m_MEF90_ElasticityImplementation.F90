@@ -1267,6 +1267,7 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,plasticStrainLoc,plasticStrainOldLoc
       PetscReal                                          :: temperatureElem
       Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem,plasticStrainOldElem
+      PetscReal                                          :: cellSize
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
@@ -1276,7 +1277,8 @@ Contains
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemDisplacementType%numDof))
          Allocate(temperatureloc(elemTemperatureType%numDof))
-         Do cell = 1,size(cellID)   
+         Do cell = 1,size(cellID)
+            cellSize = 0.0_Kr   
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
             If (temperature%v /= 0) Then
                Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
@@ -1307,9 +1309,16 @@ write(*,*) __FUNCT__,'plasticStrainLoc',plasticStrainLoc
 write(*,*) __FUNCT__,'plasticStrainOldLoc',plasticStrainOldLoc
                   end if
                End If
-               stressElem = HookesLaw * strainElem
+               cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
+               
+               stressElem = HookesLaw * strainElem 
 
-               energy = energy + (stressElem .dotP. ( plasticStrainElem - plasticStrainOldElem) )
+write(*,*) __FUNCT__,'stressElem',stressElem
+
+               energy = energy + (stressElem .dotP. ( plasticStrainElem - plasticStrainOldElem) ) * cellSize
+
+write(*,*) __FUNCT__,'energy',energy
+   
             End Do ! Gauss
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
