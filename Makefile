@@ -30,6 +30,10 @@ ThermoElasticity: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
 	-@make -C objs/${PETSC_ARCH} -f ../../ThermoElasticity/Makefile ThermoElasticity
 
+ThermoElastoPlasticity: MEF90 m_DefMech m_HeatXfer chkpaths
+	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
+	-@make -C objs/${PETSC_ARCH} -f ../../ThermoElastoPlasticity/Makefile ThermoElastoPlasticity
+
 vDef: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
 	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef

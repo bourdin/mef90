@@ -421,7 +421,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtxSetSections: Set the data layout for each of the fields involved in a MEF90DefMechCtx_Type
 !!!                               Uses Sieve convenience functions for now, but will be pulling layout informations
-!!!                               from teh element types when switching to DMComplex
+!!!                               from the element types when switching to DMComplex
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!

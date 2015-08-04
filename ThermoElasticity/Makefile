@@ -31,7 +31,7 @@ BASE_DIR=${MEF90_DIR}/ThermoElasticity
 ThermoElasticity:${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
 	-@echo "      $@"
 
-${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity: ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}
+${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity: ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} 
 	-@echo "      $@"
 	-@${FLINKER} -o $@ ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 
@@ -49,8 +49,8 @@ testThermoElasticity:
 	
 MEF90:
 	make -C ${MEF90_DIR} MEF90
-m_DEFMECH:
-	make -C ${MEF90_DIR} m_DEFMECH
+m_DefMech:
+	make -C ${MEF90_DIR} m_DefMech
 	
 testclean::
 	-@rm -f data/*out.gen data/*log data/*ener*
