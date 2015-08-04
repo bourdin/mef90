@@ -1099,12 +1099,15 @@ Contains
             cellSize = 0.0_Kr 
             stressLoc = 0.0_Kr
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
+            
             If (temperature%v /= 0) Then
                Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
             End If
+
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
             End If
+
             Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
                temperatureElem   = 0.0_Kr
                plasticStrainElem = 0.0_Kr
@@ -1305,19 +1308,18 @@ Contains
                   plasticStrainOldElem = plasticStrainOldLoc
                   strainElem = strainElem - plasticStrainElem
                   if (igauss==1) Then
-write(*,*) __FUNCT__,'plasticStrainLoc',plasticStrainLoc
-write(*,*) __FUNCT__,'plasticStrainOldLoc',plasticStrainOldLoc
+!write(*,*) __FUNCT__,'plasticStrainLoc',plasticStrainLoc
+!write(*,*) __FUNCT__,'plasticStrainOldLoc',plasticStrainOldLoc
                   end if
                End If
                cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
-               
                stressElem = HookesLaw * strainElem 
 
-write(*,*) __FUNCT__,'stressElem',stressElem
+!write(*,*) __FUNCT__,'stressElem',stressElem
 
                energy = energy + (stressElem .dotP. ( plasticStrainElem - plasticStrainOldElem) ) * cellSize
 
-write(*,*) __FUNCT__,'energy',energy
+!write(*,*) __FUNCT__,'energy',energy
    
             End Do ! Gauss
             If (plasticStrain%v /= 0) Then

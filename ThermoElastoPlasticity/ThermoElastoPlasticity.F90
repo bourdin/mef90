@@ -434,7 +434,7 @@ Program ThermoElastoPlasticity
             Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
             Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
             
-Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr)
+!Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr)
             Call MEF90DefMechPlasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticenergyvariation,ierr);CHKERRQ(ierr)
 
 
@@ -455,7 +455,6 @@ Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr)
             !!! Save results and boundary Values
             If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
                Call MEF90DefMechStress(MEF90DefMechCtx%displacement,MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr)
-               Call VecView(MEF90DefMechCtx%stress,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
             End If
 
             Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
@@ -503,6 +502,7 @@ Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr)
    DeAllocate(energy)
    DeAllocate(plasticenergy)
    DeAllocate(work)
+   DeAllocate(plasticenergyvariation)
 
    Call MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)

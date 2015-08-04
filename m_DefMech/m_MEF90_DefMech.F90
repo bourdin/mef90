@@ -846,6 +846,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
             Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
             Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr)
             Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
                                    MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%plasticStrainOffset,ierr);CHKERRQ(ierr)
             Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)

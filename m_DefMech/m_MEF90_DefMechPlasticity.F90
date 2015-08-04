@@ -10,13 +10,19 @@ Module m_MEF90_DefMechPlasticity
    !!! note that this type is NOT C interoperable, which is not an issue, since we only
    !!! need SNLP to carry its address
 
-   type :: ctx 
+   type :: ctx2D 
       Type(MEF90HookesLaw2D)  :: HookesLaw
       real(Kind = Kr)         :: YieldStress
       Type(MatS2D)            :: InelasticStrain
       Type(MatS2D)            :: PlasticStrainOld
-      !Type(MatS2D)            :: PlasticStrain
-   end type ctx
+   end type ctx2D
+
+   type :: ctx3D 
+      Type(MEF90HookesLaw3D)  :: HookesLaw
+      real(Kind = Kr)         :: YieldStress
+      Type(MatS3D)            :: InelasticStrain
+      Type(MatS3D)            :: PlasticStrainOld
+   end type ctx3D
 
 
 contains
@@ -41,7 +47,7 @@ contains
       real(kind=c_double)           :: g(*)
       type(c_ptr),intent(in),value  :: myctx
 
-      type(ctx),pointer             :: myctx_ptr
+      type(ctx2D),pointer           :: myctx_ptr
       type(MatS2D)                  :: x2D
 
       x2D = x(1:3)
@@ -57,6 +63,49 @@ contains
       !!!!write(*,*) 'FHG: f,h,g           ', f(1),h(1),g(1)
       !write(*,*)
    end subroutine fhg_VonMises2D
+
+
+
+
+#undef __FUNCT__
+#define __FUNCT__ "fhg_VonMises3D"
+
+!!!
+!!!  
+!!!  fhg: Vonmises
+!!!  
+!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
+!!!
+!!!
+
+   subroutine fhg_VonMises3D(x,f,h,g,myctx) bind(c)
+      use,intrinsic :: iso_c_binding
+      use m_MEF90
+
+      real(kind=c_double)           :: x(*)
+      real(kind=c_double)           :: f(*)
+      real(kind=c_double)           :: h(*)
+      real(kind=c_double)           :: g(*)
+      type(c_ptr),intent(in),value  :: myctx
+
+      type(ctx3D),pointer           :: myctx_ptr
+      type(MatS3D)                  :: x3D
+
+      x3D = x(1:6)
+      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      call c_f_pointer(myctx,myctx_ptr)
+      !!!!write(*,*) 'FHG: x:              ',x(1:6)
+      !write(*,*) 'FHG: HookesLaw:      ',myctx_ptr%HookesLaw
+      !write(*,*) 'FHG: x3D:            ',x3D
+      !write(*,*) 'FHG: PlasticStrainOld', myctx_ptr%PlasticStrainOld
+      f(1) = ( (myctx_ptr%HookesLaw * (x3D-myctx_ptr%PlasticStrainOld)) .DotP. (x3D-myctx_ptr%PlasticStrainOld) ) /2.
+      h(1) = Trace(x3D)
+      g(1) =  sqrt(3.0* ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x3D))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-x3D)) ) / 2.0 )  - myctx_ptr%YieldStress
+      !!!!write(*,*) 'FHG: f,h,g           ', f(1),h(1),g(1)
+      !write(*,*)
+   end subroutine fhg_VonMises3D
+
+
 
 
 #undef __FUNCT__
@@ -80,7 +129,7 @@ contains
       real(kind=c_double)           :: g(*)
       type(c_ptr),intent(in),value  :: myctx
 
-      type(ctx),pointer             :: myctx_ptr
+      type(ctx2D),pointer           :: myctx_ptr
       type(MatS2D)                  :: x2D
       type(Mat2D)                   :: MatProj
       type(MatS2D)                  :: MatDiag
@@ -143,11 +192,15 @@ contains
    PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,inelasticStrainLoc
    type(c_funptr)                                     :: snlp_fhg,snlp_Dfhg
    integer(kind=c_int)                                :: snlp_n,snlp_m,snlp_p
-   type(c_ptr)                                        :: snlp_ctx
    type(SNLP),pointer                                 :: s
    integer                                            :: i,j
    integer(kind=c_int)                                :: exit_code
-   type(ctx),target                                   :: ctx_ptr
+
+   type(ctx2D),target                                 :: ctx2D_ptr
+   type(ctx3D),target                                 :: ctx3D_ptr
+   type(c_ptr)                                        :: snlp_ctx
+
+
    type(VecScatter)                                   :: ScatterSecToVecCellMatS,ScatterSecToVec,ScatterSecToVecScal
    PetscInt                                           :: dim,set,cell,QuadratureOrder
    Type(IS)                                           :: cellSetGlobalIS,setIS
@@ -156,6 +209,7 @@ contains
    !Type(MEF90_MATPROP),Pointer                        :: matpropSet
    Type(MEF90Element_Type)                            :: elemDisplacementType
    Type(MEF90MatProp2D_Type),pointer                  :: matProp2D
+   Type(MEF90MatProp3D_Type),pointer                  :: matProp3D
    !Adding type needs for inelastic strain
    Type(SectionReal)                                  :: xSec,temperatureSec
    Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
@@ -187,7 +241,15 @@ contains
    Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 
    Do set = 1,size(setID)
-      Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matprop2D,ierr);CHKERRQ(ierr)
+      if (dim==2) Then
+         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matprop2D,ierr);CHKERRQ(ierr)
+      end if
+
+      if (dim==3) then
+         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matprop3D,ierr);CHKERRQ(ierr)
+      end if
+
+
       Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
       Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
       elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
@@ -197,23 +259,35 @@ contains
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%plasticityType)
             case(MEF90DefMech_plasticityTypeVonMises)
-               ! Faire bloucle pour dim2 et dim 3
-               ctx_ptr%HookesLaw = MatProp2D%HookesLaw
-               snlp_Dfhg = c_null_funptr
-               snlp_fhg  = c_funloc(fhg_VonMises2D)
-               snlp_n    = 3
-               snlp_m    = 1
-               snlp_p    = 1
-               snlp_ctx  = c_loc(ctx_ptr)
+
+               if (dim == 2) then
+                  ctx2D_ptr%HookesLaw = MatProp2D%HookesLaw
+                  snlp_Dfhg = c_null_funptr
+                  snlp_fhg  = c_funloc(fhg_VonMises2D)
+                  snlp_n    = 3
+                  snlp_m    = 1
+                  snlp_p    = 1
+                  snlp_ctx  = c_loc(ctx2D_ptr)
+               end if
+
+               if (dim == 3) then 
+                  ctx3D_ptr%HookesLaw = MatProp3D%HookesLaw
+                  snlp_Dfhg = c_null_funptr
+                  snlp_fhg  = c_funloc(fhg_VonMises3D)
+                  snlp_n    = 6
+                  snlp_m    = 1
+                  snlp_p    = 1
+                  snlp_ctx  = c_loc(ctx3D_ptr)
+               end if 
 
             case(MEF90DefMech_plasticityTypeTresca)
-               ctx_ptr%HookesLaw = MatProp2D%HookesLaw
+               ctx2D_ptr%HookesLaw = MatProp2D%HookesLaw
                snlp_Dfhg = c_null_funptr
                snlp_fhg  = c_funloc(fhg_Tresca2D)
                snlp_n    = 3
                snlp_m    = 1
                snlp_p    = 6
-               snlp_ctx  = c_loc(ctx_ptr)
+               snlp_ctx  = c_loc(ctx2D_ptr)
 
             case(MEF90DefMech_plasticityTypeNONE)
                return
@@ -225,11 +299,18 @@ contains
    
          !! Remplissage du Ctx
 
-         ctx_ptr%YieldStress = 1.0_Kr
-         ctx_ptr%HookesLaw = matprop2D%HookesLaw
-         
+         if (dim==2) Then
+         ctx2D_ptr%YieldStress = 1.0_Kr
+         ctx2D_ptr%HookesLaw = matprop2D%HookesLaw
+         end if
+
+         if (dim==3) Then
+         ctx3D_ptr%YieldStress = 1.0_Kr
+         ctx3D_ptr%HookesLaw = matprop3D%HookesLaw
+         end if
+
          !if (dim == 2) then
-            Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
+         Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
          !else
          !   Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
          !End If
@@ -251,9 +332,15 @@ contains
             !!! You don't need the Section, only the local version.
             !!! Modify your function so that it computes the inelastic strain in a given cell, given local (stress, strain, temp etc) fields
 
-            ctx_ptr%PlasticStrainOld = plasticStrainOldLoc
-            ctx_ptr%InelasticStrain = InelasticStrainLoc  ![10.0_Kr,0.0_Kr,0.0_Kr]
+            if (dim==2) Then
+            ctx2D_ptr%PlasticStrainOld = plasticStrainOldLoc
+            ctx2D_ptr%InelasticStrain = InelasticStrainLoc  ![10.0_Kr,0.0_Kr,0.0_Kr]
+            end if
 
+            if (dim==3) Then
+            ctx3D_ptr%PlasticStrainOld = plasticStrainOldLoc
+            ctx3D_ptr%InelasticStrain = InelasticStrainLoc  ![10.0_Kr,0.0_Kr,0.0_Kr]
+            end if
             !ctx_ptr%PlasticStrainOld   =   plasticStrainOldLoc
       
             
