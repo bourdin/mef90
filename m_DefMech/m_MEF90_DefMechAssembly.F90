@@ -1734,7 +1734,7 @@ Contains
          Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
-Call SectionRealView(plasticStrainSec,PETSC_VIEWER_STDOUT_WORLD,ierr)         
+!Call SectionRealView(plasticStrainSec,PETSC_VIEWER_STDOUT_WORLD,ierr)         
          
          Call SectionRealDuplicate(plasticStrainSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(plasticStrainOldSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr)          
@@ -2005,7 +2005,9 @@ Call SectionRealView(plasticStrainSec,PETSC_VIEWER_STDOUT_WORLD,ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,stressSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
 
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-         Call SectionRealDuplicate(stressSec,plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)          
       Else
          PlasticStrainSec%v = 0
       End If

@@ -1,19 +1,19 @@
 verbose: 0
 time:
-    min: 4
-    max: 0
+    min: 0
+    max: 4
     numstep: 8
 heatxfer:
   mode: null
 defmech:
   mode: quasistatic
   plasticStrain:
-    atol: 1e-1
+    atol: 1e-2
 temperature:
     offset: 0
-plasticStrain:
+stress:
     offset: 3
-Stress:
+plasticStrain:
     offset: 3
 cs0001:
     fracturetoughness: 1
