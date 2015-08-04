@@ -14,7 +14,7 @@ temperature:
 stress:
     offset: 3
 plasticStrain:
-    offset: 3
+    offset: 6
 cs0001:
     fracturetoughness: 1
     residualstiffness: 0.
