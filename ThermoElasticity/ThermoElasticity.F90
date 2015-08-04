@@ -202,7 +202,7 @@ Program ThermoElasticity
    Call MEF90DefMechCtxCreateVectors(MEF90DefMechCtx,ierr)
    Call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx,ierr)
    
-   !!! Link the temperature field from teh DefMech context to that of the HeatXfer context
+   !!! Link the temperature field from the DefMech context to that of the HeatXfer context
    DeAllocate(MEF90DefMechCtx%temperature)
    MEF90DefMechCtx%temperature => MEF90HeatXferCtx%temperature
 

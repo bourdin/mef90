@@ -300,13 +300,13 @@ contains
          !! Remplissage du Ctx
 
          if (dim==2) Then
-         ctx2D_ptr%YieldStress = 1.0_Kr
-         ctx2D_ptr%HookesLaw = matprop2D%HookesLaw
+            ctx2D_ptr%YieldStress = 1.0_Kr
+            ctx2D_ptr%HookesLaw = matprop2D%HookesLaw
          end if
 
          if (dim==3) Then
-         ctx3D_ptr%YieldStress = 1.0_Kr
-         ctx3D_ptr%HookesLaw = matprop3D%HookesLaw
+            ctx3D_ptr%YieldStress = 1.0_Kr
+            ctx3D_ptr%HookesLaw = matprop3D%HookesLaw
          end if
 
          !if (dim == 2) then
@@ -315,7 +315,7 @@ contains
          !   Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
          !End If
          QuadratureOrder = 2 * (elemDisplacementType%order - 1)
-         write(*,*) 'QuadratureOrder:  ', QuadratureOrder
+write(*,*) 'QuadratureOrder:  ', QuadratureOrder
          Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
          Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
          Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matprop2D%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
