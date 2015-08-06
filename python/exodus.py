@@ -69,10 +69,10 @@ def getAccessPath():
 
 if os.uname()[0] == 'Darwin':
   NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib","libnetcdf.dylib")
-  EXODUS_SO = os.path.join(os.getenv("MEF90_DIR"),"lib",os.getenv("PETSC_ARCH"), "libexodus.dylib")
+  EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib","libexodus.dylib")
 else:                                             
   NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib","libnetcdf.so")
-  EXODUS_SO = os.path.join(os.getenv("MEF90_DIR"),"lib",os.getenv("PETSC_ARCH"), "libexodus.so")
+  EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib","libexodus.so")
 
 
 ###def findLibExoPath():
