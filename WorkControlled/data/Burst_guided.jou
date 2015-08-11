@@ -1,0 +1,102 @@
+# guide damage propagation
+
+reset
+#{Ro=1.11500669942}
+#{Ri=0.115006699419}
+#{L=0.219115676641}
+#{w=0.1*Ri}
+#{courb=.05}
+
+
+create vertex 0 {w} 0
+create vertex {Ri+L-w} {w} 0
+create vertex {Ri+L} 0 0
+create vertex {Ri+L-w} {-w} 0
+create vertex 0 {-w} 0
+create curve arc three vertex 2 3 4
+create curve vertex 1 2
+create curve vertex 4 5
+create curve arc radius {Ri} center location 0 0 0 normal 0 0 1 start angle -90 stop angle 90
+
+create vertex AtIntersection curve 2 4 
+create vertex AtIntersection curve 3 4 
+
+split curve 4 at vertex 11 
+split curve 5 at vertex 12 
+split curve 2 at vertex 11 
+split curve 3 at vertex 12 
+
+delete curve 8 9 12
+split curve 1  at vertex 3 
+Curve 6 7 10 11 13 14 copy reflect x 
+
+create surface curve all
+
+
+create surface circle radius {Ro} zplane 
+
+
+
+create surface ellipse major radius .5 minor radius .1 zplane 
+move Surface 3 x 0.7 y 0 z 0 include_merged 
+
+
+create surface ellipse major radius .5 minor radius .1 zplane 
+move Surface 4 x -0.7 y 0 z 0 include_merged 
+
+
+
+unite volume 3 4
+
+
+imprint tolerant surface 2 with curve 22 23 merge
+
+
+delete body 3
+
+
+subtract volume 1 from volume 2 
+
+split curve 33 fraction 0.5
+split curve 47 fraction 0.5
+
+create vertex 0 {Ro/2} 0 on surface 10
+create vertex 0 {-Ro/2} 0 on surface 10
+
+imprint vertex 68 volume 2
+imprint vertex 69 volume 2
+
+surface all scheme tridelaunay
+
+surface 8 11 size 0.02
+tridelaunay point placement gq
+mesh surface 8 11
+
+
+
+surface 9 sizing function type bias start curve 35 38 factor 1.06
+surface 10 sizing function type bias start curve 36 44 factor 1.06
+mesh surface 9 10
+
+
+smooth surface all
+
+
+block 1 surface 11 8 
+block 10 curve 40 42
+block 20 curve 27 25 30 31 29
+block 30 surface 9 10
+nodeset 100 vertex 66 67
+
+nodeset 200 vertex 70
+nodeset 300 vertex 71
+
+draw block all nodeset all
+
+block 1 to 9 element type tri3
+block 10 to 21 element type bar2
+block 30 element type tri3
+
+
+#{filename = Quote("/Users/TANNE/Code/mef90-sieve/WorkControlled/data/Burst_arc.gen")}
+export mesh {filename} dimension 2 block all overwrite
