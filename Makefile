@@ -1,4 +1,4 @@
-all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef
+all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef WorkControlled
 
 ${MEF90_DIR}/.hg/dirstate:
 	@mkdir -p ${MEF90_DIR}/.hg; touch ${MEF90_DIR}/.hg/dirstate
@@ -33,6 +33,10 @@ ThermoElasticity: MEF90 m_DefMech m_HeatXfer chkpaths
 ThermoElastoPlasticity: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
 	-@make -C objs/${PETSC_ARCH} -f ../../ThermoElastoPlasticity/Makefile ThermoElastoPlasticity
+
+WorkControlled: MEF90 m_DefMech m_HeatXfer chkpaths
+	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
+	-@make -C objs/${PETSC_ARCH} -f ../../WorkControlled/Makefile WorkControlled
 
 vDef: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"

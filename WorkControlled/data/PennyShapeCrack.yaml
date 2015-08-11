@@ -1,0 +1,48 @@
+verbose: 0
+#pressureForce_scaling: linear
+
+#boundaryDisplacement_scaling: constant
+pressureForce_scaling: constant
+time:
+    min: 0
+    max: 3
+    numstep: 10
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+  irrevthres: 0.
+temperature:
+    offset: 0
+stress:
+    offset: 3
+cs0001:
+    hookesLaw: 
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
+    fracturetoughness: 1
+    residualstiffness: 0.
+    internalLength: .15
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE 
+cs0010:
+#    displacementbc: 1,1,1
+#    boundaryDisplacement: 1.0,1.0,1.0
+    pressureForce: 1
+#    displacementBC: 1,1,1
+    #boundaryDisplacement: .5,0,0 
+#    damageBC: 1
+#    boundaryDamage: 0
+vs0100:
+#    displacementBC: 1,1,1
+#    boundaryDisplacement: 0.0,0.0,0.0
+    damageBC: 1
+    boundaryDamage: 0
+vs0200:
+#    displacementBC: 1,1,1
+#    boundaryDisplacement: 0.0,0.0,0.0
+    damageBC: 1
+    boundaryDamage: 0
