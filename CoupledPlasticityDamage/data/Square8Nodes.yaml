@@ -1,0 +1,40 @@
+verbose: 0
+time:
+    min: 0
+    max: 2
+    numstep: 4
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+  plasticStrain:
+    atol: 1e-2
+temperature:
+    offset: 0
+stress:
+    offset: 3
+plasticStrain:
+    offset: 6
+cs0001:
+    fracturetoughness: 1
+    residualstiffness: 0.
+    internalLength: .5
+    damage:
+        type: AT1
+    plasticity:
+        type: VonMises
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+    yieldStress: 1
+cs0002:
+    displacementBC: 0,1,0
+    boundaryDisplacement: 0.,0.,0.
+    damageBC: 1
+    boundaryDamage: 0.
+cs0003:
+    displacementBC: 0,1,0
+    boundaryDisplacement: 0.,1.,0.
+    damageBC: 1
+    boundaryDamage: 0.

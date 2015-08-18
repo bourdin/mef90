@@ -1149,8 +1149,6 @@ Contains
 
 
 
-
-
 #undef __FUNCT__
 #define __FUNCT__ "InelasticStrainSet"
 
@@ -1238,6 +1236,8 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine InelasticStrainSet
+
+
 
 
 
@@ -1337,7 +1337,8 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine PlasticityEnergySet
-   
+
+
 
 
 End Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D
