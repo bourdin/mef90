@@ -153,6 +153,10 @@ contains
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
       Type(MEF90Element_Type)                            :: elemScalType
 
+      !Type(SectionReal)                                  :: damageSec
+      !PetscReal,Dimension(:),Pointer                     :: damageLoc
+      !Type(MEF90Element_Type)                            :: elemDamageType
+
       Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(plasticStrainSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(plasticStrainSec,inelasticStrainSec,ierr);CHKERRQ(ierr)
@@ -160,6 +164,8 @@ contains
       Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrain,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(plasticStrainOldSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr)
    
+Call VecView(MEF90DefMechCtx%damage,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)         
@@ -171,6 +177,18 @@ contains
       Else
          temperatureSec%v = 0
       End If
+
+      !If (Associated(MEF90DefMechCtx%damage)) Then
+      !   Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
+      !   Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+      !   Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)          
+      !Else
+      !   damageSec%v = 0
+      !End If
+
+      !write(*,*)'Damage',damageSec
+
+
 
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -185,6 +203,9 @@ contains
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
          elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
       
+         !elemdamageType = MEF90KnownElements(cellSetOptions%elemTypeShortIDdamage)
+
+
          Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          If ((Size(cellID) > 0) .AND. (elemDisplacementType%coDim == 0)) Then
             !!! Call proper local assembly depending on the type of damage law
@@ -226,11 +247,17 @@ contains
             Call MEF90Element_Destroy(elemScal,ierr)
 
 
+            !Allocate(damageloc(elemdamageType%numDof))
+
             Do cell = 1,size(cellID)
                !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
                Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestrict(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
+
+               !If (damagesec%v /= 0) Then
+               !   Call SectionRealRestrictClosure(damageSec,xSec,cellID(cell),elemdamageType%numDof,damageLoc,ierr);CHKERRQ(ierr)
+               !End If
 
                PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
                PlasticityCtx%InelasticStrain = InelasticStrainLoc
@@ -265,9 +292,15 @@ contains
       Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(plasticStrainOldSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(inelasticStrainSec,ierr);CHKERRQ(ierr)
+
       Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+
+      !If (Associated(MEF90DefMechCtx%damage)) Then
+      !   Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
+      !   Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+      !End If
 
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)

@@ -122,7 +122,7 @@ Contains
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
          Do iDoF1 = 1,numDofDisplacement
-            sigma = matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss)
+            sigma = matProp%HookesLaw * ( elemDisplacement%GradS_BF(iDoF1,iGauss) - plasticStrainCell)
             Do iDoF2 = 1,numDofDisplacement
                ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
                If (matprop%cohesiveStiffness /= 0.0_Kr) Then
@@ -539,7 +539,7 @@ Contains
                temperature = temperature + temperatureDoF(iDoF1) * elemDamage%BF(iDoF1,iGauss)
             End Do
          End If
-         sigma = matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion)
+         sigma = matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion - plasticStrainCell) 
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
          End Do
@@ -2105,7 +2105,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,plasticEnergyDensityGauss,temperatureGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
@@ -2132,11 +2132,14 @@ Contains
          inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
          elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
 
+         !!! This is really twice the plastic energy density
+         !!! This is not the plasticEnergyDensityGauss properly, we should write 2*(matprop%HookesLaw * inelasticStrainGauss .DotP. (plasticStrainCell - plasticStrainoldCell ) )
+         plasticEnergyDensityGauss = 2.0_Kr*(matprop%HookesLaw * inelasticStrainGauss .DotP. plasticStrainCell)
          !!! This is really twice the elastic energy density
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
-                                      elasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                      (elasticEnergyDensityGauss + plasticEnergyDensityGauss) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
                                       C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
@@ -2750,7 +2753,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,plasticEnergyDensityGauss,temperatureGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       Type(MEF90_VECT)                                   :: gradientDamageGauss
       PetscReal                                          :: C1,C2
@@ -2779,6 +2782,10 @@ Contains
          End Do
          inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
          elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
+         
+         !!! Be careful It is not true in all the case, only for monotone increasing plastic strain
+         !!! plasticEnergyDensityGauss = 2*(matprop%HookesLaw * inelasticStrainGauss) .DotP. plasticStrainCell
+         plasticEnergyDensityGauss = 2.0_Kr* ((matprop%HookesLaw * inelasticStrainGauss) .DotP. plasticStrainCell)
          !!! This is really twice the elastic energy density
 
          damageGauss = 0.0_Kr
@@ -2790,9 +2797,10 @@ Contains
 
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
-                                  (elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) + C1) * elemDamage%BF(iDoF2,iGauss) + &
+                                  ( ( elasticEnergyDensityGauss + plasticEnergyDensityGauss ) * (damageGauss - 1.0_Kr) + C1) * elemDamage%BF(iDoF2,iGauss) + &
                                   C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
+
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
@@ -4032,4 +4040,5 @@ Contains
       Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSurfaceEnergy
+
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
