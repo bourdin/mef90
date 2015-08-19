@@ -122,7 +122,7 @@ Contains
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
          Do iDoF1 = 1,numDofDisplacement
-            sigma = matProp%HookesLaw * ( elemDisplacement%GradS_BF(iDoF1,iGauss) - plasticStrainCell)
+            sigma = matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss) 
             Do iDoF2 = 1,numDofDisplacement
                ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
                If (matprop%cohesiveStiffness /= 0.0_Kr) Then
@@ -608,7 +608,7 @@ Contains
                temperature = temperature + temperatureDoF(iDoF1) * elemDamage%BF(iDoF1,iGauss)
             End Do
          End If
-         sigma = stiffness * (matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion))
+         sigma = stiffness * (matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion - plasticStrainCell))
 
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
