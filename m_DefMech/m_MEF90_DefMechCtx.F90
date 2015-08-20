@@ -232,7 +232,7 @@ Module m_MEF90_DefMechCtx
    Enum,bind(c)
       enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,              &
                      MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric, &
-                     MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric, &
+                     MEF90DefMech_unilateralContactTypePositiveHydrostatic, &
                      MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric, &
                      MEF90DefMech_unilateralContactTypeDeviatoric, &
                      MEF90DefMech_unilateralContactTypePrincipalStrains
@@ -294,7 +294,7 @@ Contains
 
       MEF90DefMech_unilateralContactTypeList(1) = 'None'
       MEF90DefMech_unilateralContactTypeList(2) = 'HydrostaticDeviatoric'
-      MEF90DefMech_unilateralContactTypeList(3) = 'PositiveHydrostaticDeviatoric'
+      MEF90DefMech_unilateralContactTypeList(3) = 'PositiveHydrostatic'
       MEF90DefMech_unilateralContactTypeList(4) = 'HybridHydrostaticDeviatoric'
       MEF90DefMech_unilateralContactTypeList(5) = 'Deviatoric'
       MEF90DefMech_unilateralContactTypeList(6) = 'PrincipalStrains'
