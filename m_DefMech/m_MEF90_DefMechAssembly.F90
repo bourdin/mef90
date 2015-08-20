@@ -1131,7 +1131,7 @@ Contains
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATLoc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypePositiveHydrostatic)
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralDeviatoricLoc
@@ -1421,7 +1421,7 @@ Contains
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATLoc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypePositiveHydrostatic)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralDeviatoricLoc
@@ -3564,7 +3564,7 @@ Contains
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1Loc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypePositiveHydrostatic)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralDeviatoricLoc
@@ -3587,7 +3587,7 @@ Contains
                   localOperatorFunction => MEF90DefMechOperatorDamageAT2Loc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT2UnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypePositiveHydrostatic)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT2UnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT2UnilateralDeviatoricLoc
@@ -3834,7 +3834,7 @@ Contains
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1Loc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypePositiveHydrostatic)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralDeviatoricLoc
@@ -3852,7 +3852,7 @@ Contains
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2Loc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2UnilateralHDLoc
-               Case (MEF90DefMech_unilateralContactTypePositiveHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypePositiveHydrostatic)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2UnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2UnilateralDeviatoricLoc
