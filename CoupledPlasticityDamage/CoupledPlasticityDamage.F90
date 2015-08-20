@@ -505,7 +505,8 @@ Program CoupledPlasticityDamage
             Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechCohesiveEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,cohesiveEnergySet,ierr);CHKERRQ(ierr)
-            ! Call MEF90DefMechPlasticDissipation(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticDissipationvariation,ierr);CHKERRQ(ierr)
+            Call MEF90DefMechPlasticDissipation(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticDissipationvariation,ierr);CHKERRQ(ierr)
+            write(*,*) 'plasticDissipationvariation:          ',plasticDissipationvariation
 
             elasticEnergy(step)  = sum(elasticEnergySet)
             forceWork(step)      = sum(forceWorkSet)
@@ -520,10 +521,12 @@ Program CoupledPlasticityDamage
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
-               !plasticDissipation(set)= plasticDissipation(set) + plasticDissipationvariation(set)
-               Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set), plasticDissipation(set)
+
+               plasticDissipation(set)= plasticDissipation(set) + plasticDissipationvariation(set)
+               Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipation(set), plasticDissipation(set)
+
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-               Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
+               Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipation(set)
                Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
                Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
             End Do

@@ -435,7 +435,7 @@ Program ThermoElastoPlasticity
             Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
             Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
             
-            Call MEF90DefMechPlasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticDissipationvariation,ierr);CHKERRQ(ierr)
+            Call MEF90DefMechPlasticDissipation(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticDissipationvariation,ierr);CHKERRQ(ierr)
 
 
             Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)

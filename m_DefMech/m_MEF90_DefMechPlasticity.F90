@@ -15,12 +15,15 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
       real(Kind = Kr)             :: YieldStress
       Type(MEF90_MATS)            :: InelasticStrain
       Type(MEF90_MATS)            :: PlasticStrainOld
+      real(Kind = Kr)             :: Damage
    end type MEF90DefMechPlasticityCtx
 
 contains
 !!! Since these functions are C interoperable, fortran cannot rename them in a use statement
 !!! We play with the pre-processor in order to avoid duplicate symbols.
+
 #define FHG_VONMISES MEF90_APPEND(fhg_VonMises,MEF90_DIM)D
+
 #define FHG_TRESCA MEF90_APPEND(fhg_Tresca,MEF90_DIM)D
 
 #undef __FUNCT__
@@ -32,6 +35,7 @@ contains
 !!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
 !!!
 !!!
+
    subroutine FHG_VONMISES(x,f,h,g,myctx) bind(c)
       use,intrinsic :: iso_c_binding
       use m_MEF90
@@ -48,10 +52,14 @@ contains
       xMatS = x(1:SIZEOFMEF90_MATS)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx,myctx_ptr)
-      f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.
+      f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * (1-myctx_ptr%Damage)**2
       h(1) = Trace(xMatS)
       g(1) =  sqrt( MEF90_DIM * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
    end subroutine FHG_VONMISES
+
+
+
+
 
 #undef __FUNCT__
 #define __FUNCT__ "FHG_TRESCA"
@@ -130,7 +138,7 @@ contains
 #ifdef MEF90_HAVE_SNLP
       Type(DM)                                           :: Mesh
       Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec
-      PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,inelasticStrainLoc
+      PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,inelasticStrainLoc,damageLoc
       type(c_funptr)                                     :: snlp_fhg,snlp_Dfhg
       integer(kind=c_int)                                :: snlp_n,snlp_m,snlp_p
       type(SNLP),pointer                                 :: s
@@ -153,7 +161,9 @@ contains
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
       Type(MEF90Element_Type)                            :: elemScalType
 
-      !Type(SectionReal)                                  :: damageSec
+      Type(SectionReal)                                  :: damageSec
+      PetscReal                                          :: damageElem
+
       !PetscReal,Dimension(:),Pointer                     :: damageLoc
       !Type(MEF90Element_Type)                            :: elemDamageType
 
@@ -176,15 +186,18 @@ contains
          temperatureSec%v = 0
       End If
 
-      !If (Associated(MEF90DefMechCtx%damage)) Then
-      !   Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
-      !   Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-      !   Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)          
-      !Else
-      !   damageSec%v = 0
-      !End If
-
-      !write(*,*)'Damage',damageSec
+      If (Associated(MEF90DefMechCtx%damage)) Then
+         If (Associated(MEF90DefMechCtx%temperature)) Then
+            Call SectionRealDuplicate(temperatureSec,damageSec,ierr);CHKERRQ(ierr)
+         Else
+            Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
+            Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+         End If
+         Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)          
+      Else
+         damageSec%v = 0
+      End If
+      write(*,*)'Damage',damageSec
 
 
 
@@ -201,13 +214,13 @@ contains
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
          elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
       
-         !elemdamageType = MEF90KnownElements(cellSetOptions%elemTypeShortIDdamage)
-
+         elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          If ((Size(cellID) > 0) .AND. (elemDisplacementType%coDim == 0)) Then
             !!! Call proper local assembly depending on the type of damage law
             Select Case (cellSetOptions%plasticityType)
+
                case(MEF90DefMech_plasticityTypeVonMises)
                   snlp_Dfhg = c_null_funptr
                   snlp_fhg  = c_funloc(FHG_VONMISES)
@@ -215,6 +228,7 @@ contains
                   snlp_m    = 1
                   snlp_p    = 1
                   snlp_ctx  = c_loc(PlasticityCtx)
+
                case(MEF90DefMech_plasticityTypeTresca)
                   snlp_Dfhg = c_null_funptr
                   snlp_fhg  = c_funloc(FHG_TRESCA)
@@ -222,11 +236,13 @@ contains
                   snlp_m    = 1
                   snlp_p    = 2*SIZEOFMEF90_MATS
                   snlp_ctx  = c_loc(PlasticityCtx)
+
                case(MEF90DefMech_plasticityTypeNONE)
                   return
+
                case default
                   Print*,__FUNCT__,': Unimplemented plasticity Type',cellSetOptions%PlasticityType
-                  STOP  
+                  STOP 
 
             End select
    
@@ -240,22 +256,43 @@ contains
             QuadratureOrder = 2 * (elemDisplacementType%order - 1)
             Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
             Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-            Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+            Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
+                                         elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+            
+            !Call MEF90DamageSet(damageSec,xSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
+            !                    elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemScal,ierr)
 
 
-            !Allocate(damageloc(elemdamageType%numDof))
+
+
 
             Do cell = 1,size(cellID)
                !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
                Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestrict(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
+               !Call SectionRealRestrict(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
+               
 
-               !If (damagesec%v /= 0) Then
-               !   Call SectionRealRestrictClosure(damageSec,xSec,cellID(cell),elemdamageType%numDof,damageLoc,ierr);CHKERRQ(ierr)
-               !End If
+               !!! Damage on one element is not the good way to do that, HAVE TO CHANGE THAT
+               Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               !Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
+               !                             elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+            
+               Call MEF90DamageSet(damageSec,damageElem,xSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,cell, &
+                                elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+
+               Call MEF90Element_Destroy(elemDisplacement,ierr)
+               Call MEF90Element_Destroy(elemScal,ierr)
+
+
+               PlasticityCtx%Damage = damageElem 
+               write(*,*)'DamageCtx',PlasticityCtx%Damage
+
 
                PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
                PlasticityCtx%InelasticStrain = InelasticStrainLoc
@@ -265,11 +302,7 @@ contains
       
                write(*,*) 'Plastic Strain Old step: ', PlasticStrainOldLoc
                write(*,*) 'Plastic Strain before:   ', PlasticStrainLoc
-
-               !write(*,*) 'Plastic Strain: Old      ', ctx_ptr%PlasticStrainOld
                write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
-               !Write(*,*) 'HookesLaw                ', ctx_ptr%HookesLaw
-         
                !!! This is a bit dangerous:
                !!! If PetscReal is not the same as c_double, this call will fail
                exit_code = SNLPL1SQP(s,plasticStrainLoc)
@@ -278,6 +311,7 @@ contains
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
+               Call SectionRealRestore(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
       
             End Do !cell
             call SNLPDelete(s)
@@ -295,10 +329,10 @@ contains
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
 
-      !If (Associated(MEF90DefMechCtx%damage)) Then
-      !   Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
-      !   Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-      !End If
+      If (Associated(MEF90DefMechCtx%damage)) Then
+         Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+      End If
 
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
