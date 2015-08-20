@@ -66,7 +66,7 @@ Program CoupledPlasticityDamage
    !PetscInt                                           :: BTStep,BTminStep,BTMaxSTep,BTDirection
 
    !!! plastic variables
-   PetscReal,Dimension(:),Pointer                     :: plasticenergy,plasticenergyvariation
+   PetscReal,Dimension(:),Pointer                     :: plasticDissipation,plasticDissipationvariation
    Type(Vec)                                          :: plasticStrainOld
    PetscInt                                           :: AltProjIter
    PetscReal                                          :: PlasticStrainMaxChange
@@ -285,11 +285,11 @@ Program CoupledPlasticityDamage
    Allocate(heatFluxWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
    heatFluxWorkSet = 0.0_Kr
 
-   Allocate(plasticenergyvariation(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   plasticenergyvariation = 0.0_Kr
+   Allocate(plasticDissipationvariation(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   plasticDissipationvariation = 0.0_Kr
 
-   Allocate(plasticenergy(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   plasticenergy = 0.0_Kr
+   Allocate(plasticDissipation(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   plasticDissipation = 0.0_Kr
    
    Allocate(elasticEnergy(MEF90GlobalOptions%timeNumStep))
    elasticEnergy = 0.0_Kr
@@ -498,14 +498,14 @@ Program CoupledPlasticityDamage
             forceWorkSet      = 0.0_Kr
             surfaceEnergySet  = 0.0_Kr
             cohesiveEnergySet = 0.0_Kr
-            plasticenergyvariation = 0.0_Kr
+            plasticDissipationvariation = 0.0_Kr
 
 
             Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,elasticEnergySet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechCohesiveEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,cohesiveEnergySet,ierr);CHKERRQ(ierr)
-            ! Call MEF90DefMechPlasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticenergyvariation,ierr);CHKERRQ(ierr)
+            ! Call MEF90DefMechPlasticDissipation(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticDissipationvariation,ierr);CHKERRQ(ierr)
 
             elasticEnergy(step)  = sum(elasticEnergySet)
             forceWork(step)      = sum(forceWorkSet)
@@ -520,8 +520,8 @@ Program CoupledPlasticityDamage
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
-               !plasticenergy(set)= plasticenergy(set) + plasticenergyvariation(set)
-               Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set), plasticenergy(set)
+               !plasticDissipation(set)= plasticDissipation(set) + plasticDissipationvariation(set)
+               Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set), plasticDissipation(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
                Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
@@ -603,8 +603,8 @@ Program CoupledPlasticityDamage
    DeAllocate(cohesiveEnergy)
    DeAllocate(surfaceEnergy)
    DeAllocate(totalMechanicalEnergy)
-   DeAllocate(plasticenergy)
-   DeAllocate(plasticenergyvariation)
+   DeAllocate(plasticDissipation)
+   DeAllocate(plasticDissipationvariation)
 
    Call MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)

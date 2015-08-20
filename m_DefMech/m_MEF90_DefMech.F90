@@ -10,7 +10,7 @@ Module m_MEF90_DefMech
       MEF90DefMechBilinearFormDisplacement2D => MEF90DefMechBilinearFormDisplacement,  &     
       MEF90DefMechWork2D                     => MEF90DefMechWork,                      &
       MEF90DefMechCohesiveEnergy2D           => MEF90DefMechCohesiveEnergy,            &
-      MEF90DefMechPlasticEnergy2D            => MEF90DefMechPlasticEnergy,             &
+      MEF90DefMechPlasticdissipation2D       => MEF90DefMechPlasticDissipation,        &
       MEF90DefMechElasticEnergy2D            => MEF90DefMechElasticEnergy,             &
       MEF90DefMechOperatorDamage2D           => MEF90DefMechOperatorDamage,            &
       MEF90DefMechBilinearFormDamage2D       => MEF90DefMechBilinearFormDamage,        &
@@ -23,7 +23,7 @@ Module m_MEF90_DefMech
       MEF90DefMechBilinearFormDisplacement3D => MEF90DefMechBilinearFormDisplacement,  &     
       MEF90DefMechWork3D                     => MEF90DefMechWork,                      &
       MEF90DefMechCohesiveEnergy3D           => MEF90DefMechCohesiveEnergy,            &
-      MEF90DefMechPlasticEnergy3D            => MEF90DefMechPlasticEnergy,             &
+      MEF90DefMechPlasticdissipation3D       => MEF90DefMechPlasticDissipation,        &
       MEF90DefMechElasticEnergy3D            => MEF90DefMechElasticEnergy,             &
       MEF90DefMechOperatorDamage3D           => MEF90DefMechOperatorDamage,            &
       MEF90DefMechBilinearFormDamage3D       => MEF90DefMechBilinearFormDamage,        &
@@ -52,7 +52,7 @@ Module m_MEF90_DefMech
    Public :: MEF90DefMechElasticEnergy
    Public :: MEF90DefMechWork
    Public :: MEF90DefMechCohesiveEnergy
-   Public :: MEF90DefMechPlasticEnergy
+   Public :: MEF90DefMechPlasticDissipation
    Public :: MEF90DefMechStress
    Public :: MEF90DefMechPlasticStrainUpdate
 
@@ -677,15 +677,15 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechPlasticEnergy"
+#define __FUNCT__ "MEF90DefMechPlasticDissipation"
 !!!
 !!!  
-!!!  MEF90DefMechPlasticEnergy: wraps calls to MEF90DefMechPlasticEnergy from m_MEF90_DefMechAssembly
+!!!  MEF90DefMechPlasticDissipation: wraps calls to MEF90DefMechPlasticDissipation from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!  
 !!!  (c) 2012-14 Erwan TANNE erwan.tanne@gmail.com
 !!!
-   Subroutine MEF90DefMechPlasticEnergy(x,MEF90DefMechCtx,plasticStrainOld,energy,ierr)
+   Subroutine MEF90DefMechPlasticDissipation(x,MEF90DefMechCtx,plasticStrainOld,energy,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(Vec),Intent(IN)                               :: plasticStrainOld
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -695,11 +695,11 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       PetscInt                                           :: dim      
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
       If (dim == 2) Then
-         Call MEF90DefMechPlasticEnergy2D(x,MEF90DefMechCtx,plasticStrainOld,energy,ierr)
+         Call MEF90DefMechPlasticDissipation2D(x,MEF90DefMechCtx,plasticStrainOld,energy,ierr)
       Else If (dim == 3) Then
-         Call MEF90DefMechPlasticEnergy3D(x,MEF90DefMechCtx,plasticStrainOld,energy,ierr)
+         Call MEF90DefMechPlasticDissipation3D(x,MEF90DefMechCtx,plasticStrainOld,energy,ierr)
       End If      
-   End Subroutine MEF90DefMechPlasticEnergy
+   End Subroutine MEF90DefMechPlasticDissipation
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechStress"

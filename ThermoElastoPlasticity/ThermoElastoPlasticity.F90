@@ -125,7 +125,7 @@ Program ThermoElastoPlasticity
    Type(IS)                                           :: setIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
-   PetscReal,Dimension(:),Pointer                     :: time,energy,work,plasticenergy,plasticenergyvariation
+   PetscReal,Dimension(:),Pointer                     :: time,energy,work,plasticDissipation,plasticDissipationvariation
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
@@ -271,11 +271,11 @@ Program ThermoElastoPlasticity
    Allocate(energy(size(MEF90DefMechCtx%CellSetOptionsBag)))
    energy = 0.0_Kr
 
-   Allocate(plasticenergyvariation(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   plasticenergyvariation = 0.0_Kr
+   Allocate(plasticDissipationvariation(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   plasticDissipationvariation = 0.0_Kr
 
-   Allocate(plasticenergy(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   plasticenergy = 0.0_Kr
+   Allocate(plasticDissipation(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   plasticDissipation = 0.0_Kr
 
    Allocate(work(size(MEF90DefMechCtx%CellSetOptionsBag)))
    work = 0.0_Kr
@@ -430,21 +430,20 @@ Program ThermoElastoPlasticity
 
             !!! Compute energies
             energy = 0.0_Kr
-            plasticenergyvariation = 0.0_Kr
+            plasticDissipationvariation = 0.0_Kr
             work = 0.0_Kr
             Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,work,ierr);CHKERRQ(ierr)
             Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,energy,ierr);CHKERRQ(ierr)
             
-!Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr)
-            Call MEF90DefMechPlasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticenergyvariation,ierr);CHKERRQ(ierr)
+            Call MEF90DefMechPlasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticDissipationvariation,ierr);CHKERRQ(ierr)
 
 
             Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
-               plasticenergy(set)= plasticenergy(set) + plasticenergyvariation(set)
-               Write(IOBuffer,201) setID(set),energy(set),work(set),energy(set)-work(set), plasticenergy(set)
+               plasticDissipation(set)= plasticDissipation(set) + plasticDissipationvariation(set)
+               Write(IOBuffer,201) setID(set),energy(set),work(set),energy(set)-work(set), plasticDissipation(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             End Do
 
@@ -501,9 +500,9 @@ Program ThermoElastoPlasticity
 
    DeAllocate(time)
    DeAllocate(energy)
-   DeAllocate(plasticenergy)
+   DeAllocate(plasticDissipation)
    DeAllocate(work)
-   DeAllocate(plasticenergyvariation)
+   DeAllocate(plasticDissipationvariation)
 
    Call MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
