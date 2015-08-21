@@ -66,6 +66,7 @@ Program CoupledPlasticityDamage
    !PetscInt                                           :: BTStep,BTminStep,BTMaxSTep,BTDirection
 
    !!! plastic variables
+   PetscReal,Dimension(:),Pointer                     :: plasticDissipationSet,plasticDissipationvariationSet
    PetscReal,Dimension(:),Pointer                     :: plasticDissipation,plasticDissipationvariation
    Type(Vec)                                          :: plasticStrainOld
    PetscInt                                           :: AltProjIter
@@ -285,11 +286,11 @@ Program CoupledPlasticityDamage
    Allocate(heatFluxWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
    heatFluxWorkSet = 0.0_Kr
 
-   Allocate(plasticDissipationvariation(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   plasticDissipationvariation = 0.0_Kr
+   Allocate(plasticDissipationvariationSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   plasticDissipationvariationSet = 0.0_Kr
+   Allocate(plasticDissipationSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   plasticDissipationSet = 0.0_Kr
 
-   Allocate(plasticDissipation(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   plasticDissipation = 0.0_Kr
    
    Allocate(elasticEnergy(MEF90GlobalOptions%timeNumStep))
    elasticEnergy = 0.0_Kr
@@ -301,6 +302,12 @@ Program CoupledPlasticityDamage
    cohesiveEnergy = 0.0_Kr
    Allocate(totalMechanicalEnergy(MEF90GlobalOptions%timeNumStep))
    totalMechanicalEnergy = 0.0_Kr
+
+   Allocate(plasticDissipation(MEF90GlobalOptions%timeNumStep))
+   plasticDissipation = 0.0_Kr
+
+   Allocate(plasticDissipationvariation(MEF90GlobalOptions%timeNumStep))
+   plasticDissipationvariation = 0.0_Kr
    
    !!!
    !!! Try to figure out if the file was formatted
@@ -453,12 +460,9 @@ Program CoupledPlasticityDamage
                   Call VecAxPy(plasticStrainPrevious,-1.0_Kr,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
                   !!! Calculate the Infinity norm in error on PlasticStrain
                   Call VecNorm(plasticStrainPrevious,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
-               
-                  !!! Sum The PlasticStrainPrevious with PlasticStrain
-                  !Call VecAxPy(MEF90DefMechCtx%plasticStrain,1.0_Kr,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-                  !Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
 
-                  write(*,*) 'PlasticStrainMaxChange:          ',PlasticStrainMaxChange
+                  Write(IOBuffer,300) PlasticStrainMaxChange
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
                   If (PlasticStrainMaxChange <= MEF90DefMechGlobalOptions%plasticStrainATol) Then
                      EXIT
@@ -498,21 +502,24 @@ Program CoupledPlasticityDamage
             forceWorkSet      = 0.0_Kr
             surfaceEnergySet  = 0.0_Kr
             cohesiveEnergySet = 0.0_Kr
-            plasticDissipationvariation = 0.0_Kr
+            plasticDissipationvariationSet = 0.0_Kr
 
 
             Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,elasticEnergySet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechCohesiveEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,cohesiveEnergySet,ierr);CHKERRQ(ierr)
-            Call MEF90DefMechPlasticDissipation(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticDissipationvariation,ierr);CHKERRQ(ierr)
-            write(*,*) 'plasticDissipationvariation:          ',plasticDissipationvariation
+            Call MEF90DefMechPlasticDissipation(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticDissipationvariationSet,ierr);CHKERRQ(ierr)
+ !write(*,*) 'plasticDissipationvariation:          ',plasticDissipationvariation
+            
+            plasticDissipationvariation(step) = sum(plasticDissipationvariationSet)
+            plasticDissipation(step) = plasticDissipation(step-1) + plasticDissipationvariation(step)
 
             elasticEnergy(step)  = sum(elasticEnergySet)
             forceWork(step)      = sum(forceWorkSet)
             surfaceEnergy(step)  = sum(surfaceEnergySet)
             cohesiveEnergy(step) = sum(cohesiveEnergySet)
-            totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + cohesiveEnergy(step) + surfaceEnergy(step)
+            totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + cohesiveEnergy(step) + surfaceEnergy(step) + plasticDissipation(step)
             !!!
             !!! Print and save energies
             !!!
@@ -522,19 +529,19 @@ Program CoupledPlasticityDamage
             Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
 
-               plasticDissipation(set)= plasticDissipation(set) + plasticDissipationvariation(set)
-               Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipation(set), plasticDissipation(set)
-
+               plasticDissipationSet(set)= plasticDissipationSet(set) + plasticDissipationvariationSet(set)
+               Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipationSet(set), plasticDissipationSet(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-               Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipation(set)
+
+               Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipationSet(set) , plasticDissipationSet(set)
                Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
                Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
             End Do
             Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,202) elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
+            Write(IOBuffer,202) elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step),plasticDissipation(step)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,500) step,time(step),elasticEnergy(step),cohesiveEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step)
+            Write(IOBuffer,500) step,time(step),elasticEnergy(step),cohesiveEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step),plasticDissipation(step)
             Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
             Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
 
@@ -600,6 +607,8 @@ Program CoupledPlasticityDamage
    DeAllocate(cohesiveEnergySet)
    DeAllocate(thermalEnergySet)
    DeAllocate(heatFluxWorkSet)
+   DeAllocate(plasticDissipationSet)
+   DeAllocate(plasticDissipationvariationSet)
    
    DeAllocate(elasticEnergy)
    DeAllocate(forceWork)
@@ -625,11 +634,12 @@ Program CoupledPlasticityDamage
 110 Format("\nHeat transfer: step ",I4,", until t=",ES12.5,"\n")
 200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5," plastic dissipation: ",ES12.5,"\n")
-202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5, " plastic dissipation: ",ES12.5, "\n")
 208 Format("   Alt. Min. step ",I5," ")
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
+300 Format("                 plastic strain max change: ", ES12.5, "\n")
 308 Format("   Alt. Proj. step ",I5," ")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
-500 Format(I6, 7(ES16.5),"\n")
+500 Format(I8, 8(ES16.5), "\n")
 End Program CoupledPlasticityDamage

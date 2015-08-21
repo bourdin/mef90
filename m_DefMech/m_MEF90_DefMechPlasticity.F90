@@ -197,7 +197,7 @@ contains
       Else
          damageSec%v = 0
       End If
-      write(*,*)'Damage',damageSec
+!write(*,*)'Damage',damageSec
 
 
 
@@ -291,7 +291,7 @@ contains
 
 
                PlasticityCtx%Damage = damageElem 
-               write(*,*)'DamageCtx',PlasticityCtx%Damage
+!write(*,*)'DamageCtx',PlasticityCtx%Damage
 
 
                PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
@@ -300,14 +300,13 @@ contains
                !!! This is just for testing
                s%show_progress = 0
       
-               write(*,*) 'Plastic Strain Old step: ', PlasticStrainOldLoc
-               write(*,*) 'Plastic Strain before:   ', PlasticStrainLoc
-               write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
+!write(*,*) 'Plastic Strain Old step: ', PlasticStrainOldLoc
+!write(*,*) 'Plastic Strain before:   ', PlasticStrainLoc
+!write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
                !!! This is a bit dangerous:
                !!! If PetscReal is not the same as c_double, this call will fail
                exit_code = SNLPL1SQP(s,plasticStrainLoc)
-               write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
-               write(*,*) 
+!write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
