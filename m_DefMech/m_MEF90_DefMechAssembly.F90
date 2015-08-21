@@ -1770,7 +1770,7 @@ Contains
 
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%damageType)
-         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic,MEF90DefMech_damageTypeAT1)
+         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic,MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeATk)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemScalType%order)
@@ -2167,7 +2167,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,PlasticDissipationDensityGauss,temperatureGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       PetscReal                                          :: C2,C1
       PetscLogDouble                                     :: flops
@@ -2204,10 +2204,15 @@ Contains
          C0 = k * (k + 3.0_Kr * (k - 1.0_Kr) * (1.0_Kr - damageGauss)**2) / &
               (k + (1.0_Kr - k) * (1.0_Kr - damageGauss)**2)**3
          !!! This is really twice the elastic energy density
+
+         !!! This is really twice the plastic energy density
+         !!! This is not the PlasticDissipationDensityGauss properly, we should write 2*(matprop%HookesLaw * inelasticStrainGauss .DotP. (plasticStrainCell - plasticStrainoldCell ) )
+         PlasticDissipationDensityGauss = 2.0_Kr*(matprop%HookesLaw * inelasticStrainGauss .DotP. plasticStrainCell)
+
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( & 
-                                  (elasticEnergyDensityGauss * C0 - C1) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) &
+                                  (elasticEnergyDensityGauss * C0 - C1 + PlasticDissipationDensityGauss) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) &
                               + C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
@@ -2823,7 +2828,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,PlasticDissipationDensityGauss,temperatureGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       Type(MEF90_VECT)                                   :: gradientDamageGauss
       PetscReal                                          :: C1,C2,k,C0Operator
@@ -2855,6 +2860,11 @@ Contains
          elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
          !!! This is really twice the elastic energy density
 
+
+         !!! PlasticDissipationDensityGauss = 2*(matprop%HookesLaw * inelasticStrainGauss) .DotP. plasticStrainCell
+         PlasticDissipationDensityGauss = 2.0_Kr* ((matprop%HookesLaw * inelasticStrainGauss) .DotP. plasticStrainCell)
+         !!! This is really twice the plastic energy density
+
          damageGauss = 0.0_Kr
          gradientDamageGauss = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
@@ -2866,7 +2876,7 @@ Contains
 
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * (                       &
-                                  (C0Operator + C1 * (1.0_Kr - damageGauss)) * elemDamage%BF(iDoF2,iGauss) & 
+                                  (C0Operator + C1 * (1.0_Kr - damageGauss) - PlasticDissipationDensityGauss * (damageGauss - 1.0_Kr) ) * elemDamage%BF(iDoF2,iGauss) & 
                                   + C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
