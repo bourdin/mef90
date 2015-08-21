@@ -1409,6 +1409,7 @@ Contains
                      damageElem = damageElem + damageLoc(iDof1) * elemTemperature(cell)%BF(iDof1,iGauss)
                   End Do
 !write(*,*)'damageElem',damageElem
+                  !!!! Pas bon pour ATK faire ((1.0_Kr - damageElem)**2 /( 1.0_Kr + ( k - 1.0_Kr )*(1.0_Kr - (1.0_Kr - damageElem)**2 ) ))
                   stressElem = HookesLaw * strainElem * ( 1.0_Kr - damageElem )**2
                End If
 

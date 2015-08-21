@@ -16,6 +16,7 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
       Type(MEF90_MATS)            :: InelasticStrain
       Type(MEF90_MATS)            :: PlasticStrainOld
       real(Kind = Kr)             :: Damage
+      real(Kind = Kr)             :: ValueOfk
    end type MEF90DefMechPlasticityCtx
 
 contains
@@ -52,9 +53,15 @@ contains
       xMatS = x(1:SIZEOFMEF90_MATS)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx,myctx_ptr)
-      f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * (1-myctx_ptr%Damage)**2
+
+      if (myctx_ptr%ValueOfk==0) then
+         f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * (1-myctx_ptr%Damage)**2
+         g(1) =  sqrt( MEF90_DIM * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
+      else 
+         f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * ((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%ValueOfk - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))
+         g(1) =  sqrt( MEF90_DIM * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))*((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%ValueOfk - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))  - myctx_ptr%YieldStress* (1-myctx_ptr%Damage)**2
+      end if
       h(1) = Trace(xMatS)
-      g(1) =  sqrt( MEF90_DIM * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
    end subroutine FHG_VONMISES
 
 
@@ -198,7 +205,9 @@ contains
          damageSec%v = 0
       End If
 !write(*,*)'Damage',damageSec
+!   cellSetOptions%damageType
 
+!write(*,*)'Damage',cellSetOptions%damageType
 
 
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
@@ -208,6 +217,15 @@ contains
 
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+         
+         !!GET DAMAGE TYPE
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         Select Case (cellSetOptions%damageType)
+            Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
+            PlasticityCtx%ValueOfk=0
+            Case (MEF90DefMech_damageTypeATk)
+            PlasticityCtx%ValueOfk=matpropSet%k_for_ATk
+         End Select
 
 
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
