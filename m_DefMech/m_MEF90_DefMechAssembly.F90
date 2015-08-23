@@ -2782,7 +2782,7 @@ Contains
          inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
          elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
          
-         !!! Be careful It is not true in all the case, only for monotone increasing plastic strain
+         !!! Be careful It is not true in all cases, only for monotone increasing plastic strain
          !!! PlasticDissipationDensityGauss = 2*(matprop%HookesLaw * inelasticStrainGauss) .DotP. plasticStrainCell
          PlasticDissipationDensityGauss = 2.0_Kr* ((matprop%HookesLaw * inelasticStrainGauss) .DotP. plasticStrainCell)
          !!! This is really twice the elastic energy density
@@ -2876,7 +2876,7 @@ Contains
 
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * (                       &
-                                  (C0Operator + C1 * (1.0_Kr - damageGauss) - PlasticDissipationDensityGauss * (damageGauss - 1.0_Kr) ) * elemDamage%BF(iDoF2,iGauss) & 
+                                  (C0Operator + C1 * (1.0_Kr - damageGauss) + PlasticDissipationDensityGauss * (damageGauss - 1.0_Kr) ) * elemDamage%BF(iDoF2,iGauss) & 
                                   + C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
