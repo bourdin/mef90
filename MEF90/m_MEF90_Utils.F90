@@ -289,7 +289,7 @@ Contains
       MPI_Comm                         :: dComm
       PetscInt, Dimension(:), Pointer  :: dMyVals, dVals
       
-      Logical, Dimension(:), Pointer   :: ValCount
+      Logical, Dimension(:), Pointer   :: ValCount1,ValCount2
       PetscInt                         :: GlobMinVal, MyMinVal
       PetscInt                         :: GlobMaxVal, MyMaxVal
       PetscInt                         :: UniqCount
@@ -306,26 +306,28 @@ Contains
          MyMaxVal = MaxVal(dMyVals)
          Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPIU_INTEGER, MPI_MIN, dComm, iErr)
          Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPIU_INTEGER, MPI_MAX, dComm, iErr)
-         Allocate(ValCount(GlobMinVal:GlobMaxVal))
-         ValCount = .FALSE.
+         Allocate(ValCount1(GlobMinVal:GlobMaxVal))
+         Allocate(ValCount1(GlobMinVal:GlobMaxVal))
+         ValCount1 = .FALSE.
          Do i = 1, Size(dMyVals)
-            ValCount(dMyVals(i)) = .TRUE.
+            ValCount1(dMyVals(i)) = .TRUE.
          End Do
-   
-         Call MPI_AllReduce(MPI_IN_PLACE, ValCount, GlobMaxVal-GlobMinVal+1, MPI_LOGICAL, MPI_LOR, dComm, iErr)
+
+         Call MPI_AllReduce(ValCount1, ValCount2, GlobMaxVal-GlobMinVal+1, MPI_LOGICAL, MPI_LOR, dComm, iErr)
          !!! This is suboptimal. I could gather only to CPU 0 and do everything else on CPU 0 before broadcasting
          
-         UniqCount = Count(ValCount)
+         UniqCount = Count(ValCount2)
    
          Allocate(dVals(UniqCount))
          j = 1
          Do i = GlobMinVal, GlobMaxVal
-            If (ValCount(i)) Then
+            If (ValCount2(i)) Then
                dVals(j) = i
                j = j+1
             End If
          End Do
-         DeAllocate(ValCount)
+         DeAllocate(ValCount1)
+         DeAllocate(ValCount2)
       Else
          Allocate(dVals(0))
       End If
