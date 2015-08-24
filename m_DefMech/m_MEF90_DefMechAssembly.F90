@@ -1556,7 +1556,7 @@ Contains
       Type(MEF90Element_Type)                            :: elemDisplacementType
       Type(MEF90DefMechGlobalOptions_Type),Pointer       :: globalOptions
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
-      PetscReal                                          :: myWork
+      PetscReal                                          :: myWork,myWorkSet
       
       
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%globalOptionsBag,globalOptions,ierr);CHKERRQ(ierr)
@@ -1603,8 +1603,8 @@ Contains
          Call MEF90Element_Destroy(elemDisplacement,ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
-         Call MPI_AllReduce(MPI_IN_PLACE,myWork,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
-         work(set) = work(set) + mywork
+         Call MPI_AllReduce(myWork,myWorkSet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         work(set) = work(set) + myWorkSet
       End Do ! set
       Call ISrestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -1643,7 +1643,7 @@ Contains
       Type(MEF90Element_Type)                            :: elemDisplacementType
       Type(MEF90DefMechGlobalOptions_Type),Pointer       :: globalOptions
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
-      PetscReal                                          :: mycohesiveEnergy
+      PetscReal                                          :: mycohesiveEnergy,mycohesiveEnergySet
       
       
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%globalOptionsBag,globalOptions,ierr);CHKERRQ(ierr)
@@ -1676,8 +1676,8 @@ Contains
          Call MEF90Element_Destroy(elemDisplacement,ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
-         Call MPI_AllReduce(MPI_IN_PLACE,mycohesiveEnergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
-         cohesiveEnergy(set) = cohesiveEnergy(set) + mycohesiveEnergy * matpropSet%cohesiveStiffness
+         Call MPI_AllReduce(mycohesiveEnergy,mycohesiveEnergySet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         cohesiveEnergy(set) = cohesiveEnergy(set) + mycohesiveEnergySet * matpropSet%cohesiveStiffness
       End Do ! set
       Call ISrestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -1716,7 +1716,7 @@ Contains
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
       Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
-      PetscReal                                          :: myenergy
+      PetscReal                                          :: myenergy,myenergySet
 
       !!! Create dof-based sections
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
@@ -1792,8 +1792,8 @@ Contains
 
 
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-         Call MPI_AllReduce(MPI_IN_PLACE,myenergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
-         energy(set) = energy(set) + myenergy
+         Call MPI_AllReduce(myenergy,myenergySet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         energy(set) = energy(set) + myenergySet
       End Do ! set
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -1842,7 +1842,7 @@ Contains
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
       Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
-      PetscReal                                          :: myenergy
+      PetscScalar                                        :: myenergy,myenergySet
 
       !!! Create dof-based sections
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
@@ -1941,8 +1941,8 @@ Contains
             STOP  
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-         Call MPI_AllReduce(MPI_IN_PLACE,myenergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
-         energy(set) = energy(set) + myenergy
+         Call MPI_AllReduce(myenergy,myenergySet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         energy(set) = energy(set) + myenergySet
       End Do ! set
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
@@ -3988,7 +3988,7 @@ Contains
       Type(VecScatter)                                   :: ScatterSecToVecScal
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
       Type(MEF90Element_Type)                            :: elemScalType
-      PetscReal                                          :: myenergy
+      PetscReal                                          :: myenergy,myenergySet
 
       !!! Create dof-based sections
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',alphaSec,ierr);CHKERRQ(ierr)
@@ -4035,8 +4035,8 @@ Contains
 !!<--erwan!!
          End Select
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-         Call MPI_AllReduce(MPI_IN_PLACE,myenergy,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
-         energy(set) = energy(set) + myenergy
+         Call MPI_AllReduce(myenergy,myenergySet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         energy(set) = energy(set) + myenergySet
       End Do ! set
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
