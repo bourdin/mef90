@@ -323,7 +323,24 @@ contains
 !write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
                !!! This is a bit dangerous:
                !!! If PetscReal is not the same as c_double, this call will fail
-               exit_code = SNLPL1SQP(s,plasticStrainLoc)
+
+
+
+
+               !!! Brittle in traction, Ductile in compression
+               Select Case(cellSetOptions%unilateralContactType)
+               Case (MEF90DefMech_unilateralContactTypeBrittleDuctile)
+                     If (Trace(PlasticityCtx%InelasticStrain) > 0.0_Kr ) Then
+                        plasticStrainLoc = plasticStrainOldLoc
+                     Else 
+                        exit_code = SNLPL1SQP(s,plasticStrainLoc)
+                     End if
+               Case default
+                  exit_code = SNLPL1SQP(s,plasticStrainLoc)
+               End Select
+
+
+
 !write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
