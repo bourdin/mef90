@@ -1122,7 +1122,7 @@ Contains
                   QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%order
                End If
                Select Case(cellSetOptions%unilateralContactType)
-               Case (MEF90DefMech_unilateralContactTypeNone,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypeNone,MEF90DefMech_unilateralContactTypeBrittleDuctile,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATLoc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralHDLoc
@@ -1412,7 +1412,7 @@ Contains
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
                QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * ElemDamageType%order
                Select Case(cellSetOptions%unilateralContactType)
-               Case (MEF90DefMech_unilateralContactTypeNone,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
+               Case (MEF90DefMech_unilateralContactTypeNone,MEF90DefMech_unilateralContactTypeBrittleDuctile,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATLoc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralHDLoc
@@ -3564,7 +3564,7 @@ Contains
                   QuadratureOrder = 2 * elemDamageType%order + 2 * (elemDisplacementType%order - 1)
                End If
                Select Case(cellSetOptions%unilateralContactType)
-               Case (MEF90DefMech_unilateralContactTypeNone)
+               Case (MEF90DefMech_unilateralContactTypeNone,MEF90DefMech_unilateralContactTypeBrittleDuctile)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1Loc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralHDLoc
@@ -3834,7 +3834,7 @@ Contains
                   QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%order
                End If
                Select Case(cellSetOptions%unilateralContactType)
-               Case (MEF90DefMech_unilateralContactTypeNone)
+               Case (MEF90DefMech_unilateralContactTypeNone,MEF90DefMech_unilateralContactTypeBrittleDuctile)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1Loc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralHDLoc
