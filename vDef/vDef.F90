@@ -35,7 +35,7 @@ Program vDef
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
-   Type(Vec)                                          :: plasticStrainOld
+   Type(Vec)                                          :: plasticStrainOld,plasticStrainPrevious
    Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
    Type(Vec)                                          :: residualDamage,damageOld
@@ -439,7 +439,10 @@ Program vDef
                Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,ierr);CHKERRQ(ierr)
+               
+
+               Call VecDuplicate(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,ierr);CHKERRQ(ierr)
 
                ! Check for BT if necessary
                BTCheck: If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &

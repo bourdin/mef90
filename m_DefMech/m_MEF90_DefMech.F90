@@ -1282,18 +1282,18 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,ierr)
+   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(Vec),Intent(INOUT)                            :: plasticStrain
-      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld
+      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld,plasticStrainPrevious
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt                                           :: dim      
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
       If (dim == 2) Then
-         Call MEF90DefMechPlasticStrainUpdate2D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,ierr)
+         Call MEF90DefMechPlasticStrainUpdate2D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,ierr)
       Else If (dim == 3) Then
-         Call MEF90DefMechPlasticStrainUpdate3D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,ierr)
+         Call MEF90DefMechPlasticStrainUpdate3D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,ierr)
       End If      
    End Subroutine MEF90DefMechPlasticStrainUpdate
 End Module m_MEF90_DefMech

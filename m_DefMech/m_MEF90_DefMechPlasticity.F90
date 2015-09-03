@@ -131,7 +131,7 @@ contains
 !!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
 !!!
 
-   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,ierr)
+   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,ierr)
       use,intrinsic :: iso_c_binding
 #ifdef MEF90_HAVE_SNLP
       use SNLPF90
@@ -139,13 +139,13 @@ contains
 
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(Vec),Intent(INOUT)                            :: plasticStrain
-      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld
+      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld,plasticStrainPrevious
       PetscErrorCode,Intent(OUT)                         :: ierr
 
 #ifdef MEF90_HAVE_SNLP
       Type(DM)                                           :: Mesh
-      Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec
-      PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,inelasticStrainLoc,damageLoc
+      Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec,plasticStrainPreviousSec
+      PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,inelasticStrainLoc,damageLoc,plasticStrainPreviousLoc
       type(c_funptr)                                     :: snlp_fhg,snlp_Dfhg
       integer(kind=c_int)                                :: snlp_n,snlp_m,snlp_p
       type(SNLP),pointer                                 :: s
@@ -177,10 +177,15 @@ contains
       Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(plasticStrainSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(plasticStrainSec,inelasticStrainSec,ierr);CHKERRQ(ierr)
+      !!! plasticStrainPrevious only usefull for BrittleDuctile response
+      Call SectionRealDuplicate(plasticStrainSec,plasticStrainPreviousSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrain,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(plasticStrainOldSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr)
-   
+      !!! plasticStrainPrevious only usefull for BrittleDuctile response
+      Call SectionRealToVec(plasticStrainPreviousSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+
+
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)         
@@ -276,10 +281,6 @@ contains
             Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
             Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
                                          elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
-            
-            !Call MEF90DamageSet(damageSec,xSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
-            !                    elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
-
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemScal,ierr)
 
@@ -309,22 +310,16 @@ contains
 
 
                PlasticityCtx%Damage = damageElem 
-!write(*,*)'DamageCtx',PlasticityCtx%Damage
-
-
                PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
                PlasticityCtx%InelasticStrain = InelasticStrainLoc
-            
-               !!! This is just for testing
                s%show_progress = 0
       
 !write(*,*) 'Plastic Strain Old step: ', PlasticStrainOldLoc
 !write(*,*) 'Plastic Strain before:   ', PlasticStrainLoc
 !write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
+
                !!! This is a bit dangerous:
                !!! If PetscReal is not the same as c_double, this call will fail
-
-
 
 
                !!! Brittle in traction, Ductile in compression
@@ -332,14 +327,15 @@ contains
                Case (MEF90DefMech_unilateralContactTypeBrittleDuctile)
                      If (Trace(PlasticityCtx%InelasticStrain) > 0.0_Kr ) Then
                         plasticStrainLoc = plasticStrainOldLoc
+                        Call SectionRealRestrict(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
+                        plasticStrainPreviousLoc = plasticStrainLoc
+                        Call SectionRealRestore(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
                      Else 
                         exit_code = SNLPL1SQP(s,plasticStrainLoc)
                      End if
                Case default
                   exit_code = SNLPL1SQP(s,plasticStrainLoc)
                End Select
-
-
 
 !write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
@@ -358,6 +354,8 @@ contains
       Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(plasticStrainOldSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(inelasticStrainSec,ierr);CHKERRQ(ierr)
+      !!! plasticStrainPrevious only usefull for BrittleDuctile response
+      Call SectionRealDestroy(plasticStrainPreviousSec,ierr);CHKERRQ(ierr)
 
       Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
