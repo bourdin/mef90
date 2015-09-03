@@ -35,7 +35,7 @@ Program WorkControlled
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
-   Type(Vec)                                          :: plasticStrainOld
+   Type(Vec)                                          :: plasticStrainOld,plasticStrainPrevious
    Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
    Type(Vec)                                          :: residualDamage,damageOld
@@ -469,7 +469,8 @@ Program WorkControlled
 
                Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
 
-               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,ierr);CHKERRQ(ierr)
+               Call VecDuplicate(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                
 
                !!! Evaluation of W and compare with the W_target

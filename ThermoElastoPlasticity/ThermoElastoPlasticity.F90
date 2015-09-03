@@ -392,7 +392,7 @@ Program ThermoElastoPlasticity
                !!! Save the PlasticStrainPrevious
                Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                !!! Solve PlasticProjection
-               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,ierr);CHKERRQ(ierr)
+               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                !!! add damage in DefMechPlasticStrainUpdate
 
                Call VecAxPy(plasticStrainPrevious,-1.0_Kr,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
