@@ -74,6 +74,11 @@ Program CoupledPlasticityDamage
    Type(Vec)                                          :: plasticstrainerror
    Type(Vec)                                          :: plasticStrainPrevious
 
+   !!! WorkControl variables
+   Type(Vec)                                          :: pressureForce_1
+   PetscReal                                          :: pressure
+   PetscReal                                          :: Work
+
 
 
 !!! Default values of the contexts
@@ -110,7 +115,8 @@ Program CoupledPlasticityDamage
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticStrainAtol
+                                                         1.0e-4,                  & ! plasticStrainAtol
+                                                         0)                         ! bloacknumberworkcontrolled
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
@@ -135,7 +141,8 @@ Program CoupledPlasticityDamage
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticStrainAtol
+                                                         1.0e-4,                  & ! plasticStrainAtol
+                                                         0)                         ! bloacknumberworkcontrolled
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -435,6 +442,13 @@ Program CoupledPlasticityDamage
             Call SNESSetLagPreconditioner(snesDisp,1,ierr);CHKERRQ(ierr)
             
 
+
+            !!! Save the pressure equal to one
+            If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
+               Call VecDuplicate(MEF90DefMechCtx%pressureForce,pressureForce_1,ierr);CHKERRQ(ierr)
+               Call VecCopy(MEF90DefMechCtx%pressureForce,pressureForce_1,ierr);CHKERRQ(ierr)
+            End If
+
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit 
                Write(IObuffer,208) AltMinIter
                !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -452,14 +466,27 @@ Program CoupledPlasticityDamage
                   End If
 
 
-                  !!! Save the PlasticStrainPrevious
-                  Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+                  !!! Work Controled part 
+                  If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
+                     forceWorkSet      = 0.0_Kr
+                     Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
+                     work = forceWorkSet(MEF90DefMechGlobalOptions%BlockNumberWorkControlled)
+                     pressure = sqrt(time(step)/work)
+                     Call VecScale(MEF90DefMechCtx%pressureForce,pressure)
+                     Call VecScale(MEF90DefMechCtx%displacement,pressure)
+                  Else
+                     pressure=0
+                  End If
+
+
                   !!! Solve PlasticProjection
+                  !!! Save the PlasticStrainPrevious, add damage in DefMechPlasticStrainUpdate, error on the norm PlasticStrain
+
+                  Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                   Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-                  !!! add damage in DefMechPlasticStrainUpdate
                   Call VecAxPy(plasticStrainPrevious,-1.0_Kr,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
-                  !!! Calculate the Infinity norm in error on PlasticStrain
                   Call VecNorm(plasticStrainPrevious,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
+
 
                   Write(IOBuffer,300) PlasticStrainMaxChange
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -484,8 +511,18 @@ Program CoupledPlasticityDamage
                Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-
                Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
+
+
+               !!! Evaluation of the Work pressure and compare with the Work input (time)
+               If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
+                  forceWorkSet      = 0.0_Kr
+                  Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
+                  work = forceWorkSet(MEF90DefMechGlobalOptions%BlockNumberWorkControlled)
+                  If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol  .and. abs(time(step)-work)<= 1e-4) Then
+                     EXIT
+                  End If
+               End If
 
                If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
                   EXIT
@@ -495,6 +532,11 @@ Program CoupledPlasticityDamage
                   Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
                End If
             End Do AltMin
+
+            !!! Work controlled destroy Vec
+            If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
+               Call VecDestroy(pressureForce_1,ierr);CHKERRQ(ierr)
+            End If
 
 
             !!! Compute energies
@@ -510,7 +552,6 @@ Program CoupledPlasticityDamage
             Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechCohesiveEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,cohesiveEnergySet,ierr);CHKERRQ(ierr)
             Call MEF90DefMechPlasticDissipation(MEF90DefMechCtx%displacement,MEF90DefMechCtx,plasticStrainOld,plasticDissipationvariationSet,ierr);CHKERRQ(ierr)
- !write(*,*) 'plasticDissipationvariation:          ',plasticDissipationvariation
             
             plasticDissipationvariation(step) = sum(plasticDissipationvariationSet)
             plasticDissipation(step) = plasticDissipation(step-1) + plasticDissipationvariation(step)
@@ -533,7 +574,7 @@ Program CoupledPlasticityDamage
                Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipationSet(set), plasticDissipationSet(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-               Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipationSet(set) , plasticDissipationSet(set)
+               Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipationSet(set) , plasticDissipationSet(set) 
                Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
                Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
             End Do
@@ -634,12 +675,12 @@ Program CoupledPlasticityDamage
 110 Format("\nHeat transfer: step ",I4,", until t=",ES12.5,"\n")
 200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5," plastic dissipation: ",ES12.5,"\n")
-202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5, " plastic dissipation: ",ES12.5, "\n")
+202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5, " plastic dissipation: ",ES12.5,"\n")
 208 Format("   Alt. Min. step ",I5," ")
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
 300 Format("                 plastic strain max change: ", ES12.5, "\n")
 308 Format("   Alt. Proj. step ",I5," ")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
-500 Format(I8, 8(ES16.5), "\n")
+500 Format(I6, 7(ES16.5), "\n")
 End Program CoupledPlasticityDamage

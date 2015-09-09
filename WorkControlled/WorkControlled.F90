@@ -106,7 +106,9 @@ Program WorkControlled
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticStrainAtol
+                                                         1.0e-4,                  & ! plasticStrainAtol
+                                                         0)                         ! bloacknumberworkcontrolled
+
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
@@ -131,7 +133,8 @@ Program WorkControlled
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticStrainAtol
+                                                         1.0e-4,                  & ! plasticStrainAtol
+                                                         0)                         ! bloacknumberworkcontrolled
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -441,10 +444,10 @@ Program WorkControlled
                !!! Evaluation of W_1 and rescale the displacement and the real pressureForce
                forceWorkSet      = 0.0_Kr
                Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
-               write(*,*) "Work in set", forceWorkSet
+!write(*,*) "Work in set", forceWorkSet
                work = forceWorkSet(2)
                pressure = sqrt(time(step)/work)
-               write(*,*) "pressure=sqrt(time(step)/work)",pressure
+!write(*,*) "pressure=sqrt(time(step)/work)",pressure
 
                Call VecScale(MEF90DefMechCtx%pressureForce, pressure )
                Call VecScale(MEF90DefMechCtx%displacement,  pressure )
@@ -477,7 +480,7 @@ Program WorkControlled
                forceWorkSet      = 0.0_Kr
                Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
                work = forceWorkSet(2)
-               write(*,*) "errW",abs(time(step)-work)
+!write(*,*) "errW",abs(time(step)-work)
 
                If ((damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) .and. abs(time(step)-work)<= 1e-4) Then
                   EXIT

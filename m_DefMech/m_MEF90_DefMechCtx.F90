@@ -59,6 +59,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                               :: BTScope
       PetscReal                              :: BTTol
       PetscReal                              :: plasticStrainATol
+      PetscInt                               :: BlockNumberWorkControlled
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -686,6 +687,7 @@ Contains
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%BTTol,default%BTTol,'BT_Tol','Backtracking relative tolerance',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticStrainATol,default%plasticStrainATol,'defmech_plasticstrain_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt(bag,DefMechGlobalOptions%BlockNumberWorkControlled,default%BlockNumberWorkControlled,'BlockNumberWorkControlled','default 0 workcontrolled not activated, else number of the block to controlled',ierr);CHKERRQ(ierr)
 
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 

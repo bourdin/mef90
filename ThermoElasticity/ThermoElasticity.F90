@@ -48,7 +48,8 @@ Program ThermoElasticity
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticStrainAtol
+                                                         1.0e-4,                  & ! plasticStrainAtol
+                                                         0)                         ! bloacknumberworkcontrolled
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
@@ -74,7 +75,8 @@ Program ThermoElasticity
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
-                                                         1.0e-4)                    ! plasticStrainAtol
+                                                         1.0e-4,                  & ! plasticStrainAtol
+                                                         0)                         ! bloacknumberworkcontrolled
 
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
