@@ -169,7 +169,7 @@ contains
       Type(MEF90Element_Type)                            :: elemScalType
 
       Type(SectionReal)                                  :: damageSec
-      PetscReal                                          :: damageElem
+      PetscReal                                          :: damageCellAvg
 
       !PetscReal,Dimension(:),Pointer                     :: damageLoc
       !Type(MEF90Element_Type)                            :: elemDamageType
@@ -184,7 +184,6 @@ contains
       Call SectionRealToVec(plasticStrainOldSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr)
       !!! plasticStrainPrevious only usefull for BrittleDuctile response
       Call SectionRealToVec(plasticStrainPreviousSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-
 
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
@@ -281,35 +280,19 @@ contains
             Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
             Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
                                          elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
-            Call MEF90Element_Destroy(elemDisplacement,ierr)
-            Call MEF90Element_Destroy(elemScal,ierr)
-
-
-
-
-
             Do cell = 1,size(cellID)
                !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
                Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestrict(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
-               !Call SectionRealRestrict(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
-               
+               If (Associated(MEF90DefMechCtx%damage)) Then
+                  Call SectionRealRestrict(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
+                  Call MEF90GradDamageCellAverage(damageCellAvg,damageLoc,elemScal(cell),elemScalType,ierr)
+               Else
+                  damageCellAvg = 0.0_Kr
+               End If
 
-               !!! Damage on one element is not the good way to do that, HAVE TO CHANGE THAT
-               Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               !Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
-               !                             elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
-            
-               Call MEF90DamageSet(damageSec,damageElem,xSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,cell, &
-                                elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
-
-               Call MEF90Element_Destroy(elemDisplacement,ierr)
-               Call MEF90Element_Destroy(elemScal,ierr)
-
-
-               PlasticityCtx%Damage = damageElem 
+               PlasticityCtx%Damage = damageCellAvg 
                PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
                PlasticityCtx%InelasticStrain = InelasticStrainLoc
                s%show_progress = 0
@@ -341,9 +324,13 @@ contains
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
-               Call SectionRealRestore(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
+               If (Associated(MEF90DefMechCtx%damage)) Then
+                  Call SectionRealRestore(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
+               End If
       
             End Do !cell
+            Call MEF90Element_Destroy(elemDisplacement,ierr)
+            Call MEF90Element_Destroy(elemScal,ierr)
             call SNLPDelete(s)
          End If ! set 
       End Do !! set

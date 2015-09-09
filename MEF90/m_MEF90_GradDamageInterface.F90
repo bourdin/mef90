@@ -33,8 +33,8 @@ Module m_MEF90_GradDamageInterface
       MEF90GradDamageDamageBilinearFormSetLinSoft_2D             => MEF90GradDamageDamageBilinearFormSetLinSoft, &
       MEF90GradDamageDamageOperatorSetLinSoft_2D                 => MEF90GradDamageDamageOperatorSetLinSoft, &
       MEF90GradDamageDamageRHSSetLinSoft_2D                      => MEF90GradDamageDamageRHSSetLinSoft, &
-      MEF90GradDamageSurfaceEnergySetLinSoft_2D                  => MEF90GradDamageSurfaceEnergySetLinSoft
-
+      MEF90GradDamageSurfaceEnergySetLinSoft_2D                  => MEF90GradDamageSurfaceEnergySetLinSoft, &
+      MEF90GradDamageCellAverage_2D                              => MEF90GradDamageCellAverage
 
         
    Use m_MEF90_GradDamageImplementation_3D , &  
@@ -63,7 +63,8 @@ Module m_MEF90_GradDamageInterface
       MEF90GradDamageDamageBilinearFormSetLinSoft_3D             => MEF90GradDamageDamageBilinearFormSetLinSoft, &
       MEF90GradDamageDamageOperatorSetLinSoft_3D                 => MEF90GradDamageDamageOperatorSetLinSoft, &
       MEF90GradDamageDamageRHSSetLinSoft_3D                      => MEF90GradDamageDamageRHSSetLinSoft, &
-      MEF90GradDamageSurfaceEnergySetLinSoft_3D                  => MEF90GradDamageSurfaceEnergySetLinSoft
+      MEF90GradDamageSurfaceEnergySetLinSoft_3D                  => MEF90GradDamageSurfaceEnergySetLinSoft, &
+      MEF90GradDamageCellAverage_3D                              => MEF90GradDamageCellAverage
 
 
 
@@ -97,6 +98,7 @@ Module m_MEF90_GradDamageInterface
 !   Public :: MEF90GradDamageDamageOperatorSetLinSoft
 !   Public :: MEF90GradDamageDamageRHSSetLinSoft
    Public :: MEF90GradDamageSurfaceEnergySetLinSoft
+   Public :: MEF90GradDamageCellAverage
 
    
    Interface MEF90GradDamageDispBilinearFormSet
@@ -189,6 +191,7 @@ Module m_MEF90_GradDamageInterface
       Module Procedure MEF90GradDamageSurfaceEnergySetLinSoft_2D, MEF90GradDamageSurfaceEnergySetLinSoft_3D
    End Interface 
 
-
-
+   Interface MEF90GradDamageCellAverage
+      Module Procedure MEF90GradDamageCellAverage_2D, MEF90GradDamageCellAverage_3D
+   End Interface 
 End Module m_MEF90_GradDamageInterface
