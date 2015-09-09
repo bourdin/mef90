@@ -228,8 +228,8 @@ contains
          Select Case (cellSetOptions%damageType)
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
             PlasticityCtx%ValueOfk=0
-            Case (MEF90DefMech_damageTypeATk)
-            PlasticityCtx%ValueOfk=matpropSet%k_for_ATk
+            Case (MEF90DefMech_damageTypeLinSoft)
+            PlasticityCtx%ValueOfk=matpropSet%CoefficientLinSoft
          End Select
 
 

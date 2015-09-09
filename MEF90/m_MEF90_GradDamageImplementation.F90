@@ -29,13 +29,13 @@ Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
    Public :: MEF90GradDamageDamageRHSSetAT2
    Public :: MEF90GradDamageSurfaceEnergySetAT2
 !!erwan -->!!
-!   Public :: MEF90GradDamageDamageBilinearFormSetATkElastic
-!   Public :: MEF90GradDamageDamageOperatorSetATkElastic
-!   Public :: MEF90GradDamageDamageRHSSetATkElastic
-   Public :: MEF90GradDamageDamageBilinearFormSetATk
-   Public :: MEF90GradDamageDamageOperatorSetATk
-   Public :: MEF90GradDamageDamageRHSSetATk
-   Public :: MEF90GradDamageSurfaceEnergySetATk
+!   Public :: MEF90GradDamageDamageBilinearFormSetLinSoftElastic
+!   Public :: MEF90GradDamageDamageOperatorSetLinSoftElastic
+!   Public :: MEF90GradDamageDamageRHSSetLinSoftElastic
+   Public :: MEF90GradDamageDamageBilinearFormSetLinSoft
+   Public :: MEF90GradDamageDamageOperatorSetLinSoft
+   Public :: MEF90GradDamageDamageRHSSetLinSoft
+   Public :: MEF90GradDamageSurfaceEnergySetLinSoft
 !! <-- erwan !!
 
 !!! The Euler-Lagrange equation for the alpha problem for AT1 is
@@ -1381,18 +1381,18 @@ Contains
    End Subroutine MEF90GradDamageSurfaceEnergySetAT2
 
 
-!!erwan-->!!
+
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetATk"
+#define __FUNCT__ "MEF90GradDamageDamageBilinearFormSetLinSoft"
 !!!
 !!!  
-!!!  MEF90GradDamageDamageBilinearFormSetATk:
+!!!  MEF90GradDamageDamageBilinearFormSetLinSoft:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90GradDamageDamageBilinearFormSetATk(K,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageBilinearFormSetLinSoft(K,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(Mat),Intent(IN)                               :: K 
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(IS),Intent(IN)                                :: cellIS
@@ -1476,18 +1476,18 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)      
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageDamageBilinearFormSetATk
+   End Subroutine MEF90GradDamageDamageBilinearFormSetLinSoft
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageDamageOperatorSetATk"
+#define __FUNCT__ "MEF90GradDamageDamageOperatorSetLinSoft"
 !!!
 !!!  
-!!!  MEF90GradDamageDamageOperatorSetATk:
+!!!  MEF90GradDamageDamageOperatorSetLinSoft:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90GradDamageDamageOperatorSetATk(G,mesh,meshDisp,alpha,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageOperatorSetLinSoft(G,mesh,meshDisp,alpha,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
       Type(DM),Intent(IN)                                :: mesh,meshDisp
       Type(SectionReal),Intent(IN)                       :: alpha
@@ -1584,18 +1584,18 @@ Contains
          DeAllocate(alphaLoc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageDamageOperatorSetATk
+   End Subroutine MEF90GradDamageDamageOperatorSetLinSoft
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageDamageRHSSetATk"
+#define __FUNCT__ "MEF90GradDamageDamageRHSSetLinSoft"
 !!!
 !!!  
-!!!  MEF90GradDamageDamageRHSSetATk:
+!!!  MEF90GradDamageDamageRHSSetLinSoft:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90GradDamageDamageRHSSetATk(G,scaling,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
+   Subroutine MEF90GradDamageDamageRHSSetLinSoft(G,scaling,mesh,meshDisp,cellIS,displacement,temperature,plasticStrain,internalLength,HookesLaw,LinearThermalExpansion,FractureToughness,elem,elemType,elemDisp,elemDispType,ierr)
       Type(SectionReal),Intent(INOUT)                    :: G
       PetscReal,Intent(IN)                               :: scaling
       Type(DM),Intent(IN)                                :: mesh,meshDisp
@@ -1680,18 +1680,18 @@ Contains
          DeAllocate(Gloc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageDamageRHSSetATk
+   End Subroutine MEF90GradDamageDamageRHSSetLinSoft
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90GradDamageSurfaceEnergySetATk"
+#define __FUNCT__ "MEF90GradDamageSurfaceEnergySetLinSoft"
 !!!
 !!!  
-!!!  MEF90GradDamageSurfaceEnergySetATk:
+!!!  MEF90GradDamageSurfaceEnergySetLinSoft:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90GradDamageSurfaceEnergySetATk(energy,alpha,meshScal,cellIS,internalLength,fractureToughness,elemScal,elemScalType,ierr)
+   Subroutine MEF90GradDamageSurfaceEnergySetLinSoft(energy,alpha,meshScal,cellIS,internalLength,fractureToughness,elemScal,elemScalType,ierr)
       PetscReal,Intent(OUT)                              :: energy
       Type(SectionReal),Intent(IN)                       :: alpha
       Type(DM),Intent(IN)                                :: meshScal
@@ -1733,7 +1733,7 @@ Contains
          DeAllocate(alphaloc)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90GradDamageSurfaceEnergySetATk
+   End Subroutine MEF90GradDamageSurfaceEnergySetLinSoft
 
 !!<--erwan!!
 

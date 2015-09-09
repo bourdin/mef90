@@ -216,10 +216,10 @@ Module m_MEF90_DefMechCtx
    Enum,bind(c)
       enumerator  :: MEF90DefMech_damageTypeAT1 = 0,     &
                      MEF90DefMech_damageTypeAT2,         &
-                     MEF90DefMech_damageTypeATk,         &
+                     MEF90DefMech_damageTypeLinSoft,         &
                      MEf90DefMech_damageTypeAT1Elastic,  &
                      MEf90DefMech_damageTypeAT2Elastic,  &
-                     MEF90DefMech_damageTypeATkElastic
+                     MEF90DefMech_damageTypeLinSoftElastic
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(9),protected   :: MEF90DefMech_damageTypeList
    
@@ -279,10 +279,10 @@ Contains
       
       MEF90DefMech_damageTypeList(1) = 'AT1'
       MEF90DefMech_damageTypeList(2) = 'AT2'
-      MEF90DefMech_damageTypeList(3) = 'ATk'
+      MEF90DefMech_damageTypeList(3) = 'LinSoft'
       MEF90DefMech_damageTypeList(4) = 'AT1Elastic'
       MEF90DefMech_damageTypeList(5) = 'AT2Elastic'
-      MEF90DefMech_damageTypeList(6) = 'ATkElastic'
+      MEF90DefMech_damageTypeList(6) = 'LinSoftElastic'
       MEF90DefMech_damageTypeList(7) = 'MEF90DefMech_damageType'
       MEF90DefMech_damageTypeList(8) = '_MEF90DefMech_damageType'
       MEF90DefMech_damageTypeList(9) = ''

@@ -26,15 +26,15 @@ Module m_MEF90_GradDamageInterface
       MEF90GradDamageDamageRHSSetAT2_2D                      => MEF90GradDamageDamageRHSSetAT2, &
       MEF90GradDamageSurfaceEnergySetAT2_2D                  => MEF90GradDamageSurfaceEnergySetAT2, &
 
-!!erwan-->!!
-!      MEF90GradDamageDamageBilinearFormSetATkElastic_2D      => MEF90GradDamageDamageBilinearFormSetATkElastic, &
-!      MEF90GradDamageDamageOperatorSetATkElastic_2D          => MEF90GradDamageDamageOperatorSetATkElastic, &
-!      MEF90GradDamageDamageRHSSetATkElastic_2D               => MEF90GradDamageDamageRHSSetATkElastic, &
-      MEF90GradDamageDamageBilinearFormSetATk_2D             => MEF90GradDamageDamageBilinearFormSetATk, &
-      MEF90GradDamageDamageOperatorSetATk_2D                 => MEF90GradDamageDamageOperatorSetATk, &
-      MEF90GradDamageDamageRHSSetATk_2D                      => MEF90GradDamageDamageRHSSetATk, &
-      MEF90GradDamageSurfaceEnergySetATk_2D                  => MEF90GradDamageSurfaceEnergySetATk
-!!<--erwan!!
+
+!      MEF90GradDamageDamageBilinearFormSetLinSoftElastic_2D      => MEF90GradDamageDamageBilinearFormSetLinSoftElastic, &
+!      MEF90GradDamageDamageOperatorSetLinSoftElastic_2D          => MEF90GradDamageDamageOperatorSetLinSoftElastic, &
+!      MEF90GradDamageDamageRHSSetLinSoftElastic_2D               => MEF90GradDamageDamageRHSSetLinSoftElastic, &
+      MEF90GradDamageDamageBilinearFormSetLinSoft_2D             => MEF90GradDamageDamageBilinearFormSetLinSoft, &
+      MEF90GradDamageDamageOperatorSetLinSoft_2D                 => MEF90GradDamageDamageOperatorSetLinSoft, &
+      MEF90GradDamageDamageRHSSetLinSoft_2D                      => MEF90GradDamageDamageRHSSetLinSoft, &
+      MEF90GradDamageSurfaceEnergySetLinSoft_2D                  => MEF90GradDamageSurfaceEnergySetLinSoft
+
 
         
    Use m_MEF90_GradDamageImplementation_3D , &  
@@ -56,15 +56,15 @@ Module m_MEF90_GradDamageInterface
       MEF90GradDamageDamageOperatorSetAT2_3D                 => MEF90GradDamageDamageOperatorSetAT2, &
       MEF90GradDamageDamageRHSSetAT2_3D                      => MEF90GradDamageDamageRHSSetAT2, &
       MEF90GradDamageSurfaceEnergySetAT2_3D                  => MEF90GradDamageSurfaceEnergySetAT2, &
-!!erwan-->!!
-!      MEF90GradDamageDamageBilinearFormSetATkElastic_3D      => MEF90GradDamageDamageBilinearFormSetATkElastic, &
-!      MEF90GradDamageDamageOperatorSetATkElastic_3D          => MEF90GradDamageDamageOperatorSetATkElastic, &
-!      MEF90GradDamageDamageRHSSetATkElastic_3D               => MEF90GradDamageDamageRHSSetATkElastic, &
-      MEF90GradDamageDamageBilinearFormSetATk_3D             => MEF90GradDamageDamageBilinearFormSetATk, &
-      MEF90GradDamageDamageOperatorSetATk_3D                 => MEF90GradDamageDamageOperatorSetATk, &
-      MEF90GradDamageDamageRHSSetATk_3D                      => MEF90GradDamageDamageRHSSetATk, &
-      MEF90GradDamageSurfaceEnergySetATk_3D                  => MEF90GradDamageSurfaceEnergySetATk
-!!<--erwan!!
+
+!      MEF90GradDamageDamageBilinearFormSetLinSoftElastic_3D      => MEF90GradDamageDamageBilinearFormSetLinSoftElastic, &
+!      MEF90GradDamageDamageOperatorSetLinSoftElastic_3D          => MEF90GradDamageDamageOperatorSetLinSoftElastic, &
+!      MEF90GradDamageDamageRHSSetLinSoftElastic_3D               => MEF90GradDamageDamageRHSSetLinSoftElastic, &
+      MEF90GradDamageDamageBilinearFormSetLinSoft_3D             => MEF90GradDamageDamageBilinearFormSetLinSoft, &
+      MEF90GradDamageDamageOperatorSetLinSoft_3D                 => MEF90GradDamageDamageOperatorSetLinSoft, &
+      MEF90GradDamageDamageRHSSetLinSoft_3D                      => MEF90GradDamageDamageRHSSetLinSoft, &
+      MEF90GradDamageSurfaceEnergySetLinSoft_3D                  => MEF90GradDamageSurfaceEnergySetLinSoft
+
 
 
    IMPLICIT NONE
@@ -89,15 +89,15 @@ Module m_MEF90_GradDamageInterface
    Public :: MEF90GradDamageDamageRHSSetAT2
    Public :: MEF90GradDamageSurfaceEnergySetAT2
 
-!!erwan-->!!
-!   Public :: MEF90GradDamageDamageBilinearFormSetATkElastic
-!   Public :: MEF90GradDamageDamageOperatorSetATkElastic
-!   Public :: MEF90GradDamageDamageRHSSetATkElastic
-!   Public :: MEF90GradDamageDamageBilinearFormSetATk
-!   Public :: MEF90GradDamageDamageOperatorSetATk
-!   Public :: MEF90GradDamageDamageRHSSetATk
-   Public :: MEF90GradDamageSurfaceEnergySetATk
-!!<--erwan!!
+
+!   Public :: MEF90GradDamageDamageBilinearFormSetLinSoftElastic
+!   Public :: MEF90GradDamageDamageOperatorSetLinSoftElastic
+!   Public :: MEF90GradDamageDamageRHSSetLinSoftElastic
+!   Public :: MEF90GradDamageDamageBilinearFormSetLinSoft
+!   Public :: MEF90GradDamageDamageOperatorSetLinSoft
+!   Public :: MEF90GradDamageDamageRHSSetLinSoft
+   Public :: MEF90GradDamageSurfaceEnergySetLinSoft
+
    
    Interface MEF90GradDamageDispBilinearFormSet
       Module Procedure MEF90GradDamageDispBilinearFormSet_2D, MEF90GradDamageDispBilinearFormSet_3D
@@ -171,24 +171,24 @@ Module m_MEF90_GradDamageInterface
       Module Procedure MEF90GradDamageSurfaceEnergySetAT2_2D, MEF90GradDamageSurfaceEnergySetAT2_3D
    End Interface 
 
-!!erwan-->!!
 
-   Interface MEF90GradDamageDamageBilinearFormSetATk
-      Module Procedure MEF90GradDamageDamageBilinearFormSetATk_2D, MEF90GradDamageDamageBilinearFormSetATk_3D
+
+   Interface MEF90GradDamageDamageBilinearFormSetLinSoft
+      Module Procedure MEF90GradDamageDamageBilinearFormSetLinSoft_2D, MEF90GradDamageDamageBilinearFormSetLinSoft_3D
    End Interface 
 
-   Interface MEF90GradDamageDamageOperatorSetATk
-      Module Procedure MEF90GradDamageDamageOperatorSetATk_2D, MEF90GradDamageDamageOperatorSetATk_3D
+   Interface MEF90GradDamageDamageOperatorSetLinSoft
+      Module Procedure MEF90GradDamageDamageOperatorSetLinSoft_2D, MEF90GradDamageDamageOperatorSetLinSoft_3D
    End Interface 
 
-   Interface MEF90GradDamageDamageRHSSetATk
-      Module Procedure MEF90GradDamageDamageRHSSetATk_2D, MEF90GradDamageDamageRHSSetATk_3D
+   Interface MEF90GradDamageDamageRHSSetLinSoft
+      Module Procedure MEF90GradDamageDamageRHSSetLinSoft_2D, MEF90GradDamageDamageRHSSetLinSoft_3D
    End Interface 
 
-   Interface MEF90GradDamageSurfaceEnergySetATk
-      Module Procedure MEF90GradDamageSurfaceEnergySetATk_2D, MEF90GradDamageSurfaceEnergySetATk_3D
+   Interface MEF90GradDamageSurfaceEnergySetLinSoft
+      Module Procedure MEF90GradDamageSurfaceEnergySetLinSoft_2D, MEF90GradDamageSurfaceEnergySetLinSoft_3D
    End Interface 
-!!<--erwan!!
+
 
 
 End Module m_MEF90_GradDamageInterface
