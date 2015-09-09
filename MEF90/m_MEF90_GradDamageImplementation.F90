@@ -36,6 +36,7 @@ Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
    Public :: MEF90GradDamageDamageOperatorSetLinSoft
    Public :: MEF90GradDamageDamageRHSSetLinSoft
    Public :: MEF90GradDamageSurfaceEnergySetLinSoft
+   Public :: MEF90GradDamageCellAverage
 !! <-- erwan !!
 
 !!! The Euler-Lagrange equation for the alpha problem for AT1 is
@@ -1735,8 +1736,42 @@ Contains
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90GradDamageSurfaceEnergySetLinSoft
 
-!!<--erwan!!
+#undef __FUNCT__
+#define __FUNCT__ "MEF90GradDamageCellAverage"
+   !!!
+   !!!  
+   !!!  MEF90GradDamageCellAverage: Compute a cell--average section of the average damage in each cell
+   !!!
+   !!!         Stress : (plasticStrain-plasticStrainOld)
+   !!!  
+   !!!  (c) 2015 Erwan TANNE erwan.tanne@gmail.com
+   !!!
+   
+   Subroutine MEF90GradDamageCellAverage(damageCellAvg,damageLoc,elemDamage,elemDamageType,ierr)
+      PetscReal,Intent(OUT)                              :: damageCellAvg
+      PetscReal,Dimension(:),pointer                     :: damageLoc
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+      Type(MEF90Element_Type),Intent(IN)                 :: elemDamageType
+      PetscErrorCode,Intent(OUT)                         :: ierr
 
+      PetscReal                                          :: cellSize
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+     
+      cellSize = 0.0_Kr   
+      Do iGauss = 1,size(elemDamage%Gauss_C)
+         damageCellAvg = 0.0_Kr
+         cellSize = 0.0_Kr
+         Do iDoF1 = 1,elemDamageType%numDof
+            damageCellAvg = damageCellAvg + damageLoc(iDof1) * elemDamage%BF(iDof1,iGauss) * elemDamage%Gauss_C(iGauss)
+            cellSize = cellSize +  elemDamage%BF(iDof1,iGauss) * elemDamage%Gauss_C(iGauss)
+         End Do
+      End Do
+      damageCellAvg = damageCellAvg / cellSize
+
+      flops = 5 * elemDamageType%numDof * size(elemDamage%Gauss_C) + 1 
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90GradDamageCellAverage
 
 End Module MEF90_APPEND(m_MEF90_GradDamageImplementation_,MEF90_DIM)D
 

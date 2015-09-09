@@ -28,8 +28,7 @@ Module m_MEF90_ElasticityInterface
          !ElasticityWorkPressureSetVertex_2D => ElasticityPressureWorkSetVertex
          ElasticityStressSet_2D => ElasticityStressSet, &
          InelasticStrainSet_2D => InelasticStrainSet, &
-         PlasticityEnergySet_2D => PlasticityEnergySet, &
-         DamageSet_2D => DamageSet
+         PlasticityEnergySet_2D => PlasticityEnergySet
 
 
    Use m_MEF90_ElasticityImplementation_3D, &
@@ -56,8 +55,7 @@ Module m_MEF90_ElasticityInterface
          !ElasticityWorkPressureSetVertex_3D => ElasticityPressureWorkSetVertex
          ElasticityStressSet_3D => ElasticityStressSet, &
          InelasticStrainSet_3D => InelasticStrainSet, &
-         PlasticityEnergySet_3D => PlasticityEnergySet, &
-         DamageSet_3D => DamageSet
+         PlasticityEnergySet_3D => PlasticityEnergySet
    Use petsc
 
    IMPLICIT NONE
@@ -86,7 +84,6 @@ Module m_MEF90_ElasticityInterface
    Public :: MEF90ElasticityStressSet
    Public :: MEF90InelasticStrainSet
    Public :: MEF90PlasticityEnergySet
-   Public :: MEF90DamageSet
 
    
    Interface MEF90ElasticityBilinearFormSet
@@ -181,9 +178,4 @@ Module m_MEF90_ElasticityInterface
    Interface MEF90PlasticityEnergySet
       Module procedure PlasticityEnergySet_2D,PlasticityEnergySet_3D
    End Interface
-
-   Interface MEF90DamageSet
-      Module procedure DamageSet_2D,DamageSet_3D
-   End Interface
-
 End Module m_MEF90_ElasticityInterface
