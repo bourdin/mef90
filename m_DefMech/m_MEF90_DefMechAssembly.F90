@@ -184,7 +184,7 @@ Contains
    
 !!erwan-->!!
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormDisplacementATkLoc"
+#define __FUNCT__ "MEF90DefMechBilinearFormDisplacementLinSoftLoc"
 !!!
 !!!  
 !!!  MEF90DefMechBilinearFormDisplacementElasticLoc:
@@ -192,7 +192,7 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDisplacementATkLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechBilinearFormDisplacementLinSoftLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: ALoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
@@ -211,7 +211,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
       ALoc = 0.0_Kr
-      k = matprop%k_for_ATk
+      k = matprop%CoefficientLinSoft
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
@@ -230,7 +230,7 @@ Contains
       End Do
       !flops = numGauss * ( 2. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDisplacementATkLoc
+   End Subroutine MEF90DefMechBilinearFormDisplacementLinSoftLoc
    
 !!<--erwan!!
 
@@ -621,15 +621,15 @@ Contains
 
 !!erwan-->!!
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechOperatorDisplacementATkLoc"
+#define __FUNCT__ "MEF90DefMechOperatorDisplacementLinSoftLoc"
 !!!
 !!!  
-!!!  MEF90DefMechOperatorDisplacementATkLoc:
+!!!  MEF90DefMechOperatorDisplacementLinSoftLoc:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementATkLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDisplacementLinSoftLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
@@ -648,7 +648,7 @@ Contains
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
-      k = matprop%k_for_ATk
+      k = matprop%CoefficientLinSoft
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
@@ -688,7 +688,7 @@ Contains
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechOperatorDisplacementATkLoc
+   End Subroutine MEF90DefMechOperatorDisplacementLinSoftLoc
 !!<--erwan!!
 
 
@@ -1110,9 +1110,9 @@ Contains
                localOperatorFunction => MEF90DefMechOperatorDisplacementElasticLoc
                localRHSFunction => MEF90DefMechRHSDisplacementLoc
 !!erwan-->!!
-            Case (MEF90DefMech_damageTypeATk)
+            Case (MEF90DefMech_damageTypeLinSoft)
                QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
-               localOperatorFunction => MEF90DefMechOperatorDisplacementATkLoc
+               localOperatorFunction => MEF90DefMechOperatorDisplacementLinSoftLoc
                localRHSFunction => MEF90DefMechRHSDisplacementLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
@@ -1405,9 +1405,9 @@ Contains
                QuadratureOrder = 2 * (elemDisplacementType%order - 1)
                localAssemblyFunction => MEF90DefMechBilinearFormDisplacementElasticLoc
 !!erwan-->!!
-            Case (MEF90DefMech_damageTypeATk)
+            Case (MEF90DefMech_damageTypeLinSoft)
                QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * ElemDamageType%order
-               localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATkLoc
+               localAssemblyFunction => MEF90DefMechBilinearFormDisplacementLinSoftLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
                QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * ElemDamageType%order
@@ -1770,7 +1770,7 @@ Contains
 
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%damageType)
-         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic,MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeATk)
+         Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic,MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeLinSoft)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = 2 * max(elemDisplacementType%order - 1, elemScalType%order)
@@ -1907,7 +1907,7 @@ Contains
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
 !!erwan->!!
-         Case (MEF90DefMech_damageTypeATk)
+         Case (MEF90DefMech_damageTypeLinSoft)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = 5 * max(elemDisplacementType%order - 1, elemScalType%order)
@@ -2027,7 +2027,7 @@ Contains
          !!! Call proper local assembly depending on the type of damage law
          Select Case (cellSetOptions%damageType)
 !!erwan-->!!
-         Case (MEF90DefMech_damageTypeATk)
+         Case (MEF90DefMech_damageTypeLinSoft)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = max(elemDisplacementType%order - 1, elemScalType%order)
@@ -2145,10 +2145,10 @@ Contains
 !!erwan_bilinear-->!!
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormDamageATkLoc"
+#define __FUNCT__ "MEF90DefMechBilinearFormDamageLinSoftLoc"
 !!!
 !!!  
-!!!  MEF90DefMechBilinearFormDamageATkLoc: Assembles the bilinear form for ATk, that is:
+!!!  MEF90DefMechBilinearFormDamageLinSoftLoc: Assembles the bilinear form for LinSoft, that is:
 !!!    <K(alpha) beta , delta> = \int a''(\alpha) W(e(u)) \beta \delta 
 !!!                            + Gc/pi/\ell w''(alpha) \beta \delta
 !!!                            + 2 Gc/pi*\ell \nabla \beta \nabla \delta
@@ -2158,7 +2158,7 @@ Contains
 !!!  (c) 2014-2015 Erwan Tanne erwan.tanne@gmail.com, Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDamageATkLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechBilinearFormDamageLinSoftLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
@@ -2178,7 +2178,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
       
-      k = matprop%k_for_ATk
+      k = matprop%CoefficientLinSoft
       C1 = 2.0_Kr * matprop%fractureToughness / matprop%internalLength / PETSC_PI
       C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength / PETSC_PI
       Aloc = 0.0_Kr
@@ -2219,7 +2219,7 @@ Contains
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDamageATkLoc
+   End Subroutine MEF90DefMechBilinearFormDamageLinSoftLoc
 !!<--erwan!!
 
 #undef __FUNCT__
@@ -2808,10 +2808,10 @@ Contains
 
 !!erwan_operator-->!!
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechOperatorDamageATkLoc"
+#define __FUNCT__ "MEF90DefMechOperatorDamageLinSoftLoc"
 !!!
 !!!  
-!!!  MEF90DefMechOperatorDamageATkLoc: Assembles the operator for ATk:
+!!!  MEF90DefMechOperatorDamageLinSoftLoc: Assembles the operator for LinSoft:
 !!!    F(\alpha)\beta = \int [k(\alpha-1)W(e(u))] / [k-(k-1)(1-\alpha)^2]^2 \beta 
 !!!                   + 2Gc/pi (1-\alpha) \beta / \ell 
 !!!                   + 2Gc/pi \nabla \alpha \nabla \beta * \ell
@@ -2819,7 +2819,7 @@ Contains
 !!!  (c) 2014-2015 Erwan Tanne erwan.tanne@gmail.com, Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageATkLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageLinSoftLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       TYPE(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
@@ -2842,7 +2842,7 @@ Contains
       
       C1 = 2.0_Kr * matprop%fractureToughness / matprop%internalLength / PETSC_PI
       C2 = 2.0_Kr * matprop%fractureToughness * matprop%internalLength / PETSC_PI
-      k = matprop%k_for_ATk
+      k = matprop%CoefficientLinSoft
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
          temperatureGauss = 0.0_Kr
@@ -2882,7 +2882,7 @@ Contains
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechOperatorDamageATkLoc
+   End Subroutine MEF90DefMechOperatorDamageLinSoftLoc
 !!<--erwan!!
 
 #undef __FUNCT__
@@ -3576,9 +3576,9 @@ Contains
                   localOperatorFunction => MEF90DefMechOperatorNull
                End Select
 !!erwan-->!!
-            Case (MEF90DefMech_damageTypeATk)
+            Case (MEF90DefMech_damageTypeLinSoft)
                QuadratureOrder = 9! 5 * elemDamageType%order + 5 * (elemDisplacementType%order - 1)
-               localOperatorFunction => MEF90DefMechOperatorDamageATkLoc
+               localOperatorFunction => MEF90DefMechOperatorDamageLinSoftLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT2)
                If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -3823,9 +3823,9 @@ Contains
                QuadratureOrder = 2 * elemDamageType%order
                localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2ElasticLoc
 !!erwan-->!!
-            Case (MEF90DefMech_damageTypeATk)
+            Case (MEF90DefMech_damageTypeLinSoft)
                QuadratureOrder = 9 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
-               localAssemblyFunction => MEF90DefMechBilinearFormDamageATkLoc
+               localAssemblyFunction => MEF90DefMechBilinearFormDamageLinSoftLoc
 !!<--erwan!!
             Case (MEF90DefMech_damageTypeAT1)
                If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -4024,12 +4024,12 @@ Contains
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
 !!erwan-->!!
-         Case (MEF90DefMech_damageTypeATk)
+         Case (MEF90DefMech_damageTypeLinSoft)
             If (elemScalType%coDim == 0) Then
-               ! Which QuadratureOdre chose for ATk
+               ! Which QuadratureOdre chose for LinSoft
                QuadratureOrder = 5 !* (elemScalType%order - 1)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageSurfaceEnergySetATk(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
+               Call MEF90GradDamageSurfaceEnergySetLinSoft(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
 !!<--erwan!!
