@@ -16,7 +16,7 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
       Type(MEF90_MATS)            :: InelasticStrain
       Type(MEF90_MATS)            :: PlasticStrainOld
       real(Kind = Kr)             :: Damage
-      real(Kind = Kr)             :: ValueOfk
+      real(Kind = Kr)             :: CoefficientLinSoft
    end type MEF90DefMechPlasticityCtx
 
 contains
@@ -24,6 +24,8 @@ contains
 !!! We play with the pre-processor in order to avoid duplicate symbols.
 
 #define FHG_VONMISES MEF90_APPEND(fhg_VonMises,MEF90_DIM)D
+
+#define FHG_DRUCKERPRAGER MEF90_APPEND(fhg_DruckerPrager,MEF90_DIM)D
 
 #define FHG_TRESCA MEF90_APPEND(fhg_Tresca,MEF90_DIM)D
 
@@ -54,15 +56,49 @@ contains
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx,myctx_ptr)
 
-      if (myctx_ptr%ValueOfk==0) then
+      if (myctx_ptr%CoefficientLinSoft==0) then
          f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * (1-myctx_ptr%Damage)**2
-         g(1) =  sqrt( MEF90_DIM * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
+         g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
       else 
-         f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * ((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%ValueOfk - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))
-         g(1) =  sqrt( MEF90_DIM * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))*((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%ValueOfk - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))  - myctx_ptr%YieldStress* (1-myctx_ptr%Damage)**2
+         f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * ((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))
+         g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))*((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))  - myctx_ptr%YieldStress* (1-myctx_ptr%Damage)**2
       end if
       h(1) = Trace(xMatS)
    end subroutine FHG_VONMISES
+
+
+#undef __FUNCT__
+#define __FUNCT__ "FHG_DRUCKERPRAGER"
+!!!
+!!!  
+!!!  fhg: VonMises
+!!!  
+!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
+!!!
+!!!
+
+   subroutine FHG_DRUCKERPRAGER(x,f,h,g,myctx) bind(c)
+      use,intrinsic :: iso_c_binding
+      use m_MEF90
+
+      real(kind=c_double)                       :: x(*)
+      real(kind=c_double)                       :: f(*)
+      real(kind=c_double)                       :: h(*)
+      real(kind=c_double)                       :: g(*)
+      type(c_ptr),intent(in),value              :: myctx
+
+      type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
+      type(MEF90_MATS)                          :: xMatS
+
+      xMatS = x(1:SIZEOFMEF90_MATS)
+      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      call c_f_pointer(myctx,myctx_ptr)
+
+
+      f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 
+      g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress - 0.5*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))
+
+   end subroutine FHG_DRUCKERPRAGER
 
 
 
@@ -226,11 +262,10 @@ contains
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Select Case (cellSetOptions%damageType)
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
-            PlasticityCtx%ValueOfk=0
+            PlasticityCtx%CoefficientLinSoft=0
             Case (MEF90DefMech_damageTypeLinSoft)
-            PlasticityCtx%ValueOfk=matpropSet%CoefficientLinSoft
+            PlasticityCtx%CoefficientLinSoft=matpropSet%CoefficientLinSoft
          End Select
-
 
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
@@ -257,6 +292,14 @@ contains
                   snlp_n    = SIZEOFMEF90_MATS
                   snlp_m    = 1
                   snlp_p    = 2*SIZEOFMEF90_MATS
+                  snlp_ctx  = c_loc(PlasticityCtx)
+
+               case(MEF90DefMech_plasticityTypeDruckerPrager)
+                  snlp_Dfhg = c_null_funptr
+                  snlp_fhg  = c_funloc(FHG_DRUCKERPRAGER)
+                  snlp_n    = SIZEOFMEF90_MATS
+                  snlp_m    = 0
+                  snlp_p    = 1
                   snlp_ctx  = c_loc(PlasticityCtx)
 
                case(MEF90DefMech_plasticityTypeNONE)
@@ -298,8 +341,8 @@ contains
                s%show_progress = 0
       
 !write(*,*) 'Plastic Strain Old step: ', PlasticStrainOldLoc
-!write(*,*) 'Plastic Strain before:   ', PlasticStrainLoc
-!write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
+write(*,*) 'Plastic Strain before:   ', PlasticStrainLoc
+write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
 
                !!! This is a bit dangerous:
                !!! If PetscReal is not the same as c_double, this call will fail
@@ -320,7 +363,7 @@ contains
                   exit_code = SNLPL1SQP(s,plasticStrainLoc)
                End Select
 
-!write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
+write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
