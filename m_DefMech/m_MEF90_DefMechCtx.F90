@@ -216,7 +216,7 @@ Module m_MEF90_DefMechCtx
    Enum,bind(c)
       enumerator  :: MEF90DefMech_damageTypeAT1 = 0,     &
                      MEF90DefMech_damageTypeAT2,         &
-                     MEF90DefMech_damageTypeLinSoft,         &
+                     MEF90DefMech_damageTypeLinSoft,     &
                      MEf90DefMech_damageTypeAT1Elastic,  &
                      MEf90DefMech_damageTypeAT2Elastic,  &
                      MEF90DefMech_damageTypeLinSoftElastic
@@ -224,12 +224,13 @@ Module m_MEF90_DefMechCtx
    Character(len = MEF90_MXSTRLEN),Dimension(9),protected   :: MEF90DefMech_damageTypeList
    
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_plasticityTypeNone = 0,   &
-                     MEF90DefMech_plasticityTypeTresca,     &
-                     MEF90DefMech_plasticityTypeVonMises,   &
-                     MEF90DefMech_plasticityTypeDruckerPrager
+      enumerator  :: MEF90DefMech_plasticityTypeNone = 0,      &
+                     MEF90DefMech_plasticityTypeTresca,        &
+                     MEF90DefMech_plasticityTypeVonMises,      &
+                     MEF90DefMech_plasticityTypeDruckerPrager, &
+                     MEF90DefMech_plasticityTypeDruckerPragerCapModel
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(7),protected   :: MEF90DefMech_plasticityTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(8),protected   :: MEF90DefMech_plasticityTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,              &
@@ -292,9 +293,10 @@ Contains
       MEF90DefMech_plasticityTypeList(2) = 'Tresca'
       MEF90DefMech_plasticityTypeList(3) = 'VonMises'
       MEF90DefMech_plasticityTypeList(4) = 'DruckerPrager'
-      MEF90DefMech_plasticityTypeList(5) = 'MEF90DefMech_plasticityType'
-      MEF90DefMech_plasticityTypeList(6) = '_MEF90DefMech_plasticityType'
-      MEF90DefMech_plasticityTypeList(7) = ''
+      MEF90DefMech_plasticityTypeList(5) = 'DruckerPragerCapModel'
+      MEF90DefMech_plasticityTypeList(6) = 'MEF90DefMech_plasticityType'
+      MEF90DefMech_plasticityTypeList(7) = '_MEF90DefMech_plasticityType'
+      MEF90DefMech_plasticityTypeList(8) = ''
 
       MEF90DefMech_unilateralContactTypeList(1) = 'None'
       MEF90DefMech_unilateralContactTypeList(2) = 'HydrostaticDeviatoric'

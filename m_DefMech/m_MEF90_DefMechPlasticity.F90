@@ -17,6 +17,10 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
       Type(MEF90_MATS)            :: PlasticStrainOld
       real(Kind = Kr)             :: Damage
       real(Kind = Kr)             :: CoefficientLinSoft
+      real(Kind = Kr)             :: CoefficientDruckerPrager
+      real(Kind = Kr)             :: CoefficientDruckerPragerCapModel1
+      real(Kind = Kr)             :: CoefficientDruckerPragerCapModel2
+      real(Kind = Kr)             :: CoefficientDruckerPragerCapModel3
    end type MEF90DefMechPlasticityCtx
 
 contains
@@ -26,6 +30,8 @@ contains
 #define FHG_VONMISES MEF90_APPEND(fhg_VonMises,MEF90_DIM)D
 
 #define FHG_DRUCKERPRAGER MEF90_APPEND(fhg_DruckerPrager,MEF90_DIM)D
+
+#define FHG_DRUCKERPRAGERCAPMODEL MEF90_APPEND(fhg_DruckerPragerCapModel,MEF90_DIM)D
 
 #define FHG_TRESCA MEF90_APPEND(fhg_Tresca,MEF90_DIM)D
 
@@ -96,9 +102,44 @@ contains
 
 
       f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 
-      g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress - 0.5*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))
+      g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress -  myctx_ptr%CoefficientDruckerPrager*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))
 
    end subroutine FHG_DRUCKERPRAGER
+
+
+#undef __FUNCT__
+#define __FUNCT__ "FHG_DRUCKERPRAGERCAPMODEL"
+!!!
+!!!  
+!!!  fhg: VonMises
+!!!  
+!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
+!!!
+!!!
+
+   subroutine FHG_DRUCKERPRAGERCAPMODEL(x,f,h,g,myctx) bind(c)
+      use,intrinsic :: iso_c_binding
+      use m_MEF90
+
+      real(kind=c_double)                       :: x(*)
+      real(kind=c_double)                       :: f(*)
+      real(kind=c_double)                       :: h(*)
+      real(kind=c_double)                       :: g(*)
+      type(c_ptr),intent(in),value              :: myctx
+
+      type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
+      type(MEF90_MATS)                          :: xMatS
+
+      xMatS = x(1:SIZEOFMEF90_MATS)
+      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      call c_f_pointer(myctx,myctx_ptr)
+
+
+      f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 
+      g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress -  myctx_ptr%CoefficientDruckerPrager*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))
+      g(2) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%CoefficientDruckerPragerCapModel3 -  myctx_ptr%CoefficientDruckerPragerCapModel2*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) - myctx_ptr%CoefficientDruckerPragerCapModel1*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))**2.0
+
+   end subroutine FHG_DRUCKERPRAGERCAPMODEL
 
 
 
@@ -138,8 +179,8 @@ contains
 
 
       !write(*,*) 'A.e(u):         ', myctx_ptr%HookesLaw*myctx_ptr%Strain
-      call EigenVectorValues(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain),MatProj,MatDiag)
       ! D=P^(-1).A.P 
+      call EigenVectorValues(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain),MatProj,MatDiag)
       MatPrincipal = Transpose(MatProj)*MatSymToMat(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain) - xMatS)*MatProj
 
       f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.
@@ -302,6 +343,14 @@ contains
                   snlp_p    = 1
                   snlp_ctx  = c_loc(PlasticityCtx)
 
+               case(MEF90DefMech_plasticityTypeDruckerPragerCapModel)
+                  snlp_Dfhg = c_null_funptr
+                  snlp_fhg  = c_funloc(FHG_DRUCKERPRAGERCAPMODEL)
+                  snlp_n    = SIZEOFMEF90_MATS
+                  snlp_m    = 0
+                  snlp_p    = 2
+                  snlp_ctx  = c_loc(PlasticityCtx)
+
                case(MEF90DefMech_plasticityTypeNONE)
                   return
 
@@ -313,8 +362,13 @@ contains
    
             !! Remplissage du Ctx
 
-            PlasticityCtx%YieldStress = matpropSet%YieldStress
+            
             PlasticityCtx%HookesLaw = matpropSet%HookesLaw
+            PlasticityCtx%YieldStress = matpropSet%YieldStress
+            PlasticityCtx%CoefficientDruckerPrager = matpropSet%CoefficientDruckerPrager
+            PlasticityCtx%CoefficientDruckerPragerCapModel1 = matpropSet%CoefficientDruckerPragerCapModel1
+            PlasticityCtx%CoefficientDruckerPragerCapModel2 = matpropSet%CoefficientDruckerPragerCapModel2
+            PlasticityCtx%CoefficientDruckerPragerCapModel3 = matpropSet%CoefficientDruckerPragerCapModel3
 
             Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
 
@@ -341,8 +395,8 @@ contains
                s%show_progress = 0
       
 !write(*,*) 'Plastic Strain Old step: ', PlasticStrainOldLoc
-write(*,*) 'Plastic Strain before:   ', PlasticStrainLoc
-write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
+!write(*,*) 'Plastic Strain before:   ', PlasticStrainLoc
+!write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
 
                !!! This is a bit dangerous:
                !!! If PetscReal is not the same as c_double, this call will fail
@@ -363,7 +417,7 @@ write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
                   exit_code = SNLPL1SQP(s,plasticStrainLoc)
                End Select
 
-write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
+!write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
