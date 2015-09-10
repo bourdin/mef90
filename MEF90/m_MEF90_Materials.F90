@@ -22,36 +22,40 @@ Module m_MEF90_Materials_Types
 
    Type MEF90MatProp2D_Type
       Sequence
-      PetscReal                     :: Density                    ! rho
-      PetscReal                     :: FractureToughness          ! Gc
-      PetscReal                     :: SpecificHeat               ! Cp
-      Type(MatS2D)                  :: ThermalConductivity        ! K
-      Type(MatS2D)                  :: LinearThermalExpansion     ! alpha
-      Type(MEF90HookesLaw2D)        :: HookesLaw                  ! A
-      PetscReal                     :: internalLength             ! l
-
-      PetscReal                     :: CoefficientLinSoft                  ! k
-
-      PetscReal                     :: residualStiffness          ! eta
-      PetscReal                     :: yieldStress                ! yield stress
+      PetscReal                     :: Density                                          ! rho
+      PetscReal                     :: FractureToughness                                ! Gc
+      PetscReal                     :: SpecificHeat                                     ! Cp
+      Type(MatS2D)                  :: ThermalConductivity                              ! K
+      Type(MatS2D)                  :: LinearThermalExpansion                           ! alpha
+      Type(MEF90HookesLaw2D)        :: HookesLaw                                        ! A
+      PetscReal                     :: internalLength                                   ! l
+      PetscReal                     :: CoefficientLinSoft                               ! k
+      PetscReal                     :: residualStiffness                                ! eta
+      PetscReal                     :: yieldStress                                      ! yield stress
+      PetscReal                     :: CoefficientDruckerPragerCapModel1                ! C1 in DruckerPrager-CapModel
+      PetscReal                     :: CoefficientDruckerPragerCapModel2                ! C2 in DruckerPrager-CapModel
+      PetscReal                     :: CoefficientDruckerPragerCapModel3                ! C3 in DruckerPrager-CapModel
+      PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
       PetscReal                     :: cohesiveStiffness          
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
    Type MEF90MatProp3D_Type
       Sequence
-      PetscReal                     :: Density                    ! rho
-      PetscReal                     :: FractureToughness          ! Gc
-      PetscReal                     :: SpecificHeat               ! Cp
-      Type(MatS3D)                  :: ThermalConductivity        ! K
-      Type(MatS3D)                  :: LinearThermalExpansion     ! alpha
-      Type(MEF90HookesLaw3D)        :: HookesLaw                  ! A
-      PetscReal                     :: internalLength             ! l
-
-      PetscReal                     :: CoefficientLinSoft                  ! k
-
-      PetscReal                     :: residualStiffness          ! eta
-      PetscReal                     :: yieldStress                ! yield stress
+      PetscReal                     :: Density                                          ! rho
+      PetscReal                     :: FractureToughness                                ! Gc
+      PetscReal                     :: SpecificHeat                                     ! Cp
+      Type(MatS3D)                  :: ThermalConductivity                              ! K
+      Type(MatS3D)                  :: LinearThermalExpansion                           ! alpha
+      Type(MEF90HookesLaw3D)        :: HookesLaw                                        ! A
+      PetscReal                     :: internalLength                                   ! l
+      PetscReal                     :: CoefficientLinSoft                                        ! k
+      PetscReal                     :: residualStiffness                                ! eta
+      PetscReal                     :: yieldStress                                      ! yield stress
+      PetscReal                     :: CoefficientDruckerPragerCapModel1                ! C1 in DruckerPrager-CapModel
+      PetscReal                     :: CoefficientDruckerPragerCapModel2                ! C2 in DruckerPrager-CapModel
+      PetscReal                     :: CoefficientDruckerPragerCapModel3                ! C3 in DruckerPrager-CapModel
+      PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
       PetscReal                     :: cohesiveStiffness          
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
@@ -80,6 +84,10 @@ Module m_MEF90_Materials_Types
       2.0_Kr,                                                                          & ! CoefficientLinSoft
       1.0D-9,                                                                          & ! Residual Stiffness
       1.0_Kr,                                                                          & ! Yield Stress
+      -0.3_Kr,                                                                         & ! C1 in DruckerPrager-CapModel
+      0.4_Kr,                                                                          & ! C2 in DruckerPrager-CapModel
+      1.0_Kr,                                                                          & ! C3 in DruckerPrager-CapModel
+      -0.5_Kr,                                                                         & ! k  in DruckerPrager
       0.0_Kr,                                                                          & ! cohesive stiffness
       "MEF90Mathium2D")  
 
@@ -102,6 +110,10 @@ Module m_MEF90_Materials_Types
       2.0_Kr,                                                                          & ! CoefficientLinSoft
       1.0D-9,                                                                          & ! Residual Stiffness
       1.0_Kr,                                                                          & ! Yield Stress
+      -0.3_Kr,                                                                         & ! C1 in DruckerPrager-CapModel
+      0.4_Kr,                                                                          & ! C2 in DruckerPrager-CapModel
+      1.0_Kr,                                                                          & ! C3 in DruckerPrager-CapModel
+      -0.5_Kr,                                                                         & ! k  in DruckerPrager
       0.0_Kr,                                                                          & ! cohesive stiffness
       "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
@@ -288,11 +300,17 @@ Contains
             Call PetscBagRegisterBool(bag,matprop%HookesLaw%isPlaneStress,default%HookesLaw%isPlaneStress,'hookeslaw_planeStress','Use plane stress elasticity',ierr);CHKERRQ(ierr)
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
-      Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
 
+      Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientLinSoft,default%CoefficientLinSoft,'CoefficientLinSoft','[] (k) Linear softening coefficient for LinSoft',ierr)
 
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel1,default%CoefficientDruckerPragerCapModel1,'CoefficientDruckerPragerCapModel1','C1 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) - C3 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel2,default%CoefficientDruckerPragerCapModel2,'CoefficientDruckerPragerCapModel2','C2 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) - C3 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel3,default%CoefficientDruckerPragerCapModel3,'CoefficientDruckerPragerCapModel3','C3 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) - C3 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr)
+
+
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
@@ -337,10 +355,14 @@ Contains
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
-
       Call PetscBagRegisterReal(bag,matprop%CoefficientLinSoft,default%CoefficientLinSoft,'CoefficientLinSoft','[] (k) Linear softening coefficient for LinSoft',ierr)
 
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel1,default%CoefficientDruckerPragerCapModel1,'CoefficientDruckerPragerCapModel1',' C1 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) -C3 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel2,default%CoefficientDruckerPragerCapModel2,'CoefficientDruckerPragerCapModel2','C2 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) -C3 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel3,default%CoefficientDruckerPragerCapModel3,'CoefficientDruckerPragerCapModel3','C3 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) -C3 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr)
+
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
