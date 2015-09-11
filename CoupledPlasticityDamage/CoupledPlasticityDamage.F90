@@ -522,10 +522,10 @@ Program CoupledPlasticityDamage
                   If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol  .and. abs(time(step)-work)<= 1e-4) Then
                      EXIT
                   End If
-               End If
-
-               If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
-                  EXIT
+               Else
+                  If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
+                     EXIT
+                  End If
                End If
 
                If (mod(AltMinIter,25) == 0) Then
