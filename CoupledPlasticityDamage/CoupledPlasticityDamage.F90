@@ -79,6 +79,10 @@ Program CoupledPlasticityDamage
    PetscReal                                          :: pressure
    PetscReal                                          :: Work
 
+   !!! cumulatedPlasticEnergyDissipated
+   Type(Vec)                                          :: cumulatedPlasticEnergyDissipatedOld
+   Type(Vec)                                          :: cumulatedPlasticEnergyDissipatedVariation
+
 
 
 !!! Default values of the contexts
@@ -116,7 +120,9 @@ Program CoupledPlasticityDamage
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         0)                         ! bloacknumberworkcontrolled
+                                                         0,                       & ! bloacknumberworkcontrolled
+                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
@@ -142,7 +148,9 @@ Program CoupledPlasticityDamage
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         0)                         ! bloacknumberworkcontrolled
+                                                         0,                       & ! bloacknumberworkcontrolled
+                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -239,17 +247,17 @@ Program CoupledPlasticityDamage
    Call MEF90DefMechCtxCreateVectors(MEF90DefMechCtx,ierr)
    Call VecDuplicate(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
    Call VecDuplicate(MEF90DefMechCtx%displacement,residualDisp,ierr);CHKERRQ(ierr)
-
    Call PetscObjectSetName(residualDisp,"residualDisp",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
    Call VecDuplicate(MEF90DefMechCtx%damage,residualDamage,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
+      !!!cumulatedPlasticEnergyDissipated Vectors
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
+   Call VecCopy(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
    DeAllocate(MEF90DefMechCtx%temperature)
    
-   Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
-   Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-
    
    !!! As long as plasticity is not implemented, there is no point in keeping the pastic strain around
    !!!DeAllocate(MEF90DefMechCtx%plasticStrain)
@@ -481,13 +489,13 @@ Program CoupledPlasticityDamage
 
                   !!! Solve PlasticProjection
                   !!! Save the PlasticStrainPrevious, add damage in DefMechPlasticStrainUpdate, error on the norm PlasticStrain
+                  !!! calculate cumulatedPlasticEnergyDissipated =  CumulatedPlasticEnergyDissipatedPrevious + CumulatedPlasticEnergyDissipatedVariation
 
                   Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-                  Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+                  Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,plasticStrainPrevious,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
                   Call VecAxPy(plasticStrainPrevious,-1.0_Kr,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
                   Call VecNorm(plasticStrainPrevious,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
-
-
+                  Call VecWAXPY(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,1.0_Kr,cumulatedPlasticEnergyDissipatedOld,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
                   Write(IOBuffer,300) PlasticStrainMaxChange
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
@@ -533,6 +541,7 @@ Program CoupledPlasticityDamage
                End If
             End Do AltMin
 
+            
             !!! Work controlled destroy Vec
             If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
                Call VecDestroy(pressureForce_1,ierr);CHKERRQ(ierr)
@@ -601,10 +610,14 @@ Program CoupledPlasticityDamage
          If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
             Call MEF90DefMechStress(MEF90DefMechCtx%displacement,MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr)
          End If
+
+         !!! Update plasticstrainold & CumulatedPlasticEnergyDissipated
+         Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+         Call VecCopy(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
+
          Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
 
-         !!! Update plasticstrainold
-         Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+         
 
          !!!
          !!! Save performance log file
@@ -639,6 +652,8 @@ Program CoupledPlasticityDamage
    Call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx,ierr)
    Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
    Call VecDestroy(plasticStrainPrevious,ierr);CHKERRQ(ierr)
+   Call VecDestroy(cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
+   Call VecDestroy(cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
 
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 

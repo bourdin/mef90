@@ -208,7 +208,7 @@ contains
 !!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
 !!!
 
-   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,ierr)
+   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedPlasticEnergyDissipatedVariation,ierr)
       use,intrinsic :: iso_c_binding
 #ifdef MEF90_HAVE_SNLP
       use SNLPF90
@@ -216,13 +216,14 @@ contains
 
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(Vec),Intent(INOUT)                            :: plasticStrain
-      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld,plasticStrainPrevious
+      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld,plasticStrainPrevious,cumulatedPlasticEnergyDissipatedVariation
       PetscErrorCode,Intent(OUT)                         :: ierr
 
 #ifdef MEF90_HAVE_SNLP
       Type(DM)                                           :: Mesh
-      Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec,plasticStrainPreviousSec
+      Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec,plasticStrainPreviousSec,cumulatedPlasticEnergyDissipatedVariationSec
       PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,inelasticStrainLoc,damageLoc,plasticStrainPreviousLoc
+      PetscReal,Dimension(:),Pointer                     :: cumulatedPlasticEnergyDissipatedVariationLoc
       type(c_funptr)                                     :: snlp_fhg,snlp_Dfhg
       integer(kind=c_int)                                :: snlp_n,snlp_m,snlp_p
       type(SNLP),pointer                                 :: s
@@ -233,7 +234,7 @@ contains
       type(c_ptr)                                        :: snlp_ctx
 
 
-      type(VecScatter)                                   :: ScatterSecToVecCellMatS,ScatterSecToVec,ScatterSecToVecScal
+      type(VecScatter)                                   :: ScatterSecToVecCellMatS,ScatterSecToVec,ScatterSecToVecScal,ScatterSecToVecCellScal
       PetscInt                                           :: dim,set,cell,QuadratureOrder
       Type(IS)                                           :: cellSetGlobalIS,setIS
       PetscInt,dimension(:),Pointer                      :: setID,cellID
@@ -248,8 +249,8 @@ contains
       Type(SectionReal)                                  :: damageSec
       PetscReal                                          :: damageCellAvg
 
-      !PetscReal,Dimension(:),Pointer                     :: damageLoc
-      !Type(MEF90Element_Type)                            :: elemDamageType
+      Type(MEF90_MATS)                                   :: PlasticStrainMatS
+
 
       Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(plasticStrainSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)
@@ -261,6 +262,12 @@ contains
       Call SectionRealToVec(plasticStrainOldSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr)
       !!! plasticStrainPrevious only usefull for BrittleDuctile response
       Call SectionRealToVec(plasticStrainPreviousSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+
+      !!!  Cumulatedplasticenergydissipated
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',cumulatedPlasticEnergyDissipatedVariationSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMScal,cumulatedPlasticEnergyDissipatedVariationSec,ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(cumulatedPlasticEnergyDissipatedVariationSec,ScatterSecToVecCellScal,SCATTER_REVERSE,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr) 
+
 
       Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
@@ -289,6 +296,8 @@ contains
 !   cellSetOptions%damageType
 
 !write(*,*)'Damage',cellSetOptions%damageType
+
+!Call VecSet(cumulatedPlasticEnergyDissipatedVariation,3.0_Kr,ierr);CHKERRQ(ierr)
 
 
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
@@ -382,6 +391,8 @@ contains
                Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestrict(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
+               Call SectionRealRestrict(cumulatedPlasticEnergyDissipatedVariationSec,cellID(cell),cumulatedPlasticEnergyDissipatedVariationLoc,ierr);CHKERRQ(ierr)
+
                If (Associated(MEF90DefMechCtx%damage)) Then
                   Call SectionRealRestrict(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
                   Call MEF90GradDamageCellAverage(damageCellAvg,damageLoc,elemScal(cell),elemScalType,ierr)
@@ -400,8 +411,6 @@ contains
 
                !!! This is a bit dangerous:
                !!! If PetscReal is not the same as c_double, this call will fail
-
-
                !!! Brittle in traction, Ductile in compression
                Select Case(cellSetOptions%unilateralContactType)
                Case (MEF90DefMech_unilateralContactTypeBrittleDuctile)
@@ -416,6 +425,14 @@ contains
                Case default
                   exit_code = SNLPL1SQP(s,plasticStrainLoc)
                End Select
+
+               !!! cumulatedPlasticEnergyDissipated
+               PlasticStrainMatS=plasticStrainLoc
+               cumulatedPlasticEnergyDissipatedVariationLoc(1) = ( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
+
+write(*,*) 'cumulatedPlasticEnergyDissipatedVariationLoc:  ', cumulatedPlasticEnergyDissipatedVariationLoc(1)
+               Call SectionRealRestore(cumulatedPlasticEnergyDissipatedVariationSec,cellID(cell),cumulatedPlasticEnergyDissipatedVariationLoc,ierr);CHKERRQ(ierr)
+
 
 !write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
@@ -432,7 +449,9 @@ contains
          End If ! set 
       End Do !! set
 
+      !!! forward data plasticStrain & cumulatedPlasticEnergyDissipated
       Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(cumulatedPlasticEnergyDissipatedVariationSec,ScatterSecToVecCellscal,SCATTER_FORWARD,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
 
 
       Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
@@ -444,6 +463,11 @@ contains
       Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
+
+      !!! cumulatedPlasticEnergyDissipated
+      Call SectionRealDestroy(cumulatedPlasticEnergyDissipatedVariationSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(ScatterSecToVecCellscal,ierr);CHKERRQ(ierr)
+
 
       If (Associated(MEF90DefMechCtx%damage)) Then
          Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
