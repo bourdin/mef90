@@ -16,6 +16,7 @@ Module m_MEF90_DefMechCtx_Type
       Type(Vec),pointer                      :: force
       Type(Vec),pointer                      :: pressureForce
       Type(Vec),Pointer                      :: plasticStrain
+      Type(Vec),Pointer                      :: cumulatedPlasticEnergyDissipated
       Type(Vec),Pointer                      :: stress
       
       PetscBag                               :: GlobalOptionsBag
@@ -60,6 +61,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                              :: BTTol
       PetscReal                              :: plasticStrainATol
       PetscInt                               :: BlockNumberWorkControlled
+      PetscInt                               :: cumulatedPlasticEnergyDissipatedOffset
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -420,6 +422,7 @@ Contains
       Nullify(DefMechCtx%Damage)
       Nullify(DefMechCtx%temperature)
       Nullify(DefMechCtx%plasticStrain)
+      Nullify(DefMechCtx%cumulatedPlasticEnergyDissipated)
    End Subroutine MEF90DefMechCtxCreate
    
 #undef __FUNCT__
@@ -508,6 +511,11 @@ Contains
       Call DMCreateGlobalVector(DefMechCtx%CellDMMatS,DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(DefMechCtx%plasticStrain,"plasticStrain",ierr);CHKERRQ(ierr)
       Call VecSet(DefMechCtx%plasticStrain,0.0_Kr,ierr);CHKERRQ(ierr)
+
+      Allocate(DefMechCtx%cumulatedPlasticEnergyDissipated,stat=ierr)
+      Call DMCreateGlobalVector(DefMechCtx%cellDMScal,DefMechCtx%cumulatedPlasticEnergyDissipated,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(DefMechCtx%cumulatedPlasticEnergyDissipated,"cumulatedPlasticEnergyDissipated",ierr);CHKERRQ(ierr)
+      Call VecSet(DefMechCtx%cumulatedPlasticEnergyDissipated,0.0_Kr,ierr);CHKERRQ(ierr)
    
       Allocate(DefMechCtx%damage,stat=ierr)
       Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%damage,ierr);CHKERRQ(ierr)
@@ -586,6 +594,12 @@ Contains
          Nullify(DefMechCtx%plasticStrain)
       End If
 
+      If (Associated(DefMechCtx%cumulatedPlasticEnergyDissipated)) Then 
+         Call VecDestroy(DefMechCtx%cumulatedPlasticEnergyDissipated,ierr);CHKERRQ(ierr)   
+         DeAllocate(DefMechCtx%cumulatedPlasticEnergyDissipated)
+         Nullify(DefMechCtx%cumulatedPlasticEnergyDissipated)
+      End If
+
       If (Associated(DefMechCtx%stress)) Then 
          Call VecDestroy(DefMechCtx%stress,ierr);CHKERRQ(ierr)   
          DeAllocate(DefMechCtx%stress)
@@ -633,6 +647,7 @@ Contains
       Nullify(DefMechCtx%Damage)
       Nullify(DefMechCtx%temperature)
       Nullify(DefMechCtx%plasticStrain)
+      Nullify(DefMechCtx%cumulatedPlasticEnergyDissipated)
       Call DMDestroy(DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
@@ -692,6 +707,8 @@ Contains
 
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticStrainATol,default%plasticStrainATol,'defmech_plasticstrain_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,DefMechGlobalOptions%BlockNumberWorkControlled,default%BlockNumberWorkControlled,'BlockNumberWorkControlled','default 0 workcontrolled not activated, else number of the block to controlled',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedPlasticEnergyDissipatedOffset,default%cumulatedPlasticEnergyDissipatedOffset,'cumulatedPlasticEnergyDissipated_Offset','Position of the Cumulated Plastic Energy Dissipated field in EXO file',ierr);CHKERRQ(ierr)
+
 
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 

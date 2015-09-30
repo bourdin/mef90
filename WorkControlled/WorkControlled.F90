@@ -71,6 +71,11 @@ Program WorkControlled
    Type(Vec)                                          :: pressureForce_1
    PetscReal                                          :: pressure
    PetscReal                                          :: Work
+
+   !!! cumulatedPlasticEnergyDissipated
+   Type(Vec)                                          :: cumulatedPlasticEnergyDissipatedOld
+   Type(Vec)                                          :: cumulatedPlasticEnergyDissipatedVariation
+
       
 !!! Default values of the contexts
    Type(MEF90CtxGlobalOptions_Type),Parameter         :: vDefDefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
@@ -107,7 +112,9 @@ Program WorkControlled
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         0)                         ! bloacknumberworkcontrolled
+                                                         0,                       & ! bloacknumberworkcontrolled
+                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
@@ -134,7 +141,9 @@ Program WorkControlled
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         0)                         ! bloacknumberworkcontrolled
+                                                         0,                       & ! bloacknumberworkcontrolled
+                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -237,6 +246,10 @@ Program WorkControlled
    Call VecDuplicate(MEF90DefMechCtx%damage,residualDamage,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
+         !!!cumulatedPlasticEnergyDissipated Vectors
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
+   Call VecCopy(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
    DeAllocate(MEF90DefMechCtx%temperature)
    
    
@@ -473,8 +486,8 @@ Program WorkControlled
                Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
 
                Call VecDuplicate(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-               
+               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
+               Call VecWAXPY(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,1.0_Kr,cumulatedPlasticEnergyDissipatedOld,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
 
                !!! Evaluation of W and compare with the W_target
                forceWorkSet      = 0.0_Kr
@@ -489,6 +502,11 @@ Program WorkControlled
                   Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
                End If
             End Do AltMin
+
+            !!! Update plasticstrainold & CumulatedPlasticEnergyDissipated
+            Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
+
 
             Call VecDestroy(pressureForce_1,ierr);CHKERRQ(ierr)
 
@@ -576,6 +594,9 @@ Program WorkControlled
    Nullify(MEF90HeatXferCtx%temperature)
    Call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx,ierr)
    Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
+   Call VecDestroy(cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
+   Call VecDestroy(cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
+
 
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 

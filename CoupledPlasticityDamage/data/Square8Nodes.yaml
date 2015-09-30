@@ -1,8 +1,8 @@
 verbose: 0
 time:
-    min: 0
-    max: 2
-    numstep: 4
+    min: -3
+    max: 0
+    numstep: 6
 heatxfer:
   mode: null
 defmech:
@@ -11,16 +11,18 @@ defmech:
     atol: 1e-2
 temperature:
     offset: 0
-stress:
-    offset: 3
+cumulatedPlasticEnergyDissipated:
+    offset: 1
 plasticStrain:
+    offset: 2
+Stress:
     offset: 6
 cs0001:
     fracturetoughness: 1
     residualstiffness: 0.
     internalLength: .5
     damage:
-        type: AT1
+        type: AT1Elastic
     plasticity:
         type: VonMises
     HookesLaw:
