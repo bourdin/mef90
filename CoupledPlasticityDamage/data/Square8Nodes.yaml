@@ -1,7 +1,7 @@
 verbose: 0
 time:
-    min: -3
-    max: 0
+    min: 0
+    max: 3
     numstep: 6
 heatxfer:
   mode: null
@@ -22,7 +22,7 @@ cs0001:
     residualstiffness: 0.
     internalLength: .5
     damage:
-        type: AT1Elastic
+        type: AT1
     plasticity:
         type: VonMises
     HookesLaw:
