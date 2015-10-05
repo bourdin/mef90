@@ -297,9 +297,6 @@ contains
 
 !write(*,*)'Damage',cellSetOptions%damageType
 
-!Call VecSet(cumulatedPlasticEnergyDissipatedVariation,3.0_Kr,ierr);CHKERRQ(ierr)
-
-
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -371,7 +368,6 @@ contains
    
             !! Remplissage du Ctx
 
-            
             PlasticityCtx%HookesLaw = matpropSet%HookesLaw
             PlasticityCtx%YieldStress = matpropSet%YieldStress
             PlasticityCtx%CoefficientDruckerPrager = matpropSet%CoefficientDruckerPrager
@@ -429,9 +425,8 @@ contains
                !!! cumulatedPlasticEnergyDissipated
                PlasticStrainMatS=plasticStrainLoc
                cumulatedPlasticEnergyDissipatedVariationLoc(1) = ( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
-
-write(*,*) 'cumulatedPlasticEnergyDissipatedVariationLoc:  ', cumulatedPlasticEnergyDissipatedVariationLoc(1)
                Call SectionRealRestore(cumulatedPlasticEnergyDissipatedVariationSec,cellID(cell),cumulatedPlasticEnergyDissipatedVariationLoc,ierr);CHKERRQ(ierr)
+!write(*,*) 'cumulatedPlasticEnergyDissipatedVariationLoc:  ', cumulatedPlasticEnergyDissipatedVariationLoc(1)
 
 
 !write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
