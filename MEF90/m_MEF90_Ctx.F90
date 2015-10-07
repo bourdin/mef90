@@ -67,10 +67,11 @@ Module m_MEF90_Ctx
    
    Enum,bind(c)
       Enumerator  :: MEF90TimeInterpolation_linear = 0,  &
+                     MEF90TimeInterpolation_cycling,     &
                      MEF90TimeInterpolation_quadratic,   &
                      MEF90TimeInterpolation_exo
    End Enum
-   Character(len=MEF90_MXSTRLEN),dimension(6),protected  :: MEF90TimeInterpolationList
+   Character(len=MEF90_MXSTRLEN),dimension(7),protected  :: MEF90TimeInterpolationList
    
    
 
@@ -123,11 +124,12 @@ Contains
       MEF90FileFormatList(5) = '' 
       
       MEF90TimeInterpolationList(1) = 'linear'
-      MEF90TimeInterpolationList(2) = 'quadratic'
-      MEF90TimeInterpolationList(3) = 'exo'
-      MEF90TimeInterpolationList(4) = 'MEF90TimeInterpolation'
-      MEF90TimeInterpolationList(5) = '_MEF90TimeInterpolation'
-      MEF90TimeInterpolationList(6) = ''
+      MEF90TimeInterpolationList(2) = 'cycling'
+      MEF90TimeInterpolationList(3) = 'quadratic'
+      MEF90TimeInterpolationList(4) = 'exo'
+      MEF90TimeInterpolationList(5) = 'MEF90TimeInterpolation'
+      MEF90TimeInterpolationList(6) = '_MEF90TimeInterpolation'
+      MEF90TimeInterpolationList(7) = ''
    End Subroutine MEF90CtxInitialize_Private
    
 #undef __FUNCT__
@@ -264,8 +266,8 @@ Contains
       Integer                                         :: i,n
       Real                                            :: dummyR
       Character(len=1)                                :: dummyS
-      Integer                                         :: exoerr      
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+      Integer                                         :: exoerr
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions
 
       i = 0 ! silence gfortran silly warning
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
@@ -276,8 +278,18 @@ Contains
          If (GlobalOptions%timeNumStep > 1) Then
             dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / Real(GlobalOptions%timeNumStep-1.0_Kr)
          End If
-         t = [ (GlobalOptions%timeMin + Real(i) * dt, i = 0,GlobalOptions%timeNumStep-1) ]
+         t = [ ( GlobalOptions%timeMin + Real(i) * dt , i = 0,GlobalOptions%timeNumStep-1 ) ]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
+
+      Case (MEF90TimeInterpolation_cycling)
+         Allocate(t(GlobalOptions%timeNumStep))
+         dt = 0.0_Kr
+         If (GlobalOptions%timeNumStep > 1) Then
+            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / Real(GlobalOptions%timeNumStep-1.0_Kr)
+         End If
+         t = [ (sin(GlobalOptions%timeMin + Real(i) * dt ), i = 0,GlobalOptions%timeNumStep-1) ]
+         t(GlobalOptions%timeNumStep) = sin(GlobalOptions%timeMax)
+
       Case (MEF90TimeInterpolation_quadratic)
          !!! Natural time scale for the heat equation
          Allocate(t(GlobalOptions%timeNumStep))
@@ -287,6 +299,9 @@ Contains
          End If
          t = [ ((sqrt(GlobalOptions%timeMin) + Real(i) * dt)**2, i = 0,GlobalOptions%timeNumStep-1) ]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
+
+
+
       Case (MEF90TimeInterpolation_exo)
          Select case(GlobalOptions%FileFormat)
          Case (MEF90FileFormat_EXOSingle)
