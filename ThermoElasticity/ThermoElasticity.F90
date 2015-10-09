@@ -19,7 +19,9 @@ Program ThermoElasticity
                                                          0.0_Kr,                        & ! timeMin
                                                          1.0_Kr,                        & ! timeMax
                                                          11,                            & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
+                                                         MEF90FileFormat_EXOSingle,     & ! fileFormat
+                                                         1.0_Kr)                         ! frequency
+
 
    !!! Defect mechanics contexts
    Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx

@@ -27,6 +27,7 @@ Module m_MEF90_Ctx_Type
       PetscReal                                       :: timeMax
       PetscInt                                        :: timeNumStep
       PetscEnum                                       :: fileFormat
+      PetscReal                                       :: timeFrequency
    End Type MEF90CtxGlobalOptions_Type
 End Module m_MEF90_Ctx_Type
 
@@ -174,6 +175,7 @@ Contains
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%fileFormat,MEF90FileFormatList,default%fileFormat,'file_format','I/O: file format.',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeFrequency,default%timeFrequency,'time_frequency','Time: frequency   (1+t) cos(2 k Pi t)',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90CtxGlobalOptions
 
 #undef __FUNCT__
@@ -240,7 +242,7 @@ Contains
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
       PetscErrorCode,Intent(OUT)                      :: ierr
 
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions
 
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       If (GlobalOptions%dryrun) Then
@@ -287,8 +289,8 @@ Contains
          If (GlobalOptions%timeNumStep > 1) Then
             dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / Real(GlobalOptions%timeNumStep-1.0_Kr)
          End If
-         t = [ (sin(GlobalOptions%timeMin + Real(i) * dt ), i = 0,GlobalOptions%timeNumStep-1) ]
-         t(GlobalOptions%timeNumStep) = sin(GlobalOptions%timeMax)
+         t = [ ( (1.0_Kr + (GlobalOptions%timeMin + Real(i) * dt )) * (1.0_Kr - cos( 2.0_Kr*PETSC_PI*GlobalOptions%timeFrequency * (GlobalOptions%timeMin + Real(i) * dt ))), i = 0,GlobalOptions%timeNumStep-1) ]
+         t(GlobalOptions%timeNumStep) = ( (1.0_Kr + (GlobalOptions%timeMax ))*( 1.0_Kr - cos(  2.0_Kr*PETSC_PI*GlobalOptions%timeFrequency * GlobalOptions%timeMax ) ))
 
       Case (MEF90TimeInterpolation_quadratic)
          !!! Natural time scale for the heat equation
