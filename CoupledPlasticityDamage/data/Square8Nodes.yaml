@@ -1,8 +1,11 @@
-verbose: 0
+verbose: 1
 time:
+    interpolation: cycling
     min: 0
-    max: 3
-    numstep: 6
+# -1/(4k)
+    max: 1
+    numstep: 80 
+    frequency: 8
 heatxfer:
   mode: null
 defmech:
@@ -22,9 +25,11 @@ cs0001:
     residualstiffness: 0.
     internalLength: .5
     damage:
-        type: AT1
+#        type: AT1
+        type: AT1Elastic
     plasticity:
-        type: VonMises
+#        type: VonMises
+        type: None
     HookesLaw:
         type: isotropic
         YoungsModulus: 1.
