@@ -170,7 +170,7 @@ Contains
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%cellDMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-        Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+         Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
          Do c = 1, size(setIdx)
             Call SectionRealRestrict(xSec,setIDx(c),val,ierr);CHKERRQ(ierr)
             val = cellSetOptions%force
@@ -224,7 +224,7 @@ Contains
       Do set = 1,size(setID)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%cellDMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-        Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+         Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
          Do c = 1, size(setIdx)
             Call SectionRealRestrict(xSec,setIDx(c),val,ierr);CHKERRQ(ierr)
             val = cellSetOptions%pressureForce

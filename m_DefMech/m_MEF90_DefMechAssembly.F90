@@ -1078,6 +1078,7 @@ Contains
          temperatureSec%v = 0
       End If
 
+      Nullify(ForceLoc)
       If (Associated(MEF90DefMechCtx%force)) Then
          Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMVect,'default',forceSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMVect,forceSec,ScatterSecToVecCell,ierr);CHKERRQ(ierr)
@@ -1086,6 +1087,7 @@ Contains
          ForceSec%v = 0
       End If
       
+      Nullify(pressureForceLoc)
       If (Associated(MEF90DefMechCtx%pressureForce)) Then
          Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',pressureForceSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMScal,pressureForceSec,ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
@@ -1094,13 +1096,18 @@ Contains
          pressureForceSec%v = 0
       End If
 
+      Nullify(plasticStrainLoc)
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
          Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
-
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',cumulatedPlasticEnergyDissipatedSec,ierr);CHKERRQ(ierr)
-         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMScal,cumulatedPlasticEnergyDissipatedSec,ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+         
+         If (Associated(MEF90DefMechCtx%pressureForce)) Then
+            Call SectionRealDuplicate(pressureForceSec,cumulatedPlasticEnergyDissipatedSec,ierr);CHKERRQ(ierr)
+         Else
+            Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',cumulatedPlasticEnergyDissipatedSec,ierr);CHKERRQ(ierr)
+            Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMScal,cumulatedPlasticEnergyDissipatedSec,ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+         End If
          Call SectionRealToVec(cumulatedPlasticEnergyDissipatedSec,ScatterSecToVecCellScal,SCATTER_REVERSE,MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,ierr);CHKERRQ(ierr)
       Else
          PlasticStrainSec%v = 0
@@ -1318,7 +1325,6 @@ Contains
          Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
          Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
          Call SectionRealDestroy(cumulatedPlasticEnergyDissipatedSec,ierr);CHKERRQ(ierr)
-         Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
       End If
       
       If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -1327,6 +1333,9 @@ Contains
 
       If (Associated(MEF90DefMechCtx%pressureForce)) Then
          Call SectionRealDestroy(pressureForceSec,ierr);CHKERRQ(ierr)
+      End If
+
+      If ((Associated(MEF90DefMechCtx%pressureForce)) .OR. (Associated(MEF90DefMechCtx%plasticStrain))) Then
          Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)      
       End If
       
