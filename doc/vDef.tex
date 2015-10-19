@@ -138,7 +138,7 @@ In the deep backtracking, the exploration loop (lines 5-10) is moved into the al
 \item Boundary conditions can be specified on cell or vertex sets. Passing boundary conditions on vertex sets is slightly more efficient, but ensuring that vertex sets are disjoint can be difficult.
 \item Boundary condition handling is \emph{additive}. If a cell or vertex belong to several sets, the type of boundary conditions is given by performing a logical \verb+OR+ on the boundary conditions type of its parent entities. 
 %\item may lead to inconsistent results. In general, the loading applied will be the one specified in the set written last in the exodus file. There may be boundary effects for parallel computations.
-\item Unilateral contact, work constrained evolution, multiple load sets, variational plasticity, thermodynamically consistent evolutions are not implemented in this version of vDef.
+%\item Work constrained evolution, multiple load sets, variational plasticity, thermodynamically consistent evolutions are not implemented in this version of vDef.
 \end{itemize}
 
 \chapter{Command line options}
@@ -201,28 +201,42 @@ Notes:
 \end{compactenum}
 
 \subsection{Ordering of tensors}
-In all options, symmetric tensors or order 2 (symmetric matrices) are given in Voigt notations, \emph{i.e.} a $3\times 3$ symmetric matrix is represented by the array $A_{11},A_{22},A_{33},A_{23},A_{13},A_{12}$ and a $2\times 2$ symmetric matrix as $A_{11},A_{22},A_{12}$. Fourth odder symmetric tensors (Hooke's laws) are listed in alphabetical order. Redundant terms due to minor and major symmetries are not duplicated. The ordering of the coefficients of a two--dimensional Hooke's law $C$ is therefore $C_{1111}, C_{1112}, C_{1122}, C_{1212}, C_{1222}, C_{2222}$ and that of  a three--dimensional Hooke's law, $C_{1111}, C_{1112}, C_{1113}$, $C_{1122}, C_{1123}, C_{1133}, C_{1212}, C_{1213}$, $C_{1222}, C_{1223}, C_{1233}, C_{1313}, C_{1322}, C_{1323}, C_{1333}, C_{2222}, C_{2223}, C_{2233}$,
-$C_{2323}, C_{2333}, C_{3333}$. 
+In all options, symmetric tensors or order 2 (symmetric matrices) are given in Voigt notations, \emph{i.e.} a $3\times 3$ symmetric matrix is represented by the array $A_{11},A_{22},A_{33},A_{23},A_{13},A_{12}$ and a $2\times 2$ symmetric matrix as $A_{11},A_{22},A_{12}$. 
+The symmetric fourth order tensors (Hooke's laws) are stored as the rows of the upper diagonal part of a matrix consistent with the ordering above, i.e.
+\begin{equation*}
+	\begin{bmatrix}
+		C_{1111} & C_{1122} & C_{1133} & C_{1123} & C_{1113} & C_{1112}\\
+				 & C_{2222} & C_{2233} & C_{2223} & C_{2213} & C_{2212}\\
+				 &          & C_{3333} & C_{3323} & C_{3313} & C_{3312}\\
+				 &          &          & C_{2323} & C_{2313} & C_{2312}\\
+				 &          &          &          & C_{1313} & C_{1312}\\
+				 &          &          &          &          & C_{1313}
+	\end{bmatrix}
+\end{equation*}
+becomes:
+$\left[C_{1111}\ C_{1122}\  C_{1133}\  C_{1123}\  C_{1113}\  C_{1112}\  C_{2222}\  \dots  C_{1312}\  C_{1313}\right]$.
 
 A small utility in \verb+$MEF90_DIR/Tests/HookeLaws+ can be used to compute the coefficients of isotropic Hooke's laws:
 \begin{boxedverbatim}
-blaise@MacBook-Pro-3:Tests $ ./HookeLaws -E 1 -nu .3
- # MEF90: hg changeset 1634:5fef53534dac 
- # Copyright (c) 2014 B. Bourdin bourdin@lsu.edu 
- # PETSC_ARCH=Darwin-intel14.0-mef90-O 
- # PETSC_DIR=/opt/HPC/petsc-3.3 
+bourdin@galerkin:Tests $ ./HookeLaws -E 1 -nu .3
+ # MEF90: hg changeset 1792:b88429f29d30 
+ # Copyright (c) 1998-2014 B. Bourdin <bourdin@lsu.edu> 
+ # PETSC_ARCH=Darwin-gcc5.0-mef90-g 
+ # PETSC_DIR=/opt/HPC/petsc-3.3-p7 
+  
 Hooke's laws for E= 1.00E+00 nu= 3.00E-01
  3D isotropic
- 1.34615E+00, 0.00000E+00, 0.00000E+00, 5.76923E-01, 0.00000E+00, 5.76923E-01, 
- 3.84615E-01, 0.00000E+00, 0.00000E+00, 0.00000E+00, 0.00000E+00, 3.84615E-01, 
- 0.00000E+00, 0.00000E+00, 0.00000E+00, 1.34615E+00, 0.00000E+00, 5.76923E-01, 
- 3.84615E-01, 0.00000E+00, 1.34615E+00
+ 1.34615E+00, 5.76923E-01, 5.76923E-01, 0.00000E+00, 0.00000E+00, 0.00000E+00, 
+ 1.34615E+00, 5.76923E-01, 0.00000E+00, 0.00000E+00, 0.00000E+00, 1.34615E+00, 
+ 0.00000E+00, 0.00000E+00, 0.00000E+00, 3.84615E-01, 0.00000E+00, 0.00000E+00, 
+ 3.84615E-01, 0.00000E+00, 3.84615E-01 
  2D plane stress
- 1.09890E+00, 0.00000E+00, 3.29670E-01, 3.84615E-01, 0.00000E+00, 1.09890E+00
+ 1.09890E+00, 3.29670E-01, 0.00000E+00, 1.09890E+00, 0.00000E+00, 3.84615E-01 
  2D plane strain
- 1.34615E+00, 0.00000E+00, 5.76923E-01, 3.84615E-01, 0.00000E+00, 1.34615E+00
+ 1.34615E+00, 5.76923E-01, 0.00000E+00, 1.34615E+00, 0.00000E+00, 3.84615E-01 
 \end{boxedverbatim}
 
+Alternatively, \emph{isotropic} Hooke's laws are also implemented (see Section~\ref{sec:MatProp}).
 
 
 \subsection{Time interpolation}
@@ -249,6 +263,7 @@ Piecewise constant loadings functions (fluxes, forces, boundary values) can be p
 Due to a bug in the ExodusII fortran bindings, \vDef can only import Exodus entities numbers and ignores their names. When passing command line options, Exodus' element blocks are abbreviated as \verb+cs+ (for Cell Sets) and nodes sets as \verb+vs+ (for Vertex Sets) concatenated with the entity number formatted with 4 digits. For instance, the prefix associated with exodusII element block 10 would be \verb+cs0010_+.
 
 \subsection{Material properties}
+\label{sec:MatProp}
 Material properties for a cell set are passed by prefixing the following options with the cell set number (i.e. \verb+-cs0001_Density+, for instance). Materials names are not used at the moment. Substitute the \verb+cs0001_+ prefix with the appropriate reference.
 \small{
 \begin{boxedverbatim}
@@ -262,6 +277,15 @@ Material properties for a cell set are passed by prefixing the following options
 -cs0001_internalLength <1>: [m] (l) Internal Length 
 \end{boxedverbatim}
 }
+
+Isotropic Hookes laws are described in terms of  Youngs Modulus / Poisson ration in plane stress or plane strain (2D only) as:
+\begin{boxedverbatim}
+-cs0001_hookeslaw_type = Isotropic; (MEF90HookesLawTypeList) Type of Hooke's law
+-cs0001_hookeslaw_YoungsModulus = 1 ; [N.m^(-2)] (E) Young's Modulus
+-cs0001_hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
+-cs0001_hookeslaw_planeStress =  FALSE; Use plane stress elasticity
+\end{boxedverbatim}
+or as a general fourth order tensor.
 
 \subsection{Heat transfer options}
 \subsubsection{Global options}
