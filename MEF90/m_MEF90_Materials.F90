@@ -32,6 +32,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoefficientLinSoft                               ! k
       PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: yieldStress                                      ! yield stress
+      PetscReal                     :: DuctileCouplingPower                             ! Coupling power between plasticity and damage
       PetscReal                     :: CoefficientDruckerPragerCapModel1                ! C1 in DruckerPrager-CapModel
       PetscReal                     :: CoefficientDruckerPragerCapModel2                ! C2 in DruckerPrager-CapModel
       PetscReal                     :: CoefficientDruckerPragerCapModel3                ! C3 in DruckerPrager-CapModel
@@ -52,6 +53,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoefficientLinSoft                                        ! k
       PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: yieldStress                                      ! yield stress
+      PetscReal                     :: DuctileCouplingPower                             ! Coupling power between plasticity and damage
       PetscReal                     :: CoefficientDruckerPragerCapModel1                ! C1 in DruckerPrager-CapModel
       PetscReal                     :: CoefficientDruckerPragerCapModel2                ! C2 in DruckerPrager-CapModel
       PetscReal                     :: CoefficientDruckerPragerCapModel3                ! C3 in DruckerPrager-CapModel
@@ -84,6 +86,7 @@ Module m_MEF90_Materials_Types
       2.0_Kr,                                                                          & ! CoefficientLinSoft
       1.0D-9,                                                                          & ! Residual Stiffness
       1.0_Kr,                                                                          & ! Yield Stress
+      2.0_Kr,                                                                          & ! Coupling power between damage and plasticity
       -0.3_Kr,                                                                         & ! C1 in DruckerPrager-CapModel
       0.4_Kr,                                                                          & ! C2 in DruckerPrager-CapModel
       1.0_Kr,                                                                          & ! C3 in DruckerPrager-CapModel
@@ -110,6 +113,7 @@ Module m_MEF90_Materials_Types
       2.0_Kr,                                                                          & ! CoefficientLinSoft
       1.0D-9,                                                                          & ! Residual Stiffness
       1.0_Kr,                                                                          & ! Yield Stress
+      2.0_Kr,                                                                          & ! Coupling power between damage and plasticity
       -0.3_Kr,                                                                         & ! C1 in DruckerPrager-CapModel
       0.4_Kr,                                                                          & ! C2 in DruckerPrager-CapModel
       1.0_Kr,                                                                          & ! C3 in DruckerPrager-CapModel
@@ -305,6 +309,7 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%CoefficientLinSoft,default%CoefficientLinSoft,'CoefficientLinSoft','[] (k) Linear softening coefficient for LinSoft',ierr)
 
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
+      Call PetscBagRegisterReal(bag,matprop%DuctileCouplingPower,default%DuctileCouplingPower,'DuctileCouplingPower','[] power of the coupling between the damage and the plasticity',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel1,default%CoefficientDruckerPragerCapModel1,'CoefficientDruckerPragerCapModel1','C1 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) - C3 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel2,default%CoefficientDruckerPragerCapModel2,'CoefficientDruckerPragerCapModel2','C2 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) - C3 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel3,default%CoefficientDruckerPragerCapModel3,'CoefficientDruckerPragerCapModel3','C3 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) - C3 <= 0',ierr)
@@ -358,6 +363,7 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%CoefficientLinSoft,default%CoefficientLinSoft,'CoefficientLinSoft','[] (k) Linear softening coefficient for LinSoft',ierr)
 
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
+      Call PetscBagRegisterReal(bag,matprop%DuctileCouplingPower,default%DuctileCouplingPower,'DuctileCouplingPower','[] power of the coupling between the damage and the plasticity',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel1,default%CoefficientDruckerPragerCapModel1,'CoefficientDruckerPragerCapModel1',' C1 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) -C3 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel2,default%CoefficientDruckerPragerCapModel2,'CoefficientDruckerPragerCapModel2','C2 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) -C3 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel3,default%CoefficientDruckerPragerCapModel3,'CoefficientDruckerPragerCapModel3','C3 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) -C3 <= 0',ierr)

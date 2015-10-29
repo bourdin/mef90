@@ -1336,7 +1336,7 @@ Contains
       End If
 
       If ((Associated(MEF90DefMechCtx%pressureForce)) .OR. (Associated(MEF90DefMechCtx%plasticStrain))) Then
-         Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)      
+         Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
       End If
       
       If (Associated(MEF90DefMechCtx%damage)) Then
@@ -1842,7 +1842,7 @@ Contains
                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                Call MEF90PlasticityEnergySet(myenergy,xSec,damageSec,cumulatedPlasticEnergyDissipatedSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
-                                             elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+                                             elemDisplacement,elemDisplacementType,elemScal,elemScalType,matpropSet,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
@@ -2163,16 +2163,19 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
-      PetscReal                                          :: C2
+      PetscReal                                          :: C2,N
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
+
+
 
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
       
+      N = matprop%DuctileCouplingPower
       C2 = matprop%fractureToughness * matprop%internalLength * .75
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
@@ -2191,10 +2194,18 @@ Contains
          elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
          !!! This is really twice the elastic energy density
 
+         damageGauss = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
+         End Do
+
+
+
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
-                                      (elasticEnergyDensityGauss + 2.0_Kr*cumulatedPlasticEnergyDissipatedCell) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                      (elasticEnergyDensityGauss + &
+                                      ( N * (N - 1.0) *( (1.0_Kr-damageGauss)**(DBLE(N - 2.0)) ) ) * cumulatedPlasticEnergyDissipatedCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
                                       C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
@@ -2825,14 +2836,16 @@ Contains
       PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       Type(MEF90_VECT)                                   :: gradientDamageGauss
-      PetscReal                                          :: C1,C2
+      PetscReal                                          :: C1,C2,N
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
+
 
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
       
+      N  = matprop%DuctileCouplingPower
       C1 = matprop%fractureToughness / matprop%internalLength * .375
       C2 = matprop%fractureToughness * matprop%internalLength * .75
 
@@ -2863,8 +2876,9 @@ Contains
 
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
-                                  ( ( elasticEnergyDensityGauss + 2.0_Kr * cumulatedPlasticEnergyDissipatedCell ) * (damageGauss - 1.0_Kr) + C1) * elemDamage%BF(iDoF2,iGauss) + &
-                                  C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                 ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) - &
+                                 ( N * cumulatedPlasticEnergyDissipatedCell * (1.0_Kr - damageGauss)**(DBLE(N - 1.0))  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
+                                 C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
 
       End Do

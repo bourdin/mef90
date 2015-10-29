@@ -13,6 +13,7 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
    type :: MEF90DefMechPlasticityCtx
       Type(MEF90_HOOKESLAW)       :: HookesLaw
       real(Kind = Kr)             :: YieldStress
+      real(Kind = Kr)             :: DuctileCouplingPower
       Type(MEF90_MATS)            :: InelasticStrain
       Type(MEF90_MATS)            :: PlasticStrainOld
       real(Kind = Kr)             :: Damage
@@ -63,8 +64,8 @@ contains
       call c_f_pointer(myctx,myctx_ptr)
 
       if (myctx_ptr%CoefficientLinSoft==0) then
-         f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * (1-myctx_ptr%Damage)**2
-         g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
+         f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * (1.0_Kr - myctx_ptr%Damage)** DBLE(2.0-myctx_ptr%DuctileCouplingPower) / 2.0
+         g(1) =  (1.0_Kr - myctx_ptr%Damage)** DBLE(2.0 - myctx_ptr%DuctileCouplingPower)*sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
       else 
          f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * ((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))
          g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))*((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))  - myctx_ptr%YieldStress* (1-myctx_ptr%Damage)**2
@@ -370,6 +371,7 @@ contains
 
             PlasticityCtx%HookesLaw = matpropSet%HookesLaw
             PlasticityCtx%YieldStress = matpropSet%YieldStress
+            PlasticityCtx%DuctileCouplingPower = matpropSet%DuctileCouplingPower
             PlasticityCtx%CoefficientDruckerPrager = matpropSet%CoefficientDruckerPrager
             PlasticityCtx%CoefficientDruckerPragerCapModel1 = matpropSet%CoefficientDruckerPragerCapModel1
             PlasticityCtx%CoefficientDruckerPragerCapModel2 = matpropSet%CoefficientDruckerPragerCapModel2

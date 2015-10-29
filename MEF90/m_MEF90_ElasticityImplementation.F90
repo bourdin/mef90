@@ -1248,7 +1248,7 @@ Contains
    !!!  (c) 2015 Erwan TANNE erwan.tanne@gmail.com
    !!!
    
-   Subroutine PlasticityEnergySet(energy,x,damage,cumulatedPlasticEnergyDissipated,mesh,meshScal,cellIS,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
+   Subroutine PlasticityEnergySet(energy,x,damage,cumulatedPlasticEnergyDissipated,mesh,meshScal,cellIS,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,matpropSet,ierr)
       PetscReal,Intent(OUT)                              :: energy
       Type(SectionReal),Intent(IN)                       :: x,damage,cumulatedPlasticEnergyDissipated
       Type(DM),Intent(IN)                                :: mesh,meshScal
@@ -1256,6 +1256,7 @@ Contains
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
       Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
+      Type(MEF90_MATPROP),Pointer                        :: matpropSet
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemDamage
@@ -1265,6 +1266,7 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: xloc,cumulatedPlasticEnergyDissipatedLoc
       PetscReal                                          :: cumulatedPlasticEnergyDissipatedElem
       PetscReal                                          :: cellSize
+      PetscReal                                          :: N
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
@@ -1275,6 +1277,8 @@ Contains
 
          Allocate(xloc(elemDisplacementType%numDof))
          Allocate(damageloc(elemTemperatureType%numDof))
+
+         N = matpropSet%DuctileCouplingPower
 
          Do cell = 1,size(cellID)
             cellSize = 0.0_Kr
@@ -1302,7 +1306,7 @@ Contains
                End If
 
                cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
-               energy = energy + ( 1 - damageElem )**2 * cumulatedPlasticEnergyDissipatedElem * cellSize
+               energy = energy + ( 1 - damageElem )**(DBLE(N)) * cumulatedPlasticEnergyDissipatedElem * cellSize
    
             End Do ! Gauss
             If (cumulatedPlasticEnergyDissipated%v /= 0) Then
