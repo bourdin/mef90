@@ -1,10 +1,11 @@
 verbose: 1
 time:
-    interpolation: cycling
+#    interpolation: cycling
+    interpolation: linear
     min: 0
 # -1/(4k)
-    max: 1
-    numstep: 80 
+    max: 10
+    numstep: 15
     frequency: 8
 heatxfer:
   mode: null
@@ -25,23 +26,26 @@ cs0001:
     residualstiffness: 0.
     internalLength: .5
     damage:
-#        type: AT1
-        type: AT1Elastic
+        type: AT1
+#        type: AT1Elastic
     plasticity:
-#        type: VonMises
-        type: None
+        type: VonMises
+#        type: None
     HookesLaw:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
-    yieldStress: 1
+    yieldStress: .5
+    DuctileCouplingPower: 2.4
 cs0002:
     displacementBC: 0,1,0
     boundaryDisplacement: 0.,0.,0.
     damageBC: 1
     boundaryDamage: 0.
+    DuctileCouplingPower: 1.5
 cs0003:
     displacementBC: 0,1,0
     boundaryDisplacement: 0.,1.,0.
     damageBC: 1
     boundaryDamage: 0.
+    DuctileCouplingPower: 1.5
