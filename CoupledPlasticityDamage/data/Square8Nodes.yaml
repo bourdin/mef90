@@ -26,7 +26,8 @@ cs0001:
     residualstiffness: 0.
     internalLength: .5
     damage:
-        type: AT1
+        type: LinSoft
+    CoefficientLinSoft: 2
 #        type: AT1Elastic
     plasticity:
         type: VonMises

@@ -492,7 +492,7 @@ Program CoupledPlasticityDamage
                   Write(IOBuffer,300) PlasticStrainMaxChange
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-                  If (PlasticStrainMaxChange <= MEF90DefMechGlobalOptions%plasticStrainATol) Then
+                  If ( PlasticStrainMaxChange <= MIN( MAX( MEF90DefMechGlobalOptions%plasticStrainATol , damageMaxChange ) , 0.1 ) )  Then
                      EXIT
                   End If
                End Do AltProj

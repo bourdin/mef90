@@ -54,6 +54,7 @@ contains
       real(kind=c_double)                       :: f(*)
       real(kind=c_double)                       :: h(*)
       real(kind=c_double)                       :: g(*)
+      real(Kind = Kr)                           :: Stiffness         !! Stiffness = a(alpha)/b(alpha)
       type(c_ptr),intent(in),value              :: myctx
 
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
@@ -64,13 +65,15 @@ contains
       call c_f_pointer(myctx,myctx_ptr)
 
       if (myctx_ptr%CoefficientLinSoft==0) then
-         f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * (1.0_Kr - myctx_ptr%Damage)** DBLE(2.0-myctx_ptr%DuctileCouplingPower) / 2.0
-         g(1) =  (1.0_Kr - myctx_ptr%Damage)** DBLE(2.0 - myctx_ptr%DuctileCouplingPower)*sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
+         Stiffness = (1.0_Kr - myctx_ptr%Damage)** DBLE(2.0-myctx_ptr%DuctileCouplingPower)
+         f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * Stiffness / 2.0
+         g(1) = Stiffness * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
       else 
-         f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 * ((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))
-         g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))*((1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ))  - myctx_ptr%YieldStress* (1-myctx_ptr%Damage)**2
+         Stiffness = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) ) / ((1.0_Kr - myctx_ptr%Damage)** DBLE(myctx_ptr%DuctileCouplingPower))
+         f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) *Stiffness /2.0 
+         g(1) = Stiffness * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) )) - myctx_ptr%YieldStress
       end if
-      h(1) = Trace(xMatS)
+      h(1) = Trace(xMatS) !- x(1)
    end subroutine FHG_VONMISES
 
 
