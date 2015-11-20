@@ -986,7 +986,6 @@ Contains
       If (Norm(totalForce) > 0.0_Kr) Then
          numDofDisplacement = size(elemDisplacement%BF,1)
          numGauss = size(elemDisplacement%BF,2)
-         residualLoc = 0.0_Kr
          Do iGauss = 1,numGauss
             Do iDoF2 = 1,numDofDisplacement
                residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * &

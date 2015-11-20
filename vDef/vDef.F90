@@ -561,7 +561,7 @@ Program vDef
                Write(IOBuffer,202) elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-               Write(IOBuffer,500) step,time(step),elasticEnergy(step),cohesiveEnergy(step),forceWork(step),surfaceEnergy(step),totalMechanicalEnergy(step)
+               Write(IOBuffer,500) step,time(step),elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
                Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
                Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
 
