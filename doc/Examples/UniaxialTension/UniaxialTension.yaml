@@ -13,7 +13,10 @@ time:
     max: 10
     numstep: 51
 cs0001:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
+    HookesLaw:
+       type: isotropic
+       YoungsModulus: 1.
+       PoissonRatio:  0.
     FractureToughness: 1.
     internallength: .05
     residualstiffness: 0.
@@ -24,10 +27,6 @@ cs0001:
     displacementbc: no,no,no
     damageBC: no
 cs0020:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
-    fracturetoughness: 1.
-    internallength: .05
-    residualstiffness: 0.
     damage:
         type: AT1
     plasticity:
@@ -37,10 +36,6 @@ cs0020:
     damageBC: yes
     boundaryDamage: 0.
 cs0030:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
-    fracturetoughness: .1
-    internallength: .05
-    residualstiffness: 0.
     damage:
         type: AT1
     plasticity:

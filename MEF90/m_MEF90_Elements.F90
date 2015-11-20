@@ -1460,7 +1460,7 @@ Contains
             Allocate(dElem%BF(Num_DoF,Num_Gauss),stat=ierr)
             dElem%BF(1,:) = Xi * (Xi - 1.0_Kr) * .5_Kr
             dElem%BF(2,:) = Xi * (Xi + 1.0_Kr) * .5_Kr
-            dElem%BF(3,:) = (1.0_Kr - Xi) * (1.0_Kr + Xi)
+            dElem%BF(3,:) = 1.0_Kr - dElem%BF(1,:)  - dElem%BF(2,:) !(1.0_Kr - Xi) * (1.0_Kr + Xi)
          Case Default
             Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
@@ -1600,9 +1600,8 @@ Contains
       PetscInt                               :: dim = 2 
       PetscInt                               :: Num_DoF,Nb_Gauss,iDof,iG
       
-      
       Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,dCoord,dPolynomialOrder,dQuadratureOrder,ierr)
-      Num_DoF   = Size(Elem_Scal%BF,1) 
+      Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
       dElem%Gauss_C = Elem_Scal%Gauss_C
