@@ -672,6 +672,7 @@ Program vDef
    DeAllocate(surfaceEnergy)
    DeAllocate(totalMechanicalEnergy)
 
+   DeAllocate(time)
    Call MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)
