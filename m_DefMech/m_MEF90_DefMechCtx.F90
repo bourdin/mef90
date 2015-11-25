@@ -638,6 +638,7 @@ Contains
       Do set = 1, size(DefMechCtx%setEnergyViewer)
          Call PetscViewerDestroy(DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
       End Do
+      DeAllocate(DefMechCtx%setEnergyViewer)
 
       Nullify(DefMechCtx%force)
       Nullify(DefMechCtx%pressureforce)
