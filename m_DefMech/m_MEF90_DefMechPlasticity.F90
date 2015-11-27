@@ -54,7 +54,8 @@ contains
       real(kind=c_double)                       :: f(*)
       real(kind=c_double)                       :: h(*)
       real(kind=c_double)                       :: g(*)
-      real(Kind = Kr)                           :: Stiffness         !! Stiffness = a(alpha)/b(alpha)
+      real(Kind = Kr)                           :: StiffnessA         !! Stiffness = a(alpha)/b(alpha)
+      real(Kind = Kr)                           :: StiffnessB
       type(c_ptr),intent(in),value              :: myctx
 
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
@@ -65,15 +66,19 @@ contains
       call c_f_pointer(myctx,myctx_ptr)
 
       if (myctx_ptr%CoefficientLinSoft==0) then
-         Stiffness = (1.0_Kr - myctx_ptr%Damage)** DBLE(2.0-myctx_ptr%DuctileCouplingPower)
-         f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * Stiffness / 2.0
-         g(1) = Stiffness * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress
+         StiffnessA = (1.0_Kr - myctx_ptr%Damage)**2
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**DBLE(myctx_ptr%DuctileCouplingPower)
+         f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
+         g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress*StiffnessB
       else 
-         Stiffness = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) ) / ((1.0_Kr - myctx_ptr%Damage)** DBLE(myctx_ptr%DuctileCouplingPower))
-         f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) *Stiffness /2.0 
-         g(1) = Stiffness * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) )) - myctx_ptr%YieldStress
+         StiffnessA = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) )
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**DBLE(myctx_ptr%DuctileCouplingPower)
+         f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) *StiffnessA /2.0 
+         g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) )) - myctx_ptr%YieldStress*StiffnessB
       end if
-      h(1) = Trace(xMatS) !- x(1)
+      h(1) = Trace(xMatS)
+      !h(1) = x(2)
+      !h(2) = x(3)
    end subroutine FHG_VONMISES
 
 
@@ -251,7 +256,7 @@ contains
       Type(MEF90Element_Type)                            :: elemScalType
 
       Type(SectionReal)                                  :: damageSec
-      PetscReal                                          :: damageCellAvg
+      PetscReal                                          :: damageCellAvg,StiffnessB,StiffnessA
 
       Type(MEF90_MATS)                                   :: PlasticStrainMatS
 
@@ -313,9 +318,9 @@ contains
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Select Case (cellSetOptions%damageType)
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
-            PlasticityCtx%CoefficientLinSoft=0
+               PlasticityCtx%CoefficientLinSoft=0
             Case (MEF90DefMech_damageTypeLinSoft)
-            PlasticityCtx%CoefficientLinSoft=matpropSet%CoefficientLinSoft
+               PlasticityCtx%CoefficientLinSoft=matpropSet%CoefficientLinSoft
          End Select
 
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
@@ -395,8 +400,11 @@ contains
                Call SectionRealRestrict(cumulatedPlasticEnergyDissipatedVariationSec,cellID(cell),cumulatedPlasticEnergyDissipatedVariationLoc,ierr);CHKERRQ(ierr)
 
                If (Associated(MEF90DefMechCtx%damage)) Then
-                  Call SectionRealRestrict(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
+                  !Call SectionRealRestrict(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
+                  Allocate(damageloc(elemScalType%numDof))
+                  Call SectionRealRestrictClosure(damageSec,MEF90DefMechCtx%DMScal,cellID(cell),elemScalType%numDof,damageLoc,ierr);CHKERRQ(ierr)
                   Call MEF90GradDamageCellAverage(damageCellAvg,damageLoc,elemScal(cell),elemScalType,ierr)
+                  DeAllocate(damageLoc)
                Else
                   damageCellAvg = 0.0_Kr
                End If
@@ -429,17 +437,22 @@ contains
 
                !!! cumulatedPlasticEnergyDissipated
                PlasticStrainMatS=plasticStrainLoc
-               cumulatedPlasticEnergyDissipatedVariationLoc(1) = ( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
+               Select Case (cellSetOptions%damageType)
+                  Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
+                     StiffnessA = (1.0_Kr - PlasticityCtx%Damage)**2
+                     StiffnessB = (1.0_Kr - PlasticityCtx%Damage)**DBLE(PlasticityCtx%DuctileCouplingPower)
+                  Case (MEF90DefMech_damageTypeLinSoft)
+                     StiffnessA = ( (1.0_Kr - PlasticityCtx%Damage)**2 / ( 1.0_Kr + ( PlasticityCtx%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - PlasticityCtx%Damage)**2 ) ) )
+                     StiffnessB = (1.0_Kr - PlasticityCtx%Damage)**DBLE(PlasticityCtx%DuctileCouplingPower)
+               End Select
+               cumulatedPlasticEnergyDissipatedVariationLoc(1) = (StiffnessA/StiffnessB)*( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
                Call SectionRealRestore(cumulatedPlasticEnergyDissipatedVariationSec,cellID(cell),cumulatedPlasticEnergyDissipatedVariationLoc,ierr);CHKERRQ(ierr)
-!write(*,*) 'cumulatedPlasticEnergyDissipatedVariationLoc:  ', cumulatedPlasticEnergyDissipatedVariationLoc(1)
 
-
-!write(*,*) 'Plastic Strain after:  ', PlasticStrainLoc
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
                If (Associated(MEF90DefMechCtx%damage)) Then
-                  Call SectionRealRestore(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
+                  !Call SectionRealRestore(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
                End If
       
             End Do !cell

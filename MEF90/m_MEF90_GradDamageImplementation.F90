@@ -1758,11 +1758,12 @@ Contains
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
      
-      cellSize = 0.0_Kr   
+      cellSize = 0.0_Kr
       Do iGauss = 1,size(elemDamage%Gauss_C)
          damageCellAvg = 0.0_Kr
          cellSize = 0.0_Kr
          Do iDoF1 = 1,elemDamageType%numDof
+
             damageCellAvg = damageCellAvg + damageLoc(iDof1) * elemDamage%BF(iDof1,iGauss) * elemDamage%Gauss_C(iGauss)
             cellSize = cellSize +  elemDamage%BF(iDof1,iGauss) * elemDamage%Gauss_C(iGauss)
          End Do
