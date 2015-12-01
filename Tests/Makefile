@@ -69,7 +69,7 @@ TestQuadrature.o: ${MEF90_DIR}/Tests/TestQuadrature.F90 MEF90
 
 TestQuadrature: TestQuadrature.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestSpectralDecomposition.o: ${MEF90_DIR}/Tests/TestSpectralDecomposition.F90 MEF90
