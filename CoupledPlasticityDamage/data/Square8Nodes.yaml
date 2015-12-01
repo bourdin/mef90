@@ -26,9 +26,7 @@ cs0001:
     residualstiffness: 0.
     internalLength: .5
     damage:
-        type: LinSoft
-    CoefficientLinSoft: 2
-#        type: AT1Elastic
+        type: AT1Elastic
     plasticity:
         type: VonMises
 #        type: None
@@ -38,6 +36,8 @@ cs0001:
         PoissonRatio:  0.
     yieldStress: .5
     DuctileCouplingPower: 2.4
+    damageBC: 1
+    boundaryDamage: 0.5
 cs0002:
     displacementBC: 0,1,0
     boundaryDisplacement: 0.,0.,0.

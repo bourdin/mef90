@@ -1419,19 +1419,19 @@ Contains
          dElem%Gauss_C(1) = l * 5.0_Kr / 18.0_Kr
          dElem%Gauss_C(2) = l * 4.0_Kr / 9.0_Kr
          dElem%Gauss_C(3) = l * 5.0_Kr / 18.0_Kr
-      Case(6,7)
-         Num_Gauss = 4
-         Allocate(Xi(Num_Gauss),stat=ierr)
-         Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
-         Xi(1) = -sqrt(525.0_Kr + 70.0_Kr * sqrt(30.0_Kr) / 35.0_Kr)
-         Xi(2) = -sqrt(525.0_Kr - 70.0_Kr * sqrt(30.0_Kr) / 35.0_Kr)
-         Xi(3) =  sqrt(525.0_Kr - 70.0_Kr * sqrt(30.0_Kr) / 35.0_Kr)
-         Xi(4) =  sqrt(525.0_Kr + 70.0_Kr * sqrt(30.0_Kr) / 35.0_Kr)
-         dElem%Gauss_C(1) = l * (18.0_Kr - sqrt(30.0_Kr)) / 72.0_Kr
-         dElem%Gauss_C(2) = l * (18.0_Kr + sqrt(30.0_Kr)) / 72.0_Kr
-         dElem%Gauss_C(3) = l * (18.0_Kr + sqrt(30.0_Kr)) / 72.0_Kr
-         dElem%Gauss_C(4) = l * (18.0_Kr - sqrt(30.0_Kr)) / 72.0_Kr
-      Case(8,9)
+       Case(6,7)
+          Num_Gauss = 4
+          Allocate(Xi(Num_Gauss),stat=ierr)
+          Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
+          Xi(1) = -sqrt((15.0_Kr + 2.0_Kr * sqrt(30.0_Kr))/35.0_Kr)
+          Xi(2) = -sqrt((15.0_Kr - 2.0_Kr * sqrt(30.0_Kr))/35.0_Kr)
+          Xi(3) =  sqrt((15.0_Kr - 2.0_Kr * sqrt(30.0_Kr))/35.0_Kr)
+          Xi(4) =  sqrt((15.0_Kr + 2.0_Kr * sqrt(30.0_Kr))/35.0_Kr)
+          dElem%Gauss_C(1) = l * (.25_kr - sqrt(5.0_Kr / 864.0_Kr)) 
+          dElem%Gauss_C(2) = l * (.25_kr + sqrt(5.0_Kr / 864.0_Kr))
+          dElem%Gauss_C(3) = l * (.25_kr + sqrt(5.0_Kr / 864.0_Kr))
+          dElem%Gauss_C(4) = l * (.25_kr - sqrt(5.0_Kr / 864.0_Kr))
+      Case(8,9,10,11,12)
          Num_Gauss = 5
          Allocate(Xi(Num_Gauss),stat=ierr)
          Allocate(dElem%Gauss_C(Num_Gauss),stat=ierr)
@@ -1440,11 +1440,11 @@ Contains
          Xi(3) =  0.0_Kr
          Xi(4) =  sqrt(5.0_Kr - sqrt(40.0_Kr / 7.0_Kr)) / 3.0_Kr
          Xi(5) =  sqrt(5.0_Kr + sqrt(40.0_Kr / 7.0_Kr)) / 3.0_Kr
-         dElem%Gauss_C(1) = l * (322.0_Kr - sqrt(11830.0_Kr)) / 900.0_Kr
-         dElem%Gauss_C(2) = l * (322.0_Kr + sqrt(11830.0_Kr)) / 900.0_Kr
-         dElem%Gauss_C(3) = l * 128.0_Kr / 225.0_Kr
-         dElem%Gauss_C(4) = l * (322.0_Kr + sqrt(11830.0_Kr)) / 900.0_Kr
-         dElem%Gauss_C(5) = l * (322.0_Kr - sqrt(11830.0_Kr)) / 900.0_Kr
+         dElem%Gauss_C(1) = l * (322.0_Kr - sqrt(11830.0_Kr)) / 1800.0_Kr
+         dElem%Gauss_C(2) = l * (322.0_Kr + sqrt(11830.0_Kr)) / 1800.0_Kr
+         dElem%Gauss_C(3) = l * 128.0_Kr / 450.0_Kr
+         dElem%Gauss_C(4) = l * (322.0_Kr + sqrt(11830.0_Kr)) / 1800.0_Kr
+         dElem%Gauss_C(5) = l * (322.0_Kr - sqrt(11830.0_Kr)) / 1800.0_Kr
       Case Default
          Print*,__FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
          STOP

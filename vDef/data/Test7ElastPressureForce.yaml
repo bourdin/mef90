@@ -1,0 +1,30 @@
+verbose: 0
+time:
+    min: 0
+    max: 1
+    numstep: 2
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+temperature:
+    offset: 0
+cs0001:
+    damage:
+        type: AT2Elastic
+    plasticity:
+        type: NONE 
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+cs0010:
+    displacementBC: no,no,no
+    damageBC: 1
+    boundaryDamage: 0
+    pressureForce: 1.
+cs0020:
+    displacementBC: no,no,no
+    damageBC: 1
+    boundaryDamage: 0
+    pressureForce: 1.
