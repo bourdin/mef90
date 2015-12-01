@@ -37,11 +37,12 @@ Program TestQuadrature
                                                          0.0_Kr,                        & ! timeMin
                                                          1.0_Kr,                        & ! timeMax
                                                          11,                            & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
+                                                         MEF90FileFormat_EXOSingle,     & ! fileFormat
+                                                         1.0_Kr)                         ! frequency
 
-   !!! Defect mechanics contexts
    Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
    Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
@@ -52,7 +53,7 @@ Program TestQuadrature
                                                          1,                       & ! temperatureOffset
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
-                                                         0,                       & ! plasticStrainOffset
+                                                         6,                       & ! plasticStrainOffset
                                                          6,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
@@ -60,11 +61,16 @@ Program TestQuadrature
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
+                                                         10,                      & ! PCLag
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
-                                                         1.0e-2)                    ! BTTol
+                                                         1.0e-2,                  & ! BTTol
+                                                         1.0e-4,                  & ! plasticStrainAtol
+                                                         0,                       & ! bloacknumberworkcontrolled
+                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
@@ -83,11 +89,17 @@ Program TestQuadrature
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
+                                                         10,                      & ! PCLag
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
                                                          -1,                      & ! BTScope
-                                                         1.0e-2)                    ! BTTol
+                                                         1.0e-2,                  & ! BTTol
+                                                         1.0e-4,                  & ! plasticStrainAtol
+                                                         0,                       & ! bloacknumberworkcontrolled
+                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+
+
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -145,18 +157,19 @@ Program TestQuadrature
    Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-k',k,flg,ierr);CHKERRQ(ierr);
    Do QuadOrder = QuadOrderMax, QuadOrderMax
       Do k = 0, (dim-2) * QuadOrderMax
-         Do j = 0, QuadOrderMax
-            Do i = 0, QuadOrderMax
+         Do j = 1, QuadOrderMax
+            Do i = 1, QuadOrderMax
                !!! Initialize a field
                If (i+j+k <= QuadOrder) Then
                   sol = 1.0_Kr / (1.0_kr + i) / (1.0_Kr + j) / (1.0_Kr + k)
+                  sol = 1.0_Kr / (1.0_kr + i)  + 1.0_Kr / (1.0_Kr + j)
                   !!! Integrate
                   If (dim ==2) Then
                      Call Integrate2D_Scal(MEF90DefMechCtx,i,j,QuadOrder,Scal,v2d,ierr)
                   Else
                      Call Integrate3D_Scal(MEF90DefMechCtx,i,j,k,QuadOrder,Scal,v3d,ierr)
                   End If
-                  Write(IOBuffer,100) i,j,k,QuadOrder,Scal, sol, (Scal - sol)/Scal
+                  Write(IOBuffer,100) i,j,k,QuadOrder,Scal, sol, abs(Scal - sol)/sol
                   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr) 
                End If
             End Do
