@@ -1248,9 +1248,9 @@ Contains
    !!!  (c) 2015 Erwan TANNE erwan.tanne@gmail.com
    !!!
    
-   Subroutine PlasticityEnergySet(energy,x,damage,cumulatedPlasticEnergyDissipated,mesh,meshScal,cellIS,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,matpropSet,ierr)
+   Subroutine PlasticityEnergySet(energy,x,damage,cumulatedDissipatedPlasticEnergy,mesh,meshScal,cellIS,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,matpropSet,ierr)
       PetscReal,Intent(OUT)                              :: energy
-      Type(SectionReal),Intent(IN)                       :: x,damage,cumulatedPlasticEnergyDissipated
+      Type(SectionReal),Intent(IN)                       :: x,damage,cumulatedDissipatedPlasticEnergy
       Type(DM),Intent(IN)                                :: mesh,meshScal
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
@@ -1263,8 +1263,8 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: damageloc
       PetscReal                                          :: damageElem
 
-      PetscReal,Dimension(:),Pointer                     :: xloc,cumulatedPlasticEnergyDissipatedLoc
-      PetscReal                                          :: cumulatedPlasticEnergyDissipatedElem
+      PetscReal,Dimension(:),Pointer                     :: xloc,cumulatedDissipatedPlasticEnergyLoc
+      PetscReal                                          :: cumulatedDissipatedPlasticEnergyElem
       PetscReal                                          :: cellSize
       PetscReal                                          :: N
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -1288,15 +1288,15 @@ Contains
                Call SectionRealRestrictClosure(damage,meshScal,cellID(cell),elemTemperatureType%numDof,damageLoc,ierr);CHKERRQ(ierr)
             End If
 
-            If (cumulatedPlasticEnergyDissipated%v /= 0) Then
-               Call SectionRealRestrict(cumulatedPlasticEnergyDissipated,cellID(cell),cumulatedPlasticEnergyDissipatedLoc,ierr);CHKERRQ(ierr)
+            If (cumulatedDissipatedPlasticEnergy%v /= 0) Then
+               Call SectionRealRestrict(cumulatedDissipatedPlasticEnergy,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
             End If
             Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
                damageElem                           = 0.0_Kr
-               cumulatedPlasticEnergyDissipatedElem = 0.0_Kr
+               cumulatedDissipatedPlasticEnergyElem = 0.0_Kr
 
-               If (cumulatedPlasticEnergyDissipated%v /= 0) Then
-                  cumulatedPlasticEnergyDissipatedElem = cumulatedPlasticEnergyDissipatedLoc(1)
+               If (cumulatedDissipatedPlasticEnergy%v /= 0) Then
+                  cumulatedDissipatedPlasticEnergyElem = cumulatedDissipatedPlasticEnergyLoc(1)
                End If
 
                If (damage%v /= 0) Then
@@ -1306,11 +1306,11 @@ Contains
                End If
 
                cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
-               energy = energy + ( 1 - damageElem )**(DBLE(N)) * cumulatedPlasticEnergyDissipatedElem * cellSize
+               energy = energy + ( 1 - damageElem )**(DBLE(N)) * cumulatedDissipatedPlasticEnergyElem * cellSize
    
             End Do ! Gauss
-            If (cumulatedPlasticEnergyDissipated%v /= 0) Then
-               Call SectionRealRestore(cumulatedPlasticEnergyDissipated,cellID(cell),cumulatedPlasticEnergyDissipatedLoc,ierr);CHKERRQ(ierr)
+            If (cumulatedDissipatedPlasticEnergy%v /= 0) Then
+               Call SectionRealRestore(cumulatedDissipatedPlasticEnergy,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
             End If
          End Do ! cell
          !flops = 3 * size(elemDisplacement(1)%Gauss_C) * size(cellID) 

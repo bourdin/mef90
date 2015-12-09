@@ -16,7 +16,7 @@ Module m_MEF90_DefMechCtx_Type
       Type(Vec),pointer                      :: force
       Type(Vec),pointer                      :: pressureForce
       Type(Vec),Pointer                      :: plasticStrain
-      Type(Vec),Pointer                      :: cumulatedPlasticEnergyDissipated
+      Type(Vec),Pointer                      :: cumulatedDissipatedPlasticEnergy
       Type(Vec),Pointer                      :: stress
       
       PetscBag                               :: GlobalOptionsBag
@@ -27,7 +27,27 @@ Module m_MEF90_DefMechCtx_Type
       Type(DM),pointer                       :: DM
       Type(DM)                               :: DMScal,DMVect           ! Remove all these
       Type(DM)                               :: cellDMScal,cellDMVect   ! after switching to 
-      Type(DM)                               :: DMMatS,cellDMMatS       ! DMcomplex
+      Type(DM)                               :: DMMatS,cellDMMatS       ! DMplex
+      
+      Type(VecScatter)                       :: ScatterSecToVecVect
+      Type(VecScatter)                       :: ScatterSecToVecScal
+      Type(VecScatter)                       :: ScatterSecToVecMatS
+      Type(VecScatter)                       :: ScatterSecToVecCellVect
+      Type(VecScatter)                       :: ScatterSecToVecCellScal
+      Type(VecScatter)                       :: ScatterSecToVecCellMatS
+      
+      !!! Remove all sections after switching to DMplex
+      Type(SectionReal)                      :: displacementSec
+      Type(SectionReal)                      :: damageSec
+      Type(SectionReal)                      :: boundaryDisplacementSec
+      Type(SectionReal)                      :: boundaryDamageSec
+      Type(SectionReal)                      :: temperatureSec
+      Type(SectionReal)                      :: forceSec
+      Type(SectionReal)                      :: pressureForceSec
+      Type(SectionReal)                      :: plasticStrainSec
+      Type(SectionReal)                      :: cumulatedDissipatedPlasticEnergySec
+      Type(SectionReal)                      :: stressSec
+
       Type(PetscViewer)                      :: globalEnergyViewer
       Type(PetscViewer),Dimension(:),Pointer :: setEnergyViewer
    End Type MEF90DefMechCtx_Type
@@ -61,7 +81,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                              :: BTTol
       PetscReal                              :: plasticStrainATol
       PetscInt                               :: BlockNumberWorkControlled
-      PetscInt                               :: cumulatedPlasticEnergyDissipatedOffset
+      PetscInt                               :: cumulatedDissipatedPlasticEnergyOffset
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -422,7 +442,7 @@ Contains
       Nullify(DefMechCtx%Damage)
       Nullify(DefMechCtx%temperature)
       Nullify(DefMechCtx%plasticStrain)
-      Nullify(DefMechCtx%cumulatedPlasticEnergyDissipated)
+      Nullify(DefMechCtx%cumulatedDissipatedPlasticEnergy)
    End Subroutine MEF90DefMechCtxCreate
    
 #undef __FUNCT__
@@ -512,10 +532,10 @@ Contains
       Call PetscObjectSetName(DefMechCtx%plasticStrain,"plasticStrain",ierr);CHKERRQ(ierr)
       Call VecSet(DefMechCtx%plasticStrain,0.0_Kr,ierr);CHKERRQ(ierr)
 
-      Allocate(DefMechCtx%cumulatedPlasticEnergyDissipated,stat=ierr)
-      Call DMCreateGlobalVector(DefMechCtx%cellDMScal,DefMechCtx%cumulatedPlasticEnergyDissipated,ierr);CHKERRQ(ierr)
-      Call PetscObjectSetName(DefMechCtx%cumulatedPlasticEnergyDissipated,"cumulatedPlasticEnergyDissipated",ierr);CHKERRQ(ierr)
-      Call VecSet(DefMechCtx%cumulatedPlasticEnergyDissipated,0.0_Kr,ierr);CHKERRQ(ierr)
+      Allocate(DefMechCtx%cumulatedDissipatedPlasticEnergy,stat=ierr)
+      Call DMCreateGlobalVector(DefMechCtx%cellDMScal,DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(DefMechCtx%cumulatedDissipatedPlasticEnergy,"cumulatedDissipatedPlasticEnergy",ierr);CHKERRQ(ierr)
+      Call VecSet(DefMechCtx%cumulatedDissipatedPlasticEnergy,0.0_Kr,ierr);CHKERRQ(ierr)
    
       Allocate(DefMechCtx%damage,stat=ierr)
       Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%damage,ierr);CHKERRQ(ierr)
@@ -533,6 +553,47 @@ Contains
       Call VecSet(DefMechCtx%stress,0.0_Kr,ierr);CHKERRQ(ierr)
    
    End Subroutine MEF90DefMechCtxCreateVectors
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCtxCreateSectionsScatters"
+!!!
+!!!  
+!!!  MEF90DefMechCtxCreateSectionsScatters:
+!!!  
+!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechCtxCreateSectionsScatters(DefMechCtx,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
+      PetscErrorCode,Intent(OUT)                      :: ierr
+      
+      !!! Vect
+      Call DMMeshGetSectionReal(DefMechCtx%DMVect,'default',DefMechCtx%displacementSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(DefMechCtx%displacementSec,DefMechCtx%boundaryDisplacementSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%DMVect,DefMechCtx%displacementSec,DefMechCtx%ScatterSecToVecVect,ierr);CHKERRQ(ierr)
+
+      !!! Scal
+      Call DMMeshGetSectionReal(DefMechCtx%DMScal,'default',DefMechCtx%damageSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(DefMechCtx%damageSec,DefMechCtx%boundaryDamageSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(DefMechCtx%damageSec,DefMechCtx%temperatureSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%DMScal,DefMechCtx%damageSec,DefMechCtx%ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+
+      !!! MatS
+      
+      !!! cellVect
+      Call DMMeshGetSectionReal(DefMechCtx%cellDMVect,'default',DefMechCtx%forceSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%cellDMVect,DefMechCtx%forceSec,DefMechCtx%ScatterSecToVecCellVect,ierr);CHKERRQ(ierr)
+
+      !!! cellScal
+      Call DMMeshGetSectionReal(DefMechCtx%cellDMScal,'default',DefMechCtx%pressureForceSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(DefMechCtx%pressureForceSec,DefMechCtx%cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%cellDMScal,DefMechCtx%forceSec,DefMechCtx%ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+      
+      !!! cellMatS
+      Call DMMeshGetSectionReal(DefMechCtx%CellDMMatS,'default',DefMechCtx%plasticStrainSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(DefMechCtx%plasticStrainSec,DefMechCtx%stressSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%CellDMMatS,DefMechCtx%plasticStrainSec,DefMechCtx%ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechCtxCreateSectionsScatters
+
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxDestroyVectors"
@@ -594,10 +655,10 @@ Contains
          Nullify(DefMechCtx%plasticStrain)
       End If
 
-      If (Associated(DefMechCtx%cumulatedPlasticEnergyDissipated)) Then 
-         Call VecDestroy(DefMechCtx%cumulatedPlasticEnergyDissipated,ierr);CHKERRQ(ierr)   
-         DeAllocate(DefMechCtx%cumulatedPlasticEnergyDissipated)
-         Nullify(DefMechCtx%cumulatedPlasticEnergyDissipated)
+      If (Associated(DefMechCtx%cumulatedDissipatedPlasticEnergy)) Then 
+         Call VecDestroy(DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)   
+         DeAllocate(DefMechCtx%cumulatedDissipatedPlasticEnergy)
+         Nullify(DefMechCtx%cumulatedDissipatedPlasticEnergy)
       End If
 
       If (Associated(DefMechCtx%stress)) Then 
@@ -606,6 +667,47 @@ Contains
          Nullify(DefMechCtx%stress)
       End If
    End Subroutine MEF90DefMechCtxDestroyVectors
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCtxDestroySectionsScatters"
+!!!
+!!!  
+!!!  MEF90DefMechCtxDestroySectionsScatters:
+!!!  
+!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechCtxDestroySectionsScatters(DefMechCtx,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
+      PetscErrorCode,Intent(OUT)                      :: ierr
+
+      !!! Vect
+      Call SectionRealDestroy(DefMechCtx%displacementSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%boundaryDisplacementSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecVect,ierr);CHKERRQ(ierr)
+
+      !!! Scal
+      Call SectionRealDestroy(DefMechCtx%damageSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%boundaryDamageSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%temperatureSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+
+      !!! MatS
+      
+      !!! cellVect
+      Call SectionRealDestroy(DefMechCtx%forceSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecCellVect,ierr);CHKERRQ(ierr)
+   
+      !!! cellScal
+      Call SectionRealDestroy(DefMechCtx%pressureForceSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+
+      !!! cellMatS
+      Call SectionRealDestroy(DefMechCtx%plasticStrainSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%stressSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechCtxDestroySectionsScatters
+
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxDestroy"
@@ -648,7 +750,7 @@ Contains
       Nullify(DefMechCtx%Damage)
       Nullify(DefMechCtx%temperature)
       Nullify(DefMechCtx%plasticStrain)
-      Nullify(DefMechCtx%cumulatedPlasticEnergyDissipated)
+      Nullify(DefMechCtx%cumulatedDissipatedPlasticEnergy)
       Call DMDestroy(DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
@@ -708,7 +810,7 @@ Contains
 
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticStrainATol,default%plasticStrainATol,'defmech_plasticstrain_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,DefMechGlobalOptions%BlockNumberWorkControlled,default%BlockNumberWorkControlled,'BlockNumberWorkControlled','default 0 workcontrolled not activated, else number of the block to controlled',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedPlasticEnergyDissipatedOffset,default%cumulatedPlasticEnergyDissipatedOffset,'cumulatedPlasticEnergyDissipated_Offset','Position of the Cumulated Plastic Energy Dissipated field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,default%cumulatedDissipatedPlasticEnergyOffset,'cumulatedDissipatedPlasticEnergy_Offset','Position of the Cumulated Plastic Energy Dissipated field in EXO file',ierr);CHKERRQ(ierr)
 
 
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions

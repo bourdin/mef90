@@ -23,7 +23,7 @@ def getlaststep(fname):
 
 def save(fname, energies):
   import numpy as np
-  np.savetxt(fname, energies, fmt='%7d  %13.5E %13.5E %13.5E %13.5E %13.5E')
+  np.savetxt(fname, energies, fmt='%7d  %13.5E %13.5E %13.5E %13.5E %13.5E %13.5E')
 
 def fixBT(energies, laststep=None):
   import numpy as np
