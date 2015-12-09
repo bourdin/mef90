@@ -6,6 +6,7 @@ def parse(args=None):
     ### Get options from the command line
     parser = argparse.ArgumentParser(description='Plot energy evolution for VarFracQS.')
     parser.add_argument("-f","--forces",default=False,action="store_true",help="displays forces work")
+    parser.add_argument("-c","--cohesive",default=False,action="store_true",help="displays cohesive energy")
     parser.add_argument('inputfile',type=argparse.FileType('r'),nargs='?',help='Input file',default=sys.stdin)
     parser.add_argument('-o','--outputfile',help='output file',default=None)
     parser.add_argument("-d","--debug",action="store_true",default=False,help="Display useless debugging information")
@@ -65,10 +66,12 @@ def main():
       energies[:,5] -= energies[tmin,4]
     ### plot
     plt.plot(energies[:,1], energies[:,2], label='Elastic energy')
-    plt.plot(energies[:,1], energies[:,4], label='Surface energy')
-    plt.plot(energies[:,1], energies[:,5],zorder=999,label='Total energy', lw=4)
+    plt.plot(energies[:,1], energies[:,-2], label='Surface energy')
+    plt.plot(energies[:,1], energies[:,-1],zorder=999,label='Total energy', lw=4)
     if options.forces:
         plt.plot(energies[:,1], energies[:,3], label='External Forces')
+    if options.cohesive:
+        plt.plot(energies[:,1], energies[:,4], label='Cohesive energy')
     plt.grid()
     plt.legend(loc=0)
     plt.xlabel('t')

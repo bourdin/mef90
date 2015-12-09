@@ -52,7 +52,7 @@ Program ThermoElasticity
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          0,                       & ! bloacknumberworkcontrolled
-                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
 
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
@@ -81,7 +81,7 @@ Program ThermoElasticity
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          0,                       & ! bloacknumberworkcontrolled
-                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
 
 
 

@@ -15,7 +15,7 @@ defmech:
     atol: 1e-2
 temperature:
     offset: 0
-cumulatedPlasticEnergyDissipated:
+cumulatedDissipatedPlasticEnergy:
     offset: 1
 plasticStrain:
     offset: 2

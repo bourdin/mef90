@@ -66,9 +66,9 @@ Program vDef
    PetscBool                                          :: BTActive = Petsc_False
    PetscInt                                           :: BTStep,BTminStep,BTMaxSTep,BTDirection
 
-   !!! cumulatedPlasticEnergyDissipated
-   Type(Vec)                                          :: cumulatedPlasticEnergyDissipatedOld
-   Type(Vec)                                          :: cumulatedPlasticEnergyDissipatedVariation
+   !!! cumulatedDissipatedPlasticEnergy
+   Type(Vec)                                          :: cumulatedDissipatedPlasticEnergyOld
+   Type(Vec)                                          :: cumulatedDissipatedPlasticEnergyVariation
 
       
 !!! Default values of the contexts
@@ -108,7 +108,7 @@ Program vDef
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          0,                       & ! bloacknumberworkcontrolled
-                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
@@ -136,7 +136,7 @@ Program vDef
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          0,                       & ! bloacknumberworkcontrolled
-                                                         1)                         ! cumulatedPlasticEnergyDissipatedOffset
+                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
@@ -240,10 +240,10 @@ Program vDef
    Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
    DeAllocate(MEF90DefMechCtx%temperature)
    
-   !!!cumulatedPlasticEnergyDissipated Vectors
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
-   Call VecCopy(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
+   !!!cumulatedDissipatedPlasticEnergy Vectors
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+   Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
 
    
    !!! As long as plasticity is not implemented, there is no point in keeping the pastic strain around
@@ -458,8 +458,8 @@ Program vDef
                
 
                Call VecDuplicate(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
-               Call VecWAXPY(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,1.0_Kr,cumulatedPlasticEnergyDissipatedOld,cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
+               Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+               Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
                ! Check for BT if necessary
                BTCheck: If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &
@@ -503,7 +503,7 @@ Program vDef
                      BTDirection = -1
                   End If
                   Do BTStep = BTminStep,BTMaxSTep,BTDirection
-                     If (time(step)**2 * (totalMechanicalEnergy(BTStep) - surfaceEnergy(step)) - time(BTStep)**2 * (elasticEnergy(step) - forceWork(step)) & 
+                     If (time(step)**2 * (totalMechanicalEnergy(BTStep) - surfaceEnergy(step)) - time(BTStep)**2 * (elasticEnergy(step) - forceWork(step) + cohesiveEnergy(step)) & 
                          > time(step)**2 * abs(totalMechanicalEnergy(step)) * MEF90DefMechGlobalOptions%BTtol ) Then
                          !!! current solution is a better test field for step BTstep, backtracking
                         BTActive = PETSC_TRUE
@@ -525,7 +525,7 @@ Program vDef
                End If
             End Do AltMin
 
-            Call VecCopy(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
 
             EndStep: If (.NOT. BTActive) Then
                !!! Compute energies
@@ -592,7 +592,7 @@ Program vDef
                      BTDirection = -1
                   End If
                   Do BTStep = BTminStep,BTMaxSTep,BTDirection
-                     If (time(step)**2 * (totalMechanicalEnergy(BTStep) - surfaceEnergy(step)) - time(BTStep)**2 * (elasticEnergy(step) - forceWork(step)) & 
+                     If (time(step)**2 * (totalMechanicalEnergy(BTStep) - surfaceEnergy(step)) - time(BTStep)**2 * (elasticEnergy(step) - forceWork(step) + cohesiveEnergy(step)) & 
                          > time(step)**2 * abs(totalMechanicalEnergy(step)) * MEF90DefMechGlobalOptions%BTtol ) Then
                          !!! current solution is a better test field for step BTstep, backtracking
                         BTActive = PETSC_TRUE
@@ -607,7 +607,7 @@ Program vDef
          Case (MEF90DefMech_ModeNULL)
             Continue
          Case default
-            Write(IOBuffer,*) "Implemented DefMech mode: ", MEF90DefMechGlobalOptions%mode, "\n"
+            Write(IOBuffer,*) "Unimplemented DefMech mode: ", MEF90DefMechGlobalOptions%mode, "\n"
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             STOP
          End Select
@@ -654,8 +654,8 @@ Program vDef
    Call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx,ierr)
    Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
 
-   Call VecDestroy(cumulatedPlasticEnergyDissipatedOld,ierr);CHKERRQ(ierr)
-   Call VecDestroy(cumulatedPlasticEnergyDissipatedVariation,ierr);CHKERRQ(ierr)
+   Call VecDestroy(cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   Call VecDestroy(cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 

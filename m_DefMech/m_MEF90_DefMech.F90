@@ -858,16 +858,16 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       End If
 
 
-      If (MEF90DefMechGlobalOptions%cumulatedPlasticEnergyDissipatedOffset > 0) Then
-         If (Associated(MEF90DefMechCtx%cumulatedPlasticEnergyDissipated)) Then
+      If (MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset > 0) Then
+         If (Associated(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy)) Then
             Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedPlasticEnergyDissipated,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%cumulatedPlasticEnergyDissipatedOffset,ierr);CHKERRQ(ierr)
+                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,ierr);CHKERRQ(ierr)
             Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
          Else
-            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] cumulatedPlasticEnergyDissipated field not associated, not saving. Use -cumulatedPlasticEnergyDissipated_offset 0 \n",ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] cumulatedDissipatedPlasticEnergy field not associated, not saving. Use -cumulatedDissipatedPlasticEnergy_offset 0 \n",ierr);CHKERRQ(ierr)
          End If
       End If
 
@@ -1017,7 +1017,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
                      MEF90DefMechGlobalOptions%pressureForceOffset,&
                      MEF90DefMechGlobalOptions%StressOffset+(dim*(dim+1))/2-1,&
                      MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1,&
-                     MEF90DefMechGlobalOptions%cumulatedPlasticEnergyDissipatedOffset)
+                     MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset)
       Allocate(nameC(numfield))
       nameC = "empty"
       If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
@@ -1060,8 +1060,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          End If
       End If
 
-      If (MEF90DefMechGlobalOptions%cumulatedPlasticEnergyDissipatedOffset > 0) Then
-         nameC(MEF90DefMechGlobalOptions%cumulatedPlasticEnergyDissipatedOffset)       = "Cumulated_Plastic_Energy"
+      If (MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset > 0) Then
+         nameC(MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset)       = "Cumulated_Plastic_Energy"
       End If
       
       Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
@@ -1301,18 +1301,18 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedPlasticEnergyDissipatedVariation,ierr)
+   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(Vec),Intent(INOUT)                            :: plasticStrain
-      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld,plasticStrainPrevious,cumulatedPlasticEnergyDissipatedVariation
+      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt                                           :: dim      
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
       If (dim == 2) Then
-         Call MEF90DefMechPlasticStrainUpdate2D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedPlasticEnergyDissipatedVariation,ierr)
+         Call MEF90DefMechPlasticStrainUpdate2D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,ierr)
       Else If (dim == 3) Then
-         Call MEF90DefMechPlasticStrainUpdate3D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedPlasticEnergyDissipatedVariation,ierr)
+         Call MEF90DefMechPlasticStrainUpdate3D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,ierr)
       End If      
    End Subroutine MEF90DefMechPlasticStrainUpdate
 End Module m_MEF90_DefMech
