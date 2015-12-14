@@ -1880,12 +1880,15 @@ Contains
       End If
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
          Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
-         Call SectionRealDestroy(cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
          Call SectionRealDestroy(plasticStrainOldSec,ierr);CHKERRQ(ierr)
          Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
       End If
       Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      If (Associated(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy)) Then
+         Call SectionRealDestroy(cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+      End If
    End Subroutine MEF90DefMechPlasticDissipation
 
 
