@@ -392,6 +392,7 @@ contains
             Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
             Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
                                          elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+            Allocate(damageloc(elemScalType%numDof))
             Do cell = 1,size(cellID)
                !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
                Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
@@ -401,10 +402,8 @@ contains
 
                If (Associated(MEF90DefMechCtx%damage)) Then
                   !Call SectionRealRestrict(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
-                  Allocate(damageloc(elemScalType%numDof))
                   Call SectionRealRestrictClosure(damageSec,MEF90DefMechCtx%DMScal,cellID(cell),elemScalType%numDof,damageLoc,ierr);CHKERRQ(ierr)
                   Call MEF90GradDamageCellAverage(damageCellAvg,damageLoc,elemScal(cell),elemScalType,ierr)
-                  DeAllocate(damageLoc)
                Else
                   damageCellAvg = 0.0_Kr
                End If
@@ -414,10 +413,6 @@ contains
                PlasticityCtx%InelasticStrain = InelasticStrainLoc
                s%show_progress = 0
       
-!write(*,*) 'Plastic Strain Old step: ', PlasticStrainOldLoc
-!write(*,*) 'Plastic Strain before:   ', PlasticStrainLoc
-!write(*,*) 'Inelastic Strain:        ', InelasticStrainLoc
-
                !!! This is a bit dangerous:
                !!! If PetscReal is not the same as c_double, this call will fail
                !!! Brittle in traction, Ductile in compression
@@ -458,7 +453,8 @@ contains
             End Do !cell
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemScal,ierr)
-            call SNLPDelete(s)
+            Call SNLPDelete(s)
+            DeAllocate(damageLoc)
          End If ! set 
       End Do !! set
 

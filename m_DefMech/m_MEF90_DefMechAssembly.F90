@@ -1369,6 +1369,7 @@ Contains
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode,Intent(OUT)                         :: ierr  
          
+      Type(SectionReal)                                  :: defaultSec
       Type(SectionReal)                                  :: displacementSec,damageSec,temperatureSec,plasticStrainSec
       Type(SectionReal)                                  :: cumulatedDissipatedPlasticEnergySec
       PetscReal,Dimension(:),Pointer                     :: displacementDOF,damageDof,temperatureDof,nullPtr
@@ -1401,29 +1402,37 @@ Contains
       Call SNESGetDM(snesDispl,mesh,ierr);CHKERRQ(ierr)
       
       !!! Get Section and scatter associated with each field
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',displacementSec,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',defaultSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(defaultSec,displacementSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSec,ierr);CHKERRQ(ierr)
+
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,displacementSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(displacementSec,ScatterSecToVec,SCATTER_REVERSE,displacement,ierr);CHKERRQ(ierr)   
 
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',defaultSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(defaultSec,damageSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)   
 
       Nullify(temperatureDof)
       If (Associated(MEF90DefMechCtx%temperature)) Then
-         Call SectionRealDuplicate(damageSec,temperatureSec,ierr);CHKERRQ(ierr)
-         !Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
+         Call SectionRealDuplicate(defaultSec,temperatureSec,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)   
       Else
          temperatureSec%v = 0
       End If
+      Call SectionRealDestroy(defaultSec,ierr);CHKERRQ(ierr)
       
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',defaultSec,ierr);CHKERRQ(ierr)
+         Call SectionRealDuplicate(defaultSec,plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call SectionRealDestroy(defaultSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
 
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
+         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',defaultSec,ierr);CHKERRQ(ierr)
+         Call SectionRealDuplicate(defaultSec,cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
+         Call SectionRealDestroy(defaultSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMScal,cumulatedDissipatedPlasticEnergySec,ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(cumulatedDissipatedPlasticEnergySec,ScatterSecToVecCellScal,SCATTER_REVERSE,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
       Else
@@ -1577,6 +1586,12 @@ Contains
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
       End If      
+      If (Associated(MEF90DefMechCtx%plasticStrain)) Then
+         Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call SectionRealDestroy(cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+      End If
       flg = SAME_NONZERO_PATTERN
    End Subroutine MEF90DefMechBilinearFormDisplacement
 
@@ -3851,7 +3866,8 @@ Contains
       MatStructure,Intent(INOUT)                         :: flg
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode,Intent(OUT)                         :: ierr  
-         
+      
+      Type(SectionReal)                                  :: defaultSec   
       Type(SectionReal)                                  :: displacementSec,damageSec,temperatureSec,plasticStrainSec
       Type(SectionReal)                                  :: cumulatedDissipatedPlasticEnergySec
       PetscReal,Dimension(:),Pointer                     :: displacementDOF,damageDof,temperatureDof,nullPtr
@@ -3884,28 +3900,37 @@ Contains
       Call SNESGetDM(snesDamage,mesh,ierr);CHKERRQ(ierr)
       
       !!! Get Section and scatter associated with each field
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',displacementSec,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',defaultSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(defaultSec,displacementSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSec,ierr);CHKERRQ(ierr)
+
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,displacementSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(displacementSec,ScatterSecToVec,SCATTER_REVERSE,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)   
 
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',defaultSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(defaultSec,damageSec,ierr);CHKERRQ(ierr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,damage,ierr);CHKERRQ(ierr)   
 
       Nullify(temperatureDof)
       If (Associated(MEF90DefMechCtx%temperature)) Then
-         Call SectionRealDuplicate(damageSec,temperatureSec,ierr);CHKERRQ(ierr)
+         Call SectionRealDuplicate(defaultSec,temperatureSec,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)   
       Else
          temperatureSec%v = 0
       End If
+      Call SectionRealDestroy(defaultSec,ierr);CHKERRQ(ierr)
       
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',defaultSec,ierr);CHKERRQ(ierr)
+         Call SectionRealDuplicate(defaultSec,plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call SectionRealDestroy(defaultSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
 
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
+         Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',defaultSec,ierr);CHKERRQ(ierr)
+         Call SectionRealDuplicate(defaultSec,cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
+         Call SectionRealDestroy(defaultSec,ierr);CHKERRQ(ierr)
          Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMScal,cumulatedDissipatedPlasticEnergySec,ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(cumulatedDissipatedPlasticEnergySec,ScatterSecToVecCellScal,SCATTER_REVERSE,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
       Else
@@ -4078,6 +4103,13 @@ Contains
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
       End If      
+      If (Associated(MEF90DefMechCtx%plasticStrain)) Then
+         Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
+         Call SectionRealDestroy(cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
+         Call VecScatterDestroy(ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
+      End If
+
       flg = SAME_NONZERO_PATTERN
    End Subroutine MEF90DefMechBilinearFormDamage
 
@@ -4096,7 +4128,7 @@ Contains
       PetscReal,dimension(:),Pointer                     :: energy
       PetscErrorCode,Intent(OUT)                         :: ierr
    
-      Type(SectionReal)                                  :: alphaSec
+      Type(SectionReal)                                  :: defaultSec,alphaSec
       Type(IS)                                           :: CellSetGlobalIS,setIS,setISdof,bcIS
       PetscInt,dimension(:),Pointer                      :: setID
       PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
@@ -4109,7 +4141,9 @@ Contains
       PetscReal                                          :: myenergy,myenergySet
 
       !!! Create dof-based sections
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',alphaSec,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',defaultSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(defaultSec,alphaSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSec,ierr);CHKERRQ(iErr)
       Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,alphaSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
 
       !!! Scatter data from Vec to Sec, or initialize
