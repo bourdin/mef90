@@ -12,6 +12,7 @@ Program TestNSP
    PetscInt                            :: i,dim
    PetscReal                           :: val
    Type(MEF90Ctx_Type)                 :: MEF90Ctx
+   PetscReal,Dimension(:,:),Pointer    :: Coord      
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
    Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
                                                          1,                             & ! verbose
@@ -20,7 +21,8 @@ Program TestNSP
                                                          0.0_Kr,                        & ! timeMin
                                                          1.0_Kr,                        & ! timeMax
                                                          11,                            & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
+                                                         MEF90FileFormat_EXOSingle,     & ! fileFormat
+                                                         1.0_Kr)                         ! frequency
 
 
 
@@ -38,15 +40,27 @@ Program TestNSP
    Call DMMeshSetMaxDof(Mesh,dim,ierr);CHKERRQ(ierr) 
    Call DMMeshGetVertexSectionReal(Mesh,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
    Call DMMeshSetSectionReal(Mesh,"default",defaultSection,ierr);CHKERRQ(ierr)
-   !!!Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
 
-   Do 
+   Do i = 1, 1000 
+         if (mod(i,100) == 0) Then
+            write(*,*) i
+         end if
       Call DMMeshGetSectionReal(Mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(defaultSection,copySection,ierr);CHKERRQ(ierr)
       val = i + 1.234
       Call SectionRealSet(defaultSection,val,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(copySection,ierr);CHKERRQ(ierr)
+   End Do
+
+   Do i = 1, 1000
+         if (mod(i,100) == 0) Then
+            write(*,*) i
+         end if
+         Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+         val = sum(Coord) * (i-1.)
+         Call DMMeshRestoreCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
    End Do
 
 
