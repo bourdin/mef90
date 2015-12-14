@@ -29,24 +29,18 @@ Module m_MEF90_DefMechCtx_Type
       Type(DM)                               :: cellDMScal,cellDMVect   ! after switching to 
       Type(DM)                               :: DMMatS,cellDMMatS       ! DMplex
       
-      Type(VecScatter)                       :: ScatterSecToVecVect
-      Type(VecScatter)                       :: ScatterSecToVecScal
-      Type(VecScatter)                       :: ScatterSecToVecMatS
-      Type(VecScatter)                       :: ScatterSecToVecCellVect
-      Type(VecScatter)                       :: ScatterSecToVecCellScal
-      Type(VecScatter)                       :: ScatterSecToVecCellMatS
+      Type(VecScatter)                       :: DMScalScatter
+      Type(VecScatter)                       :: DMVectScatter
+      Type(VecScatter)                       :: DMMatSScatter
+      Type(VecScatter)                       :: cellDMScalScatter
+      Type(VecScatter)                       :: cellDMVectScatter
+      Type(VecScatter)                       :: cellDMMatSScatter
       
       !!! Remove all sections after switching to DMplex
-      Type(SectionReal)                      :: displacementSec
-      Type(SectionReal)                      :: damageSec
-      Type(SectionReal)                      :: boundaryDisplacementSec
-      Type(SectionReal)                      :: boundaryDamageSec
-      Type(SectionReal)                      :: temperatureSec
-      Type(SectionReal)                      :: forceSec
-      Type(SectionReal)                      :: pressureForceSec
-      Type(SectionReal)                      :: plasticStrainSec
-      Type(SectionReal)                      :: cumulatedDissipatedPlasticEnergySec
-      Type(SectionReal)                      :: stressSec
+      Type(SectionReal)                      :: DMSec
+      Type(SectionReal)                      :: DMScalSec,DMVectSec           ! Remove all these
+      Type(SectionReal)                      :: cellDMScalSec,cellDMVectSec   ! after switching to 
+      Type(SectionReal)                      :: DMMatSSec,cellDMMatSSec       ! DMplex
 
       Type(PetscViewer)                      :: globalEnergyViewer
       Type(PetscViewer),Dimension(:),Pointer :: setEnergyViewer
@@ -459,35 +453,39 @@ Contains
       Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
    
-      Type(SectionReal)                               :: defaultSection
       PetscInt                                        :: dim
 
       Call DMMeshGetDimension(DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetVertexSectionReal(DefMechCtx%DMVect,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshSetSectionReal(DefMechCtx%DMVect,"default",defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+      Call DMMeshGetVertexSectionReal(DefMechCtx%DMVect,"default",dim,DefMechCtx%DMVectSec,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(DefMechCtx%DMVect,"default",DefMechCtx%DMVectSec,ierr);CHKERRQ(ierr)
       Call DMSetBlockSize(DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%DMVect,DefMechCtx%DMVectSec,DefMechCtx%DMVectScatter,ierr);CHKERRQ(ierr)
    
-      Call DMMeshGetCellSectionReal(DefMechCtx%cellDMVect,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshSetSectionReal(DefMechCtx%cellDMVect,"default",defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+      Call DMMeshGetCellSectionReal(DefMechCtx%cellDMVect,"default",dim,DefMechCtx%cellDMVectSec,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(DefMechCtx%cellDMVect,"default",DefMechCtx%cellDMVectSec,ierr);CHKERRQ(ierr)
       Call DMSetBlockSize(DefMechCtx%CellDMVect,dim,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%cellDMVect,DefMechCtx%cellDMVectSec,DefMechCtx%cellDMVectScatter,ierr);CHKERRQ(ierr)
       
-      Call DMMeshGetVertexSectionReal(DefMechCtx%DMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshSetSectionReal(DefMechCtx%DMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+      Call DMMeshGetVertexSectionReal(DefMechCtx%DMScal,"default",1,DefMechCtx%DMScalSec,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(DefMechCtx%DMScal,"default",DefMechCtx%DMScalSec,ierr);CHKERRQ(ierr)
       Call DMSetBlockSize(DefMechCtx%DMScal,1,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%DMScal,DefMechCtx%DMScalSec,DefMechCtx%DMScalScatter,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetCellSectionReal(DefMechCtx%cellDMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshSetSectionReal(DefMechCtx%cellDMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+      Call DMMeshGetCellSectionReal(DefMechCtx%cellDMScal,"default",1,DefMechCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(DefMechCtx%cellDMScal,"default",DefMechCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
       Call DMSetBlockSize(DefMechCtx%cellDMScal,1,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%cellDMScal,DefMechCtx%cellDMScalSec,DefMechCtx%cellDMScalScatter,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetCellSectionReal(DefMechCtx%cellDMMatS,"default",(dim*(dim+1))/2,defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshSetSectionReal(DefMechCtx%cellDMMatS,"default",defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)   
+      Call DMMeshGetVertexSectionReal(DefMechCtx%DMMatS,"default",(dim*(dim+1))/2,DefMechCtx%DMMatSSec,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(DefMechCtx%DMMatS,"default",DefMechCtx%DMMatSSec,ierr);CHKERRQ(ierr)
+      Call DMSetBlockSize(DefMechCtx%DMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%DMMatS,DefMechCtx%DMMatSSec,DefMechCtx%DMMatSScatter,ierr);CHKERRQ(ierr)
+
+      Call DMMeshGetCellSectionReal(DefMechCtx%cellDMMatS,"default",(dim*(dim+1))/2,DefMechCtx%cellDMMatSSec,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(DefMechCtx%cellDMMatS,"default",DefMechCtx%cellDMMatSSec,ierr);CHKERRQ(ierr)
       Call DMSetBlockSize(DefMechCtx%cellDMMatS,(dim*(dim+1))/2,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(DefMechCtx%cellDMMatS,DefMechCtx%cellDMMatSSec,DefMechCtx%cellDMMatSScatter,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechCtxSetSections
 
 #undef __FUNCT__
@@ -551,60 +549,7 @@ Contains
       Call DMCreateGlobalVector(DefMechCtx%CellDMMatS,DefMechCtx%stress,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(DefMechCtx%stress,"stress",ierr);CHKERRQ(ierr)
       Call VecSet(DefMechCtx%stress,0.0_Kr,ierr);CHKERRQ(ierr)
-   
    End Subroutine MEF90DefMechCtxCreateVectors
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCtxCreateSectionsScatters"
-!!!
-!!!  
-!!!  MEF90DefMechCtxCreateSectionsScatters:
-!!!  
-!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechCtxCreateSectionsScatters(DefMechCtx,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
-      Type(SectionReal)                               :: defaultSection
-      PetscErrorCode,Intent(OUT)                      :: ierr
-      
-      !!! Vect
-      Call DMMeshGetSectionReal(DefMechCtx%DMVect,'default',defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%displacementSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%boundaryDisplacementSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(DefMechCtx%DMVect,DefMechCtx%displacementSec,DefMechCtx%ScatterSecToVecVect,ierr);CHKERRQ(ierr)
-
-      !!! Scal
-      Call DMMeshGetSectionReal(DefMechCtx%DMScal,'default',defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%damageSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%boundaryDamageSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%temperatureSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(DefMechCtx%DMScal,DefMechCtx%damageSec,DefMechCtx%ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-
-      !!! MatS
-      
-      !!! cellVect
-      Call DMMeshGetSectionReal(DefMechCtx%cellDMVect,'default',defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%forceSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(DefMechCtx%cellDMVect,DefMechCtx%forceSec,DefMechCtx%ScatterSecToVecCellVect,ierr);CHKERRQ(ierr)
-
-      !!! cellScal
-      Call DMMeshGetSectionReal(DefMechCtx%cellDMScal,'default',defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%pressureForceSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(DefMechCtx%cellDMScal,DefMechCtx%forceSec,DefMechCtx%ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
-      
-      !!! cellMatS
-      Call DMMeshGetSectionReal(DefMechCtx%CellDMMatS,'default',defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%plasticStrainSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,DefMechCtx%stressSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(DefMechCtx%CellDMMatS,DefMechCtx%plasticStrainSec,DefMechCtx%ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechCtxCreateSectionsScatters
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxDestroyVectors"
@@ -680,47 +625,6 @@ Contains
    End Subroutine MEF90DefMechCtxDestroyVectors
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCtxDestroySectionsScatters"
-!!!
-!!!  
-!!!  MEF90DefMechCtxDestroySectionsScatters:
-!!!  
-!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechCtxDestroySectionsScatters(DefMechCtx,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
-      PetscErrorCode,Intent(OUT)                      :: ierr
-
-      !!! Vect
-      Call SectionRealDestroy(DefMechCtx%displacementSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(DefMechCtx%boundaryDisplacementSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecVect,ierr);CHKERRQ(ierr)
-
-      !!! Scal
-      Call SectionRealDestroy(DefMechCtx%damageSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(DefMechCtx%boundaryDamageSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(DefMechCtx%temperatureSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-
-      !!! MatS
-      
-      !!! cellVect
-      Call SectionRealDestroy(DefMechCtx%forceSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecCellVect,ierr);CHKERRQ(ierr)
-   
-      !!! cellScal
-      Call SectionRealDestroy(DefMechCtx%pressureForceSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
-
-      !!! cellMatS
-      Call SectionRealDestroy(DefMechCtx%plasticStrainSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(DefMechCtx%cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(DefMechCtx%stressSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(DefMechCtx%ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechCtxDestroySectionsScatters
-
-
-#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxDestroy"
 !!!
 !!!  
@@ -762,6 +666,21 @@ Contains
       Nullify(DefMechCtx%temperature)
       Nullify(DefMechCtx%plasticStrain)
       Nullify(DefMechCtx%cumulatedDissipatedPlasticEnergy)
+
+      Call VecScatterDestroy(DefMechCtx%DMScalScatter,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%cellDMScalScatter,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%DMVectScatter,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%cellDMVectScatter,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%DMMatSScatter,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(DefMechCtx%cellDMMatSScatter,ierr);CHKERRQ(ierr)
+
+      Call SectionRealDestroy(DefMechCtx%DMScalSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%DMVectSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%cellDMVectSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%DMMatSSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(DefMechCtx%cellDMMatSSec,ierr);CHKERRQ(ierr)
+
       Call DMDestroy(DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
