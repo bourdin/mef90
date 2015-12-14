@@ -7,7 +7,7 @@ Program TestNSP
    PetscErrorCode                      :: ierr
    Type(DM),target                     :: Mesh,MeshClone
    Character(len=MEF90_MXSTRLEN)       :: IOBuffer
-   Type(SectionReal)                   :: defaultSection,copySection
+   Type(SectionReal)                   :: defaultSection1,defaultSection2,copySection
    PetscBool                           :: flg
    PetscInt                            :: i,dim
    PetscReal                           :: val
@@ -38,31 +38,41 @@ Program TestNSP
    Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
    Call DMSetBlockSize(Mesh,dim,ierr);CHKERRQ(ierr)
    Call DMMeshSetMaxDof(Mesh,dim,ierr);CHKERRQ(ierr) 
-   Call DMMeshGetVertexSectionReal(Mesh,"default",dim,defaultSection,ierr);CHKERRQ(ierr)
-   Call DMMeshSetSectionReal(Mesh,"default",defaultSection,ierr);CHKERRQ(ierr)
-   Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   Call DMMeshGetVertexSectionReal(Mesh,"default",dim,defaultSection1,ierr);CHKERRQ(ierr)
+   Call DMMeshSetSectionReal(Mesh,"default",defaultSection1,ierr);CHKERRQ(ierr)
+   Call SectionRealDestroy(defaultSection1,ierr);CHKERRQ(ierr)
 
-   Do i = 1, 1000 
-         if (mod(i,100) == 0) Then
-            write(*,*) i
-         end if
-      Call DMMeshGetSectionReal(Mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(defaultSection,copySection,ierr);CHKERRQ(ierr)
-      val = i + 1.234
-      Call SectionRealSet(defaultSection,val,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   !Do i = 1, 1000 
+   !      if (mod(i,100) == 0) Then
+   !         write(*,*) i
+   !      end if
+   !   Call DMMeshGetSectionReal(Mesh,'default',defaultSection1,ierr);CHKERRQ(ierr)
+   !   Call SectionRealDuplicate(defaultSection1,copySection,ierr);CHKERRQ(ierr)
+   !   val = i + 1.234
+   !   Call SectionRealSet(defaultSection1,val,ierr);CHKERRQ(ierr)
+   !   Call SectionRealDestroy(defaultSection1,ierr);CHKERRQ(ierr)
+   !   Call SectionRealDestroy(copySection,ierr);CHKERRQ(ierr)
+   !End Do
+
+   !Do i = 1, 1000
+   !      if (mod(i,100) == 0) Then
+   !         write(*,*) i
+   !      end if
+   !      Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+   !      val = sum(Coord) * (i-1.)
+   !      Call DMMeshRestoreCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
+   !End Do
+
+
+   Do i = 1, 10000000
+      Call DMMeshGetSectionReal(Mesh,'default',defaultSection1,ierr);CHKERRQ(ierr)
+      Call DMMeshGetSectionReal(Mesh,'default',defaultSection2,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(defaultSection1,copySection,ierr);CHKERRQ(ierr)
+      !Call SectionRealDestroy(defaultSection1,ierr);CHKERRQ(ierr)
+      print*, defaultSection1%V, defaultSection2%V, copySection%V
+      Call SectionRealDestroy(defaultSection2,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(copySection,ierr);CHKERRQ(ierr)
    End Do
-
-   Do i = 1, 1000
-         if (mod(i,100) == 0) Then
-            write(*,*) i
-         end if
-         Call DMMeshGetCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
-         val = sum(Coord) * (i-1.)
-         Call DMMeshRestoreCoordinatesF90(mesh,Coord,ierr);CHKERRQ(ierr)
-   End Do
-
 
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
    Call MEF90CtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)   
