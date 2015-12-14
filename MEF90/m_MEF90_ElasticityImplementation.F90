@@ -1317,7 +1317,7 @@ Contains
          !If (temperature%v /= 0) Then
          !   flops = flops + 2 * elemtemperatureType%numDof * size(elemtemperature(1)%Gauss_C) * size(cellID)
          !End If
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(damageloc)
       End If   
