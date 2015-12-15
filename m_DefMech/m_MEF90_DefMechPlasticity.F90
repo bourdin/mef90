@@ -256,7 +256,7 @@ contains
       Type(MEF90Element_Type)                            :: elemScalType
 
       Type(SectionReal)                                  :: damageSec
-      PetscReal                                          :: damageCellAvg,StiffnessB,StiffnessA
+      PetscReal                                          :: damageCellAvg,Stiffness
 
       Type(MEF90_MATS)                                   :: PlasticStrainMatS
 
@@ -434,13 +434,11 @@ contains
                PlasticStrainMatS=plasticStrainLoc
                Select Case (cellSetOptions%damageType)
                   Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
-                     StiffnessA = (1.0_Kr - PlasticityCtx%Damage)**2
-                     StiffnessB = (1.0_Kr - PlasticityCtx%Damage)**DBLE(PlasticityCtx%DuctileCouplingPower)
+                     Stiffness = (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr-DBLE(PlasticityCtx%DuctileCouplingPower))
                   Case (MEF90DefMech_damageTypeLinSoft)
-                     StiffnessA = ( (1.0_Kr - PlasticityCtx%Damage)**2 / ( 1.0_Kr + ( PlasticityCtx%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - PlasticityCtx%Damage)**2 ) ) )
-                     StiffnessB = (1.0_Kr - PlasticityCtx%Damage)**DBLE(PlasticityCtx%DuctileCouplingPower)
+                     Stiffness = ( (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr - DBLE(PlasticityCtx%DuctileCouplingPower)) / ( 1.0_Kr + ( PlasticityCtx%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - PlasticityCtx%Damage)**2.0_kr ) ) )
                End Select
-               cumulatedDissipatedPlasticEnergyVariationLoc(1) = (StiffnessA/StiffnessB)*( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
+               cumulatedDissipatedPlasticEnergyVariationLoc(1) = (Stiffness)*( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
                Call SectionRealRestore(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
 
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
