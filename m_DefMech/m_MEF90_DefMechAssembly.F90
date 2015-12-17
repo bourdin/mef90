@@ -1052,9 +1052,9 @@ Contains
 
       !!! Get Section and scatter associated with each field
       Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,displacementSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,residualSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,boundaryDisplacementSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(displacementSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,displacement,ierr);CHKERRQ(ierr) 
+      Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,boundaryDisplacementSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,residualSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(boundaryDisplacementSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,MEF90DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
 
 

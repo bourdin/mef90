@@ -243,7 +243,6 @@ contains
       type(c_ptr)                                        :: snlp_ctx
 
 
-      type(VecScatter)                                   :: ScatterSecToVecCellMatS,ScatterSecToVec,ScatterSecToVecScal,ScatterSecToVecCellScal
       PetscInt                                           :: dim,set,cell,QuadratureOrder
       Type(IS)                                           :: cellSetGlobalIS,setIS
       PetscInt,dimension(:),Pointer                      :: setID,cellID
@@ -261,45 +260,36 @@ contains
       Type(MEF90_MATS)                                   :: PlasticStrainMatS
 
 
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(plasticStrainSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(plasticStrainSec,inelasticStrainSec,ierr);CHKERRQ(ierr)
-      !!! plasticStrainPrevious only usefull for BrittleDuctile response
-      Call SectionRealDuplicate(plasticStrainSec,plasticStrainPreviousSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMMatS,plasticStrainSec,ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrain,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(plasticStrainOldSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr)
-      !!! plasticStrainPrevious only usefull for BrittleDuctile response
-      Call SectionRealToVec(plasticStrainPreviousSec,ScatterSecToVecCellMatS,SCATTER_REVERSE,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,plasticStrainSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(plasticStrainSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_REVERSE,plasticStrain,ierr);CHKERRQ(ierr) 
 
-      !!!  cumulatedDissipatedPlasticEnergy
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMScal,'default',cumulatedDissipatedPlasticEnergyVariationSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%CellDMScal,cumulatedDissipatedPlasticEnergyVariationSec,ScatterSecToVecCellScal,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(cumulatedDissipatedPlasticEnergyVariationSec,ScatterSecToVecCellScal,SCATTER_REVERSE,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr) 
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(plasticStrainOldSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr) 
 
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,inelasticStrainSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(plasticStrainOldSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr) 
 
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'default',xSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)         
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,plasticStrainPreviousSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(plasticStrainOldSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr) 
 
-      If (Associated(MEF90DefMechCtx%temperature)) Then
-         Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',temperatureSec,ierr);CHKERRQ(ierr)
-         Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,temperatureSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-         Call SectionRealToVec(temperatureSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)          
-      Else
-         temperatureSec%v = 0
-      End If
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMScalSec,cumulatedDissipatedPlasticEnergyVariationSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(cumulatedDissipatedPlasticEnergyVariationSec,MEF90DefMechCtx%cellDMScalScatter,SCATTER_REVERSE,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr) 
+
+      Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,xSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(xSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)
 
       If (Associated(MEF90DefMechCtx%damage)) Then
-         If (Associated(MEF90DefMechCtx%temperature)) Then
-            Call SectionRealDuplicate(temperatureSec,damageSec,ierr);CHKERRQ(ierr)
-         Else
-            Call DMMeshGetSectionReal(MEF90DefMechCtx%DMScal,'default',damageSec,ierr);CHKERRQ(ierr)
-            Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMScal,damageSec,ScatterSecToVecScal,ierr);CHKERRQ(ierr)
-         End If
-         Call SectionRealToVec(damageSec,ScatterSecToVecScal,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)          
+         Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,damageSec,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(damageSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)   
       Else
          damageSec%v = 0
+      End If
+
+      If (Associated(MEF90DefMechCtx%temperature)) Then
+         Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,temperatureSec,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(temperatureSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr)   
+      Else
+         temperatureSec%v = 0
       End If
 
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
@@ -450,33 +440,22 @@ contains
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
       !!! forward data plasticStrain & cumulatedDissipatedPlasticEnergy
-      Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(cumulatedDissipatedPlasticEnergyVariationSec,ScatterSecToVecCellscal,SCATTER_FORWARD,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(plasticStrainSec,MEF90DefMechCtx%cellDMMatSSec,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(cumulatedDissipatedPlasticEnergyVariationSec,MEF90DefMechCtx%cellDMScalSec,SCATTER_FORWARD,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
 
       Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(plasticStrainOldSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(inelasticStrainSec,ierr);CHKERRQ(ierr)
-      !!! plasticStrainPrevious only usefull for BrittleDuctile response
       Call SectionRealDestroy(plasticStrainPreviousSec,ierr);CHKERRQ(ierr)
-
-      Call VecScatterDestroy(ScatterSecToVecCellMatS,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
-
-      !!! cumulatedDissipatedPlasticEnergy
       Call SectionRealDestroy(cumulatedDissipatedPlasticEnergyVariationSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(ScatterSecToVecCellscal,ierr);CHKERRQ(ierr)
-
-
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       If (Associated(MEF90DefMechCtx%damage)) Then
          Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
-         Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       End If
 
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
-         Call VecScatterDestroy(ScatterSecToVecScal,ierr);CHKERRQ(ierr)
       End If
 #else
       write(*,*) 'This example needs SNLP'
