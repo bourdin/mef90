@@ -28,6 +28,8 @@ contains
 !!! Since these functions are C interoperable, fortran cannot rename them in a use statement
 !!! We play with the pre-processor in order to avoid duplicate symbols.
 
+#define FHG_NONE MEF90_APPEND(fhg_None,MEF90_DIM)D
+
 #define FHG_VONMISES MEF90_APPEND(fhg_VonMises,MEF90_DIM)D
 
 #define FHG_DRUCKERPRAGER MEF90_APPEND(fhg_DruckerPrager,MEF90_DIM)D
@@ -35,6 +37,28 @@ contains
 #define FHG_DRUCKERPRAGERCAPMODEL MEF90_APPEND(fhg_DruckerPragerCapModel,MEF90_DIM)D
 
 #define FHG_TRESCA MEF90_APPEND(fhg_Tresca,MEF90_DIM)D
+
+#undef __FUNCT__
+#define __FUNCT__ "FHG_NONE"
+!!!
+!!!  
+!!!  fhg: VonMises
+!!!  
+!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
+!!!
+!!!
+   subroutine FHG_NONE(x,f,h,g,myctx) bind(c)
+      use,intrinsic :: iso_c_binding
+      use m_MEF90
+
+      real(kind=c_double)                       :: x(*)
+      real(kind=c_double)                       :: f(*)
+      real(kind=c_double)                       :: h(*)
+      real(kind=c_double)                       :: g(*)
+      type(c_ptr),intent(in),value              :: myctx
+
+      CONTINUE
+   end subroutine FHG_NONE
 
 #undef __FUNCT__
 #define __FUNCT__ "FHG_VONMISES"
@@ -351,8 +375,12 @@ contains
                   snlp_ctx  = c_loc(PlasticityCtx)
 
                case(MEF90DefMech_plasticityTypeNONE)
-                  return
-
+                  snlp_Dfhg = c_null_funptr
+                  snlp_fhg  = c_funloc(FHG_NONE)
+                  snlp_n    = 1
+                  snlp_m    = 0
+                  snlp_p    = 0
+                  snlp_ctx  = c_loc(PlasticityCtx)
                case default
                   Print*,__FUNCT__,': Unimplemented plasticity Type',cellSetOptions%PlasticityType
                   STOP 
@@ -407,7 +435,9 @@ contains
                         exit_code = SNLPL1SQP(s,plasticStrainLoc)
                      End if
                Case default
-                  exit_code = SNLPL1SQP(s,plasticStrainLoc)
+                  if (cellSetOptions%plasticityType /= MEF90DefMech_plasticityTypeNONE) then
+                     exit_code = SNLPL1SQP(s,plasticStrainLoc)
+                  end if
                End Select
 
                !!! cumulatedDissipatedPlasticEnergy
@@ -440,8 +470,8 @@ contains
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
       !!! forward data plasticStrain & cumulatedDissipatedPlasticEnergy
-      Call SectionRealToVec(plasticStrainSec,MEF90DefMechCtx%cellDMMatSSec,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(cumulatedDissipatedPlasticEnergyVariationSec,MEF90DefMechCtx%cellDMScalSec,SCATTER_FORWARD,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(plasticStrainSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(cumulatedDissipatedPlasticEnergyVariationSec,MEF90DefMechCtx%cellDMScalScatter,SCATTER_FORWARD,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
 
       Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)

@@ -1234,8 +1234,6 @@ Contains
 
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemDamage,ierr)
-            Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If 
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)

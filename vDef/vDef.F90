@@ -432,7 +432,7 @@ Program vDef
                   Call SNESSetLagPreconditioner(snesDisp,-2,ierr);CHKERRQ(ierr)
                   Call SNESSetLagPreconditioner(snesDamage,-2,ierr);CHKERRQ(ierr)
                End If 
-               !Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+               Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
 
                Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
                If (snesDispConvergedReason < 0) Then  
@@ -440,7 +440,7 @@ Program vDef
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                End If
                Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-               !Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+               Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
                Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
                If (snesDamageConvergedReason < 0) Then
                   Write(IOBuffer,400) "damage field",snesDamageConvergedReason
