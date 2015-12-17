@@ -146,7 +146,6 @@ Contains
       PetscErrorCode,Intent(OUT)                      :: ierr
    
       Type(SectionReal)                               :: xSec
-      Type(VecScatter)                                :: scatterSecToVec
       Type(MEF90DefMechGlobalOptions_Type),pointer    :: MEF90DefMechGlobalOptions
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
       Type(MEF90DefMechCellSetOptions_Type),pointer   :: cellSetOptions
@@ -160,8 +159,7 @@ Contains
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMMeshGetDimension(MEF90DefMechCtx%cellDMVect,dim,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%cellDMVect,'default',xSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%cellDMVect,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMVectSec,xSec,ierr);CHKERRQ(ierr)
 
       !!! force is cell-centered
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%CellDMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -181,9 +179,8 @@ Contains
       End Do
       Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr) 
+      Call SectionRealToVec(xSec,MEF90DefMechCtx%cellDMVectScatter,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSetForceCst
 
 #undef __FUNCT__
@@ -200,7 +197,6 @@ Contains
       PetscErrorCode,Intent(OUT)                      :: ierr
    
       Type(SectionReal)                               :: xSec
-      Type(VecScatter)                                :: scatterSecToVec
       Type(MEF90DefMechGlobalOptions_Type),pointer    :: MEF90DefMechGlobalOptions
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
       Type(MEF90DefMechCellSetOptions_Type),pointer   :: cellSetOptions
@@ -214,8 +210,7 @@ Contains
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMMeshGetDimension(MEF90DefMechCtx%cellDMVect,dim,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetSectionReal(MEF90DefMechCtx%cellDMScal,'default',xSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%cellDMScal,xSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMScalSec,xSec,ierr);CHKERRQ(ierr)
 
       !!! pressure force is cell-centered
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%CellDMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -235,9 +230,8 @@ Contains
       End Do
       Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(xSec,ScatterSecToVec,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr) 
+      Call SectionRealToVec(xSec,MEF90DefMechCtx%cellDMScalScatter,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr) 
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSetPressureForceCst
 
 #undef __FUNCT__
@@ -1189,15 +1183,11 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
       Type(Mat)                                          :: matDamage
-      Type(SectionReal)                                  :: CoordSec
-      Type(Vec)                                          :: CoordVec
       PetscReal,Dimension(:,:),Pointer                   :: CoordPtr
-      Type(VecScatter)                                   :: ScatterSecToVec
       Type(Vec)                                          :: residualDamage
       Type(KSP)                                          :: kspDamage
       Type(PC)                                           :: pcDamage
       PetscReal                                          :: atol,rtol,dtol
-      PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
       PetscInt                                           :: dim
       Type(Vec)                                          :: LB,UB
       

@@ -301,10 +301,6 @@ contains
       Else
          damageSec%v = 0
       End If
-!write(*,*)'Damage',damageSec
-!   cellSetOptions%damageType
-
-!write(*,*)'Damage',cellSetOptions%damageType
 
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -324,16 +320,14 @@ contains
          End Select
 
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
-         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
-      
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)      
          elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
+         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
          Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          If ((Size(cellID) > 0) .AND. (elemDisplacementType%coDim == 0)) Then
             !!! Call proper local assembly depending on the type of damage law
             Select Case (cellSetOptions%plasticityType)
-
                case(MEF90DefMech_plasticityTypeVonMises)
                   snlp_Dfhg = c_null_funptr
                   snlp_fhg  = c_funloc(FHG_VONMISES)
@@ -372,10 +366,7 @@ contains
                case default
                   Print*,__FUNCT__,': Unimplemented plasticity Type',cellSetOptions%PlasticityType
                   STOP 
-
             End select
-   
-            !! Remplissage du Ctx
 
             PlasticityCtx%HookesLaw = matpropSet%HookesLaw
             PlasticityCtx%YieldStress = matpropSet%YieldStress
@@ -386,7 +377,6 @@ contains
             PlasticityCtx%CoefficientDruckerPragerCapModel3 = matpropSet%CoefficientDruckerPragerCapModel3
 
             Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
-
             QuadratureOrder = 2 * (elemDisplacementType%order - 1)
             Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
             Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
@@ -446,15 +436,18 @@ contains
                Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
                If (Associated(MEF90DefMechCtx%damage)) Then
                   !Call SectionRealRestore(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
-               End If
-      
+               End If      
             End Do !cell
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemScal,ierr)
             Call SNLPDelete(s)
             DeAllocate(damageLoc)
          End If ! set 
+         Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do !! set
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
       !!! forward data plasticStrain & cumulatedDissipatedPlasticEnergy
       Call SectionRealToVec(plasticStrainSec,ScatterSecToVecCellMatS,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
