@@ -374,7 +374,7 @@ Contains
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 Subroutine MEF90EXOFormat(exoid,NameG,NameC,NameV,ierr)
-   Integer,Intent(IN)                                 :: exoid
+   Integer,Intent(INOUT)                              :: exoid
    Character(len=*),Dimension(:),Pointer,Intent(IN)   :: nameG,nameC,nameV
    PetscErrorCode,Intent(OUT)                         :: ierr
    

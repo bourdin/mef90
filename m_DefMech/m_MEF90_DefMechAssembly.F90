@@ -3534,22 +3534,16 @@ Contains
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,temperatureSec,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(temperatureSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr) 
-
-
-
       Else
          temperatureSec%v = 0
       End If
 
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-
          Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,plasticstrainSec,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(plasticstrainSec,MEF90DefMechCtx%CellDMMatSScatter,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr) 
       
          Call SectionRealDuplicate(MEF90DefMechCtx%cellDMScalSec,cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(cumulatedDissipatedPlasticEnergySec,MEF90DefMechCtx%CellDMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr) 
-
-
       Else
          PlasticStrainSec%v = 0
          cumulatedDissipatedPlasticEnergySec%v = 0
@@ -3560,7 +3554,6 @@ Contains
       Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-
       !!!
       !!! We loop over all element twice. The first time in order to assembly all non BC cell sets
       !!! In the second pass, we only update the BC where necessary
@@ -3570,10 +3563,9 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
          elemDamageType       = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
-
-         Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          If ((Size(cellID) > 0) .AND. (elemDamageType%coDim == 0)) Then
             Select Case (cellSetOptions%damageType)
             Case (MEF90DefMech_damageTypeAT1Elastic)
@@ -3600,11 +3592,9 @@ Contains
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localOperatorFunction => MEF90DefMechOperatorNull
                End Select
-
             Case (MEF90DefMech_damageTypeLinSoft)
                QuadratureOrder = 9! 5 * elemDamageType%order + 5 * (elemDisplacementType%order - 1)
                localOperatorFunction => MEF90DefMechOperatorDamageLinSoftLoc
-
             Case (MEF90DefMech_damageTypeAT2)
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = 2 * elemDamageType%order + 2 * max (elemDisplacementType%order - 1, elemDamageType%order)
@@ -3663,7 +3653,6 @@ Contains
                   Call SectionRealRestore(cumulatedDissipatedPlasticEnergySec,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
                End If
             End Do
-
             DeAllocate(displacementDof)
             DeAllocate(damageDof)
             If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -3673,17 +3662,15 @@ Contains
 
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemDamage,ierr)
-            Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If 
+         Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do ! set
 
       !!! "Ghost update" for the residual Section
       Call SectionRealComplete(residualSec,ierr);CHKERRQ(ierr)
       !!! Scatter back from SectionReal to Vec
-
       Call SectionRealToVec(residualSec,MEF90DefMechCtx%DMScalScatter,SCATTER_FORWARD,residual,ierr);CHKERRQ(ierr) 
-
 
       !!!
       !!! Cell set BC
@@ -3756,7 +3743,6 @@ Contains
       Call SectionRealDestroy(boundaryDamageSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(residualSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
-
    End Subroutine MEF90DefMechOperatorDamage
 
 #undef __FUNCT__
