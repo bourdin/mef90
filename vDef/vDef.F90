@@ -243,12 +243,11 @@ Program vDef
    !!!cumulatedDissipatedPlasticEnergy Vectors
    Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-   Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   !Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
 
    
-   !!! As long as plasticity is not implemented, there is no point in keeping the pastic strain around
-   !!!DeAllocate(MEF90DefMechCtx%plasticStrain)
    Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
    
    !!! Create sections, vectors, and solvers for HeatXfer Context
    If (MEF90HeatXferGlobalOptions%mode /= MEF90HeatXfer_ModeNULL) Then
@@ -457,7 +456,7 @@ Program vDef
 
                
 
-               Call VecDuplicate(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+               Call VecCopy(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
                Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
@@ -639,12 +638,15 @@ Program vDef
    Select case(MEF90DefMechGlobalOptions%mode)
    Case (MEF90DefMech_ModeQuasiStatic)
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
+      Call SNESDestroy(snesDamage,ierr);CHKERRQ(ierr)
       Call VecDestroy(residualDisp,ierr);CHKERRQ(ierr)
+      Call VecDestroy(residualDamage,ierr);CHKERRQ(ierr)
    End Select
    
    Select Case (MEF90HeatXferGlobalOptions%mode)
    Case (MEF90HeatXFer_ModeSteadyState) 
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
+      call VecDestroy(residualTemp,ierr);CHKERRQ(ierr)
    Case (MEF90HeatXFer_ModeTransient) 
       Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
    End Select
@@ -654,10 +656,12 @@ Program vDef
    Call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx,ierr)
    Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
 
+   Call VecDestroy(plasticStrainOld,ierr);CHKERRQ(ierr)
+   Call VecDestroy(plasticStrainPrevious,ierr);CHKERRQ(ierr)
+   Call VecDestroy(cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    Call VecDestroy(cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    Call VecDestroy(cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
-   Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 
    DeAllocate(elasticEnergySet)
    DeAllocate(surfaceEnergySet)
@@ -676,6 +680,7 @@ Program vDef
    Call MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)
+   Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 
    Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90Ctx%prefix)//'.log',logViewer, ierr);CHKERRQ(ierr)
    Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)

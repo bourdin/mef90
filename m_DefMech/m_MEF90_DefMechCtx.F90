@@ -36,11 +36,11 @@ Module m_MEF90_DefMechCtx_Type
       Type(VecScatter)                       :: cellDMVectScatter
       Type(VecScatter)                       :: cellDMMatSScatter
       
-      !!! Remove all sections after switching to DMplex
       Type(SectionReal)                      :: DMSec
       Type(SectionReal)                      :: DMScalSec,DMVectSec           ! Remove all these
       Type(SectionReal)                      :: cellDMScalSec,cellDMVectSec   ! after switching to 
       Type(SectionReal)                      :: DMMatSSec,cellDMMatSSec       ! DMplex
+      Type(Vec)                              :: Coord
 
       Type(PetscViewer)                      :: globalEnergyViewer
       Type(PetscViewer),Dimension(:),Pointer :: setEnergyViewer
