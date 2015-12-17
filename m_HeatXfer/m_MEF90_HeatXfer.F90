@@ -548,7 +548,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90HeatXferFormatEXO(MEF90HeatXferCtx,ierr)
-      Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
+      Type(MEF90HeatXferCtx_Type),Intent(INOUT)          :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameV,nameC

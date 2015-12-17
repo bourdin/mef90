@@ -960,7 +960,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      Type(MEF90DefMechCtx_Type),Intent(INOUT)           :: MEF90DefMechCtx
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameV,nameC
