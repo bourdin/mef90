@@ -817,14 +817,15 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
 
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+
       !!! cell-based fields are located before nodal ones in exodus files, so saving them first.
-      If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
+      If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
          If (Associated(MEF90DefMechCtx%pressureForce)) Then
             Call DMGetLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
             Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call VecViewExodusCell(MEF90DefMechCtx%cellDMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
+                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureforceOffset,ierr);CHKERRQ(ierr)
             Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
          Else
             Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] force field not associated, not saving. Use -force_offset 0 \n",ierr);CHKERRQ(ierr)
@@ -1065,6 +1066,13 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       End If
       
       Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
+      If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
+         Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
+      End If
+      !!! This makes no sense, but there seems to be a bug in exodus / OSX where
+      !!! formatting is not flushed to the drive
+      Call MEF90CtxCloseEXO(MEF90DefMechCtx%MEF90Ctx,ierr)
+      Call MEF90CtxOpenEXO(MEF90DefMechCtx%MEF90Ctx,MEF90DefMechCtx%DM,ierr)
       DeAllocate(nameG)
       DeAllocate(nameV)
       DeAllocate(nameC)
