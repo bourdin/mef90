@@ -1237,6 +1237,8 @@ Contains
             Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If 
+         Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do ! set
 
       !!! "Ghost update" for the residual Section
