@@ -67,12 +67,12 @@ contains
 
       if (myctx_ptr%CoefficientLinSoft==0) then
          StiffnessA = (1.0_Kr - myctx_ptr%Damage)**2
-         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**DBLE(myctx_ptr%DuctileCouplingPower)
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
          f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
          g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress*StiffnessB
       else 
          StiffnessA = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) )
-         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**DBLE(myctx_ptr%DuctileCouplingPower)
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
          f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) *StiffnessA /2.0 
          g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) )) - myctx_ptr%YieldStress*StiffnessB
       end if
@@ -434,9 +434,9 @@ contains
                PlasticStrainMatS=plasticStrainLoc
                Select Case (cellSetOptions%damageType)
                   Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
-                     Stiffness = (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr-DBLE(PlasticityCtx%DuctileCouplingPower))
+                     Stiffness = (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr-PlasticityCtx%DuctileCouplingPower)
                   Case (MEF90DefMech_damageTypeLinSoft)
-                     Stiffness = ( (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr - DBLE(PlasticityCtx%DuctileCouplingPower)) / ( 1.0_Kr + ( PlasticityCtx%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - PlasticityCtx%Damage)**2.0_kr ) ) )
+                     Stiffness = ( (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr - PlasticityCtx%DuctileCouplingPower) / ( 1.0_Kr + ( PlasticityCtx%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - PlasticityCtx%Damage)**2.0_kr ) ) )
                End Select
                cumulatedDissipatedPlasticEnergyVariationLoc(1) = (Stiffness)*( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
                Call SectionRealRestore(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
