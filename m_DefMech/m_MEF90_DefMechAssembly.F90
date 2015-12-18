@@ -1490,9 +1490,9 @@ Contains
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemDamage,ierr)
             DeAllocate(Aloc)    
-            Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If 
+         Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do ! set
       Call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
       Call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
@@ -3929,9 +3929,9 @@ Contains
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemDamage,ierr)
             DeAllocate(Aloc)    
-            Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
-            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If 
+         Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do ! set
       Call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
       Call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)

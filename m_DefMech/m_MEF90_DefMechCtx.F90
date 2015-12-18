@@ -40,7 +40,6 @@ Module m_MEF90_DefMechCtx_Type
       Type(SectionReal)                      :: DMScalSec,DMVectSec           ! Remove all these
       Type(SectionReal)                      :: cellDMScalSec,cellDMVectSec   ! after switching to 
       Type(SectionReal)                      :: DMMatSSec,cellDMMatSSec       ! DMplex
-      Type(Vec)                              :: Coord
 
       Type(PetscViewer)                      :: globalEnergyViewer
       Type(PetscViewer),Dimension(:),Pointer :: setEnergyViewer
