@@ -1782,7 +1782,6 @@ Contains
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
-
          Case default
             Print*,__FUNCT__,': Unimplemented damage Type, only AT1Elastic and AT2Elastic implement',cellSetOptions%damageType
             STOP  
@@ -1837,16 +1836,12 @@ Contains
       Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
       PetscScalar                                        :: myenergy,myenergySet
 
-      !!! Create dof-based sections
-      !!! Scatter data from Vec to Sec, or initialize
       Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,xSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr) 
 
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
          Call SectionRealDuplicate(MEF90DefMechCtx%CellDMMatSSec,plasticStrainSec,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(plasticStrainSec,MEF90DefMechCtx%CellDMMatSScatter,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr) 
- 
-
       Else
          PlasticStrainSec%v = 0
       End If
@@ -1859,13 +1854,8 @@ Contains
       End If
 
       If (Associated(MEF90DefMechCtx%damage)) Then
-         If (Associated(MEF90DefMechCtx%temperature)) Then
-            Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,TemperatureSec,ierr);CHKERRQ(ierr)
-            Call SectionRealToVec(TemperatureSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%temperature,ierr);CHKERRQ(ierr) 
-         Else
-            Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,damageSec,ierr);CHKERRQ(ierr)
-            Call SectionRealToVec(damageSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr) 
-         End If
+         Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,damageSec,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(damageSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr) 
       Else
          damageSec%v = 0
       End If
@@ -1911,7 +1901,6 @@ Contains
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
-
          Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
             If (elemDisplacementType%coDim == 0) Then
                If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -2297,11 +2286,11 @@ Contains
 
          If (Trace(inelasticStrainGauss) < 0.0_Kr) Then
             elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. DeviatoricPart(inelasticStrainGauss)
+            PlasticDissipationDensityGauss = 0.0_Kr
          Else
             elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
             PlasticDissipationDensityGauss = 2.0_Kr*cumulatedDissipatedPlasticEnergyCell
          End If
-         !!! This is really twice the elastic energy density
          !!! This is really twice the plastic energy density
          
          Do iDoF1 = 1,numDofDamage
@@ -2979,6 +2968,7 @@ Contains
 
          If (Trace(inelasticStrainGauss) < 0.0_Kr) Then
             elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. DeviatoricPart(inelasticStrainGauss)
+            PlasticDissipationDensityGauss = 0.0_Kr
          Else
             elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
             PlasticDissipationDensityGauss = 2.0_Kr*cumulatedDissipatedPlasticEnergyCell

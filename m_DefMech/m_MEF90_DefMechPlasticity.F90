@@ -441,14 +441,18 @@ contains
                End Select
 
                !!! cumulatedDissipatedPlasticEnergy
-               PlasticStrainMatS=plasticStrainLoc
+               PlasticStrainMatS = plasticStrainLoc
+               stiffness = 0.0_Kr
                Select Case (cellSetOptions%damageType)
                   Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
                      Stiffness = (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr-PlasticityCtx%DuctileCouplingPower)
                   Case (MEF90DefMech_damageTypeLinSoft)
                      Stiffness = ( (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr - PlasticityCtx%DuctileCouplingPower) / ( 1.0_Kr + ( PlasticityCtx%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - PlasticityCtx%Damage)**2.0_kr ) ) )
+                  Case default
+                     Print*,__FUNCT__,': Unimplemented damage Type, only AT1Elastic and AT2Elastic implement',cellSetOptions%damageType
+                     STOP  
                End Select
-               cumulatedDissipatedPlasticEnergyVariationLoc(1) = (Stiffness)*( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
+               cumulatedDissipatedPlasticEnergyVariationLoc(1) = Stiffness * ( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
                Call SectionRealRestore(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
 
                Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
