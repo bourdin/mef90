@@ -192,7 +192,7 @@ Program HeatXfer
       Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
       Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
       !!! Save results
-      Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
+      Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,time(step),ierr)
    End Do
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
