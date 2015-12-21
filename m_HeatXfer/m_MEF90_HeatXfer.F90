@@ -478,10 +478,9 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,time,ierr)
+   Subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       PetscInt,Intent(IN)                                :: step
-      PetscReal,Intent(IN)                               :: time
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(Vec)                                          :: localVec
@@ -536,7 +535,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       End If
       Call DMRestoreLocalVector(MEF90HeatXferCtx%DM,localVec,ierr);CHKERRQ(ierr)
       If (MEF90HeatXferCtx%MEF90Ctx%rank == 0) Then
-         Call EXPTIM(MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,time,ierr)
+         Call EXPTIM(MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,ierr)
          Call EXUPDA(MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,ierr)
       End If
    End Subroutine MEF90HeatXferViewEXO

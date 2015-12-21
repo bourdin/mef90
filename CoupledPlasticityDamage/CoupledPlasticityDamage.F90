@@ -372,7 +372,7 @@ Program CoupledPlasticityDamage
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
             !!! Save results
-            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,time(step),ierr)
+            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
          Case (MEF90HeatXFer_ModeTransient)
             If (step > 1) Then
                Write(IOBuffer,110) step,time(step)
@@ -417,7 +417,7 @@ Program CoupledPlasticityDamage
             Write(IOBuffer,102) sum(thermalEnergySet),sum(heatFluxWorkSet),sum(thermalEnergySet)-sum(heatFluxWorkSet)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             !!! Save results
-            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,time(step),ierr)
+            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
          Case (MEF90HeatXfer_ModeNULL)
             Continue
          Case default
@@ -530,7 +530,7 @@ Program CoupledPlasticityDamage
                End If
 
                If (mod(AltMinIter,25) == 0) Then
-                  Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,time(step),ierr)
+                  Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
                End If
             End Do AltMin
 
@@ -606,7 +606,7 @@ Program CoupledPlasticityDamage
          Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
          Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
 
-         Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,time(step),ierr)
+         Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
 
          
 

@@ -802,10 +802,9 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechViewEXO(MEF90DefMechCtx,step,time,ierr)
+   Subroutine MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscInt,Intent(IN)                                :: step
-      PetscReal,Intent(IN)                               :: time
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(Vec)                                          :: localVec
@@ -948,7 +947,6 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          End If
       End If
       If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
-         Call EXPTIM(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,time,ierr)
          Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
       End If
    End Subroutine MEF90DefMechViewEXO
@@ -961,13 +959,14 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)           :: MEF90DefMechCtx
+      PetscReal,Dimension(:),Pointer                     :: time
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameV,nameC
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-      Integer                                            :: dim,numfield
+      Integer                                            :: dim,numfield,step
 
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
@@ -1064,6 +1063,11 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
       If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
          Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
+         If (associated(time)) then
+            Do step = 1, size(time)
+               Call EXPTIM(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,time(step),ierr)
+            End Do
+         End If
       End If
       !!! This makes no sense, but there seems to be a bug in exodus / OSX where
       !!! formatting is not flushed to the drive
