@@ -38,7 +38,7 @@ Program vDef
    Type(Vec)                                          :: plasticStrainOld,plasticStrainPrevious
    Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
-   Type(Vec)                                          :: residualDamage,damageOld
+   Type(Vec)                                          :: residualDamage,damageOld,localVec
    PetscInt                                           :: AltMinIter
    PetscReal                                          :: damageMaxChange
 
@@ -58,7 +58,7 @@ Program vDef
    Type(PetscViewer)                                  :: logViewer
    Integer                                            :: numfield
    
-   Integer                                            :: step
+   Integer                                            :: step,stepold
    PetscInt                                           :: dim
    
    PetscReal                                          :: alphaMaxChange,alphaMin,alphaMax
@@ -314,6 +314,7 @@ Program vDef
    !!!
    If (.NOT. MEF90GlobalOptions%dryrun) Then
       step = 1
+      stepold = 1
       mainloopQS: Do
          BTActive = PETSC_FALSE
          !!! Solve for temperature
@@ -409,9 +410,20 @@ Program vDef
             Write(IOBuffer,200) step,time(step) 
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             damageMaxChange = 1.0D+20
-            If (BTActive) Then
-               !!! We are going back to this step from the future.
-               !!! We need to recompute damage bounds from the past
+            If (stepOld > step) Then
+               If (step == 1) Then
+                  call VecSet(damageOld,0.0_Kr,ierr);CHKERRQ(ierr)
+               Else
+                  !!! We are going back to this step from the future.
+                  !!! We need to reload damageOld in order to recompute bounds properly
+                  Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+                  Call VecLoadExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                           MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step-1,MEF90DefMechGlobalOptions%damageOffset,ierr);CHKERRQ(ierr)
+                  Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,damageOld,ierr);CHKERRQ(ierr)
+                  Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,damageOld,ierr);CHKERRQ(ierr)
+                  Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+                  Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,snesDamage,damageOld,ierr);CHKERRQ(ierr)
+               End If
             Else
                Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,snesDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
             EndIf
@@ -626,9 +638,11 @@ Program vDef
          If (step == MEF90GlobalOptions%timeNumStep) Then
             EXIT
          ElseIf (BTActive) Then
+            stepOld = step
             step = BTStep
             BTActive = PETSC_FALSE
          Else
+            stepOld = step
             step = step + 1
          End If
       End Do MainloopQS
@@ -700,4 +714,5 @@ Program vDef
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 450 Format("BT: going back to step ",I4,"\n")
 500 Format(I6, 6(ES16.5),"\n")
+
 End Program vDef
