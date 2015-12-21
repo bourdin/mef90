@@ -350,7 +350,7 @@ Program vDef
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
             !!! Save results
-            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
+            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,time(step),ierr)
          Case (MEF90HeatXFer_ModeTransient)
             If (step > 1) Then
                Write(IOBuffer,110) step,time(step)
@@ -395,7 +395,7 @@ Program vDef
             Write(IOBuffer,102) sum(thermalEnergySet),sum(heatFluxWorkSet),sum(thermalEnergySet)-sum(heatFluxWorkSet)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             !!! Save results
-            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
+            Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,time(step),ierr)
          Case (MEF90HeatXfer_ModeNULL)
             Continue
          Case default
@@ -530,7 +530,7 @@ Program vDef
                   EXIT
                End If
                If (mod(AltMinIter,25) == 0) Then
-                  Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+                  Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,time(step),ierr)
                End If
             End Do AltMin
 
@@ -627,7 +627,7 @@ Program vDef
          If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
             Call MEF90DefMechStress(MEF90DefMechCtx%displacement,MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr)
          End If
-         Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+         Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,time(step),ierr)
          !!!
          !!! Save performance log file
          !!!

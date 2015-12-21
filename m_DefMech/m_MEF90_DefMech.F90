@@ -802,9 +802,10 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+   Subroutine MEF90DefMechViewEXO(MEF90DefMechCtx,step,time,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscInt,Intent(IN)                                :: step
+      PetscReal,Intent(IN)                               :: time
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(Vec)                                          :: localVec
@@ -947,6 +948,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          End If
       End If
       If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
+         Call EXPTIM(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,time,ierr)
          Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
       End If
    End Subroutine MEF90DefMechViewEXO
