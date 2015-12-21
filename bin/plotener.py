@@ -30,7 +30,7 @@ def main():
       print("Option table: {0}".format(options))
     if options.old:
       energies_old=np.loadtxt(options.inputfile)
-      energies=np.zeros( (energies_old.shape[0], 6) )
+      energies=np.zeros( (energies_old.shape[0],6) )
       energies[:,:3]=energies_old[:,:3]
       energies[:,-2:]=energies_old[:,-2:]
     else:
@@ -65,13 +65,13 @@ def main():
       energies[:,4] -= energies[tmin,4]
       energies[:,5] -= energies[tmin,4]
     ### plot
-    plt.plot(energies[:,1], energies[:,2], label='Elastic energy')
-    plt.plot(energies[:,1], energies[:,-2], label='Surface energy')
-    plt.plot(energies[:,1], energies[:,-1],zorder=999,label='Total energy', lw=4)
+    plt.plot(energies[:,1],energies[:,2],'o-',label='Elastic energy')
+    plt.plot(energies[:,1],energies[:,-2],'o-',label='Surface energy',lw = 2)
     if options.forces:
-        plt.plot(energies[:,1], energies[:,3], label='External Forces')
+        plt.plot(energies[:,1],energies[:,3],'o-',label='External Forces',lw = 2)
     if options.cohesive:
-        plt.plot(energies[:,1], energies[:,4], label='Cohesive energy')
+        plt.plot(energies[:,1],energies[:,4],'o-',label='Cohesive energy',lw = 2)
+    plt.plot(energies[:,1],energies[:,-1],'o-',zorder=999,label='Total energy',lw=4)
     plt.grid()
     plt.legend(loc=0)
     plt.xlabel('t')
