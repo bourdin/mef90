@@ -495,18 +495,23 @@ Contains
 !!!
    Subroutine MEF90HeatXferCtxSetSections(MEF90HeatXferCtx,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: MEF90HeatXferCtx
-      PetscErrorCode,Intent(OUT)                            :: ierr
-      
-
-      Call DMMeshGetVertexSectionReal(MEF90HeatXferCtx%DMScal,"default",1,MEF90HeatXferCtx%DMScalSec,ierr);CHKERRQ(ierr)
-      Call DMMeshSetSectionReal(MEF90HeatXferCtx%DMScal,"default",MEF90HeatXferCtx%DMScalSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%DMScalSec,MEF90HeatXferCtx%DMScalScatter,ierr);CHKERRQ(ierr)
-      Call DMSetBlockSize(MEF90HeatXferCtx%DMScal,1,ierr);CHKERRQ(ierr)
-
-      Call DMMeshGetCellSectionReal(MEF90HeatXferCtx%cellDMScal,"default",1,MEF90HeatXferCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
-      Call DMMeshSetSectionReal(MEF90HeatXferCtx%cellDMScal,"default",MEF90HeatXferCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
-      Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%cellDMScalSec,MEF90HeatXferCtx%cellDMScalScatter,ierr);CHKERRQ(ierr)
-      Call DMSetBlockSize(MEF90HeatXferCtx%cellDMScal,1,ierr);CHKERRQ(ierr)
+       PetscErrorCode,Intent(OUT)                            :: ierr
+       
+       Type(SectionReal)                                     :: defaultSection
+ 
+       Call DMMeshGetVertexSectionReal(MEF90HeatXferCtx%DMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
+       Call DMMeshSetSectionReal(MEF90HeatXferCtx%DMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
+       Call SectionRealDuplicate(defaultSection,MEF90HeatXferCtx%DMScalSec,ierr);CHKERRQ(ierr)
+       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)      
+       Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%DMScalSec,MEF90HeatXferCtx%DMScalScatter,ierr);CHKERRQ(ierr)
+       Call DMSetBlockSize(MEF90HeatXferCtx%DMScal,1,ierr);CHKERRQ(ierr)
+ 
+       Call DMMeshGetCellSectionReal(MEF90HeatXferCtx%cellDMScal,"default",1,defaultSection,ierr);CHKERRQ(ierr)
+       Call DMMeshSetSectionReal(MEF90HeatXferCtx%cellDMScal,"default",defaultSection,ierr);CHKERRQ(ierr)
+       Call SectionRealDuplicate(defaultSection,MEF90HeatXferCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
+       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)      
+       Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%cellDMScalSec,MEF90HeatXferCtx%cellDMScalScatter,ierr);CHKERRQ(ierr)
+       Call DMSetBlockSize(MEF90HeatXferCtx%cellDMScal,1,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferCtxSetSections
 
 
@@ -526,7 +531,6 @@ Contains
       Call DMCreateGlobalVector(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(MEF90HeatXferCtx%temperature,"Temperature",ierr);CHKERRQ(ierr)
       Call VecSet(MEF90HeatXferCtx%temperature,0.0_Kr,ierr);CHKERRQ(ierr)
-   
       Allocate(MEF90HeatXferCtx%boundaryTemperature)
       Call DMCreateGlobalVector(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(MEF90HeatXferCtx%boundaryTemperature,"Boundary_Temperature",ierr);CHKERRQ(ierr)

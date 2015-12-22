@@ -491,18 +491,17 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       If (MEF90HeatXferGlobalOptions%fluxOffset > 0) Then
          If (Associated(MEF90HeatXferCtx%flux)) Then
             Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd  (MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%flux,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call VecViewExodusCell(MEF90HeatXferCtx%cellDMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                    MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr);CHKERRQ(ierr)
          Else
             Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] flux field not associated, not saving. Use -flux_offset 0 \n",ierr);CHKERRQ(ierr)
          End If
       End If
-      
       If (MEF90HeatXferGlobalOptions%externalTempOffset > 0) Then
          If (Associated(MEF90HeatXferCtx%externalTemperature)) Then
             Call DMGlobalToLocalBegin(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalEnd(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd  (MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%externalTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call VecViewExodusCell(MEF90HeatXferCtx%cellDMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                    MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr);CHKERRQ(ierr)
          Else
@@ -515,18 +514,17 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       If (MEF90HeatXferGlobalOptions%tempOffset > 0) Then
          If (Associated(MEF90HeatXferCtx%temperature)) Then
             Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd  (MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call VecViewExodusVertex(MEF90HeatXferCtx%DMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                      MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%tempOffset,ierr);CHKERRQ(ierr)
          Else
             Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] temperature field not associated, not saving. Use -temperature_offset 0 \n",ierr);CHKERRQ(ierr)
          End If
       End If
-
       If (MEF90HeatXferGlobalOptions%boundaryTempOffset > 0) Then
          If (Associated(MEF90HeatXferCtx%boundaryTemperature)) Then
             Call DMGlobalToLocalBegin(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-            Call DMGlobalToLocalEnd(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd  (MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%boundaryTemperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call VecViewExodusVertex(MEF90HeatXferCtx%DMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
                                      MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryTempOffset,ierr);CHKERRQ(ierr)
          Else
@@ -535,7 +533,6 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       End If
       Call DMRestoreLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
       If (MEF90HeatXferCtx%MEF90Ctx%rank == 0) Then
-         Call EXPTIM(MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,ierr)
          Call EXUPDA(MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,ierr)
       End If
    End Subroutine MEF90HeatXferViewEXO
