@@ -22,7 +22,15 @@ Module m_MEF90_HeatXferCtx_Type
       PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
       Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
       Type(DM),pointer                 :: DM
-      Type(DM)                         :: cellDM
+
+      Type(DM)                         :: DMScal
+      Type(DM)                         :: cellDMScal
+
+      Type(VecScatter)                 :: DMScalScatter
+      Type(VecScatter)                 :: cellDMScalScatter
+      
+      Type(SectionReal)                :: DMScalSec
+      Type(SectionReal)                :: cellDMScalSec
    End Type MEF90HeatXferCtx_Type
    
    Type MEF90HeatXferGlobalOptions_Type
@@ -232,8 +240,10 @@ Contains
       Call MEF90HeatXferCtxInitialize_Private(ierr)
       HeatXferCtx%DM => Mesh
       HeatXferCtx%MEF90Ctx => MEF90Ctx
-      Call DMMeshClone(HeatXferCtx%DM,HeatXferCtx%cellDM,ierr);CHKERRQ(ierr)
-      Call DMMeshSetMaxDof(HeatXferCtx%cellDM,1,ierr);CHKERRQ(ierr) 
+      Call DMMeshClone(HeatXferCtx%DM,HeatXferCtx%DMScal,ierr);CHKERRQ(ierr)
+      Call DMMeshClone(HeatXferCtx%DM,HeatXferCtx%cellDMScal,ierr);CHKERRQ(ierr)
+      Call DMMeshSetMaxDof(HeatXferCtx%DMScal,1,ierr);CHKERRQ(ierr) 
+      Call DMMeshSetMaxDof(HeatXferCtx%cellDMScal,1,ierr);CHKERRQ(ierr) 
 
       Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferGlobalOptions,HeatXferCtx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
       
@@ -293,7 +303,12 @@ Contains
       Nullify(HeatXferCtx%boundaryTemperature)
       Nullify(HeatXferCtx%externalTemperature)
       Nullify(HeatXferCtx%DM)
-      Call DMDestroy(HeatXferCtx%cellDM,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(HeatXferCtx%DMScalSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(HeatXferCtx%DMScalScatter,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(HeatXferCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
+      Call VecScatterDestroy(HeatXferCtx%cellDMScalScatter,ierr);CHKERRQ(ierr)
+      Call DMDestroy(HeatXferCtx%cellDMScal,ierr);CHKERRQ(ierr)
+      Call DMDestroy(HeatXferCtx%DMScal,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferCtxDestroy
 
 #undef __FUNCT__
@@ -482,17 +497,16 @@ Contains
       Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                            :: ierr
       
-      Type(SectionReal)                                     :: defaultSection
 
-      Call DMMeshGetVertexSectionReal(MEF90HeatXferCtx%DM,"default",1,defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshSetSectionReal(MEF90HeatXferCtx%DM,"default",defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-      Call DMSetBlockSize(MEF90HeatXferCtx%DM,1,ierr);CHKERRQ(ierr)
+      Call DMMeshGetVertexSectionReal(MEF90HeatXferCtx%DMScal,"default",1,MEF90HeatXferCtx%DMScalSec,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(MEF90HeatXferCtx%DMScal,"default",MEF90HeatXferCtx%DMScalSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%DMScalSec,MEF90HeatXferCtx%DMScalScatter,ierr);CHKERRQ(ierr)
+      Call DMSetBlockSize(MEF90HeatXferCtx%DMScal,1,ierr);CHKERRQ(ierr)
 
-      Call DMMeshGetCellSectionReal(MEF90HeatXferCtx%cellDM,"default",1,defaultSection,ierr);CHKERRQ(ierr)
-      Call DMMeshSetSectionReal(MEF90HeatXferCtx%cellDM,"default",defaultSection,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-      Call DMSetBlockSize(MEF90HeatXferCtx%CellDM,1,ierr);CHKERRQ(ierr)
+      Call DMMeshGetCellSectionReal(MEF90HeatXferCtx%cellDMScal,"default",1,MEF90HeatXferCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
+      Call DMMeshSetSectionReal(MEF90HeatXferCtx%cellDMScal,"default",MEF90HeatXferCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
+      Call DMMeshCreateGlobalScatter(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%cellDMScalSec,MEF90HeatXferCtx%cellDMScalScatter,ierr);CHKERRQ(ierr)
+      Call DMSetBlockSize(MEF90HeatXferCtx%cellDMScal,1,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferCtxSetSections
 
 
@@ -509,22 +523,22 @@ Contains
       PetscErrorCode,Intent(OUT)                            :: ierr
 
       Allocate(MEF90HeatXferCtx%temperature)
-      Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
+      Call DMCreateGlobalVector(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(MEF90HeatXferCtx%temperature,"Temperature",ierr);CHKERRQ(ierr)
       Call VecSet(MEF90HeatXferCtx%temperature,0.0_Kr,ierr);CHKERRQ(ierr)
    
       Allocate(MEF90HeatXferCtx%boundaryTemperature)
-      Call DMCreateGlobalVector(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
+      Call DMCreateGlobalVector(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%boundaryTemperature,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(MEF90HeatXferCtx%boundaryTemperature,"Boundary_Temperature",ierr);CHKERRQ(ierr)
       Call VecSet(MEF90HeatXferCtx%boundaryTemperature,0.0_Kr,ierr);CHKERRQ(ierr)
    
       Allocate(MEF90HeatXferCtx%externalTemperature)
-      Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%externalTemperature,ierr);CHKERRQ(ierr)
+      Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%externalTemperature,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(MEF90HeatXferCtx%externalTemperature,"External_Temperature",ierr);CHKERRQ(ierr)
       Call VecSet(MEF90HeatXferCtx%externalTemperature,0.0_Kr,ierr);CHKERRQ(ierr)
 
       Allocate(MEF90HeatXferCtx%flux)
-      Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDM,MEF90HeatXferCtx%flux,ierr);CHKERRQ(ierr)
+      Call DMCreateGlobalVector(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%flux,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(MEF90HeatXferCtx%flux,"Flux",ierr);CHKERRQ(ierr)
       Call VecSet(MEF90HeatXferCtx%flux,0.0_Kr,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferCtxCreateVectors   
