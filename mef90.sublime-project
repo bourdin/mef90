@@ -1,0 +1,14 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+			"folder_exclude_patterns": [".hgcheck",".hgignore",".ipynb_checkpoints","Darwin*","lib","objs"],
+			"file_exclude_patterns": ["*.i90",".tags","*.aux","*.bbl","*.blg","*.gz","*.toc","*.pdf","*.gen","*.cub"]
+		}
+	],
+	"settings":
+    {
+        "tab_size": 3
+    },
+}

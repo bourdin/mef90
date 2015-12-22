@@ -1061,18 +1061,18 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       End If
       
       Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
+      !!! This makes no sense, but there seems to be a bug in exodus / OSX where
+      !!! formatting is not flushed to the drive
+      Call MEF90CtxCloseEXO(MEF90DefMechCtx%MEF90Ctx,ierr)
+      Call MEF90CtxOpenEXO(MEF90DefMechCtx%MEF90Ctx,MEF90DefMechCtx%DM,ierr)
       If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
-         Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
+         !Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
          If (associated(time)) then
             Do step = 1, size(time)
                Call EXPTIM(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,time(step),ierr)
             End Do
          End If
       End If
-      !!! This makes no sense, but there seems to be a bug in exodus / OSX where
-      !!! formatting is not flushed to the drive
-      Call MEF90CtxCloseEXO(MEF90DefMechCtx%MEF90Ctx,ierr)
-      Call MEF90CtxOpenEXO(MEF90DefMechCtx%MEF90Ctx,MEF90DefMechCtx%DM,ierr)
       DeAllocate(nameG)
       DeAllocate(nameV)
       DeAllocate(nameC)
