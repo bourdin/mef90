@@ -287,6 +287,18 @@ Contains
       
       PetscInt                                        :: set
    
+      !Call SectionRealDestroy(HeatXferCtx%DMScalSec,ierr);CHKERRQ(ierr)
+      !Call VecScatterDestroy(HeatXferCtx%DMScalScatter,ierr);CHKERRQ(ierr)
+      !Call SectionRealDestroy(HeatXferCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
+      !Call VecScatterDestroy(HeatXferCtx%cellDMScalScatter,ierr);CHKERRQ(ierr)
+      Call DMDestroy(HeatXferCtx%cellDMScal,ierr);CHKERRQ(ierr)
+      Call DMDestroy(HeatXferCtx%DMScal,ierr);CHKERRQ(ierr)
+      Nullify(HeatXferCtx%DM)
+      Nullify(HeatXferCtx%MEF90Ctx)
+      Nullify(HeatXferCtx%flux)
+      Nullify(HeatXferCtx%boundaryTemperature)
+      Nullify(HeatXferCtx%externalTemperature)
+
       Call PetscBagDestroy(HeatXferCtx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
       Do set = 1, size(HeatXferCtx%CellSetOptionsBag)
          Call PetscBagDestroy(HeatXferCtx%CellSetOptionsBag(set),ierr);CHKERRQ(ierr)
@@ -297,18 +309,6 @@ Contains
       End Do
       DeAllocate(HeatXferCtx%VertexSetOptionsBag)
       
-      Nullify(HeatXferCtx%DM)
-      Nullify(HeatXferCtx%MEF90Ctx)
-      Nullify(HeatXferCtx%flux)
-      Nullify(HeatXferCtx%boundaryTemperature)
-      Nullify(HeatXferCtx%externalTemperature)
-      Nullify(HeatXferCtx%DM)
-      Call SectionRealDestroy(HeatXferCtx%DMScalSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(HeatXferCtx%DMScalScatter,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(HeatXferCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
-      Call VecScatterDestroy(HeatXferCtx%cellDMScalScatter,ierr);CHKERRQ(ierr)
-      Call DMDestroy(HeatXferCtx%cellDMScal,ierr);CHKERRQ(ierr)
-      Call DMDestroy(HeatXferCtx%DMScal,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferCtxDestroy
 
 #undef __FUNCT__
