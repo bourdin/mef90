@@ -1,0 +1,31 @@
+--- /opt/HPC/src/petsc-3.3-p7/src/sys/viewer/impls/ascii/ftn-custom/zvcreatef.c	2013-05-11 22:06:36.000000000 -0500
++++ petsc-3.3-p7/src/sys/viewer/impls/ascii/ftn-custom/zvcreatef.c	2015-12-21 10:06:36.000000000 -0600
+@@ -3,9 +3,13 @@
+ #if defined(PETSC_HAVE_FORTRAN_CAPS)
+ #define petsc_viewer_stdout__      PETSC_VIEWER_STDOUT_BROKEN
+ #define petscviewerasciiopen_      PETSCVIEWERASCIIOPEN
++#define petscviewerasciigetstdout_ PETSCVIEWERASCIIGETSTDOUT
++#define petscviewerasciigetstdout_ PETSCVIEWERASCIIGETSTDERR
+ #elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE)
+ #define petscviewerasciiopen_      petscviewerasciiopen
+ #define petsc_viewer_stdout__      petsc_viewer_stdout_
++#define petscviewerasciigetstdout_ petscviewerasciigetstdout
++#define petscviewerasciigetstdout_ petscviewerasciigetstderr
+ #endif
+ 
+ #if defined(PETSC_HAVE_FORTRAN_UNDERSCORE_UNDERSCORE)
+@@ -27,5 +31,14 @@
+   return PETSC_VIEWER_STDOUT_(MPI_Comm_f2c(*(MPI_Fint *)&*comm));
+ }
+ 
++void PETSC_STDCALL   petscviewerasciigetstdout_(MPI_Comm *comm,PetscViewer *viewer,PetscErrorCode *ierr PETSC_END_LEN(len))
++{
++  *ierr = PetscViewerASCIIGetStdout(*comm,viewer);
++}
++void PETSC_STDCALL   petscviewerasciigetstderr_(MPI_Comm *comm,PetscViewer *viewer,PetscErrorCode *ierr PETSC_END_LEN(len))
++{
++  *ierr = PetscViewerASCIIGetStderr(*comm,viewer);
++}
++
+ EXTERN_C_END
+ 
