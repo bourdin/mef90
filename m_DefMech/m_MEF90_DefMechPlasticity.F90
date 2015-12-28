@@ -283,7 +283,6 @@ contains
 
       Type(MEF90_MATS)                                   :: PlasticStrainMatS
 
-
       Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,plasticStrainSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(plasticStrainSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_REVERSE,plasticStrain,ierr);CHKERRQ(ierr) 
 
@@ -326,149 +325,146 @@ contains
          
          !!GET DAMAGE TYPE
          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         Select Case (cellSetOptions%damageType)
-            Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
-               PlasticityCtx%CoefficientLinSoft=0
-            Case (MEF90DefMech_damageTypeLinSoft)
-               PlasticityCtx%CoefficientLinSoft=matpropSet%CoefficientLinSoft
-         End Select
+         If (cellSetOptions%plasticityType /= MEF90DefMech_plasticityTypeNONE) Then
+            elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)      
+            elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
-         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)      
-         elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
+            Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
+            Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+            If ((Size(cellID) > 0) .AND. (elemDisplacementType%coDim == 0)) Then
+               !!! Call proper local assembly depending on the type of damage law
+               Select Case (cellSetOptions%plasticityType)
+                  case(MEF90DefMech_plasticityTypeVonMises)
+                     snlp_Dfhg = c_null_funptr
+                     snlp_fhg  = c_funloc(FHG_VONMISES)
+                     snlp_n    = SIZEOFMEF90_MATS
+                     snlp_m    = 1
+                     snlp_p    = 1
+                     snlp_ctx  = c_loc(PlasticityCtx)
 
-         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
-         Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
-         If ((Size(cellID) > 0) .AND. (elemDisplacementType%coDim == 0)) Then
-            !!! Call proper local assembly depending on the type of damage law
-            Select Case (cellSetOptions%plasticityType)
-               case(MEF90DefMech_plasticityTypeVonMises)
-                  snlp_Dfhg = c_null_funptr
-                  snlp_fhg  = c_funloc(FHG_VONMISES)
-                  snlp_n    = SIZEOFMEF90_MATS
-                  snlp_m    = 1
-                  snlp_p    = 1
-                  snlp_ctx  = c_loc(PlasticityCtx)
+                  case(MEF90DefMech_plasticityTypeTresca)
+                     snlp_Dfhg = c_null_funptr
+                     snlp_fhg  = c_funloc(FHG_TRESCA)
+                     snlp_n    = SIZEOFMEF90_MATS
+                     snlp_m    = 1
+                     snlp_p    = 2*SIZEOFMEF90_MATS
+                     snlp_ctx  = c_loc(PlasticityCtx)
 
-               case(MEF90DefMech_plasticityTypeTresca)
-                  snlp_Dfhg = c_null_funptr
-                  snlp_fhg  = c_funloc(FHG_TRESCA)
-                  snlp_n    = SIZEOFMEF90_MATS
-                  snlp_m    = 1
-                  snlp_p    = 2*SIZEOFMEF90_MATS
-                  snlp_ctx  = c_loc(PlasticityCtx)
+                  case(MEF90DefMech_plasticityTypeDruckerPrager)
+                     snlp_Dfhg = c_null_funptr
+                     snlp_fhg  = c_funloc(FHG_DRUCKERPRAGER)
+                     snlp_n    = SIZEOFMEF90_MATS
+                     snlp_m    = 0
+                     snlp_p    = 1
+                     snlp_ctx  = c_loc(PlasticityCtx)
 
-               case(MEF90DefMech_plasticityTypeDruckerPrager)
-                  snlp_Dfhg = c_null_funptr
-                  snlp_fhg  = c_funloc(FHG_DRUCKERPRAGER)
-                  snlp_n    = SIZEOFMEF90_MATS
-                  snlp_m    = 0
-                  snlp_p    = 1
-                  snlp_ctx  = c_loc(PlasticityCtx)
+                  case(MEF90DefMech_plasticityTypeDruckerPragerCapModel)
+                     snlp_Dfhg = c_null_funptr
+                     snlp_fhg  = c_funloc(FHG_DRUCKERPRAGERCAPMODEL)
+                     snlp_n    = SIZEOFMEF90_MATS
+                     snlp_m    = 0
+                     snlp_p    = 2
+                     snlp_ctx  = c_loc(PlasticityCtx)
 
-               case(MEF90DefMech_plasticityTypeDruckerPragerCapModel)
-                  snlp_Dfhg = c_null_funptr
-                  snlp_fhg  = c_funloc(FHG_DRUCKERPRAGERCAPMODEL)
-                  snlp_n    = SIZEOFMEF90_MATS
-                  snlp_m    = 0
-                  snlp_p    = 2
-                  snlp_ctx  = c_loc(PlasticityCtx)
+                  case(MEF90DefMech_plasticityTypeNONE)
+                     snlp_Dfhg = c_null_funptr
+                     snlp_fhg  = c_funloc(FHG_NONE)
+                     snlp_n    = 1
+                     snlp_m    = 0
+                     snlp_p    = 0
+                     snlp_ctx  = c_loc(PlasticityCtx)
+                  case default
+                     Print*,__FUNCT__,': Unimplemented plasticity Type',cellSetOptions%PlasticityType
+                     STOP 
+               End select
 
-               case(MEF90DefMech_plasticityTypeNONE)
-                  snlp_Dfhg = c_null_funptr
-                  snlp_fhg  = c_funloc(FHG_NONE)
-                  snlp_n    = 1
-                  snlp_m    = 0
-                  snlp_p    = 0
-                  snlp_ctx  = c_loc(PlasticityCtx)
-               case default
-                  Print*,__FUNCT__,': Unimplemented plasticity Type',cellSetOptions%PlasticityType
-                  STOP 
-            End select
-
-            PlasticityCtx%HookesLaw = matpropSet%HookesLaw
-            PlasticityCtx%YieldStress = matpropSet%YieldStress
-            PlasticityCtx%DuctileCouplingPower = matpropSet%DuctileCouplingPower
-            PlasticityCtx%CoefficientDruckerPrager = matpropSet%CoefficientDruckerPrager
-            PlasticityCtx%CoefficientDruckerPragerCapModel1 = matpropSet%CoefficientDruckerPragerCapModel1
-            PlasticityCtx%CoefficientDruckerPragerCapModel2 = matpropSet%CoefficientDruckerPragerCapModel2
-            PlasticityCtx%CoefficientDruckerPragerCapModel3 = matpropSet%CoefficientDruckerPragerCapModel3
-
-            Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
-            QuadratureOrder = 2 * (elemDisplacementType%order - 1)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-            Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
-                                         elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
-            Allocate(damageloc(elemScalType%numDof))
-            Do cell = 1,size(cellID)
-               !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
-               Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
-               Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
-               Call SectionRealRestrict(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
-               Call SectionRealRestrict(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
-
-               If (Associated(MEF90DefMechCtx%damage)) Then
-                  !Call SectionRealRestrict(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
-                  Call SectionRealRestrictClosure(damageSec,MEF90DefMechCtx%DMScal,cellID(cell),elemScalType%numDof,damageLoc,ierr);CHKERRQ(ierr)
-                  Call MEF90GradDamageCellAverage(damageCellAvg,damageLoc,elemScal(cell),elemScalType,ierr)
+               If (cellSetOptions%damageType == MEF90DefMech_damageTypeLinSoft) Then
+                  PlasticityCtx%CoefficientLinSoft = matpropSet%CoefficientLinSoft
                Else
-                  damageCellAvg = 0.0_Kr
+                  PlasticityCtx%CoefficientLinSoft = 0.0_Kr
                End If
+               PlasticityCtx%HookesLaw = matpropSet%HookesLaw
+               PlasticityCtx%YieldStress = matpropSet%YieldStress
+               PlasticityCtx%DuctileCouplingPower = matpropSet%DuctileCouplingPower
+               PlasticityCtx%CoefficientDruckerPrager = matpropSet%CoefficientDruckerPrager
+               PlasticityCtx%CoefficientDruckerPragerCapModel1 = matpropSet%CoefficientDruckerPragerCapModel1
+               PlasticityCtx%CoefficientDruckerPragerCapModel2 = matpropSet%CoefficientDruckerPragerCapModel2
+               PlasticityCtx%CoefficientDruckerPragerCapModel3 = matpropSet%CoefficientDruckerPragerCapModel3
 
-               PlasticityCtx%Damage = damageCellAvg 
-               PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
-               PlasticityCtx%InelasticStrain = InelasticStrainLoc
-               s%show_progress = 0
-      
-               !!! This is a bit dangerous:
-               !!! If PetscReal is not the same as c_double, this call will fail
-               !!! Brittle in traction, Ductile in compression
-               Select Case(cellSetOptions%unilateralContactType)
-               Case (MEF90DefMech_unilateralContactTypeBrittleDuctile)
-                     If (Trace(PlasticityCtx%InelasticStrain) > 0.0_Kr ) Then
-                        plasticStrainLoc = plasticStrainOldLoc
-                        Call SectionRealRestrict(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
-                        plasticStrainPreviousLoc = plasticStrainLoc
-                        Call SectionRealRestore(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
-                     Else 
-                        exit_code = SNLPL1SQP(s,plasticStrainLoc)
-                     End if
-               Case default
-                  if (cellSetOptions%plasticityType /= MEF90DefMech_plasticityTypeNONE) then
-                     exit_code = SNLPL1SQP(s,plasticStrainLoc)
-                  end if
-               End Select
+               Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
+               QuadratureOrder = 2 * (elemDisplacementType%order - 1)
+               Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
+                                            elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+               Allocate(damageloc(elemScalType%numDof))
+               Do cell = 1,size(cellID)
+                  !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
+                  Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestrict(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestrict(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
 
-               !!! cumulatedDissipatedPlasticEnergy
-               PlasticStrainMatS = plasticStrainLoc
-               stiffness = 0.0_Kr
-               Select Case (cellSetOptions%damageType)
-                  Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
-                     Stiffness = (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr-PlasticityCtx%DuctileCouplingPower)
-                  Case (MEF90DefMech_damageTypeLinSoft)
-                     Stiffness = ( (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr - PlasticityCtx%DuctileCouplingPower) / ( 1.0_Kr + ( PlasticityCtx%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - PlasticityCtx%Damage)**2.0_kr ) ) )
+                  If (Associated(MEF90DefMechCtx%damage)) Then
+                     Call SectionRealRestrictClosure(damageSec,MEF90DefMechCtx%DMScal,cellID(cell),elemScalType%numDof,damageLoc,ierr);CHKERRQ(ierr)
+                     Call MEF90GradDamageCellAverage(damageCellAvg,damageLoc,elemScal(cell),elemScalType,ierr)
+                  Else
+                     damageCellAvg = 0.0_Kr
+                  End If
+
+                  PlasticityCtx%Damage = damageCellAvg 
+                  PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
+                  PlasticityCtx%InelasticStrain = InelasticStrainLoc
+                  s%show_progress = 0
+         
+                  !!! This is a bit dangerous:
+                  !!! If PetscReal is not the same as c_double, this call will fail
+                  !!! Brittle in traction, Ductile in compression
+                  Select Case(cellSetOptions%unilateralContactType)
+                  Case (MEF90DefMech_unilateralContactTypeBrittleDuctile)
+                        If (Trace(PlasticityCtx%InelasticStrain) > 0.0_Kr ) Then
+                           plasticStrainLoc = plasticStrainOldLoc
+                           Call SectionRealRestrict(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
+                           plasticStrainPreviousLoc = plasticStrainLoc
+                           Call SectionRealRestore(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
+                        Else 
+                           exit_code = SNLPL1SQP(s,plasticStrainLoc)
+                        End if
                   Case default
-                     Print*,__FUNCT__,': Unimplemented damage Type, only AT1Elastic and AT2Elastic implement',cellSetOptions%damageType
-                     STOP  
-               End Select
-               cumulatedDissipatedPlasticEnergyVariationLoc(1) = Stiffness * ( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
-               Call SectionRealRestore(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
+                     if (cellSetOptions%plasticityType /= MEF90DefMech_plasticityTypeNONE) then
+                        exit_code = SNLPL1SQP(s,plasticStrainLoc)
+                     end if
+                  End Select
 
-               Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
-               Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
-               Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
-               If (Associated(MEF90DefMechCtx%damage)) Then
-                  !Call SectionRealRestore(damageSec,cellID(cell),damageLoc,ierr);CHKERRQ(ierr)
-               End If      
-            End Do !cell
-            Call MEF90Element_Destroy(elemDisplacement,ierr)
-            Call MEF90Element_Destroy(elemScal,ierr)
-            Call SNLPDelete(s)
-            DeAllocate(damageLoc)
-         End If ! set 
-         Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
-         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+                  !!! cumulatedDissipatedPlasticEnergy
+                  PlasticStrainMatS = plasticStrainLoc
+                  stiffness = 0.0_Kr
+                  Select Case (cellSetOptions%damageType)
+                     Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic)
+                        Stiffness = 1.0_Kr
+                     Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
+                        Stiffness = (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr-PlasticityCtx%DuctileCouplingPower)
+                     Case (MEF90DefMech_damageTypeLinSoft)
+                        Stiffness = ( (1.0_Kr - PlasticityCtx%Damage)**(2.0_Kr - PlasticityCtx%DuctileCouplingPower) / ( 1.0_Kr + ( PlasticityCtx%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - PlasticityCtx%Damage)**2.0_kr ) ) )
+                     Case default
+                        Print*,__FUNCT__,': Unimplemented damage Type, only AT1Elastic and AT2Elastic implement',cellSetOptions%damageType
+                        STOP  
+                  End Select
+                  cumulatedDissipatedPlasticEnergyVariationLoc(1) = Stiffness * ( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
+                  Call SectionRealRestore(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
+
+                  Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
+               End Do !cell
+               Call MEF90Element_Destroy(elemDisplacement,ierr)
+               Call MEF90Element_Destroy(elemScal,ierr)
+               Call SNLPDelete(s)
+               DeAllocate(damageLoc)
+            End If ! set 
+            Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+         End If !damageType /= NONE
       End Do !! set
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -476,7 +472,6 @@ contains
       !!! forward data plasticStrain & cumulatedDissipatedPlasticEnergy
       Call SectionRealToVec(plasticStrainSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(cumulatedDissipatedPlasticEnergyVariationSec,MEF90DefMechCtx%cellDMScalScatter,SCATTER_FORWARD,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-
 
       Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(plasticStrainOldSec,ierr);CHKERRQ(ierr)
