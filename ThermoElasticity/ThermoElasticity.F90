@@ -250,7 +250,7 @@ Program ThermoElasticity
    End If
    Call MPI_Bcast(numfield,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)   
    If (numfield == 0) Then
-      Call MEF90DefMechFormatEXO(MEF90DefMechCtx,ierr)
+      Call MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr)
       !!! Will have to figure out this one
    End If
    

@@ -1830,7 +1830,6 @@ Contains
       PetscInt                                           :: set,QuadratureOrder
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
-      !Type(VecScatter)                                   :: ScatterSecToVec,ScatterSecToVecScal,ScatterSecToVecCellMatS
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
       Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
