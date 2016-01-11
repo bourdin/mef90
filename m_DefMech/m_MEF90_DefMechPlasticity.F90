@@ -469,8 +469,6 @@ contains
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
-      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-
       !!! forward data plasticStrain & cumulatedDissipatedPlasticEnergy
       Call SectionRealToVec(plasticStrainSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_FORWARD,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(cumulatedDissipatedPlasticEnergyVariationSec,MEF90DefMechCtx%cellDMScalScatter,SCATTER_FORWARD,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)

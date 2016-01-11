@@ -92,7 +92,7 @@ Program vDef
                                                          1,                       & ! temperatureOffset
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
-                                                         6,                       & ! plasticStrainOffset
+                                                         0,                       & ! plasticStrainOffset
                                                          6,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
