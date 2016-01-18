@@ -83,7 +83,7 @@ Module m_MEF90_Materials_Types
          MEF90HookesLawTypeIsotropic,                                                  & ! type
          .FALSE.),                                                                     & ! isPlaneStress
       1.0_Kr,                                                                          & ! Internal Length
-      2.0_Kr,                                                                          & ! CoefficientLinSoft
+      0.0_Kr,                                                                          & ! CoefficientLinSoft
       1.0e-9,                                                                          & ! Residual Stiffness
       1.0_Kr,                                                                          & ! Yield Stress
       2.0_Kr,                                                                          & ! Coupling power between damage and plasticity

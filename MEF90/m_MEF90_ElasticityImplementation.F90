@@ -1068,21 +1068,22 @@ Contains
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine ElasticityStressSet(stress,x,plasticStrain,temperature,mesh,meshScal,cellIS,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemTemperature,elemTemperatureType,ierr)
-      Type(SectionReal),Intent(IN)                       :: stress,x,plasticStrain,temperature
+   Subroutine ElasticityStressSet(stress,x,plasticStrain,temperature,damage,CoefficientLinSoft,mesh,meshScal,cellIS,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+      Type(SectionReal),Intent(IN)                       :: stress,x,plasticStrain,temperature,damage
       Type(DM),Intent(IN)                                :: mesh,meshScal
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
-      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemScalType
+      PetscReal,Intent(IN)                               :: CoefficientLinSoft
       PetscErrorCode,Intent(OUT)                         :: ierr
 
-      PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,plasticStrainLoc,stressPtr
-      PetscReal                                          :: temperatureElem
+      PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,damageLoc,plasticStrainLoc,stressPtr
+      PetscReal                                          :: temperatureElem,damageElem
       Type(MEF90_MATS)                                   :: StrainElem,plasticStrainElem,stressLoc
-      PetscReal                                          :: cellSize
+      PetscReal                                          :: cellSize,StiffnessElem
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
@@ -1091,7 +1092,8 @@ Contains
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemDisplacementType%numDof))
-         Allocate(temperatureloc(elemTemperatureType%numDof))
+         Allocate(temperatureloc(elemScalType%numDof))
+         Allocate(damageloc(elemScalType%numDof))
          Allocate(stressPtr(SIZEOFMEF90_MATS))
          Do cell = 1,size(cellID)  
             cellSize = 0.0_Kr 
@@ -1099,7 +1101,11 @@ Contains
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
             
             If (temperature%v /= 0) Then
-               Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemTemperatureType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+               Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemScalType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+            End If
+
+            If (damage%v /= 0) Then
+               Call SectionRealRestrictClosure(damage,meshScal,cellID(cell),elemScalType%numDof,damageLoc,ierr);CHKERRQ(ierr)
             End If
 
             If (plasticStrain%v /= 0) Then
@@ -1110,20 +1116,36 @@ Contains
                temperatureElem   = 0.0_Kr
                plasticStrainElem = 0.0_Kr
                strainElem        = 0.0_Kr
+               damageElem        = 0.0_Kr
                Do iDoF1 = 1,elemDisplacementType%numDof
                   strainElem = strainElem + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
                End Do
+
                If (temperature%v /= 0) Then
-                  Do iDoF1 = 1,elemtemperatureType%numDof
-                     temperatureElem = temperatureElem + temperatureLoc(iDof1) * elemTemperature(cell)%BF(iDof1,iGauss)
+                  Do iDoF1 = 1,elemScalType%numDof
+                     temperatureElem = temperatureElem + temperatureLoc(iDof1) * elemScal(cell)%BF(iDof1,iGauss)
                   End Do
                   strainElem = strainElem - (temperatureElem * thermalExpansion)
                End If
+               
                If (plasticStrain%v /= 0) Then
                   plasticStrainElem = plasticStrainLoc
                   strainElem = strainElem - plasticStrainElem
                End If
-               stressLoc = stressLoc + elemDisplacement(cell)%Gauss_C(iGauss) * (HookesLaw * strainElem)
+
+               If (damage%v /= 0) Then
+                  Do iDoF1 = 1,elemScalType%numDof
+                     damageElem = damageElem + damageLoc(iDof1) * elemScal(cell)%BF(iDof1,iGauss)
+                  End Do
+               End If
+
+               If (CoefficientLinSoft == 0) Then
+                  StiffnessElem = (1.0_Kr - damageElem)**2.0
+               Else 
+                  StiffnessElem =  (1.0_Kr - damageElem)**2.0 / ( 1.0_Kr + ( CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - DamageElem)**2.0 ) )
+               End IF
+
+               stressLoc = stressLoc + elemDisplacement(cell)%Gauss_C(iGauss) * (HookesLaw * strainElem) * StiffnessElem
                cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
             End Do ! Gauss
             If (plasticStrain%v /= 0) Then
@@ -1134,11 +1156,12 @@ Contains
          End Do ! cell
          flops = size(elemDisplacement(1)%Gauss_C) * size(cellID) 
          If (temperature%v /= 0) Then
-            flops = flops + 2 * elemtemperatureType%numDof * size(elemtemperature(1)%Gauss_C) * size(cellID)
+            flops = flops + 2 * elemScalType%numDof * size(elemscal(1)%Gauss_C) * size(cellID)
          End If
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(temperatureloc)
+         DeAllocate(damageloc)
          DeAllocate(stressPtr)
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
