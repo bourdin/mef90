@@ -1952,7 +1952,7 @@ Contains
       Type(Vec),Intent(IN)                               :: stress
          
       Type(SectionReal)                                  :: xSec,stressSec
-      Type(SectionReal)                                  :: plasticStrainSec,temperatureSec
+      Type(SectionReal)                                  :: plasticStrainSec,temperatureSec,damageSec
       Type(IS)                                           :: CellSetGlobalIS,setIS,setISdof,bcIS
       PetscInt,dimension(:),Pointer                      :: setID
       PetscInt,Dimension(:),Pointer                      :: setIdx,setdofIdx
@@ -1980,6 +1980,13 @@ Contains
          PlasticStrainSec%v = 0
       End If
 
+      If (Associated(MEF90DefMechCtx%damage)) Then
+         Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,damageSec,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(damageSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)   
+      Else
+         damageSec%v = 0
+      End If
+
       Call SectionRealDuplicate(MEF90DefMechCtx%CellDMMatSSec,stressSec,ierr);CHKERRQ(ierr)
 
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -2004,8 +2011,10 @@ Contains
                End If
                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90ElasticityStressSet(stressSec,xSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
+               
+               Call MEF90ElasticityStressSet(stressSec,xSec,plasticStrainSec,temperatureSec,damageSec,matpropSet%CoefficientLinSoft,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
                                              matpropSet%HookesLaw,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
@@ -2020,8 +2029,11 @@ Contains
                End If
                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90ElasticityStressSet(stressSec,xSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
+
+               matpropSet%CoefficientLinSoft = 0
+               Call MEF90ElasticityStressSet(stressSec,xSec,plasticStrainSec,temperatureSec,damageSec,matpropSet%CoefficientLinSoft,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
                                              matpropSet%HookesLaw,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
@@ -2040,6 +2052,10 @@ Contains
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
+      End If
+
+      If (Associated(MEF90DefMechCtx%damage)) Then
+         Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
       End If
 
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
