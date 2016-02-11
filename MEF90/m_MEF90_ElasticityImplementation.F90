@@ -1329,7 +1329,7 @@ Contains
                End If
 
                cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
-               energy = energy + ( 1 - damageElem )**(DBLE(N)) * cumulatedDissipatedPlasticEnergyElem * cellSize
+               energy = energy + ( 1 - damageElem )**N * cumulatedDissipatedPlasticEnergyElem * cellSize
    
             End Do ! Gauss
             If (cumulatedDissipatedPlasticEnergy%v /= 0) Then

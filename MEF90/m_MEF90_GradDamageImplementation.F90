@@ -317,13 +317,14 @@ Contains
    !!!  
    !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
    !!!
-   Subroutine MEF90GradDamageElasticEnergySet(energy,x,alpha,plasticStrain,temperature,mesh,meshScal,cellIS,eta,HookesLaw,ThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+   Subroutine MEF90GradDamageElasticEnergySet(energy,x,alpha,plasticStrain,temperature,mesh,meshScal,cellIS,eta,HookesLaw,CoefficientLinSoft,ThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
       PetscReal,Intent(OUT)                              :: energy
       Type(SectionReal),Intent(IN)                       :: x,alpha,plasticStrain,temperature
       Type(DM),Intent(IN)                                :: mesh,meshScal
       Type(IS),Intent(IN)                                :: cellIS
       PetscReal                                          :: eta
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
+      PetscReal,Intent(IN)                               :: CoefficientLinSoft
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
@@ -361,7 +362,13 @@ Contains
                      alphaElem = alphaElem + alphaLoc(iDoF1) * elemScal(cell)%BF(iDoF1,iGauss)
                   End Do ! iDoF1
                End If
-               SalphaElem = eta + (1.0_Kr - alphaElem)**2
+
+               If (CoefficientLinSoft == 0) Then
+                  SalphaElem = eta + (1.0_Kr - alphaElem)**2
+               Else 
+                  SalphaElem = eta + (1.0_Kr - alphaElem)**2 / ( 1.0_Kr + ( CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - alphaElem)**2 ) )
+               End IF
+
 
                strainElem = 0.0_Kr
                Do iDoF1 = 1,elemDisplacementType%numDof
