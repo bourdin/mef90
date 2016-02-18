@@ -243,9 +243,10 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_plasticityTypeTresca,        &
                      MEF90DefMech_plasticityTypeVonMises,      &
                      MEF90DefMech_plasticityTypeDruckerPrager, &
-                     MEF90DefMech_plasticityTypeDruckerPragerCapModel
+                     MEF90DefMech_plasticityTypeDruckerPragerCapModel, &
+                     MEF90DefMech_plasticityTypeVonMises1DHardening
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(8),protected   :: MEF90DefMech_plasticityTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(9),protected   :: MEF90DefMech_plasticityTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,              &
@@ -309,9 +310,10 @@ Contains
       MEF90DefMech_plasticityTypeList(3) = 'VonMises'
       MEF90DefMech_plasticityTypeList(4) = 'DruckerPrager'
       MEF90DefMech_plasticityTypeList(5) = 'DruckerPragerCapModel'
-      MEF90DefMech_plasticityTypeList(6) = 'MEF90DefMech_plasticityType'
-      MEF90DefMech_plasticityTypeList(7) = '_MEF90DefMech_plasticityType'
-      MEF90DefMech_plasticityTypeList(8) = ''
+      MEF90DefMech_plasticityTypeList(6) = 'VonMises1DHardening'
+      MEF90DefMech_plasticityTypeList(7) = 'MEF90DefMech_plasticityType'
+      MEF90DefMech_plasticityTypeList(8) = '_MEF90DefMech_plasticityType'
+      MEF90DefMech_plasticityTypeList(9) = ''
 
       MEF90DefMech_unilateralContactTypeList(1) = 'None'
       MEF90DefMech_unilateralContactTypeList(2) = 'HydrostaticDeviatoric'

@@ -453,6 +453,10 @@ Program CoupledPlasticityDamage
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit 
                Write(IObuffer,208) AltMinIter
                !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+
+
+
+
                AltProj: Do AltProjIter = 1, MEF90DefMechGlobalOptions%maxit 
                   Write(IObuffer,308) AltProjIter
                   !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -492,7 +496,7 @@ Program CoupledPlasticityDamage
                   Write(IOBuffer,300) PlasticStrainMaxChange
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-                  If ( PlasticStrainMaxChange <= MIN( MAX( MEF90DefMechGlobalOptions%plasticStrainATol , damageMaxChange ) , 0.1 ) )  Then
+                  If ( PlasticStrainMaxChange <= MIN( MAX( MEF90DefMechGlobalOptions%plasticStrainATol , damageMaxChange ) , 0.001 ) )  Then
                      EXIT
                   End If
                End Do AltProj
@@ -524,7 +528,7 @@ Program CoupledPlasticityDamage
                      EXIT
                   End If
                Else
-                  If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
+                  If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol ) Then
                      EXIT
                   End If
                End If
