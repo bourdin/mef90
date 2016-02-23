@@ -33,6 +33,8 @@ contains
 
 #define FHG_VONMISES MEF90_APPEND(fhg_VonMises,MEF90_DIM)D
 
+#define FHG_VONMISESPLANE MEF90_APPEND(fhg_VonMisesPlane,MEF90_DIM)D
+
 #define FHG_VONMISES1DHARDENING MEF90_APPEND(fhg_VonMises2DHardening,MEF90_DIM)D
 
 #define FHG_DRUCKERPRAGER MEF90_APPEND(fhg_DruckerPrager,MEF90_DIM)D
@@ -89,7 +91,6 @@ contains
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
       type(MEF90_MATS)                          :: xMatS
       type(MEF90_MATS)                          :: Stress
-      real(Kind = Kr)                           :: StressOutPlane
 
 
       xMatS = x(1:SIZEOFMEF90_MATS)
@@ -106,21 +107,67 @@ contains
          StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
       endif
 
+      Stress=myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)
       f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
-
-#if MEF90_DIM == 2
-      Stress = myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)
-      if (myctx_ptr%isPlaneStress .eqv. .TRUE.) then
-         g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(Stress) .DotP. deviatoricPart(Stress) ) - Stress%XY**2  )  - myctx_ptr%YieldStress*StiffnessB
-      else 
-         StressOutPlane=myctx_ptr%HookesLaw%PoissonRatio*(Stress%XX+Stress%YY)
-         g(1) = StiffnessA * sqrt( 0.5*( (Stress%XX-Stress%YY)**2 + (Stress%YY-StressOutPlane)**2 + (StressOutPlane - Stress%XX)**2 + 6*(Stress%XY)**2 )  )  - myctx_ptr%YieldStress*StiffnessB
-      endif
-#else
-      g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress*StiffnessB
-#endif
+      g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - myctx_ptr%YieldStress*StiffnessB
       h(1) = Trace(xMatS)
+
    end subroutine FHG_VONMISES
+
+
+
+#undef __FUNCT__
+#define __FUNCT__ "FHG_VONMISESPLANE"
+!!!
+!!!  
+!!!  fhg: VonMises
+!!!  
+!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
+!!!
+!!!
+
+   subroutine FHG_VONMISESPLANE(x,f,h,g,myctx) bind(c)
+      use,intrinsic :: iso_c_binding
+      use m_MEF90
+
+      real(kind=c_double)                       :: x(*)
+      real(kind=c_double)                       :: f(*)
+      real(kind=c_double)                       :: h(*)
+      real(kind=c_double)                       :: g(*)
+      real(Kind = Kr)                           :: StiffnessA         !! Stiffness = a(alpha)/b(alpha)
+      real(Kind = Kr)                           :: StiffnessB
+      type(c_ptr),intent(in),value              :: myctx
+
+      type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
+      type(MEF90_MATS)                          :: xMatS,Stress,PlasticStrainFlow
+      real(Kind = Kr)                           :: lambda,mu,E,nu
+
+      xMatS = x(1:SIZEOFMEF90_MATS)
+      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      call c_f_pointer(myctx,myctx_ptr)
+
+      !!! Select which softening young model
+      if (myctx_ptr%CoefficientLinSoft==0) then
+         StiffnessA = (1.0_Kr - myctx_ptr%Damage)**2
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
+      else 
+         StiffnessA = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) )
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
+      endif
+
+      E=myctx_ptr%HookesLaw%YoungsModulus
+      nu=myctx_ptr%HookesLaw%PoissonRatio
+      mu     = E / (1.0_Kr + nu) * .5_Kr
+
+      Stress = myctx_ptr%HookesLaw * (myctx_ptr%InelasticStrain - xMatS)
+      PlasticStrainFlow = xMatS-myctx_ptr%PlasticStrainOld
+
+      f(1) = mu*(  (PlasticStrainFlow%XX + PlasticStrainFlow%YY)**2 + (PlasticStrainFlow%XX)**2 + (PlasticStrainFlow%YY)**2 + 2*(  PlasticStrainFlow%XY )**2  ) * StiffnessA 
+      !f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
+      g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ) + Stress%XX*Stress%YY - (Stress%XY)**2  )  - myctx_ptr%YieldStress*StiffnessB
+
+   end subroutine FHG_VONMISESPLANE
+
 
 #undef __FUNCT__
 #define __FUNCT__ "FHG_VONMISES1DHARDENING"
@@ -410,6 +457,14 @@ contains
                      snlp_fhg  = c_funloc(FHG_VONMISES)
                      snlp_n    = SIZEOFMEF90_MATS
                      snlp_m    = 1
+                     snlp_p    = 1
+                     snlp_ctx  = c_loc(PlasticityCtx)
+
+                     case(MEF90DefMech_plasticityTypeVonMisesPlane)
+                     snlp_Dfhg = c_null_funptr
+                     snlp_fhg  = c_funloc(FHG_VONMISESPLANE)
+                     snlp_n    = SIZEOFMEF90_MATS
+                     snlp_m    = 0
                      snlp_p    = 1
                      snlp_ctx  = c_loc(PlasticityCtx)
 
