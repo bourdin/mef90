@@ -139,8 +139,8 @@ contains
       type(c_ptr),intent(in),value              :: myctx
 
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
-      type(MEF90_MATS)                          :: xMatS,Stress,PlasticStrainFlow
-      real(Kind = Kr)                           :: lambda,mu,E,nu
+      type(MEF90_MATS)                          :: xMatS,Stress,PlasticStrainFlow,ElasticStrain
+      real(Kind = Kr)                           :: lambda,mu,E,nu,lambdaPlaneStrain
 
       xMatS = x(1:SIZEOFMEF90_MATS)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
@@ -155,16 +155,26 @@ contains
          StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
       endif
 
+
+      Stress = myctx_ptr%HookesLaw * (myctx_ptr%InelasticStrain - xMatS)
+
       E=myctx_ptr%HookesLaw%YoungsModulus
       nu=myctx_ptr%HookesLaw%PoissonRatio
       mu     = E / (1.0_Kr + nu) * .5_Kr
 
-      Stress = myctx_ptr%HookesLaw * (myctx_ptr%InelasticStrain - xMatS)
+      
+      ElasticStrain = (myctx_ptr%InelasticStrain - xMatS)
       PlasticStrainFlow = xMatS-myctx_ptr%PlasticStrainOld
+      lambdaPlaneStrain=myctx_ptr%HookesLaw%lambda
 
-      f(1) = mu*(  (PlasticStrainFlow%XX + PlasticStrainFlow%YY)**2 + (PlasticStrainFlow%XX)**2 + (PlasticStrainFlow%YY)**2 + 2*(  PlasticStrainFlow%XY )**2  ) * StiffnessA 
-      !f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
-      g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ) + Stress%XX*Stress%YY - (Stress%XY)**2  )  - myctx_ptr%YieldStress*StiffnessB
+      !f(1) = mu*(  (PlasticStrainFlow%XX + PlasticStrainFlow%YY)**2 + (PlasticStrainFlow%XX)**2 + (PlasticStrainFlow%YY)**2 + 2*(  PlasticStrainFlow%XY )**2  ) * StiffnessA 
+      f(1) = mu*(  (PlasticStrainFlow .DotP. PlasticStrainFlow) + (Trace(PlasticStrainFlow))**2  ) * StiffnessA 
+      
+      g(1) = StiffnessA * sqrt( (lambdaPlaneStrain**2 + 2*lambdaPlaneStrain*mu + 4*mu**2)*(Trace(ElasticStrain))**2 + 3*( - (ElasticStrain%XX)*(ElasticStrain%YY) + (ElasticStrain%XY)**2)*(2*mu)**2 )  - myctx_ptr%YieldStress*StiffnessB
+      !g(1) = StiffnessA * sqrt( (Stress%XX)**2 + (Stress%YY)**2 - (Stress%XX)*(Stress%YY) + 3*(Stress%XY)**2  )  - myctx_ptr%YieldStress*StiffnessB
+
+
+      !h(1) = xMatS%XX + 2*xMatS%YY
 
    end subroutine FHG_VONMISESPLANE
 
