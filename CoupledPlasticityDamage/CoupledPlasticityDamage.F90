@@ -497,6 +497,14 @@ Program CoupledPlasticityDamage
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
                   If ( PlasticStrainMaxChange <= MIN( MAX( MEF90DefMechGlobalOptions%plasticStrainATol , damageMaxChange ) , 0.001 ) )  Then
+                     Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+                     Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
+                     If (snesDispConvergedReason < 0) Then
+                        Write(IOBuffer,400) "displacement",snesDispConvergedReason
+                        Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                     End If
+
+
                      EXIT
                   End If
                End Do AltProj

@@ -242,7 +242,7 @@ Module m_MEF90_DefMechCtx
       enumerator  :: MEF90DefMech_plasticityTypeNone = 0,               &
                      MEF90DefMech_plasticityTypeTresca,                 &
                      MEF90DefMech_plasticityTypeVonMises,               &
-                     MEF90DefMech_plasticityTypeVonMisesPlane,          &
+                     MEF90DefMech_plasticityTypeVonMisesPlaneStress,    &
                      MEF90DefMech_plasticityTypeDruckerPrager,          &
                      MEF90DefMech_plasticityTypeDruckerPragerCapModel,  &
                      MEF90DefMech_plasticityTypeVonMises1DHardening
@@ -309,7 +309,7 @@ Contains
       MEF90DefMech_plasticityTypeList(1) = 'None'
       MEF90DefMech_plasticityTypeList(2) = 'Tresca'
       MEF90DefMech_plasticityTypeList(3) = 'VonMises'
-      MEF90DefMech_plasticityTypeList(4) = 'VonMisesPlane'
+      MEF90DefMech_plasticityTypeList(4) = 'VonMisesPlaneStress'
       MEF90DefMech_plasticityTypeList(5) = 'DruckerPrager'
       MEF90DefMech_plasticityTypeList(6) = 'DruckerPragerCapModel'
       MEF90DefMech_plasticityTypeList(7) = 'VonMises1DHardening'
