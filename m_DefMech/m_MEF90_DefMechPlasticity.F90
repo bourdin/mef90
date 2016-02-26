@@ -33,7 +33,7 @@ contains
 
 #define FHG_VONMISES MEF90_APPEND(fhg_VonMises,MEF90_DIM)D
 
-#define FHG_VONMISESPLANE MEF90_APPEND(fhg_VonMisesPlane,MEF90_DIM)D
+#define FHG_VONMISESPLANESTRESS MEF90_APPEND(fhg_VonMisesPlaneStress,MEF90_DIM)D
 
 #define FHG_VONMISES1DHARDENING MEF90_APPEND(fhg_VonMises2DHardening,MEF90_DIM)D
 
@@ -117,7 +117,7 @@ contains
 
 
 #undef __FUNCT__
-#define __FUNCT__ "FHG_VONMISESPLANE"
+#define __FUNCT__ "FHG_VONMISESPLANESTRESS"
 !!!
 !!!  
 !!!  fhg: VonMises
@@ -126,7 +126,7 @@ contains
 !!!
 !!!
 
-   subroutine FHG_VONMISESPLANE(x,f,h,g,myctx) bind(c)
+   subroutine FHG_VONMISESPLANESTRESS(x,f,h,g,myctx) bind(c)
       use,intrinsic :: iso_c_binding
       use m_MEF90
 
@@ -139,8 +139,9 @@ contains
       type(c_ptr),intent(in),value              :: myctx
 
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
-      type(MEF90_MATS)                          :: xMatS,Stress,PlasticStrainFlow,ElasticStrain
-      real(Kind = Kr)                           :: lambda,mu,E,nu,lambdaPlaneStrain
+      type(MEF90_MATS)                          :: xMatS
+      real(Kind = Kr)                           :: lambda,mu,E,nu
+      type(MatS3D)                              :: Strain,PlasticStrainFlow,Stress
 
       xMatS = x(1:SIZEOFMEF90_MATS)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
@@ -155,28 +156,33 @@ contains
          StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
       endif
 
+      E     = myctx_ptr%HookesLaw%YoungsModulus
+      nu    = myctx_ptr%HookesLaw%PoissonRatio
+      mu    = E / (1.0_Kr + nu) * .5_Kr
+      lambda  = E * nu / (1.0_Kr + nu) / (1 - 2.0_Kr * nu)
 
-      Stress = myctx_ptr%HookesLaw * (myctx_ptr%InelasticStrain - xMatS)
+      Strain      = 0.0_Kr
+      Strain%XX   = myctx_ptr%InelasticStrain%XX
+      Strain%YY   = myctx_ptr%InelasticStrain%YY
+      Strain%XY   = myctx_ptr%InelasticStrain%XY
+      Strain%ZZ   = (-lambda*Trace(myctx_ptr%InelasticStrain) - 2*mu*Trace(myctx_ptr%PlasticStrainOld))/(lambda + 2*mu)
 
-      E=myctx_ptr%HookesLaw%YoungsModulus
-      nu=myctx_ptr%HookesLaw%PoissonRatio
-      mu     = E / (1.0_Kr + nu) * .5_Kr
+      PlasticStrainFlow    = 0.0_Kr
+      PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
+      PlasticStrainFlow%YY = xMatS%YY-myctx_ptr%PlasticStrainOld%YY
+      PlasticStrainFlow%XY = xMatS%XY-myctx_ptr%PlasticStrainOld%XY
+      PlasticStrainFlow%ZZ = -( PlasticStrainFlow%XX + PlasticStrainFlow%YY )
 
-      
-      ElasticStrain = (myctx_ptr%InelasticStrain - xMatS)
-      PlasticStrainFlow = xMatS-myctx_ptr%PlasticStrainOld
-      lambdaPlaneStrain=myctx_ptr%HookesLaw%lambda
+      Stress    = 0.0_Kr
+      Stress%XX = lambda*(Trace(Strain)) + 2*mu*(Strain%XX-xMatS%XX)
+      Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
+      Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
+      Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ + Trace(xMatS) )
 
-      !f(1) = mu*(  (PlasticStrainFlow%XX + PlasticStrainFlow%YY)**2 + (PlasticStrainFlow%XX)**2 + (PlasticStrainFlow%YY)**2 + 2*(  PlasticStrainFlow%XY )**2  ) * StiffnessA 
-      f(1) = mu*(  (PlasticStrainFlow .DotP. PlasticStrainFlow) + (Trace(PlasticStrainFlow))**2  ) * StiffnessA 
-      
-      g(1) = StiffnessA * sqrt( (lambdaPlaneStrain**2 + 2*lambdaPlaneStrain*mu + 4*mu**2)*(Trace(ElasticStrain))**2 + 3*( - (ElasticStrain%XX)*(ElasticStrain%YY) + (ElasticStrain%XY)**2)*(2*mu)**2 )  - myctx_ptr%YieldStress*StiffnessB
-      !g(1) = StiffnessA * sqrt( (Stress%XX)**2 + (Stress%YY)**2 - (Stress%XX)*(Stress%YY) + 3*(Stress%XY)**2  )  - myctx_ptr%YieldStress*StiffnessB
+      f(1) = mu*(  (PlasticStrainFlow .DotP. PlasticStrainFlow) ) * StiffnessA 
+      g(1) = StiffnessA * sqrt( (3.0/2.0)*( deviatoricPart(Stress) .dotP. deviatoricPart(Stress) ) ) - myctx_ptr%YieldStress*StiffnessB
 
-
-      !h(1) = xMatS%XX + 2*xMatS%YY
-
-   end subroutine FHG_VONMISESPLANE
+   end subroutine FHG_VONMISESPLANESTRESS
 
 
 #undef __FUNCT__
@@ -470,9 +476,9 @@ contains
                      snlp_p    = 1
                      snlp_ctx  = c_loc(PlasticityCtx)
 
-                     case(MEF90DefMech_plasticityTypeVonMisesPlane)
+                     case(MEF90DefMech_plasticityTypeVonMisesPlaneStress)
                      snlp_Dfhg = c_null_funptr
-                     snlp_fhg  = c_funloc(FHG_VONMISESPLANE)
+                     snlp_fhg  = c_funloc(FHG_VONMISESPLANESTRESS)
                      snlp_n    = SIZEOFMEF90_MATS
                      snlp_m    = 0
                      snlp_p    = 1
