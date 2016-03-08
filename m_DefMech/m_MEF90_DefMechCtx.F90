@@ -245,7 +245,7 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_plasticityTypeVonMisesPlaneStress,    &
                      MEF90DefMech_plasticityTypeDruckerPrager,          &
                      MEF90DefMech_plasticityTypeDruckerPragerCapModel,  &
-                     MEF90DefMech_plasticityTypeVonMises1DHardening
+                     MEF90DefMech_plasticityTypeVonMises1D
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(10),protected   :: MEF90DefMech_plasticityTypeList
    
@@ -312,7 +312,7 @@ Contains
       MEF90DefMech_plasticityTypeList(4) = 'VonMisesPlaneStress'
       MEF90DefMech_plasticityTypeList(5) = 'DruckerPrager'
       MEF90DefMech_plasticityTypeList(6) = 'DruckerPragerCapModel'
-      MEF90DefMech_plasticityTypeList(7) = 'VonMises1DHardening'
+      MEF90DefMech_plasticityTypeList(7) = 'VonMises1D'
       MEF90DefMech_plasticityTypeList(8) = 'MEF90DefMech_plasticityType'
       MEF90DefMech_plasticityTypeList(9) = '_MEF90DefMech_plasticityType'
       MEF90DefMech_plasticityTypeList(10) = ''
