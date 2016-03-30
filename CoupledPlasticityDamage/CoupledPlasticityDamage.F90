@@ -493,18 +493,10 @@ Program CoupledPlasticityDamage
                   Call VecAxPy(plasticStrainPrevious,-1.0_Kr,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
                   Call VecNorm(plasticStrainPrevious,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
                   Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-                  Write(IOBuffer,300) PlasticStrainMaxChange
-                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-                  If ( PlasticStrainMaxChange <= MIN( MAX( MEF90DefMechGlobalOptions%plasticStrainATol , damageMaxChange ) , 0.001 ) )  Then
-                     Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
-                     Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
-                     If (snesDispConvergedReason < 0) Then
-                        Write(IOBuffer,400) "displacement",snesDispConvergedReason
-                        Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-                     End If
-
-
+                  If ( PlasticStrainMaxChange <=  MEF90DefMechGlobalOptions%plasticStrainATol )  Then
+                     Write(IOBuffer,300) AltProjIter,PlasticStrainMaxChange
+                     Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                      EXIT
                   End If
                End Do AltProj
@@ -694,7 +686,7 @@ Program CoupledPlasticityDamage
 202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5, " plastic dissipation: ",ES12.5,"\n")
 208 Format("   Alt. Min. step ",I5," ")
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
-300 Format("                 plastic strain max change: ", ES12.5, "\n")
+300 Format("   plastic strain ProjIter",I5, " max change ", ES12.5, "\n")
 308 Format("   Alt. Proj. step ",I5," ")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
