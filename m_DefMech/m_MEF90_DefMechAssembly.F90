@@ -613,7 +613,16 @@ Contains
                temperature = temperature + temperatureDoF(iDoF1) * elemDamage%BF(iDoF1,iGauss)
             End Do
          End If
-         sigma = stiffness * (matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion - plasticStrainCell))
+
+
+         sigma = stiffness * (matProp%HookesLaw * (sigma - temperature * matProp%LinearThermalExpansion - plasticStrainCell) )
+
+#if MEF90_DIM == 2
+         !!! Adding terms in planestrain for plasticity with tr(p) = 0
+         If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
+         sigma = sigma +  stiffness * 0.5_Kr* ( 2.0_Kr*matProp%HookesLaw%mu*trace(plasticStrainCell)*MEF90MatS2DIdentity )
+         endif
+#endif
 
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
@@ -2115,6 +2124,13 @@ Contains
          End Do
          inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
          elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
+
+#if MEF90_DIM == 2
+         !!! Adding terms in planestrain for plasticity with tr(p) = 0
+         If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
+         elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( (matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)*trace(plasticStrainCell) + matProp%HookesLaw%lambda*trace(inelasticStrainGauss) )*trace(plasticStrainCell)
+         endif
+#endif
          !!! This is really twice the elastic energy density
 
          damageGauss = 0.0_Kr
@@ -2128,7 +2144,7 @@ Contains
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                       (elasticEnergyDensityGauss + &
-                                      ( N * (N - 1.0) *( (1.0_Kr-damageGauss)**(DBLE(N - 2.0)) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                      ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
                                       C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
@@ -2788,7 +2804,14 @@ Contains
             inelasticStrainGauss = inelasticStrainGauss + elemDisplacement%GradS_BF(iDoF1,iGauss) * displacementDof(iDoF1)
          End Do
          inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
-         elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
+         elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss 
+
+#if MEF90_DIM == 2
+         !!! Adding terms in planestrain for plasticity with tr(p) = 0
+         If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
+         elasticEnergyDensityGauss = elasticEnergyDensityGauss +  ( (matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)*trace(plasticStrainCell) + matProp%HookesLaw%lambda*trace(inelasticStrainGauss) )*trace(plasticStrainCell)
+         endif
+#endif
          
          !!! This is really twice the elastic energy density
 
@@ -2802,7 +2825,7 @@ Contains
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                  ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
-                                 - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(DBLE(N - 1.0))  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
+                                 - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1.0_Kr)  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
                                  C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
 
