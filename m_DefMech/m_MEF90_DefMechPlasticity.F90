@@ -34,7 +34,7 @@ contains
 
 #define FHG_VONMISES MEF90_APPEND(fhg_VonMises,MEF90_DIM)D
 
-#define FHG_VONMISESPLANESTRESS MEF90_APPEND(fhg_VonMisesPlaneStress,MEF90_DIM)D
+#define FHG_VONMISESPLANETHEORY MEF90_APPEND(fhg_VonMisesPlaneTheory,MEF90_DIM)D
 
 #define FHG_VONMISES1D MEF90_APPEND(fhg_VonMises1D,MEF90_DIM)D
 
@@ -117,7 +117,7 @@ contains
 
 
 #undef __FUNCT__
-#define __FUNCT__ "FHG_VONMISESPLANESTRESS"
+#define __FUNCT__ "FHG_VONMISESPLANETHEORY"
 !!!
 !!!  
 !!!  fhg: VonMises
@@ -126,7 +126,7 @@ contains
 !!!
 !!!
 
-   subroutine FHG_VONMISESPLANESTRESS(x,f,h,g,myctx) bind(c)
+   subroutine FHG_VONMISESPLANETHEORY(x,f,h,g,myctx) bind(c)
       use,intrinsic :: iso_c_binding
       use m_MEF90
 
@@ -161,28 +161,51 @@ contains
       mu    = E / (1.0_Kr + nu) * .5_Kr
       lambda  = E * nu / (1.0_Kr + nu) / (1 - 2.0_Kr * nu)
 
-      Strain      = 0.0_Kr
-      Strain%XX   = myctx_ptr%InelasticStrain%XX
-      Strain%YY   = myctx_ptr%InelasticStrain%YY
-      Strain%XY   = myctx_ptr%InelasticStrain%XY
-      Strain%ZZ   = (-lambda*Trace(myctx_ptr%InelasticStrain) - 2*mu*Trace(myctx_ptr%PlasticStrainOld))/(lambda + 2*mu)
+      if ( myctx_ptr%isPlaneStress .eqv. .true.) then
+         !!! If plane stress
+         Strain      = 0.0_Kr
+         Strain%XX   = myctx_ptr%InelasticStrain%XX
+         Strain%YY   = myctx_ptr%InelasticStrain%YY
+         Strain%XY   = myctx_ptr%InelasticStrain%XY
+         Strain%ZZ   = (-lambda*Trace(myctx_ptr%InelasticStrain) - 2*mu*Trace(myctx_ptr%PlasticStrainOld))/(lambda + 2*mu)
+         
+         PlasticStrainFlow    = 0.0_Kr
+         PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
+         PlasticStrainFlow%YY = xMatS%YY-myctx_ptr%PlasticStrainOld%YY
+         PlasticStrainFlow%XY = xMatS%XY-myctx_ptr%PlasticStrainOld%XY
+         PlasticStrainFlow%ZZ = -( PlasticStrainFlow%XX + PlasticStrainFlow%YY )
+         
+         Stress    = 0.0_Kr
+         Stress%XX = lambda*(Trace(Strain)) + 2*mu*(Strain%XX-xMatS%XX)
+         Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
+         Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
+         Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ + Trace(xMatS) )
+      else
+         !!! If plane strain
+         Strain      = 0.0_Kr
+         Strain%XX   = myctx_ptr%InelasticStrain%XX
+         Strain%YY   = myctx_ptr%InelasticStrain%YY
+         Strain%XY   = myctx_ptr%InelasticStrain%XY
+   
+         PlasticStrainFlow    = 0.0_Kr
+         PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
+         PlasticStrainFlow%YY = xMatS%YY-myctx_ptr%PlasticStrainOld%YY
+         PlasticStrainFlow%XY = xMatS%XY-myctx_ptr%PlasticStrainOld%XY
+         PlasticStrainFlow%ZZ = -( PlasticStrainFlow%XX + PlasticStrainFlow%YY )
+   
+         Stress    = 0.0_Kr
+         Stress%XX = lambda*(Trace(Strain)) + 2*mu*(Strain%XX-xMatS%XX)
+         Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
+         Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
+         Stress%ZZ = E*(Trace(xMatS)) + nu*(Stress%XX+Stress%YY)
+      endif
 
-      PlasticStrainFlow    = 0.0_Kr
-      PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
-      PlasticStrainFlow%YY = xMatS%YY-myctx_ptr%PlasticStrainOld%YY
-      PlasticStrainFlow%XY = xMatS%XY-myctx_ptr%PlasticStrainOld%XY
-      PlasticStrainFlow%ZZ = -( PlasticStrainFlow%XX + PlasticStrainFlow%YY )
 
-      Stress    = 0.0_Kr
-      Stress%XX = lambda*(Trace(Strain)) + 2*mu*(Strain%XX-xMatS%XX)
-      Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
-      Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
-      Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ + Trace(xMatS) )
 
       f(1) = mu*(  (PlasticStrainFlow .DotP. PlasticStrainFlow) ) * StiffnessA 
       g(1) = StiffnessA * sqrt( (3.0/2.0)*( deviatoricPart(Stress) .dotP. deviatoricPart(Stress) ) ) - myctx_ptr%YieldStress*StiffnessB
 
-   end subroutine FHG_VONMISESPLANESTRESS
+   end subroutine FHG_VONMISESPLANETHEORY
 
 
 #undef __FUNCT__
@@ -411,6 +434,7 @@ contains
       PetscReal                                          :: damageCellAvg,Stiffness
 
       Type(MEF90_MATS)                                   :: PlasticStrainMatS
+      PetscReal                                          :: Sigma_33_PlaneStrain
 
 
       Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,plasticStrainSec,ierr);CHKERRQ(ierr)
@@ -472,9 +496,9 @@ contains
                      snlp_p    = 1
                      snlp_ctx  = c_loc(PlasticityCtx)
 
-                     case(MEF90DefMech_plasticityTypeVonMisesPlaneStress)
+                     case(MEF90DefMech_plasticityTypeVonMisesPlaneTheory)
                      snlp_Dfhg = c_null_funptr
-                     snlp_fhg  = c_funloc(FHG_VONMISESPLANESTRESS)
+                     snlp_fhg  = c_funloc(FHG_VONMISESPLANETHEORY)
                      snlp_n    = SIZEOFMEF90_MATS
                      snlp_m    = 0
                      snlp_p    = 1
@@ -606,6 +630,14 @@ contains
                         STOP  
                   End Select
                   cumulatedDissipatedPlasticEnergyVariationLoc(1) = Stiffness * ( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
+
+#if MEF90_DIM == 2
+                  if (PlasticityCtx%isPlaneStress .eqv. .FALSE.) then
+                  Sigma_33_PlaneStrain = 2.0*PlasticityCtx%HookesLaw%mu*trace(PlasticStrainMatS) + PlasticityCtx%HookesLaw%lambda*trace(PlasticityCtx%InelasticStrain)
+                  cumulatedDissipatedPlasticEnergyVariationLoc(1) = cumulatedDissipatedPlasticEnergyVariationLoc(1) - Stiffness * Sigma_33_PlaneStrain * trace(PlasticStrainMatS - PlasticityCtx%plasticStrainOld)
+                  endif
+#endif
+
                   Call SectionRealRestore(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
 
                   Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
