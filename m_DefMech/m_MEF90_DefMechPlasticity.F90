@@ -633,7 +633,7 @@ contains
 
 #if MEF90_DIM == 2
                   if (PlasticityCtx%isPlaneStress .eqv. .FALSE.) then
-                  Sigma_33_PlaneStrain = 2.0*PlasticityCtx%HookesLaw%mu*trace(PlasticStrainMatS) + PlasticityCtx%HookesLaw%lambda*trace(PlasticityCtx%InelasticStrain)
+                  Sigma_33_PlaneStrain = PlasticityCtx%HookesLaw%YoungsModulus*trace(PlasticStrainMatS) + PlasticityCtx%HookesLaw%lambda*trace(PlasticityCtx%InelasticStrain - PlasticStrainMatS)
                   cumulatedDissipatedPlasticEnergyVariationLoc(1) = cumulatedDissipatedPlasticEnergyVariationLoc(1) - Stiffness * Sigma_33_PlaneStrain * trace(PlasticStrainMatS - PlasticityCtx%plasticStrainOld)
                   endif
 #endif
