@@ -620,7 +620,7 @@ Contains
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
          If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         sigma = sigma +  stiffness * 0.5_Kr* ( 2.0_Kr*matProp%HookesLaw%mu*trace(plasticStrainCell)*MEF90MatS2DIdentity )
+         sigma = sigma +  stiffness * ( 0.5_Kr*matProp%HookesLaw%mu*trace(plasticStrainCell)*MEF90MatS2DIdentity )
          endif
 #endif
 
@@ -2128,7 +2128,7 @@ Contains
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
          If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( (matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)*trace(plasticStrainCell) + matProp%HookesLaw%lambda*trace(inelasticStrainGauss) )*trace(plasticStrainCell)
+         elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( matprop%HookesLaw%YoungsModulus*trace(plasticStrainCell) + matProp%HookesLaw%lambda*trace(inelasticStrainGauss) )*trace(plasticStrainCell)
          endif
 #endif
          !!! This is really twice the elastic energy density
@@ -2809,7 +2809,7 @@ Contains
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
          If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         elasticEnergyDensityGauss = elasticEnergyDensityGauss +  ( (matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)*trace(plasticStrainCell) + matProp%HookesLaw%lambda*trace(inelasticStrainGauss) )*trace(plasticStrainCell)
+         elasticEnergyDensityGauss = elasticEnergyDensityGauss +  ( matprop%HookesLaw%YoungsModulus*trace(plasticStrainCell) + matProp%HookesLaw%lambda*trace(inelasticStrainGauss) )*trace(plasticStrainCell)
          endif
 #endif
          
