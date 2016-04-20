@@ -1044,7 +1044,7 @@ Contains
 
 #if MEF90_DIM == 2
                if ( HookesLaw%isPlaneStress .eqv. .FALSE. ) then
-                  Stress_ZZ_planeStrain = ( HookesLaw%YoungsModulus - 2.0_Kr*HookesLaw%PoissonRatio*HookesLaw%lambda )*trace(plasticStrainElem) + HookesLaw%lambda*trace(strainElem)
+                  Stress_ZZ_planeStrain = ( HookesLaw%YoungsModulus - 2.0_Kr*HookesLaw%PoissonRatio*HookesLaw%mu )*trace(plasticStrainElem) + HookesLaw%lambda*trace(strainElem)
                   energy = energy + 0.5_Kr * elemDisplacement(cell)%Gauss_C(iGauss)* ( Stress_ZZ_planeStrain + HookesLaw%lambda*trace(strainElem - plasticStrainElem) ) * trace(plasticStrainElem)
                endif
 #endif

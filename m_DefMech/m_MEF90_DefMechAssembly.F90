@@ -2128,7 +2128,7 @@ Contains
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
          If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%lambda )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
+         Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%mu )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
          elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(plasticStrainCell)
          endif
 #endif
@@ -2810,13 +2810,12 @@ Contains
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
          If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%lambda )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
+         Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%mu )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
          elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(plasticStrainCell)
          endif
 #endif
          
          !!! This is really twice the elastic energy density
-
          damageGauss = 0.0_Kr
          gradientDamageGauss = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
