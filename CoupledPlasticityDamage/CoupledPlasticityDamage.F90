@@ -483,7 +483,6 @@ Program CoupledPlasticityDamage
                      pressure=0
                   End If
 
-
                   !!! Solve PlasticProjection
                   !!! Save the PlasticStrainPrevious, add damage in DefMechPlasticStrainUpdate, error on the norm PlasticStrain
                   !!! calculate cumulatedDissipatedPlasticEnergy =  cumulatedDissipatedPlasticEnergyPrevious + cumulatedDissipatedPlasticEnergyVariation

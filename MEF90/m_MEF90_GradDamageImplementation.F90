@@ -332,7 +332,7 @@ Contains
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscReal,Dimension(:),Pointer                     :: xloc,alphaLoc,temperatureLoc,plasticStrainLoc
-      PetscReal                                          :: alphaElem,SalphaElem,temperatureElem
+      PetscReal                                          :: alphaElem,SalphaElem,temperatureElem,Stress_ZZ_planeStrain
       Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
@@ -386,10 +386,17 @@ Contains
                plasticStrainElem = 0.0_Kr
                If (plasticStrain%v /= 0) Then
                   plasticStrainElem = plasticStrainLoc
-                  strainElem = strainElem - plasticStrainElem
                End If
-               stressElem = HookesLaw * strainElem
-               energy = energy + SalphaElem * (strainElem .dotP. stressElem) * elemDisplacement(cell)%Gauss_C(iGauss) * 0.5_Kr
+               stressElem = HookesLaw * (strainElem - plasticStrainElem)
+               energy = energy + SalphaElem * ( (strainElem - plasticStrainElem) .dotP. stressElem) * elemDisplacement(cell)%Gauss_C(iGauss) * 0.5_Kr
+
+#if MEF90_DIM == 2
+               if ( HookesLaw%isPlaneStress .eqv. .FALSE. ) then
+                  Stress_ZZ_planeStrain = ( HookesLaw%YoungsModulus - 2.0_Kr*HookesLaw%PoissonRatio*HookesLaw%lambda )*trace(plasticStrainElem) + HookesLaw%lambda*trace(strainElem)
+                  energy = energy + 0.5_Kr * elemDisplacement(cell)%Gauss_C(iGauss)* SalphaElem * ( Stress_ZZ_planeStrain + HookesLaw%lambda*trace(strainElem - plasticStrainElem) ) * trace(plasticStrainElem)
+               endif
+#endif
+
             End Do ! Gauss
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)

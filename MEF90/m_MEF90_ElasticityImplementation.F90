@@ -1004,7 +1004,7 @@ Contains
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,plasticStrainLoc
-      PetscReal                                          :: temperatureElem
+      PetscReal                                          :: temperatureElem,Stress_ZZ_planeStrain
       Type(MEF90_MATS)                                   :: StrainElem,StressElem,plasticStrainElem
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
@@ -1038,10 +1038,17 @@ Contains
                End If
                If (plasticStrain%v /= 0) Then
                   plasticStrainElem = plasticStrainLoc
-                  strainElem = strainElem - plasticStrainElem
                End If
-               stressElem = HookesLaw * strainElem
-               energy = energy + (strainElem .dotP. stressElem) * elemDisplacement(cell)%Gauss_C(iGauss) * 0.5_Kr
+               stressElem = HookesLaw * (strainElem - plasticStrainElem)
+               energy = energy + ( (strainElem - plasticStrainElem) .dotP. stressElem) * elemDisplacement(cell)%Gauss_C(iGauss) * 0.5_Kr
+
+#if MEF90_DIM == 2
+               if ( HookesLaw%isPlaneStress .eqv. .FALSE. ) then
+                  Stress_ZZ_planeStrain = ( HookesLaw%YoungsModulus - 2.0_Kr*HookesLaw%PoissonRatio*HookesLaw%lambda )*trace(plasticStrainElem) + HookesLaw%lambda*trace(strainElem)
+                  energy = energy + 0.5_Kr * elemDisplacement(cell)%Gauss_C(iGauss)* ( Stress_ZZ_planeStrain + HookesLaw%lambda*trace(strainElem - plasticStrainElem) ) * trace(plasticStrainElem)
+               endif
+#endif
+
             End Do ! Gauss
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
@@ -1130,7 +1137,6 @@ Contains
                
                If (plasticStrain%v /= 0) Then
                   plasticStrainElem = plasticStrainLoc
-                  strainElem = strainElem - plasticStrainElem
                End If
 
                If (damage%v /= 0) Then
@@ -1145,8 +1151,13 @@ Contains
                   StiffnessElem =  (1.0_Kr - damageElem)**2.0 / ( 1.0_Kr + ( CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - DamageElem)**2.0 ) )
                End IF
 
-               stressLoc = stressLoc + elemDisplacement(cell)%Gauss_C(iGauss) * (HookesLaw * strainElem) * StiffnessElem
                cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
+               stressLoc = stressLoc + elemDisplacement(cell)%Gauss_C(iGauss) *StiffnessElem *  (HookesLaw * ( strainElem - plasticStrainElem) )
+#if MEF90_DIM == 2
+               if ( HookesLaw%isPlaneStress .eqv. .FALSE. ) then
+                  stressLoc = stressLoc + elemDisplacement(cell)%Gauss_C(iGauss) * HookesLaw%lambda*trace( plasticStrainElem )*MEF90MatS2DIdentity * StiffnessElem 
+               endif
+#endif
             End Do ! Gauss
             If (plasticStrain%v /= 0) Then
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)

@@ -16,6 +16,7 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
       real(Kind = Kr)             :: DuctileCouplingPower
       Type(MEF90_MATS)            :: InelasticStrain
       Type(MEF90_MATS)            :: PlasticStrainOld
+      Type(MEF90_MATS)            :: plasticStrainPrevious
       real(Kind = Kr)             :: Damage
       real(Kind = Kr)             :: residualStiffness
       real(Kind = Kr)             :: CoefficientLinSoft
@@ -167,7 +168,7 @@ contains
          Strain%XX   = myctx_ptr%InelasticStrain%XX
          Strain%YY   = myctx_ptr%InelasticStrain%YY
          Strain%XY   = myctx_ptr%InelasticStrain%XY
-         Strain%ZZ   = (-lambda*Trace(myctx_ptr%InelasticStrain) - 2*mu*Trace(myctx_ptr%PlasticStrainOld))/(lambda + 2*mu)
+         Strain%ZZ   = (-lambda*Trace(myctx_ptr%InelasticStrain) - 2*mu*Trace(myctx_ptr%plasticStrainPrevious))/(lambda + 2*mu)
          
          PlasticStrainFlow    = 0.0_Kr
          PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
@@ -197,10 +198,8 @@ contains
          Stress%XX = lambda*(Trace(Strain)) + 2*mu*(Strain%XX-xMatS%XX)
          Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
          Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
-         Stress%ZZ = E*(Trace(xMatS)) + nu*(Stress%XX+Stress%YY)
+         Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ+ Trace(xMatS))
       endif
-
-
 
       f(1) = mu*(  (PlasticStrainFlow .DotP. PlasticStrainFlow) ) * StiffnessA 
       g(1) = StiffnessA * sqrt( (3.0/2.0)*( deviatoricPart(Stress) .dotP. deviatoricPart(Stress) ) ) - myctx_ptr%YieldStress*StiffnessB
@@ -594,6 +593,8 @@ contains
                   PlasticityCtx%Damage = damageCellAvg 
                   PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
                   PlasticityCtx%InelasticStrain = InelasticStrainLoc
+                  PlasticityCtx%plasticStrainPrevious = plasticStrainLoc
+
                   s%show_progress = 0
          
                   !!! This is a bit dangerous:
@@ -631,10 +632,11 @@ contains
                   End Select
                   cumulatedDissipatedPlasticEnergyVariationLoc(1) = Stiffness * ( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
 
+
 #if MEF90_DIM == 2
                   if (PlasticityCtx%isPlaneStress .eqv. .FALSE.) then
-                  Sigma_33_PlaneStrain = PlasticityCtx%HookesLaw%YoungsModulus*trace(PlasticStrainMatS) + PlasticityCtx%HookesLaw%lambda*trace(PlasticityCtx%InelasticStrain - PlasticStrainMatS)
-                  cumulatedDissipatedPlasticEnergyVariationLoc(1) = cumulatedDissipatedPlasticEnergyVariationLoc(1) - Stiffness * Sigma_33_PlaneStrain * trace(PlasticStrainMatS - PlasticityCtx%plasticStrainOld)
+                  Sigma_33_PlaneStrain = (PlasticityCtx%HookesLaw%YoungsModulus - 2.0_Kr*PlasticityCtx%HookesLaw%PoissonRatio*PlasticityCtx%HookesLaw%mu)*trace(PlasticStrainMatS) + PlasticityCtx%HookesLaw%lambda*trace(PlasticityCtx%InelasticStrain)
+                  cumulatedDissipatedPlasticEnergyVariationLoc(1) = cumulatedDissipatedPlasticEnergyVariationLoc(1) - Stiffness * Sigma_33_PlaneStrain * trace(PlasticStrainMatS - PlasticityCtx%plasticStrainOld) + Stiffness * PlasticityCtx%HookesLaw%lambda *trace(PlasticStrainMatS) * trace( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
                   endif
 #endif
 
