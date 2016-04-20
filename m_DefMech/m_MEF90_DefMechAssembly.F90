@@ -620,7 +620,7 @@ Contains
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
          If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         sigma = sigma +  stiffness * ( 0.5_Kr*matProp%HookesLaw%mu*trace(plasticStrainCell)*MEF90MatS2DIdentity )
+            sigma = sigma +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
          endif
 #endif
 
@@ -2095,7 +2095,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss,Stress_ZZ_planeStrain
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       PetscReal                                          :: C2,N
       PetscLogDouble                                     :: flops
@@ -2122,13 +2122,14 @@ Contains
          Do iDoF1 = 1,numDofDisplacement
             inelasticStrainGauss = inelasticStrainGauss + elemDisplacement%GradS_BF(iDoF1,iGauss) * displacementDof(iDoF1)
          End Do
-         inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
-         elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss
+         inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion 
+         elasticEnergyDensityGauss = ( matprop%HookesLaw * (inelasticStrainGauss - plasticStrainCell) ) .DotP. (inelasticStrainGauss - plasticStrainCell)
 
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
          If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( matprop%HookesLaw%YoungsModulus*trace(plasticStrainCell) + matProp%HookesLaw%lambda*trace(inelasticStrainGauss) )*trace(plasticStrainCell)
+         Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%lambda )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
+         elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(plasticStrainCell)
          endif
 #endif
          !!! This is really twice the elastic energy density
@@ -2774,7 +2775,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss,Stress_ZZ_planeStrain
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       Type(MEF90_VECT)                                   :: gradientDamageGauss
       PetscReal                                          :: C1,C2,N
@@ -2803,13 +2804,14 @@ Contains
          Do iDoF1 = 1,numDofDisplacement
             inelasticStrainGauss = inelasticStrainGauss + elemDisplacement%GradS_BF(iDoF1,iGauss) * displacementDof(iDoF1)
          End Do
-         inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion - plasticStrainCell
-         elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. inelasticStrainGauss 
+         inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion 
+         elasticEnergyDensityGauss = (matprop%HookesLaw * (inelasticStrainGauss - plasticStrainCell) ) .DotP. (inelasticStrainGauss - plasticStrainCell)
 
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
          If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         elasticEnergyDensityGauss = elasticEnergyDensityGauss +  ( matprop%HookesLaw%YoungsModulus*trace(plasticStrainCell) + matProp%HookesLaw%lambda*trace(inelasticStrainGauss) )*trace(plasticStrainCell)
+         Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%lambda )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
+         elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(plasticStrainCell)
          endif
 #endif
          
