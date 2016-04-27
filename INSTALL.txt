@@ -53,7 +53,7 @@ Note that the second command patches auto-generated fortran header files. If one
       --download-chaco=1                \
       --download-exodusii=1             \
       --download-metis=1                \
-      --download-netcdf=ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz 
+      --download-netcdf=ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz \
       --download-parmetis=1             \
       --download-triangle=1             \
       --download-yaml=1                 \
@@ -75,7 +75,7 @@ With intel 14.0 compilers, and MKL, I use
       --download-chaco=1                \
       --download-exodusii=1             \
       --download-metis=1                \
-      --download-netcdf=ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz 
+      --download-netcdf=ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz \
       --download-parmetis=1             \
       --download-triangle=1             \
       --download-yaml=1                 \
