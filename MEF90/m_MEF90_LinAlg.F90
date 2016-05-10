@@ -115,13 +115,13 @@
    End Interface
 
    Interface Operator (*)
-      Module Procedure DbleXVect2D,Vect2DXDble,DbleXVect3D,Vect3DXDble,&
-         DbleXMat2D,Mat2DXDble,DbleXMat3D,Mat3DXDble,                  &
-         DbleXMatS2D,MatS2DXDble,DbleXMatS3D,MatS3DXDble,              &
-         MatXVect2D,MatXVect3D,MatXVect2DS,MatXVect3DS,                &
-         DbleXTens4OS2D,Tens4OS2DXDble,Tens4OS2DXMatS2D,               &
-         DbleXTens4OS3D,Tens4OS3DXDble,Tens4OS3DXMatS3D,               &
-         Mat2DXMat2D,MatS2DXMatS2D,Mat3DXMat3D,MatS3DXMatS3D,          &
+      Module Procedure DbleXVect2D,Vect2DXDble,DbleXVect3D,Vect3DXDble,                          &
+         DbleXMat2D,Mat2DXDble,DbleXMat3D,Mat3DXDble,                                            &
+         DbleXMatS2D,MatS2DXDble,DbleXMatS3D,MatS3DXDble,                                        &
+         MatXVect2D,MatXVect3D,MatXVect2DS,MatXVect3DS,                                          &
+         DbleXTens4OS2D,Tens4OS2DXDble,Tens4OS2DXMatS2D,                                         &
+         DbleXTens4OS3D,Tens4OS3DXDble,Tens4OS3DXMatS3D,                                         &
+         Mat2DXMat2D,Mat2DXMatS2D,MatS2DXMatS2D,Mat3DXMat3D,Mat3DXMatS3D,MatS3DXMatS3D,          &
          DotP2D,DotP3D
    End Interface
 
@@ -811,7 +811,7 @@ Contains
       flops = 21.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Tens4OS3DXDble
-   
+
    Function  MatXVect2D(M1,V1)
       Type(Mat2D),Intent(IN)                      :: M1
       Type(Vect2D),Intent(IN)                     :: V1
@@ -916,6 +916,21 @@ Contains
       flops = 12.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Mat2DXMat2D
+
+   Function Mat2DXMatS2D(M1,M2)
+      Type(Mat2D),Intent(IN)                      :: M1
+      Type(MatS2D),Intent(IN)                     :: M2
+      Type(Mat2D)                                 :: Mat2DXMatS2D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      Mat2DXMatS2D%XX = M1%XX * M2%XX + M1%XY * M2%XY
+      Mat2DXMatS2D%XY = M1%XX * M2%XY + M1%XY * M2%YY
+      Mat2DXMatS2D%YX = M1%YX * M2%XX + M1%YY * M2%XY
+      Mat2DXMatS2D%YY = M1%YX * M2%XY + M1%YY * M2%YY
+      flops = 12.0
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Function Mat2DXMatS2D
    
    Function MatS2DXMatS2D(M1,M2)
       Type(MatS2D),Intent(IN)                     :: M1,M2
@@ -949,6 +964,26 @@ Contains
       flops = 45.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Mat3DXMat3D
+
+   Function Mat3DXMatS3D(M1,M2)
+      Type(Mat3D),Intent(IN)                      :: M1
+      Type(MatS3D),Intent(IN)                     :: M2
+      Type(Mat3D)                                 :: Mat3DXMatS3D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      Mat3DXMatS3D%XX = M1%XX * M2%XX + M1%XY * M2%XY + M1%XZ * M2%XZ
+      Mat3DXMatS3D%XY = M1%XX * M2%XY + M1%XY * M2%YY + M1%XZ * M2%YZ
+      Mat3DXMatS3D%XZ = M1%XX * M2%XZ + M1%XY * M2%YZ + M1%XZ * M2%ZZ 
+      Mat3DXMatS3D%YX = M1%YX * M2%XX + M1%YY * M2%XY + M1%YZ * M2%XZ
+      Mat3DXMatS3D%YY = M1%YX * M2%XY + M1%YY * M2%YY + M1%YZ * M2%YZ
+      Mat3DXMatS3D%YZ = M1%YX * M2%XZ + M1%YY * M2%YZ + M1%YZ * M2%ZZ
+      Mat3DXMatS3D%ZX = M1%ZX * M2%XX + M1%ZY * M2%XY + M1%ZZ * M2%XZ
+      Mat3DXMatS3D%ZY = M1%ZX * M2%XY + M1%ZY * M2%YY + M1%ZZ * M2%YZ
+      Mat3DXMatS3D%ZZ = M1%ZX * M2%XZ + M1%ZY * M2%YZ + M1%ZZ * M2%ZZ
+      flops = 45.0
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Function Mat3DXMatS3D
    
    Function MatS3DXMatS3D(M1,M2)
       Type(MatS3D),Intent(IN)                     :: M1,M2
@@ -2477,7 +2512,7 @@ Contains
       Type(MatS2D),Dimension(2),Intent(OUT)       :: ppleDirections
       
       Integer,Parameter                           :: n = 2
-      PetscReal,Dimension(n,n)                    :: A,Pt      
+      PetscReal,Dimension(n,n)                    :: A,Pt
       Integer                                     :: i
       PetscReal                                   :: d
       PetscInt                                    :: lwork = 2*n**2+6*n+1
@@ -2528,7 +2563,7 @@ Contains
       Type(MatS3D),Intent(IN)                     :: M
       PetscReal,Dimension(3)                      :: ppleValues
       Type(Mat3D),Intent(OUT)                     :: MatProj
-      Type(MatS3D),Intent(OUT)                    :: MatDiag
+      Type(MatS3D),Intent(OUT)                     :: MatDiag
       
       Integer,Parameter                           :: n = 3
       PetscReal,Dimension(n,n)                    :: A,Pt      
@@ -2585,8 +2620,8 @@ Contains
       MatDiag%YY=ppleValues(2)
 
       MatProj%XX = A(1,1)
-      MatProj%YX = A(2,1)
       MatProj%XY = A(1,2)
+      MatProj%YX = A(2,1)
       MatProj%YY = A(2,2)
 
    End Subroutine MatS2DEigenVectorValues
