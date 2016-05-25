@@ -21,9 +21,10 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
       real(Kind = Kr)             :: residualStiffness
       real(Kind = Kr)             :: CoefficientLinSoft
       real(Kind = Kr)             :: CoefficientDruckerPrager
-      real(Kind = Kr)             :: CoefficientDruckerPragerCapModel1
-      real(Kind = Kr)             :: CoefficientDruckerPragerCapModel2
-      real(Kind = Kr)             :: CoefficientDruckerPragerCapModel3
+      real(Kind = Kr)             :: CoefficientCapModel0
+      real(Kind = Kr)             :: CoefficientCapModel1
+      real(Kind = Kr)             :: CoefficientCapModel2
+      real(Kind = Kr)             :: CoefficientCapModelD
       logical(Kind = Kr)          :: isPlaneStress
    end type MEF90DefMechPlasticityCtx
 
@@ -39,7 +40,7 @@ contains
 
 #define FHG_VONMISES1D MEF90_APPEND(fhg_VonMises1D,MEF90_DIM)D
 
-#define FHG_DRUCKERPRAGER MEF90_APPEND(fhg_DruckerPrager,MEF90_DIM)D
+#define FHG_CAPMODEL MEF90_APPEND(fhg_CapModel,MEF90_DIM)D
 
 #define FHG_DRUCKERPRAGERCAPMODEL MEF90_APPEND(fhg_DruckerPragerCapModel,MEF90_DIM)D
 
@@ -255,19 +256,17 @@ contains
    end subroutine FHG_VONMISES1D
 
 
-
-
 #undef __FUNCT__
-#define __FUNCT__ "FHG_DRUCKERPRAGER"
+#define __FUNCT__ "FHG_CAPMODEL"
 !!!
 !!!  
-!!!  fhg: VonMises
+!!!  fhg: Capmodel
 !!!  
 !!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
 !!!
 !!!
 
-   subroutine FHG_DRUCKERPRAGER(x,f,h,g,myctx) bind(c)
+   subroutine FHG_CAPMODEL(x,f,h,g,myctx) bind(c)
       use,intrinsic :: iso_c_binding
       use m_MEF90
 
@@ -275,20 +274,34 @@ contains
       real(kind=c_double)                       :: f(*)
       real(kind=c_double)                       :: h(*)
       real(kind=c_double)                       :: g(*)
+      real(Kind = Kr)                           :: StiffnessA         !! Stiffness = a(alpha)/b(alpha)
+      real(Kind = Kr)                           :: StiffnessB
       type(c_ptr),intent(in),value              :: myctx
 
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
       type(MEF90_MATS)                          :: xMatS
+      type(MEF90_MATS)                          :: Stress
 
       xMatS = x(1:SIZEOFMEF90_MATS)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx,myctx_ptr)
 
 
-      f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 
-      g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress -  myctx_ptr%CoefficientDruckerPrager*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))
+      !!! Select which softening young model
+      if (myctx_ptr%CoefficientLinSoft==0) then
+         StiffnessA = (1.0_Kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
+      else 
+         StiffnessA = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) ) + myctx_ptr%residualStiffness
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
+      endif
 
-   end subroutine FHG_DRUCKERPRAGER
+      Stress=(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))*StiffnessA
+      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
+      g(1) = myctx_ptr%CoefficientCapModelD * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - myctx_ptr%CoefficientCapModel0*StiffnessB -  myctx_ptr%CoefficientCapModel1*Trace(Stress) - myctx_ptr%CoefficientCapModel2*Trace(Stress)**2.0
+
+   end subroutine FHG_CAPMODEL
+
 
 
 #undef __FUNCT__
@@ -309,19 +322,32 @@ contains
       real(kind=c_double)                       :: f(*)
       real(kind=c_double)                       :: h(*)
       real(kind=c_double)                       :: g(*)
+      real(Kind = Kr)                           :: StiffnessA         !! Stiffness = a(alpha)/b(alpha)
+      real(Kind = Kr)                           :: StiffnessB
       type(c_ptr),intent(in),value              :: myctx
 
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
       type(MEF90_MATS)                          :: xMatS
+      type(MEF90_MATS)                          :: Stress
 
       xMatS = x(1:SIZEOFMEF90_MATS)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx,myctx_ptr)
 
 
-      f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.0 
-      g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%YieldStress -  myctx_ptr%CoefficientDruckerPrager*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))
-      g(2) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))  .DotP.  deviatoricPart(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) ))  - myctx_ptr%CoefficientDruckerPragerCapModel3 -  myctx_ptr%CoefficientDruckerPragerCapModel2*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) - myctx_ptr%CoefficientDruckerPragerCapModel1*Trace(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))**2.0
+      !!! Select which softening young model
+      if (myctx_ptr%CoefficientLinSoft==0) then
+         StiffnessA = (1.0_Kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
+      else 
+         StiffnessA = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) ) + myctx_ptr%residualStiffness
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
+      endif
+
+      Stress=(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))*StiffnessA
+      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
+      g(1) =  sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - myctx_ptr%YieldStress*StiffnessB -  myctx_ptr%CoefficientDruckerPrager*Trace(Stress)
+      g(2) = myctx_ptr%CoefficientCapModelD * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - myctx_ptr%CoefficientCapModel0*StiffnessB -  myctx_ptr%CoefficientCapModel1*Trace(Stress) - myctx_ptr%CoefficientCapModel2*Trace(Stress)**2.0
 
    end subroutine FHG_DRUCKERPRAGERCAPMODEL
 
@@ -519,9 +545,9 @@ contains
                      snlp_p    = 2*SIZEOFMEF90_MATS
                      snlp_ctx  = c_loc(PlasticityCtx)
 
-                  case(MEF90DefMech_plasticityTypeDruckerPrager)
+                  case(MEF90DefMech_plasticityTypeCapModel)
                      snlp_Dfhg = c_null_funptr
-                     snlp_fhg  = c_funloc(FHG_DRUCKERPRAGER)
+                     snlp_fhg  = c_funloc(FHG_CAPMODEL)
                      snlp_n    = SIZEOFMEF90_MATS
                      snlp_m    = 0
                      snlp_p    = 1
@@ -557,9 +583,10 @@ contains
                PlasticityCtx%YieldStress = matpropSet%YieldStress
                PlasticityCtx%DuctileCouplingPower = matpropSet%DuctileCouplingPower
                PlasticityCtx%CoefficientDruckerPrager = matpropSet%CoefficientDruckerPrager
-               PlasticityCtx%CoefficientDruckerPragerCapModel1 = matpropSet%CoefficientDruckerPragerCapModel1
-               PlasticityCtx%CoefficientDruckerPragerCapModel2 = matpropSet%CoefficientDruckerPragerCapModel2
-               PlasticityCtx%CoefficientDruckerPragerCapModel3 = matpropSet%CoefficientDruckerPragerCapModel3
+               PlasticityCtx%CoefficientCapModel0 = matpropSet%CoefficientCapModel0
+               PlasticityCtx%CoefficientCapModel1 = matpropSet%CoefficientCapModel1
+               PlasticityCtx%CoefficientCapModel2 = matpropSet%CoefficientCapModel2
+               PlasticityCtx%CoefficientCapModelD = matpropSet%CoefficientCapModelD
 
 
 #if MEF90_DIM == 2
