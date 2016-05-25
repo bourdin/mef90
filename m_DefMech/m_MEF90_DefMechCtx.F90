@@ -243,7 +243,7 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_plasticityTypeTresca,                 &
                      MEF90DefMech_plasticityTypeVonMises,               &
                      MEF90DefMech_plasticityTypeVonMisesPlaneTheory,    &
-                     MEF90DefMech_plasticityTypeDruckerPrager,          &
+                     MEF90DefMech_plasticityTypeCapModel,               &
                      MEF90DefMech_plasticityTypeDruckerPragerCapModel,  &
                      MEF90DefMech_plasticityTypeVonMises1D
    End Enum
@@ -310,7 +310,7 @@ Contains
       MEF90DefMech_plasticityTypeList(2) = 'Tresca'
       MEF90DefMech_plasticityTypeList(3) = 'VonMises'
       MEF90DefMech_plasticityTypeList(4) = 'VonMisesPlaneTheory'
-      MEF90DefMech_plasticityTypeList(5) = 'DruckerPrager'
+      MEF90DefMech_plasticityTypeList(5) = 'CapModel'
       MEF90DefMech_plasticityTypeList(6) = 'DruckerPragerCapModel'
       MEF90DefMech_plasticityTypeList(7) = 'VonMises1D'
       MEF90DefMech_plasticityTypeList(8) = 'MEF90DefMech_plasticityType'

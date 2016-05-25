@@ -33,9 +33,10 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: yieldStress                                      ! yield stress
       PetscReal                     :: DuctileCouplingPower                             ! Coupling power between plasticity and damage
-      PetscReal                     :: CoefficientDruckerPragerCapModel1                ! C1 in DruckerPrager-CapModel
-      PetscReal                     :: CoefficientDruckerPragerCapModel2                ! C2 in DruckerPrager-CapModel
-      PetscReal                     :: CoefficientDruckerPragerCapModel3                ! C3 in DruckerPrager-CapModel
+      PetscReal                     :: CoefficientCapModel0                             ! C0 in CapModel
+      PetscReal                     :: CoefficientCapModel1                             ! C1 in CapModel
+      PetscReal                     :: CoefficientCapModel2                             ! C2 in CapModel
+      PetscReal                     :: CoefficientCapModelD                             ! CD in CapModel
       PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
       PetscReal                     :: cohesiveStiffness          
       Character(len=MEF90_MXSTRLEN) :: Name
@@ -54,9 +55,10 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: yieldStress                                      ! yield stress
       PetscReal                     :: DuctileCouplingPower                             ! Coupling power between plasticity and damage
-      PetscReal                     :: CoefficientDruckerPragerCapModel1                ! C1 in DruckerPrager-CapModel
-      PetscReal                     :: CoefficientDruckerPragerCapModel2                ! C2 in DruckerPrager-CapModel
-      PetscReal                     :: CoefficientDruckerPragerCapModel3                ! C3 in DruckerPrager-CapModel
+      PetscReal                     :: CoefficientCapModel0                             ! C0 in CapModel
+      PetscReal                     :: CoefficientCapModel1                             ! C1 in CapModel
+      PetscReal                     :: CoefficientCapModel2                             ! C2 in CapModel
+      PetscReal                     :: CoefficientCapModelD                             ! CD in CapModel
       PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
       PetscReal                     :: cohesiveStiffness          
       Character(len=MEF90_MXSTRLEN) :: Name
@@ -87,9 +89,10 @@ Module m_MEF90_Materials_Types
       1.0e-9,                                                                          & ! Residual Stiffness
       1.0_Kr,                                                                          & ! Yield Stress
       2.0_Kr,                                                                          & ! Coupling power between damage and plasticity
-      -0.3_Kr,                                                                         & ! C1 in DruckerPrager-CapModel
-      0.4_Kr,                                                                          & ! C2 in DruckerPrager-CapModel
-      1.0_Kr,                                                                          & ! C3 in DruckerPrager-CapModel
+      -0.3_Kr,                                                                         & ! C0 in CapModel
+      0.4_Kr,                                                                          & ! C1 in CapModel
+      1.0_Kr,                                                                          & ! C2 in CapModel
+      1.0_Kr,                                                                          & ! CD in CapModel
       -0.5_Kr,                                                                         & ! k  in DruckerPrager
       0.0_Kr,                                                                          & ! cohesive stiffness
       "MEF90Mathium2D")  
@@ -114,9 +117,10 @@ Module m_MEF90_Materials_Types
       1.0e-9,                                                                          & ! Residual Stiffness
       1.0_Kr,                                                                          & ! Yield Stress
       2.0_Kr,                                                                          & ! Coupling power between damage and plasticity
-      -0.3_Kr,                                                                         & ! C1 in DruckerPrager-CapModel
-      0.4_Kr,                                                                          & ! C2 in DruckerPrager-CapModel
-      1.0_Kr,                                                                          & ! C3 in DruckerPrager-CapModel
+      -0.3_Kr,                                                                         & ! C0 in CapModel
+      0.4_Kr,                                                                          & ! C1 in CapModel
+      1.0_Kr,                                                                          & ! C2 in CapModel
+      1.0_Kr,                                                                          & ! CD in CapModel
       -0.5_Kr,                                                                         & ! k  in DruckerPrager
       0.0_Kr,                                                                          & ! cohesive stiffness
       "MEF90Mathium3D")  
@@ -310,9 +314,10 @@ Contains
 
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
       Call PetscBagRegisterReal(bag,matprop%DuctileCouplingPower,default%DuctileCouplingPower,'DuctileCouplingPower','[] power of the coupling between the damage and the plasticity',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel1,default%CoefficientDruckerPragerCapModel1,'CoefficientDruckerPragerCapModel1','C1 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) - C3 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel2,default%CoefficientDruckerPragerCapModel2,'CoefficientDruckerPragerCapModel2','C2 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) - C3 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel3,default%CoefficientDruckerPragerCapModel3,'CoefficientDruckerPragerCapModel3','C3 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) - C3 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel0,default%CoefficientCapModel0,'CoefficientCapModel0','C0 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel1,default%CoefficientCapModel1,'CoefficientCapModel1','C1 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr)
 
 
@@ -364,9 +369,10 @@ Contains
 
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
       Call PetscBagRegisterReal(bag,matprop%DuctileCouplingPower,default%DuctileCouplingPower,'DuctileCouplingPower','[] power of the coupling between the damage and the plasticity',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel1,default%CoefficientDruckerPragerCapModel1,'CoefficientDruckerPragerCapModel1',' C1 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) -C3 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel2,default%CoefficientDruckerPragerCapModel2,'CoefficientDruckerPragerCapModel2','C2 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) -C3 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPragerCapModel3,default%CoefficientDruckerPragerCapModel3,'CoefficientDruckerPragerCapModel3','C3 in the Yield function: || dev(stress) || - C1 tr(stress)^2 - C2 tr(stress) -C3 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel0,default%CoefficientCapModel0,'CoefficientCapModel0','C0 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel1,default%CoefficientCapModel1,'CoefficientCapModel1','C1 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr)
 
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
