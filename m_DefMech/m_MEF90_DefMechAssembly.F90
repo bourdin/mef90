@@ -452,6 +452,78 @@ Contains
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
+      PetscInt                                           :: i,iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
+      PetscReal                                          :: stiffness
+      Type(MEF90_MATS)                                   :: sigma,inelasticStrain
+      PetscReal, Dimension(MEF90_DIM)                    :: PpalStrain
+      Type(MEF90_MATS),Dimension(MEF90_DIM)              :: PpalDirection
+      PetscLogDouble                                     :: flops
+      PetscErrorCode                                     :: ierr
+
+      numDofDisplacement = size(elemDisplacement%BF,1)
+      numDofDamage = size(elemDamage%BF,1)
+      numGauss = size(elemDisplacement%BF,2)
+
+      ALoc = 0.0_Kr
+      Do iGauss = 1,numGauss
+         stiffness = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+         End Do
+         stiffness = (1.0_Kr - stiffness + matProp%residualStiffness)**2
+   
+         inelasticStrain = 0.0_Kr
+         If (Associated(temperatureDof)) Then
+            Do iDoF1 = 1,numDofDamage
+               inelasticStrain = inelasticStrain - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss) * matProp%LinearThermalExpansion
+            End Do         
+         End If
+         Do iDoF1 = 1,numDofDisplacement
+            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
+         End Do
+         inelasticStrain = inelasticStrain - plasticStrainCell
+
+         Call SpectralDecomposition(inelasticStrain,PpalStrain,PpalDirection)
+         Do iDoF1 = 1,numDofDisplacement
+            sigma = 0.0_Kr
+            Do i = 1,MEF90_DIM 
+               If (PpalStrain(i) < 0.0_Kr) Then
+                  sigma = sigma + (PpalStrain(i) * PpalDirection(i))
+               Else
+                  sigma = sigma + Stiffness * (PpalStrain(i) * PpalDirection(i))
+               End If
+            End Do
+            sigma = matProp%HookesLaw * sigma
+            Do iDoF2 = 1,numDofDisplacement
+               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+            End Do
+         End Do
+      End Do
+      !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
+      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc
+
+
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc"
+!!!
+!!!  
+!!!  MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
+      PetscReal,Dimension(:,:),Pointer                   :: ALoc
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       PetscReal                                          :: stiffness
       Type(MEF90_MATS)                                   :: sigma,PositiveStrain,PrincipalStrain,inelasticStrain
@@ -464,26 +536,43 @@ Contains
       numGauss = size(elemDisplacement%BF,2)
       ALoc = 0.0_Kr
       Do iGauss = 1,numGauss
+
          stiffness = 0.0_Kr
+         inelasticStrain = 0.0_Kr
+         Do iDoF1 = 1,numDofDisplacement
+            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss) 
+         End Do
          Do iDoF1 = 1,numDofDamage
             stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
          End Do
-         stiffness = (1.0_Kr - stiffness)**2 + matProp%residualStiffness
-         
-write(*,*)'MEF90DefMechBilinearFormDisplacement Principal Strain is not implemented'
 
-         Do iDoF1 = 1,numDofDisplacement
-            Do iDoF2 = 1,numDofDisplacement
-               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss)) )
-               If (matprop%cohesiveStiffness /= 0.0_Kr) Then
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesivestiffness * (elemDisplacement%BF(iDoF1,iGauss) .DotP. elemDisplacement%BF(iDoF2,iGauss))
-               End If            
+         stiffness = (1.0_Kr - stiffness )**2 + matProp%residualStiffness
+         call EigenVectorValues(inelasticStrain,MatProjLocalToPrincipal,PrincipalStrain)
+         PositiveStrain = 0.0_Kr
+         PositiveStrain%YY = ( PrincipalStrain%YY + (matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2*matProp%HookesLaw%mu))*PrincipalStrain%XX )
+
+
+         if ( PositiveStrain%YY <= 0 ) then
+            Do iDoF1 = 1,numDofDisplacement
+                  sigma = stiffness* (matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss))
+               Do iDoF2 = 1,numDofDisplacement
+                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+               End Do
             End Do
-         End Do
-      End Do
+         else
+            Do iDoF1 = 1,numDofDisplacement
+                  sigma = matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss)
+               Do iDoF2 = 1,numDofDisplacement
+                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+               End Do
+            End Do
+         end if
+
+      End Do ! Gauss
+
       !flops = numGauss * ( 4. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc
+   End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc
 
 
 #undef __FUNCT__
@@ -884,6 +973,7 @@ write(*,*)'MEF90DefMechBilinearFormDisplacement Principal Strain is not implemen
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDisplacementATUnilateralDeviatoricLoc
 
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralPSLoc"
 !!!
@@ -894,6 +984,76 @@ write(*,*)'MEF90DefMechBilinearFormDisplacement Principal Strain is not implemen
 !!!
 
    Subroutine MEF90DefMechOperatorDisplacementATUnilateralPSLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
+      PetscReal,Dimension(:),Pointer                     :: residualLoc
+      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
+      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+      PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+
+      PetscInt                                           :: i,iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
+      PetscReal                                          :: temperature,stiffness
+      Type(MEF90_MATS)                                   :: inelasticStrain,sigma
+      PetscReal, Dimension(MEF90_DIM)                    :: PpalStrain
+      Type(MEF90_MATS),Dimension(MEF90_DIM)              :: PpalDirection
+      PetscLogDouble                                     :: flops
+      PetscErrorCode                                     :: ierr
+
+      numDofDisplacement = size(elemDisplacement%BF,1)
+      numDofDamage = size(elemDamage%BF,1)
+      numGauss = size(elemDisplacement%BF,2)
+
+      residualLoc = 0.0_Kr
+      Do iGauss = 1,numGauss
+         temperature = 0.0_Kr
+         inelasticStrain = 0.0_Kr
+         If (Associated(temperatureDof)) Then
+            Do iDoF1 = 1,numDofDamage
+               temperature = temperature - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+            End Do         
+            inelasticStrain = matProp%LinearThermalExpansion * temperature
+         End If
+         Do iDoF1 = 1,numDofDisplacement
+            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
+         End Do
+         inelasticStrain = inelasticStrain - plasticStrainCell
+         
+         stiffness = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+         End Do
+         stiffness = (1.0_Kr - stiffness + matProp%residualStiffness)**2
+   
+         Call SpectralDecomposition(inelasticStrain,PpalStrain,PpalDirection)
+         sigma = 0.0_Kr
+         Do i = 1,MEF90_DIM 
+            If (PpalStrain(i) < 0.0_Kr) Then
+               sigma = sigma + (PpalStrain(i) * PpalDirection(i))
+            Else
+               sigma = sigma + Stiffness * (PpalStrain(i) * PpalDirection(i))
+            End If
+         End Do
+         sigma = matProp%HookesLaw * sigma
+         Do iDoF2 = 1,numDofDisplacement
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+         End Do
+      End Do
+      !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
+      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechOperatorDisplacementATUnilateralPSLoc
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc"
+!!!
+!!!  
+!!!  MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
@@ -955,7 +1115,7 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
          sigma%XY = sigmaNoSym%XY 
 
          Do iDoF2 = 1,numDofDisplacement
-            call EigenVectorValues(elemDisplacement%GradS_BF(iDoF2,iGauss),MatProjLocalToPrincipal,PrincipalStrain)
+            !call EigenVectorValues(elemDisplacement%GradS_BF(iDoF2,iGauss),MatProjLocalToPrincipal,PrincipalStrain)
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
          End Do
       End Do
@@ -964,7 +1124,10 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
 
       !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechOperatorDisplacementATUnilateralPSLoc
+   End Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc
+
+
+
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechRHSDisplacementLoc"
@@ -1136,8 +1299,11 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
                localRHSFunction => MEF90DefMechRHSDisplacementLoc
 
             Case (MEF90DefMech_damageTypeLinSoft)
-               QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
-               localOperatorFunction => MEF90DefMechOperatorDisplacementLinSoftLoc
+               Select Case(cellSetOptions%unilateralContactType)
+               Case (MEF90DefMech_unilateralContactTypeNone)
+                  QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
+                  localOperatorFunction => MEF90DefMechOperatorDisplacementLinSoftLoc
+               End Select
                localRHSFunction => MEF90DefMechRHSDisplacementLoc
 
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
@@ -1157,6 +1323,8 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralPSLoc
+               Case (MEF90DefMech_unilateralContactTypeMasonry)
+                  localOperatorFunction => MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc
                End Select
                localRHSFunction => MEF90DefMechRHSDisplacementLoc
             End Select
@@ -1429,11 +1597,9 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
             Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic)
                QuadratureOrder = 2 * (elemDisplacementType%order - 1)
                localAssemblyFunction => MEF90DefMechBilinearFormDisplacementElasticLoc
-
             Case (MEF90DefMech_damageTypeLinSoft)
                QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * ElemDamageType%order
                localAssemblyFunction => MEF90DefMechBilinearFormDisplacementLinSoftLoc
-
             Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
                QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * ElemDamageType%order
                Select Case(cellSetOptions%unilateralContactType)
@@ -1445,8 +1611,10 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralDeviatoricLoc
+               Case (MEF90DefMech_unilateralContactTypeMasonry)
+                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralPHDLoc
+                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc
                End Select
             End Select
             !!! Allocate storage for fields at dof and Gauss points
@@ -2461,7 +2629,7 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
 
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormDamageAT1UnilateralPSLoc"
+#define __FUNCT__ "MEF90DefMechBilinearFormDamageAT1UnilateralMasonryLoc"
 !!!
 !!!  
 !!!  MEF90DefMechBilinearFormDamageAT1Loc:
@@ -2469,7 +2637,7 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
 !!!  (c) 2016 Erwan Tanne erwan.tanne@gmail.com
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDamageAT1UnilateralPSLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechBilinearFormDamageAT1UnilateralMasonryLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
@@ -2539,7 +2707,8 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDamageAT1UnilateralPSLoc
+   End Subroutine MEF90DefMechBilinearFormDamageAT1UnilateralMasonryLoc
+
 
 
 
@@ -3253,15 +3422,15 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
    End Subroutine MEF90DefMechOperatorDamageAT1UnilateralPHDLoc
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechOperatorDamageAT1UnilateralPSLoc"
+#define __FUNCT__ "MEF90DefMechOperatorDamageAT1UnilateralMasonryLoc"
 !!!
 !!!  
-!!!  MEF90DefMechOperatorDamageAT1UnilateralPSLoc:
+!!!  MEF90DefMechOperatorDamageAT1UnilateralMasonryLoc:
 !!!  
 !!!  (c) 2015 Erwan TANNE erwan.tanne@gmail.com
 !!!
 
-   Subroutine MEF90DefMechOperatorDamageAT1UnilateralPSLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
+   Subroutine MEF90DefMechOperatorDamageAT1UnilateralMasonryLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
@@ -3335,7 +3504,8 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechOperatorDamageAT1UnilateralPSLoc
+   End Subroutine MEF90DefMechOperatorDamageAT1UnilateralMasonryLoc
+
 
 
 
@@ -3787,11 +3957,18 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
-                  localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralPSLoc
+                  localOperatorFunction => MEF90DefMechOperatorNull
+               Case (MEF90DefMech_unilateralContactTypeMasonry)
+                  localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralMasonryLoc
                End Select
             Case (MEF90DefMech_damageTypeLinSoft)
-               QuadratureOrder = 9! 5 * elemDamageType%order + 5 * (elemDisplacementType%order - 1)
-               localOperatorFunction => MEF90DefMechOperatorDamageLinSoftLoc
+ 
+               Select Case(cellSetOptions%unilateralContactType)
+               Case (MEF90DefMech_unilateralContactTypeNone)
+                  QuadratureOrder = 9! 5 * elemDamageType%order + 5 * (elemDisplacementType%order - 1)
+                  localOperatorFunction => MEF90DefMechOperatorDamageLinSoftLoc
+               End Select
+
             Case (MEF90DefMech_damageTypeAT2)
                If (Associated(MEF90DefMechCtx%temperature)) Then
                   QuadratureOrder = 2 * elemDamageType%order + 2 * max (elemDisplacementType%order - 1, elemDamageType%order)
@@ -3807,7 +3984,7 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
                   localOperatorFunction => MEF90DefMechOperatorDamageAT2UnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localOperatorFunction => MEF90DefMechOperatorDamageAT2UnilateralDeviatoricLoc
-               Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
+               Case (MEF90DefMech_unilateralContactTypePrincipalStrains,MEF90DefMech_unilateralContactTypeMasonry)
                   localOperatorFunction => MEF90DefMechOperatorNull
                End Select
             End Select
@@ -4042,6 +4219,11 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
             Case (MEF90DefMech_damageTypeLinSoft)
                QuadratureOrder = 9 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
                localAssemblyFunction => MEF90DefMechBilinearFormDamageLinSoftLoc
+               Select Case(cellSetOptions%unilateralContactType)
+               Case (MEF90DefMech_unilateralContactTypeNone)
+                  QuadratureOrder = 9 !* (elemDisplacementType%order - 1) + 5 * elemDamageType%order
+                  localAssemblyFunction => MEF90DefMechBilinearFormDamageLinSoftLoc
+               End Select
 
             Case (MEF90DefMech_damageTypeAT1)
                If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -4059,7 +4241,9 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralPSLoc
+                  localAssemblyFunction => MEF90DefMechBilinearFormNull
+               Case (MEF90DefMech_unilateralContactTypeMasonry)
+                  localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralMasonryLoc
                End Select
             Case (MEF90DefMech_damageTypeAT2)
                If (Associated(MEF90DefMechCtx%temperature)) Then
@@ -4076,7 +4260,7 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2UnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT2UnilateralDeviatoricLoc
-               Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
+               Case (MEF90DefMech_unilateralContactTypePrincipalStrains,MEF90DefMech_unilateralContactTypeMasonry)
                   localAssemblyFunction => MEF90DefMechBilinearFormNull
                End Select
             End Select
