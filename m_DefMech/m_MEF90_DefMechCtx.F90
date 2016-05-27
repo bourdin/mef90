@@ -250,15 +250,16 @@ Module m_MEF90_DefMechCtx
    Character(len = MEF90_MXSTRLEN),Dimension(10),protected   :: MEF90DefMech_plasticityTypeList
    
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,              &
-                     MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric, &
-                     MEF90DefMech_unilateralContactTypeBrittleDuctile, &
-                     MEF90DefMech_unilateralContactTypePositiveHydrostatic, &
-                     MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric, &
-                     MEF90DefMech_unilateralContactTypeDeviatoric, &
-                     MEF90DefMech_unilateralContactTypePrincipalStrains
+      enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,                     &
+                     MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,        &
+                     MEF90DefMech_unilateralContactTypeBrittleDuctile,               &
+                     MEF90DefMech_unilateralContactTypePositiveHydrostatic,          &
+                     MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric,  &
+                     MEF90DefMech_unilateralContactTypeDeviatoric,                   &
+                     MEF90DefMech_unilateralContactTypePrincipalStrains,             &
+                     MEF90DefMech_unilateralContactTypeMasonry
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(10),protected   :: MEF90DefMech_unilateralContactTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(11),protected   :: MEF90DefMech_unilateralContactTypeList
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxInitialize_Private"
@@ -324,9 +325,10 @@ Contains
       MEF90DefMech_unilateralContactTypeList(5) = 'HybridHydrostaticDeviatoric'
       MEF90DefMech_unilateralContactTypeList(6) = 'Deviatoric'
       MEF90DefMech_unilateralContactTypeList(7) = 'PrincipalStrains'
-      MEF90DefMech_unilateralContactTypeList(8) = 'MEF90DefMech_unilateralContactTypeList'
-      MEF90DefMech_unilateralContactTypeList(9) = '_MEF90DefMech_unilateralContactTypeList'
-      MEF90DefMech_unilateralContactTypeList(10) = ''
+      MEF90DefMech_unilateralContactTypeList(8) = 'Masonry'
+      MEF90DefMech_unilateralContactTypeList(9) = 'MEF90DefMech_unilateralContactTypeList'
+      MEF90DefMech_unilateralContactTypeList(10) = '_MEF90DefMech_unilateralContactTypeList'
+      MEF90DefMech_unilateralContactTypeList(11) = ''
    End Subroutine MEF90DefMechCtxInitialize_Private
    
 #undef __FUNCT__
