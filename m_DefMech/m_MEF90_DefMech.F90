@@ -145,7 +145,7 @@ Contains
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
    
-      Type(SectionReal)                               :: xSec
+      !Type(SectionReal)                               :: xSec
       Type(MEF90DefMechGlobalOptions_Type),pointer    :: MEF90DefMechGlobalOptions
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
       Type(MEF90DefMechCellSetOptions_Type),pointer   :: cellSetOptions
@@ -159,7 +159,7 @@ Contains
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
       Call DMMeshGetDimension(MEF90DefMechCtx%cellDMVect,dim,ierr);CHKERRQ(ierr)
 
-      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMVectSec,xSec,ierr);CHKERRQ(ierr)
+      !Call SectionRealDuplicate(MEF90DefMechCtx%cellDMVectSec,xSec,ierr);CHKERRQ(ierr)
 
       !!! force is cell-centered
       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%CellDMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -170,17 +170,17 @@ Contains
          Call DMMeshGetStratumIS(MEF90DefMechCtx%cellDMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
          Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
          Do c = 1, size(setIdx)
-            Call SectionRealRestrict(xSec,setIDx(c),val,ierr);CHKERRQ(ierr)
+            Call SectionRealRestrict(MEF90DefMechCtx%cellDMVectSec,setIDx(c),val,ierr);CHKERRQ(ierr)
             val = cellSetOptions%force
-            Call SectionRealRestore(xSec,setIDx(c),val,ierr);CHKERRQ(ierr)
+            Call SectionRealRestore(MEF90DefMechCtx%cellDMVectSec,setIDx(c),val,ierr);CHKERRQ(ierr)
          End Do
          Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call SectionRealToVec(xSec,MEF90DefMechCtx%cellDMVectScatter,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(MEF90DefMechCtx%cellDMVectSec,MEF90DefMechCtx%cellDMVectScatter,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr)
+      !Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSetForceCst
 
 #undef __FUNCT__

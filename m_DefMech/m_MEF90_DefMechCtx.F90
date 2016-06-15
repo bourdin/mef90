@@ -679,7 +679,7 @@ Contains
       Call VecScatterDestroy(DefMechCtx%DMMatSScatter,ierr);CHKERRQ(ierr)
       Call VecScatterDestroy(DefMechCtx%cellDMMatSScatter,ierr);CHKERRQ(ierr)
 
-      Call SectionRealDestroy(DefMechCtx%DMScalSec,ierr);CHKERRQ(ierr)
+      !Call SectionRealDestroy(DefMechCtx%DMScalSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(DefMechCtx%cellDMScalSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(DefMechCtx%DMVectSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(DefMechCtx%cellDMVectSec,ierr);CHKERRQ(ierr)
@@ -689,7 +689,7 @@ Contains
       Call DMDestroy(DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMScal,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
-      Call DMDestroy(DefMechCtx%cellDMVect,ierr);CHKERRQ(ierr)
+      !Call DMDestroy(DefMechCtx%cellDMVect,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%DMMatS,ierr);CHKERRQ(ierr)
       Call DMDestroy(DefMechCtx%cellDMMatS,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechCtxDestroy
