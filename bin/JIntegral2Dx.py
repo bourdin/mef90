@@ -14,13 +14,55 @@ def parse(args=None):
 
     return parser.parse_args()
 
+def Jintegraldx2(BB,nintx=100,ninty=100):
+    def mytrapz(xy):
+        trapz = 0
+        for i in range(len(xy)/2-1):
+            trapz += (xy[2*i+2]-xy[2*i])*(xy[2*i+1]+xy[2*i+3])
+        trapz = trapz*.5
+        return trapz
 
-def mytrapz(xy):
-    trapz = 0
-    for i in range(len(xy)/2-1):
-        trapz += (xy[2*i+2]-xy[2*i])*(xy[2*i+1]+xy[2*i+3])
-    trapz = trapz*.5
-    return trapz
+    ### -C e1 . n left edge
+    SetActiveWindow(1)
+    ChangeActivePlotsVar("C11")
+    DrawPlots()
+    Query("Lineout", start_point=(BB[0],BB[1]+BB[3], 0), 
+                       end_point=(BB[0],BB[1], 0), 
+                    use_sampling=1,num_samples=ninty)
+    SetActiveWindow(2)
+    Cleft = -mytrapz(GetPlotInformation()["Curve"])
+    DeleteActivePlots()
+
+
+    ### C e1 . n right edge
+    SetActiveWindow(1)
+    Query("Lineout", start_point=(BB[0]+BB[2],BB[1], 0), 
+                       end_point=(BB[0]+BB[2],BB[1]+BB[3], 0), 
+                    use_sampling=1,num_samples=ninty)
+    SetActiveWindow(2)
+    Cright = mytrapz(GetPlotInformation()["Curve"])
+    DeleteActivePlots()
+
+    ### C e1 . n top edge
+    SetActiveWindow(1)
+    ChangeActivePlotsVar("C21")
+    DrawPlots()
+    Query("Lineout", start_point=(BB[0]+BB[2],BB[1]+BB[3], 0), 
+                       end_point=(BB[0],      BB[1]+BB[3], 0), 
+                    use_sampling=1,num_samples=nintx)
+    SetActiveWindow(2)
+    Ctop = mytrapz(GetPlotInformation()["Curve"])
+    DeleteActivePlots()
+
+    ### C e1 . n bottom edge
+    SetActiveWindow(1)
+    Query("Lineout", start_point=(BB[0],      BB[1], 0), 
+                       end_point=(BB[0]+BB[2],BB[1], 0), 
+                    use_sampling=1,num_samples=nintx)
+    SetActiveWindow(2)
+    Cbot = -mytrapz(GetPlotInformation()["Curve"])
+    DeleteActivePlots()
+    return Cleft,Ctop,Cright,Cbot
 
 def plot(opts):
     import json
@@ -37,78 +79,44 @@ def plot(opts):
     
     status = OpenDatabase(MyDatabase,0)       
     
-    DefineScalarExpression("X", 'coord(Mesh)[0]')
-    DefineScalarExpression("Y", 'coord(Mesh)[1]')
-    DefineScalarExpression("E", '{0}* (1.-Damage) * (1.-Damage)'.format(opts.E))
-    DefineScalarExpression("v", '{0}'.format(opts.nu))
-    DefineVectorExpression("Displacement_2D", "{Displacement_X,Displacement_Y}")
-    DefineScalarExpression("Strain_2D", "{{gradient(Displacement_X)[0],0.5*(gradient(Displacement_X)[1]+gradient(Displacement_Y)[0])},{0.5*(gradient(Displacement_X)[1]+gradient(Displacement_Y)[0]),gradient(Displacement_Y)[1]}} ")
-    DefineTensorExpression("Grad_U", "{{gradient(Displacement_2D[0])[0],gradient(Displacement_2D[0])[1]},{gradient(Displacement_2D[1])[0],gradient(Displacement_2D[1])[1]}}")
-    DefineTensorExpression("Stress_2D", "E/((1+v)*(1-2*v))*{{(1-v)*Strain_2D[0][0] , (1-2*v)*Strain_2D[0][1]},{(1-2*v)*Strain_2D[1][0] , (1-v)*Strain_2D[1][1]}}")
     DefineVectorExpression("dUx","gradient(<Displacement_X>)")
     DefineVectorExpression("dUy","gradient(<Displacement_Y>)")
-    DefineScalarExpression("EnergyDensity","Stress_2D[0][0] * Grad_U[0][0] + Stress_2D[1][1] * Grad_U[1][1] + Stress_2D[0][1] * Grad_U[0][1] ")
-    DefineScalarExpression("C11","EnergyDensity - Stress_2D[0][0] * Grad_U[0][0] - Stress_2D[0][1] * Grad_U[0][1] * 2.")
-    DefineScalarExpression("C21","              - Stress_2D[0][1] * Grad_U[0][0] - Stress_2D[1][1] * Grad_U[0][0] * 2.")
+    DefineScalarExpression("EnergyDensity","(<Stress_XX> * dUx[0] + <Stress_YY> * dUy[1] + <Stress_XY> * (dUx[1]+dUy[0])) * .5 ")
+    DefineScalarExpression("C11","EnergyDensity - <Stress_XX> * dUx[0] - <Stress_XY> * dUy[0]")
+    DefineScalarExpression("C21","              - <Stress_XY> * dUx[0] - <Stress_YY> * dUy[0]")
 
     opts.bb = opts.bb
-    AddPlot("Curve", "operators/Lineout/C11")
+    AddPlot("Pseudocolor","Damage")
     DrawPlots()
     SuppressQueryOutputOn()
 
     filename = opts.inputfile+'_Jint.txt'
     f=open(filename,'w')
     f.write("#t   J, Jleft, Jtop, Jright, Jbottom\n")
+
+
+    BB = opts.bb
+    nintx = opts.nint[0]
+    ninty = opts.nint[1]
+    print 'options ',opts
     for s in range(0,TimeSliderGetNStates(),1):
+        SetActiveWindow(1)
         SetTimeSliderState(s)
         Query("Time")
         t = GetQueryOutputValue()
+        DrawPlots()
+        Cleft,Ctop,Cright,Cbot = Jintegraldx2(BB,nintx,ninty)    
 
-        ChangeActivePlotsVar("C11")
-        lineAtts = LineoutAttributes()
-        lineAtts.point1= (opts.bb[0],opts.bb[1]+opts.bb[3], 0)
-        lineAtts.point2= (opts.bb[0],opts.bb[1], 0)
-        lineAtts.interactive = 0
-        lineAtts.ignoreGlobal = 1
-        lineAtts.samplingOn = 1
-        lineAtts.numberOfSamplePoints = opts.nint[1]
-        SetOperatorOptions(lineAtts)
-        Cleft = -mytrapz(GetPlotInformation()["Curve"])
-
-        lineAtts.point1= (opts.bb[0]+opts.bb[2],opts.bb[1], 0)
-        lineAtts.point2= (opts.bb[0]+opts.bb[2],opts.bb[1]+opts.bb[3], 0)
-        lineAtts.interactive = 0
-        lineAtts.ignoreGlobal = 1
-        lineAtts.samplingOn = 1
-        lineAtts.numberOfSamplePoints = opts.nint[1]
-        SetOperatorOptions(lineAtts)
-        Cright = mytrapz(GetPlotInformation()["Curve"])
-        
-        ChangeActivePlotsVar("C21")
-        lineAtts.point1= (opts.bb[0]+opts.bb[2],opts.bb[1]+opts.bb[3], 0)
-        lineAtts.point2= (opts.bb[0],       opts.bb[1]+opts.bb[3], 0)
-        lineAtts.interactive = 0
-        lineAtts.ignoreGlobal = 1
-        lineAtts.samplingOn = 1
-        lineAtts.numberOfSamplePoints = opts.nint[0]
-        SetOperatorOptions(lineAtts)
-        Ctop = mytrapz(GetPlotInformation()["Curve"])
-
-        lineAtts.point1= (opts.bb[0],      opts.bb[1], 0)
-        lineAtts.point2= (opts.bb[0]+opts.bb[2],opts.bb[1], 0)
-        lineAtts.interactive = 0
-        lineAtts.ignoreGlobal = 1
-        lineAtts.samplingOn = 1
-        lineAtts.numberOfSamplePoints = opts.nint[0]
-        SetOperatorOptions(lineAtts)
-        Cbot = -mytrapz(GetPlotInformation()["Curve"])
-        
         print "****** step %i load = %e, Jint = %e  ( = %e %+e %+e %+e)"%(s,t,Cleft+Ctop+Cright+Cbot,Cleft,Ctop,Cright,Cbot)
         f.write("%e \t%e \t%e \t%e \t%e \t%e\n"%(t,Cleft+Ctop+Cright+Cbot,Cleft,Ctop,Cright,Cbot))
         f.flush()
         os.fsync(f)
     f.close()
+    SetActiveWindow(1)
     DeleteAllPlots()
+    SetActiveWindow(2)
+    DeleteAllPlots()
+    DeleteWindow()
     CloseDatabase(MyDatabase)
     return 0
 
