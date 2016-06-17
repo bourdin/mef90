@@ -44,12 +44,13 @@ def PrepareJob(Geometry,Parameters,debug=False):
     ### 
     ### Create a long file prefix if necessary
     ###
-    if Parameters['prefix']:
-        for k in sorted(Geometry.keys()):
-            Parameters['prefix'] +='-%s_%s'%(k,Geometry[k])
-    else:
+    #if Parameters['prefix']:
+    #    for k in sorted(Geometry.keys()):
+    #        Parameters['prefix'] +='-%s_%s'%(k,Geometry[k])
+    #else:
+    #    Parameters['prefix'] = Parameters['jobid']
+    if not Parameters['prefix']:
         Parameters['prefix'] = Parameters['jobid']
-    
     
     ###
     ### Find where the script was submitted from
@@ -74,7 +75,7 @@ def PrepareJob(Geometry,Parameters,debug=False):
         ###
         ### Try to figure out if workdir is a relative or absolute path
         ### 
-        if not args.workdir[0] == '/':
+        if not Parameters['workdir'][0] == '/':
             Parameters['workdir'] = os.path.join(submitdir,args.workdir)
     else:
         if os.getenv('PBS_O_WORKDIR'):
