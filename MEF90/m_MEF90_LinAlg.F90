@@ -176,7 +176,9 @@
          Tens4OS2DToArray,ArrayToTens4OS2D,                          &
          Tens4OS3DToArray,ArrayToTens4OS3D,                          &
          MatS2DGetArray,MatS3DGetArray,                              &
-         ArrayGetMatS2D,ArrayGetMatS3D
+         ArrayGetMatS2D,ArrayGetMatS3D,                              &
+         MatS3DToMat3D,MatS2DToMat2D,                                &
+         Mat3DToMatS3D,Mat2DToMatS2D
    End Interface
   
    Interface Symmetrize
@@ -190,7 +192,11 @@
    Interface HydrostaticPart
       Module Procedure HydrostaticPart2D,HydrostaticPart2DS,HydrostaticPart3D,HydrostaticPart3DS
    End Interface
-   
+
+   Interface MatRaRt
+      Module Procedure RaRtMat2D,RaRtMatS2D,RaRtMat3D,RaRtMatS3D
+   End Interface
+
    Interface Norm
       Module Procedure Vect2DNorm,Vect3DNorm,Mat2DNorm,MatS2DNorm,Mat3DNorm,MatS3DNorm
       ! Tens4OS2DNorm,Tens4OS3DNorm
@@ -212,9 +218,10 @@
       Module Procedure MatS3DEigenVectorValues,MatS2DEigenVectorValues
    End Interface
 
-   Interface MatSymToMat
-      Module Procedure MatS3DToMat3D,MatS2DToMat2D
-   End Interface
+   !Interface MatSymToMat
+   !   Module Procedure MatS3DToMat3D,MatS2DToMat2D
+   !End Interface
+
 
 
 !!$  Type(Vect2D),Parameter       :: e1_2D = (/ 1.0_Kr,0.0_Kr /)
@@ -1921,6 +1928,92 @@ Contains
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Symmetrize3D
    
+   Subroutine MatS2DToMat2D(M1,M2)
+      Type(Mat2D),Intent(OUT)                     :: M1
+      Type(MatS2D),Intent(IN)                     :: M2
+
+      M1%XX = M2%XX
+      M1%XY = M2%XY
+      M1%YX = M2%XY
+      M1%YY = M2%YY
+   End Subroutine MatS2DToMat2D
+
+   Subroutine MatS3DToMat3D(M1,M2)
+      Type(Mat3D),Intent(OUT)                     :: M1
+      Type(MatS3D),Intent(IN)                     :: M2
+
+      M1%XX = M2%XX
+      M1%XY = M2%XY
+      M1%XZ = M2%XZ
+      M1%YX = M2%XY
+      M1%YY = M2%YY
+      M1%YZ = M2%YZ
+      M1%ZX = M2%XZ
+      M1%ZY = M2%YZ
+      M1%ZZ = M2%ZZ
+   End Subroutine MatS3DToMat3D
+
+   Subroutine Mat2DToMatS2D(M1,M2)
+      Type(MatS2D),Intent(OUT)                    :: M1
+      Type(Mat2D),Intent(IN)                      :: M2
+
+      M1%XX = M2%XX
+      M1%XY = M2%XY
+      M1%YY = M2%YY
+   End Subroutine Mat2DToMatS2D
+
+   Subroutine Mat3DToMatS3D(M1,M2)
+      Type(MatS3D),Intent(OUT)                    :: M1
+      Type(Mat3D),Intent(IN)                      :: M2
+
+      M1%XX = M2%XX
+      M1%YY = M2%YY
+      M1%ZZ = M2%ZZ
+      M1%YZ = M2%YZ
+      M1%XZ = M2%XZ
+      M1%XY = M2%XY
+   End Subroutine Mat3DToMatS3D
+
+   Function RARtMat2D(A,R)
+      ! A <- R.A.R^T
+      Type(Mat2D),Intent(IN)                      :: A
+      Type(Mat2D),Intent(IN)                      :: R
+      Type(Mat2D)                                 :: RARtMat2D
+
+      RARtMat2D = R*A*transpose(R)
+   End Function RaRtMat2D   
+
+   Function RARtMatS2D(A,R)
+      ! A <- R.A.R^T
+      Type(MatS2D),Intent(IN)                     :: A
+      Type(Mat2D),Intent(IN)                      :: R
+      Type(MatS2D)                                :: RARtMatS2D
+
+      Type(Mat2D)                                 :: Atmp
+      Atmp = A
+      RARtMatS2D = R*Atmp*transpose(R)
+   End Function RaRtMatS2D   
+
+   Function RARtMat3D(A,R)
+      ! A <- R.A.R^T
+      Type(Mat3D),Intent(IN)                      :: A
+      Type(Mat3D),Intent(IN)                      :: R
+      Type(Mat3D)                                 :: RARtMat3D
+
+      RARtMat3D = R*A*transpose(R)
+   End Function RaRtMat3D   
+
+   Function RARtMatS3D(A,R)
+      ! A <- R.A.R^T
+      Type(MatS3D),Intent(IN)                     :: A
+      Type(Mat3D),Intent(IN)                      :: R
+      Type(MatS3D)                                :: RARtMatS3D
+
+      Type(Mat3D)                                 :: Atmp
+      Atmp = A
+      RARtMatS3D = R*Atmp*transpose(R)
+   End Function RaRtMatS3D   
+
    Function DeviatoricPart2D(M1)
       Type(Mat2D),Intent(IN)                      :: M1
       Type(Mat2D)                                 :: DeviatoricPart2D
@@ -2592,7 +2685,6 @@ Contains
       MatProj%XZ = A(1,3)
       MatProj%YZ = A(2,3)
       MatProj%ZZ = A(3,3)
-
    End Subroutine MatS3DEigenVectorValues
 
 
@@ -2623,37 +2715,5 @@ Contains
       MatProj%XY = A(1,2)
       MatProj%YX = A(2,1)
       MatProj%YY = A(2,2)
-
    End Subroutine MatS2DEigenVectorValues
-
-
-
-   Function MatS3DToMat3D(A)
-      Type(MatS3D),Intent(IN)                    :: A
-      Type(Mat3D)                                :: MatS3DToMat3D
-
-      MatS3DToMat3D%XX = A%XX
-      MatS3DToMat3D%XY = A%XY
-      MatS3DToMat3D%XZ = A%XZ
-      MatS3DToMat3D%YX = A%XY
-      MatS3DToMat3D%YY = A%YY
-      MatS3DToMat3D%YZ = A%YZ
-      MatS3DToMat3D%ZX = A%XZ
-      MatS3DToMat3D%ZY = A%YZ
-      MatS3DToMat3D%ZZ = A%ZZ
-
-   End Function MatS3DToMat3D
-
-
-   Function MatS2DToMat2D(A)
-      Type(MatS2D),Intent(IN)                    :: A
-      Type(Mat2D)                                :: MatS2DToMat2D
-
-      MatS2DToMat2D%XX = A%XX
-      MatS2DToMat2D%XY = A%XY
-      MatS2DToMat2D%YX = A%XY
-      MatS2DToMat2D%YY = A%YY
-
-   End Function MatS2DToMat2D
-
 End Module m_MEF90_LinAlg
