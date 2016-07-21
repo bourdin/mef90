@@ -1989,9 +1989,7 @@ Contains
       Type(Mat2D),Intent(IN)                      :: R
       Type(MatS2D)                                :: RARtMatS2D
 
-      Type(Mat2D)                                 :: Atmp
-      Atmp = A
-      RARtMatS2D = R*Atmp*transpose(R)
+      RARtMatS2D = R*A*transpose(R)
    End Function RaRtMatS2D   
 
    Function RARtMat3D(A,R)
@@ -2009,9 +2007,7 @@ Contains
       Type(Mat3D),Intent(IN)                      :: R
       Type(MatS3D)                                :: RARtMatS3D
 
-      Type(Mat3D)                                 :: Atmp
-      Atmp = A
-      RARtMatS3D = R*Atmp*transpose(R)
+      RARtMatS3D = R*A*transpose(R)
    End Function RaRtMatS3D   
 
    Function DeviatoricPart2D(M1)
