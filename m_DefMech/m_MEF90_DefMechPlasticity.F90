@@ -392,7 +392,7 @@ contains
       !write(*,*) 'A.e(u):         ', myctx_ptr%HookesLaw*myctx_ptr%Strain
       ! D=P^(-1).A.P 
       call EigenVectorValues(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain),MatProj,MatDiag)
-      MatPrincipal = Transpose(MatProj)*MatSymToMat(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain) - xMatS)*MatProj
+      MatPrincipal = MatRaRt(deviatoricPart((myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain) - xMatS),Transpose(MatProj))
 
       f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.
       h(1) = Trace(xMatS)

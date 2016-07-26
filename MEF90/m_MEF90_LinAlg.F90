@@ -1919,7 +1919,7 @@ Contains
       
       Symmetrize3D%XX = M1%XX
       Symmetrize3D%YY = M1%YY
-      Symmetrize3D%ZZ = M1%YY
+      Symmetrize3D%ZZ = M1%ZZ
       
       Symmetrize3D%YZ = (M1%YZ + M1%ZY) * 0.5_Kr
       Symmetrize3D%XZ = (M1%XZ + M1%ZX) * 0.5_Kr

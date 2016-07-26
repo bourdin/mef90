@@ -525,9 +525,9 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: stiffness
-      Type(MEF90_MATS)                                   :: sigma,PositiveStrain,PrincipalStrain,inelasticStrain
-      Type(MEF90_MAT)                                    :: sigmaNoSym,MatProjLocalToPrincipal
+      PetscReal                                          :: stiffness,alpha,Phi
+      Type(MEF90_MATS)                                   :: PositiveStrain,StrainPrincipalBasis,DualStrainPrincipalBasis,inelasticStrain,InelasticStrainPrincipalBasis
+      Type(MEF90_MAT)                                    :: MatProjLocalToPrincipal
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
@@ -547,26 +547,49 @@ Contains
          End Do
 
          stiffness = (1.0_Kr - stiffness )**2 + matProp%residualStiffness
-         call EigenVectorValues(inelasticStrain,MatProjLocalToPrincipal,PrincipalStrain)
+         call EigenVectorValues(inelasticStrain,MatProjLocalToPrincipal,InelasticStrainPrincipalBasis)
+         alpha = matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)
+         Phi = matprop%HookesLaw%lambda*(1.0_Kr - alpha)**2 + 2*matprop%HookesLaw%mu*(1.0_Kr + alpha**2)
+
          PositiveStrain = 0.0_Kr
-         PositiveStrain%YY = ( PrincipalStrain%YY + (matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2*matProp%HookesLaw%mu))*PrincipalStrain%XX )
+         PositiveStrain%YY = ( InelasticStrainPrincipalBasis%YY + alpha*InelasticStrainPrincipalBasis%XX )
 
 
-         if ( PositiveStrain%YY <= 0 ) then
+         if ( InelasticStrainPrincipalBasis%XX >= 0 ) then
+
             Do iDoF1 = 1,numDofDisplacement
-                  sigma = stiffness* (matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss))
+               StrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF1,iGauss),transpose(MatProjLocalToPrincipal))
                Do iDoF2 = 1,numDofDisplacement
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+                  DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
+
+                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( & 
+                                                      stiffness * ( ( matprop%HookesLaw*StrainPrincipalBasis ) .DotP. DualStrainPrincipalBasis) )
                End Do
             End Do
-         else
+         ElseIf (PositiveStrain%YY >= 0 ) then
             Do iDoF1 = 1,numDofDisplacement
-                  sigma = matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss)
+               StrainPrincipalBasis =  MatRaRt(elemDisplacement%GradS_BF(iDoF1,iGauss),transpose(MatProjLocalToPrincipal)) 
                Do iDoF2 = 1,numDofDisplacement
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+                  DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
+
+                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( & 
+                                                      stiffness*(matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu)*(alpha**2 +1.0_Kr)*( StrainPrincipalBasis .dotP. DualStrainPrincipalBasis ) &
+                                                      + Phi*( StrainPrincipalBasis%XX*DualStrainPrincipalBasis%XX) &
+                                                      )
                End Do
             End Do
-         end if
+
+         Else
+            Do iDoF1 = 1,numDofDisplacement
+               StrainPrincipalBasis =  MatRaRt(elemDisplacement%GradS_BF(iDoF1,iGauss),transpose(MatProjLocalToPrincipal)) 
+               Do iDoF2 = 1,numDofDisplacement
+                  DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
+
+                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( & 
+                                                        ( matprop%HookesLaw * StrainPrincipalBasis ) .DotP. DualStrainPrincipalBasis )
+               End Do
+            End Do
+         EndIf
 
       End Do ! Gauss
 
@@ -1062,9 +1085,9 @@ Contains
       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
       PetscInt                                           :: i,iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: temperature,stiffness
-      Type(MEF90_MATS)                                   :: inelasticStrain,sigma,PositiveStrain,PrincipalStrain,strain
-      type(MEF90_MAT)                                    :: MatProjLocalToPrincipal,sigmaNoSym
+      PetscReal                                          :: temperature,stiffness,alpha,Phi
+      Type(MEF90_MATS)                                   :: inelasticStrain,InelasticPrincipalBasis,DualStrainPrincipalBasis,PositiveStrain,MatCaseTwo
+      type(MEF90_MAT)                                    :: MatProjLocalToPrincipal
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
@@ -1095,31 +1118,39 @@ Contains
 
          !! Princiapl strain find the positive strain in the principal base
          !! see: doi:10.1016/j.jmps.2010.02.010
-         call EigenVectorValues(inelasticStrain,MatProjLocalToPrincipal,PrincipalStrain)
+         call EigenVectorValues(inelasticStrain,MatProjLocalToPrincipal,InelasticPrincipalBasis)
+         alpha = matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)
          PositiveStrain = 0.0_Kr
-         PositiveStrain%YY = ( PrincipalStrain%YY + (matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2*matProp%HookesLaw%mu))*PrincipalStrain%XX )
-         
-         if ( PrincipalStrain%XX >= 0 ) then
-            PositiveStrain = PrincipalStrain
-         else if ( PositiveStrain%YY > 0 .and. PrincipalStrain%XX < 0 ) then
-         else if ( PositiveStrain%YY <= 0 ) then
-            PositiveStrain = 0.0_Kr
-         else
-Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
-         end if
+         PositiveStrain%YY = ( InelasticPrincipalBasis%YY + alpha*InelasticPrincipalBasis%XX )
 
-         sigma =  stiffness*(matProp%HookesLaw*PositiveStrain) + matProp%HookesLaw*( PrincipalStrain - PositiveStrain )
-         sigmaNoSym = (MatProjLocalToPrincipal * sigma) * transpose(MatProjLocalToPrincipal)
-         sigma%XX = sigmaNoSym%XX 
-         sigma%YY = sigmaNoSym%YY 
-         sigma%XY = sigmaNoSym%XY 
+         MatCaseTwo = 0.0_Kr
+         MatCaseTwo%XX = alpha
+         MatCaseTwo%YY = 1.0_Kr
 
-         Do iDoF2 = 1,numDofDisplacement
-            !call EigenVectorValues(elemDisplacement%GradS_BF(iDoF2,iGauss),MatProjLocalToPrincipal,PrincipalStrain)
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
-         End Do
+         Phi = matprop%HookesLaw%lambda*(1.0_Kr - alpha)**2 + 2*matprop%HookesLaw%mu*(1.0_Kr + alpha**2)
+
+         if ( InelasticPrincipalBasis%XX >= 0 ) then
+            Do iDoF2 = 1,numDofDisplacement
+               DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ( & 
+                                                     stiffness *  ( ( matProp%HookesLaw*InelasticPrincipalBasis ) .DotP. DualStrainPrincipalBasis ) )
+            End Do
+         ElseIf (PositiveStrain%YY >= 0 ) then
+            Do iDoF2 = 1,numDofDisplacement
+               DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ( & 
+                                                      stiffness * (matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu)*(alpha*InelasticPrincipalBasis%XX + InelasticPrincipalBasis%YY)* ( MatCaseTwo .dotP. DualStrainPrincipalBasis ) &
+                                                      + Phi*InelasticPrincipalBasis%XX*( DualStrainPrincipalBasis%XX ) &
+                                                      )
+            End Do
+         Else
+            Do iDoF2 = 1,numDofDisplacement
+               DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ( & 
+                                                      ( ( matProp%HookesLaw*InelasticPrincipalBasis ) .DotP. DualStrainPrincipalBasis ) )
+            End Do
+         End If
       End Do
-
 
 
       !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
@@ -2647,8 +2678,8 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss,Stress_ZZ_planeStrain
-      Type(MEF90_MATS)                                   :: inelasticStrainGauss,PositiveStrain,PrincipalStrain
+      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss,alpha
+      Type(MEF90_MATS)                                   :: inelasticStrainGauss,PositiveStrain,InelasticPrincipalBasis
       Type(MEF90_MAT)                                    :: MatProjLocalToPrincipal
       PetscReal                                          :: C2,N
       PetscLogDouble                                     :: flops
@@ -2677,18 +2708,18 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
          End Do
          inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion 
 
-         !!!! Princiapl strain calculate positive strain see: doi:10.1016/j.jmps.2010.02.010
-         call EigenVectorValues(inelasticStrainGauss,MatProjLocalToPrincipal,PrincipalStrain)
+
+         call EigenVectorValues(inelasticStrainGauss,MatProjLocalToPrincipal,InelasticPrincipalBasis)
+         alpha = matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)
          PositiveStrain = 0.0_Kr
-         PositiveStrain%YY = ( PrincipalStrain%YY + (matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2*matProp%HookesLaw%mu))*PrincipalStrain%XX )
-         if ( PrincipalStrain%XX >= 0.0_Kr ) then
-               elasticEnergyDensityGauss = ( matprop%HookesLaw * ( PrincipalStrain ) ) .DotP. PrincipalStrain
-         else if (  PrincipalStrain%XX < 0.0_Kr  .and. PositiveStrain%YY >  0 ) then
-               elasticEnergyDensityGauss = ( matprop%HookesLaw * PositiveStrain ) .DotP. PositiveStrain
-         else if ( PositiveStrain%YY <=  0 ) then
-               elasticEnergyDensityGauss = 0.0_Kr
+         PositiveStrain%YY = ( InelasticPrincipalBasis%YY + alpha*InelasticPrincipalBasis%XX )
+
+         if ( InelasticPrincipalBasis%XX >= 0 ) then
+               elasticEnergyDensityGauss = ( matprop%HookesLaw * ( InelasticPrincipalBasis ) ) .DotP. InelasticPrincipalBasis
+         else if (  PositiveStrain%YY >=  0 ) then
+               elasticEnergyDensityGauss = ( matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu ) * (trace(PositiveStrain))**2 
          Else
-Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
+               elasticEnergyDensityGauss = 0.0_Kr
          endif
 
          damageGauss = 0.0_Kr
@@ -2699,8 +2730,7 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
-                                      (elasticEnergyDensityGauss + &
-                                      ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                      ( elasticEnergyDensityGauss ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
                                       C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
@@ -3440,8 +3470,8 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
-      Type(MEF90_MATS)                                   :: inelasticStrainGauss,PrincipalStrain,PositiveStrain
+      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss,alpha
+      Type(MEF90_MATS)                                   :: inelasticStrainGauss,InelasticPrincipalBasis,PositiveStrain
       Type(MEF90_MAT)                                    :: MatProjLocalToPrincipal
       Type(MEF90_VECT)                                   :: gradientDamageGauss
       PetscReal                                          :: C1,C2,N
@@ -3472,18 +3502,19 @@ Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
          End Do
          inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion 
 
-         !!!! Princiapl strain calculate positive strain see: doi:10.1016/j.jmps.2010.02.010
-         call EigenVectorValues(inelasticStrainGauss,MatProjLocalToPrincipal,PrincipalStrain)
+
+
+         call EigenVectorValues(inelasticStrainGauss,MatProjLocalToPrincipal,InelasticPrincipalBasis)
+         alpha = matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)
          PositiveStrain = 0.0_Kr
-         PositiveStrain%YY = ( PrincipalStrain%YY + (matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2*matProp%HookesLaw%mu))*PrincipalStrain%XX )
-         if ( PrincipalStrain%XX >= 0.0_Kr ) then
-               elasticEnergyDensityGauss = ( matprop%HookesLaw * ( PrincipalStrain ) ) .DotP. PrincipalStrain
-         else if (  PrincipalStrain%XX < 0.0_Kr  .and. PositiveStrain%YY >  0 ) then
-               elasticEnergyDensityGauss = ( matprop%HookesLaw * PositiveStrain ) .DotP. PositiveStrain
-         else if ( PositiveStrain%YY <=  0 ) then
-               elasticEnergyDensityGauss = 0.0_Kr
+         PositiveStrain%YY = ( InelasticPrincipalBasis%YY + alpha*InelasticPrincipalBasis%XX )
+
+         if ( InelasticPrincipalBasis%XX >= 0 ) then
+               elasticEnergyDensityGauss = ( matprop%HookesLaw * ( InelasticPrincipalBasis ) ) .DotP. InelasticPrincipalBasis
+         else if (  PositiveStrain%YY >=  0 ) then
+               elasticEnergyDensityGauss = ( matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu ) * (trace(PositiveStrain))**2 
          Else
-Write(*,*),__FUNCT__,': Problem with EigenVectorValues'
+               elasticEnergyDensityGauss = 0.0_Kr
          endif
 
          !!! This is really twice the elastic energy density
