@@ -101,6 +101,8 @@ Program vDef
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
+                                                         1.0_Kr,                  & ! SOROmegaDisplacement
+                                                         1.0_Kr,                  & ! SOROmegaDamage
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
@@ -129,6 +131,8 @@ Program vDef
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
+                                                         1.0_Kr,                  & ! SOROmegaDisplacement
+                                                         1.0_Kr,                  & ! SOROmegaDamage
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
@@ -462,6 +466,7 @@ Program vDef
                Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
                Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
                Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+               ! damageOld = damageOld - damage
                Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
                Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)

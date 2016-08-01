@@ -67,6 +67,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                              :: damageATol
       PetscInt                               :: maxit
       PetscInt                               :: PCLag
+      PetscReal                              :: SOROmegaDisplacement,SOROmegaDamage
       PetscReal                              :: irrevthres
       PetscEnum                              :: BTType
       PetscInt                               :: BTInterval
@@ -737,6 +738,8 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%maxit,default%maxit,'defmech_maxit','Maximum number of alternate minimizations for damage',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%PCLag,default%PCLag,'defmech_pclag','Interval at which the PC is recomputed during alternate minimization',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%irrevthres,default%irrevthres,'defmech_irrevThres','Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%SOROmegaDisplacement,default%SOROmegaDisplacement,'defmech_SOR_Omega_Disp','Alterate Minimization SOR parameter fof the displacement field',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%SOROmegaDamage,default%SOROmegaDamage,'defmech_SOR_Omega_Damage','Alterate Minimization SOR parameter fof the damage field',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%BTType,MEF90DefMech_BTTypeList,default%BTType,'BT_Type','Backtracking type',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%BTInterval,default%BTInterval,'BT_Interval','Interval at which Backtracking is run in inner loop (0 for outer loop)',ierr);CHKERRQ(ierr)
@@ -746,7 +749,6 @@ Contains
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticStrainATol,default%plasticStrainATol,'defmech_plasticstrain_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,DefMechGlobalOptions%BlockNumberWorkControlled,default%BlockNumberWorkControlled,'BlockNumberWorkControlled','default 0 workcontrolled not activated, else number of the block to controlled',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,default%cumulatedDissipatedPlasticEnergyOffset,'cumulatedDissipatedPlasticEnergy_Offset','Position of the Cumulated Plastic Energy Dissipated field in EXO file',ierr);CHKERRQ(ierr)
-
 
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 
