@@ -1,0 +1,25 @@
+diff --git a/src/snes/impls/vi/ftn-auto/vif.c b/src/snes/impls/vi/ftn-auto/vif.c
+--- a/src/snes/impls/vi/ftn-auto/vif.c
++++ b/src/snes/impls/vi/ftn-auto/vif.c
+@@ -30,8 +30,10 @@ extern void PetscRmPointer(void*);
+ #include "petscsnes.h"
+ #ifdef PETSC_HAVE_FORTRAN_CAPS
+ #define snesvisetvariablebounds_ SNESVISETVARIABLEBOUNDS
++#define snesvigetvariablebounds_ SNESVIGETVARIABLEBOUNDS
+ #elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE) && !defined(FORTRANDOUBLEUNDERSCORE)
+ #define snesvisetvariablebounds_ snesvisetvariablebounds
++#define snesvigetvariablebounds_ SNESVIGETVARIABLEBOUNDS
+ #endif
+ 
+ 
+@@ -45,6 +47,10 @@ void PETSC_STDCALL  snesvisetvariablebou
+ 	(Vec)PetscToPointer((xl) ),
+ 	(Vec)PetscToPointer((xu) ));
+ }
++void PETSC_STDCALL  snesvigetvariablebounds_(SNES snes,Vec *xl,Vec *xu, int *__ierr ){
++*__ierr = SNESVIGetVariableBounds(
++	(SNES)PetscToPointer((snes) ),xl,xu);
++}
+ #if defined(__cplusplus)
+ }
+ #endif
