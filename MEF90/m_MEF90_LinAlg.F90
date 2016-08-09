@@ -197,6 +197,10 @@
       Module Procedure RaRtMat2D,RaRtMatS2D,RaRtMat3D,RaRtMatS3D
    End Interface
 
+   Interface MatRtaR
+      Module Procedure RtaRMat2D,RtaRMatS2D,RtaRMat3D,RtaRMatS3D
+   End Interface
+
    Interface Norm
       Module Procedure Vect2DNorm,Vect3DNorm,Mat2DNorm,MatS2DNorm,Mat3DNorm,MatS3DNorm
       ! Tens4OS2DNorm,Tens4OS3DNorm
@@ -214,7 +218,9 @@
       Module Procedure MatS2DSpectralDecomposition,MatS3DSpectralDecomposition
    End Interface
 
-   Interface EigenVectorValues
+   Interface Diagonalize
+      !!! Diagonalize(A,P,D) returns P,D such that A = P D P^{-1}
+      !!! The diagonal entries of D are sorted in increasing order.
       Module Procedure MatS3DEigenVectorValues,MatS2DEigenVectorValues
    End Interface
 
@@ -2010,6 +2016,42 @@ Contains
       RARtMatS3D = R*A*transpose(R)
    End Function RaRtMatS3D   
 
+   Function RtARMat2D(A,R)
+      ! A <- Rt.A.R
+      Type(Mat2D),Intent(IN)                      :: A
+      Type(Mat2D),Intent(IN)                      :: R
+      Type(Mat2D)                                 :: RtARMat2D
+
+      RtARMat2D = transpose(R)*A*R
+   End Function RtaRMat2D   
+
+   Function RtaRMatS2D(A,R)
+      ! A <- R^T.A.R
+      Type(MatS2D),Intent(IN)                     :: A
+      Type(Mat2D),Intent(IN)                      :: R
+      Type(MatS2D)                                :: RtaRMatS2D
+
+      RtaRMatS2D = transpose(R)*A*R
+   End Function RtaRMatS2D   
+
+   Function RtaRMat3D(A,R)
+      ! A <- R^T.A.R
+      Type(Mat3D),Intent(IN)                      :: A
+      Type(Mat3D),Intent(IN)                      :: R
+      Type(Mat3D)                                 :: RtaRMat3D
+
+      RtaRMat3D = transpose(R)*A*R
+   End Function RtaRMat3D   
+
+   Function RtaRMatS3D(A,R)
+      ! A <- R^T.A.R
+      Type(MatS3D),Intent(IN)                     :: A
+      Type(Mat3D),Intent(IN)                      :: R
+      Type(MatS3D)                                :: RtaRMatS3D
+
+      RtaRMatS3D = transpose(R)*A*R
+   End Function RtaRMatS3D   
+
    Function DeviatoricPart2D(M1)
       Type(Mat2D),Intent(IN)                      :: M1
       Type(Mat2D)                                 :: DeviatoricPart2D
@@ -2652,7 +2694,7 @@ Contains
       Type(MatS3D),Intent(IN)                     :: M
       PetscReal,Dimension(3)                      :: ppleValues
       Type(Mat3D),Intent(OUT)                     :: MatProj
-      Type(MatS3D),Intent(OUT)                     :: MatDiag
+      Type(MatS3D),Intent(OUT)                    :: MatDiag
       
       Integer,Parameter                           :: n = 3
       PetscReal,Dimension(n,n)                    :: A,Pt      
