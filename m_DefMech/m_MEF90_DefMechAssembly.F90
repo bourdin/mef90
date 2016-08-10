@@ -558,33 +558,29 @@ Contains
          if ( InelasticStrainPrincipalBasis%XX >= 0 ) then
 
             Do iDoF1 = 1,numDofDisplacement
-               StrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF1,iGauss),transpose(MatProjLocalToPrincipal))
+               StrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF1,iGauss),MatProjLocalToPrincipal)
                Do iDoF2 = 1,numDofDisplacement
-                  DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
-
+                  DualStrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF2,iGauss),MatProjLocalToPrincipal)
                   ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( & 
                                                       stiffness * ( ( matprop%HookesLaw*StrainPrincipalBasis ) .DotP. DualStrainPrincipalBasis) )
                End Do
             End Do
          ElseIf (PositiveStrain%YY >= 0 ) then
             Do iDoF1 = 1,numDofDisplacement
-               StrainPrincipalBasis =  MatRaRt(elemDisplacement%GradS_BF(iDoF1,iGauss),transpose(MatProjLocalToPrincipal)) 
+               StrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF1,iGauss),MatProjLocalToPrincipal)
                Do iDoF2 = 1,numDofDisplacement
-                  DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
-
+                  DualStrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF2,iGauss),MatProjLocalToPrincipal)
                   ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( & 
                                                       stiffness*(matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu)*(alpha**2 +1.0_Kr)*( StrainPrincipalBasis .dotP. DualStrainPrincipalBasis ) &
                                                       + Phi*( StrainPrincipalBasis%XX*DualStrainPrincipalBasis%XX) &
                                                       )
                End Do
             End Do
-
          Else
             Do iDoF1 = 1,numDofDisplacement
-               StrainPrincipalBasis =  MatRaRt(elemDisplacement%GradS_BF(iDoF1,iGauss),transpose(MatProjLocalToPrincipal)) 
+               StrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF1,iGauss),MatProjLocalToPrincipal)
                Do iDoF2 = 1,numDofDisplacement
-                  DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
-
+                  DualStrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF2,iGauss),MatProjLocalToPrincipal)
                   ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( & 
                                                         ( matprop%HookesLaw * StrainPrincipalBasis ) .DotP. DualStrainPrincipalBasis )
                End Do
