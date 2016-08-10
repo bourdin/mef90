@@ -17,7 +17,10 @@ time:
     interpolation: linear
 cs0001:
     name: Matrix
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
     FractureToughness: 1e-4
     internallength: .04
     residualstiffness: 0.
@@ -33,7 +36,10 @@ cs0001:
 cs0002:
     name: Inclusion
     # inclusion
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 5.
+        PoissonRatio: 0.
     FractureToughness: 5e-5
     internallength: .04
     residualstiffness: 0.

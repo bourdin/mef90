@@ -13,7 +13,10 @@ time:
     max: 1
     numstep: 41
 cs0001:
-    hookesLaw: 1.00000e+00,0.00000e+00,0.00000e+00,0.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,0.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,0.00000e+00,5.00000e-01,0.00000e+00,5.00000e-01 
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
     FractureToughness: 1.e-2
     internallength: .3
     residualstiffness: 0.

@@ -17,6 +17,7 @@ cs0001:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
+        PlaneStress: 0
     FractureToughness: 1.
     internallength: .05
     residualstiffness: 0.
