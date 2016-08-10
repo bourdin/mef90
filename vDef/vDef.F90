@@ -39,7 +39,7 @@ Program vDef
    Type(Vec)                                          :: damageLB,damageUB   
    PetscReal,Dimension(:),Pointer                     :: damageArray,damageAltMinOldArray,damageLBArray,damageUBArray
    PetscInt                                           :: iDof
-   PetscReal                                          :: SOROmegaDamage
+   PetscReal                                          :: SOROmega,mySOROmega
    Type(Vec)                                          :: plasticStrainOld,plasticStrainPrevious
    Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
@@ -107,8 +107,7 @@ Program vDef
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
-                                                         1.0_Kr,                  & ! SOROmegaDisplacement
-                                                         1.0_Kr,                  & ! SOROmegaDamage
+                                                         1.0_Kr,                  & ! SOROmega
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
@@ -137,8 +136,7 @@ Program vDef
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
-                                                         1.0_Kr,                  & ! SOROmegaDisplacement
-                                                         1.0_Kr,                  & ! SOROmegaDamage
+                                                         1.0_Kr,                  & ! SOROmega
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
@@ -460,8 +458,9 @@ Program vDef
                Call VecCopy(MEF90DefMechCtx%displacement,displacementAltMinOld,ierr);CHKERRQ(ierr)
                Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                !!! Over relaxation on u, skipping the first alternate minimization step
-               If ((MEF90DefMechGlobalOptions%SOROmegaDisplacement /= 1.0_Kr) .AND. (AltMinIter > 1)) Then
-                  Call VecAXPBY(MEF90DefMechCtx%displacement,1.0_Kr - MEF90DefMechGlobalOptions%SOROmegaDisplacement,MEF90DefMechGlobalOptions%SOROmegaDisplacement,displacementAltMinOld,ierr);CHKERRQ(ierr)
+               If (AltMinIter > 1) Then
+                  SOROmega = abs(MEF90DefMechGlobalOptions%SOROmega)
+                  Call VecAXPBY(MEF90DefMechCtx%displacement,1.0_Kr - SOROmega,SOROmega,displacementAltMinOld,ierr);CHKERRQ(ierr)
                EndIf
 
                Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
@@ -479,28 +478,35 @@ Program vDef
                End If
 
                !!! Over relaxation of the damage variable
-               If ((MEF90DefMechGlobalOptions%SOROmegaDamage /= 1.0_Kr) .AND. (AltMinIter > 1)) Then
-                  Call SNESVIGetVariableBounds(snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
-                  Call VecGetArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
-                  Call VecGetArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
-                  Call VecGetArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
-                  Call VecGetArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
-                  SOROmegaDamage = MEF90DefMechGlobalOptions%SOROmegaDamage
-                  Do iDof = 1, size(damageArray)
-                     If (damageArray(iDof) > damageAltMinOldArray(iDof)) Then
-                     !write(*,*) '+',damageArray(iDof) - damageAltMinOldArray(iDof), SOROmegaDamage,(damageUBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof))
-                        SOROmegaDamage = min(SOROmegaDamage,(damageUBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
-                     Else If (damageArray(iDof) < damageAltMinOldArray(iDof)) Then
-                     !write(*,*) '-',damageArray(iDof) - damageAltMinOldArray(iDof), SOROmegaDamage,(damageLBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof))
-                        SOROmegaDamage = min(SOROmegaDamage,(damageLBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
-                     End If
-                  End Do
-                  Call VecRestoreArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
-                  Call VecRestoreArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
-                  Call VecRestoreArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
-                  Call VecRestoreArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
-                  If (SOROmegaDamage /= 1.0_Kr) Then
-                     Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmegaDamage,SOROmegaDamage,damageAltMinOld,ierr);CHKERRQ(ierr)
+               If (AltMinIter > 1) Then
+                  If (MEF90DefMechGlobalOptions%SOROmega > 1.0_Kr) Then
+                     mySOROmega = MEF90DefMechGlobalOptions%SOROmega
+                     !!! LIMITED SOR
+                     Call SNESVIGetVariableBounds(snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
+                     Call VecGetArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
+                     Call VecGetArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
+                     Call VecGetArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
+                     Call VecGetArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
+                     Do iDof = 1, size(damageArray)
+                        If (damageArray(iDof) > damageAltMinOldArray(iDof)) Then
+                           mySOROmega = min(mySOROmega,(damageUBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
+                        Else If (damageArray(iDof) < damageAltMinOldArray(iDof)) Then
+                           mySOROmega = min(mySOROmega,(damageLBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
+                        End If
+                     End Do
+                     Call MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+                     Call VecRestoreArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
+                     Call VecRestoreArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
+                     Call VecRestoreArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
+                     Call VecRestoreArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
+                     Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
+                  Else If (MEF90DefMechGlobalOptions%SOROmega < -1.0_Kr) Then
+                     !!! PROJECTED SOR
+                     SOROmega = -MEF90DefMechGlobalOptions%SOROmega
+                     Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
+                     Call SNESVIGetVariableBounds(snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
+                     Call VecPointwiseMax(MEF90DefMechCtx%damage,MEF90DefMechCtx%damage,damageLB,ierr);CHKERRQ(ierr)
+                     Call VecPointwiseMin(MEF90DefMechCtx%damage,MEF90DefMechCtx%damage,damageUB,ierr);CHKERRQ(ierr)
                   EndIf
                End If
 
