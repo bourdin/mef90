@@ -13,12 +13,12 @@ TestLinAlg.o: ${MEF90_DIR}/Tests/TestLinAlg.F90 MEF90
 
 TestLinAlg: TestLinAlg.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestMaterials: TestMaterials.o
 	-@echo " $@"
-	${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestMaterials.o: ${MEF90_DIR}/Tests/TestMaterials.F90 MEF90
@@ -26,7 +26,7 @@ TestMaterials.o: ${MEF90_DIR}/Tests/TestMaterials.F90 MEF90
 
 TestMEF90Ctx: TestMEF90Ctx.o 
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestMEF90Ctx.o: ${MEF90_DIR}/Tests/TestMEF90Ctx.F90 MEF90
@@ -37,7 +37,7 @@ TestUpdateSets.o: ${MEF90_DIR}/Tests/TestUpdateSets.F90 MEF90
 
 TestUpdateSets: TestUpdateSets.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestNSP.o: ${MEF90_DIR}/Tests/TestNSP.F90 MEF90
@@ -45,7 +45,7 @@ TestNSP.o: ${MEF90_DIR}/Tests/TestNSP.F90 MEF90
 
 TestNSP: TestNSP.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestLeak.o: ${MEF90_DIR}/Tests/TestLeak.F90 MEF90
@@ -53,7 +53,7 @@ TestLeak.o: ${MEF90_DIR}/Tests/TestLeak.F90 MEF90
 
 TestLeak: TestLeak.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 HookeLaws.o: ${MEF90_DIR}/Tests/HookeLaws.F90 MEF90
@@ -61,7 +61,7 @@ HookeLaws.o: ${MEF90_DIR}/Tests/HookeLaws.F90 MEF90
 
 HookeLaws: HookeLaws.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestHookeLaws.o: ${MEF90_DIR}/Tests/TestHookeLaws.F90 MEF90
@@ -69,7 +69,7 @@ TestHookeLaws.o: ${MEF90_DIR}/Tests/TestHookeLaws.F90 MEF90
 
 TestHookeLaws: TestHookeLaws.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestQuadrature.o: ${MEF90_DIR}/Tests/TestQuadrature.F90 MEF90
@@ -85,7 +85,7 @@ TestSpectralDecomposition.o: ${MEF90_DIR}/Tests/TestSpectralDecomposition.F90 ME
 
 TestSpectralDecomposition: TestSpectralDecomposition.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestSNLP.o: ${MEF90_DIR}/Tests/TestSNLP.F90 MEF90
