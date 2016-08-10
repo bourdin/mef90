@@ -30,7 +30,6 @@ cs0001:
     displacementbc: no,no,no
     damageBC: no
 cs0002:
-    hookesLaw:  1.00000e+00,0.00000e+00,0.00000e+00,1.00000e+00,0.00000e+00,5.00000e-01
     hookesLaw:  
         type: isotropic
         YoungsModulus: 1.
