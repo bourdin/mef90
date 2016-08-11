@@ -511,6 +511,7 @@ Contains
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu, Erwan TANNE erwan.tanne@gmail.com 
 !!!
+
    Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
       PetscReal,Dimension(:,:),Pointer                   :: ALoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
@@ -694,10 +695,8 @@ Contains
                                                         ( matprop%HookesLaw * StrainPrincipalBasis ) .DotP. DualStrainPrincipalBasis )
                End Do
             End Do
-         EndIf
-
+         End If
       End Do ! Gauss
-
       !flops = numGauss * ( 4. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc2
@@ -751,7 +750,7 @@ Contains
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
          End Do
    
-         If (Associated(boundaryDisplacementDof) .AND. (matprop%cohesiveStiffness > 0.0_Kr)) Then
+         If (Associated(boundaryDisplacementDof) .AND. (matprop%cohesiveStiffness /= 0.0_Kr)) Then
             UU0 = 0.0_Kr
             Do iDoF1 = 1,numDofDisplacement
                UU0 = UU0 + (xDof(iDoF1) - boundaryDisplacementDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss)
@@ -821,15 +820,15 @@ Contains
 
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
-         If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
+         If (.NOT. matProp%HookesLaw%isPlaneStress) Then
             sigma = sigma +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
-         endif
+         End If
 #endif
 
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
          End Do
-         If (Associated(boundaryDisplacementDof) .AND. (matprop%cohesiveStiffness > 0.0_Kr)) Then
+         If (Associated(boundaryDisplacementDof) .AND. (matprop%cohesiveStiffness /= 0.0_Kr)) Then
             UU0 = 0.0_Kr
             Do iDoF1 = 1,numDofDisplacement
                UU0 = UU0 + (xDof(iDoF1) - boundaryDisplacementDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss)
@@ -902,7 +901,7 @@ Contains
          End Do
 
          UU0 = 0.0_Kr
-         If (Associated(boundaryDisplacementDof) .AND. (matprop%cohesiveStiffness > 0.0_Kr)) Then
+         If (Associated(boundaryDisplacementDof) .AND. (matprop%cohesiveStiffness /= 0.0_Kr)) Then
             Do iDoF1 = 1,numDofDisplacement
                UU0 = UU0 + (xDof(iDoF1) - boundaryDisplacementDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss)
             End Do
@@ -916,9 +915,6 @@ Contains
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDisplacementLinSoftLoc
-
-
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralHDLoc"
@@ -1180,15 +1176,15 @@ Contains
 
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc"
+#define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc2"
 !!!
 !!!  
-!!!  MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc:
+!!!  MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc2:
 !!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2016 Erwan TANNE erwan.tanne@gmail.com
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
+   Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc2(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
@@ -1254,8 +1250,7 @@ Contains
                DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
                residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ( & 
                                                       stiffness * (matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu)*(alpha*InelasticPrincipalBasis%XX + InelasticPrincipalBasis%YY)* ( MatCaseTwo .dotP. DualStrainPrincipalBasis ) &
-                                                      + Phi*InelasticPrincipalBasis%XX*( DualStrainPrincipalBasis%XX ) &
-                                                      )
+                                                      + Phi*InelasticPrincipalBasis%XX*( DualStrainPrincipalBasis%XX ) )
             End Do
          Else
             Do iDoF2 = 1,numDofDisplacement
@@ -1265,14 +1260,9 @@ Contains
             End Do
          End If
       End Do
-
-
       !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc
-
-
-
+   End Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc2
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechRHSDisplacementLoc"
@@ -1326,7 +1316,7 @@ Contains
 !!!  MEF90DefMechOperatorDisplacement: Build the operator. When called in SNES, the solution time should always match the target time, 
 !!!                                    so there is no need for interpolation of the forcees, external, and boundary values
 !!!  
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-16 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
 !!!
 
    Subroutine MEF90DefMechOperatorDisplacement(snesDisplacement,displacement,residual,MEF90DefMechCtx,ierr)
@@ -1617,7 +1607,6 @@ Contains
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
-      
       !!!
       !!! Vertex set BC
       !!!
@@ -1679,7 +1668,7 @@ Contains
 !!!  
 !!!  MEF90DefMechBilinearFormDisplacement:
 !!!  
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-16 Blaise Bourdin bourdin@lsu.edu,Erwan Tanne erwan.tanne@gmail.com
 !!!
 
    Subroutine MEF90DefMechBilinearFormDisplacement(snesDispl,displacement,A,M,flg,MEF90DefMechCtx,ierr)
@@ -2462,19 +2451,16 @@ Contains
 
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
-         If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%mu )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
-         elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(plasticStrainCell)
-         endif
+         If (.NOT. matProp%HookesLaw%isPlaneStress) Then
+            Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%mu )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
+            elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(plasticStrainCell)
+         End If
 #endif
          !!! This is really twice the elastic energy density
-
          damageGauss = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
             damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
          End Do
-
-
 
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
@@ -2565,7 +2551,6 @@ Contains
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDamageLinSoftLoc
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDamageAT1ElasticLoc"
@@ -2860,7 +2845,7 @@ Contains
                elasticEnergyDensityGauss = ( matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu ) * (trace(PositiveStrain))**2 
          Else
                elasticEnergyDensityGauss = 0.0_Kr
-         endif
+         End If
 
          damageGauss = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
@@ -2878,9 +2863,6 @@ Contains
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDamageAT1UnilateralMasonryLoc
-
-
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDamageAT2Loc"
@@ -3234,10 +3216,10 @@ Contains
 
 #if MEF90_DIM == 2
          !!! Adding terms in planestrain for plasticity with tr(p) = 0
-         If (matProp%HookesLaw%isPlaneStress .eqv. .false. ) Then
-         Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%mu )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
-         elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(plasticStrainCell)
-         endif
+         If (.NOT. matProp%HookesLaw%isPlaneStress) Then
+           Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%mu )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
+           elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(plasticStrainCell)
+         End If
 #endif
          
          !!! This is really twice the elastic energy density
@@ -3254,7 +3236,6 @@ Contains
                                  - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1.0_Kr)  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
                                  C2 * ( (gradientDamageGauss + Displacement*CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
-
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
@@ -3337,7 +3318,6 @@ Contains
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDamageLinSoftLoc
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamageAT1ElasticLoc"
@@ -3457,7 +3437,6 @@ Contains
                                   C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
-
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDamageAT1UnilateralHDLoc
@@ -3667,7 +3646,7 @@ Contains
                elasticEnergyDensityGauss = ( matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu ) * (trace(PositiveStrain))**2 
          Else
                elasticEnergyDensityGauss = 0.0_Kr
-         endif
+         End If
 
          !!! This is really twice the elastic energy density
          damageGauss = 0.0_Kr
@@ -3688,9 +3667,6 @@ Contains
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDamageAT1UnilateralMasonryLoc
-
-
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamageAT2Loc"
@@ -3768,6 +3744,7 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechOperatorDamageAT2ElasticLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
@@ -3817,6 +3794,7 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechOperatorDamageAT2UnilateralHDLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
@@ -3888,6 +3866,7 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechOperatorDamageAT2UnilateralDeviatoricLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
@@ -4026,7 +4005,7 @@ Contains
 !!!  MEF90DefMechOperatorDamage: Build the operator. When called in SNES, the solution time should always match the target time, 
 !!!                                    so there is no need for interpolation of the forcees, external, and boundary values
 !!!  
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-16 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
 !!!
 
    Subroutine MEF90DefMechOperatorDamage(snesDamage,damage,residual,MEF90DefMechCtx,ierr)
@@ -4280,7 +4259,6 @@ Contains
       End Do ! set
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-
       
       !!!
       !!! Vertex set BC
@@ -4337,7 +4315,7 @@ Contains
 !!!  
 !!!  MEF90DefMechBilinearFormDamage:
 !!!  
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-16 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
 !!!
 
    Subroutine MEF90DefMechBilinearFormDamage(snesDamage,damage,A,M,flg,MEF90DefMechCtx,ierr)
@@ -4660,6 +4638,4 @@ Contains
 
       Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSurfaceEnergy
-
-
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
