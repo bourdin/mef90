@@ -229,7 +229,7 @@ Module m_MEF90_Materials
    End Interface
    
    Interface  Operator (*)
-      Module Procedure MEF90HookesLaw2DXMatS2D,MEF90HookesLaw3DXMatS3D
+      Module Procedure MEF90HookesLaw2DXMatS2D,MEF90HookesLaw3DXMatS3D,MEF90HookesLaw2DXMat2D,MEF90HookesLaw3DXMat3D
    End Interface
    
    PetscSizeT,protected   :: sizeofMEF90MatProp2D
@@ -648,4 +648,72 @@ Contains
       End Select
    End Function MEF90HookesLaw3DXMatS3D
 
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HookesLaw2DXMat2D"
+!!!
+!!!  
+!!!  MEF90HookesLaw2DXMat2D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function MEF90HookesLaw2DXMat2D(A,X)
+      Type(MEF90HookesLaw2D), Intent(IN)           :: A
+      Type(Mat2D), Intent(IN)                      :: X
+      Type(Mat2D)                                  :: MEF90HookesLaw2DXMat2D
+      
+      PetscErrorCode                               :: ierr
+      Real(Kind = Kr)                              :: C1, C2
+
+      Select case(A%type)
+         Case(MEF90HookesLawTypeIsotropic)
+            C1 = A%lambda + 2.0_Kr * A%mu
+            C2 = 2.0_Kr * A%mu
+            MEF90HookesLaw2DXMat2D%XX = C1 * X%XX       + A%lambda * X%YY
+            MEF90HookesLaw2DXMat2D%XY = C2 * X%XY
+            MEF90HookesLaw2DXMat2D%YY = A%lambda * X%XX + C1 * X%YY
+            MEF90HookesLaw2DXMat2D%YX = C2 * X%YX
+            Call PetscLogFlops(11._pflop,ierr);CHKERRQ(ierr)
+         Case(MEF90HookesLawTypeFull)
+            MEF90HookesLaw2DXMat2D = A%fullTensor * X
+            ! flops are counted in m_MEF90_LinAlg
+      End Select
+   End Function MEF90HookesLaw2DXMat2D
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HookesLaw2DXMat3D"
+!!!
+!!!  
+!!!  MEF90HookesLaw2DXMat3D:
+!!!  
+!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function MEF90HookesLaw3DXMat3D(A,X)
+      Type(MEF90HookesLaw3D), Intent(IN)           :: A
+      Type(Mat3D), Intent(IN)                     :: X
+      Type(Mat3D)                                 :: MEF90HookesLaw3DXMat3D
+      
+      PetscErrorCode                               :: ierr
+      Real(Kind = Kr)                              :: C1, C2
+
+      Select case(A%type)
+         Case(MEF90HookesLawTypeIsotropic)
+            C1 = A%lambda + 2.0_Kr * A%mu
+            C2 = 2.0_Kr * A%mu
+            MEF90HookesLaw3DXMat3D%XX = C1 * X%XX       + A%lambda * X%YY + A%lambda * X%ZZ
+            MEF90HookesLaw3DXMat3D%XY = C2 * X%XY
+            MEF90HookesLaw3DXMat3D%XZ = C2 * X%XZ
+
+            MEF90HookesLaw3DXMat3D%YX = C2 * X%YX
+            MEF90HookesLaw3DXMat3D%YY = A%lambda * X%XX + C1 * X%YY       + A%lambda * X%ZZ
+            MEF90HookesLaw3DXMat3D%YZ = C2 * X%YZ
+
+            MEF90HookesLaw3DXMat3D%XZ = C2 * X%XZ
+            MEF90HookesLaw3DXMat3D%YZ = C2 * X%YZ
+            MEF90HookesLaw3DXMat3D%ZZ = A%lambda * X%XX + A%lambda * X%YY + C1 * X%ZZ
+            Call PetscLogFlops(24._pflop,ierr);CHKERRQ(ierr)
+         Case(MEF90HookesLawTypeFull)
+            MEF90HookesLaw3DXMat3D = A%fullTensor * X
+            ! flops are counted in m_MEF90_LinAlg
+      End Select
+   End Function MEF90HookesLaw3DXMat3D
 End Module m_MEF90_Materials

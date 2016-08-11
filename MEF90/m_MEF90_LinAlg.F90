@@ -119,8 +119,8 @@
          DbleXMat2D,Mat2DXDble,DbleXMat3D,Mat3DXDble,                                            &
          DbleXMatS2D,MatS2DXDble,DbleXMatS3D,MatS3DXDble,                                        &
          MatXVect2D,MatXVect3D,MatXVect2DS,MatXVect3DS,                                          &
-         DbleXTens4OS2D,Tens4OS2DXDble,Tens4OS2DXMatS2D,                                         &
-         DbleXTens4OS3D,Tens4OS3DXDble,Tens4OS3DXMatS3D,                                         &
+         DbleXTens4OS2D,Tens4OS2DXDble,Tens4OS2DXMatS2D,Tens4OS2DXMat2D,                         &
+         DbleXTens4OS3D,Tens4OS3DXDble,Tens4OS3DXMatS3D,Tens4OS3DXMat3D,                         &
          Mat2DXMat2D,Mat2DXMatS2D,MatS2DXMatS2D,Mat3DXMat3D,Mat3DXMatS3D,MatS3DXMatS3D,          &
          DotP2D,DotP3D
    End Interface
@@ -130,7 +130,8 @@
    End Interface
 
    Interface Operator (.DotP.)
-      Module Procedure DotP2D,DotP3D,ContP2D,ContP3D,ContP2DS,ContP3DS
+      Module Procedure DotP2D,DotP3D,ContP2D,ContP3D,ContP2DS,ContP3DS,                         &
+         Mat2DDotMatS2D,MatS2DDotMat2D,Mat3DDotMatS3D,MatS3DDotMat3D
    End Interface
    
    Interface Operator (.CrossP.)
@@ -916,6 +917,41 @@ Contains
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Tens4OS3DXMatS3D
    
+#undef __FUNCT__
+#define __FUNCT__ "Tens4OS2DXMat2D"
+!!!
+!!!  
+!!!  Tens4OS2DXMat2D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function Tens4OS2DXMat2D(T1,M1)
+      Type(Tens4OS2D),Intent(IN)                  :: T1
+      Type(Mat2D),Intent(IN)                      :: M1
+      Type(MatS2D)                                :: Tens4OS2DXMat2D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      Tens4OS2DXMat2D = T1 * symmetrize(M1)
+   End Function Tens4OS2DXMat2D
+   
+#undef __FUNCT__
+#define __FUNCT__ "Tens4OS3DXMat3D"
+!!!
+!!!  
+!!!  Tens4OS3DXMat3D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function Tens4OS3DXMat3D(T1,M1)
+      Type(Tens4OS3D),Intent(IN)                  :: T1
+      Type(Mat3D),Intent(IN)                      :: M1
+      Type(MatS3D)                                :: Tens4OS3DXMat3D
+      PetscInt                                    :: ierr
+      
+      Tens4OS3DXMat3D =  T1 * symmetrize(M1)
+   End Function Tens4OS3DXMat3D
+   
    Function Mat2DXMat2D(M1,M2)
       Type(Mat2D),Intent(IN)                      :: M1,M2
       Type(Mat2D)                                 :: Mat2DXMat2D
@@ -1213,6 +1249,78 @@ Contains
       flops = 6.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function ContP2DS
+
+#undef __FUNCT__
+#define __FUNCT__ "Mat2DDotMatS2D"
+!!!
+!!!  
+!!!  Mat2DDotMatS2D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function Mat2DDotMatS2D(M1,M2)
+      Type(Mat2D),Intent(IN)                      :: M1
+      Type(MatS2D),Intent(IN)                     :: M2
+      PetscReal                                   :: Mat2DDotMatS2D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      Mat2DDotMatS2D = symmetrize(M1) .DotP. M2
+   End Function Mat2DDotMatS2D
+
+#undef __FUNCT__
+#define __FUNCT__ "MatS2DDotMat2D"
+!!!
+!!!  
+!!!  MatS2DDotMat2D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function MatS2DDotMat2D(M1,M2)
+      Type(MatS2D),Intent(IN)                     :: M1
+      Type(Mat2D),Intent(IN)                      :: M2
+      PetscReal                                   :: MatS2DDotMat2D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      MatS2DDotMat2D = M1 .DotP. symmetrize(M2)
+   End Function MatS2DDotMat2D
+
+#undef __FUNCT__
+#define __FUNCT__ "Mat2DDotMatS3D"
+!!!
+!!!  
+!!!  Mat3DDotMatS3D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function Mat3DDotMatS3D(M1,M2)
+      Type(Mat3D),Intent(IN)                      :: M1
+      Type(MatS3D),Intent(IN)                     :: M2
+      PetscReal                                   :: Mat3DDotMatS3D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      Mat3DDotMatS3D = symmetrize(M1) .DotP. M2
+   End Function Mat3DDotMatS3D
+
+#undef __FUNCT__
+#define __FUNCT__ "MatS3DDotMat3D"
+!!!
+!!!  
+!!!  MatS3DDotMat3D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Function MatS3DDotMat3D(M1,M2)
+      Type(MatS3D),Intent(IN)                     :: M1
+      Type(Mat3D),Intent(IN)                      :: M2
+      PetscReal                                   :: MatS3DDotMat3D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      MatS3DDotMat3D = M1 .DotP. symmetrize(M2)
+   End Function MatS3DDotMat3D
 
    Function ContP3D(M1,M2)
       ! tr(A^t x B)
