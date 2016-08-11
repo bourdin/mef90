@@ -106,15 +106,18 @@ Program CoupledPlasticityDamage
                                                          1,                       & ! temperatureOffset
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
-                                                         6,                       & ! plasticStrainOffset
+                                                         0,                       & ! CrackPressureOffset
+                                                         0,                       & ! plasticStrainOffset
                                                          6,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
+                                                         MEF90Scaling_Linear,     & ! CrackPressureScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
+                                                         1.0_Kr,                  & ! SOROmega
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
@@ -134,15 +137,18 @@ Program CoupledPlasticityDamage
                                                          1,                       & ! temperatureOffset
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
+                                                         0,                       & ! CrackPressureOffset
                                                          0,                       & ! plasticStrainOffset
                                                          7,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
+                                                         MEF90Scaling_Linear,     & ! CrackPressureScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
+                                                         1.0_Kr,                  & ! SOROmega
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
@@ -158,6 +164,7 @@ Program CoupledPlasticityDamage
                                                          -1,                                      & ! elemTypeShortIDDamage will be overriden
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! force
                                                          0.0_Kr,                                  & ! pressureForce
+                                                         0.0_Kr,                                  & ! CrackPressure
                                                          MEF90DefMech_damageTypeAT1,              & ! damageType
                                                          MEF90DefMech_plasticityTypeNone,         & ! plasticityType
                                                          MEF90DefMech_unilateralContactTypeNone,  & ! unilateralContactType
@@ -405,7 +412,7 @@ Program CoupledPlasticityDamage
             !!! Compute thermal energy
             Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,thermalEnergySet,heatFluxWorkSet,ierr);CHKERRQ(ierr)
             Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-            Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+            Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call PetscPrintf(MEF90Ctx%Comm,"\nThermal energies: \n",ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
@@ -470,7 +477,6 @@ Program CoupledPlasticityDamage
                      Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                   End If
 
-
                   !!! Work Controled part 
                   If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
                      forceWorkSet      = 0.0_Kr
@@ -513,6 +519,8 @@ Program CoupledPlasticityDamage
                   Write(IOBuffer,400) "damage field",snesDamageConvergedReason
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                End If
+
+Call VecView(MEF90DefMechCtx%CrackPressure,PETSC_VIEWER_STDOUT_WORLD)
 
                Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
                Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)

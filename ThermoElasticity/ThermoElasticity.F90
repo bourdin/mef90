@@ -31,20 +31,23 @@ Program ThermoElasticity
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          3,                       & ! DisplacementOffset
                                                          2,                       & ! DamageOffset
-                                                         0,                       & ! boundaryDisplacementOffset
+                                                         3,                       & ! boundaryDisplacementOffset
                                                          0,                       & ! boundaryDamageOffset
                                                          1,                       & ! temperatureOffset
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
+                                                         0,                       & ! CrackPressureOffset
                                                          0,                       & ! plasticStrainOffset
-                                                         0,                       & ! StressOffset
+                                                         6,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
+                                                         MEF90Scaling_Linear,     & ! CrackPressureScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
+                                                         1.0_Kr,                  & ! SOROmega
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
@@ -60,20 +63,23 @@ Program ThermoElasticity
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          3,                       & ! DisplacementOffset
                                                          2,                       & ! DamageOffset
-                                                         0,                       & ! boundaryDisplacementOffset
+                                                         3,                       & ! boundaryDisplacementOffset
                                                          0,                       & ! boundaryDamageOffset
                                                          1,                       & ! temperatureOffset
                                                          4,                       & ! ForceOffset
                                                          3,                       & ! pressureForceOffset
+                                                         0,                       & ! CrackPressureOffset
                                                          0,                       & ! plasticStrainOffset
-                                                         0,                       & ! StressOffset
+                                                         7,                       & ! StressOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
+                                                         MEF90Scaling_Linear,     & ! CrackPressureScaling
                                                          1e-4,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
+                                                         1.0_Kr,                  & ! SOROmega
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
                                                          -1,                      & ! BTInt
@@ -90,6 +96,7 @@ Program ThermoElasticity
                                                          -1,                                      & ! elemTypeShortIDDamage will be overriden
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! force
                                                          0.0_Kr,                                  & ! pressureForce
+                                                         0.0_Kr,                                  & ! CrackPressure
                                                          MEF90DefMech_damageTypeAT1Elastic,       & ! damageType
                                                          MEF90DefMech_plasticityTypeNone,         & ! plasticityType
                                                          MEF90DefMech_unilateralContactTypeNone,  & ! unilateralContactType
