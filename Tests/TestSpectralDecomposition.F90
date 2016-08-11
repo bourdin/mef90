@@ -55,7 +55,6 @@ Program TestSpectralDecomposition
       Call PetscRandomGetValue(RdmCtx,M2D%XY,ierr);CHKERRQ(ierr)
       Call Diagonalize(M2D,P2D,D2D)
       M2D = M2D - MatRaRt(D2D,P2D)
-
       Call PetscRandomGetValue(RdmCtx,M3D%XX,ierr);CHKERRQ(ierr)
       Call PetscRandomGetValue(RdmCtx,M3D%YY,ierr);CHKERRQ(ierr)
       Call PetscRandomGetValue(RdmCtx,M3D%ZZ,ierr);CHKERRQ(ierr)
