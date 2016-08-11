@@ -15,6 +15,7 @@ Module m_MEF90_DefMechCtx_Type
       !!! cell based vec      
       Type(Vec),pointer                      :: force
       Type(Vec),pointer                      :: pressureForce
+      Type(Vec),pointer                      :: CrackPressure
       Type(Vec),Pointer                      :: plasticStrain
       Type(Vec),Pointer                      :: cumulatedDissipatedPlasticEnergy
       Type(Vec),Pointer                      :: stress
@@ -57,6 +58,7 @@ Module m_MEF90_DefMechCtx_Type
       !!! Position of cell-based vecs in exo files
       PetscInt                               :: forceOffset
       PetscInt                               :: pressureForceOffset
+      PetscInt                               :: CrackPressureOffset
       PetscInt                               :: plasticStrainOffset
       PetscInt                               :: stressOffset
       !!! scaling = time (step) scaling law currently CST, Linear, or File
@@ -64,6 +66,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                               :: boundaryDamageScaling
       PetscInt                               :: forceScaling
       PetscInt                               :: pressureForceScaling
+      PetscInt                               :: CrackPressureScaling
       PetscReal                              :: damageATol
       PetscInt                               :: maxit
       PetscInt                               :: PCLag
@@ -83,6 +86,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                               :: elemTypeShortIDDamage
       PetscReal,Dimension(3)                 :: force
       PetscReal                              :: pressureForce
+      PetscReal                              :: CrackPressure
       PetscEnum                              :: damageType
       PetscEnum                              :: plasticityType
       PetscEnum                              :: unilateralContactType
@@ -436,6 +440,7 @@ Contains
 102 Format("# cell set ",I4,"\n")
       Nullify(DefMechCtx%force)
       Nullify(DefMechCtx%pressureforce)
+      Nullify(DefMechCtx%CrackPressure)
       Nullify(DefMechCtx%boundaryDisplacement)
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
@@ -526,6 +531,11 @@ Contains
       Call PetscObjectSetName(DefMechCtx%pressureForce,"PressureForce",ierr);CHKERRQ(ierr)
       Call VecSet(DefMechCtx%pressureForce,0.0_Kr,ierr);CHKERRQ(ierr)
 
+      Allocate(DefMechCtx%CrackPressure,stat=ierr)
+      Call DMCreateGlobalVector(DefMechCtx%cellDMScal,DefMechCtx%CrackPressure,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(DefMechCtx%CrackPressure,"CrackPressure",ierr);CHKERRQ(ierr)
+      Call VecSet(DefMechCtx%CrackPressure,0.0_Kr,ierr);CHKERRQ(ierr)
+
       Allocate(DefMechCtx%temperature,stat=ierr)
       Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%temperature,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(DefMechCtx%temperature,"temperature",ierr);CHKERRQ(ierr)
@@ -605,6 +615,12 @@ Contains
          Nullify(DefMechCtx%pressureForce)
       End If
 
+      If (Associated(DefMechCtx%CrackPressure)) Then 
+         Call VecDestroy(DefMechCtx%CrackPressure,ierr);CHKERRQ(ierr)      
+         DeAllocate(DefMechCtx%CrackPressure)
+         Nullify(DefMechCtx%CrackPressure)
+      End If
+
       If (Associated(DefMechCtx%temperature)) Then 
          Call VecDestroy(DefMechCtx%temperature,ierr);CHKERRQ(ierr)   
          DeAllocate(DefMechCtx%temperature)
@@ -665,6 +681,7 @@ Contains
 
       Nullify(DefMechCtx%force)
       Nullify(DefMechCtx%pressureforce)
+      Nullify(DefMechCtx%CrackPressure)
       Nullify(DefMechCtx%boundaryDisplacement)
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
@@ -734,6 +751,8 @@ Contains
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%pressureForceScaling,MEF90ScalingList,default%pressureforceScaling,'pressureForce_scaling','Pressure force scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%pressureForceOffset,default%pressureForceOffset,'pressureForce_Offset','Position of pressure force field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%CrackPressureScaling,MEF90ScalingList,default%CrackPressureScaling,'CrackPressure_scaling','Crack Pressure scaling',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%CrackPressureOffset,default%CrackPressureOffset,'CrackPressure_Offset','Position of Crack Pressure field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%damageATol,default%damageATol,'defmech_damage_atol','Absolute tolerance on damage error',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%maxit,default%maxit,'defmech_maxit','Maximum number of alternate minimizations for damage',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%PCLag,default%PCLag,'defmech_pclag','Interval at which the PC is recomputed during alternate minimization',ierr);CHKERRQ(ierr)
@@ -779,6 +798,7 @@ Contains
       Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortIDDamage,default%ElemTypeShortIDDamage,'ShortIDDamage','Damage field element type ShortID',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%force,3,'Force','[N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%pressureForce,default%pressureForce,'pressureForce','[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechCellSetOptions%CrackPressure,default%CrackPressure,'CrackPressure','without unit: internal crack pressure',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%damageType,MEF90DefMech_damageTypeList,default%damageType,'damage_type','Type of damage law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%plasticityType,MEF90DefMech_plasticityTypeList,default%plasticityType,'plasticity_type','Type of plasticity law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%unilateralContactType,MEF90DefMech_unilateralContactTypeList,default%unilateralContactType,'unilateralContact_type','Type of handling of unilateral contact',ierr);CHKERRQ(ierr)

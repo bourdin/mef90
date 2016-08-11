@@ -102,6 +102,20 @@ Contains
                Call MEF90DefMechSetPressureForceCst(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx,ierr)
          End Select
       End If
+
+      If (Associated(MEF90DefMechCtx%CrackPressure)) Then
+         Select case (MEF90DefMechGlobalOptions%CrackPressureScaling)
+            Case (MEF90Scaling_File)
+               Call VecLoadExodusCell(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%CrackPressure,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                      MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%CrackPressureOffset,ierr);CHKERRQ(ierr)
+            Case (MEF90Scaling_Linear)
+               Call MEF90DefMechSetCrackPressureCst(MEF90DefMechCtx%CrackPressure,MEF90DefMechCtx,ierr)
+               Call VecScale(MEF90DefMechCtx%CrackPressure,time,ierr);CHKERRQ(ierr)
+            Case (MEF90Scaling_CST)
+               Call MEF90DefMechSetCrackPressureCst(MEF90DefMechCtx%CrackPressure,MEF90DefMechCtx,ierr)
+         End Select
+      End If
+
       Select case (MEF90DefMechGlobalOptions%boundaryDisplacementScaling)
          Case (MEF90Scaling_File)
             Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
@@ -233,6 +247,61 @@ Contains
       Call SectionRealToVec(xSec,MEF90DefMechCtx%cellDMScalScatter,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr) 
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSetPressureForceCst
+
+
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechSetCrackPressureCst"
+!!!
+!!!  
+!!!  MEF90DefMechSetCrackPressureCst:
+!!!  
+!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechSetCrackPressureCst(x,MEF90DefMechCtx,ierr)
+      Type(Vec),Intent(IN)                            :: x
+      Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                      :: ierr
+   
+      Type(SectionReal)                               :: xSec
+      Type(MEF90DefMechGlobalOptions_Type),pointer    :: MEF90DefMechGlobalOptions
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
+      Type(MEF90DefMechCellSetOptions_Type),pointer   :: cellSetOptions
+      Type(IS)                                        :: cellSetGlobalIS,setIS
+      PetscInt,Dimension(:),Pointer                   :: setID
+      PetscInt,Dimension(:),Pointer                   :: setIdx
+      PetscInt                                        :: set,c,dim
+      PetscReal,Dimension(:),Pointer                  :: val
+      
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
+      Call DMMeshGetDimension(MEF90DefMechCtx%cellDMVect,dim,ierr);CHKERRQ(ierr)
+
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMScalSec,xSec,ierr);CHKERRQ(ierr)
+
+      !!! pressure force is cell-centered
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%CellDMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         Call DMMeshGetStratumIS(MEF90DefMechCtx%cellDMVect,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+         Do c = 1, size(setIdx)
+            Call SectionRealRestrict(xSec,setIDx(c),val,ierr);CHKERRQ(ierr)
+            val = cellSetOptions%CrackPressure
+            Call SectionRealRestore(xSec,setIDx(c),val,ierr);CHKERRQ(ierr)
+         End Do
+         Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      End Do
+      Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(xSec,MEF90DefMechCtx%cellDMScalScatter,SCATTER_FORWARD,x,ierr);CHKERRQ(ierr) 
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechSetCrackPressureCst
+
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSetBoundaryDisplacementCst"
@@ -813,13 +882,13 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
 
       !!! cell-based fields are located before nodal ones in exodus files, so saving them first.
-      If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
-         If (Associated(MEF90DefMechCtx%pressureForce)) Then
+      If (MEF90DefMechGlobalOptions%ForceOffset > 0) Then
+         If (Associated(MEF90DefMechCtx%Force)) Then
             Call DMGetLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
             Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             Call VecViewExodusCell(MEF90DefMechCtx%cellDMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureforceOffset,ierr);CHKERRQ(ierr)
+                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
             Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMVect,localVec,ierr);CHKERRQ(ierr)
          Else
             Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] force field not associated, not saving. Use -force_offset 0 \n",ierr);CHKERRQ(ierr)
@@ -836,6 +905,19 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
             Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
          Else
             Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] pressureForce field not associated, not saving. Use -pressureForce_offset 0 \n",ierr);CHKERRQ(ierr)
+         End If
+      End If
+
+      If (MEF90DefMechGlobalOptions%CrackPressureOffset > 0) Then
+         If (Associated(MEF90DefMechCtx%CrackPressure)) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%CrackPressure,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%CrackPressure,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
+            Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%CrackPressureOffset,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+         Else
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] CrackPressure field not associated, not saving. Use -CrackPressure_offset 0 \n",ierr);CHKERRQ(ierr)
          End If
       End If
 
@@ -1011,6 +1093,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
                      
       numfield = max(MEF90DefMechGlobalOptions%forceOffset+dim-1,&
                      MEF90DefMechGlobalOptions%pressureForceOffset,&
+                     MEF90DefMechGlobalOptions%CrackPressureOffset,&
                      MEF90DefMechGlobalOptions%StressOffset+(dim*(dim+1))/2-1,&
                      MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1,&
                      MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset)
@@ -1027,6 +1110,11 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
          nameC(MEF90DefMechGlobalOptions%pressureForceOffset)                          = "Pressure_Force"
       End If
+      
+      If (MEF90DefMechGlobalOptions%CrackPressureOffset > 0) Then
+         nameC(MEF90DefMechGlobalOptions%CrackPressureOffset)                          = "Crack_Pressure"
+      End If
+
       If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
          If (dim == 2) Then
             nameC(MEF90DefMechGlobalOptions%stressOffset+0)                            = "Stress_XX"

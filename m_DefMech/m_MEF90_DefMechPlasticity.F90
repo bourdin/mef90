@@ -379,8 +379,8 @@ contains
 
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
       type(MEF90_MATS)                          :: xMatS
-      type(MEF90_MAT)                           :: MatProj
-      type(MEF90_MATS)                          :: MatDiag
+      type(MEF90_MAT)                           :: MatProjLocBasisToPrincipalBasis
+      type(MEF90_MATS)                          :: MatDiagPrincipalBasis
       type(MEF90_MAT)                           :: MatPrincipal
       type(MEF90_MATS)                          :: gMatS
 
@@ -391,19 +391,18 @@ contains
 
       !write(*,*) 'A.e(u):         ', myctx_ptr%HookesLaw*myctx_ptr%Strain
       ! D=P^(-1).A.P 
-      call EigenVectorValues(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain),MatProj,MatDiag)
-      MatPrincipal = MatRaRt(deviatoricPart((myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain) - xMatS),Transpose(MatProj))
+      call Diagonalize(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain),MatProjLocBasisToPrincipalBasis,MatDiagPrincipalBasis)
 
       f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.
       h(1) = Trace(xMatS)
 
 #if MEF90_DIM == 2
-      g(1) = +(MatPrincipal%XX-MatPrincipal%YY) - myctx_ptr%YieldStress
-      g(2) = -(MatPrincipal%XX-MatPrincipal%YY) - myctx_ptr%YieldStress
-      g(3) = +(MatPrincipal%YY)                 - myctx_ptr%YieldStress
-      g(4) = -(MatPrincipal%YY)                 - myctx_ptr%YieldStress
-      g(5) = +(MatPrincipal%XX)                 - myctx_ptr%YieldStress
-      g(6) = -(MatPrincipal%XX)                 - myctx_ptr%YieldStress
+      g(1) = +(MatDiagPrincipalBasis%XX-MatDiagPrincipalBasis%YY) - myctx_ptr%YieldStress
+      g(2) = -(MatDiagPrincipalBasis%XX-MatDiagPrincipalBasis%YY) - myctx_ptr%YieldStress
+      g(3) = +(MatDiagPrincipalBasis%YY)                 - myctx_ptr%YieldStress
+      g(4) = -(MatDiagPrincipalBasis%YY)                 - myctx_ptr%YieldStress
+      g(5) = +(MatDiagPrincipalBasis%XX)                 - myctx_ptr%YieldStress
+      g(6) = -(MatDiagPrincipalBasis%XX)                 - myctx_ptr%YieldStress
 #else
       Write(*,*) 'Tresca3D is NOT implemented'
 #endif
