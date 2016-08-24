@@ -15,6 +15,8 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
           MEF90DefMechOperatorDamage,           &
           MEF90DefMechBilinearFormDamage,       &
           MEF90DefMechSurfaceEnergy,            &
+          MEF90DefMechCrackVolume,              &
+          MEF90DefMechCrackPressureRescaling,   &
           MEF90DefMechStress
 
    Abstract Interface
@@ -1975,7 +1977,7 @@ Contains
       Call SectionRealDestroy(pressureForceSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(forceSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechWork   
+   End Subroutine MEF90DefMechWork
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCohesiveEnergy"
@@ -3252,7 +3254,7 @@ Contains
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                  ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
                                  - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1.0_Kr)  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
-                                 C2 * ( (gradientDamageGauss + Displacement*CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                  ( ( C2 * gradientDamageGauss +  Displacement*CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
 
       End Do
@@ -4660,6 +4662,253 @@ Contains
 
       Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSurfaceEnergy
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCrackVolume"
+!!!
+!!!  
+!!!  MEF90DefMechCrackVolume:
+!!!  
+!!!  (c) 2016 Erwan erwan.tanne@gmail.com  
+!!!
+
+   Subroutine MEF90DefMechCrackVolume(xVec,MEF90DefMechCtx,CrackVolume,ierr)
+      Type(Vec),Intent(IN)                               :: xVec
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscReal,Dimension(:),Pointer                     :: CrackVolume
+      PetscErrorCode,Intent(OUT)                         :: ierr
+   
+      Type(SectionReal)                                  :: xSec,alphaSec,CrackPressureSec
+      Type(IS)                                           :: CellSetGlobalIS,setIS
+      PetscInt,Dimension(:),Pointer                      :: setID
+      PetscInt                                           :: set,QuadratureOrder,numCell
+      Type(MEF90_MATPROP),Pointer                        :: matpropSet
+      Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
+      Type(MEF90DefMechGlobalOptions_Type),Pointer       :: globalOptions
+      Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
+      PetscReal                                          :: myCrackVolume,myCrackVolumeSet
+
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscReal,Dimension(:),Pointer                     :: xloc,alphaloc,CrackPressureLoc
+      PetscInt                                           :: cell
+      PetscReal                                          :: CrackPressureElem,alphaElem
+      PetscInt                                           :: iDoF1,iGauss
+      Type(MEF90_VECT)                                   :: gradAlphaElem,DisplacementElem
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisp
+
+      
+      
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%globalOptionsBag,globalOptions,ierr);CHKERRQ(ierr)
+
+      Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,xSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(xSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,xVec,ierr);CHKERRQ(ierr)
+      
+      Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,alphaSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(alphaSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%Damage,ierr);CHKERRQ(ierr) 
+      
+      CrackVolume   = 0.0_Kr
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         myCrackVolume = 0.0_Kr
+         
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
+         elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
+
+         QuadratureOrder = elemDisplacementType%order
+         Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+         QuadratureOrder = 2 * (elemScalType%order - 1)
+         Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+
+         If (elemScalType%coDim == 0) Then
+            
+            Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+            If (Size(cellID) > 0) Then
+               Allocate(xloc(elemDisplacementType%numDof))
+               Allocate(alphaloc(elemScalType%numDof))
+               Do cell = 1,size(cellID)
+
+                  Call SectionRealRestrictClosure(xSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestrictClosure(alphaSec,MEF90DefMechCtx%DMScal,cellID(cell),elemScalType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+
+                  Do iGauss = 1,size(elemScal(cell)%Gauss_C)
+
+                     DisplacementElem = 0.0_Kr
+                     Do iDoF1 = 1,elemDisplacementType%numDof
+                        DisplacementElem = DisplacementElem + xloc(iDof1) * elemDisplacement(cell)%BF(iDof1,iGauss)
+                     End Do
+                     gradAlphaElem = 0.0_Kr
+                     alphaElem = 0.0_Kr
+                     Do iDoF1 = 1,elemScalType%numDof
+                        alphaElem     = alphaElem     + alphaLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
+                        gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
+                     End Do
+                     myCrackVolume = myCrackVolume - (elemDisplacement(cell)%Gauss_C(iGauss) *( ( gradAlphaElem) .dotP. DisplacementElem  ) )
+                  End Do ! Gauss
+               End Do ! cell
+
+               DeAllocate(xloc)
+               DeAllocate(alphaloc)
+               End If
+            Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         End If
+
+         Call MEF90Element_Destroy(elemScal,ierr)
+         Call MEF90Element_Destroy(elemDisplacement,ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+         Call MPI_AllReduce(myCrackVolume,myCrackVolumeSet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         CrackVolume(set) = CrackVolume(set) + myCrackVolumeSet
+      End Do ! set
+      Call ISrestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+
+      Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechCrackVolume
+
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCrackPressureRescaling"
+!!!
+!!!  
+!!!  MEF90DefMechCrackPressureRescaling:
+!!!  
+!!!  (c) 2016 Erwan erwan.tanne@gmail.com  
+!!!
+
+   Subroutine MEF90DefMechCrackPressureRescaling(xVec,CrackPressureVec,MEF90DefMechCtx,CrackVolumeSet,ActivatedCrackPressureBlocksList,timeStep,ierr)
+      Type(Vec),Intent(IN)                               :: xVec
+      Type(Vec),Intent(INOUT)                            :: CrackPressureVec
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscReal,Dimension(:),Pointer,Intent(IN)          :: CrackVolumeSet
+      PetscReal,Intent(IN)                               :: timeStep
+      PetscBool,Dimension(:),Pointer,Intent(IN)          :: ActivatedCrackPressureBlocksList
+
+
+      Type(MEF90DefMechGlobalOptions_Type),Pointer       :: globalOptions
+      Type(SectionReal)                                  :: xSec,CrackPressureSec,alphaSec
+      Type(IS)                                           :: CellSetGlobalIS,setIS
+      PetscInt,Dimension(:),Pointer                      :: setID,cellID
+      PetscInt                                           :: set,QuadratureOrder,numCell
+      Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
+      PetscReal                                          :: cellSize,CrackPressureElem,alphaElem,PressureVolumeElem,CrackVolumeControlled
+      Type(MEF90_MATS)                                   :: StrainElem
+      Type(MEF90_VECT)                                   :: gradAlphaElem,DisplacementElem
+      Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
+      PetscInt                                           :: iDoF1,iGauss,cell
+      PetscReal,Dimension(:),Pointer                     :: xloc,alphaloc,CrackPressureLoc
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisp
+      Type(MEF90_MATPROP),pointer                        :: matpropSet
+
+
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%globalOptionsBag,globalOptions,ierr);CHKERRQ(ierr)
+
+      Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,xSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(xSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,xVec,ierr);CHKERRQ(ierr)
+
+      Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,alphaSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(alphaSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%Damage,ierr);CHKERRQ(ierr) 
+
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMScalSec,CrackPressureSec,ierr)
+      Call SectionRealToVec(CrackPressureSec,MEF90DefMechCtx%CellDMScalScatter,SCATTER_REVERSE,CrackPressureVec,ierr);CHKERRQ(ierr) 
+
+      Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+
+         Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+         elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
+         elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
+         !Allocate(ActivatedCrackPressureBlocksList(size(MEF90DefMechCtx%CellSetOptionsBag)))
+
+         QuadratureOrder = elemDisplacementType%order
+         Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+         QuadratureOrder = 2 * (elemScalType%order - 1)
+         Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+
+         If (elemScalType%coDim == 0) Then
+
+            Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+            If (Size(cellID) > 0) Then
+               Allocate(xloc(elemDisplacementType%numDof))
+               Allocate(alphaloc(elemScalType%numDof))
+
+               PressureVolumeElem = 0
+               Do cell = 1,size(cellID)
+                  cellSize = 0.0_Kr
+                  PressureVolumeElem = 0.0_Kr
+
+                  Call SectionRealRestrictClosure(xSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestrictClosure(alphaSec,MEF90DefMechCtx%DMScal,cellID(cell),elemScalType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestrict(CrackPressureSec,cellID(cell),CrackPressureLoc,ierr);CHKERRQ(ierr)
+                  Do iGauss = 1,size(elemScal(cell)%Gauss_C)
+
+                     StrainElem = 0.0_Kr
+                     Do iDoF1 = 1,elemDisplacementType%numDof
+                        StrainElem = StrainElem + xloc(iDof1) *  elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
+                     End Do
+
+
+                     DisplacementElem = 0.0_Kr
+                     Do iDoF1 = 1,elemDisplacementType%numDof
+                        DisplacementElem = DisplacementElem + xloc(iDof1) * elemDisplacement(cell)%BF(iDof1,iGauss)
+                     End Do
+                     gradAlphaElem = 0.0_Kr
+                     alphaElem = 0.0_Kr
+                     Do iDoF1 = 1,elemScalType%numDof
+                        alphaElem     = alphaElem     + alphaLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
+                        gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
+                     End Do
+                     cellSize = cellSize + elemDisplacement(cell)%Gauss_C(iGauss)
+                     PressureVolumeElem = PressureVolumeElem - (elemDisplacement(cell)%Gauss_C(iGauss) *( gradAlphaElem .dotP. DisplacementElem  ) )
+                  End Do ! Gauss
+
+               !! Case where the total volume is controlled
+               If (ActivatedCrackPressureBlocksList(set)) then
+                  !! rescal the total 
+                  CrackVolumeControlled = sum(CrackVolumeSet,MASK=ActivatedCrackPressureBlocksList)
+                  CrackPressureLoc = ( timeStep/CrackVolumeControlled )*CrackPressureLoc
+               Else 
+                  If ( trace(StrainElem)<0 .and. (alphaElem>0)) Then
+                     CrackPressureLoc = (1.0_Kr-alphaElem)**2*((matpropSet%HookesLaw*StrainElem)*gradAlphaElem)*gradAlphaElem / (gradAlphaElem .dotP. gradAlphaElem)
+                  Else
+                     CrackPressureLoc = 0.0_Kr
+                  EndIf
+               EndIf
+               Call SectionRealRestore(CrackPressureSec,cellID(cell),CrackPressureLoc,ierr);CHKERRQ(ierr)
+               End Do ! cell
+
+               DeAllocate(xloc)
+               DeAllocate(alphaloc)
+               End If
+            Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         End If
+
+         Call MEF90Element_Destroy(elemScal,ierr)
+         Call MEF90Element_Destroy(elemDisplacement,ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      End Do ! set
+      Call ISrestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call SectionRealToVec(CrackPressureSec,MEF90DefMechCtx%CellDMScalScatter,SCATTER_FORWARD,CrackPressureVec,ierr);CHKERRQ(ierr) 
+      
+      Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(CrackpressureSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechCrackPressureRescaling
 
 
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
