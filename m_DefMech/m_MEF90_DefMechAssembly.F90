@@ -1562,6 +1562,9 @@ Contains
                If (Associated(MEF90DefMechCtx%pressureForce)) Then
                   Call SectionRealRestore(pressureForceSec,cellID(cell),pressureForceLoc,ierr);CHKERRQ(ierr)
                End If
+               If (Associated(MEF90DefMechCtx%CrackPressure)) Then
+                  Call SectionRealRestore(CrackPressureSec,cellID(cell),CrackPressureLoc,ierr);CHKERRQ(ierr)
+               End If
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
                   Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                   Call SectionRealRestore(cumulatedDissipatedPlasticEnergySec,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
@@ -1663,6 +1666,10 @@ Contains
 
       If (Associated(MEF90DefMechCtx%pressureForce)) Then
          Call SectionRealDestroy(pressureForceSec,ierr);CHKERRQ(ierr)
+      End If
+
+      If (Associated(MEF90DefMechCtx%CrackPressure)) Then
+         Call SectionRealDestroy(CrackPressureSec,ierr);CHKERRQ(ierr)
       End If
 
       If (Associated(MEF90DefMechCtx%force)) Then
@@ -4095,13 +4102,6 @@ Contains
          temperatureSec%v = 0
       End If
 
-      If (Associated(MEF90DefMechCtx%pressureForce)) Then
-         Call SectionRealDuplicate(MEF90DefMechCtx%cellDMScalSec,pressureForceSec,ierr);CHKERRQ(ierr)
-         Call SectionRealToVec(pressureForceSec,MEF90DefMechCtx%CellDMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%pressureForce,ierr);CHKERRQ(ierr)
-      Else
-         pressureForceSec%v = 0
-      End If
-
       If (Associated(MEF90DefMechCtx%CrackPressure)) Then
          Call SectionRealDuplicate(MEF90DefMechCtx%cellDMScalSec,CrackPressureSec,ierr);CHKERRQ(ierr)
          Call SectionRealToVec(CrackPressureSec,MEF90DefMechCtx%CellDMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%CrackPressure,ierr);CHKERRQ(ierr)
@@ -4236,6 +4236,12 @@ Contains
                   Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                   Call SectionRealRestore(cumulatedDissipatedPlasticEnergySec,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
                End If
+
+               If (Associated(MEF90DefMechCtx%CrackPressure)) Then
+                  Call SectionRealRestore(CrackPressureSec,cellID(cell),CrackPressureLoc,ierr);CHKERRQ(ierr)
+               EndIf
+
+
             End Do
             DeAllocate(displacementDof)
             DeAllocate(damageDof)
