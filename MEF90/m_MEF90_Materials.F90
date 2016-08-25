@@ -231,6 +231,10 @@ Module m_MEF90_Materials
    Interface  Operator (*)
       Module Procedure MEF90HookesLaw2DXMatS2D,MEF90HookesLaw3DXMatS3D,MEF90HookesLaw2DXMat2D,MEF90HookesLaw3DXMat3D
    End Interface
+
+   Interface MasonryProjection
+      Module Procedure MasonryProjection2D,MasonryProjection3D
+   End Interface
    
    PetscSizeT,protected   :: sizeofMEF90MatProp2D
    PetscSizeT,protected   :: sizeofMEF90MatProp3D
@@ -590,7 +594,7 @@ Contains
 !!!  
 !!!  MEF90HookesLaw2DXMatS2D:
 !!!  
-!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    Function MEF90HookesLaw2DXMatS2D(A,X)
       Type(MEF90HookesLaw2D), Intent(IN)           :: A
@@ -620,7 +624,7 @@ Contains
 !!!  
 !!!  MEF90HookesLaw2DXMatS3D:
 !!!  
-!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    Function MEF90HookesLaw3DXMatS3D(A,X)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
@@ -685,7 +689,7 @@ Contains
 !!!  
 !!!  MEF90HookesLaw2DXMat3D:
 !!!  
-!!!  (c) 2015 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    Function MEF90HookesLaw3DXMat3D(A,X)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
@@ -716,4 +720,84 @@ Contains
             ! flops are counted in m_MEF90_LinAlg
       End Select
    End Function MEF90HookesLaw3DXMat3D
+
+#undef __FUNCT__
+#define __FUNCT__ "MasonryProjection2D"
+!!!
+!!!  
+!!!  MasonryProjection2D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine MasonryProjection2D(Epsilon,A,PositivePart,NegativePart)
+      Type(MatS2D),Intent(IN)                     :: Epsilon
+      Type(MEF90HookesLaw2D),Intent(IN)           :: A
+      Type(MatS2D),Intent(OUT)                    :: PositivePart,NegativePart
+
+      Type(MatS2D)                                :: D
+      Type(Mat2D)                                 :: Pinv
+      PetscErrorCode                              :: ierr
+
+      If (A%type /= MEF90HookesLawTypeIsotropic) Then
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+      End If
+
+if ((epsilon .dotP. epsilon) < 1.e-8) Then
+   PositivePart = 0.0_Kr
+   NegativePart = 0.0_Kr
+Else
+      Call Diagonalize(Epsilon,Pinv,D)
+      If (D%XX >= 0.0_Kr) Then
+         PositivePart = D
+      Else If (A%lambda * D%XX + (A%lambda + 2.0_Kr * A%mu) * D%YY >= 0.0_Kr ) Then
+         PositivePart = 0.0_Kr
+         PositivePart%YY = A%lambda / (A%lambda + 2.0_Kr * A%mu) * D%XX + D%YY
+      Else
+         PositivePart = 0.0_Kr
+      End If
+      PositivePart = MatRaRt(PositivePart,Pinv)
+      NegativePart = Epsilon - PositivePart
+End If
+   End Subroutine MasonryProjection2D
+
+#undef __FUNCT__
+#define __FUNCT__ "MasonryProjection3D"
+!!!
+!!!  
+!!!  MasonryProjection3D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine MasonryProjection3D(Epsilon,A,PositivePart,NegativePart)
+      Type(MatS3D),Intent(IN)                     :: Epsilon
+      Type(MEF90HookesLaw3D),Intent(IN)           :: A
+      Type(MatS3D),Intent(OUT)                    :: PositivePart,NegativePart
+
+      Type(MatS3D)                                :: D
+      Type(Mat3D)                                 :: Pinv
+      PetscReal                                   :: nu
+      PetscErrorCode                              :: ierr
+
+      If (A%type /= MEF90HookesLawTypeIsotropic) Then
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+      End If
+      Call Diagonalize(Epsilon,Pinv,D)
+      nu = A%lambda / (A%lambda + A%mu) * 0.5_Kr
+      If (D%XX >= 0.0_Kr) Then
+         PositivePart = D
+      Else If (nu * D%XX + D%YY >= 0.0_Kr ) Then
+         PositivePart = 0.0_Kr
+         PositivePart%YY = nu * D%XX + D%YY
+         PositivePart%ZZ = nu * D%XX + D%ZZ
+      Else If (nu * (D%XX + D%YY) + (1.0_Kr - nu) * D%ZZ >= 0.0_Kr ) Then
+         PositivePart = 0.0_Kr
+         PositivePart%ZZ = nu / (1.0_Kr - nu) * (D%XX + D%YY) + D%ZZ
+      Else
+         PositivePart = 0.0_Kr
+      End If
+      PositivePart = MatRaRt(PositivePart,Pinv)
+      NegativePart = Epsilon - PositivePart
+   End Subroutine MasonryProjection3D
 End Module m_MEF90_Materials
