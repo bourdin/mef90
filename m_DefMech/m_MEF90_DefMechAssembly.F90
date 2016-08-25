@@ -193,7 +193,6 @@ Contains
       flops = numGauss * ( 4. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDisplacementATLoc
-   
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDisplacementLinSoftLoc"
@@ -502,205 +501,6 @@ Contains
       !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc"
-!!!
-!!!  
-!!!  MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc:
-!!!  
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu, Erwan TANNE erwan.tanne@gmail.com 
-!!!
-
-   Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
-      PetscReal,Dimension(:,:),Pointer                   :: ALoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
-      PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
-      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
-      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
-
-      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: lambda,mu,stiffness
-      Type(MEF90_MATS)                                   :: inelasticStrain,InelasticStrainPrincipalBasis,sigma,epsilon
-      Type(MEF90_MAT)                                    :: Pinv,PositiveStrainProjector,NegativeStrainProjector
-      PetscLogDouble                                     :: flops
-      PetscErrorCode                                     :: ierr
-
-      If (matprop%HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unilateral Masonry not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
-      End If
-      lambda = matprop%HookesLaw%lambda
-      mu     = matprop%HookesLaw%mu
-
-#if MEF90_DIM == 2
-      numDofDisplacement = size(elemDisplacement%BF,1)
-      numDofDamage = size(elemDamage%BF,1)
-      numGauss = size(elemDisplacement%BF,2)
-      ALoc = 0.0_Kr
-      Do iGauss = 1,numGauss
-         inelasticStrain = (-1.0_Kr) * plasticStrainCell
-         If (Associated(temperatureDof)) Then
-            Do iDoF1 = 1,numDofDamage
-               inelasticStrain = inelasticStrain - temperatureDof(iDoF1) * (matProp%LinearThermalExpansion * elemDamage%BF(iDoF1,iGauss))
-            End Do         
-         End If
-         Do iDoF1 = 1,numDofDisplacement
-            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
-         End Do
-         Call Diagonalize(inelasticStrain,Pinv,InelasticStrainPrincipalBasis)
-         
-         stiffness = 0.0_Kr
-         Do iDoF1 = 1,numDofDamage
-            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-         End Do
-         stiffness = (1.0_Kr - stiffness)**2 + matProp%residualStiffness
-
-         If (InelasticStrainPrincipalBasis%XX >= 0.0_Kr) Then
-            Do iDoF1 = 1,numDofDisplacement
-               sigma = stiffness * (matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss))
-               Do iDoF2 = 1,numDofDisplacement
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
-                  If (matprop%cohesiveStiffness /= 0.0_Kr) Then
-                     ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesivestiffness * (elemDisplacement%BF(iDoF1,iGauss) .DotP. elemDisplacement%BF(iDoF2,iGauss))
-                  End If            
-               End Do ! iDof2
-            End Do !iDof1
-         Else If (lambda * InelasticStrainPrincipalBasis%XX + (lambda + 2.0_Kr * mu) * InelasticStrainPrincipalBasis%YY >= 0.0_Kr) Then
-            !!! A \phi \psi = (a(\alpha) + \eta) A \Pi D \phi : \Pi D \psi + (1+\eta) A (I - \Pi D) \phi : (I - \Pi D) \phi + k \phi \psi
-            !!! with \Pi D = PositiveStrainProjector
-            !!! with I - \Pi D = NegativeStrainProjector
-            PositiveStrainProjector    = 0.0_Kr
-            PositiveStrainProjector%YX = lambda / (lambda + 2.0_Kr * mu)
-            PositiveStrainProjector%YY = 1.0_Kr
-            PositiveStrainProjector    = PositiveStrainProjector * Pinv
-            NegativeStrainProjector    = 0.0_Kr
-            NegativeStrainProjector%XX = 1.0_Kr
-            NegativeStrainProjector%YX = -lambda / (lambda + 2.0_Kr * mu)
-            NegativeStrainProjector    = NegativeStrainProjector * Pinv
-            !!! Contribution of the positive strain and cohesive energy
-            Do iDoF1 = 1,numDofDisplacement
-               sigma = stiffness * (matProp%HookesLaw * (PositiveStrainProjector * elemDisplacement%GradS_BF(iDoF1,iGauss)))
-               Do iDoF2 = 1,numDofDisplacement
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. PositiveStrainProjector * elemDisplacement%GradS_BF(iDoF2,iGauss))
-                  If (matprop%cohesiveStiffness /= 0.0_Kr) Then
-                     ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesivestiffness * (elemDisplacement%BF(iDoF1,iGauss) .DotP. elemDisplacement%BF(iDoF2,iGauss))
-                  End If            
-               End Do ! iDof2
-            End Do !iDof1
-            !!! Contribution of the negative strain
-            Do iDoF1 = 1,numDofDisplacement
-               sigma = matProp%HookesLaw * (NegativeStrainProjector * elemDisplacement%GradS_BF(iDoF1,iGauss))
-               Do iDoF2 = 1,numDofDisplacement
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( sigma .DotP. NegativeStrainProjector * elemDisplacement%GradS_BF(iDoF2,iGauss))
-               End Do ! iDof2
-            End Do !iDof1
-         Else
-            !!! Compression: (1+\eta) A \phi.\psi = (1 + \eta) A\phi:\psi + k \phi \psi
-            Do iDoF1 = 1,numDofDisplacement
-               sigma = (1.0_Kr + matProp%residualStiffness) * (matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss))
-               Do iDoF2 = 1,numDofDisplacement
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
-                  If (matprop%cohesiveStiffness /= 0.0_Kr) Then
-                     ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesivestiffness * (elemDisplacement%BF(iDoF1,iGauss) .DotP. elemDisplacement%BF(iDoF2,iGauss))
-                  End If            
-               End Do ! iDof2
-            End Do !iDof1
-         End If
-      End Do ! iGauss
-      !flops = numGauss * ( 4. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
-#else
-      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unilateral Masonry not implemented in 3D yet: "//__FUNCT__,ierr)
-#endif
-      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc2"
-!!!
-!!!  
-!!!  MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc2:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-
-   Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc2(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
-      PetscReal,Dimension(:,:),Pointer                   :: ALoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
-      PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
-      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
-      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
-
-      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: stiffness,alpha,Phi
-      Type(MEF90_MATS)                                   :: PositiveStrain,StrainPrincipalBasis,DualStrainPrincipalBasis,inelasticStrain,InelasticStrainPrincipalBasis
-      Type(MEF90_MAT)                                    :: MatProjLocalToPrincipal
-      PetscLogDouble                                     :: flops
-      PetscErrorCode                                     :: ierr
-
-      numDofDisplacement = size(elemDisplacement%BF,1)
-      numDofDamage = size(elemDamage%BF,1)
-      numGauss = size(elemDisplacement%BF,2)
-      ALoc = 0.0_Kr
-      Do iGauss = 1,numGauss
-
-         stiffness = 0.0_Kr
-         inelasticStrain = 0.0_Kr
-         Do iDoF1 = 1,numDofDisplacement
-            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss) 
-         End Do
-         Do iDoF1 = 1,numDofDamage
-            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-         End Do
-
-         stiffness = (1.0_Kr - stiffness )**2 + matProp%residualStiffness
-         call Diagonalize(inelasticStrain,MatProjLocalToPrincipal,InelasticStrainPrincipalBasis)
-         alpha = matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)
-         Phi = matprop%HookesLaw%lambda*(1.0_Kr - alpha)**2 + 2*matprop%HookesLaw%mu*(1.0_Kr + alpha**2)
-
-         PositiveStrain = 0.0_Kr
-         PositiveStrain%YY = ( InelasticStrainPrincipalBasis%YY + alpha*InelasticStrainPrincipalBasis%XX )
-
-
-         if ( InelasticStrainPrincipalBasis%XX >= 0 ) then
-
-            Do iDoF1 = 1,numDofDisplacement
-               StrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF1,iGauss),MatProjLocalToPrincipal)
-               Do iDoF2 = 1,numDofDisplacement
-                  DualStrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF2,iGauss),MatProjLocalToPrincipal)
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( & 
-                                                      stiffness * ( ( matprop%HookesLaw*StrainPrincipalBasis ) .DotP. DualStrainPrincipalBasis) )
-               End Do
-            End Do
-         ElseIf (PositiveStrain%YY >= 0 ) then
-            Do iDoF1 = 1,numDofDisplacement
-               StrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF1,iGauss),MatProjLocalToPrincipal)
-               Do iDoF2 = 1,numDofDisplacement
-                  DualStrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF2,iGauss),MatProjLocalToPrincipal)
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( & 
-                                                      stiffness*(matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu)*(alpha**2 +1.0_Kr)*( StrainPrincipalBasis .dotP. DualStrainPrincipalBasis ) &
-                                                      + Phi*( StrainPrincipalBasis%XX*DualStrainPrincipalBasis%XX) &
-                                                      )
-               End Do
-            End Do
-         Else
-            Do iDoF1 = 1,numDofDisplacement
-               StrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF1,iGauss),MatProjLocalToPrincipal)
-               Do iDoF2 = 1,numDofDisplacement
-                  DualStrainPrincipalBasis = MatRtaR(elemDisplacement%GradS_BF(iDoF2,iGauss),MatProjLocalToPrincipal)
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * ( & 
-                                                        ( matprop%HookesLaw * StrainPrincipalBasis ) .DotP. DualStrainPrincipalBasis )
-               End Do
-            End Do
-         End If
-      End Do ! Gauss
-      !flops = numGauss * ( 4. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
-      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc2
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDisplacementElasticLoc"
@@ -1174,17 +974,16 @@ Contains
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDisplacementATUnilateralPSLoc
 
-
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc2"
+#define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc"
 !!!
 !!!  
-!!!  MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc2:
+!!!  MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc:
 !!!  
-!!!  (c) 2016 Erwan TANNE erwan.tanne@gmail.com
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu, Erwan TANNE erwan.tanne@gmail.com 
 !!!
 
-   Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc2(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
+   Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
       PetscReal,Dimension(:),Pointer                     :: residualLoc
       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
@@ -1194,75 +993,71 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
       PetscReal,Intent(IN)                               :: CrackPressureCell
 
-      PetscInt                                           :: i,iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: temperature,stiffness,alpha,Phi
-      Type(MEF90_MATS)                                   :: inelasticStrain,InelasticPrincipalBasis,DualStrainPrincipalBasis,PositiveStrain,MatCaseTwo
-      type(MEF90_MAT)                                    :: MatProjLocalToPrincipal
+      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
+      PetscReal                                          :: damageElem
+      Type(MEF90_MATS)                                   :: inelasticStrain,positiveInelasticStrain,negativeInelasticStrain,stress
+      Type(MEF90_MAT)                                    :: Pinv
+      Type(MEF90_VECT)                                   :: UU0
+      PetscReal                                          :: C1
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
+
+      If (matprop%HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unilateral Masonry not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+      End If
 
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
+      C1 = matprop%HookesLaw%lambda / (matprop%HookesLaw%lambda + 2.0_Kr * matprop%HookesLaw%mu)
 
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
-         temperature = 0.0_Kr
+         damageElem = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            damageElem = damageElem + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+         End Do
+
          inelasticStrain = 0.0_Kr
-         stiffness = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
-               temperature = temperature - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
+               inelasticStrain = inelasticStrain - temperatureDof(iDoF1)  * elemDamage%BF(iDoF1,iGauss) * matProp%LinearThermalExpansion
             End Do         
-            inelasticStrain = matProp%LinearThermalExpansion * temperature
          End If
-
          Do iDoF1 = 1,numDofDisplacement
-            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss) - plasticStrainCell
+            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
          End Do
-
-         Do iDoF1 = 1,numDofDamage
-            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-         End Do
-         stiffness = (1.0_Kr - stiffness )**2 + matProp%residualStiffness
-
-         !! Princiapl strain find the positive strain in the principal base
-         !! see: doi:10.1016/j.jmps.2010.02.010
-         call Diagonalize(inelasticStrain,MatProjLocalToPrincipal,InelasticPrincipalBasis)
-         alpha = matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)
-         PositiveStrain = 0.0_Kr
-         PositiveStrain%YY = ( InelasticPrincipalBasis%YY + alpha*InelasticPrincipalBasis%XX )
-
-         MatCaseTwo = 0.0_Kr
-         MatCaseTwo%XX = alpha
-         MatCaseTwo%YY = 1.0_Kr
-
-         Phi = matprop%HookesLaw%lambda*(1.0_Kr - alpha)**2 + 2*matprop%HookesLaw%mu*(1.0_Kr + alpha**2)
-
-         if ( InelasticPrincipalBasis%XX >= 0 ) then
-            Do iDoF2 = 1,numDofDisplacement
-               DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
-               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ( & 
-                                                     stiffness *  ( ( matProp%HookesLaw*InelasticPrincipalBasis ) .DotP. DualStrainPrincipalBasis ) )
+         inelasticStrain = inelasticStrain - plasticStrainCell
+         Call MasonryProjection(inelasticStrain,matprop%HookesLaw,positiveInelasticStrain,negativeInelasticStrain)
+         inelasticStrain = ((1.0_Kr - damageElem + matprop%residualStiffness) * positiveInelasticStrain) + &
+                         & ((1.0_Kr + matprop%residualStiffness) * negativeInelasticStrain)
+         stress = matprop%HookesLaw * inelasticStrain
+!InelasticStrainPrincipalBasis = InelasticStrain
+!Pinv = 0.0_Kr
+!Pinv%XX = 1.0_Kr         
+!Pinv%YY = 1.0_Kr         
+         UU0 = 0.0_Kr
+         If (Associated(boundaryDisplacementDof) .AND. (matprop%cohesiveStiffness /= 0.0_Kr)) Then
+            UU0 = 0.0_Kr
+            Do iDoF1 = 1,numDofDisplacement
+               UU0 = UU0 + (xDof(iDoF1) - boundaryDisplacementDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss)
             End Do
-         ElseIf (PositiveStrain%YY >= 0 ) then
-            Do iDoF2 = 1,numDofDisplacement
-               DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
-               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ( & 
-                                                      stiffness * (matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu)*(alpha*InelasticPrincipalBasis%XX + InelasticPrincipalBasis%YY)* ( MatCaseTwo .dotP. DualStrainPrincipalBasis ) &
-                                                      + Phi*InelasticPrincipalBasis%XX*( DualStrainPrincipalBasis%XX ) )
-            End Do
-         Else
-            Do iDoF2 = 1,numDofDisplacement
-               DualStrainPrincipalBasis = MatRaRt(elemDisplacement%GradS_BF(iDoF2,iGauss),transpose(MatProjLocalToPrincipal))
-               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * ( & 
-                                                      ( ( matProp%HookesLaw*InelasticPrincipalBasis ) .DotP. DualStrainPrincipalBasis ) )
-            End Do
+            UU0 = UU0 * matprop%cohesiveStiffness
          End If
-      End Do
-      !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
+
+         Do iDoF2 = 1,numDofDisplacement
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (stress .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+         End Do ! iDof2
+         !!! Contribution of the cohesive energy
+         If (matprop%cohesiveStiffness /= 0.0_Kr) Then
+            Do iDoF2 = 1,numDofDisplacement
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (UU0 .DotP. elemDisplacement%BF(iDoF2,iGauss))
+            End Do ! iDof2
+         End If            
+      End Do ! iGauss
+      !flops = numGauss * ( 4. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc2
+   End Subroutine MEF90DefMechOperatorDisplacementATUnilateralMasonryLoc
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechRHSDisplacementLoc"
@@ -1772,7 +1567,8 @@ Contains
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypeMasonry)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralMasonryLoc
+                  ! due to the lag technique used for the implementation of Masonry, the Bilinear form is that of an emasticity problem
+                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementElasticLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc
                End Select
@@ -2782,13 +2578,11 @@ Contains
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDamageAT1UnilateralPHDLoc
 
-
-
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDamageAT1UnilateralMasonryLoc"
 !!!
 !!!  
-!!!  MEF90DefMechBilinearFormDamageAT1Loc:
+!!!  MEF90DefMechBilinearFormDamageAT1UnilateralMasonryLoc:
 !!!  
 !!!  (c) 2016 Erwan Tanne erwan.tanne@gmail.com
 !!!
@@ -2803,12 +2597,11 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss,alpha
-      Type(MEF90_MATS)                                   :: inelasticStrainGauss,PositiveStrain,InelasticPrincipalBasis
-      Type(MEF90_MAT)                                    :: MatProjLocalToPrincipal
-      PetscReal                                          :: C2,N
+      PetscReal                                          :: positiveElasticEnergyDensityGauss
+      Type(MEF90_MATS)                                   :: inelasticStrain,positiveInelasticStrain,negativeInelasticStrain
+      PetscReal                                          :: C2
       PetscLogDouble                                     :: flops
-      PetscErrorCode                                     :: ierr
+      PetscBool                                          :: isNaN
 
 
 
@@ -2816,46 +2609,38 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
       
-      N = matprop%DuctileCouplingPower
       C2 = matprop%fractureToughness * matprop%internalLength * .75
       Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
-         temperatureGauss = 0.0_Kr
+         inelasticStrain = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
-               temperatureGauss = temperatureGauss + elemDamage%BF(iDoF1,iGauss) * temperatureDof(iDoF1)
-            End Do
+               inelasticStrain = inelasticStrain - temperatureDof(iDoF1) * (matProp%LinearThermalExpansion * elemDamage%BF(iDoF1,iGauss))
+            End Do         
          End If
-
-         inelasticStrainGauss = 0.0_Kr
          Do iDoF1 = 1,numDofDisplacement
-            inelasticStrainGauss = inelasticStrainGauss + elemDisplacement%GradS_BF(iDoF1,iGauss) * displacementDof(iDoF1)
+            inelasticStrain = inelasticStrain + displacementDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
          End Do
-         inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion 
-
-
-         call Diagonalize(inelasticStrainGauss,MatProjLocalToPrincipal,InelasticPrincipalBasis)
-         alpha = matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)
-         PositiveStrain = 0.0_Kr
-         PositiveStrain%YY = ( InelasticPrincipalBasis%YY + alpha*InelasticPrincipalBasis%XX )
-
-         if ( InelasticPrincipalBasis%XX >= 0 ) then
-               elasticEnergyDensityGauss = ( matprop%HookesLaw * ( InelasticPrincipalBasis ) ) .DotP. InelasticPrincipalBasis
-         else if (  PositiveStrain%YY >=  0 ) then
-               elasticEnergyDensityGauss = ( matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu ) * (trace(PositiveStrain))**2 
-         Else
-               elasticEnergyDensityGauss = 0.0_Kr
-         End If
-
-         damageGauss = 0.0_Kr
-         Do iDoF1 = 1,numDofDamage
-            damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
-         End Do
-
+         inelasticStrain = inelasticStrain - plasticStrainCell
+         Call MasonryProjection(inelasticStrain,matprop%HookesLaw,positiveInelasticStrain,negativeInelasticStrain)
+         positiveElasticEnergyDensityGauss = (matprop%HookesLaw * positiveInelasticStrain) .dotP. positiveInelasticStrain
+isNan = PetscIsInfOrNanReal(positiveElasticEnergyDensityGauss)
+if (isNan) then
+   write(*,*) 'displacementDof: ',displacementDof
+   write(*,*) 'temperatureDoF: ',temperatureDoF
+   write(*,*) 'plasticStrainCell: ',plasticStrainCell
+   write(*,*) 'inelasticStrain: ',inelasticStrain
+   write(*,*) 'positiveInelasticStrain: ',positiveInelasticStrain
+   write(*,*) 'negativeInelasticStrain: ',negativeInelasticStrain
+   write(*,*)
+End If
+!positiveElasticEnergyDensityGauss = 0.0_Kr
+!Write(*,*) positiveElasticEnergyDensityGauss,ierr
+         !!! This is really twice the elastic energy density
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
-                                      ( elasticEnergyDensityGauss ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                      positiveElasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
                                       C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
@@ -3587,7 +3372,7 @@ Contains
 !!!  
 !!!  MEF90DefMechOperatorDamageAT1UnilateralMasonryLoc:
 !!!  
-!!!  (c) 2015 Erwan TANNE erwan.tanne@gmail.com
+!!!  (c) 2016 Erwan TANNE erwan.tanne@gmail.com, Blaise Bourdin bourdin@lsu.edu
 !!!
 
    Subroutine MEF90DefMechOperatorDamageAT1UnilateralMasonryLoc(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
@@ -3601,14 +3386,13 @@ Contains
       PetscReal,Intent(IN)                               :: CrackPressureCell
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss,alpha
-      Type(MEF90_MATS)                                   :: inelasticStrainGauss,InelasticPrincipalBasis,PositiveStrain
-      Type(MEF90_MAT)                                    :: MatProjLocalToPrincipal
+      PetscReal                                          :: positiveElasticEnergyDensityGauss
+      Type(MEF90_MATS)                                   :: inelasticStrain,positiveInelasticStrain,negativeInelasticStrain
       Type(MEF90_VECT)                                   :: gradientDamageGauss
+      PetscReal                                          :: damageGauss
       PetscReal                                          :: C1,C2,N
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
-
 
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
@@ -3620,35 +3404,21 @@ Contains
 
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
-         temperatureGauss = 0.0_Kr
+         inelasticStrain = 0.0_Kr
          If (Associated(temperatureDof)) Then
             Do iDoF1 = 1,numDofDamage
-               temperatureGauss = temperatureGauss + elemDamage%BF(iDoF1,iGauss) * temperatureDof(iDoF1)
-            End Do
+               inelasticStrain = inelasticStrain - temperatureDof(iDoF1) * (matProp%LinearThermalExpansion * elemDamage%BF(iDoF1,iGauss))
+            End Do         
          End If
-
-         inelasticStrainGauss = 0.0_Kr
          Do iDoF1 = 1,numDofDisplacement
-            inelasticStrainGauss = inelasticStrainGauss + elemDisplacement%GradS_BF(iDoF1,iGauss) * displacementDof(iDoF1)
+            inelasticStrain = inelasticStrain + displacementDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
          End Do
-         inelasticStrainGauss = inelasticStrainGauss - temperatureGauss * matprop%linearThermalExpansion 
-
-
-
-         call Diagonalize(inelasticStrainGauss,MatProjLocalToPrincipal,InelasticPrincipalBasis)
-         alpha = matProp%HookesLaw%lambda/(matProp%HookesLaw%lambda + 2.0_Kr*matProp%HookesLaw%mu)
-         PositiveStrain = 0.0_Kr
-         PositiveStrain%YY = ( InelasticPrincipalBasis%YY + alpha*InelasticPrincipalBasis%XX )
-
-         if ( InelasticPrincipalBasis%XX >= 0 ) then
-               elasticEnergyDensityGauss = ( matprop%HookesLaw * ( InelasticPrincipalBasis ) ) .DotP. InelasticPrincipalBasis
-         else if (  PositiveStrain%YY >=  0 ) then
-               elasticEnergyDensityGauss = ( matprop%HookesLaw%lambda + 2*matprop%HookesLaw%mu ) * (trace(PositiveStrain))**2 
-         Else
-               elasticEnergyDensityGauss = 0.0_Kr
-         End If
-
+         inelasticStrain = inelasticStrain - plasticStrainCell
+         Call MasonryProjection(inelasticStrain,matprop%HookesLaw,positiveInelasticStrain,negativeInelasticStrain)
+         positiveElasticEnergyDensityGauss = (matprop%HookesLaw * positiveInelasticStrain) .dotP. positiveInelasticStrain
+!positiveElasticEnergyDensityGauss = 0.0_Kr
          !!! This is really twice the elastic energy density
+
          damageGauss = 0.0_Kr
          gradientDamageGauss = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
@@ -3658,11 +3428,10 @@ Contains
 
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
-                                 ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
-                                 - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1.0_Kr)  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
+                                 ( positiveElasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
+                                 - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1)  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
                                  C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
-
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
