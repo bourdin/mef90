@@ -2849,9 +2849,16 @@ Contains
       PetscInt                                    :: liwork = 5*n+3
       PetscInt,Dimension(5*n+3)                   :: iwork
       PetscInt                                    :: info
+      PetscErrorCode                              :: ierr
 
       A = M
       Call DSYEVD('V','L',n,A,n,ppleValues,work,lwork,iwork,liwork,info)
+      If (info /= 0) Then
+         Write(*,*) 'DSYEVD failed with info=',info
+         Write(*,*) 'A: ', A
+         Write(*,*) 'ppleValues: ',ppleValues
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_LIB,"DSYEVD failed: "//__FUNCT__,ierr)
+      End If
 
       MatDiag=0.0_Kr
       MatDiag%XX=ppleValues(1)
