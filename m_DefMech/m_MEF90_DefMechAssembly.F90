@@ -4415,9 +4415,6 @@ End If
 
       Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSurfaceEnergy
-<<<<<<< local
-=======
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCrackVolume"
@@ -4665,6 +4662,4 @@ End If
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechCrackPressureRescaling
 
-
->>>>>>> other
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
