@@ -75,6 +75,7 @@ Program vDef
    !!! cumulatedDissipatedPlasticEnergy
    Type(Vec)                                          :: cumulatedDissipatedPlasticEnergyOld
    Type(Vec)                                          :: cumulatedDissipatedPlasticEnergyVariation
+Integer :: i
 
       
 !!! Default values of the contexts
@@ -451,7 +452,7 @@ Program vDef
             Call SNESSetLagPreconditioner(snesDamage,1,ierr);CHKERRQ(ierr)
             Call SNESSetLagPreconditioner(snesDisp,1,ierr);CHKERRQ(ierr)
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
-   AltMinStep = altminstep + 1
+               AltMinStep = altminstep + 1
                Write(IObuffer,208) AltMinIter
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
@@ -474,7 +475,6 @@ Program vDef
                   Write(IOBuffer,400) "displacement",snesDispConvergedReason
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                End If
-
                Call VecCopy(MEF90DefMechCtx%damage,damageAltMinOld,ierr);CHKERRQ(ierr)
                Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
                Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
@@ -722,8 +722,8 @@ Program vDef
       Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
    End Select
 
-Write(IOBuffer,*) 'Total number of alternate minimizations:',AltMinStep,'\n'
-Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+   Write(IOBuffer,*) 'Total number of alternate minimizations:',AltMinStep,'\n'
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 
    Call MEF90DefMechCtxDestroyVectors(MEF90DefMechCtx,ierr)
    Nullify(MEF90HeatXferCtx%temperature)
