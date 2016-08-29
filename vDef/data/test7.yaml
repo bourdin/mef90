@@ -1,7 +1,7 @@
 verbose: 0
 time:
     min: 0
-    max: 15
+    max: .1
     numstep: 21
 heatxfer:
   mode: null
@@ -12,18 +12,34 @@ temperature:
 cs0001:
     fracturetoughness: 1
     residualstiffness: 0.
-    internalLength: .5
+    internalLength: .09
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  .3
     damage:
         type: AT1
     plasticity:
         type: NONE 
-cs0010:
-    displacementBC: 1,1,1
+    unilateralcontact:
+        type: masonry
+cs0002:
+    displacementBC: 1,0,0
     boundaryDisplacement: -.5,0,0 
-    damageBC: 1
+    damageBC: 0
     boundaryDamage: 0
-cs0020:
-    displacementBC: 1,1,1
+cs0003:
+    displacementBC: 1,0,0
     boundaryDisplacement: .5,0,0 
-    damageBC: 1
+    damageBC: 0
+    boundaryDamage: 0
+cs0004:
+    displacementBC: 0,1,0
+    boundaryDisplacement: 0,.0,0 
+    damageBC: 0
+    boundaryDamage: 0
+cs0005:
+    displacementBC: 0,1,0
+    boundaryDisplacement: 0,.0,0 
+    damageBC: 0
     boundaryDamage: 0

@@ -61,7 +61,7 @@ Program CoupledPlasticityDamage
    Integer                                            :: step
    PetscInt                                           :: dim
    
-   PetscReal                                          :: alphaMaxChange,alphaMin,alphaMax,CrackPressureRescaling,ErrorEstimationCrackPressure,MaxCrackPressure
+   PetscReal                                          :: alphaMaxChange,alphaMin,alphaMax,CrackPressureRescaling,ErrorEstimationCrackVolume,MaxCrackPressure
    
    PetscBool                                          :: BTActive = Petsc_False
    !PetscInt                                           :: BTStep,BTminStep,BTMaxSTep,BTDirection
@@ -516,12 +516,13 @@ Program CoupledPlasticityDamage
                   !!! CrackPressure Block
                   If (any(ActivatedCrackPressureBlocksList)) Then
                      CrackVolumeSet = 0.0_Kr
+
                      Call MEF90DefMechCrackVolume(MEF90DefMechCtx%displacement,MEF90DefMechCtx,CrackVolumeSet,ierr);CHKERRQ(ierr)
                      CrackVolume(step) = sum(CrackVolumeSet,MASK=ActivatedCrackPressureBlocksList)
                      CrackPressureRescaling = time(step)/CrackVolume(step)
                      !Call MEF90DefMechCrackPressureRescaling(MEF90DefMechCtx%displacement,MEF90DefMechCtx%CrackPressure,MEF90DefMechCtx,CrackVolumeSet,ActivatedCrackPressureBlocksList,time(step),ierr);CHKERRQ(ierr)
                      Call VecScale(MEF90DefMechCtx%CrackPressure,CrackPressureRescaling)
-                     ErrorEstimationCrackPressure=((abs(time(step)-CrackVolume(step)))/(1.0_Kr+time(step)))
+                     ErrorEstimationCrackVolume=((abs(time(step)-CrackVolume(step)))/(1.0_Kr+time(step)))
                   End If
 
 
@@ -540,8 +541,8 @@ Program CoupledPlasticityDamage
 
 
                   !!! condition exit loop in u
-                  If (( PlasticStrainMaxChange <=  RelativeAbsoluteplasticStrainATol ) .and. ( ErrorEstimationCrackPressure <= 1E-6 )) Then
-                     If ( ErrorEstimationCrackPressure /= 0 ) Write(IOBuffer,301) AltProjIter,ErrorEstimationCrackPressure
+                  If (( PlasticStrainMaxChange <=  RelativeAbsoluteplasticStrainATol ) .and. ( ErrorEstimationCrackVolume <= 1E-4 )) Then
+                     If ( ErrorEstimationCrackVolume /= 0 ) Write(IOBuffer,301) AltProjIter,ErrorEstimationCrackVolume
                      If ( PlasticStrainMaxChange /= 0 ) Write(IOBuffer,300) AltProjIter,PlasticStrainMaxChange
                      Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                      EXIT
