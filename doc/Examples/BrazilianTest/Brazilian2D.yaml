@@ -1,0 +1,89 @@
+### global options
+verbose: 1
+boundaryDisplacement_scaling: linear
+defmech:
+    irrevthres: 0.
+    mode: quasistatic
+    #sor: 
+    #   omega: -1.6
+    pclag: 100
+heatxfer:
+    mode: null
+temperature:
+    offset: 0
+disp:
+    snes:
+        atol: 2.e-3
+        max_it: 300
+        lag_jacobian: -2 
+        monitor:
+    pc:
+        type: ml
+time:
+    min: .5
+    max: 1
+    numstep: 41
+cs0001:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.3
+    FractureToughness: 1.e-2
+    internallength: .03
+    residualstiffness: 0.
+    damage:
+        type: AT1
+    plasticity:
+        type: none
+    unilateralContact:
+        type: masonry
+    displacementbc: no,no,no
+    damageBC: no
+cs0002:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 10.
+        PoissonRatio: 0.
+    FractureToughness: 1.e-2
+    internallength: .03
+    residualstiffness: 0.
+    damage:
+        type: AT2Elastic
+    plasticity:
+        type: none
+    unilateralContact:
+        type: none
+    displacementbc: no,no,no
+    damageBC: no
+cs0003:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 10.
+        PoissonRatio: 0.
+    FractureToughness: 1.e-2
+    internallength: .03
+    residualstiffness: 0.
+    damage:
+        type: AT2Elastic
+    plasticity:
+        type: none
+    unilateralContact:
+        type: none
+    displacementbc: no,no,no
+    damageBC: no
+cs0020:
+    displacementbc: no,yes,no
+    boundaryDisplacement: 0.,-1.,0.
+    damageBC: yes
+    boundaryDamage: 0.
+cs0030:
+    displacementbc: no,yes,no
+    boundaryDisplacement: 0.,1.,0.
+    damageBC: yes
+    boundaryDamage: 0.
+cs0040:
+    displacementbc: yes,no,no
+    boundaryDisplacement: 0.,0.,0.
+    damageBC: yes
+    boundaryDamage: 0.
+
