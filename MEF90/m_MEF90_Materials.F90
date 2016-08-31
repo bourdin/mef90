@@ -236,6 +236,10 @@ Module m_MEF90_Materials
       Module Procedure MasonryProjection2D,MasonryProjection3D
    End Interface
    
+   Interface HDProjection
+      Module Procedure HDProjection2D,HDProjection3D
+   End Interface
+   
    PetscSizeT,protected   :: sizeofMEF90MatProp2D
    PetscSizeT,protected   :: sizeofMEF90MatProp3D
 
@@ -800,4 +804,64 @@ End If
       PositivePart = MatRaRt(PositivePart,Pinv)
       NegativePart = Epsilon - PositivePart
    End Subroutine MasonryProjection3D
+
+#undef __FUNCT__
+#define __FUNCT__ "HDProjection2D"
+!!!
+!!!  
+!!!  HDProjection2D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine HDProjection2D(Epsilon,A,PositivePart,NegativePart)
+      Type(MatS2D),Intent(IN)                     :: Epsilon
+      Type(MEF90HookesLaw2D),Intent(IN)           :: A
+      Type(MatS2D),Intent(OUT)                    :: PositivePart,NegativePart
+
+      PetscErrorCode                              :: ierr
+
+      If (A%type /= MEF90HookesLawTypeIsotropic) Then
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Hydrostatic-Deviatoric projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+      End If
+
+      If (trace(Epsilon) >= 0.0_Kr) Then
+         PositivePart = Epsilon
+         NegativePart = 0.0_Kr
+      Else
+         PositivePart = deviatoricPart(Epsilon)
+         NegativePart = hydrostaticPart(Epsilon)
+      End If
+   End Subroutine HDProjection2D
+
+#undef __FUNCT__
+#define __FUNCT__ "HDProjection3D"
+!!!
+!!!  
+!!!  HDProjection3D:
+!!!  
+!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine HDProjection3D(Epsilon,A,PositivePart,NegativePart)
+      Type(MatS3D),Intent(IN)                     :: Epsilon
+      Type(MEF90HookesLaw3D),Intent(IN)           :: A
+      Type(MatS3D),Intent(OUT)                    :: PositivePart,NegativePart
+
+      PetscReal                                   :: tr
+      PetscErrorCode                              :: ierr
+
+      If (A%type /= MEF90HookesLawTypeIsotropic) Then
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Hydrostatic-Deviatoric projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+      End If
+
+      If (trace(Epsilon) >= 0.0_Kr) Then
+         PositivePart = Epsilon
+         NegativePart = 0.0_Kr
+      Else
+         PositivePart = deviatoricPart(Epsilon)
+         NegativePart = hydrostaticPart(Epsilon)
+      End If
+   End Subroutine HDProjection3D
+
 End Module m_MEF90_Materials
