@@ -98,13 +98,19 @@ In case of problems with X11, try --with-x=0
 
 Note that all fortran tests will fail as they are not compatible with the "--with-fortran-datatypes" configure option
 
-### Optional:
+### Optional: exodus python bindings
   The exodus python bindings in $MEF90_DIR/exodus.py require that exodusii be compiled as a shared library, which is not the case by default. It is possible to replace the static libraries with dynamic ones:
   [bourdin@head petsc-3.3-p7]$ mkdir -p $MEF90_DIR/lib/$PETSC_ARCH/
   [bourdin@head petsc-3.3-p7]$ cd externalpackages/exodusii-5.22b/
   [bourdin@head exodusii-5.22b]$ gcc -shared -L $PETSC_DIR/$PETSC_ARCH/lib -lnetcdf -o $PETSC_DIR/$PETSC_ARCH/lib/libexodus.so cbind/src/*.o
 
   Use -dynamiclib and .dylib under mac OS
+
+### Recommended: snlp (required for plasticity and soon for some models of unilateral contact)
+ Set $SNLP_DIR to the location where snlp will be installed. Remark that SNLP relies on PETSc for its makefile system, so using mumtiple builds of PETSc will require using multiple builds of SNLP. THen clone, build, and install snlp
+ [bourdin@head ~]$ git clone git@bitbucket.org:bourdin/snlp.git
+ [bourdin@head ~]$ make
+ [bourdin@head ~]$ make install
    
 ## Building vDef
 From there, it should be as simple as 
