@@ -77,7 +77,6 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                               :: BTScope
       PetscReal                              :: BTTol
       PetscReal                              :: plasticStrainATol
-      PetscInt                               :: BlockNumberWorkControlled
       PetscInt                               :: cumulatedDissipatedPlasticEnergyOffset
    End Type MEF90DefMechGlobalOptions_Type
 
@@ -94,6 +93,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal,Dimension(3)                 :: boundaryDisplacement
       PetscBool                              :: Has_damageBC
       PetscBool                              :: IsCrackPressureActivated
+      PetscBool                              :: IsWorkControlledActivated
       PetscReal                              :: boundaryDamage
    End Type MEF90DefMechCellSetOptions_Type
 
@@ -766,7 +766,6 @@ Contains
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%BTTol,default%BTTol,'BT_Tol','Backtracking relative tolerance',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticStrainATol,default%plasticStrainATol,'defmech_plasticstrain_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt(bag,DefMechGlobalOptions%BlockNumberWorkControlled,default%BlockNumberWorkControlled,'BlockNumberWorkControlled','default 0 workcontrolled not activated, else number of the block to controlled',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,default%cumulatedDissipatedPlasticEnergyOffset,'cumulatedDissipatedPlasticEnergy_Offset','Position of the Cumulated Plastic Energy Dissipated field in EXO file',ierr);CHKERRQ(ierr)
 
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
@@ -807,6 +806,7 @@ Contains
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%IsCrackPressureActivated,default%IsCrackPressureActivated,'IsCrackPressureActivated','Is Crack Pressure activated in this block (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,DefMechCellSetOptions%IsWorkControlledActivated,default%IsWorkControlledActivated,'IsWorkControlledActivated','Is Crack Pressure activated in this block (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','[unit-less] (alpha): Damage boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions
 
