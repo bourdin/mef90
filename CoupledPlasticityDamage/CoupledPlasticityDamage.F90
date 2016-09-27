@@ -29,9 +29,8 @@ Program CoupledPlasticityDamage
    PetscInt                                           :: numset,set
    PetscReal,Dimension(:),Pointer                     :: time
    PetscReal,Dimension(:),Pointer                     :: thermalEnergySet,heatFluxWorkSet
-   PetscReal,Dimension(:),Pointer                     :: elasticEnergySet,surfaceEnergySet,forceWorkSet,cohesiveEnergySet,CrackVolumeSet
-   PetscReal,Dimension(:),Pointer                     :: elasticEnergy,surfaceEnergy,forceWork,cohesiveEnergy,totalMechanicalEnergy,CrackVolume
-   PetscBool,Dimension(:),Pointer                     :: ActivatedCrackPressureBlocksList
+   PetscReal,Dimension(:),Pointer                     :: elasticEnergySet,surfaceEnergySet,forceWorkSet,cohesiveEnergySet
+   PetscReal,Dimension(:),Pointer                     :: elasticEnergy,surfaceEnergy,forceWork,cohesiveEnergy,totalMechanicalEnergy
 
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
@@ -61,7 +60,7 @@ Program CoupledPlasticityDamage
    Integer                                            :: step
    PetscInt                                           :: dim
    
-   PetscReal                                          :: alphaMaxChange,alphaMin,alphaMax,CrackPressureRescaling,ErrorEstimationCrackVolume,MaxCrackPressure
+   PetscReal                                          :: alphaMaxChange,alphaMin,alphaMax
    
    PetscBool                                          :: BTActive = Petsc_False
    !PetscInt                                           :: BTStep,BTminStep,BTMaxSTep,BTDirection
@@ -75,10 +74,10 @@ Program CoupledPlasticityDamage
    Type(Vec)                                          :: plasticstrainerror
    Type(Vec)                                          :: plasticStrainPrevious
 
-   !!! WorkControl variables
-   Type(Vec)                                          :: pressureForce_1
-   PetscReal                                          :: pressure
-   PetscReal                                          :: Work
+   !!! WorkControlled and CrackPressure variables
+   PetscReal                                          :: WorkControlledRescaling,ErrorEstimationWorkControlled,CrackPressureRescaling,ErrorEstimationCrackVolume
+   PetscBool,Dimension(:),Pointer                     :: ActivatedWorkControlledBlocksList,ActivatedCrackPressureBlocksList
+   PetscReal,Dimension(:),Pointer                     :: CrackVolume,CrackVolumeSet,WorkControlled
 
    !!! cumulatedDissipatedPlasticEnergy
    Type(Vec)                                          :: cumulatedDissipatedPlasticEnergyOld
@@ -127,7 +126,6 @@ Program CoupledPlasticityDamage
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         0,                       & ! bloacknumberworkcontrolled
                                                          1)                         ! cumulatedDissipatedPlasticEnergyOffset
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
@@ -158,7 +156,6 @@ Program CoupledPlasticityDamage
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         0,                       & ! bloacknumberworkcontrolled
                                                          1)                         ! cumulatedDissipatedPlasticEnergyOffset
 
 
@@ -175,6 +172,7 @@ Program CoupledPlasticityDamage
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
                                                          PETSC_FALSE,                             & ! IsCrackPressureActivated
+                                                         PETSC_FALSE,                             & ! IsWorkControlledActivated
                                                          0._Kr)                                     ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: vDefDefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
@@ -335,6 +333,8 @@ Program CoupledPlasticityDamage
    plasticDissipation = 0.0_Kr
    Allocate(CrackVolume(MEF90GlobalOptions%timeNumStep))
    CrackVolume = 0.0_Kr
+   Allocate(WorkControlled(MEF90GlobalOptions%timeNumStep))
+   WorkControlled = 0.0_Kr
 
    
    !!!
@@ -461,31 +461,25 @@ Program CoupledPlasticityDamage
             Call SNESSetLagPreconditioner(snesDamage,1,ierr);CHKERRQ(ierr)
             Call SNESSetLagPreconditioner(snesDisp,1,ierr);CHKERRQ(ierr)
             
-            !!! Save the pressure equal to one
-            If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
-               Call VecDuplicate(MEF90DefMechCtx%pressureForce,pressureForce_1,ierr);CHKERRQ(ierr)
-               Call VecCopy(MEF90DefMechCtx%pressureForce,pressureForce_1,ierr);CHKERRQ(ierr)
-            End If
 
             !!! Create logical list of blocks where crack pressure or work control is activated
             Allocate(ActivatedCrackPressureBlocksList(size(MEF90DefMechCtx%CellSetOptionsBag)))
+            Allocate(ActivatedWorkControlledBlocksList(size(MEF90DefMechCtx%CellSetOptionsBag)))
             Call DMmeshGetLabelIdIS(MEF90DefMechCtx%CellDMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Do set = 1,size(setID)
                Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
                ActivatedCrackPressureBlocksList(set) = cellSetOptions%IsCrackPressureActivated
+               ActivatedWorkControlledBlocksList(set) = cellSetOptions%IsWorkControlledActivated
                Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
             End Do
             Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
-
-
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit 
                Write(IObuffer,208) AltMinIter
                !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-
 
 
                AltProj: Do AltProjIter = 1, MEF90DefMechGlobalOptions%maxit 
@@ -500,23 +494,21 @@ Program CoupledPlasticityDamage
                      Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                   End If
 
-                  !!! Work Controled part 
-                  If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
-                     forceWorkSet      = 0.0_Kr
-                     Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
-                     work = forceWorkSet(MEF90DefMechGlobalOptions%BlockNumberWorkControlled)
-                     pressure = sqrt(time(step)/work)
-                     Call VecScale(MEF90DefMechCtx%pressureForce,pressure)
-                     Call VecScale(MEF90DefMechCtx%displacement,pressure)
-                  Else
-                     pressure=0
-                  End If
 
+                  !!! WorkControlled Block
+                  If (any(ActivatedWorkControlledBlocksList)) Then
+                     forceWorkSet = 0.0_Kr
+                     Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
+                     WorkControlled(step) = sum(forceWorkSet,MASK=ActivatedWorkControlledBlocksList)
+                     WorkControlledRescaling = sqrt(time(step)/WorkControlled(step))
+                     Call VecScale(MEF90DefMechCtx%pressureForce,WorkControlledRescaling)
+
+                     ErrorEstimationWorkControlled=((abs(time(step)-WorkControlled(step)))/(1.0_Kr+time(step)))
+                  End If
 
                   !!! CrackPressure Block
                   If (any(ActivatedCrackPressureBlocksList)) Then
                      CrackVolumeSet = 0.0_Kr
-
                      Call MEF90DefMechCrackVolume(MEF90DefMechCtx%displacement,MEF90DefMechCtx,CrackVolumeSet,ierr);CHKERRQ(ierr)
                      CrackVolume(step) = sum(CrackVolumeSet,MASK=ActivatedCrackPressureBlocksList)
                      CrackPressureRescaling = time(step)/CrackVolume(step)
@@ -541,8 +533,9 @@ Program CoupledPlasticityDamage
 
 
                   !!! condition exit loop in u
-                  If (( PlasticStrainMaxChange <=  RelativeAbsoluteplasticStrainATol ) .and. ( ErrorEstimationCrackVolume <= 1E-4 )) Then
+                  If (( PlasticStrainMaxChange <=  RelativeAbsoluteplasticStrainATol ) .and. ( ErrorEstimationCrackVolume <= 1E-4 ) .and. ( ErrorEstimationWorkControlled <= 1E-4 )) Then
                      If ( ErrorEstimationCrackVolume /= 0 ) Write(IOBuffer,301) AltProjIter,ErrorEstimationCrackVolume
+                     If ( ErrorEstimationWorkControlled /= 0 ) Write(IOBuffer,301) AltProjIter,ErrorEstimationWorkControlled
                      If ( PlasticStrainMaxChange /= 0 ) Write(IOBuffer,300) AltProjIter,PlasticStrainMaxChange
                      Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                      EXIT
@@ -569,31 +562,17 @@ Program CoupledPlasticityDamage
                Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
 
 
-               !!! Conditions to exit the loop
-
-               If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
-                  forceWorkSet      = 0.0_Kr
-                  Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
-                  work = forceWorkSet(MEF90DefMechGlobalOptions%BlockNumberWorkControlled)
-                  If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol  .and. abs(time(step)-work)<= 1e-4) Then
-                     EXIT
-                  End If
-               Else
-                  If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol ) Then
-                     EXIT
-                  End If
+               !!! Conditions to exit the loop in alpha
+               If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol ) Then
+                  EXIT
                End If
+
 
                If (mod(AltMinIter,25) == 0) Then
                   Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
                End If
             End Do AltMin
 
-            
-            !!! Work controlled destroy Vec
-            If (MEF90DefMechGlobalOptions%BlockNumberWorkControlled /= 0) Then 
-               Call VecDestroy(pressureForce_1,ierr);CHKERRQ(ierr)
-            End If
 
 
             !!! Compute energies
@@ -667,7 +646,6 @@ Program CoupledPlasticityDamage
 
          Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
 
-         
 
          !!!
          !!! Save performance log file

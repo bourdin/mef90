@@ -54,7 +54,6 @@ Program ThermoElasticity
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         0,                       & ! bloacknumberworkcontrolled
                                                          1)                         ! cumulatedDissipatedPlasticEnergyOffset
 
 
@@ -86,7 +85,6 @@ Program ThermoElasticity
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         0,                       & ! bloacknumberworkcontrolled
                                                          1)                         ! cumulatedDissipatedPlasticEnergyOffset
 
 
@@ -104,6 +102,7 @@ Program ThermoElasticity
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
                                                          PETSC_FALSE,                             & ! IsCrackPressureActivated
+                                                         PETSC_FALSE,                             & ! IsWorkControlledActivated
                                                          0._Kr)                                     ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
