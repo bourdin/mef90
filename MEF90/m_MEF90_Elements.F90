@@ -423,7 +423,7 @@ Contains
          Case("BAR3")
             elemType = MEF90_P2_Lagrange_2DBoundary_Scal
          Case default
-            Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
+            Write(*,*) __FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
             ierr = PETSC_ERR_ARG_UNKNOWN_TYPE
       End Select
    End Subroutine EXO2MEF90ElementType_Scal
@@ -471,7 +471,7 @@ Contains
          Case("BAR3")
             elemType = MEF90_P2_Lagrange_2DBoundary_Vect
          Case default
-            Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
+            Write(*,*) __FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
             ierr = PETSC_ERR_ARG_UNKNOWN_TYPE
       End Select
    End Subroutine EXO2MEF90ElementType_Vect
@@ -519,7 +519,7 @@ Contains
          Case("BAR3")
             elemType = MEF90_P2_Lagrange_2DBoundary_Elast
          Case default
-            Write(*,*),__FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
+            Write(*,*) __FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
             ierr = PETSC_ERR_ARG_UNKNOWN_TYPE
       End Select
    End Subroutine EXO2MEF90ElementType_Elast
@@ -1000,7 +1000,7 @@ Contains
 !         Case (MEF90_Q2_Lagrange_2D_Scal%shortID)
 !            Call Element_Q_Lagrange_2D_Scal_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element2D_Scal_Init                                
@@ -1028,7 +1028,7 @@ Contains
 !         Case (MEF90_Q2_Lagrange_2D_Vect%shortID)
 !            Call Element_Q_Lagrange_2D_Vect_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element2D_Vect_Init                                
@@ -1057,7 +1057,7 @@ Contains
 !         Case (MEF90_Q2_Lagrange_2D_Elast%shortID)
 !            Call Element_Q_Lagrange_2D_Elast_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element2D_Elast_Init                                
@@ -1085,7 +1085,7 @@ Contains
 !         Case (MEF90_Q2_Lagrange_3D_Scal%shortID)
 !            Call Element_Q_Lagrange_3D_Scal_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element3D_Scal_Init                                
@@ -1113,7 +1113,7 @@ Contains
 !         Case (MEF90_Q2_Lagrange_3D_Vect)
 !            Call Element_Q_Lagrange_3D_Vect_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element3D_Vect_Init                                
@@ -1141,7 +1141,7 @@ Contains
 !         Case (MEF90_Q2_Lagrange_3D_Elast%shortID)
 !            Call Element_Q_Lagrange_3D_Elast_Init(dElem,dCoord,2,QuadratureOrder,ierr)
          Case Default
-            Print*,__FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
+            Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element3D_Elast_Init                                
@@ -1318,7 +1318,7 @@ Contains
          dElem%Gauss_C(11:13) = 0.02557767565869810_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(14:19) = 0.04328353937728940_Kr / 2.0_Kr * detBinv
       Case Default
-         Print*,__FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
+         Write(*,*) __FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
          STOP
       End Select
       
@@ -1354,7 +1354,7 @@ Contains
          GradPhiHat(6,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(6,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
       Case Default
          Num_DoF = 0
-         Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
+         Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
          STOP
       End Select
       
@@ -1446,7 +1446,7 @@ Contains
          dElem%Gauss_C(4) = l * (322.0_Kr + sqrt(11830.0_Kr)) / 1800.0_Kr
          dElem%Gauss_C(5) = l * (322.0_Kr - sqrt(11830.0_Kr)) / 1800.0_Kr
       Case Default
-         Print*,__FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
+         Write(*,*) __FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
          STOP
       End Select         
       Select Case (dPolynomialOrder)
@@ -1462,7 +1462,7 @@ Contains
             dElem%BF(2,:) = Xi * (Xi + 1.0_Kr) * .5_Kr
             dElem%BF(3,:) = 1.0_Kr - dElem%BF(1,:)  - dElem%BF(2,:) !(1.0_Kr - Xi) * (1.0_Kr + Xi)
          Case Default
-            Print*,'[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
+            Write(*,*) '[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
       Allocate(delem%Grad_BF(Num_DoF,Num_Gauss),stat=ierr)
       Do iDof = 1, num_dof
@@ -1863,7 +1863,7 @@ Contains
          dElem%Gauss_C(22:33) =  0.0254426245481023_Kr / 6.0_Kr * detBinv
          dElem%Gauss_C(34:45) =  0.0134324384376852_Kr / 6.0_Kr * detBinv
       Case Default
-         Print*,__FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
+         Write(*,*) __FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
          STOP
       End Select
       
@@ -1937,7 +1937,7 @@ Contains
          GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Y
       Case Default
          Num_DoF = 0
-         Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
+         Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
          STOP
       End Select
       
@@ -2104,7 +2104,7 @@ Contains
          dElem%Gauss_C(11:13) = 0.02557767565869810_Kr * area
          dElem%Gauss_C(14:19) = 0.04328353937728940_Kr * area
       Case Default
-         Print*,__FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
+         Write(*,*) __FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
          ierr = PETSC_ERR_SUP
          STOP
       End Select
@@ -2126,7 +2126,7 @@ Contains
          dElem%BF(5,:) = 4.0_Kr * Xi%X * Xi%Y
          dElem%BF(6,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
       Case Default
-         Print*,__FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
+         Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
          ierr = PETSC_ERR_SUP
       End Select
       
