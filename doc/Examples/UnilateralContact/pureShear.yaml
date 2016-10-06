@@ -8,6 +8,18 @@ heatxfer:
     mode: null
 temperature:
     offset: 0
+disp:
+    snes:
+        linesearch:
+            type:    basic
+        max_it: 1000
+        atol: 1.e-3
+        rtol: 1.e-3
+        lag_jacobian: -2
+    pc:
+        type: hypre
+damage:
+    atol: 1.e-3
 time:
     min: 0
     max: 1
@@ -18,7 +30,7 @@ cs0001:
         YoungsModulus: 1.
         PoissonRatio: 0.
     FractureToughness: 1.e-2
-    internallength: .03
+    internallength: .15
     residualstiffness: 0.
     damage:
         type: AT1

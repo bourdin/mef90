@@ -8,6 +8,22 @@ heatxfer:
     mode: null
 temperature:
     offset: 0
+disp:
+    snes:
+        linesearch:
+            type:    basic
+            damping: 1.
+        max_it: 1000
+        atol: 1.e-3
+        rtol: 1.e-3
+        lag_jacobian: 100
+    ksp:
+        atol: 1.e-7
+        rtol: 1.e-7
+    pc:
+        type: hypre
+damage:
+    atol: 1.e-3
 time:
     min: 0
     max: 1
@@ -18,14 +34,14 @@ cs0001:
         YoungsModulus: 1.
         PoissonRatio: 0.
     FractureToughness: 1.e-2
-    internallength: .3
+    internallength: 0.15
     residualstiffness: 0.
     damage:
         type: AT1
     plasticity:
         type: none
     unilateralContact:
-        type: HydrostaticDeviatoric
+        type: masonry
     displacementbc: no,no,no
     damageBC: no
 cs0020:
@@ -51,3 +67,5 @@ vs0400:
     damageBC: yes
     boundaryDamage: 1.
 
+
+### -disp_snes_monitor -disp_snes_max_it 1000 -disp_snes_linesearch_type basic -cs0001_unilateralContact_type masonry   -cs0001_residualstiffness 0.  -cs0001_hookeslaw_planeStress 1 -disp_snes_atol 2e-3 -disp_snes_rtol 2e-3 -disp_pc_type hypre -disp_snes_lag_jacobian -2 -defmech_damage_atol 5e-4 -cs0001_internallength .15

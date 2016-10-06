@@ -44,6 +44,8 @@ Module m_MEF90_DefMechCtx_Type
 
       Type(PetscViewer)                      :: globalEnergyViewer
       Type(PetscViewer),Dimension(:),Pointer :: setEnergyViewer
+
+      Type(SNES)                             :: SNESDisp,SNESDamage
    End Type MEF90DefMechCtx_Type
    
    Type MEF90DefMechGlobalOptions_Type
