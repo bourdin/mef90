@@ -773,97 +773,28 @@ Contains
          End Do
          inelasticStrain = inelasticStrain - plasticStrainCell
          Call HDProjection(inelasticStrain,matprop%HookesLaw,positiveInelasticStrain,negativeInelasticStrain)
-         inelasticStrain = ((1.0_Kr - damageElem + matprop%residualStiffness) * positiveInelasticStrain) + &
+         inelasticStrain = (((1.0_Kr - damageElem)**2 + matprop%residualStiffness) * positiveInelasticStrain) + &
                          & ((1.0_Kr + matprop%residualStiffness) * negativeInelasticStrain)
          stress = matprop%HookesLaw * inelasticStrain
 
-         UU0 = 0.0_Kr
+         Do iDoF2 = 1,numDofDisplacement
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (stress .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+         End Do ! iDof2
+
+         !!! Contribution of the cohesive energy
          If (Associated(boundaryDisplacementDof) .AND. (matprop%cohesiveStiffness /= 0.0_Kr)) Then
             UU0 = 0.0_Kr
             Do iDoF1 = 1,numDofDisplacement
                UU0 = UU0 + (xDof(iDoF1) - boundaryDisplacementDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss)
             End Do
-            UU0 = UU0 * matprop%cohesiveStiffness
-         End If
-
-         Do iDoF2 = 1,numDofDisplacement
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (stress .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
-         End Do ! iDof2
-         !!! Contribution of the cohesive energy
-         If (matprop%cohesiveStiffness /= 0.0_Kr) Then
             Do iDoF2 = 1,numDofDisplacement
-               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (UU0 .DotP. elemDisplacement%BF(iDoF2,iGauss))
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesiveStiffness * (UU0 .DotP. elemDisplacement%BF(iDoF2,iGauss))
             End Do ! iDof2
          End If            
       End Do ! iGauss
       !flops = numGauss * ( 4. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechOperatorDisplacementATUnilateralHDLoc
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralHDLoc2"
-!!!
-!!!  
-!!!  MEF90DefMechOperatorDisplacementATUnilateralHDLoc2:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-
-   Subroutine MEF90DefMechOperatorDisplacementATUnilateralHDLoc2(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
-      PetscReal,Dimension(:),Pointer                     :: residualLoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
-      PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
-      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
-      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
-      PetscReal,Intent(IN)                               :: CrackPressureCell
-
-      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: temperature,stiffnessH,stiffnessD
-      Type(MEF90_MATS)                                   :: plasticStrain,inelasticStrain,sigma
-      PetscLogDouble                                     :: flops
-      PetscErrorCode                                     :: ierr
-
-      numDofDisplacement = size(elemDisplacement%BF,1)
-      numDofDamage = size(elemDamage%BF,1)
-      numGauss = size(elemDisplacement%BF,2)
-
-      residualLoc = 0.0_Kr
-      Do iGauss = 1,numGauss
-         temperature = 0.0_Kr
-         inelasticStrain = 0.0_Kr
-         If (Associated(temperatureDof)) Then
-            Do iDoF1 = 1,numDofDamage
-               temperature = temperature - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-            End Do         
-            inelasticStrain = matProp%LinearThermalExpansion * temperature - plasticStrainCell
-         End If
-         Do iDoF1 = 1,numDofDisplacement
-            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
-         End Do
-
-         stiffnessD = 0.0_Kr
-         Do iDoF1 = 1,numDofDamage
-            stiffnessD = stiffnessD + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-         End Do
-         stiffnessD = (1.0_Kr - stiffnessD)**2 + matProp%residualStiffness
-
-         If (Trace(inelasticStrain) < 0.0_Kr) Then
-            stiffnessH = 1.0_Kr
-         Else
-            stiffnessH = stiffnessD
-         End If
-         
-         sigma = stiffnessH * hydrostaticPart(inelasticStrain) + stiffnessD * deviatoricPart(inelasticStrain)
-         sigma = matProp%HookesLaw * sigma
-         Do iDoF2 = 1,numDofDisplacement
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
-         End Do
-      End Do
-      !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
-      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechOperatorDisplacementATUnilateralHDLoc2
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDisplacementATUnilateralPHDLoc"
@@ -1113,26 +1044,22 @@ Contains
          End Do
          inelasticStrain = inelasticStrain - plasticStrainCell
          Call MasonryProjection(inelasticStrain,matprop%HookesLaw,positiveInelasticStrain,negativeInelasticStrain)
-         inelasticStrain = ((1.0_Kr - damageElem + matprop%residualStiffness) * positiveInelasticStrain) + &
+         inelasticStrain = (( (1.0_Kr - damageElem)**2 + matprop%residualStiffness) * positiveInelasticStrain) + &
                          & ((1.0_Kr + matprop%residualStiffness) * negativeInelasticStrain)
          stress = matprop%HookesLaw * inelasticStrain
 
-         UU0 = 0.0_Kr
+         Do iDoF2 = 1,numDofDisplacement
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (stress .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
+         End Do ! iDof2
+
+         !!! Contribution of the cohesive energy
          If (Associated(boundaryDisplacementDof) .AND. (matprop%cohesiveStiffness /= 0.0_Kr)) Then
             UU0 = 0.0_Kr
             Do iDoF1 = 1,numDofDisplacement
                UU0 = UU0 + (xDof(iDoF1) - boundaryDisplacementDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss)
             End Do
-            UU0 = UU0 * matprop%cohesiveStiffness
-         End If
-
-         Do iDoF2 = 1,numDofDisplacement
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (stress .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
-         End Do ! iDof2
-         !!! Contribution of the cohesive energy
-         If (matprop%cohesiveStiffness /= 0.0_Kr) Then
             Do iDoF2 = 1,numDofDisplacement
-               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * (UU0 .DotP. elemDisplacement%BF(iDoF2,iGauss))
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesiveStiffness * (UU0 .DotP. elemDisplacement%BF(iDoF2,iGauss))
             End Do ! iDof2
          End If            
       End Do ! iGauss
@@ -1650,14 +1577,14 @@ Contains
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATLoc
                Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
                   !localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralHDLoc
-                  ! due to the lag technique used for the implementation of Masonry, the Bilinear form is that of an emasticity problem
+                  ! due to the lag technique used for the implementation of Masonry, the Bilinear form is that of an elasticity problem
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementElasticLoc
                Case (MEF90DefMech_unilateralContactTypePositiveHydrostatic)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralPHDLoc
                Case (MEF90DefMech_unilateralContactTypeDeviatoric)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralDeviatoricLoc
                Case (MEF90DefMech_unilateralContactTypeMasonry)
-                  ! due to the lag technique used for the implementation of Masonry, the Bilinear form is that of an emasticity problem
+                  ! due to the lag technique used for the implementation of Masonry, the Bilinear form is that of an elasticity problem
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementElasticLoc
                Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
                   localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc

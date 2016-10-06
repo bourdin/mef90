@@ -32,7 +32,7 @@ Program vDef
    PetscReal,Dimension(:),Pointer                     :: elasticEnergySet,surfaceEnergySet,forceWorkSet,cohesiveEnergySet
    PetscReal,Dimension(:),Pointer                     :: elasticEnergy,surfaceEnergy,forceWork,cohesiveEnergy,totalMechanicalEnergy
 
-   Type(SNES)                                         :: snesDisp
+   !Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
    Type(Vec)                                          :: damageAltMinOld,displacementAltMinOld
@@ -41,7 +41,7 @@ Program vDef
    PetscInt                                           :: iDof
    PetscReal                                          :: SOROmega,mySOROmega
    Type(Vec)                                          :: plasticStrainOld,plasticStrainPrevious
-   Type(SNES)                                         :: snesDamage
+   !Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
    Type(Vec)                                          :: residualDamage,localVec
    PetscInt                                           :: AltMinIter
@@ -248,11 +248,11 @@ Integer :: i
    Call VecDuplicate(MEF90DefMechCtx%displacement,displacementAltMinOld,ierr);CHKERRQ(ierr)
    Call VecDuplicate(MEF90DefMechCtx%displacement,residualDisp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDisp,"residualDisp",ierr);CHKERRQ(ierr)
-   Call MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
+   Call MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,MEF90DefMechCtx%snesDisp,residualDisp,ierr)
    Call VecDuplicate(MEF90DefMechCtx%damage,damageAltMinOld,ierr);CHKERRQ(ierr)
    Call VecDuplicate(MEF90DefMechCtx%damage,residualDamage,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
-   Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
+   Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,MEF90DefMechCtx%snesDamage,residualDamage,ierr)
    DeAllocate(MEF90DefMechCtx%temperature)
    
    !!!cumulatedDissipatedPlasticEnergy Vectors
@@ -437,10 +437,10 @@ Integer :: i
                   Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,damageAltMinOld,ierr);CHKERRQ(ierr)
                   Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,damageAltMinOld,ierr);CHKERRQ(ierr)
                   Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-                  Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,snesDamage,damageAltMinOld,ierr);CHKERRQ(ierr)
+                  Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,MEF90DefMechCtx%snesDamage,damageAltMinOld,ierr);CHKERRQ(ierr)
                End If
             Else
-               Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,snesDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+               Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,MEF90DefMechCtx%snesDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
             EndIf
 
             !!! Update fields
@@ -448,8 +448,8 @@ Integer :: i
             Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
             Call MEF90DefMechUpdateboundaryDamage(MEF90DefMechCtx%damage,MEF90DefMechCtx,ierr)
 
-            Call SNESSetLagPreconditioner(snesDamage,1,ierr);CHKERRQ(ierr)
-            Call SNESSetLagPreconditioner(snesDisp,1,ierr);CHKERRQ(ierr)
+            Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,1,ierr);CHKERRQ(ierr)
+            Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDisp,1,ierr);CHKERRQ(ierr)
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
                AltMinStep = altminstep + 1
                Write(IObuffer,208) AltMinIter
@@ -457,26 +457,27 @@ Integer :: i
 
                !!! Solve SNES
                If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
-                  Call SNESSetLagPreconditioner(snesDisp,-2,ierr);CHKERRQ(ierr)
-                  Call SNESSetLagPreconditioner(snesDamage,-2,ierr);CHKERRQ(ierr)
+                  Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDisp,-2,ierr);CHKERRQ(ierr)
+                  Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,-2,ierr);CHKERRQ(ierr)
                End If 
 
+!Call VecCopy(MEF90DefMechCtx%damage,damageAltMinOld,ierr);CHKERRQ(ierr)
                Call VecCopy(MEF90DefMechCtx%displacement,displacementAltMinOld,ierr);CHKERRQ(ierr)
-               Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+               Call SNESSolve(MEF90DefMechCtx%snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                !!! Over relaxation on u, skipping the first alternate minimization step
                If (AltMinIter > 1) Then
                   SOROmega = abs(MEF90DefMechGlobalOptions%SOROmega)
                   Call VecAXPBY(MEF90DefMechCtx%displacement,1.0_Kr - SOROmega,SOROmega,displacementAltMinOld,ierr);CHKERRQ(ierr)
                EndIf
 
-               Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
+               Call SNESGetConvergedReason(MEF90DefMechCtx%snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
                If (snesDispConvergedReason < 0) Then  
                   Write(IOBuffer,400) "displacement",snesDispConvergedReason
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                End If
                Call VecCopy(MEF90DefMechCtx%damage,damageAltMinOld,ierr);CHKERRQ(ierr)
-               Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-               Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
+               Call SNESSolve(MEF90DefMechCtx%snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+               Call SNESGetConvergedReason(MEF90DefMechCtx%snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
                If (snesDamageConvergedReason < 0) Then
                   Write(IOBuffer,400) "damage field",snesDamageConvergedReason
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -487,7 +488,7 @@ Integer :: i
                   If (MEF90DefMechGlobalOptions%SOROmega > 1.0_Kr) Then
                      mySOROmega = MEF90DefMechGlobalOptions%SOROmega
                      !!! LIMITED SOR
-                     Call SNESVIGetVariableBounds(snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
+                     Call SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
                      Call VecGetArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
                      Call VecGetArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
                      Call VecGetArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
@@ -509,7 +510,7 @@ Integer :: i
                      !!! PROJECTED SOR
                      SOROmega = -MEF90DefMechGlobalOptions%SOROmega
                      Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
-                     Call SNESVIGetVariableBounds(snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
+                     Call SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
                      Call VecPointwiseMax(MEF90DefMechCtx%damage,MEF90DefMechCtx%damage,damageLB,ierr);CHKERRQ(ierr)
                      Call VecPointwiseMin(MEF90DefMechCtx%damage,MEF90DefMechCtx%damage,damageUB,ierr);CHKERRQ(ierr)
                   EndIf
@@ -707,8 +708,8 @@ Integer :: i
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%mode)
    Case (MEF90DefMech_ModeQuasiStatic)
-      Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
-      Call SNESDestroy(snesDamage,ierr);CHKERRQ(ierr)
+      Call SNESDestroy(MEF90DefMechCtx%snesDisp,ierr);CHKERRQ(ierr)
+      Call SNESDestroy(MEF90DefMechCtx%snesDamage,ierr);CHKERRQ(ierr)
       Call VecDestroy(residualDisp,ierr);CHKERRQ(ierr)
       Call VecDestroy(residualDamage,ierr);CHKERRQ(ierr)
    End Select

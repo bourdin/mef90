@@ -88,6 +88,14 @@ TestSpectralDecomposition: TestSpectralDecomposition.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
+TestMasonryProjection.o: ${MEF90_DIR}/Tests/TestMasonryProjection.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestMasonryProjection: TestMasonryProjection.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
 TestSNLP.o: ${MEF90_DIR}/Tests/TestSNLP.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
