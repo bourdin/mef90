@@ -11,8 +11,8 @@ block 1 surface 1
 block 20 curve 4
 block 10 curve 2
 block 30 curve 1 3
-nodeset 10 curve 2
-nodeset 20 curve 4
+nodeset 10 node in curve 2
+nodeset 20 node in curve 4
 
 block 1 element type tri3
 block 10 20 30 element type bar2
@@ -27,8 +27,8 @@ delete nodeset 10 20
 block 20 curve 1
 block 10 curve 3
 block 30 curve 2 4
-nodeset 10 curve 3
-nodeset 20 curve 1
+nodeset 10 node in curve 3
+nodeset 20 node in curve 1
 
 block 1 element type tri3
 block 10 20 30 element type bar2
@@ -37,3 +37,4 @@ export mesh "SquareNG_X-tri3.gen" dimension 2 block all overwrite
 block 1 element type tri6
 block 10 20 30 element type bar3
 export mesh "SquareNG_X-tri6.gen" dimension 2 block all overwrite
+

@@ -1,0 +1,30 @@
+heatxfer:
+  mode: steadystate 
+verbose: 1
+time:
+  numstep: 3
+temp:
+    snes: 
+      monitor:
+    ksp:
+      converged_reason:
+cs0001:
+  flux: 0.
+  tempBC: no
+cs0010:
+  flux: 0.
+  tempBC: no
+cs0020:
+  flux: 1.
+  tempBC: no
+cs0030:
+  flux: 1.
+  tempBC: no
+vs0010:
+  tempBC: yes
+  boundaryTemp: 1.
+vs0010:
+  tempBC: yes
+  boundaryTemp: 0.
+
+### Dirichlet / Non-homogeneous Neumann

@@ -61,6 +61,7 @@ Module MEF90_APPEND(m_MEF90_DiffusionImplementation_,MEF90_DIM)D
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionBilinearFormSet"
+
    Subroutine MEF90DiffusionBilinearFormSet(K,mesh,cellIS,A,lambda,elem,elemType,ierr)
       Type(Mat),Intent(IN)                               :: K 
       Type(DM),Intent(IN)                                :: mesh
@@ -105,6 +106,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionOperatorSet"   
+
    Subroutine MEF90DiffusionOperatorSet(G,mesh,V,cellIS,A,lambda,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: G
       Type(DM),Intent(IN)                                :: mesh
@@ -164,6 +166,7 @@ Contains
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DiffusionOperatorAddTransientTermSet(G,mesh,x,cellIS,alpha,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: G
       Type(DM),Intent(IN)                                :: mesh
@@ -212,6 +215,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionRHSSetVertex"
+
    Subroutine MEF90DiffusionRHSSetVertex(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
@@ -299,6 +303,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionRHSSetCst"
+
    Subroutine MEF90DiffusionRHSSetCst(RHS,mesh,F,cellIS,elem,elemType,ierr)
       Type(SectionReal),Intent(IN)                       :: RHS
       Type(DM),Intent(IN)                                :: mesh
@@ -337,6 +342,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionEnergySet"
+
    Subroutine MEF90DiffusionEnergySet(energy,x,x0,mesh,A,lambda,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: energy
       Type(SectionReal),Intent(IN)                       :: x,x0
@@ -385,6 +391,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionWorkSetVertex"
+
    Subroutine MEF90DiffusionWorkSetVertex(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
@@ -430,6 +437,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionWorkSetCell"
+
    Subroutine MEF90DiffusionWorkSetCell(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x
@@ -472,6 +480,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionWorkSetCst"
+
    Subroutine MEF90DiffusionWorkSetCst(work,x,mesh,F,cellIS,elem,elemType,ierr)
       PetscReal,Intent(OUT)                              :: work
       Type(SectionReal),Intent(IN)                       :: x

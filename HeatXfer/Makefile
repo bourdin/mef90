@@ -3,7 +3,7 @@ all:
 	-@make -C ${MEF90_DIR} HeatXfer
 test: test2D test3D testTransient2D testTransient3D
 test2D:
-	-@for OPTIONSFILE in test1.opts test2.opts test3.opts; do \
+	-@for OPTIONSFILE in test1.yaml test2.yaml test3.yaml; do \
 	make -s testHeatXfer PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
 	make -s testHeatXfer PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	make -s testHeatXfer PREFIX=SquareNG_Y-tri3 OPTIONSFILE=$${OPTIONSFILE};\
@@ -11,7 +11,7 @@ test2D:
 	done
 
 test3D:
-	-@for OPTIONSFILE in test1.opts test2.opts test3.opts; do \
+	-@for OPTIONSFILE in test1.yaml test2.yaml test3.yaml; do \
 	make -s testHeatXfer PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	make -s testHeatXfer PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 	make -s testHeatXfer PREFIX=CubeNG_Y-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
@@ -21,13 +21,13 @@ test3D:
 	done
 
 testTransient2D:
-	-@for OPTIONSFILE in test5.opts test6.opts; do \
+	-@for OPTIONSFILE in test5.yaml test6.yaml; do \
 	make -s testHeatXfer PREFIX=Beam1x10-tri3 OPTIONSFILE=$${OPTIONSFILE};\
 	make -s testHeatXfer PREFIX=Beam1x10-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 testTransient3D:
-	-@for OPTIONSFILE in test5.opts test6.opts; do \
+	-@for OPTIONSFILE in test5.yaml test6.yaml; do \
 	make -s testHeatXfer PREFIX=Beam1x10-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	make -s testHeatXfer PREFIX=Beam1x10-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 	done
@@ -52,7 +52,7 @@ HeatXfer.o: ${BASE_DIR}/HeatXfer.F90 ${MEF90_HEATXFER_OBJS}
 
 testHeatXfer:
 	@echo ;echo "Testing HeatXfer with $${PREFIX} $${OPTIONSFILE}"
-	@ARGS="-prefix data/$${PREFIX} -options_file data/$${OPTIONSFILE}";\
+	@ARGS="-prefix data/$${PREFIX} -options_file_yaml data/$${OPTIONSFILE}";\
 	${MPIEXEC} -n ${NP} ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer $${ARGS}| grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
 	else echo "Possible problem. Diffs above"; fi
