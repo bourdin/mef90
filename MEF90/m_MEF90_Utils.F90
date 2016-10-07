@@ -12,6 +12,7 @@ Module m_MEF90_Utils
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90FindIndexOrderedPetscReal"
+
    Subroutine MEF90FindIndexOrderedPetscReal(x,array,pos)
       PetscReal,Intent(IN)                :: x
       PetscReal,Dimension(:),Pointer      :: array
@@ -50,6 +51,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90FindIndexOrderedPetscInt"
+
    Subroutine MEF90FindIndexOrderedPetscInt(x,array,pos)
       PetscInt,Intent(IN)                 :: x
       PetscInt,Dimension(:),Pointer       :: array
@@ -94,6 +96,7 @@ Contains
 !!!  
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90ISAllGatherMerge(Comm,labels,ierr)
       MPI_Comm,Intent(IN)              :: Comm
       Type(IS),intent(INOUT)           :: labels
@@ -126,6 +129,7 @@ Contains
 !!!  
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90ISCreateCelltoVertex(mesh,comm,cellSetIS,vertexSetIS,ierr)
       Type(DM),Intent(IN)                             :: mesh
       MPI_Comm,Intent(IN)                             :: Comm
@@ -165,6 +169,7 @@ Contains
 !!!  
 !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90VecGetValuesISdof(Mesh,V,val,setIS,dof,ierr)
       Type(DM),Intent(IN)                 :: Mesh
       PetscReal,DImension(:),Pointer      :: val
@@ -203,6 +208,7 @@ Contains
 !!!  
 !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90VecSetValuesISdof(Mesh,V,x,setIS,dof,MODE,ierr)
       Type(DM),Intent(IN)                 :: Mesh
       PetscReal,dimension(:),Pointer      :: x
@@ -228,6 +234,7 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90AskInt"
+
    Subroutine MEF90AskInt(val,msg,ArgUnit,IsBatch)
       PetscInt                                  :: Val
       Character(len=*)                          :: msg 
@@ -255,6 +262,7 @@ Contains
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90AskReal"
+
    Subroutine MEF90AskReal(val,msg,ArgUnit,IsBatch)
       PetscReal                                 :: Val
       Character(len=*)                          :: msg 
@@ -285,6 +293,7 @@ Contains
 !!!   
 #undef __FUNCT__
 #define __FUNCT__ "MEF90Uniq"
+
    Subroutine MEF90Uniq(dComm, dMyVals, dVals)
       MPI_Comm                         :: dComm
       PetscInt, Dimension(:), Pointer  :: dMyVals, dVals

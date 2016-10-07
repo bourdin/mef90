@@ -42,6 +42,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(INOUT)       :: MEF90HeatXferCtx
       PetscInt,Intent(IN)                             :: step
@@ -99,6 +100,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferSetFluxCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
       Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
@@ -146,6 +148,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferSetexternalTemperatureCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
       Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
@@ -194,6 +197,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferSetboundaryTemperatureCst(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
@@ -271,6 +275,7 @@ Contains
 !!!  
 !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferUpdateboundaryTemperature(x,MEF90HeatXferCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
@@ -322,8 +327,8 @@ Contains
             Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Vertex Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             Call ISGetSize(setIS,nval,ierr);CHKERRQ(ierr)
             Allocate(xPtr(nval),stat=ierr)
-            Call MEF90VecGetValuesISdof(MEF90HeatXferCtx%DM,MEF90HeatXferCtx%boundaryTemperature,xPtr,setIS,1,ierr)
-            Call MEF90VecSetValuesISdof(MEF90HeatXferCtx%DM,x,xPtr,setIS,1,INSERT_VALUES,ierr)
+            Call MEF90VecGetValuesISdof(MEF90HeatXferCtx%DMScal,MEF90HeatXferCtx%boundaryTemperature,xPtr,setIS,1,ierr)
+            Call MEF90VecSetValuesISdof(MEF90HeatXferCtx%DMScal,x,xPtr,setIS,1,INSERT_VALUES,ierr)
             DeAllocate(xPtr)
             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          EndIf
@@ -344,6 +349,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferOperator(snesTemp,x,residual,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
       Type(Vec),Intent(IN)                               :: x
@@ -369,6 +375,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
       Type(Vec),Intent(IN)                               :: x
@@ -396,6 +403,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
       Type(Vec),Intent(IN)                               :: temperatureVec
       PetscReal,Intent(IN)                               :: t
@@ -422,6 +430,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXFerIFunction(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr)
       Type(TS),Intent(IN)                                :: tempTS
       PetscReal,Intent(IN)                               :: time
@@ -449,6 +458,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferIJacobian(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr)
       Type(TS),Intent(IN)                                :: tempTS
       PetscReal,Intent(IN)                               :: t
@@ -478,6 +488,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       PetscInt,Intent(IN)                                :: step
@@ -545,6 +556,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferFormatEXO(MEF90HeatXferCtx,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(INOUT)          :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                         :: ierr
@@ -594,6 +606,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residual,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       Type(SNES),Intent(OUT)                             :: snesTemp
@@ -651,6 +664,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residual,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       Type(TS),Intent(OUT)                               :: tsTemp

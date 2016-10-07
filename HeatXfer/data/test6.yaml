@@ -1,0 +1,20 @@
+heatxfer:
+  mode: transient 
+  initialtemp: 1.
+verbose: 1
+time:
+  min: 0
+  max: 10
+  numstep: 11
+  interpolation: quadratic
+flux:
+  scaling: constant
+cs0001:
+  flux: 0.
+  specificHeat: 1.
+cs0010:
+  flux: -1
+  tempBC: no
+cs0020:
+  flux: 1
+  tempBC: no
