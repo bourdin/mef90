@@ -1,0 +1,162 @@
+ 
+ 
+ 
+ MEF90 Global Context:  
+  prefix:       data/CubeNG_Z-tetra10 
+  log file:     data/CubeNG_Z-tetra10.log 
+PetscBag Object:  MEF90Ctx MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0 ; Time: min
+  time_max = 1 ; Time: max
+  time_numstep = 3 ; Time: number of time steps
+  file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
+  time_frequency = 1 ; Time: frequency   (1+t) cos(2 k Pi t)
+ 
+PetscBag Object:  MEF90HeatXfer Global Ctx HeatXferGlobalOptions MEF90 Heat transfer global options
+  heatxfer_mode = SteadyState; (MEF90_HeatXFer_Mode) Type of heat transfer computation
+  heatxfer_addNullSpace =  FALSE; Add null space to SNES
+  temp_Offset = 1 ; Position of temperature field in EXO file
+  heatxfer_initialTemp = 0 ; [K] (T): Initial Temperature
+  boundaryTemp_scaling = linear; (MEF90scaling) Boundary temperature scaling
+  boundaryTemp_Offset = 0 ; Position of boundary temperature field in EXO file
+  externalTemp_scaling = linear; (MEF90scaling) External Temperature scaling
+  externalTemp_Offset = 2 ; Position of external temperature field in EXO file
+  flux_scaling = linear; (MEF90scaling) Heat flux scaling
+  flux_Offset = 1 ; Position of heat flux field in EXO file
+ 
+Registering cell set    1 prefix: cs0001_ 
+PetscBag Object:  Cell set    1 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
+  ShortID = 14 ; Element type ShortID
+  Flux = 1 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-2).m^(-1).K^(-1)] (H) Surface Thermal Conductivity
+  externalTemp = 0 ; Reference temperature T [K]
+  TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemp = 0 ; Temperature boundary value
+ 
+ 
+Registering cell set   10 prefix: cs0010_ 
+PetscBag Object:  Cell set   10 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
+  ShortID = 20 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-2).m^(-1).K^(-1)] (H) Surface Thermal Conductivity
+  externalTemp = 0 ; Reference temperature T [K]
+  TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemp = 0 ; Temperature boundary value
+ 
+ 
+Registering cell set   20 prefix: cs0020_ 
+PetscBag Object:  Cell set   20 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
+  ShortID = 20 ; Element type ShortID
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-2).m^(-1).K^(-1)] (H) Surface Thermal Conductivity
+  externalTemp = 0 ; Reference temperature T [K]
+  TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemp = 0 ; Temperature boundary value
+ 
+ 
+Registering vertex set   10 prefix: vs0010_ 
+PetscBag Object:  Vertex set   10 HeatXferVertexSetOptions MEF90 Heat transfer Vertex Set options
+  TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemp = 0 ; Temperature boundary value
+ 
+ 
+Registering vertex set   20 prefix: vs0020_ 
+PetscBag Object:  Vertex set   20 HeatXferVertexSetOptions MEF90 Heat transfer Vertex Set options
+  TempBC =  TRUE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemp = 0 ; Temperature boundary value
+ 
+Registering materials properties for cell set    1: cs0001_ 
+PetscBag Object:  Cell set    1 MatProp3D object: material properties
+  Name = MEF90Mathium3D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 1 0 0 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 1 0 0 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  hookeslaw_type = Isotropic; (MEF90HookesLawTypeList) Type of Hooke's law
+  hookeslaw_YoungsModulus = 1 ; [N.m^(-2)] (E) Young's Modulus
+  hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
+  internalLength = 1 ; [m] (l) Internal Length
+  CoefficientLinSoft = 2 ; [] (k) Linear softening coefficient for LinSoft
+  yieldStress = 1 ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
+  residualyieldStress = 0 ; [unit-less] percentage of the yield stress
+  DuctileCouplingPower = 2 ; [] power of the coupling between the damage and the plasticity
+  CoefficientCapModel0 = -0.3 ; C0 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientCapModel1 = 0.4 ; C1 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientCapModel2 = 1 ; C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientCapModelD = 1 ; CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientDruckerPrager = -0.5 ; k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0
+  cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
+  residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+ 
+Registering materials properties for cell set   10: cs0010_ 
+PetscBag Object:  Cell set   10 MatProp3D object: material properties
+  Name = MEF90Mathium3D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 1 0 0 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 1 0 0 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  hookeslaw_type = Isotropic; (MEF90HookesLawTypeList) Type of Hooke's law
+  hookeslaw_YoungsModulus = 1 ; [N.m^(-2)] (E) Young's Modulus
+  hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
+  internalLength = 1 ; [m] (l) Internal Length
+  CoefficientLinSoft = 2 ; [] (k) Linear softening coefficient for LinSoft
+  yieldStress = 1 ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
+  residualyieldStress = 0 ; [unit-less] percentage of the yield stress
+  DuctileCouplingPower = 2 ; [] power of the coupling between the damage and the plasticity
+  CoefficientCapModel0 = -0.3 ; C0 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientCapModel1 = 0.4 ; C1 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientCapModel2 = 1 ; C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientCapModelD = 1 ; CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientDruckerPrager = -0.5 ; k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0
+  cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
+  residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+ 
+Registering materials properties for cell set   20: cs0020_ 
+PetscBag Object:  Cell set   20 MatProp3D object: material properties
+  Name = MEF90Mathium3D; 
+  Density = 1 ; [kg.m^(-3)] (rho) Density
+  FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1 1 1 0 0 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1 1 1 0 0 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  hookeslaw_type = Isotropic; (MEF90HookesLawTypeList) Type of Hooke's law
+  hookeslaw_YoungsModulus = 1 ; [N.m^(-2)] (E) Young's Modulus
+  hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
+  internalLength = 1 ; [m] (l) Internal Length
+  CoefficientLinSoft = 2 ; [] (k) Linear softening coefficient for LinSoft
+  yieldStress = 1 ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
+  residualyieldStress = 0 ; [unit-less] percentage of the yield stress
+  DuctileCouplingPower = 2 ; [] power of the coupling between the damage and the plasticity
+  CoefficientCapModel0 = -0.3 ; C0 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientCapModel1 = 0.4 ; C1 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientCapModel2 = 1 ; C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientCapModelD = 1 ; CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
+  CoefficientDruckerPrager = -0.5 ; k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0
+  cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
+  residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+ 
+Time values array: 
+ 0:   0.0000e+00   5.0000e-01   1.0000e+00
+=== 
+Solving steady state step    1, t= 0.00000E+00 
+  Linear solve converged due to CONVERGED_ATOL iterations 0
+cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+Solving steady state step    2, t= 5.00000E-01 
+  Linear solve converged due to CONVERGED_RTOL iterations 43
+cell set    1 thermal energy:  4.16667E-02 fluxes work:  8.33333E-02 total: -4.16667E-02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  4.16667E-02 fluxes work:  8.33333E-02 total: -4.16667E-02 
+Solving steady state step    3, t= 1.00000E+00 
+  Linear solve converged due to CONVERGED_RTOL iterations 0
+cell set    1 thermal energy:  1.66667E-01 fluxes work:  3.33333E-01 total: -1.66667E-01 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.66667E-01 fluxes work:  3.33333E-01 total: -1.66667E-01 
