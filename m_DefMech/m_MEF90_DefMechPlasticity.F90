@@ -112,7 +112,7 @@ contains
       endif
 
       Stress=myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)
-      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
+      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) 
       g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - ( (1.0_Kr-myctx_ptr%residualYieldStress)*StiffnessB + myctx_ptr%residualYieldStress )*myctx_ptr%YieldStress
       h(1) = Trace(xMatS)
    end subroutine FHG_VONMISES
@@ -203,7 +203,7 @@ contains
          Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ+ Trace(xMatS))
       endif
       
-      f(1) = mu*(  (PlasticStrainFlow .DotP. PlasticStrainFlow) ) * StiffnessA 
+      f(1) = ( PlasticStrainFlow .DotP. PlasticStrainFlow )
       g(1) = StiffnessA * sqrt( (3.0/2.0)*( deviatoricPart(Stress) .dotP. deviatoricPart(Stress) ) ) - ( (1.0_Kr-myctx_ptr%residualYieldStress)*StiffnessB + myctx_ptr%residualYieldStress )*myctx_ptr%YieldStress
 
    end subroutine FHG_VONMISESPLANETHEORY
