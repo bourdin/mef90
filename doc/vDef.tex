@@ -30,6 +30,7 @@
 \usepackage{paralist}
 \usepackage{verbatim}
 \usepackage{algorithm,algpseudocode}
+\usepackage{siunitx}
 
 
 \def\vDef{{\texttt{vDef}} }
@@ -76,19 +77,18 @@ Where $f$ and $g$ denotes respectively the body and boundary fluxes, $T_b$ is a 
 The damage models implemented in \vDef are regularization of the energy functional devised in the the variational approach to fracture~\cite{Ambrosio-Tortorelli-1990,Ambrosio-Tortorelli-1992,Giacomini-2005,Sicsic-Marigo-2013a}. These problems are formulated as rate independent unilateral minimization problems of a total energy functional
 \begin{equation}
 	\label{eq:defEll}
-	\mathcal{E}_\ell(u,\alpha) := \int_\Omega s(\alpha) W(\e(u),T,\e^p)\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{k}{4c_w} \int_\Omega \frac{w(\alpha}{\ell} + \ell|\nabla \alpha|^2\, dx,
+	\mathcal{E}_\ell(u,\alpha) := \int_\Omega a(\alpha) W(\e(u),T,\e^p)\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx,
 \end{equation}
 where $u$, and $\alpha$ denote the displacement and damage fields, $T$, $f$, $\tau$, and $\e^p$ are given temperature, body force, surface force and plastic deformation, $\ell$ is the material internal length, $W$ is linear elastic potential:
 $$
 W(\e,T,\e^p) := \frac{1}{2} \mathbf{A}\left(\e-T \alpha_L-\e^p\right):\left(\e-T \alpha_L-\e^p\right).
 $$
-$\mathbf{A}$ is the material's Hooke's law, $\alpha_L$ its linear thermal expansion tensor (a symmatric matrix).
-The function $w$ is related to the energy dissipation function associated with a distributed damage field and the constant $c_w:= \int_0^1 \sqrt{w(s)}\, ds$ is a normalization constant.
+$\mathbf{A}$ is the material's Hooke's law, $\alpha_L$ its linear thermal expansion tensor (a symmetric matrix).
+The function $w$ is related to the energy dissipation function associated with a distributed damage field and the constant $c_w:= \int_0^1 \sqrt{w(s)}\, ds$ is a normalization constant, and $G_c$ the fracture toughness.
 Two variants are implemented ($\eta$ being a small \emph{residual stiffness} possibly set to 0):
 \begin{itemize}
-\item
-	``AT1'': $s(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha$, and $c_w =2/3$.
-	``AT2'': $s(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha^2$, and $c_w = 1/2$.
+\item ``AT1'': $a(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha$, and $c_w =2/3$.
+\item ``AT2'': $a(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha^2$, and $c_w = 1/2$.
 \end{itemize}
 For a comparison of the properties, refer to~\cite{Pham-Amor-EtAl-2011a}.
 
@@ -502,9 +502,43 @@ Consider the domain from figure~\ref{fig:BC}. Prescribe the vertical component o
 
 
 \section{Cooling}
-This problem replicates the thermal shock experiment studied in depth in~\cite{Sicsic-Marigo-2013a,Bourdin-Marigo-EtAl-2014a}. A rectangular domain held at initial temperature $T_0$ is subject to the boundary temperature $T(x,t) = T_0 - \Delta T$ on its boundary. In two dimension, the behavior depends on a single parameter quantifying the intensity of the thermal shock in relation with the material thermo-mechanical properties.
+This problem replicates the thermal shock experiment studied in depth in~\cite{Sicsic-Marigo-2013a,Bourdin-Marigo-EtAl-2014a}. A rectangular domain held at initial temperature $T_0$ is subject to the boundary temperature $T(x,t) = T_0 - \Delta T$ on its boundary. In two dimension, the behavior depends on a single parameter quantifying the intensity of the thermal shock in relation with the material thermo-mechanical properties:
 
-The renormalized material properties for this problem are $E = 3.4\times 10^5 \mathrm{Nmm}^{-2}$, $\nu = .22$, $k = .0424 \mathrm{Nmm}^{-1}$, $\alpha_L = 8\times10^{-6} \mathbf{I}\mathrm{K}^{-1}$, $\ell = .05\mathrm{mm}$. For a domain of size $50 \mathrm{mm} \times 10 \mathrm{mm}$, assuming a unit thermal conductivity and a temperature contrast of $380\mathrm{K}$, the crack evolution should take place within $1\mathrm{s}$.
+\subsection{Non-dimensional form of the energy}
+Assuming that $T0 = \Delta T$ and neglecting plastic deformation, the fracture energy functional~\eqref{eq:defEll} is
+\begin{equation}
+	\label{eq:defEllThermo}
+	\mathcal{E}_\ell(u,\alpha,T) := \int_\Omega a(\alpha) W(\e(u),T)\, dx +  \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx,
+\end{equation}
+where 
+$$
+W(\e,T) := \frac{1}{2} \mathbf{A}\left(\e-T \alpha_L\right):\left(\e-T \alpha_L\right).
+$$
+We then introduce a set of rescaling factors and rescaled fields and parameters denoted respectively by $X_0$ and $\tilde{X}$. 
+We set $x = x_0 \tilde{x}$, $u (x)= u_0 \tilde{u}(\tilde{x})$, $\alpha(x) = \tilde{\alpha}(\tilde{x})$, $T(x) = T_0 \tilde{T}(\tilde{x})$, $\mathbf{A} = A_0 \tilde{\mathbf{A}}$, and $\alpha_L = \alpha_0 \tilde{\alpha}_L$. 
+For consistency reasons, we set $\ell = \ell_0 \tilde{\ell}$. Energy~\eqref{eq:defEllThermo} can then be re-written as
+\begin{multline}
+\mathcal{E}_\ell(u,\alpha,T) = \mathbf{A}_0 u_0^2x_0^{n-1}\int_{\tilde{\Omega}} \frac{1}{2}\tilde{\mathrm{A}} \left(\tilde{\e}(\tilde{u}) - \frac{\alpha_0x_0T_0}{u_0}\tilde{\alpha}_L\tilde{T}\right):\left(\tilde{\e}(\tilde{u}) - \frac{\alpha_0x_0T_0}{u_0}\tilde{\alpha}_L\tilde{T}\right)\, d\tilde{x} \\
++G_0x_0^{n-1}\frac{\tilde{G}}{4c_w} \int_{\tilde{\Omega}} \frac{w(\tilde{\alpha})}{\tilde{\ell}} + \tilde{\ell} \tilde{\nabla |\alpha|^2\, d\tilde{x}}.
+\label{eq:defEllThermoRescaled}
+\end{multline}
+We then pick all scaling coefficients in~\eqref{eq:defEllThermoRescaled} so that all fields are of order 1, \emph{i.e.} $x_0 = \mathcal{O}(\mathrm{diam}(\Omega)$, $T_0 = \Delta T$, $A_0 = E$ (assuming isotropic Hooke's law), $G_0 = G_c$, $u_0 = \sqrt{\frac{G_cx_0}{E}}$. Finally, we pick $\alpha_0=\frac{u_0}{x_0\Delta T}$, so that the only parameter left is $\tilde{\alpha}_L = \frac{\alpha x_0 \Delta T}{u_0} = \alpha \Delta T\sqrt{\frac{E x_0}{G_c}}$, and the energy becomes:
+\begin{equation}
+\mathcal{E}_\ell(u,\alpha,T) = G_c x_0^{n-1}\left[\int_{\tilde{\Omega}} \frac{1}{2}\tilde{\mathrm{A}} \left(\tilde{\e}(\tilde{u}) - \tilde{\alpha_L}\tilde{T}\right):\left(\tilde{\e}(\tilde{u}) - \tilde{\alpha}_L\tilde{T}\right)\, d\tilde{x} 
++\frac{1}{4c_w} \int_{\tilde{\Omega}} \frac{w(\tilde{\alpha})}{\tilde{\ell}} + \tilde{\ell} \tilde{\nabla |\alpha|^2\, d\tilde{x}}\right].
+\label{eq:defEllThermoRescaled2}
+\end{equation}
+
+Similarly, using $t_0 = \frac{x_0^2\rho c_p}{\kappa}$, where the body's thermal conductivity is $K =\kappa \mathrm{I}$, the heat transfer probem becomes
+$$
+	\frac{\partial \tilde{T}}{\partial \tilde t} = \tilde{\mathrm{div}} \tilde{\nabla} \tilde{T}
+$$ in $\Omega$, $\tilde{T}(\tilde{x},\tilde{t}=0) = 1$, $\tilde{T} = 0$ on $\partial_d\Omega$, and $\frac{\partial \tilde{T}}{\partial n} = 0$ on $\partial_N \Omega$.
+
+
+
+Using material properties from~\cite{Bourdin-Marigo-EtAl-2014a}, that is $E=\SI{340}{\giga\pascal}$, $G_c = \SI{42.47}{\joule\per\squared\meter}$, $\alpha_L = \SI{8e-6}{\per\kelvin}$, $\Delta T = \SI{380}{\kelvin}$, and choosing $x_0=\SI{1}{\milli\meter}$ as the reference length, we get $\tilde{\alpha}_L \sim 8.6$. 
+The internal length can be computed from the critical stress in the material, following~\cite{Pham-Marigo-EtAl-2011a}, we have that for the AT1 model, $\sigma_c = \sqrt{\frac{3G_cE}{8\ell}}$, so that $\ell = \frac{G_cE}{8\sigma_c^2}$. From the value $\sigma_c \simeq \SI{342.2}{\mega\pascal}$ in~\cite{Bourdin-Marigo-EtAl-2014a}, we get that $\tilde{\ell} \simeq \num{4.63e-3}$, which would require  a mesh size of $h = \tilde{\ell}/3 \simeq \num{1.5e-2}$.
+When using a coarser mesh, we will capture the parking phenomenon for long cracks but will not be able to predict nucleation time, spacing, and depth correctly.
 
 
 Journal and data files are located in  \verb+Examples/Cooling+

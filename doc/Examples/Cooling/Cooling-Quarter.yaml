@@ -4,6 +4,8 @@ boundaryDisplacement:
   scaling: linear
 boundaryTemp:
   scaling: constant
+stress:
+    offset: 6
 defmech:
     irrevthres: 0.
     mode: quasistatic
@@ -11,25 +13,24 @@ defmech:
       atol: 1e-3
 heatxfer:
     mode: transient
-    initialTemp: 380
+    initialTemp: 0
 temp:
   ts_monitor:
 time:
     min: 0
-    max: 1
-    numstep: 51
+    max: .1
+    numstep: 101
     interpolation: quadratic
 cs0001:
     hookeslaw: 
         type: isotropic
-        YoungsModulus: 3.45E+05
+        YoungsModulus: 1
         PoissonRatio: .22
         PlaneStress: 1
-    FractureToughness: 4.24E-02
-    internallength: .1
-    # PRL: 5E-2
+    FractureToughness: 1
+    internallength: .0625
     residualstiffness: 0.
-    LinearThermalExpansion: 8E-6,8E-6,0
+    LinearThermalExpansion: 8.6,8.6,0
     ThermalConductivity: 1,1,0
     damage:
         type: AT1
@@ -54,7 +55,7 @@ cs0020:
     displacementbc: no,no,no
     damageBC: no
     tempBC: yes
-    boundaryTemp: 0
+    boundaryTemp: -1
 cs0030:
     damage:
         type: AT1
@@ -63,7 +64,7 @@ cs0030:
     displacementbc: no,no,no
     damageBC: no
     tempBC: yes
-    boundaryTemp: 0
+    boundaryTemp: -1
 cs0040:
     damage:
         type: AT1
