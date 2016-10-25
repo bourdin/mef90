@@ -4,6 +4,8 @@ boundaryDisplacement:
   scaling: linear
 boundaryTemp:
   scaling: constant
+stress:
+    offset: 6
 defmech:
     irrevthres: 0.
     mode: quasistatic
@@ -22,14 +24,13 @@ time:
 cs0001:
     hookeslaw: 
         type: isotropic
-        YoungsModulus: 3.45E+05
+        YoungsModulus: 1
         PoissonRatio: .22
         PlaneStress: 1
-    FractureToughness: 4.24E-02
+    FractureToughness: 1
     internallength: .0625
-    # PRL: 5E-2
     residualstiffness: 0.
-    LinearThermalExpansion: 8E-6,8E-6,0
+    LinearThermalExpansion: 8.6,8.6,0
     ThermalConductivity: 1,1,0
     damage:
         type: AT1
@@ -63,7 +64,7 @@ cs0030:
     displacementbc: no,no,no
     damageBC: no
     tempBC: yes
-    boundaryTemp: -380
+    boundaryTemp: -1
 cs0040:
     damage:
         type: AT1
