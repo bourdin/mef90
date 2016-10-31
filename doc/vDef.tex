@@ -35,7 +35,12 @@
 
 \def\vDef{{\texttt{vDef}} }
 \DeclareMathOperator*{\argmin}{argmin}
+\let\div\relax
+\DeclareMathOperator*{\div}{div}
+\DeclareMathOperator{\tr}{tr}
 \DeclareMathOperator{\e}{{\mathbf e}}
+\newcommand{\jump}[1]{\ensuremath{[\![#1]\!]} }
+
 
 \title{\vDef user manual}
 \author{Blaise Bourdin}
@@ -87,11 +92,11 @@ $\mathbf{A}$ is the material's Hooke's law, $\alpha_L$ its linear thermal expans
 The function $w$ is related to the energy dissipation function associated with a distributed damage field and the constant $c_w:= \int_0^1 \sqrt{w(s)}\, ds$ is a normalization constant, and $G_c$ the fracture toughness.
 Two variants are implemented ($\eta$ being a small \emph{residual stiffness} possibly set to 0):
 \begin{itemize}
-\item ``AT1'': $a(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha$, and $c_w =2/3$.
-\item ``AT2'': $a(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha^2$, and $c_w = 1/2$.
+\item ``AT1'': $a(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha$, and $c_w =2/3$. Critical stress, $\sigma_c^{1D} = \sqrt{3EG_c/8\ell}$
+\item ``AT2'': $a(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha^2$, and $c_w = 1/2$. Critical stress,  $\sigma_c^{1D} = (3/16) \sqrt{3EG_c/\ell}$
+\item ``LSk'': $a(\alpha) =  \eta + \frac{1-w(\alpha)}{1+(k-1)w(\alpha)}$, $w(\alpha) = 1- (1-\alpha)^2$, and $c_w =\pi/4$.  Critical stress, $\sigma_c^{1D} = \sqrt{2G_cE/k\pi\ell}$
 \end{itemize}
-For a comparison of the properties, refer to~\cite{Pham-Amor-EtAl-2011a}.
-
+For ``AT1-AT2'' comparison of the properties, refer to~\cite{Pham-Amor-EtAl-2011a}. The ``LSk'' model property is having a linear softening slop controlled by a material constant $k$. Notice that this model is not convex in $\alpha$ when no elastic energy is involves, but it remains convex if $\mathtt{A}(e(u)-p):(e(u)-p) >> G_c/(4cw\ell)$.
 
  In the time discrete formulation, the displacement and damage field at time step $t_i$ are given by
 \begin{equation}
@@ -103,6 +108,179 @@ $$
 	\mathcal{K}'(\alpha_{i-1},\eta) = \left\{\alpha \ :\  0 \le \alpha(x) \ge \alpha_{i-1}(x) \le 1 \ \forall x \text{ such that } \alpha_{i-1}(x) \ge \eta\right\}.
 $$
 Note that with these notations, enforcing irreversibility through inequality constraints as proposed in~\cite{Giacomini-2005,Amor-Marigo-EtAl-2008a,Pham-Amor-EtAl-2011a} corresponds to $\eta = 0$ whereas equality constraints under a threshold as originally proposed in~\cite{Bourdin-Francfort-EtAl-2000a} corresponds to $\eta$ close to 1.
+
+
+\section{Plasticity coupled with gradient-damage model}
+
+Let's start to set up the classical variational model for perfect plasticity in the framework of Generalized Standard materials without any damage.
+
+Let $(u,p)$ two state variables defined respectively as the displacement vector and the plastic strain symmetric tensor. The Helmholtz free energy (recoverable internal energy) associated to $(u,p)$ is, 
+
+
+$$ W^{free}(u,p)=\frac{1}{2}\mathtt{A} (e(u)-p):(e(u)-p) $$
+
+and the maximum dissipation potential associated to the internal dissipation variable $p$ takes the form:
+
+$$ \mathrm{H} (\dot{p})=\sup_{\sigma \in K} \{\sigma: \dot{p} \} $$
+
+The stress denoted $\sigma= -\partial_p W^{free} = \partial_{e(u)} W^{free}$ lies in the admissible set of stress $K:=\{ \varsigma \in \mathbb{M}^{n\times n}_s | f(\varsigma) \leq 0 \}$, the convex set $K$ is closed by the yield surface, $f:\mathbb{M}^{n\times n}_s \rightarrow \mathbb{R}$. The flow rule is $\dot{p} \in \partial I_K(\sigma)$, where $\partial$ is the classical notation in the sens of convex analysis , and $I(\sigma) $ is the indicator function :
+
+$$
+I_K(\sigma) = \left\{
+    \begin{array}{ll}
+        0 & \mbox{if } \; \sigma \in K \\
+        +\infty & \mbox{else}
+    \end{array}
+\right.
+$$
+
+
+Minimizing $\mathcal{E}(u,p)$ consists in choosing the stable state variable trajectory which conserve the energy,
+
+$$ \mathcal{E}(u,p)= \int_{\Omega} \Big[  \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_0^t \mathrm{H} (\dot{p}) \mathrm{d} \tau \Big] \mathrm{d} x $$
+
+
+The idea is to follow the classical alternate minimization which is a decreasing energy method. The problem turns out finding a pair $(u_t,p_t)$ at the time $t$ such as 
+
+
+\begin{equation*}
+\begin{split}
+(u_t,p_t) \in \argmin_{u,p}  \int_{\Omega} \Big[  \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_0^t \mathrm{H} (\dot{p}) \mathrm{d} \tau \Big] \mathrm{d} x\\
+(u_t,p_t) \in \argmin_{p}  \int_{\Omega} \int_0^t \mathrm{H} (\dot{p}) \mathrm{d} \tau  \mathrm{d} x + \argmin_{u}  \int_{\Omega} \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) \mathrm{d} x
+\end{split}
+\end{equation*}
+
+
+
+The minimization problem in $u$ is quadratic and the problem in $p$ can be turns into a minimization of a quadratic functional constraint by the stress which has to remains in the elastic domain.
+
+Let discretized the space time such as $0=t_0<..<t_{i-1}<t_i<..<t_N=T$ and for a given $u$ the minimization in $p$ is:
+
+$$\min_{p}   \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_{t_{i-1}}^{t_i} \mathrm{H} (p-p_{i-1}) + \sum_{k=0}^{i-1} \mathrm{H} (\dot{p_k-p_{k-1}}) $$
+
+Optimality conditions for the minimization problem in $p$ is, 
+
+\begin{equation}
+\begin{split}
+\partial_p \{  \frac{1}{2}\mathtt{A} (e(u)-p):(e(u)-p) + \mathrm{H}(p-p_{i-1}) \} \ni 0 \\
+-\mathtt{A} (e(u)-p) + \partial_p I^*_K(p-p_{i-1}) \ni 0
+\end{split}
+\end{equation}
+
+where $I^{*}_K$ is the indicator function in the dual space such as, $$I^*_K(p-p_{i-1})= \sup_{\sigma \in K} \{ \sigma:(p-p_{i-1}) - I_K(\sigma)  \} = \mathrm{H}(p-p_{i-1})$$
+
+
+Optimal conditions can be expressed in the dual space by using the Legendre-Fenchel transform.
+
+
+\begin{equation}
+\begin{split}
+-\mathtt{A} (e(u)-p) + \partial_p I^*_K(p-p_{i-1}) \ni 0 & \Leftrightarrow -(p-p_{i-1}) + \partial I_K(\mathtt{A} (e(u)-p)) \ni 0 \\
+ & \Leftrightarrow   \mathtt{A}(p-p_{i-1}) - \mathtt{A}\partial I_K (\mathtt{A}(e(u)-p)) \ni 0 \\
+& \Leftrightarrow  \partial_p \Big( \frac{1}{2}\mathtt{A}(p-p_{i-1}):(p-p_{i-1}) - I_K (\mathtt{A}(e(u)-p)) \Big) \ni 0
+\end{split}
+\end{equation}
+
+because $I_K(\sigma) = 0$ if $\sigma \in K$ , then the minimization problem becomes,
+
+
+$$ \min_{\substack{p \\ \mathtt{A}(e(u)-p) \in K}} \frac{1}{2}\mathtt{A} (p-p_{i-1}):(p-p_{i-1}) $$
+
+
+The closed convex set (not necessary differentiable) of admissible stress is define by the yield surface, where most of well known yield surface are:
+
+\begin{equation}
+\begin{split}
+\text{Von Mises},& \quad \sqrt{\frac{3}{2}\sigma_D:\sigma_D} = ||\sigma_D|| \leq \sigma_y  \\
+\text{Tresca},& \max_{i\neq j} \{ \sigma_i - \sigma_j \} \leq \sigma _y ,\quad  \sigma_i \text{ are principal stresses}   \\
+\text{Drucker-Prager},& ||\sigma_D || + k \tr(\sigma) \leq \sigma_y \\
+\text{Mohr Coulomb},& \frac{\max{\sigma_i}}{\sigma_T} - \frac{\min{\sigma_j}}{\sigma_C} -1 \leq 0 ,\quad  \sigma_i \text{ are principal stresses}  \\
+\text{Cap-Model},& \quad C_{D2} ||\sigma_D||^2 + C_D||\sigma_D|| + C_T \text{tr} (\sigma) \leq \sigma_y \\
+%\text{General Notation},& \sum_{i}^n  C_{Dk_i} ||\sigma_D||^2 + C_D||\sigma_D|| + C_T \text{tr} (\sigma) \leq \sigma_y_i
+\end{split}
+\end{equation}
+
+
+
+Both perfect plasticity and gradient damage model are expressed in a variational formulation and have been presented previously, now let's coupled plasticity with damage using the function $b(\alpha)$ such as,
+
+$$ \mathcal{E}(u,\alpha,p) = \int_{\Omega} \Big[  \frac{1}{2} a(\alpha) \mathtt{A} (e(u)-p):(e(u)-p) + b(\alpha) \int_0^t \sup_{\sigma \in K}  \{ \sigma : \dot{p} \} \mathrm{d}\tau + \frac{k}{4c_w} \Big( \frac{w(\alpha)}{\ell} + \ell |\nabla \alpha |^2 \Big) \Big] \mathrm{d}x$$
+
+with $\sigma=a(\alpha)\mathtt{A} (e(u)-p)$. 
+
+The algorithm is based on the decreasing total energy using alternate minimization with respect to $(u,\alpha,p)$. The minimization with respect to $(u,p)$ is respectively solving a linear problem for $u$, and for $p$, making projection onto the admissible yield surface on each element. Let plug this $(u,p)$ minimization into the $\alpha$ minimization, the algorithm takes the form Algo \ref{algo:Ductile_Algo}.
+
+
+\begin{algorithm}
+    \caption{Damage coupled with plasticity algorithm}
+    \label{algo:Ductile_Algo}
+        \begin{algorithmic}[1]
+        \State{Set $\alpha_{0}=0,p_0=0$.}
+
+        \For{$i=0$ to $N$}
+            \While{$\left| \alpha^j-\alpha^{j-1}\right|_{L^\infty} \le \delta_{\alpha}$}
+                \State{$\alpha^{j+1}_{i} \longleftarrow\underset{\alpha_{i-1}\leq\alpha\leq1}{\argmin} \; \mathcal{E}(u_i^j,\alpha,p_i^j)$}
+                \While{$\left| p^{j+1,k}-p^{j+1,k-1}\right|_{L^\infty} \le \delta_{p}$}
+                \State{$u^{j+1,k+1}_{i} \longleftarrow\underset{u\in\mathcal{K}_{A}}{\argmin} \; \frac{1}{2}a(\alpha^{j+1}_{i})\mathtt{A}(e(u)-p^{j+1,k}):(e(u)-p^{j+1,k})$}
+                \State{$p^{j+1,k+1}_{i} \longleftarrow\underset{ a(\alpha^{j+1}_{i}) \mathtt{A} (e(u^{j+1,k+1}_i)-p_{i-1}) \in b(\alpha^{j+1}_{i}) K}{\underset{p}\argmin}  \mathtt{A} (p-p_{i-1}) :(p-p_{i-1}) $} 
+            \State{$k\longleftarrow k+1$}
+            \EndWhile
+            \State{$p_i^{j+1}\longleftarrow p^{j+1,k}_{i}$}
+            \State{$u_i^{j+1}\longleftarrow u^{j+1,k}_{i}$}
+            \State{$j\longleftarrow j+1$}
+    \EndWhile
+    \State{$p_i\longleftarrow p^{j}_{i}$}
+    \State{$u_i\longleftarrow u^{j}_{i}$}
+    \State{$\alpha_i\longleftarrow \alpha^{j}_{i}$}
+\EndFor
+
+        \end{algorithmic}
+\end{algorithm}
+
+
+\section{Unilateral-Contact}
+
+Unilateral contact is basically a way to distinguish material response in traction-compression and torsion. The idea is to split the softening function $a(\alpha)$ that act on the total elastic energy of the material on different elastic energy contribution such as a traction, compression and torsion part. Those type of models have been only developed on phase field gradient damage without any plasticity.
+
+\subsection{Amor-Marigo-Maurini model}
+
+Properties of such model can be found in [ref Regularized formulation of the variational brittle fracture with unilateral contact: Numerical experiments].
+The elastic energy takes the form,
+$$W^{free}= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr ^+({e(u)}) + \mu e_D(u):e_D(u) \Big) $$ where $K=\frac{(\lambda+2\mu)}{n}$ in 3D and $K=\frac{(\lambda+2\mu)}{n}$ in 2D.
+
+\subsection{Hydrostatics-Deviatoric}
+
+
+
+\subsection{Masonry}
+
+Blaise Part,
+
+
+
+
+\section{Volume Controlled}
+
+
+A variational formulation of the a crack volume in a domain is :
+
+$$ V_{\ell}(\alpha,u)=\int_{\Omega} \alpha \div{(u)} \mathrm{d}x= - \int_{\Omega} \nabla u . \nabla \alpha + \int_{\partial \Omega} \frac{\partial \alpha}{\partial n} u \mathrm{d}s$$
+
+It can be proved using the $\Gamma$-convergence results that,
+$V_{\ell} \underset{\Gamma}{\longrightarrow} V$ , when $\ell \rightarrow 0$ where $V$:
+$$ V = \int_{\Gamma} \jump{u} .n\, \mathrm{d}\mathcal{H}^{n-1}$$
+
+
+The variational work force associated to a pressure is:
+
+$$ W^{crack pres force} = \int_{\Omega} p(x)\alpha(x)\div(u(x)) \mathrm{d}x $$ 
+
+In the case of constant pressure 
+
+$$ W^{crack pres force} = p V_{\ell} $$ 
+
+
+
 
 \section{Backtracking algorithms}
 \label{sec:BT}
