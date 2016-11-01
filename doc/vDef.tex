@@ -736,6 +736,51 @@ Consider a domain consisting of two layers with a pre-existing crack on the uppe
 By varying the displacement boundary condition on the lower edge (roller of stress free), and relative mechanical properties in the layers, multiple fracture behaviors can be exhibited: nucleation of periodic crack in the upper later as in the cooling problem, a single crack penetrating in the lower layer before branching, a crack propagating along the interface,...
 Alternatively, the python script from the surfing example could be used to apply a pre-computed inelastic strain.
 
+\section{Von Mises Plasticity in 3D}
+Let consider a domain $\Omega= (-d/2,d/2) \times (-l/2,l/2) \times (0,l), d<l$ in the coordinate $(e_1, e_2, e_3)$ with the associated variables $(x_1, x_2, x_3)$, boundaries conditions applied on the rectangular cuboid are:
+\begin{itemize}
+\item pre-stresses $\bar{\sigma_2} e_2 \otimes e_2$ applied on surfaces $(*, \pm l/2,*)$
+\item displacement $u.e_3 = 0$ applied on the surface $(*,*,0)$
+\item displacement $u.e_3 = t$ applied on the surface $(*,*,l)$
+\end{itemize}
+
+The domain is subject to perfect plasticity Von Mises such as $||\sigma_D|| \leq \sigma_p$ where $\sigma_D$ is the deviatoric part of the stress. The unique solution of this problem is:
+
+
+\section*{Proposed numerical experimentations:}
+\begin{enumerate}
+\item Recover the exact solution of (u, p)
+\end{enumerate}
+
+
+\section{Von-Mises Plasticity in 2D}
+Let consider a 2D rectangular $\Omega= (-L/2,L/2) \times (-H/2,H/2)$ in the coordinate $(e_1, e_2)$ made of metal which are subject to Von Mises Plasticity under plane strain theory. This rectangular is stretched by roller displacement condition at the boundary $u.e_1 = 0$ on $(-L/2,*)$ and $u.e_1 = t$ on $(+L/2,*)$.
+
+\section*{Proposed numerical experimentations:}
+
+\begin{enumerate}
+\item By varing the ratio $(\sigma_c/\sigma_p)$ capture the transition between brittle fracture and ductile fracture caraterized respectively by a straigth fracture and slant (at $45^\circ$) crack path.
+\item Do the same but playing with the internal length.
+\item Crack path for clamped boundary displacment
+\end{enumerate}
+
+\section{Burst experiment in 2D}
+The idea of burst experiement is to calculate the stress intensity factor of rocks. The experiment consist in
+
+
+\section{Sneddon in 2D}
+The Sneddon problem is a penny shape crack include in a 2D plate, where constant pressure applied on
+
+
+
+\section{Brazilian Test}
+The brazilian test is a simple and famous test used for rocks and concrete to determine the maximum admissible stress in tension. The idea is to load in compression a cylinder on it’s lateral surface, what’s happens is at the center the stress in yy direction is in tension. When the stress in tension at the center reaches the critical one a crack appears.
+\section*{Proposed numerical experimentations:}
+\begin{enumerate}
+\item Check that a macro cracks appear for $\sigma_yy = \sigma_c =  \sqrt{\frac{3EG_c}/{8(1-\nu^2)\ell}} $ by using unilateral contact masonry.
+\end{enumerate}
+
+
 
 \bibliography{vDef}
 \end{document}  
