@@ -1,0 +1,22 @@
+reset
+
+brick x .2 y .5 z .5
+
+volume all scheme tetmesh
+volume 1 size .05
+mesh volume 1
+
+
+block 1 volume 1
+block 10 surface 1
+block 20 surface 2
+block 30 surface 3
+block 40 surface 4
+block 50 surface 5
+block 60 surface 6
+draw block all
+block 1 element type tetra4
+block 10 to 60 element type tri3
+
+export mesh "VonMises3D.gen" dimension 3 block all overwrite
+exit

@@ -1,0 +1,45 @@
+verbose: 1
+CrackPressure:
+   scaling: constant
+boundaryDisplacement:
+   scaling: constant
+time:
+    #interpolation: exo
+    min: 0.01
+    max: .4
+    numstep: 300
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+temperature:
+    offset: 0
+CrackPressure:
+    Offset: 4
+cs0001:
+    fracturetoughness: 1.
+    residualstiffness: 0.
+    internalLength: 0.015
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE 
+    Crackpressure: 1.
+    IsCrackPressureActivated: yes
+cs0002:
+    displacementBC: 1,1,0
+    boundaryDisplacement:  0,0,0 
+    damageBC: 0
+    boundaryDamage: 0
+cs0003:
+    displacementBC: 1,1,0
+    boundaryDisplacement:  0,0,0 
+    damageBC: 0
+    boundaryDamage: 0
+cs0004:
+    damageBC: 1
+    boundaryDamage: 1

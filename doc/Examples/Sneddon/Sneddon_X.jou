@@ -1,0 +1,40 @@
+reset
+#{h=0.005}
+
+
+create surface rectangle width {h} height {80*h} zplane 
+create surface rectangle width {80*h} height {h} zplane 
+unite body 1 2
+
+create surface rectangle width {201*h} height {201*h} zplane 
+create surface circle radius {400*h} zplane
+
+imprint tolerant surface 3 with surface 5
+imprint tolerant surface 4 with surface 6
+delete body 1 3
+
+
+Set Default Element QUAD
+surface 7 11 size {h}
+mesh surface 7 11 
+QTri Surface 7 11 
+
+
+
+surface all scheme tridelaunay
+tridelaunay point placement gq
+
+surface 10 sizing function type bias start curve 46 47 48 49 factor 1.1
+
+mesh surface 10
+
+
+block 1 surface 10 11
+block 2 curve 21
+block 3 surface 7
+draw block all
+block 1 3 element type tri3
+block 2 element type bar2
+
+
+export mesh "Sneddon_X.gen" dimension 2 block all overwrite

@@ -1,0 +1,70 @@
+verbose: 1
+pressureForce_scaling: constant
+boundaryDisplacement_scaling: linear
+time:
+    min: 0
+    max: 2.5
+    numstep: 50
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+  plasticStrain:
+    atol: 1e-4
+  damage:
+    atol: 1e-4
+temperature:
+    offset: 0
+plasticStrain:
+    offset: 4
+stress:
+    offset: 10
+cs0001:
+    fracturetoughness: 0.796
+    residualstiffness: 0.
+    internalLength: 0.1
+    damage:
+        type: AT1
+    plasticity:
+        type: VonMises
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.3
+    yieldStress: 1
+    DuctileCouplingPower: 2
+cs0010:
+    displacementBC: 0,0,1
+    boundaryDisplacement: 0.,0.,1.
+    damageBC: 1
+    boundaryDamage: 0.
+    DuctileCouplingPower: 2
+cs0020:
+    displacementBC: 0,0,1
+    boundaryDisplacement: 0.,0.,0.
+    damageBC: 1
+    boundaryDamage: 0.
+    DuctileCouplingPower: 2
+cs0030:
+    pressureForce: .1
+    damageBC: 0
+    boundaryDamage: 0.
+    DuctileCouplingPower: 2
+cs0040:
+    displacementBC: 0,0,0
+    boundaryDisplacement: 0.,0.,0.
+    damageBC: 0
+    boundaryDamage: 0.
+    DuctileCouplingPower: 2
+cs0050:
+    pressureForce: .1
+    damageBC: 0
+    boundaryDamage: 0.
+    DuctileCouplingPower: 2
+cs0060:
+    displacementBC: 0,0,0
+    boundaryDisplacement: 0.,0.,0.
+    damageBC: 0
+    boundaryDamage: 0.
+    DuctileCouplingPower: 2
+
