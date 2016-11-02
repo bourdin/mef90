@@ -90,7 +90,7 @@ W(\e,T,\e^p) := \frac{1}{2} \mathbf{A}\left(\e-T \alpha_L-\e^p\right):\left(\e-T
 $$
 $\mathbf{A}$ is the material's Hooke's law, $\alpha_L$ its linear thermal expansion tensor (a symmetric matrix).
 The function $w$ is related to the energy dissipation function associated with a distributed damage field and the constant $c_w:= \int_0^1 \sqrt{w(s)}\, ds$ is a normalization constant, and $G_c$ the fracture toughness.
-Two variants are implemented ($\eta$ being a small \emph{residual stiffness} possibly set to 0):
+Three variants are implemented ($\eta$ being a small \emph{residual stiffness} possibly set to 0):
 \begin{itemize}
 \item ``AT1'': $a(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha$, and $c_w =2/3$. Critical stress, $\sigma_c^{1D} = \sqrt{3EG_c/8\ell}$
 \item ``AT2'': $a(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha^2$, and $c_w = 1/2$. Critical stress,  $\sigma_c^{1D} = (3/16) \sqrt{3EG_c/\ell}$
@@ -98,7 +98,7 @@ Two variants are implemented ($\eta$ being a small \emph{residual stiffness} pos
 \end{itemize}
 For ``AT1-AT2'' comparison of the properties, refer to~\cite{Pham-Amor-EtAl-2011a}. The ``LSk'' model property is having a linear softening slop controlled by a material constant $k$. Notice that this model is not convex in $\alpha$ when no elastic energy is involves, but it remains convex if $\mathtt{A}(e(u)-p):(e(u)-p) >> G_c/(4cw\ell)$.
 
- In the time discrete formulation, the displacement and damage field at time step $t_i$ are given by
+In the time discrete formulation, the displacement and damage field at time step $t_i$ are given by
 \begin{equation}
 	\label{eq:globMin}
 	(u_i,\alpha_i) = \argmin_{v \in \mathcal{K}(t_i), \beta \in \mathcal{K}'(\alpha_{i-1},\eta)} \mathcal{E}_\ell(v,\beta),
@@ -112,79 +112,8 @@ Note that with these notations, enforcing irreversibility through inequality con
 
 \section{Plasticity coupled with gradient-damage model}
 
-Let's start to set up the classical variational model for perfect plasticity in the framework of Generalized Standard materials without any damage.
+The reader is kindly invited  to read the appendix to better understand perfect plasticity.
 
-Let $(u,p)$ two state variables defined respectively as the displacement vector and the plastic strain symmetric tensor. The Helmholtz free energy (recoverable internal energy) associated to $(u,p)$ is, 
-
-
-$$ W^{free}(u,p)=\frac{1}{2}\mathtt{A} (e(u)-p):(e(u)-p) $$
-
-and the maximum dissipation potential associated to the internal dissipation variable $p$ takes the form:
-
-$$ \mathrm{H} (\dot{p})=\sup_{\sigma \in K} \{\sigma: \dot{p} \} $$
-
-The stress denoted $\sigma= -\partial_p W^{free} = \partial_{e(u)} W^{free}$ lies in the admissible set of stress $K:=\{ \varsigma \in \mathbb{M}^{n\times n}_s | f(\varsigma) \leq 0 \}$, the convex set $K$ is closed by the yield surface, $f:\mathbb{M}^{n\times n}_s \rightarrow \mathbb{R}$. The flow rule is $\dot{p} \in \partial I_K(\sigma)$, where $\partial$ is the classical notation in the sens of convex analysis , and $I(\sigma) $ is the indicator function :
-
-$$
-I_K(\sigma) = \left\{
-    \begin{array}{ll}
-        0 & \mbox{if } \; \sigma \in K \\
-        +\infty & \mbox{else}
-    \end{array}
-\right.
-$$
-
-
-Minimizing $\mathcal{E}(u,p)$ consists in choosing the stable state variable trajectory which conserve the energy,
-
-$$ \mathcal{E}(u,p)= \int_{\Omega} \Big[  \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_0^t \mathrm{H} (\dot{p}) \mathrm{d} \tau \Big] \mathrm{d} x $$
-
-
-The idea is to follow the classical alternate minimization which is a decreasing energy method. The problem turns out finding a pair $(u_t,p_t)$ at the time $t$ such as 
-
-
-\begin{equation*}
-\begin{split}
-(u_t,p_t) \in \argmin_{u,p}  \int_{\Omega} \Big[  \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_0^t \mathrm{H} (\dot{p}) \mathrm{d} \tau \Big] \mathrm{d} x\\
-(u_t,p_t) \in \argmin_{p}  \int_{\Omega} \int_0^t \mathrm{H} (\dot{p}) \mathrm{d} \tau  \mathrm{d} x + \argmin_{u}  \int_{\Omega} \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) \mathrm{d} x
-\end{split}
-\end{equation*}
-
-
-
-The minimization problem in $u$ is quadratic and the problem in $p$ can be turns into a minimization of a quadratic functional constraint by the stress which has to remains in the elastic domain.
-
-Let discretized the space time such as $0=t_0<..<t_{i-1}<t_i<..<t_N=T$ and for a given $u$ the minimization in $p$ is:
-
-$$\min_{p}   \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_{t_{i-1}}^{t_i} \mathrm{H} (p-p_{i-1}) + \sum_{k=0}^{i-1} \mathrm{H} (\dot{p_k-p_{k-1}}) $$
-
-Optimality conditions for the minimization problem in $p$ is, 
-
-\begin{equation}
-\begin{split}
-\partial_p \{  \frac{1}{2}\mathtt{A} (e(u)-p):(e(u)-p) + \mathrm{H}(p-p_{i-1}) \} \ni 0 \\
--\mathtt{A} (e(u)-p) + \partial_p I^*_K(p-p_{i-1}) \ni 0
-\end{split}
-\end{equation}
-
-where $I^{*}_K$ is the indicator function in the dual space such as, $$I^*_K(p-p_{i-1})= \sup_{\sigma \in K} \{ \sigma:(p-p_{i-1}) - I_K(\sigma)  \} = \mathrm{H}(p-p_{i-1})$$
-
-
-Optimal conditions can be expressed in the dual space by using the Legendre-Fenchel transform.
-
-
-\begin{equation}
-\begin{split}
--\mathtt{A} (e(u)-p) + \partial_p I^*_K(p-p_{i-1}) \ni 0 & \Leftrightarrow -(p-p_{i-1}) + \partial I_K(\mathtt{A} (e(u)-p)) \ni 0 \\
- & \Leftrightarrow   \mathtt{A}(p-p_{i-1}) - \mathtt{A}\partial I_K (\mathtt{A}(e(u)-p)) \ni 0 \\
-& \Leftrightarrow  \partial_p \Big( \frac{1}{2}\mathtt{A}(p-p_{i-1}):(p-p_{i-1}) - I_K (\mathtt{A}(e(u)-p)) \Big) \ni 0
-\end{split}
-\end{equation}
-
-because $I_K(\sigma) = 0$ if $\sigma \in K$ , then the minimization problem becomes,
-
-
-$$ \min_{\substack{p \\ \mathtt{A}(e(u)-p) \in K}} \frac{1}{2}\mathtt{A} (p-p_{i-1}):(p-p_{i-1}) $$
 
 
 The closed convex set (not necessary differentiable) of admissible stress is defined by the yield surface, where most of well known yield surface are:
@@ -242,27 +171,30 @@ The algorithm is based on the decreasing total energy using alternate minimizati
 
 Unilateral contact is basically a way to distinguish material response in traction-compression and torsion. The idea is to split the softening function $a(\alpha)$ that act on the total elastic energy of the material on different elastic energy contributions such as a traction, compression and torsion part. Those type of models have been only developed on phase field gradient damage without any plasticity.
 
-\subsection{Amor-Marigo-Maurini model}
+\subsection{Amor-Marigo-Maurini model (Hydrostatic deviatoric)}
 
 Properties of such model can be found in [ref Regularized formulation of the variational brittle fracture with unilateral contact: Numerical experiments].
 The elastic energy takes the form,
-$$W^{free}(u,p)= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr ^+({e(u)}) + \mu e_D(u):e_D(u) \Big) $$ where $K=\frac{(\lambda+2\mu)}{3}$ in 3D and $K=\frac{(\lambda+2\mu)}{2}$ in 2D.
-
-\subsection{Hydrostatics-Deviatoric}
-
+$$W^{free}(u,\alpha)= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr ^+({e(u)}) + \mu e_D(u):e_D(u) \Big) $$ where $K=\frac{(\lambda+2\mu)}{3}$ in 3D and $K=\frac{(\lambda+2\mu)}{2}$ in 2D.
 
 
 \subsection{Masonry}
 
-Blaise Part,
+Masonry model try to do the same as Amor-Marigo-Maurini model but in the principal deformation basis such that 
+
+$$W^{free}(u,\alpha)= \frac{1}{2} a(\alpha) \mathtt{A} e^+(u):e^+(u) + \frac{1}{2} \mathtt{A} \big( e(u)-e^+(u) \big): \big( e(u)-e^+(u) \big) $$
+
+$e=e^+ + e^-$ , where $e$ is the principal strain. $e^+$ is the projection such as minimize the energy norm ,
+
+$$|| e^+ - e ||_A = \min_{\varepsilon \in S} || \varepsilon - e||_A$$
 
 
+Because the projection is not differentiable we do alternate projection until convergence of the displacement.
+
+\section{Volume controlled and work controlled }
 
 
-\section{Volume Controlled}
-
-
-A variational formulation of the a crack volume in a domain is :
+A variational formulation of a crack volume in a domain is :
 
 $$ V_{\ell}(\alpha,u)=\int_{\Omega} \alpha \div{(u)} \mathrm{d}x= - \int_{\Omega} \nabla u . \nabla \alpha + \int_{\partial \Omega} \frac{\partial \alpha}{\partial n} u \mathrm{d}s$$
 
@@ -282,7 +214,7 @@ By plugging this work crack pressure into the total energy it turns out,
 	\mathcal{E}_\ell(u,\alpha,p) := \int_\Omega a(\alpha) W(\e(u),p)\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx + p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,
 \end{equation}
 
-The idea is to control the volume injected into cracks. If there is no \textit{in-situ} stresses applied on $\Omega$, the problem remains linear. The technique is to find the pressure $p_t$ where at the equilibrium is associated to the target volume $V_t$. For that, let applied any positive pressure for example $p_1=1$ then calculate the volume of crack pressure for this $p_1$ denoted $V_1$. Knowing the volume target the pressure to applied is :
+The idea is to control the incompressible volume of fluid injected into cracks. If there is no \textit{in-situ} stresses applied on $\Omega$, the problem remains linear. The technique is to find the pressure $p_t$ where at the equilibrium is associated to the target volume $V_t$. For that, let applied any positive pressure for example $p_1=1$ then calculate the volume of crack pressure for this $p_1$ denoted $V_1$. Knowing the volume target the pressure to applied is :
 
 $$ p_t=\frac{V_t p_1}{V_1}$$
 
@@ -434,6 +366,7 @@ Alternatively, \emph{isotropic} Hooke's laws are also implemented (see Section~\
 \end{boxedverbatim}
 }
 Notes: 
+
 \begin{compactenum}
 	\item If \verb+-time_interpolation exo+ is selected, analysis times will be loaded from the \emph{output} exodus file, which is expected to exist.
 	\item \verb+-time_interpolation quadratic+ corresponds to the natural time scaling in many heat transfer problems, i.e. $\tau$ is linearly interpolated between $\sqrt{t_{min}}$ and $\sqrt{t_{max}}$, and $t_i = \tau_i^2$.
@@ -745,12 +678,12 @@ Alternatively, the python script from the surfing example could be used to apply
 \section{Von Mises Plasticity in 3D}
 Let consider a domain $\Omega= (-d/2,d/2) \times (-l/2,l/2) \times (0,l), d<l$ in the coordinate $(e_1, e_2, e_3)$ with the associated variables $(x_1, x_2, x_3)$, boundaries conditions applied on the rectangular cuboid are:
 \begin{itemize}
-\item pre-stresses $\bar{\sigma_2} e_2 \otimes e_2$ applied on surfaces $(*, \pm l/2,*)$
-\item displacement $u.e_3 = 0$ applied on the surface $(*,*,0)$
-\item displacement $u.e_3 = t$ applied on the surface $(*,*,l)$
+\item traction pre-stresses $\bar{\sigma_2} e_2 \otimes e_2$ applied on surfaces $(*, \pm l/2,*)$
+\item roller displacement $u.e_3 = 0$ applied on the surface $(*,*,0)$
+\item roller displacement $u.e_3 = t$ applied on the surface $(*,*,l)$
 \end{itemize}
 
-The domain is subject to perfect plasticity Von Mises such as $||\sigma_D|| \leq \sigma_p$ where $\sigma_D$ is the deviatoric part of the stress. The unique solution of this problem is:
+The body is subject to Von Mises perfect plasticity criterion ($||\sigma_D|| \leq \sigma_p$) where $\sigma_D$ is the deviatoric part of the stress. The unique solution of this problem is:
 
 \begin{equation}
 \begin{split}
@@ -780,32 +713,132 @@ $$ \bar{\sigma_3}= \frac{1}{2} \Big( \bar{\sigma_2} + \sqrt{4\sigma_p^2-3\bar{\s
 \end{enumerate}
 
 
-\section{Von-Mises Plasticity in 2D}
-Let consider a 2D rectangular $\Omega= (-L/2,L/2) \times (-H/2,H/2)$ in the coordinate $(e_1, e_2)$ made of metal which are subject to Von Mises Plasticity under plane strain theory. This rectangular is stretched by roller displacement condition at the boundary $u.e_1 = 0$ on $(-L/2,*)$ and $u.e_1 = t$ on $(+L/2,*)$.
+\section{Damage - Von-Mises Plasticity in 2D}
+Let consider a 2D rectangular $\Omega= (-L/2,L/2) \times (-H/2,H/2)$ in the coordinate $(e_1, e_2)$ made of metal which are subject to Von Mises Plasticity under plane strain theory. The body is stretched using roller displacement condition at the boundary $u.e_1 = 0$ on $(-L/2,*)$ and $u.e_1 = t$ on $(+L/2,*)$.
 
 \section*{Proposed numerical experimentations:}
 
 \begin{enumerate}
 \item By varing the ratio $(\sigma_c/\sigma_p)$ capture the transition between brittle fracture and ductile fracture caraterized respectively by a straigth fracture and slant (at $45^\circ$) crack path.
 \item Do the same but playing with the internal length.
-\item Crack path for clamped boundary displacment
+What is the influence of the behaviors resfense
+
+
+\item Use clamped boundary displacement
 \end{enumerate}
 
 \section{Burst experiment in 2D}
-The idea of burst experiement is to calculate the stress intensity factor of rocks. The experiment consist in
+The idea of burst experiement is to calculate the stress intensity factor of rocks. The experiment consist in keeping the ratio beteween the injected internal pressure and the confining pressure constant. Then increase the internal pressure until the rock breaks.
 
-
-\section{Sneddon in 2D}
-The Sneddon problem is a penny shape crack include in a 2D plate, where constant pressure applied on
-
-
-
-\section{Brazilian Test}
-The brazilian test is a simple and famous test used for rocks and concrete to determine the maximum admissible stress in tension. The idea is to load in compression a cylinder on it’s lateral surface, what’s happens is at the center the stress in yy direction is in tension. When the stress in tension at the center reaches the critical one a crack appears.
 \section*{Proposed numerical experimentations:}
 \begin{enumerate}
-\item Check that a macro cracks appear for $\sigma_yy = \sigma_c =  \sqrt{\frac{3EG_c}/{8(1-\nu^2)\ell}} $ by using unilateral contact masonry.
+\item Use work controlled with ”AT1" to see the crack propagation
+\item Use different unilateral contact type and observe the difference of initiation
 \end{enumerate}
+
+\section{Sneddon in 2D}
+The Sneddon problem is a penny shape crack of length $(2 l_0)$ included in a 2D plate, where a constant pressure is applied on crack. Under the assumption of an infinte plate, the solution of the problem is:
+
+$$ p(V) = \frac{E'V}{2\pi l_0^2}, \text{  before crack propagation}$$
+
+$$ p(V) = \Big( \frac{2G_c^2 E'}{\pi V} \Big)^{1/3}, \text{  during crack propagation}$$
+
+where $E'=E$ in plane stress and $E'=E/(1-\nu^2)$ in plane strain.
+
+\section*{Proposed numerical experimentations:}
+\begin{enumerate}
+\item Recover the evolution $p(V)$
+\item By taking a larger domain and making a loading-unloading-loading cycle try to get better results
+\end{enumerate}
+
+\section{Brazilian Test}
+The brazilian test is a simple and famous test used for rocks and concrete to determine the maximum admissible stress in tension. The idea is to load in compression a cylinder on it’s partial lateral surface, what’s happens is at the center the stress in yy direction is in tension. When the stress in tension at the center reaches the critical one an unstable marco crack appears.
+\section*{Proposed numerical experimentations:}
+\begin{enumerate}
+\item Check that a macro cracks appear for $\sigma_{yy} = \sigma_c =  \sqrt{\frac{3EG_c}{8(1-\nu^2)\ell}} $ by using unilateral contact masonry.
+\item Study the influence of boundary contact surface on the crack inititation
+\end{enumerate}
+
+
+
+\appendix
+\renewcommand{\thechapter}{A}
+\chapter{Appendix}
+\section{Plasticity}
+
+Let's start to set up the classical variational model for perfect plasticity in the framework of Generalized Standard materials without any damage.
+
+Let $(u,p)$ two state variables defined respectively as the displacement vector and the plastic strain symmetric tensor. The Helmholtz free energy (recoverable internal energy) associated to $(u,p)$ is, 
+
+
+$$ W^{free}(u,p)=\frac{1}{2}\mathtt{A} (e(u)-p):(e(u)-p) $$
+
+and the maximum dissipation potential associated to the internal dissipation variable $p$ takes the form:
+
+$$ \mathrm{H} (\dot{p})=\sup_{\sigma \in K} \{\sigma: \dot{p} \} $$
+
+The stress denoted $\sigma= -\partial_p W^{free} = \partial_{e(u)} W^{free}$ lies in the admissible set of stress $K:=\{ \varsigma \in \mathbb{M}^{n\times n}_s | f(\varsigma) \leq 0 \}$, the convex set $K$ is closed by the yield surface, $f:\mathbb{M}^{n\times n}_s \rightarrow \mathbb{R}$. The flow rule is $\dot{p} \in \partial I_K(\sigma)$, where $\partial$ is the classical notation in the sens of convex analysis , and $I(\sigma) $ is the indicator function :
+
+$$
+I_K(\sigma) = \left\{
+    \begin{array}{ll}
+        0 & \mbox{if } \; \sigma \in K \\
+        +\infty & \mbox{else}
+    \end{array}
+\right.
+$$
+
+
+Minimizing $\mathcal{E}(u,p)$ consists in choosing the stable state variable trajectory which conserve the energy,
+
+$$ \mathcal{E}(u,p)= \int_{\Omega} \Big[  \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_0^t \mathrm{H} (\dot{p}) \mathrm{d} \tau \Big] \mathrm{d} x $$
+
+
+The idea is to follow the classical alternate minimization which is a decreasing energy method. The problem turns out finding a pair $(u_t,p_t)$ at the time $t$ such as 
+
+
+\begin{equation*}
+\begin{split}
+(u_t,p_t) \in \argmin_{u,p}  \int_{\Omega} \Big[  \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_0^t \mathrm{H} (\dot{p}) \mathrm{d} \tau \Big] \mathrm{d} x\\
+(u_t,p_t) \in \argmin_{p}  \int_{\Omega} \int_0^t \mathrm{H} (\dot{p}) \mathrm{d} \tau  \mathrm{d} x + \argmin_{u}  \int_{\Omega} \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) \mathrm{d} x
+\end{split}
+\end{equation*}
+
+
+
+The minimization problem in $u$ is quadratic and the problem in $p$ can be turns into a minimization of a quadratic functional constraint by the stress which has to remains in the elastic domain.
+
+Let discretized the space time such as $0=t_0<..<t_{i-1}<t_i<..<t_N=T$ and for a given $u$ the minimization in $p$ is:
+
+$$\min_{p}   \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_{t_{i-1}}^{t_i} \mathrm{H} (p-p_{i-1}) + \sum_{k=0}^{i-1} \mathrm{H} (\dot{p_k-p_{k-1}}) $$
+
+Optimality conditions for the minimization problem in $p$ is, 
+
+\begin{equation}
+\begin{split}
+\partial_p \{  \frac{1}{2}\mathtt{A} (e(u)-p):(e(u)-p) + \mathrm{H}(p-p_{i-1}) \} \ni 0 \\
+-\mathtt{A} (e(u)-p) + \partial_p I^*_K(p-p_{i-1}) \ni 0
+\end{split}
+\end{equation}
+
+where $I^{*}_K$ is the indicator function in the dual space such as, $$I^*_K(p-p_{i-1})= \sup_{\sigma \in K} \{ \sigma:(p-p_{i-1}) - I_K(\sigma)  \} = \mathrm{H}(p-p_{i-1})$$
+
+
+Optimal conditions can be expressed in the dual space by using the Legendre-Fenchel transform.
+
+
+\begin{equation}
+\begin{split}
+-\mathtt{A} (e(u)-p) + \partial_p I^*_K(p-p_{i-1}) \ni 0 & \Leftrightarrow -(p-p_{i-1}) + \partial I_K(\mathtt{A} (e(u)-p)) \ni 0 \\
+ & \Leftrightarrow   \mathtt{A}(p-p_{i-1}) - \mathtt{A}\partial I_K (\mathtt{A}(e(u)-p)) \ni 0 \\
+& \Leftrightarrow  \partial_p \Big( \frac{1}{2}\mathtt{A}(p-p_{i-1}):(p-p_{i-1}) - I_K (\mathtt{A}(e(u)-p)) \Big) \ni 0
+\end{split}
+\end{equation}
+
+because $I_K(\sigma) = 0$ if $\sigma \in K$ , then the minimization problem becomes,
+
+
+$$ \min_{\substack{p \\ \mathtt{A}(e(u)-p) \in K}} \frac{1}{2}\mathtt{A} (p-p_{i-1}):(p-p_{i-1}) $$
 
 
 
