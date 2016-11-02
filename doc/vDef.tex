@@ -187,14 +187,14 @@ because $I_K(\sigma) = 0$ if $\sigma \in K$ , then the minimization problem beco
 $$ \min_{\substack{p \\ \mathtt{A}(e(u)-p) \in K}} \frac{1}{2}\mathtt{A} (p-p_{i-1}):(p-p_{i-1}) $$
 
 
-The closed convex set (not necessary differentiable) of admissible stress is define by the yield surface, where most of well known yield surface are:
+The closed convex set (not necessary differentiable) of admissible stress is defined by the yield surface, where most of well known yield surface are:
 
 \begin{equation}
 \begin{split}
 \text{Von Mises},& \quad \sqrt{\frac{3}{2}\sigma_D:\sigma_D} = ||\sigma_D|| \leq \sigma_y  \\
 \text{Tresca},& \max_{i\neq j} \{ \sigma_i - \sigma_j \} \leq \sigma _y ,\quad  \sigma_i \text{ are principal stresses}   \\
 \text{Drucker-Prager},& ||\sigma_D || + k \tr(\sigma) \leq \sigma_y \\
-\text{Mohr Coulomb},& \frac{\max{\sigma_i}}{\sigma_T} - \frac{\min{\sigma_j}}{\sigma_C} -1 \leq 0 ,\quad  \sigma_i \text{ are principal stresses}  \\
+\text{Mohr Coulomb},& \frac{\max\{\sigma_i\}}{\sigma_T} - \frac{\min\{\sigma_j\}}{\sigma_C} -1 \leq 0 ,\quad  \sigma_i \text{ are principal stresses}  \\
 \text{Cap-Model},& \quad C_{D2} ||\sigma_D||^2 + C_D||\sigma_D|| + C_T \text{tr} (\sigma) \leq \sigma_y \\
 %\text{General Notation},& \sum_{i}^n  C_{Dk_i} ||\sigma_D||^2 + C_D||\sigma_D|| + C_T \text{tr} (\sigma) \leq \sigma_y_i
 \end{split}
@@ -240,13 +240,13 @@ The algorithm is based on the decreasing total energy using alternate minimizati
 
 \section{Unilateral-Contact}
 
-Unilateral contact is basically a way to distinguish material response in traction-compression and torsion. The idea is to split the softening function $a(\alpha)$ that act on the total elastic energy of the material on different elastic energy contribution such as a traction, compression and torsion part. Those type of models have been only developed on phase field gradient damage without any plasticity.
+Unilateral contact is basically a way to distinguish material response in traction-compression and torsion. The idea is to split the softening function $a(\alpha)$ that act on the total elastic energy of the material on different elastic energy contributions such as a traction, compression and torsion part. Those type of models have been only developed on phase field gradient damage without any plasticity.
 
 \subsection{Amor-Marigo-Maurini model}
 
 Properties of such model can be found in [ref Regularized formulation of the variational brittle fracture with unilateral contact: Numerical experiments].
 The elastic energy takes the form,
-$$W^{free}= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr ^+({e(u)}) + \mu e_D(u):e_D(u) \Big) $$ where $K=\frac{(\lambda+2\mu)}{n}$ in 3D and $K=\frac{(\lambda+2\mu)}{n}$ in 2D.
+$$W^{free}(u,p)= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr ^+({e(u)}) + \mu e_D(u):e_D(u) \Big) $$ where $K=\frac{(\lambda+2\mu)}{3}$ in 3D and $K=\frac{(\lambda+2\mu)}{2}$ in 2D.
 
 \subsection{Hydrostatics-Deviatoric}
 
@@ -267,18 +267,24 @@ A variational formulation of the a crack volume in a domain is :
 $$ V_{\ell}(\alpha,u)=\int_{\Omega} \alpha \div{(u)} \mathrm{d}x= - \int_{\Omega} \nabla u . \nabla \alpha + \int_{\partial \Omega} \frac{\partial \alpha}{\partial n} u \mathrm{d}s$$
 
 It can be proved using the $\Gamma$-convergence results that,
-$V_{\ell} \underset{\Gamma}{\longrightarrow} V$ , when $\ell \rightarrow 0$ where $V$:
+$V_{\ell} \underset{\Gamma}{\longrightarrow} V$ , when $\ell \rightarrow 0$ where $V$ is:
 $$ V = \int_{\Gamma} \jump{u} .n\, \mathrm{d}\mathcal{H}^{n-1}$$
 
 
-The variational work force associated to a pressure is:
+For sake of simplicity let $\frac{\partial \alpha}{\partial n} = 0 $ on $\partial \Omega$. Let assume that a constant pressure is applied on the crack, the external work due to the crack pressure is:
 
-$$ W^{crack pres force} = \int_{\Omega} p(x)\alpha(x)\div(u(x)) \mathrm{d}x $$ 
+$$ W^{crack pres force} =  pV = - p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x$$ 
 
-In the case of constant pressure 
+By plugging this work crack pressure into the total energy it turns out,
 
-$$ W^{crack pres force} = p V_{\ell} $$ 
+\begin{equation}
+	\label{eq:defEll}
+	\mathcal{E}_\ell(u,\alpha,p) := \int_\Omega a(\alpha) W(\e(u),p)\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx + p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,
+\end{equation}
 
+The idea is to control the volume injected into cracks. If there is no \textit{in-situ} stresses applied on $\Omega$, the problem remains linear. The technique is to find the pressure $p_t$ where at the equilibrium is associated to the target volume $V_t$. For that, let applied any positive pressure for example $p_1=1$ then calculate the volume of crack pressure for this $p_1$ denoted $V_1$. Knowing the volume target the pressure to applied is :
+
+$$ p_t=\frac{V_t p_1}{V_1}$$
 
 
 
@@ -746,6 +752,27 @@ Let consider a domain $\Omega= (-d/2,d/2) \times (-l/2,l/2) \times (0,l), d<l$ i
 
 The domain is subject to perfect plasticity Von Mises such as $||\sigma_D|| \leq \sigma_p$ where $\sigma_D$ is the deviatoric part of the stress. The unique solution of this problem is:
 
+\begin{equation}
+\begin{split}
+\label{eq:UsolVonMises3D}
+u(t)= \Big[ -\nu(1+\nu)\frac{\bar{\sigma_2}}{E} -\nu t_c - \frac{\bar{\sigma_2}+\bar{\sigma_3}}{2\bar{\sigma_3}-\bar{\sigma_2}} (t-t_c)\Big]x_1 e_1+\\
+	\Big[ (1-\nu^2)\frac{\bar{\sigma_2}}{E} - \nu t_c + \frac{2\bar{\sigma_2}-\bar{\sigma_3}}{2\bar{\sigma_3}-\bar{\sigma_2}}(t-t_c) \Big] x_2 e_2 + \\
+	t x_3 e_3
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\label{eq:UsolVonMises3D}
+p(t)= (t-t_c) \Big[ -\frac{\bar{\sigma_2}+\bar{\sigma_3}}{2\bar{\sigma_3}-\bar{\sigma_2}} e_1 \otimes e_1 + \frac{2\bar{\sigma_2}-\bar{\sigma_3}}{2\bar{\sigma_3}-\bar{\sigma_2}} e_2\otimes e_2 + e_3\otimes e_3 \Big]
+\end{split}
+\end{equation}
+
+
+$$t_c = \frac{1}{2E} \Big( (1-2\nu)\bar{\sigma_2} + \sqrt{4\sigma_p^2- 3\bar{\sigma_2}^2} \Big) $$
+
+
+$$ \bar{\sigma_3}= \frac{1}{2} \Big( \bar{\sigma_2} + \sqrt{4\sigma_p^2-3\bar{\sigma_2}^2} \Big) $$
 
 \section*{Proposed numerical experimentations:}
 \begin{enumerate}
