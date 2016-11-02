@@ -1,0 +1,49 @@
+verbose: 1
+pressureForce_scaling: linear
+time:
+    min: 0.0
+    max: 0.5
+    numstep: 101
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+  damage:
+    atol: 1e-4
+temperature:
+    offset: 0
+stress:
+    offset: 3
+cs0001:
+    fracturetoughness: 8.92904084966e-06
+    residualstiffness: 0.0
+    internalLength: 0.00243962891852
+    damage:
+        type: AT1
+    plasticity:
+        type: None
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 147.541
+        PoissonRatio:  0.25
+    DuctileCouplingPower: 2
+    unilateralContact:
+        Type: None
+cs0002:
+    pressureForce: -1
+    damageBC: 1
+    boundaryDamage: 0
+cs0003:
+    pressureForce: 0.0
+    damageBC: 1
+    boundaryDamage: 0
+cs0004:
+    displacementbc: 1,0,0
+    boundaryDisplacement: 0,0,0
+    damageBC: 1
+    boundaryDamage: 0.
+cs0005:
+    displacementbc: 0,1,0
+    boundaryDisplacement: 0,0,0
+    damageBC: 0
+    boundaryDamage: 0.

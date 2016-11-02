@@ -1,0 +1,21 @@
+reset
+#{L=2}
+#{H=1}
+#{ell=0.1}
+#{h=ell/5}
+create surface rectangle width {L} height {H} zplane
+surface 1 scheme tridelaunay
+tridelaunay point placement gq
+surface 1 size {h}
+mesh surface all
+smooth surface 1 scheme laplacian
+block 1 surface 1
+block 2 curve  2
+block 3 curve 4
+nodeset 100 vertex 3
+draw block all
+block 1 element type tri3
+block 2 element type bar2
+block 3 element type bar2
+export mesh "VonMises2D.gen" dimension 2 block all overwrite
+exit

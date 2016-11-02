@@ -1,0 +1,43 @@
+reset
+#{Ro=2.4965/2}
+#{Ri=0.2575/2}
+#{L=0.2453}
+#{w=0.1*Ri}
+#{ell=0.00243962891852}
+#{h=ell/3}
+create vertex 0 {w} 0
+create vertex {Ri+L-w} {w} 0
+create vertex {Ri+L} 0 0
+create curve arc vertex 3 2 radius {w} normal 0 0 1
+create curve vertex 1 2
+create curve arc radius {Ri} center location 0 0 0 normal 0 0 1 start angle 0 stop angle 90
+create vertex atintersection curve 3 2 bounded
+split curve 3 at vertex 7
+split curve 2 at vertex 10
+delete curve 4
+create curve arc radius {Ro} center location 0 0 0 normal 0 0 1 start angle 0 stop angle 90
+create curve vertex 16 3
+create curve vertex 11 17
+delete curve 6
+create surface curve all
+split curve 8 distance {1.2*w}
+create curve vertex 2 22
+imprint tolerant curve 13 with surface 1
+surface all scheme tridelaunay
+tridelaunay point placement gq
+surface 3 size {h}
+mesh surface 3
+curve 5 7 size {h}
+mesh curve 5 7 
+surface 2 sizing function type bias start curve 14 5 7 factor 1.06
+mesh surface 2
+block 1 surface 2 3
+block 2 curve 5
+block 3 curve 11 12
+block 4 curve 10
+block 5 curve 9
+draw block all nodeset all
+block 1 element type tri3
+block 2 3 4 5 element type bar2
+export mesh "Burst.gen" dimension 2 block all overwrite
+exit
