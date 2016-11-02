@@ -25,6 +25,7 @@ create curve vertex 2 22
 imprint tolerant curve 13 with surface 1
 surface all scheme tridelaunay
 tridelaunay point placement gq
+
 surface 3 size {h}
 mesh surface 3
 curve 5 7 size {h}
