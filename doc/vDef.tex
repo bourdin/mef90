@@ -112,30 +112,27 @@ Note that with these notations, enforcing irreversibility through inequality con
 
 \section{Plasticity coupled with gradient-damage model}
 
-The reader is kindly invited  to read the appendix to better understand perfect plasticity.
-
-
+The reader is kindly invited to read the appendix A to see the perfect plasticity in the variational formulation.
 
 The closed convex set (not necessary differentiable) of admissible stress is defined by the yield surface, where most of well known yield surface are:
 
 \begin{equation}
 \begin{split}
-\text{Von Mises},& \quad \sqrt{\frac{3}{2}\sigma_D:\sigma_D} = ||\sigma_D|| \leq \sigma_y  \\
-\text{Tresca},& \max_{i\neq j} \{ \sigma_i - \sigma_j \} \leq \sigma _y ,\quad  \sigma_i \text{ are principal stresses}   \\
-\text{Drucker-Prager},& ||\sigma_D || + k \tr(\sigma) \leq \sigma_y \\
-\text{Mohr Coulomb},& \frac{\max\{\sigma_i\}}{\sigma_T} - \frac{\min\{\sigma_j\}}{\sigma_C} -1 \leq 0 ,\quad  \sigma_i \text{ are principal stresses}  \\
-\text{Cap-Model},& \quad C_{D2} ||\sigma_D||^2 + C_D||\sigma_D|| + C_T \text{tr} (\sigma) \leq \sigma_y \\
+\text{Von Mises},\quad& \quad \sqrt{\frac{3}{2}\sigma_D:\sigma_D} = ||\sigma_D|| \leq \sigma_y  \\
+\text{Tresca},\quad& \max_{i\neq j} \{ \sigma_i - \sigma_j \} \leq \sigma _y ,\quad  \sigma_i \text{ are principal stresses}   \\
+\text{Drucker-Prager},\quad& ||\sigma_D || + k \tr(\sigma) \leq \sigma_y \\
+\text{Mohr Coulomb},\quad& \frac{\max\{\sigma_i\}}{\sigma_T} - \frac{\min\{\sigma_j\}}{\sigma_C} -1 \leq 0 ,\quad  \sigma_i \text{ are principal stresses}  \\
+\text{Cap-Model},\quad& \quad C_{D2} ||\sigma_D||^2 + C_D||\sigma_D|| + C_T \text{tr} (\sigma) \leq \sigma_y \\
 %\text{General Notation},& \sum_{i}^n  C_{Dk_i} ||\sigma_D||^2 + C_D||\sigma_D|| + C_T \text{tr} (\sigma) \leq \sigma_y_i
 \end{split}
 \end{equation}
 
 
-
+Remarks: Von-Mises, Durcker-Prager are particular cases of Cap-Model similar with Tresca for Mohr-Coulomb
 Both perfect plasticity and gradient damage model are expressed in a variational formulation and have been presented previously, now let's coupled plasticity with damage using the function $b(\alpha)$ such as,
 
-$$ \mathcal{E}(u,\alpha,p) = \int_{\Omega} \Big[  \frac{1}{2} a(\alpha) \mathtt{A} (e(u)-p):(e(u)-p) + b(\alpha) \int_0^t \sup_{\sigma \in K}  \{ \sigma : \dot{p} \} \mathrm{d}\tau + \frac{k}{4c_w} \Big( \frac{w(\alpha)}{\ell} + \ell |\nabla \alpha |^2 \Big) \Big] \mathrm{d}x$$
+$$ \mathcal{E}(u,\alpha,p) = \int_{\Omega} \Big[  \frac{1}{2} a(\alpha) \mathtt{A} (e(u)-p):(e(u)-p) + b(\alpha) \int_0^t \sup_{\varsigma \in K}  \{ \varsigma : \dot{p} \} \mathrm{d}\tau + \frac{k}{4c_w} \Big( \frac{w(\alpha)}{\ell} + \ell |\nabla \alpha |^2 \Big) \Big] \mathrm{d}x$$
 
-with $\sigma=a(\alpha)\mathtt{A} (e(u)-p)$. 
 
 The algorithm is based on the decreasing total energy using alternate minimization with respect to $(u,\alpha,p)$. The minimization with respect to $(u,p)$ is respectively solving a linear problem for $u$, and for $p$, making projection onto the admissible yield surface on each element. Let plug this $(u,p)$ minimization into the $\alpha$ minimization, the algorithm takes the form Algo \ref{algo:Ductile_Algo}.
 
@@ -173,28 +170,39 @@ Unilateral contact is basically a way to distinguish material response in tracti
 
 \subsection{Amor-Marigo-Maurini model (Hydrostatic deviatoric)}
 
-Properties of such model can be found in [ref Regularized formulation of the variational brittle fracture with unilateral contact: Numerical experiments].
+Properties of such model can be found in \cite{Amor-Marigo-Maurini-2009}.
 The elastic energy takes the form,
-$$W^{free}(u,\alpha)= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr ^+({e(u)}) + \mu e_D(u):e_D(u) \Big) $$ where $K=\frac{(\lambda+2\mu)}{3}$ in 3D and $K=\frac{(\lambda+2\mu)}{2}$ in 2D.
+$$W^{free}(u,\alpha)= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr ^+({e(u)}) + \mu e_D(u):e_D(u) \Big) $$ where $K=\frac{(\lambda+2\mu)}{3}$ in 3D and $K=\frac{(\lambda+2\mu)}{2}$ in 2D. The positive trace is:
+
+\begin{equation}
+\tr^+ e(u) = \left\{
+    \begin{array}{ll}
+         \tr{(e(u))}  & \mbox{if}  \tr{(e(u))} \geq 0  \\
+        0 & \mbox{else}
+    \end{array}
+\right.
+\end{equation}
+
 
 
 \subsection{Masonry}
 
-Masonry model try to do the same as Amor-Marigo-Maurini model but in the principal deformation basis such that 
+Masonry model deal in the principal deformation basis, some numerical results can be found in \cite{Freddi-Carfagni-2011}.
 
 $$W^{free}(u,\alpha)= \frac{1}{2} a(\alpha) \mathtt{A} e^+(u):e^+(u) + \frac{1}{2} \mathtt{A} \big( e(u)-e^+(u) \big): \big( e(u)-e^+(u) \big) $$
 
-$e=e^+ + e^-$ , where $e$ is the principal strain. $e^+$ is the projection such as minimize the energy norm ,
+$e(u)=e^+(u) + e^-(u)$ , where $e$ is the principal strain. $e^+$ is the projection in the positive principal basis such as minimize the energy norm $||*||_{\mathtt{A}}=\mathtt{A}*:*$,
 
-$$|| e^+ - e ||_A = \min_{\varepsilon \in S} || \varepsilon - e||_A$$
+$$|| e^+(u) - e(u) ||_\mathtt{A} = \min_{\varepsilon(u) \in S} || \varepsilon(u) - e(u)||_\mathtt{A} =\min_{\varepsilon \in S} \mathtt{A} (\varepsilon(u)-e(u)):(\varepsilon(u)-e(u))$$
 
-
+$S$ is the cone convex.
 Because the projection is not differentiable we do alternate projection until convergence of the displacement.
 
 \section{Volume controlled and work controlled }
 
+\subsection{Volume controlled}
 
-A variational formulation of a crack volume in a domain is :
+The evaluation of a crack volume in a domain is :
 
 $$ V_{\ell}(\alpha,u)=\int_{\Omega} \alpha \div{(u)} \mathrm{d}x= - \int_{\Omega} \nabla u . \nabla \alpha + \int_{\partial \Omega} \frac{\partial \alpha}{\partial n} u \mathrm{d}s$$
 
@@ -207,17 +215,28 @@ For sake of simplicity let $\frac{\partial \alpha}{\partial n} = 0 $ on $\partia
 
 $$ W^{crack pres force} =  pV = - p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x$$ 
 
-By plugging this work crack pressure into the total energy it turns out,
+By plugging this crack pressure work into the total energy it turns out,
 
 \begin{equation}
 	\label{eq:defEll}
-	\mathcal{E}_\ell(u,\alpha,p) := \int_\Omega a(\alpha) W(\e(u),p)\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx + p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,
+	\mathcal{E}_\ell(u,\alpha) := \int_\Omega a(\alpha) W(\e(u))\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx + p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,
 \end{equation}
 
-The idea is to control the incompressible volume of fluid injected into cracks. If there is no \textit{in-situ} stresses applied on $\Omega$, the problem remains linear. The technique is to find the pressure $p_t$ where at the equilibrium is associated to the target volume $V_t$. For that, let applied any positive pressure for example $p_1=1$ then calculate the volume of crack pressure for this $p_1$ denoted $V_1$. Knowing the volume target the pressure to applied is :
+\underline{Pressure controlled}
 
-$$ p_t=\frac{V_t p_1}{V_1}$$
+By letting “p" the crack pressure as a loading parameter the problem becomes not well posed, it is similar to the stress controlled body. The idea is to control the incompressible volume of fluid injected into cracks. If there is no \textit{in-situ} stresses applied on $\Omega$, the problem remains linear. The technique is to find the pressure $p_t$ where at the equilibrium is associated to the target volume $V_t$. For that, let applied any positive pressure for example $\bar{p}$ then calculate the volume of crack pressure for this $\bar{p}$ denoted $\bar{V}$. Knowing the volume target the pressure to applied is :
 
+$$ p_t=\frac{V_t \bar{p}}{\bar{V}}$$
+
+\subsection{Work controlled}
+
+Instead of applying hard device (displacement imposed) or soft device (stress control) on the boundary of a body it is possible to control the work force:
+
+$$ W^{force}=\int_{\partial_N \Omega} (\sigma . n ) . u  \mathrm{d}s $$
+
+The technique is similar to the volume controlled and it is implemented only for pressure force.
+
+$$p_t=\sqrt{\frac{\bar{W}}{\bar{p}W_t}}$$
 
 
 \section{Backtracking algorithms}
@@ -678,7 +697,7 @@ Alternatively, the python script from the surfing example could be used to apply
 \section{Von Mises Plasticity in 3D}
 Let consider a domain $\Omega= (-d/2,d/2) \times (-l/2,l/2) \times (0,l), d<l$ in the coordinate $(e_1, e_2, e_3)$ with the associated variables $(x_1, x_2, x_3)$, boundaries conditions applied on the rectangular cuboid are:
 \begin{itemize}
-\item traction pre-stresses $\bar{\sigma_2} e_2 \otimes e_2$ applied on surfaces $(*, \pm l/2,*)$
+\item constant traction pre-stresses $\bar{\sigma_2} e_2 \otimes e_2$ applied on surfaces $(*, \pm l/2,*)$
 \item roller displacement $u.e_3 = 0$ applied on the surface $(*,*,0)$
 \item roller displacement $u.e_3 = t$ applied on the surface $(*,*,l)$
 \end{itemize}
@@ -720,15 +739,12 @@ Let consider a 2D rectangular $\Omega= (-L/2,L/2) \times (-H/2,H/2)$ in the coor
 
 \begin{enumerate}
 \item By varing the ratio $(\sigma_c/\sigma_p)$ capture the transition between brittle fracture and ductile fracture caraterized respectively by a straigth fracture and slant (at $45^\circ$) crack path.
-\item Do the same but playing with the internal length.
-What is the influence of the behaviors resfense
-
-
-\item Use clamped boundary displacement
+\item Do the same but playing with the internal length.What is the influence of the internal length on the behaviors response.
+\item Use clamped boundary displacement instead
 \end{enumerate}
 
 \section{Burst experiment in 2D}
-The idea of burst experiement is to calculate the stress intensity factor of rocks. The experiment consist in keeping the ratio beteween the injected internal pressure and the confining pressure constant. Then increase the internal pressure until the rock breaks.
+The idea of burst experiement is to calculate the stress intensity factor of rocks. The experiment consist in keeping the ratio between the injected internal pressure and the confining pressure constant. Then increase the internal pressure until the rock breaks.
 
 \section*{Proposed numerical experimentations:}
 \begin{enumerate}
@@ -737,7 +753,9 @@ The idea of burst experiement is to calculate the stress intensity factor of roc
 \end{enumerate}
 
 \section{Sneddon in 2D}
-The Sneddon problem is a penny shape crack of length $(2 l_0)$ included in a 2D plate, where a constant pressure is applied on crack. Under the assumption of an infinte plate, the solution of the problem is:
+
+\subsection{Penny shape crack in plate Sneddon}
+The Sneddon problem is a penny shape crack of length $(2 l_0)$ included in a 2D plate, where a constant pressure is applied on crack tips. Under the assumption of an infinte plate, the solution of the problem is:
 
 $$ p(V) = \frac{E'V}{2\pi l_0^2}, \text{  before crack propagation}$$
 
@@ -751,12 +769,21 @@ where $E'=E$ in plane stress and $E'=E/(1-\nu^2)$ in plane strain.
 \item By taking a larger domain and making a loading-unloading-loading cycle try to get better results
 \end{enumerate}
 
+\subsection{Penny shape crack in plate Sneddon}
+Cruciform pre-cracks in a infinite domain pressurized uniformly.
+
+\section*{Proposed numerical experimentations:}
+\begin{enumerate}
+\item Observe than only on crack propagates
+\end{enumerate}
+
+
 \section{Brazilian Test}
-The brazilian test is a simple and famous test used for rocks and concrete to determine the maximum admissible stress in tension. The idea is to load in compression a cylinder on it’s partial lateral surface, what’s happens is at the center the stress in yy direction is in tension. When the stress in tension at the center reaches the critical one an unstable marco crack appears.
+The brazilian test is a simple and famous test used for rocks and concrete to determine the maximum admissible stress in tension. The idea is to load in compression a cylinder on it’s partial lateral surface, by doing that the stress at the enter is in tension. When the stress in tension at the center reaches the critical one an unstable marco crack appears.
 \section*{Proposed numerical experimentations:}
 \begin{enumerate}
 \item Check that a macro cracks appear for $\sigma_{yy} = \sigma_c =  \sqrt{\frac{3EG_c}{8(1-\nu^2)\ell}} $ by using unilateral contact masonry.
-\item Study the influence of boundary contact surface on the crack inititation
+\item Study the influence of boundary contact surface on the crack inititation.
 \end{enumerate}
 
 
