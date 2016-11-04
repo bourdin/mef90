@@ -128,7 +128,8 @@ The closed convex set (not necessary differentiable) of admissible stress is def
 \end{equation}
 
 
-Remarks: Von-Mises, Durcker-Prager are particular cases of Cap-Model similar with Tresca for Mohr-Coulomb
+Remarks: Von-Mises, Durcker-Prager are particular cases of Cap-Model similar with Tresca for Mohr-Coulomb.
+
 Both perfect plasticity and gradient damage model are expressed in a variational formulation and have been presented previously, now let's coupled plasticity with damage using the function $b(\alpha)$ such as,
 
 $$ \mathcal{E}(u,\alpha,p) = \int_{\Omega} \Big[  \frac{1}{2} a(\alpha) \mathtt{A} (e(u)-p):(e(u)-p) + b(\alpha) \int_0^t \sup_{\varsigma \in K}  \{ \varsigma : \dot{p} \} \mathrm{d}\tau + \frac{k}{4c_w} \Big( \frac{w(\alpha)}{\ell} + \ell |\nabla \alpha |^2 \Big) \Big] \mathrm{d}x$$
@@ -144,9 +145,9 @@ The algorithm is based on the decreasing total energy using alternate minimizati
         \State{Set $\alpha_{0}=0,p_0=0$.}
 
         \For{$i=0$ to $N$}
-            \While{$\left| \alpha^j-\alpha^{j-1}\right|_{L^\infty} \le \delta_{\alpha}$}
+            \While{$\left| \alpha^j_i-\alpha^{j-1}_i\right|_{L^\infty} \le \delta_{\alpha}$}
                 \State{$\alpha^{j+1}_{i} \longleftarrow\underset{\alpha_{i-1}\leq\alpha\leq1}{\argmin} \; \mathcal{E}(u_i^j,\alpha,p_i^j)$}
-                \While{$\left| p^{j+1,k}-p^{j+1,k-1}\right|_{L^\infty} \le \delta_{p}$}
+                \While{$\left| p^{j+1,k}_i-p^{j+1,k-1}_i\right|_{L^\infty} \le \delta_{p}$}
                 \State{$u^{j+1,k+1}_{i} \longleftarrow\underset{u\in\mathcal{K}_{A}}{\argmin} \; \frac{1}{2}a(\alpha^{j+1}_{i})\mathtt{A}(e(u)-p^{j+1,k}):(e(u)-p^{j+1,k})$}
                 \State{$p^{j+1,k+1}_{i} \longleftarrow\underset{ a(\alpha^{j+1}_{i}) \mathtt{A} (e(u^{j+1,k+1}_i)-p_{i-1}) \in b(\alpha^{j+1}_{i}) K}{\underset{p}\argmin}  \mathtt{A} (p-p_{i-1}) :(p-p_{i-1}) $} 
             \State{$k\longleftarrow k+1$}
@@ -183,6 +184,7 @@ $$W^{free}(u,\alpha)= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr
 \right.
 \end{equation}
 
+and $\tr ^-({e(u)}) = \tr({e(u)}) - \tr ^+({e(u)})$
 
 
 \subsection{Masonry}
@@ -195,7 +197,7 @@ $e(u)=e^+(u) + e^-(u)$ , where $e$ is the principal strain. $e^+$ is the project
 
 $$|| e^+(u) - e(u) ||_\mathtt{A} = \min_{\varepsilon(u) \in S} || \varepsilon(u) - e(u)||_\mathtt{A} =\min_{\varepsilon \in S} \mathtt{A} (\varepsilon(u)-e(u)):(\varepsilon(u)-e(u))$$
 
-$S$ is the cone convex.
+$S$ is a cone convex set.
 Because the projection is not differentiable we do alternate projection until convergence of the displacement.
 
 \section{Volume controlled and work controlled }
@@ -222,21 +224,20 @@ By plugging this crack pressure work into the total energy it turns out,
 	\mathcal{E}_\ell(u,\alpha) := \int_\Omega a(\alpha) W(\e(u))\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx + p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,
 \end{equation}
 
-\underline{Pressure controlled}
 
 By letting “p" the crack pressure as a loading parameter the problem becomes not well posed, it is similar to the stress controlled body. The idea is to control the incompressible volume of fluid injected into cracks. If there is no \textit{in-situ} stresses applied on $\Omega$, the problem remains linear. The technique is to find the pressure $p_t$ where at the equilibrium is associated to the target volume $V_t$. For that, let applied any positive pressure for example $\bar{p}$ then calculate the volume of crack pressure for this $\bar{p}$ denoted $\bar{V}$. Knowing the volume target the pressure to applied is :
 
 $$ p_t=\frac{V_t \bar{p}}{\bar{V}}$$
 
-\subsection{Work controlled}
-
-Instead of applying hard device (displacement imposed) or soft device (stress control) on the boundary of a body it is possible to control the work force:
-
-$$ W^{force}=\int_{\partial_N \Omega} (\sigma . n ) . u  \mathrm{d}s $$
-
-The technique is similar to the volume controlled and it is implemented only for pressure force.
-
-$$p_t=\sqrt{\frac{\bar{W}}{\bar{p}W_t}}$$
+%\subsection{Work controlled}
+%
+%Instead of applying hard device (displacement imposed) or soft device (stress control) on the boundary of a body it is possible to control the work force:
+%
+%$$ W^{force}=\int_{\partial_N \Omega} (\sigma . n ) . u  \mathrm{d}s $$
+%
+%The technique is similar to the volume controlled and it is implemented only for pressure force.
+%
+%$$p_t=\sqrt{\frac{\bar{W}}{\bar{p}W_t}}$$
 
 
 \section{Backtracking algorithms}
@@ -424,6 +425,40 @@ Isotropic Hookes laws are described in terms of  Youngs Modulus / Poisson ration
 \end{boxedverbatim}
 or as a general fourth order tensor.
 
+
+\subsection{Plasticity}
+
+
+\subsubsection{Global options}
+\small{\begin{boxedverbatim}
+-defmech_mode_plasticStrain_atol = 1E-4 ; tolerance for the infinit norme in p
+-plasticStrain_offset = 4 ; Position of plasticStrain field in EXO file 
+\end{boxedverbatim}}
+
+
+
+\subsubsection{Cell sets options}
+To use plasticty you need to specify some material properties such as, the plasticity type and it's coefficent:
+\begin{boxedverbatim}
+-cs0001_plasticity_type = VonMises ; Different choice ('None','Tresca',
+'VonMises','VonMisesPlaneTheory','CapModel','DruckerPragerCapModel','VonMises1D')
+-cs0001_yieldStress = 1 ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
+-cs0001_residualyieldStress = 0 ; [unit-less] (eta) residual yield stress
+-cs0001_DuctileCouplingPower = 2 ; [] power of the coupling between the 
+damage and the plasticity
+-cs0001_CoefficientCapModel0 = -0.3 ; C0 in the Yield function: CD 
+|| dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+-cs0001_CoefficientCapModel1 = 0.4 ; C1 in the Yield function: CD 
+|| dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+-cs0001_CoefficientCapModel2 = 1 ; C2 in the Yield function: CD 
+|| dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+-cs0001_CoefficientCapModelD = 1 ; CD in the Yield function: CD 
+|| dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+-cs0001_CoefficientDruckerPrager = -0.5 ; k in the Yield function: 
+|| dev(stress) || - k tr(stress) - yieldStress <= 0
+\end{boxedverbatim}
+
+
 \subsection{Heat transfer options}
 \subsubsection{Global options}
 \small{\begin{boxedverbatim}
@@ -465,7 +500,7 @@ Notes:
 -vs0500_boundaryTemp <0>: Temperature boundary value 
 \end{boxedverbatim}}
 
-\subsection{Gradient damage options}
+\subsection{Gradient damage options and unilateral contact}
 \subsubsection{Global options}
 \small{\begin{boxedverbatim}
 -DefMech_mode <QuasiStatic>: Type of defect mechanics computation. 
@@ -523,6 +558,19 @@ Notes:
 -cs0001_boundaryDamage <0>: [unit-less] (alpha): Damage boundary value 
 -cs0001_residualStiffness <1e-09>: [unit-less] (eta): residual stiffness multiplier 
 \end{boxedverbatim}}
+
+To use linear softening damage model you have to specify the value of $k$ (Linear softening coefficient):
+\begin{boxedverbatim}
+-cs0001_CoefficientLinSoft = 2 ; [] (k) Linear softening coefficient for LinSoft
+\end{boxedverbatim}
+
+
+To use unilateral contact:
+\begin{boxedverbatim}
+-cs0001_unilateralContact_type: masonry , choice ('HydrostaticDeviatoric,
+'BrittleDuctile','PositiveHydrostatic','Deviatoric','PrincipalStrains','Masonry')
+\end{boxedverbatim}
+
 Notes:
 \begin{compactenum}
 \item Element shortID should not be changed manually.
@@ -541,6 +589,20 @@ Notes:
 \end{boxedverbatim}}
 
 
+\subsection{Controlled crack volume}
+
+\subsubsection{Global options}
+\small{\begin{boxedverbatim}
+-CrackPressure_scaling: <constant> ; Crack pressure scaling (linear-constant)
+-CrackPressure_Offset: <4> ; Position of Crack pressure field in EXO file 
+\end{boxedverbatim}}
+
+
+\subsubsection{Cell sets options}
+\small{\begin{boxedverbatim}
+-cs0001_Crackpressure: 1. ; Value of crack pressure applied on the block
+-cs0001_IsCrackPressureActivated: <yes> ; Is this block play a role in the evalutation of the crack volume 
+\end{boxedverbatim}}
 
 \chapter{Examples}
 \section{Uniaxial tension}
