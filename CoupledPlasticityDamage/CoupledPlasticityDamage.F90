@@ -524,15 +524,13 @@ Program CoupledPlasticityDamage
                   !!! Absolute/Relative error 
                   !!! || p_i - p_{i-1} ||_L_inifnity / (1+ || p_i ||_L_inifnity) < tolerance
                   Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-                  Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+                  Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
                   Call VecAxPy(plasticStrainPrevious,-1.0_Kr,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
                   Call VecNorm(plasticStrainPrevious,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
                   Call VecNorm(MEF90DefMechCtx%plasticStrain,NORM_INFINITY,RelativeAbsoluteplasticStrainATol,ierr);CHKERRQ(ierr)
                   RelativeAbsoluteplasticStrainATol=(1.0_Kr+RelativeAbsoluteplasticStrainATol)*MEF90DefMechGlobalOptions%plasticStrainATol
                   Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
-
-                  !!! condition exit loop in u
                   If (( PlasticStrainMaxChange <=  RelativeAbsoluteplasticStrainATol ) .and. ( ErrorEstimationCrackVolume <= 1E-4 ) .and. ( ErrorEstimationWorkControlled <= 1E-4 )) Then
                      If ( ErrorEstimationCrackVolume /= 0 ) Write(IOBuffer,301) AltProjIter,ErrorEstimationCrackVolume
                      If ( ErrorEstimationWorkControlled /= 0 ) Write(IOBuffer,301) AltProjIter,ErrorEstimationWorkControlled

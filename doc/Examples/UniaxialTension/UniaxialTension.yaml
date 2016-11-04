@@ -22,7 +22,8 @@ cs0001:
     internallength: .05
     residualstiffness: 0.
     damage:
-        type: AT1
+        type: LinSoft
+    CoefficientLinSoft: 2
     plasticity:
         type: NONE
     displacementbc: no,no,no

@@ -27,6 +27,8 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
       real(Kind = Kr)             :: CoefficientCapModel2
       real(Kind = Kr)             :: CoefficientCapModelD
       logical(Kind = Kr)          :: isPlaneStress
+      real(Kind = Kr)             :: cumulatedDissipatedPlasticEnergy
+      logical(Kind = Kr)          :: isLinearIsotropicHardening
    end type MEF90DefMechPlasticityCtx
 
 contains
@@ -88,8 +90,8 @@ contains
       real(kind=c_double)                       :: f(*)
       real(kind=c_double)                       :: h(*)
       real(kind=c_double)                       :: g(*)
-      real(Kind = Kr)                           :: StiffnessA         !! Stiffness = a(alpha)/b(alpha)
-      real(Kind = Kr)                           :: StiffnessB
+      real(Kind = Kr)                           :: StiffnessA,PlasticStrainCumulated
+      real(Kind = Kr)                           :: StiffnessB,Stiffness
       type(c_ptr),intent(in),value              :: myctx
 
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
@@ -112,8 +114,19 @@ contains
       endif
 
       Stress=myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)
+
+      If (myctx_ptr%isLinearIsotropicHardening .eqv. .true. ) then
+         PlasticStrainCumulated = (myctx_ptr%cumulatedDissipatedPlasticEnergy+(Stress .DotP. (xMatS-myctx_ptr%PlasticStrainOld)))/myctx_ptr%YieldStress
+      else
+         PlasticStrainCumulated=0.0_Kr
+      endif
+
+
+      Stiffness=StiffnessB*(1.0_Kr+ PlasticStrainCumulated )
+
       f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) 
-      g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - ( (1.0_Kr-myctx_ptr%residualYieldStress)*StiffnessB + myctx_ptr%residualYieldStress )*myctx_ptr%YieldStress
+      g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - ( (1.0_Kr-myctx_ptr%residualYieldStress)*Stiffness + myctx_ptr%residualYieldStress )*myctx_ptr%YieldStress
+      g(2) = -PlasticStrainCumulated
       h(1) = Trace(xMatS)
    end subroutine FHG_VONMISES
 
@@ -227,9 +240,9 @@ contains
       real(kind=c_double)                       :: f(*)
       real(kind=c_double)                       :: h(*)
       real(kind=c_double)                       :: g(*)
-      real(Kind = Kr)                           :: StiffnessA         !! Stiffness = a(alpha)/b(alpha)
+      real(Kind = Kr)                           :: StiffnessA
       real(Kind = Kr)                           :: StiffnessB
-      real(Kind = Kr)                           :: Stiffness
+      real(Kind = Kr)                           :: Stiffness,PlasticStrainCumulated
       type(c_ptr),intent(in),value              :: myctx
 
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
@@ -250,8 +263,18 @@ contains
 
       Stress = myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)
 
-      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
-      g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - myctx_ptr%YieldStress*StiffnessB
+      If (myctx_ptr%isLinearIsotropicHardening .eqv. .true. ) then
+         PlasticStrainCumulated = (myctx_ptr%cumulatedDissipatedPlasticEnergy+(Stress .DotP. (xMatS-myctx_ptr%PlasticStrainOld)))/myctx_ptr%YieldStress
+      else
+         PlasticStrainCumulated=0.0_Kr
+      endif
+
+      Stiffness=StiffnessB*( 1.0_Kr+ PlasticStrainCumulated )
+
+
+      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) )
+      g(1) = StiffnessA * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr)  * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - myctx_ptr%YieldStress*Stiffness
+      g(2) = -PlasticStrainCumulated
       h(1) = xMatS%YY
       h(2) = xMatS%XY
    end subroutine FHG_VONMISES1D
@@ -418,7 +441,7 @@ contains
 !!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
 !!!
 
-   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,ierr)
+   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr)
       use,intrinsic :: iso_c_binding
 #ifdef MEF90_HAVE_SNLP
       use SNLPF90
@@ -426,14 +449,14 @@ contains
 
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(Vec),Intent(INOUT)                            :: plasticStrain
-      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation
+      Type(Vec),Intent(IN)                               :: x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld
       PetscErrorCode,Intent(OUT)                         :: ierr
 
 #ifdef MEF90_HAVE_SNLP
       Type(DM)                                           :: Mesh
-      Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec,plasticStrainPreviousSec,cumulatedDissipatedPlasticEnergyVariationSec
+      Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec,plasticStrainPreviousSec,cumulatedDissipatedPlasticEnergyVariationSec,cumulatedDissipatedPlasticEnergyOldSec
       PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,inelasticStrainLoc,damageLoc,plasticStrainPreviousLoc
-      PetscReal,Dimension(:),Pointer                     :: cumulatedDissipatedPlasticEnergyVariationLoc
+      PetscReal,Dimension(:),Pointer                     :: cumulatedDissipatedPlasticEnergyVariationLoc,cumulatedDissipatedPlasticEnergyOldLoc
       type(c_funptr)                                     :: snlp_fhg,snlp_Dfhg
       integer(kind=c_int)                                :: snlp_n,snlp_m,snlp_p
       type(SNLP),pointer                                 :: s
@@ -477,6 +500,9 @@ contains
       Call SectionRealDuplicate(MEF90DefMechCtx%cellDMScalSec,cumulatedDissipatedPlasticEnergyVariationSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(cumulatedDissipatedPlasticEnergyVariationSec,MEF90DefMechCtx%cellDMScalScatter,SCATTER_REVERSE,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr) 
 
+      Call SectionRealDuplicate(MEF90DefMechCtx%cellDMScalSec,cumulatedDissipatedPlasticEnergyOldSec,ierr);CHKERRQ(ierr)
+      Call SectionRealToVec(cumulatedDissipatedPlasticEnergyOldSec,MEF90DefMechCtx%cellDMScalScatter,SCATTER_REVERSE,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr) 
+
       Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,xSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(xSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,x,ierr);CHKERRQ(ierr)
 
@@ -518,7 +544,7 @@ contains
                      snlp_fhg  = c_funloc(FHG_VONMISES)
                      snlp_n    = SIZEOFMEF90_MATS
                      snlp_m    = 1
-                     snlp_p    = 1
+                     snlp_p    = 2
                      snlp_ctx  = c_loc(PlasticityCtx)
 
                      case(MEF90DefMech_plasticityTypeVonMisesPlaneTheory)
@@ -534,7 +560,7 @@ contains
                      snlp_fhg  = c_funloc(FHG_VONMISES1D)
                      snlp_n    = SIZEOFMEF90_MATS
                      snlp_m    = 2
-                     snlp_p    = 1
+                     snlp_p    = 2
                      snlp_ctx  = c_loc(PlasticityCtx)
 
                   case(MEF90DefMech_plasticityTypeTresca)
@@ -588,6 +614,7 @@ contains
                PlasticityCtx%CoefficientCapModel2 = matpropSet%CoefficientCapModel2
                PlasticityCtx%CoefficientCapModelD = matpropSet%CoefficientCapModelD
                PlasticityCtx%residualYieldStress = matpropSet%residualYieldStress
+               PlasticityCtx%isLinearIsotropicHardening = matpropSet%isLinearIsotropicHardening
 
 
 #if MEF90_DIM == 2
@@ -610,6 +637,8 @@ contains
                   Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                   Call SectionRealRestrict(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
                   Call SectionRealRestrict(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestrict(cumulatedDissipatedPlasticEnergyOldSec,cellID(cell),cumulatedDissipatedPlasticEnergyOldLoc,ierr);CHKERRQ(ierr)
+
 
                   If (Associated(MEF90DefMechCtx%damage)) Then
                      Call SectionRealRestrictClosure(damageSec,MEF90DefMechCtx%DMScal,cellID(cell),elemScalType%numDof,damageLoc,ierr);CHKERRQ(ierr)
@@ -622,6 +651,7 @@ contains
                   PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
                   PlasticityCtx%InelasticStrain = InelasticStrainLoc
                   PlasticityCtx%plasticStrainPrevious = plasticStrainLoc
+                  PlasticityCtx%cumulatedDissipatedPlasticEnergy = cumulatedDissipatedPlasticEnergyOldLoc(1)
 
                   s%show_progress = 0
          
@@ -669,6 +699,7 @@ contains
 #endif
 
                   Call SectionRealRestore(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
+                  Call SectionRealRestore(cumulatedDissipatedPlasticEnergyOldSec,cellID(cell),cumulatedDissipatedPlasticEnergyOldLoc,ierr);CHKERRQ(ierr)
 
                   Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                   Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
@@ -695,6 +726,7 @@ contains
       Call SectionRealDestroy(inelasticStrainSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(plasticStrainPreviousSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(cumulatedDissipatedPlasticEnergyVariationSec,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(cumulatedDissipatedPlasticEnergyOldSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       If (Associated(MEF90DefMechCtx%damage)) Then
          Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
