@@ -39,7 +39,8 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoefficientCapModel2                             ! C2 in CapModel
       PetscReal                     :: CoefficientCapModelD                             ! CD in CapModel
       PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
-      PetscReal                     :: cohesiveStiffness          
+      PetscReal                     :: cohesiveStiffness
+      PetscBool                     :: isLinearIsotropicHardening
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
@@ -63,6 +64,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoefficientCapModelD                             ! CD in CapModel
       PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
       PetscReal                     :: cohesiveStiffness          
+      PetscBool                     :: isLinearIsotropicHardening
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
 
@@ -98,6 +100,7 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                          & ! CD in CapModel
       -0.5_Kr,                                                                         & ! k  in DruckerPrager
       0.0_Kr,                                                                          & ! cohesive stiffness
+      .FALSE.,                                                                          & ! isLinearIsotropicHardening
       "MEF90Mathium2D")  
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &  
@@ -127,6 +130,7 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                          & ! CD in CapModel
       -0.5_Kr,                                                                         & ! k  in DruckerPrager
       0.0_Kr,                                                                          & ! cohesive stiffness
+      .FALSE.,                                                                          & ! isLinearIsotropicHardening
       "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
 
@@ -336,6 +340,8 @@ Contains
 
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
+
+      Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
 
@@ -391,6 +397,9 @@ Contains
 
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
+
+      Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
+
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
 
