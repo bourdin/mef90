@@ -394,7 +394,7 @@ Contains
             elemType = MEF90_P1_Lagrange_3D_Scal
          Case("TETRA10")
             elemType = MEF90_P2_Lagrange_3D_Scal
-         Case("TRI","TRI3","TRISHELL","TRISHELL3")
+         Case("TRI","TRI3","TRIANGLE","TRISHELL","TRISHELL3")
             If (dim == 2) Then
                elemType = MEF90_P1_Lagrange_2D_Scal
             Else
@@ -418,9 +418,9 @@ Contains
          !   Else
          !      elemType = MEF90_Q2_Lagrange_3DBoundary_Scal
          !   End If
-         Case("BAR","BAR2")
+         Case("BAR","BAR2","BEAM2")
             elemType = MEF90_P1_Lagrange_2DBoundary_Scal
-         Case("BAR3")
+         Case("BAR3","BEAM3")
             elemType = MEF90_P2_Lagrange_2DBoundary_Scal
          Case default
             Write(*,*) __FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
@@ -442,7 +442,7 @@ Contains
             elemType = MEF90_P1_Lagrange_3D_Vect
          Case("TETRA10")
             elemType = MEF90_P2_Lagrange_3D_Vect
-         Case("TRI","TRI3","TRISHELL","TRISHELL3")
+         Case("TRI","TRI3","TRIANGLE","TRISHELL","TRISHELL3")
             If (dim == 2) Then
                elemType = MEF90_P1_Lagrange_2D_Vect
             Else
@@ -466,9 +466,9 @@ Contains
             !Else
             !   elemType = MEF90_Q2_Lagrange_3DBoundary_Vect
             !End If
-         Case("BAR","BAR2")
+         Case("BAR","BAR2","BEAM2")
             elemType = MEF90_P1_Lagrange_2DBoundary_Vect
-         Case("BAR3")
+         Case("BAR3","BEAM3")
             elemType = MEF90_P2_Lagrange_2DBoundary_Vect
          Case default
             Write(*,*) __FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
@@ -490,7 +490,7 @@ Contains
             elemType = MEF90_P1_Lagrange_3D_Elast
          Case("TETRA10")
             elemType = MEF90_P2_Lagrange_3D_Elast
-         Case("TRI","TRI3","TRISHELL","TRISHELL3")
+         Case("TRI","TRI3","TRIANGLE","TRISHELL","TRISHELL3")
             If (dim == 2) Then
                elemType = MEF90_P1_Lagrange_2D_Elast
             Else
@@ -514,9 +514,9 @@ Contains
             !Else
             !   elemType = MEF90_Q2_Lagrange_3DBoundary_Elast
             !End If
-         Case("BAR","BAR2")
+         Case("BAR","BAR2","BEAM2")
             elemType = MEF90_P1_Lagrange_2DBoundary_Elast
-         Case("BAR3")
+         Case("BAR3","BEAM3")
             elemType = MEF90_P2_Lagrange_2DBoundary_Elast
          Case default
             Write(*,*) __FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
