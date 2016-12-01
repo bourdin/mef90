@@ -1,0 +1,45 @@
+reset
+#{R=1}
+#{W=.4}
+#{H=.2}
+#{h=.01}
+#{hstr = tostring(h)}
+#{prefix="Brazilian2D"}
+
+tridelaunay point placement gq
+
+create surface circle radius {R} zplane
+
+create surface rectangle width {W} height {H} zplane
+move body 2 Y {R}
+webcut body 2 tool body 1
+delete body 3
+
+
+create surface rectangle width {W} height {H} zplane
+move body 4 Y {-R}
+webcut body 4 tool body 1
+delete body 5
+
+imprint all
+merge all
+
+
+
+block 1 surface 1
+block 2 surface 3 6
+block 20 curve 14
+block 30 curve 2
+nodeset 100 vertex 12
+
+
+delete mesh
+surface all scheme tridelaunay size {h}
+mesh surface all
+surface all smooth scheme laplacian free 
+smooth surface all
+
+block 1 to 9 element type tri3
+block 10 to 99 element type bar2
+#{filename = Quote(prefix//"-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
