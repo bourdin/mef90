@@ -186,7 +186,7 @@ def readNodes(f,line,nodeID,vertexSet,nodeNames,order):
     
 	
 #------Function for writing to exo format
-def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames):
+def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames,numDims):
     X = coords[:,0]         #set of all X coords
     Y = coords[:,1]         #set of all Y coords
     if len(coords[1])>2:
@@ -199,7 +199,7 @@ def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames):
         numElem += len(cellSets[k]['connect'])/cellSets[k]['numVPE']
 
     #setting up exo file for writing
-    e=exo.exodus(filename, mode='w',title='title',numDims=3,numNodes=len(X), 
+    e=exo.exodus(filename, mode='w',title='title',numDims=numDims,numNodes=len(X), 
                   numElems=numElem,numBlocks=len(cellSets),numNodeSets=len(vertexSets),numSideSets=0)
     e.put_coord_names(["x","y","z"])    #name of each coordinate
     e.put_coords(X,Y,Z)                 #actual coordinates
@@ -239,9 +239,11 @@ def Main():
     parser = argparse.ArgumentParser()
     parser.add_argument("abaqusFile", help = "The name of the ABAQUS file to be parsed.", type = str)
     parser.add_argument("exoFile", help = "The name of the exodus file to be written.", type = str)
+    parser.add_argument("--dim",type=int,help="mesh dimension",default=3)
+    parser.add_argument("--time_min",type=float,help="first time step",default=0.)
     args = parser.parse_args()
     (coord,vertexSet,cellSet,elemNames,nodeNames) = ABAQUSImporter(args.abaqusFile)
-    exoWriter(coord,vertexSet,cellSet,args.exoFile,elemNames,nodeNames)
+    exoWriter(coord,vertexSet,cellSet,args.exoFile,elemNames,nodeNames,args.dim)
 
 if __name__ == '__main__':
     Main()
