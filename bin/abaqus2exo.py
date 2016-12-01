@@ -83,7 +83,7 @@ def readCoords(f,line):
     nodeID = []
     line = f.readline()
     #skip lines describing nodeset, and coords list ends on '**'
-    while not line.startswith('**'):
+    while not line.startswith('*'):
         coord.append([float(x) for x in line.strip().split(", ")[1:]])
         nodeID.append(int(line.strip().split(", ")[0]))
         line = f.readline()

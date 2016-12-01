@@ -323,7 +323,6 @@ contains
       Stress=(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))*StiffnessA
       f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0_Kr
       g(1) = myctx_ptr%CoefficientCapModelD * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - myctx_ptr%CoefficientCapModel0*StiffnessB + myctx_ptr%CoefficientCapModel1*Trace(Stress) + myctx_ptr%CoefficientCapModel2*Trace(Stress)**2.0_Kr
-      h(1) = myctx_ptr%Damage*Trace(xMatS)
    end subroutine FHG_CAPMODEL
 
 
@@ -575,7 +574,7 @@ contains
                      snlp_Dfhg = c_null_funptr
                      snlp_fhg  = c_funloc(FHG_CAPMODEL)
                      snlp_n    = SIZEOFMEF90_MATS
-                     snlp_m    = 1
+                     snlp_m    = 0
                      snlp_p    = 1
                      snlp_ctx  = c_loc(PlasticityCtx)
 
