@@ -86,9 +86,8 @@ Program CoupledPlasticityDamage
    Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
 
    !!! Secant method for sneddon
-   PetscReal,Dimension(3)                              :: CrackPressureSave= (/0.0 , 1.0 , 2.0/)
-   PetscReal,Dimension(3)                              :: CrackVolumeSave = (/ 0.0 , 1.0 , 2.0/)
-   PetscInt                                            :: CrackVolumeIter,I0,I1,I2
+   PetscReal,Dimension(3)                              :: CrackPressureSave,CrackVolumeSave
+   PetscInt                                            :: CrackVolumeIter,I1,I2,I3
    PetscReal                                           :: CrackVolumeTol=1
 
 
@@ -495,15 +494,15 @@ Program CoupledPlasticityDamage
                   !!! CrackPressure Block independent of alternate proj because exit if convergence
                   If (any(ActivatedCrackPressureBlocksList)) Then
                      CrackVolumeIter=1
-                     CrackPressureSave= (/0.0 , 1.0 , 2.0/)
-                     CrackVolumeSave = (/ 0.0 , 1.0 , 2.0/)
+                     CrackPressureSave= [0.0 , 1.0 , 2.0]
+                     CrackVolumeSave  = [0.0 , 1.0 , 2.0]
                      DO WHILE ( CrackVolumeTol > .001 .or. CrackVolumeIter > 20 )
                         !!! calculate P
-                        I0=MOD(CrackVolumeIter+2,3)+1
-                        I1=MOD(CrackVolumeIter,3)+1
-                        I2=MOD(CrackVolumeIter+1,3)+1
-                        CrackPressureSave(I2) = CrackPressureSave(I1) - ( CrackVolumeSave(I1) - time(step)   )*( CrackPressureSave(I1) - CrackPressureSave(I0) )/( CrackVolumeSave(I1) - CrackVolumeSave(I0) )
-                        Call VecSet(MEF90DefMechCtx%CrackPressure,CrackPressureSave(I2))
+                        I1=MOD(CrackVolumeIter+2,3)+1
+                        I2=MOD(CrackVolumeIter,3)+1
+                        I3=MOD(CrackVolumeIter+1,3)+1
+                        CrackPressureSave(I3) = CrackPressureSave(I2) - ( CrackVolumeSave(I2) - time(step)   )*( CrackPressureSave(I2) - CrackPressureSave(I1) )/( CrackVolumeSave(I2) - CrackVolumeSave(I1) )
+                        Call VecSet(MEF90DefMechCtx%CrackPressure,CrackPressureSave(I3),ierr);CHKERRQ(ierr)
                         !!! Solve displacement SNES
                         Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                         Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
@@ -514,8 +513,8 @@ Program CoupledPlasticityDamage
                         !!!! Calculate the volume
                         CrackVolumeSet = 0.0_Kr
                         Call MEF90DefMechCrackVolume(MEF90DefMechCtx%displacement,MEF90DefMechCtx,CrackVolumeSet,ierr);CHKERRQ(ierr)
-                        CrackVolumeSave(I2) = sum(CrackVolumeSet,MASK=ActivatedCrackPressureBlocksList)
-                        CrackVolumeTol = abs( time(step) - CrackVolumeSave(I2) )/( 1.0_Kr+time(step) )
+                        CrackVolumeSave(I3) = sum(CrackVolumeSet,MASK=ActivatedCrackPressureBlocksList)
+                        CrackVolumeTol = abs( time(step) - CrackVolumeSave(I3) )/( 1.0_Kr+time(step) )
                         CrackVolumeIter= CrackVolumeIter + 1
                      END DO 
                      CrackVolumeTol=1
@@ -536,7 +535,7 @@ Program CoupledPlasticityDamage
                         Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
                         WorkControlled(step) = sum(forceWorkSet,MASK=ActivatedWorkControlledBlocksList)
                         WorkControlledRescaling = sqrt(time(step)/WorkControlled(step))
-                        Call VecScale(MEF90DefMechCtx%pressureForce,WorkControlledRescaling)
+                        Call VecScale(MEF90DefMechCtx%pressureForce,WorkControlledRescaling,ierr);CHKERRQ(ierr)
                      
                      ErrorEstimationWorkControlled=((abs(time(step)-WorkControlled(step)))/(1.0_Kr+time(step)))
                   End If
