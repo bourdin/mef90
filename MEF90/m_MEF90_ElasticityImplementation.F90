@@ -482,7 +482,7 @@ Contains
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine ElasticityFOrceRHSSetCst
+   End Subroutine ElasticityForceRHSSetCst
 
 #undef __FUNCT__
 #define __FUNCT__ "ElasticityForceRHSSetCell"
