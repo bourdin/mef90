@@ -1,0 +1,55 @@
+Please use the following default offsets for the layout of exodus files
+
+Node based fields
+2D:
+1: Temperature
+2: Damage
+3: Displacement_X
+4: Displacement_Y
+BoundaryDisplacement defaults to the same location as Displacement
+
+3D:
+1: Temperature
+2: Damage
+3: Displacement_X
+4: Displacement_Y
+5: Displacement_Z
+BoundaryDisplacement defaults to the same location as Displacement
+
+
+Cell based fields
+2D:
+1:  heatFlux
+2:  externalTemperature
+3:  pressureForce
+4:  Force_X
+5:  Force_Y
+6:  stress_XX
+7:  stress_YY
+8:  stress_XY
+9:  crackPressure
+10: plasticStrain_XX
+11: plasticStrain_YY
+12: plasticStrain_XY
+
+3D:
+1:  heatFlux
+2:  externalTemperature
+3:  pressureForce
+4:  Force_X
+5:  Force_Y
+6:  Force_Z
+7:  stress_XX
+8:  stress_YY
+9:  stress_ZZ
+10: stress_YZ
+11: stress_XZ
+12: stress_XY
+13: crackPressure
+14: plasticStrain_XX
+15: plasticStrain_YY
+16: plasticStrain_XY
+17: plasticStrain_YZ
+18: plasticStrain_XZ
+19: plasticStrain_XY
+
