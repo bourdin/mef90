@@ -1,14 +1,6 @@
 --- petsc-3.3-p7/src/dm/impls/mesh/meshexodus.c	2015-12-24 06:43:42.000000000 -0600
 +++ /Users/blaise/AeroFS/HPC/petsc-3.3-p7/src/dm/impls/mesh/meshexodus.c	2015-12-23 14:28:39.000000000 -0600
-@@ -1614,6 +1614,7 @@
-     ierr = MPI_Bcast(setsID_zero,num_cs_zero,MPIU_INT,0,dmcomm);
-     
-     istart = 0;
-+  if (0 == 1) {
-     for (set = 0; set < num_cs_zero; set++) {
-       /*
-         Get the size of the size of the set on cpu 0 and create a Vec to receive values
-@@ -1665,18 +1666,11 @@
+@@ -1665,15 +1666,7 @@
        istart += num_cells_zero;
        ierr = VecDestroy(&vdof_set_zero);CHKERRQ(ierr);
        ierr = VecDestroy(&vdof_set);CHKERRQ(ierr);
@@ -25,7 +17,3 @@
        ierr = VecScatterDestroy(&setscattertozero);CHKERRQ(ierr);
        ierr = ISDestroy(&setIS);CHKERRQ(ierr);
      }
-+  }
-     ierr = PetscFree(setsID_zero);CHKERRQ(ierr);
-   }  
-   
