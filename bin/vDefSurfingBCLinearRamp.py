@@ -10,10 +10,8 @@ def parse(args=None):
     parser.add_argument("--time_min",type=float,help="first time step",default=0.)
     parser.add_argument("--time_max",type=float,help="last time step",default=1.)
     parser.add_argument("--time_numstep",type=int,help="number of time step",default=11)
-    parser.add_argument("--E",type=float,help="Youngs modulus",default=1.)
-    parser.add_argument("--nu",type=float,help="Poisson Ratio",default=.3)
-    parser.add_argument("--ampl",type=float,help="Amplification",default=1.)    
-    parser.add_argument("--initialpos",type=float,nargs=3,help="initial crack tip postion",default=[0.,0,0])
+    parser.add_argument("--w",type=float,help="width of the loading ramp",default=1.)
+    parser.add_argument("--h",type=float,help="height of the loading ramp",default=.1)
     parser.add_argument("--cs",type=int,nargs='*',help="list of cell sets where surfing boundary displacements are applied",default=[])
     parser.add_argument("--vs",type=int,nargs='*',help="list of vertex sets where surfing boundary displacements are applied",default=[])
     return parser.parse_args()
@@ -40,19 +38,16 @@ def exoformat(e):
     e.set_element_variable_truth_table([True] * e.numElemBlk.value * len(element_variable_name))
     return(0)
 
-def cart2polar(x, y):
-    import numpy as np
-    r = np.sqrt(x**2 + y**2)
-    theta = np.arctan2(y, x)
-    return r, theta
-        
-def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl):
+def ramp(x,y,w,h):
+    if y <= 0:
+        return -min(max(0,-x*h/w),h)
+    else:
+        return min(max(0,-x*h/w),h)
+
+def surfingBC(e,t,cslist,vslist,w,h):
     import exodus as exo
     import numpy as np
     
-    kappa = (3.0-nu)/(1.0+nu)
-    mu = E / (1. + nu) * .5
-
     dim = e.num_dimensions()
     X,Y,Z=e.get_coords()
     U = np.zeros([3,len(X)],dtype=exo.c_double)
@@ -63,18 +58,14 @@ def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl):
         for cid in range(connect[1]):
             vertices = [connect[0][cid*connect[2]+c] for c in range(connect[2])]
             for v in vertices:
-                r,theta = cart2polar(X[v-1]-Xc[0]-t,Y[v-1]-Xc[1])
-                z = Z[v-1]-Xc[2]
-                U[0,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
-                U[1,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
+                U[0,v-1] = 0.0
+                U[1,v-1] = ramp(X[v-1]-t,Y[v-1],w,h)
                 U[2,v-1] = 0.0
         
     for set in vslist:
         for v in e.get_node_set_nodes(set):
-            r,theta = cart2polar(X[v-1]-Xc[0]-t,Y[v-1]-Xc[1])
-            z = Z[v-1]
-            U[0,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
-            U[1,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
+            U[0,v-1] = 0.0
+            U[1,v-1] = ramp(X[v-1]-t,Y[v-1],w,h)
             U[2,v-1] = 0.0
     return U
 
@@ -95,7 +86,7 @@ def main():
     for t in np.linspace(options.time_min,options.time_max,options.time_numstep):
         print "writing step",step+1,t
         exoout.put_time(step+1,t)
-        U = surfingBC(exoout,t,options.initialpos,options.cs,options.vs,options.E,options.nu,options.ampl)
+        U = surfingBC(exoout,t,options.cs,options.vs,options.w,options.h)
         X,Y,Z=exoout.get_coords()
         exoout.put_node_variable_values("Displacement_X",step+1,U[0,:])
         exoout.put_node_variable_values("Displacement_Y",step+1,U[1,:])
@@ -103,9 +94,6 @@ def main():
             exoout.put_node_variable_values("Displacement_Z",step+1,U[2,:])
         step += 1
     exoout.close()
-    ### 
-    ### compute boundary displacement at vertex sets
-    ###
     
 if __name__ == "__main__":
         sys.exit(main())
