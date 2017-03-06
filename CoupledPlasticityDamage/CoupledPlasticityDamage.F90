@@ -89,6 +89,7 @@ Program CoupledPlasticityDamage
    PetscReal,Dimension(3)                              :: CrackPressureSave,CrackVolumeSave
    PetscInt                                            :: CrackVolumeIter,I1,I2,I3
    PetscReal                                           :: CrackVolumeTol=1
+   Type(Vec)                                          :: CrackPressureMask
 
 
 
@@ -132,7 +133,8 @@ Program CoupledPlasticityDamage
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1,                       & ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1.0e-3                   ) ! InjectedVolumeAtol
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
@@ -162,7 +164,8 @@ Program CoupledPlasticityDamage
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1,                       & ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1.0e-3                   ) ! InjectedVolumeAtol
 
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
@@ -481,6 +484,9 @@ Program CoupledPlasticityDamage
             Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
+            Call VecDuplicate(MEF90DefMechCtx%CrackPressure,CrackPressureMask,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%CrackPressure,CrackPressureMask,ierr);CHKERRQ(ierr)
+
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit 
                Write(IObuffer,208) AltMinIter
                !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -490,19 +496,26 @@ Program CoupledPlasticityDamage
                   Write(IObuffer,308) AltProjIter
                   !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-
                   !!! CrackPressure Block independent of alternate proj because exit if convergence
                   If (any(ActivatedCrackPressureBlocksList)) Then
-                     CrackVolumeIter=1
-                     CrackPressureSave= [0.0 , 1.0 , 2.0]
-                     CrackVolumeSave  = [0.0 , 1.0 , 2.0]
-                     DO WHILE ( CrackVolumeTol > .001 .or. CrackVolumeIter > 20 )
-                        !!! calculate P
+                     !! Initialization Variable Secant Method
+                     CrackPressureSave = [0.0 , 1.0 , 2.0]
+                     CrackVolumeSave   = [0.0 , 1.0 , 2.0]
+
+                     SecantMthd: Do CrackVolumeIter=1, 5
+
                         I1=MOD(CrackVolumeIter+2,3)+1
                         I2=MOD(CrackVolumeIter,3)+1
                         I3=MOD(CrackVolumeIter+1,3)+1
+
+                        If (CrackVolumeSave(I2) .EQ. CrackVolumeSave(I1)) Then
+                           Write(*,*) "[WARNING] dividing by zero in the secant method, premature exit"
+                           EXIT
+                        End If
+
                         CrackPressureSave(I3) = CrackPressureSave(I2) - ( CrackVolumeSave(I2) - time(step)   )*( CrackPressureSave(I2) - CrackPressureSave(I1) )/( CrackVolumeSave(I2) - CrackVolumeSave(I1) )
-                        Call VecSet(MEF90DefMechCtx%CrackPressure,CrackPressureSave(I3),ierr);CHKERRQ(ierr)
+                        !Call VecSet(MEF90DefMechCtx%CrackPressure,CrackPressureSave(I3),ierr);CHKERRQ(ierr)
+                        Call VecAXPBY(MEF90DefMechCtx%CrackPressure,CrackPressureSave(I3),0.0_Kr,CrackPressureMask,ierr);CHKERRQ(ierr)
                         !!! Solve displacement SNES
                         Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                         Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
@@ -510,15 +523,18 @@ Program CoupledPlasticityDamage
                            Write(IOBuffer,400) "displacement",snesDispConvergedReason
                            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                         End If
-                        !!!! Calculate the volume
+                        !!!! Calculate the injected volume
                         CrackVolumeSet = 0.0_Kr
                         Call MEF90DefMechCrackVolume(MEF90DefMechCtx%displacement,MEF90DefMechCtx,CrackVolumeSet,ierr);CHKERRQ(ierr)
                         CrackVolumeSave(I3) = sum(CrackVolumeSet,MASK=ActivatedCrackPressureBlocksList)
                         CrackVolumeTol = abs( time(step) - CrackVolumeSave(I3) )/( 1.0_Kr+time(step) )
-                        CrackVolumeIter= CrackVolumeIter + 1
-                     END DO 
-                     CrackVolumeTol=1
-                     EXIT
+
+                        !!!! Condition to exit loop for the secant method
+                        If (CrackVolumeTol .LE. MEF90DefMechGlobalOptions%InjectedVolumeAtol ) Then
+                           EXIT
+                        End IF
+                     End Do SecantMthd
+                     Write(IOBuffer,302) CrackVolumeIter,CrackVolumeSave(I3),CrackPressureSave(I3)
                   End If
 
                   !!! Solve displacement SNES
@@ -701,6 +717,7 @@ Program CoupledPlasticityDamage
    Call VecDestroy(plasticStrainPrevious,ierr);CHKERRQ(ierr)
    Call VecDestroy(cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    Call VecDestroy(cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+   Call VecDestroy(CrackPressureMask,ierr);CHKERRQ(ierr)
 
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 
@@ -739,9 +756,10 @@ Program CoupledPlasticityDamage
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5," plastic dissipation: ",ES12.5,"\n")
 202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5, " plastic dissipation: ",ES12.5,"\n")
 208 Format("   Alt. Min. step ",I5," ")
-209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
+209 Format("  alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
 300 Format("   plastic strain ProjIter",I5, " max change ", ES12.5, "\n")
 301 Format("   CrackPressure Iter",I5, " error ", ES12.5, "\n")
+302 Format("SecantMthd Iter",I2, ", Volume/Pressure ", ES12.5, "/" , ES12.5," " )
 308 Format("   Alt. Proj. step ",I5," ")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")

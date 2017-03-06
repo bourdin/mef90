@@ -117,7 +117,8 @@ Integer :: i
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1,                       & ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1.0e-3                   ) ! InjectedVolumeAtol
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode
@@ -147,8 +148,9 @@ Integer :: i
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
-
+                                                         1,                       & ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1.0e-3                   ) ! InjectedVolumeAtol
+   
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
                                                          -1,                                      & ! elemTypeShortIDDamage will be overriden
