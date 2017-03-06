@@ -80,6 +80,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                              :: BTTol
       PetscReal                              :: plasticStrainATol
       PetscInt                               :: cumulatedDissipatedPlasticEnergyOffset
+      PetscReal                              :: InjectedVolumeATol
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -769,7 +770,8 @@ Contains
 
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticStrainATol,default%plasticStrainATol,'defmech_plasticstrain_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,default%cumulatedDissipatedPlasticEnergyOffset,'cumulatedDissipatedPlasticEnergy_Offset','Position of the Cumulated Plastic Energy Dissipated field in EXO file',ierr);CHKERRQ(ierr)
-
+      
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%InjectedVolumeATol,default%InjectedVolumeATol,'defmech_InjectedVolume_atol','Absolute tolerance on injected volume error',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 
 #undef __FUNCT__

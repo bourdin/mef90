@@ -54,7 +54,8 @@ Program ThermoElasticity
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1,                       & ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1.0e-3                   ) ! InjectedVolumeAtol
 
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
@@ -85,7 +86,8 @@ Program ThermoElasticity
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1,                       & ! cumulatedDissipatedPlasticEnergyOffset
+                                                         1.0e-3                   ) ! InjectedVolumeAtol
 
 
 
