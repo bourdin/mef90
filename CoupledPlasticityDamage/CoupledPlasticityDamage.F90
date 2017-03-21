@@ -496,6 +496,8 @@ Program CoupledPlasticityDamage
                   Write(IObuffer,308) AltProjIter
                   !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
+                  !!! Solve for displacement, possibly using a VOlume pressure equilibrium loop based on secant method
+
                   !!! CrackPressure Block independent of alternate proj because exit if convergence
                   If (any(ActivatedCrackPressureBlocksList)) Then
                      !! Initialization Variable Secant Method
@@ -535,25 +537,23 @@ Program CoupledPlasticityDamage
                         End IF
                      End Do SecantMthd
                      Write(IOBuffer,302) CrackVolumeIter,CrackVolumeSave(I3),CrackPressureSave(I3)
-                  End If
-
-                  !!! Solve displacement SNES
-                  Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
-                  Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
-                  If (snesDispConvergedReason < 0) Then
-                     Write(IOBuffer,400) "displacement",snesDispConvergedReason
-                     Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-                  End If
-
-                  !!! WorkControlled Block
-                  If (any(ActivatedWorkControlledBlocksList)) Then
+                  Else
+                     Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+                     Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
+                     If (snesDispConvergedReason < 0) Then
+                        Write(IOBuffer,400) "displacement",snesDispConvergedReason
+                        Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                     End If
+                     !!! WorkControlled Block
+                     If an(y(ActivatedWorkControlledBlocksList)) Then
                         forceWorkSet = 0.0_Kr
                         Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
                         WorkControlled(step) = sum(forceWorkSet,MASK=ActivatedWorkControlledBlocksList)
                         WorkControlledRescaling = sqrt(time(step)/WorkControlled(step))
                         Call VecScale(MEF90DefMechCtx%pressureForce,WorkControlledRescaling,ierr);CHKERRQ(ierr)
-                     
-                     ErrorEstimationWorkControlled=((abs(time(step)-WorkControlled(step)))/(1.0_Kr+time(step)))
+                        
+                        ErrorEstimationWorkControlled=((abs(time(step)-WorkControlled(step)))/(1.0_Kr+time(step)))
+                     End If
                   End If
 
                   !!! Solve PlasticProjection
@@ -575,7 +575,6 @@ Program CoupledPlasticityDamage
                      Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                      EXIT
                   End If
-
                End Do AltProj
 
                Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
@@ -642,7 +641,6 @@ Program CoupledPlasticityDamage
             Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
-
                plasticDissipationSet(set)= plasticDissipationSet(set)
                Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) + plasticDissipationSet(set), plasticDissipationSet(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -764,6 +762,4 @@ Program CoupledPlasticityDamage
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 500 Format(I6, 7(ES16.5), "\n")
-
-
 End Program CoupledPlasticityDamage

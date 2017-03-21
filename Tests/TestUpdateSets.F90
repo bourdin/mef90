@@ -23,11 +23,13 @@ Program TestUpdateSets
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
    Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
                                                          0,                             & ! verbose
+                                                         PETSC_FALSE,                   & ! DryRun 
                                                          MEF90TimeInterpolation_linear, & ! timeInterpolation
                                                          0.0_Kr,                        & ! timeMin
                                                          1.0_Kr,                        & ! timeMax
                                                          11,                            & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
+                                                         MEF90FileFormat_EXOSingle,     & ! fileFormat
+                                                         1)                               ! timeFrequency
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
 
    !!! Initialize MEF90
