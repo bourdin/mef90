@@ -16,6 +16,11 @@ temperature:
     offset: 0
 CrackPressure:
     Offset: 4
+disp:
+    snes:
+        type: ksponly
+    pc:
+        type: ml
 cs0001:
     fracturetoughness: 1.
     residualstiffness: 0.

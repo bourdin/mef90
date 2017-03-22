@@ -26,6 +26,7 @@ Module m_MEF90_Ctx_Type
       PetscReal                                       :: timeMin
       PetscReal                                       :: timeMax
       PetscInt                                        :: timeNumStep
+      PetscInt                                        :: timeSkip
       PetscEnum                                       :: fileFormat
       PetscReal                                       :: timeFrequency
    End Type MEF90CtxGlobalOptions_Type
@@ -174,6 +175,7 @@ Contains
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMin,default%timeMin,'time_min','Time: min',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeSkip,   default%timeSkip,'time_skip','Time: number of time steps',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%fileFormat,MEF90FileFormatList,default%fileFormat,'file_format','I/O: file format.',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeFrequency,default%timeFrequency,'time_frequency','Time: frequency   (1+t) cos(2 k Pi t)',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90CtxGlobalOptions

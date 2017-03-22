@@ -71,6 +71,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechSetTransients(MEF90DefMechCtx,step,time,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: MEF90DefMechCtx
       PetscInt,Intent(IN)                             :: step
@@ -160,6 +161,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechSetForceCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
@@ -211,6 +213,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechSetPressureForceCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
@@ -265,6 +268,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechSetCrackPressureCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                            :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
@@ -317,6 +321,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechSetBoundaryDisplacementCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -397,6 +402,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechSetBoundaryDamageCst(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -473,6 +479,7 @@ Contains
 !!!  
 !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechUpdateboundaryDisplacement(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -554,6 +561,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
 !!!  
 !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechUpdateboundaryDamage(x,MEF90DefMechCtx,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -630,6 +638,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechOperatorDisplacement(snesTemp,x,residual,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
       Type(Vec),Intent(IN)                               :: x
@@ -655,6 +664,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechBilinearFormDisplacement(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesDispl
       Type(Vec),Intent(IN)                               :: x
@@ -681,6 +691,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechWork(DisplacementVec,MEF90DefMechCtx,work,ierr)
       Type(Vec),Intent(IN)                            :: DisplacementVec
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
@@ -705,6 +716,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCohesiveEnergy(DisplacementVec,MEF90DefMechCtx,cohesiveEnergy,ierr)
       Type(Vec),Intent(IN)                            :: DisplacementVec
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
@@ -729,6 +741,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechElasticEnergy(x,MEF90DefMechCtx,energy,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -754,6 +767,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Erwan TANNE erwan.tanne@gmail.com
 !!!
+
    Subroutine MEF90DefMechPlasticDissipation(x,MEF90DefMechCtx,plasticStrainOld,energy,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(Vec),Intent(IN)                               :: plasticStrainOld
@@ -779,6 +793,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechStress(x,MEF90DefMechCtx,stress,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -803,6 +818,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2016 erwan
 !!!
+
    Subroutine MEF90DefMechCrackVolume(x,MEF90DefMechCtx,CrackVolume,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -826,6 +842,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2016 erwan
 !!!
+
    Subroutine MEF90DefMechCrackPressureRescaling(x,CrackPressure,MEF90DefMechCtx,CrackVolumeSet,ActivatedCrackPressureBlocksList,timeStep,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(Vec),Intent(INOUT)                            :: CrackPressure
@@ -844,8 +861,6 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       End If      
    End Subroutine MEF90DefMechCrackPressureRescaling
 
-
-
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamage"
 !!!
@@ -855,6 +870,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechOperatorDamage(snesTemp,x,residual,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesTemp
       Type(Vec),Intent(IN)                               :: x
@@ -880,6 +896,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechBilinearFormDamage(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
       Type(SNES),Intent(IN)                              :: snesDispl
       Type(Vec),Intent(IN)                               :: x
@@ -906,6 +923,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechSurfaceEnergy(x,MEF90DefMechCtx,energy,ierr)
       Type(Vec),Intent(IN)                               :: x
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -929,6 +947,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscInt,Intent(IN)                                :: step
@@ -1099,6 +1118,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)           :: MEF90DefMechCtx
       PetscReal,Dimension(:),Pointer                     :: time
@@ -1232,6 +1252,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,snesDisp,residual,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(SNES),Intent(OUT)                             :: snesDisp
@@ -1327,6 +1348,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residual,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(SNES),Intent(OUT)                             :: snesDamage
@@ -1369,9 +1391,9 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 
          Call SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         atol = 1.0D-8
-         !rtol = 1.0D-10
-         Call SNESSetTolerances(snesDamage,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+         atol = 1.0D-7
+         rtol = 1.0D-7
+         Call SNESSetTolerances(snesDamage,atol,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call SNESSetFromOptions(snesDamage,ierr);CHKERRQ(ierr)
 
          !!! 
@@ -1410,6 +1432,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,snesDamage,alpha,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(SNES),Intent(OUT)                             :: snesDamage
@@ -1441,7 +1464,6 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Call DMRestoreGlobalVector(MEF90DefMechCtx%DMScal,UB,ierr);CHKERRQ(ierr)      
    End Subroutine MEF90DefMechUpdateDamageBounds
 
-
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechPlasticStrainUpdate"
 !!!
@@ -1451,6 +1473,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(Vec),Intent(INOUT)                            :: plasticStrain
