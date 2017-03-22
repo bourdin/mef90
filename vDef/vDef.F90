@@ -86,6 +86,7 @@ Integer :: i
                                                          0.0_Kr,                        & ! timeMin
                                                          1.0_Kr,                        & ! timeMax
                                                          11,                            & ! timeNumStep
+                                                         0,                             & ! timeSkip
                                                          MEF90FileFormat_EXOSingle,     & ! fileFormat
                                                          1.0_Kr)                         ! frequency
 
