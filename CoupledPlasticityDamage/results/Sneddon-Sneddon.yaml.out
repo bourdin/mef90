@@ -1,0 +1,1274 @@
+Mechanics: step    1, t= 1.00000E-02 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  1.00005E-02, pressure  1.73120E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.98386E-01 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  9.99963E-03, pressure  1.56950E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.45817E-04 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  9.99994E-03, pressure  1.56934E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  7.84664E-04 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.24485E-01 total:  2.25269E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  8.88496E-11 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75000E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  7.84664E-04 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.24860E-01 total:  2.25644E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    2, t= 2.50000E-02 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  2.50000E-02, pressure  3.92337E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.86138E-03 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  2.50000E-02, pressure  3.91687E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.13629E-04 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  2.50000E-02, pressure  3.91679E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  4.89599E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.24489E-01 total:  2.29385E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  5.54755E-10 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75001E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  4.89599E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.24864E-01 total:  2.29760E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    3, t= 4.00000E-02 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  4.00000E-02, pressure  6.26687E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.27129E-02 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  4.00000E-02, pressure  6.24698E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.40831E-04 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  4.00000E-02, pressure  6.24634E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.53884E-05 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  1.24926E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.24518E-01 total:  2.37011E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  1.41734E-09 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75001E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  1.24926E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.24893E-01 total:  2.37386E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    4, t= 5.50000E-02 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  5.50000E-02, pressure  8.58869E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.84427E-02 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  5.50000E-02, pressure  8.54756E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.48719E-03 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  5.50000E-02, pressure  8.54506E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.33734E-04 
+   Alt. Min. step     4  
+      Pressure line search converged in  3 iterations, volume  5.50000E-02, pressure  8.54488E-01 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.22739E-05 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  2.34984E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.24611E-01 total:  2.48109E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  2.67126E-09 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75003E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  2.34984E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.24986E-01 total:  2.48484E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    5, t= 7.00000E-02 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  7.00000E-02, pressure  1.08753E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.45980E-02 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  7.00000E-02, pressure  1.08037E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.21216E-03 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  7.00000E-02, pressure  1.07963E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.87450E-04 
+   Alt. Min. step     4  
+      Pressure line search converged in  3 iterations, volume  7.00000E-02, pressure  1.07954E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.62273E-05 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  3.77835E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.24838E-01 total:  2.62622E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  4.30725E-09 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75004E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  3.77835E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.25213E-01 total:  2.62997E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    6, t= 8.50000E-02 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  8.50000E-02, pressure  1.31085E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.08206E-02 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  8.50000E-02, pressure  1.29962E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.06416E-03 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  8.50000E-02, pressure  1.29790E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.41088E-03 
+   Alt. Min. step     4  
+      Pressure line search converged in  3 iterations, volume  8.50000E-02, pressure  1.29758E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.39118E-04 
+   Alt. Min. step     5  
+      Pressure line search converged in  3 iterations, volume  8.50000E-02, pressure  1.29751E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.22338E-05 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  5.51437E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.25316E-01 total:  2.80460E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  6.31013E-09 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75006E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  5.51437E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.25691E-01 total:  2.80835E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    7, t= 1.00000E-01 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  1.00000E-01, pressure  1.52646E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.74650E-02 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  1.00000E-01, pressure  1.51001E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.08378E-02 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  1.00000E-01, pressure  1.50615E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.67310E-03 
+   Alt. Min. step     4  
+      Pressure line search converged in  3 iterations, volume  1.00000E-01, pressure  1.50504E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.33609E-03 
+   Alt. Min. step     5  
+      Pressure line search converged in  3 iterations, volume  1.00000E-01, pressure  1.50467E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.91343E-04 
+   Alt. Min. step     6  
+      Pressure line search converged in  3 iterations, volume  1.00000E-01, pressure  1.50455E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.81502E-04 
+   Alt. Min. step     7  
+      Pressure line search converged in  3 iterations, volume  1.00000E-01, pressure  1.50451E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.72601E-05 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  7.52247E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.26269E-01 total:  3.01493E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  8.65207E-09 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75009E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  7.52247E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.26644E-01 total:  3.01868E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    8, t= 1.15000E-01 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.73017E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.48756E-02 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.70624E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.79049E-02 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.69854E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.34630E-03 
+   Alt. Min. step     4  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.69541E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.15775E-03 
+   Alt. Min. step     5  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.69396E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.15489E-03 
+   Alt. Min. step     6  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.69325E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.12635E-03 
+   Alt. Min. step     7  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.69289E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.91928E-04 
+   Alt. Min. step     8  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.69271E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.12501E-04 
+   Alt. Min. step     9  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.69262E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.65555E-04 
+   Alt. Min. step    10  
+      Pressure line search converged in  3 iterations, volume  1.15000E-01, pressure  1.69257E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.79537E-05 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  9.73218E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.28179E-01 total:  3.25501E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  1.12742E-08 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75011E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  9.73218E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.28554E-01 total:  3.25876E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    9, t= 1.30000E-01 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.91331E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.04574E-02 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.88114E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.71693E-02 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.86681E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.71340E-02 
+   Alt. Min. step     4  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.85866E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.14681E-02 
+   Alt. Min. step     5  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.85343E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.86014E-03 
+   Alt. Min. step     6  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84990E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.44313E-03 
+   Alt. Min. step     7  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84745E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.78908E-03 
+   Alt. Min. step     8  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84575E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.65480E-03 
+   Alt. Min. step     9  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84455E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.86759E-03 
+   Alt. Min. step    10  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84371E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.31551E-03 
+   Alt. Min. step    11  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84312E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.27412E-04 
+   Alt. Min. step    12  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84270E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.54110E-04 
+   Alt. Min. step    13  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84240E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.61632E-04 
+   Alt. Min. step    14  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84219E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.25843E-04 
+   Alt. Min. step    15  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84204E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.29989E-04 
+   Alt. Min. step    16  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84194E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.62462E-04 
+   Alt. Min. step    17  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84187E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.14677E-04 
+   Alt. Min. step    18  
+      Pressure line search converged in  3 iterations, volume  1.30000E-01, pressure  1.84181E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.10260E-05 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  1.19716E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.32373E-01 total:  3.52089E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  1.40219E-08 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75014E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  1.19716E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.32748E-01 total:  3.52464E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step   10, t= 1.45000E-01 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  2.05429E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.39257E-02 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  2.01136E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.73154E-02 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.98700E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.88314E-02 
+   Alt. Min. step     4  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.96976E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.33265E-02 
+   Alt. Min. step     5  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.95626E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.92756E-02 
+   Alt. Min. step     6  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.94525E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.62232E-02 
+   Alt. Min. step     7  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.93594E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.39148E-02 
+   Alt. Min. step     8  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.92789E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.21314E-02 
+   Alt. Min. step     9  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.92079E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.07288E-02 
+   Alt. Min. step    10  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.91444E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.59718E-03 
+   Alt. Min. step    11  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.90871E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.72932E-03 
+   Alt. Min. step    12  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.90350E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.05425E-03 
+   Alt. Min. step    13  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.89875E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.45502E-03 
+   Alt. Min. step    14  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.89442E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.91163E-03 
+   Alt. Min. step    15  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.89048E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.41073E-03 
+   Alt. Min. step    16  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.88690E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.94276E-03 
+   Alt. Min. step    17  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.88365E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.50282E-03 
+   Alt. Min. step    18  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.88072E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.09045E-03 
+   Alt. Min. step    19  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.87809E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.70458E-03 
+   Alt. Min. step    20  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.87574E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.34447E-03 
+   Alt. Min. step    21  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.87364E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.01053E-03 
+   Alt. Min. step    22  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.87177E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.70139E-03 
+   Alt. Min. step    23  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.87011E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.41737E-03 
+   Alt. Min. step    24  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86865E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.15774E-03 
+   Alt. Min. step    25  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86736E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.92138E-03 
+   Alt. Min. step    26  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86622E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.70715E-03 
+   Alt. Min. step    27  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86522E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.51377E-03 
+   Alt. Min. step    28  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86434E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.34064E-03 
+   Alt. Min. step    29  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86357E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.18724E-03 
+   Alt. Min. step    30  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86289E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.05077E-03 
+   Alt. Min. step    31  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86230E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.92876E-03 
+   Alt. Min. step    32  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86179E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.81973E-03 
+   Alt. Min. step    33  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86134E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.72245E-03 
+   Alt. Min. step    34  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86094E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.63573E-03 
+   Alt. Min. step    35  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86060E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.55850E-03 
+   Alt. Min. step    36  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86031E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.48966E-03 
+   Alt. Min. step    37  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86005E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.42837E-03 
+   Alt. Min. step    38  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85983E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.37375E-03 
+   Alt. Min. step    39  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85964E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.32511E-03 
+   Alt. Min. step    40  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85948E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.28176E-03 
+   Alt. Min. step    41  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85934E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.24309E-03 
+   Alt. Min. step    42  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85922E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.20861E-03 
+   Alt. Min. step    43  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85912E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.17781E-03 
+   Alt. Min. step    44  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85904E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.15034E-03 
+   Alt. Min. step    45  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85898E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.12577E-03 
+   Alt. Min. step    46  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85892E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.10386E-03 
+   Alt. Min. step    47  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85888E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.08429E-03 
+   Alt. Min. step    48  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85885E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.06685E-03 
+   Alt. Min. step    49  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85883E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.05124E-03 
+   Alt. Min. step    50  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85882E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.03736E-03 
+   Alt. Min. step    51  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85882E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.02502E-03 
+   Alt. Min. step    52  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85882E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.01409E-03 
+   Alt. Min. step    53  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85883E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.00438E-03 
+   Alt. Min. step    54  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85885E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.00479E-03 
+   Alt. Min. step    55  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85887E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.01471E-03 
+   Alt. Min. step    56  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85890E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.02443E-03 
+   Alt. Min. step    57  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85894E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.03399E-03 
+   Alt. Min. step    58  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85898E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.04346E-03 
+   Alt. Min. step    59  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85902E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.05306E-03 
+   Alt. Min. step    60  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85906E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.06190E-03 
+   Alt. Min. step    61  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85911E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.06898E-03 
+   Alt. Min. step    62  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85916E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.07584E-03 
+   Alt. Min. step    63  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85921E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.08315E-03 
+   Alt. Min. step    64  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85927E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.09083E-03 
+   Alt. Min. step    65  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85932E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.09884E-03 
+   Alt. Min. step    66  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85938E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.10716E-03 
+   Alt. Min. step    67  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85945E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.11578E-03 
+   Alt. Min. step    68  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85951E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.12474E-03 
+   Alt. Min. step    69  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85958E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.13421E-03 
+   Alt. Min. step    70  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85965E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.14421E-03 
+   Alt. Min. step    71  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85972E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.15472E-03 
+   Alt. Min. step    72  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85979E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.16569E-03 
+   Alt. Min. step    73  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85986E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.17714E-03 
+   Alt. Min. step    74  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85994E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.18903E-03 
+   Alt. Min. step    75  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86002E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.20131E-03 
+   Alt. Min. step    76  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86010E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.21399E-03 
+   Alt. Min. step    77  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86018E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.22703E-03 
+   Alt. Min. step    78  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86026E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.24040E-03 
+   Alt. Min. step    79  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86035E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.25416E-03 
+   Alt. Min. step    80  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86044E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.26823E-03 
+   Alt. Min. step    81  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86053E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.28248E-03 
+   Alt. Min. step    82  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86062E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.29707E-03 
+   Alt. Min. step    83  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86072E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.31193E-03 
+   Alt. Min. step    84  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86082E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.32701E-03 
+   Alt. Min. step    85  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86092E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.34224E-03 
+   Alt. Min. step    86  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86102E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.35764E-03 
+   Alt. Min. step    87  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86112E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.37313E-03 
+   Alt. Min. step    88  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86123E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.38867E-03 
+   Alt. Min. step    89  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86134E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.40424E-03 
+   Alt. Min. step    90  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86145E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.41976E-03 
+   Alt. Min. step    91  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86156E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.43508E-03 
+   Alt. Min. step    92  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86167E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.45037E-03 
+   Alt. Min. step    93  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86179E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.46572E-03 
+   Alt. Min. step    94  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86190E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.48113E-03 
+   Alt. Min. step    95  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86201E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.49692E-03 
+   Alt. Min. step    96  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86212E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.51289E-03 
+   Alt. Min. step    97  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86223E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.52857E-03 
+   Alt. Min. step    98  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86233E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.54197E-03 
+   Alt. Min. step    99  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86244E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.55541E-03 
+   Alt. Min. step   100  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86254E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.56896E-03 
+   Alt. Min. step   101  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86263E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.58204E-03 
+   Alt. Min. step   102  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86273E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.59659E-03 
+   Alt. Min. step   103  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86282E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.61207E-03 
+   Alt. Min. step   104  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86291E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.62692E-03 
+   Alt. Min. step   105  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86299E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.64099E-03 
+   Alt. Min. step   106  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86308E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.65417E-03 
+   Alt. Min. step   107  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86316E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.66644E-03 
+   Alt. Min. step   108  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86324E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.67752E-03 
+   Alt. Min. step   109  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86331E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.68738E-03 
+   Alt. Min. step   110  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86338E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.69582E-03 
+   Alt. Min. step   111  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86345E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.70238E-03 
+   Alt. Min. step   112  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86352E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.70404E-03 
+   Alt. Min. step   113  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86357E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.70096E-03 
+   Alt. Min. step   114  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86362E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.69581E-03 
+   Alt. Min. step   115  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86367E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.68944E-03 
+   Alt. Min. step   116  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86371E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.68166E-03 
+   Alt. Min. step   117  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86374E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.67253E-03 
+   Alt. Min. step   118  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86377E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.66210E-03 
+   Alt. Min. step   119  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86379E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.65022E-03 
+   Alt. Min. step   120  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86380E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.63687E-03 
+   Alt. Min. step   121  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86381E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.62207E-03 
+   Alt. Min. step   122  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86382E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.60601E-03 
+   Alt. Min. step   123  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86382E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.58871E-03 
+   Alt. Min. step   124  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86381E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.57012E-03 
+   Alt. Min. step   125  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86380E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.55030E-03 
+   Alt. Min. step   126  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86378E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.52955E-03 
+   Alt. Min. step   127  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86376E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.50777E-03 
+   Alt. Min. step   128  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86373E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.48514E-03 
+   Alt. Min. step   129  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86369E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.46662E-03 
+   Alt. Min. step   130  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86365E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.45703E-03 
+   Alt. Min. step   131  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86360E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.44629E-03 
+   Alt. Min. step   132  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86355E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.43435E-03 
+   Alt. Min. step   133  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86349E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.42106E-03 
+   Alt. Min. step   134  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86343E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.40643E-03 
+   Alt. Min. step   135  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86337E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.39054E-03 
+   Alt. Min. step   136  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86330E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.37333E-03 
+   Alt. Min. step   137  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86322E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.35470E-03 
+   Alt. Min. step   138  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86315E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.33485E-03 
+   Alt. Min. step   139  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86307E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.31501E-03 
+   Alt. Min. step   140  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86298E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.29627E-03 
+   Alt. Min. step   141  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86289E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.27648E-03 
+   Alt. Min. step   142  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86281E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.25584E-03 
+   Alt. Min. step   143  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86272E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.23439E-03 
+   Alt. Min. step   144  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86262E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.21214E-03 
+   Alt. Min. step   145  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86253E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.18917E-03 
+   Alt. Min. step   146  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86244E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.16562E-03 
+   Alt. Min. step   147  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86234E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.14097E-03 
+   Alt. Min. step   148  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86225E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.11568E-03 
+   Alt. Min. step   149  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86215E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.09296E-03 
+   Alt. Min. step   150  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86205E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.07171E-03 
+   Alt. Min. step   151  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86195E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.04972E-03 
+   Alt. Min. step   152  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86184E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.02659E-03 
+   Alt. Min. step   153  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86174E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.00281E-03 
+   Alt. Min. step   154  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86164E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.78627E-04 
+   Alt. Min. step   155  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86154E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.54160E-04 
+   Alt. Min. step   156  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86144E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.29564E-04 
+   Alt. Min. step   157  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86134E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.04898E-04 
+   Alt. Min. step   158  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86124E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.80239E-04 
+   Alt. Min. step   159  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86114E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.55650E-04 
+   Alt. Min. step   160  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86105E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.31202E-04 
+   Alt. Min. step   161  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86096E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.07401E-04 
+   Alt. Min. step   162  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86086E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.84408E-04 
+   Alt. Min. step   163  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86077E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.61471E-04 
+   Alt. Min. step   164  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86068E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.38498E-04 
+   Alt. Min. step   165  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86059E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.15667E-04 
+   Alt. Min. step   166  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86051E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.93050E-04 
+   Alt. Min. step   167  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86042E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.70687E-04 
+   Alt. Min. step   168  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86034E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.48626E-04 
+   Alt. Min. step   169  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86025E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.26903E-04 
+   Alt. Min. step   170  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86017E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.05560E-04 
+   Alt. Min. step   171  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86010E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.84596E-04 
+   Alt. Min. step   172  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.86002E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.64084E-04 
+   Alt. Min. step   173  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85995E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.44033E-04 
+   Alt. Min. step   174  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85987E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.24461E-04 
+   Alt. Min. step   175  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85981E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.05376E-04 
+   Alt. Min. step   176  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85974E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.86786E-04 
+   Alt. Min. step   177  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85968E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.68708E-04 
+   Alt. Min. step   178  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85961E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.51133E-04 
+   Alt. Min. step   179  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85955E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.34066E-04 
+   Alt. Min. step   180  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85950E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.17510E-04 
+   Alt. Min. step   181  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85944E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.01436E-04 
+   Alt. Min. step   182  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85939E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.85894E-04 
+   Alt. Min. step   183  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85933E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.70827E-04 
+   Alt. Min. step   184  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85928E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.56261E-04 
+   Alt. Min. step   185  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85924E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.42135E-04 
+   Alt. Min. step   186  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85919E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.28468E-04 
+   Alt. Min. step   187  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85915E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.15251E-04 
+   Alt. Min. step   188  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85910E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.02521E-04 
+   Alt. Min. step   189  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85906E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.90219E-04 
+   Alt. Min. step   190  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85902E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.78353E-04 
+   Alt. Min. step   191  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85899E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.66912E-04 
+   Alt. Min. step   192  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85895E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.55902E-04 
+   Alt. Min. step   193  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85891E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.45291E-04 
+   Alt. Min. step   194  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85888E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.35067E-04 
+   Alt. Min. step   195  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85885E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.25245E-04 
+   Alt. Min. step   196  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85882E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.15791E-04 
+   Alt. Min. step   197  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85879E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.06703E-04 
+   Alt. Min. step   198  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85876E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.97966E-04 
+   Alt. Min. step   199  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85873E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.89579E-04 
+   Alt. Min. step   200  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85871E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.81490E-04 
+   Alt. Min. step   201  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85868E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.73691E-04 
+   Alt. Min. step   202  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85866E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.66231E-04 
+   Alt. Min. step   203  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85863E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.59050E-04 
+   Alt. Min. step   204  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85861E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.52144E-04 
+   Alt. Min. step   205  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85859E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.45520E-04 
+   Alt. Min. step   206  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85857E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.39164E-04 
+   Alt. Min. step   207  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85855E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.33078E-04 
+   Alt. Min. step   208  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85853E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.27234E-04 
+   Alt. Min. step   209  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85851E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.21635E-04 
+   Alt. Min. step   210  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85850E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.16276E-04 
+   Alt. Min. step   211  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85848E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.11138E-04 
+   Alt. Min. step   212  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85847E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.06218E-04 
+   Alt. Min. step   213  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85845E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.01514E-04 
+   Alt. Min. step   214  
+      Pressure line search converged in  3 iterations, volume  1.45000E-01, pressure  1.85844E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.70115E-05 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  1.34736E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.45395E-01 total:  3.80130E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  1.60739E-08 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75016E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  1.34736E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.45770E-01 total:  3.80505E-01 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step   11, t= 1.60000E-01 
+   Alt. Min. step     1  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  2.05067E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.25054E-02 
+   Alt. Min. step     2  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  2.00642E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.99527E-02 
+   Alt. Min. step     3  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.97805E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.38266E-02 
+   Alt. Min. step     4  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.95634E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.87445E-02 
+   Alt. Min. step     5  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.93835E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.55721E-02 
+   Alt. Min. step     6  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.92293E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.29449E-02 
+   Alt. Min. step     7  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.90963E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.04071E-02 
+   Alt. Min. step     8  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.89817E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.78841E-02 
+   Alt. Min. step     9  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.88835E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.54575E-02 
+   Alt. Min. step    10  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.88001E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.32898E-02 
+   Alt. Min. step    11  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.87293E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.14525E-02 
+   Alt. Min. step    12  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.86690E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.92253E-03 
+   Alt. Min. step    13  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.86177E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.67093E-03 
+   Alt. Min. step    14  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.85740E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.64957E-03 
+   Alt. Min. step    15  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.85366E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.81035E-03 
+   Alt. Min. step    16  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.85047E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.11511E-03 
+   Alt. Min. step    17  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.84773E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.54069E-03 
+   Alt. Min. step    18  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.84537E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.07363E-03 
+   Alt. Min. step    19  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.84332E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.71191E-03 
+   Alt. Min. step    20  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.84154E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.39926E-03 
+   Alt. Min. step    21  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83999E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.12682E-03 
+   Alt. Min. step    22  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83864E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.88735E-03 
+   Alt. Min. step    23  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83746E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.67480E-03 
+   Alt. Min. step    24  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83642E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.48362E-03 
+   Alt. Min. step    25  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83550E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.31025E-03 
+   Alt. Min. step    26  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83468E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.15213E-03 
+   Alt. Min. step    27  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83396E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.01384E-03 
+   Alt. Min. step    28  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83331E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.88774E-03 
+   Alt. Min. step    29  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83272E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.76895E-03 
+   Alt. Min. step    30  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83220E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.65649E-03 
+   Alt. Min. step    31  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83172E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.54952E-03 
+   Alt. Min. step    32  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83130E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.44739E-03 
+   Alt. Min. step    33  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83091E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.34912E-03 
+   Alt. Min. step    34  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83056E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.25456E-03 
+   Alt. Min. step    35  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.83024E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.16344E-03 
+   Alt. Min. step    36  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82995E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.07546E-03 
+   Alt. Min. step    37  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82969E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.99049E-03 
+   Alt. Min. step    38  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82946E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.90843E-03 
+   Alt. Min. step    39  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82924E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.82924E-03 
+   Alt. Min. step    40  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82905E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.75351E-03 
+   Alt. Min. step    41  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82888E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.68039E-03 
+   Alt. Min. step    42  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82872E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.60994E-03 
+   Alt. Min. step    43  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82858E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.54218E-03 
+   Alt. Min. step    44  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82845E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.47695E-03 
+   Alt. Min. step    45  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82834E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.41430E-03 
+   Alt. Min. step    46  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82823E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.35413E-03 
+   Alt. Min. step    47  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82814E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.29637E-03 
+   Alt. Min. step    48  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82806E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.24098E-03 
+   Alt. Min. step    49  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82799E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.18786E-03 
+   Alt. Min. step    50  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82793E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.13701E-03 
+   Alt. Min. step    51  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82787E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.08843E-03 
+   Alt. Min. step    52  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82783E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.04186E-03 
+   Alt. Min. step    53  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82779E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.97319E-04 
+   Alt. Min. step    54  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82775E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.54783E-04 
+   Alt. Min. step    55  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82772E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.14165E-04 
+   Alt. Min. step    56  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82770E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.75429E-04 
+   Alt. Min. step    57  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82768E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.38468E-04 
+   Alt. Min. step    58  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82766E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.03203E-04 
+   Alt. Min. step    59  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82765E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.69593E-04 
+   Alt. Min. step    60  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82764E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.37493E-04 
+   Alt. Min. step    61  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82763E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.06945E-04 
+   Alt. Min. step    62  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82763E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.77748E-04 
+   Alt. Min. step    63  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82763E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.49841E-04 
+   Alt. Min. step    64  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82763E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.23270E-04 
+   Alt. Min. step    65  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82763E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.01600E-04 
+   Alt. Min. step    66  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82764E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.82604E-04 
+   Alt. Min. step    67  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82764E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.64142E-04 
+   Alt. Min. step    68  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82765E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.46205E-04 
+   Alt. Min. step    69  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82766E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.28778E-04 
+   Alt. Min. step    70  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82767E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.11857E-04 
+   Alt. Min. step    71  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82768E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.95450E-04 
+   Alt. Min. step    72  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82769E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.79541E-04 
+   Alt. Min. step    73  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82770E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.64140E-04 
+   Alt. Min. step    74  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82771E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.49153E-04 
+   Alt. Min. step    75  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82772E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.34639E-04 
+   Alt. Min. step    76  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82774E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.20586E-04 
+   Alt. Min. step    77  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82775E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.06988E-04 
+   Alt. Min. step    78  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82776E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.93809E-04 
+   Alt. Min. step    79  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82778E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.81048E-04 
+   Alt. Min. step    80  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82779E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.68702E-04 
+   Alt. Min. step    81  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82781E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.56742E-04 
+   Alt. Min. step    82  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82782E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.45197E-04 
+   Alt. Min. step    83  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82783E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.34018E-04 
+   Alt. Min. step    84  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82785E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.23294E-04 
+   Alt. Min. step    85  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82786E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.12887E-04 
+   Alt. Min. step    86  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82787E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.02859E-04 
+   Alt. Min. step    87  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82789E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.93184E-04 
+   Alt. Min. step    88  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82790E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.83817E-04 
+   Alt. Min. step    89  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82791E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.74770E-04 
+   Alt. Min. step    90  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82793E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.66034E-04 
+   Alt. Min. step    91  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82794E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.57556E-04 
+   Alt. Min. step    92  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82795E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.49417E-04 
+   Alt. Min. step    93  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82796E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.41514E-04 
+   Alt. Min. step    94  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82797E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.33880E-04 
+   Alt. Min. step    95  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82799E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.26533E-04 
+   Alt. Min. step    96  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82800E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.19346E-04 
+   Alt. Min. step    97  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82801E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.12418E-04 
+   Alt. Min. step    98  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82802E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.05721E-04 
+   Alt. Min. step    99  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82803E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.99250E-04 
+   Alt. Min. step   100  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82804E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.92971E-04 
+   Alt. Min. step   101  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82805E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.86893E-04 
+   Alt. Min. step   102  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82806E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.81046E-04 
+   Alt. Min. step   103  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82807E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.75375E-04 
+   Alt. Min. step   104  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82808E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.69880E-04 
+   Alt. Min. step   105  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82809E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.64569E-04 
+   Alt. Min. step   106  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82810E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.59449E-04 
+   Alt. Min. step   107  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82811E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.54435E-04 
+   Alt. Min. step   108  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82812E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.49605E-04 
+   Alt. Min. step   109  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82812E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.44919E-04 
+   Alt. Min. step   110  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82813E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.40395E-04 
+   Alt. Min. step   111  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82814E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.35994E-04 
+   Alt. Min. step   112  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82815E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.31780E-04 
+   Alt. Min. step   113  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82816E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.27686E-04 
+   Alt. Min. step   114  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82816E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.23724E-04 
+   Alt. Min. step   115  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82817E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.19870E-04 
+   Alt. Min. step   116  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82818E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.16150E-04 
+   Alt. Min. step   117  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82818E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.12575E-04 
+   Alt. Min. step   118  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82819E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.09053E-04 
+   Alt. Min. step   119  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82820E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.05658E-04 
+   Alt. Min. step   120  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82820E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.02371E-04 
+   Alt. Min. step   121  
+      Pressure line search converged in  3 iterations, volume  1.60000E-01, pressure  1.82821E+00 
+      alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.91810E-05 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  1.46257E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.61534E-01 total:  4.07792E-01 plastic dissipation:  0.00000E+00 
+cell set    2  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    3  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set    4  elastic energy:  1.77177E-08 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.75000E-04 total:  3.75018E-04 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  1.46257E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.61909E-01 total:  4.08167E-01 plastic dissipation:  0.00000E+00 
