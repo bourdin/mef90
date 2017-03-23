@@ -512,6 +512,10 @@ Program CoupledPlasticityDamage
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
 
+               If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
+                  Call SNESSetLagPreconditioner(snesDisp,-2,ierr);CHKERRQ(ierr)
+                  Call SNESSetLagPreconditioner(snesDamage,-2,ierr);CHKERRQ(ierr)
+               End If 
                AltProj: Do AltProjIter = 1, MEF90DefMechGlobalOptions%maxit 
                   Write(IObuffer,308) AltProjIter
                   !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -521,8 +525,11 @@ Program CoupledPlasticityDamage
                   !!! CrackPressure Block independent of alternate proj because exit if convergence
                   If (any(ActivatedCrackPressureBlocksList)) Then
                      !! Initialization Variable Secant Method
-                     CrackPressureSave = [0.0 , 1.0 , 2.0]
-                     CrackVolumeSave   = [0.0 , 1.0 , 2.0]
+                     CrackPressureSave = [0.0_Kr, 1.0_Kr, 2.0_Kr]
+                     CrackVolumeSave   = [0.0_Kr, 1.0_Kr, 2.0_Kr]
+                     If (step > 1) Then
+                        CrackVolumeSave   = time(step-1) * CrackVolumeSave
+                     End If
 
                      SecantMthd: Do CrackVolumeIter=1,5
                         I1=MOD(CrackVolumeIter+2,3)+1
@@ -536,13 +543,9 @@ Program CoupledPlasticityDamage
 
                         CrackPressureSave(I3) = CrackPressureSave(I2) - ( CrackVolumeSave(I2) - time(step)   )*( CrackPressureSave(I2) - CrackPressureSave(I1) )/( CrackVolumeSave(I2) - CrackVolumeSave(I1) )
 
-                        !Call VecSet(MEF90DefMechCtx%CrackPressure,CrackPressureSave(I3),ierr);CHKERRQ(ierr)
-
                         Call VecCopy(CrackPressureMask,MEF90DefMechCtx%CrackPressure,ierr);CHKERRQ(ierr)
                         Call VecScale(MEF90DefMechCtx%CrackPressure,CrackPressureSave(I3),ierr);CHKERRQ(ierr)
 
-                        !Write(IOBuffer,*) "CrackPressureSave: ", CrackPressureSave, "\n"
-                        !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                         !!! Solve displacement SNES
                         Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                         Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
@@ -555,8 +558,6 @@ Program CoupledPlasticityDamage
                         Call MEF90DefMechCrackVolume(MEF90DefMechCtx%displacement,MEF90DefMechCtx,CrackVolumeSet,ierr);CHKERRQ(ierr)
                         CrackVolumeSave(I3) = sum(CrackVolumeSet,MASK=ActivatedCrackPressureBlocksList)
 
-                        !Write(IOBuffer,*) "CrackVolumeSave:   ", CrackVolumeSave, "\n\n"
-                        !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                         InjectedVolumeRelativeError = abs( time(step) - CrackVolumeSave(I3) )/( 1.0_Kr+time(step) )
 
                         !!!! Condition to exit loop for the secant method
@@ -564,7 +565,7 @@ Program CoupledPlasticityDamage
                            EXIT
                         End IF
                      End Do SecantMthd
-                     Write(IOBuffer,302) CrackVolumeIter,CrackVolumeSave(I3),CrackPressureSave(I3),time(step)
+                     Write(IOBuffer,302) CrackVolumeIter,CrackVolumeSave(I3),CrackPressureSave(I3)
                   Else
                      Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                      Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
@@ -630,7 +631,7 @@ Program CoupledPlasticityDamage
                End If
 
 
-               If (mod(AltMinIter,25) == 0) Then
+               If (mod(AltMinIter,10) == 0) Then
                   Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
                End If
             End Do AltMin
@@ -782,7 +783,7 @@ Program CoupledPlasticityDamage
 209 Format("      alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
 300 Format("   plastic strain ProjIter",I5, " max change ", ES12.5, "\n")
 301 Format("   CrackPressure Iter",I5, " error ", ES12.5, "\n")
-302 Format("      SecantMthd Iter",I2, ", Volume/Pressure ", ES12.5, "/" , ES12.5,"target volume was ", ES12.5,"\n" )
+302 Format("      Pressure line search converged in ",I2, " iterations, volume ", ES12.5, ", pressure " , ES12.5,"\n" )
 308 Format("   Alt. Proj. step ",I5," ")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
