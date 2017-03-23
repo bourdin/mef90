@@ -1,11 +1,22 @@
-NP=2 
+NP=12 
 all:
 	-@make -C ${MEF90_DIR} CoupledPlasticityDamage
-test: test2D test3D
+test: test2D test3D testSneddon testVonMises3D
+
 test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/CoupledPlasticityDamage
 	-@for OPTIONSFILE in test7.yaml test8.yaml; do \
 	make -s testCoupledPlasticityDamage PREFIX=Beam1x10-tri3 OPTIONSFILE=$${OPTIONSFILE};\
 	make -s testCoupledPlasticityDamage PREFIX=Beam1x10-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	done
+
+testSneddon: ${MEF90_DIR}/bin/${PETSC_ARCH}/CoupledPlasticityDamage
+	-@for OPTIONSFILE in Sneddon.yaml ; do \
+	make -s testCoupledPlasticityDamage PREFIX=Sneddon OPTIONSFILE=$${OPTIONSFILE};\
+	done
+
+testVonMises3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/CoupledPlasticityDamage
+	-@for OPTIONSFILE in VonMises3D.yaml ; do \
+	make -s testCoupledPlasticityDamage PREFIX=VonMises3D OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 test3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/CoupledPlasticityDamage

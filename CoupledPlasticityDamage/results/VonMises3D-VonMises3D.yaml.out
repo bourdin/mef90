@@ -1,0 +1,145 @@
+ 
+Mechanics: step    1, t= 0.00000E+00 
+   Alt. Min. step     1  
+   Alt. Proj. step     1      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  2.27502E-04 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.27502E-04 plastic dissipation:  0.00000E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  2.29219E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -2.29219E-04 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  2.25783E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -2.25783E-04 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  2.27502E-04 work:  4.55002E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -2.27500E-04 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    2, t= 1.11111E-01 
+   Alt. Min. step     1  
+   Alt. Proj. step     1      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  1.46207E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.46207E-03 plastic dissipation:  0.00000E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  3.86782E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -3.86782E-04 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  4.01551E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -4.01551E-04 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  1.46207E-03 work:  7.88333E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  6.73735E-04 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    3, t= 2.22222E-01 
+   Alt. Min. step     1  
+   Alt. Proj. step     1      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  5.16577E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  5.16577E-03 plastic dissipation:  0.00000E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  5.44344E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -5.44344E-04 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  5.77323E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -5.77323E-04 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  5.16577E-03 work:  1.12167E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  4.04410E-03 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    4, t= 3.33333E-01 
+   Alt. Min. step     1  
+   Alt. Proj. step     1      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  1.13386E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.13386E-02 plastic dissipation:  0.00000E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  7.01905E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -7.01905E-04 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  7.53095E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -7.53095E-04 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  1.13386E-02 work:  1.45500E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  9.88361E-03 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    5, t= 4.44444E-01 
+   Alt. Min. step     1  
+   Alt. Proj. step     1      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  1.99806E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.99806E-02 plastic dissipation:  0.00000E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  8.59466E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -8.59466E-04 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  9.28867E-04 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -9.28867E-04 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  1.99806E-02 work:  1.78833E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.81923E-02 plastic dissipation:  0.00000E+00 
+ 
+Mechanics: step    6, t= 5.55556E-01 
+   Alt. Min. step     1  
+   plastic strain ProjIter    5 max change  5.64688E-05 
+      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  2.40541E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  3.08225E-02 plastic dissipation:  6.76835E-03 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  1.11073E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -1.11073E-03 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  1.19643E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -1.19643E-03 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  2.40541E-02 work:  2.30716E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.85153E-02 plastic dissipation:  6.76835E-03 
+ 
+Mechanics: step    7, t= 6.66667E-01 
+   Alt. Min. step     1  
+   plastic strain ProjIter    5 max change  1.03768E-04 
+      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  2.40544E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  4.19751E-02 plastic dissipation:  1.79207E-02 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  1.42263E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -1.42263E-03 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  1.52340E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -1.52340E-03 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  2.40544E-02 work:  2.94603E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  3.90291E-02 plastic dissipation:  1.79207E-02 
+ 
+Mechanics: step    8, t= 7.77778E-01 
+   Alt. Min. step     1  
+   plastic strain ProjIter    5 max change  1.04071E-04 
+      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  2.40544E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  5.31281E-02 plastic dissipation:  2.90737E-02 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  1.73466E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -1.73466E-03 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  1.85050E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -1.85050E-03 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  2.40544E-02 work:  3.58517E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  4.95429E-02 plastic dissipation:  2.90737E-02 
+ 
+Mechanics: step    9, t= 8.88889E-01 
+   Alt. Min. step     1  
+   plastic strain ProjIter    5 max change  1.04204E-04 
+      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  2.40544E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  6.42810E-02 plastic dissipation:  4.02266E-02 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  2.04670E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -2.04670E-03 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  2.17760E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -2.17760E-03 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  2.40544E-02 work:  4.22430E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  6.00567E-02 plastic dissipation:  4.02266E-02 
+ 
+Mechanics: step   10, t= 1.00000E+00 
+   Alt. Min. step     1  
+   plastic strain ProjIter    5 max change  1.04277E-04 
+      alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+ 
+Mechanical energies:  
+cell set    1  elastic energy:  2.40544E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  7.54340E-02 plastic dissipation:  5.13796E-02 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   30  elastic energy:  0.00000E+00 work:  2.35873E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -2.35873E-03 plastic dissipation:  0.00000E+00 
+cell set   40  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+cell set   50  elastic energy:  0.00000E+00 work:  2.50470E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total: -2.50470E-03 plastic dissipation:  0.00000E+00 
+cell set   60  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 plastic dissipation:  0.00000E+00 
+======= Total: elastic energy:  2.40544E-02 work:  4.86344E-03 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  7.05705E-02 plastic dissipation:  5.13796E-02 
