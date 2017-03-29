@@ -87,8 +87,8 @@ Integer :: i
                                                          1.0_Kr,                        & ! timeMax
                                                          11,                            & ! timeNumStep
                                                          0,                             & ! timeSkip
-                                                         MEF90FileFormat_EXOSingle,     & ! fileFormat
-                                                         1.0_Kr)                         ! frequency
+                                                         1.0_Kr,                        & ! frequency
+                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_ModeQuasiStatic, & ! mode

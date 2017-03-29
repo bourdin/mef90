@@ -17,8 +17,9 @@ Program HeatXfer
                                                          0.0_Kr,                          & ! timeMin
                                                          1.0_Kr,                          & ! timeMax
                                                          11,                              & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle,       & ! fileFormat
-                                                         1.0_Kr)                            ! frequency
+                                                         0,                               & ! timeSkip
+                                                         1.0_Kr,                          & ! frequency
+                                                         MEF90FileFormat_EXOSingle)         ! fileFormat
 
    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
    Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
