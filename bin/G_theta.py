@@ -5,74 +5,88 @@
 from visit import *
 
 
-def Export_data_from_visit(rootdir,prefix,R_int,R_out,X0,Y0,Time,E0,nu,AT_model,k):
-	import json
-	import os
-	import os.path
-	import shutil
-	import math
-
-	MyDatabase = os.path.join(rootdir+'/'+prefix+'_out.gen')
-	print MyDatabase
-	OpenDatabase(MyDatabase)
-
-	DefineScalarExpression("X", 'coord(Mesh)[0]-'+str(X0)+'')
-	DefineScalarExpression("Y", 'coord(Mesh)[1]-'+str(Y0)+'')
-	DefineScalarExpression("R", "sqrt(X*X+Y*Y)")
-	DefineScalarExpression("k", ''+k+'')
-	DefineScalarExpression("E0", ''+E0+'')
-	DefineScalarExpression("v", ''+nu+'')
-	print AT_model
-	if AT_model=='ATk':
-		DefineScalarExpression("E", 'E0*(1-Damage)^2./(  1+(k-1)*( 1 - (1-Damage)^2 )  )')
-	elif AT_model=='AT1' or AT_model=='AT2':
-		DefineScalarExpression("E", 'E0*(1-Damage)^2.')
-	DefineVectorExpression("Displacement_2D", "{Displacement_X,Displacement_Y}")
-	DefineTensorExpression("EPS_2D", "{{gradient(Displacement_X)[0],0.5*(gradient(Displacement_X)[1]+gradient(Displacement_Y)[0])},{0.5*(gradient(Displacement_X)[1]+gradient(Displacement_Y)[0]),gradient(Displacement_Y)[1]}} ")
-	DefineVectorExpression("Theta_vec", '{((R-'+R_out+')/('+R_int+'-'+R_out+')),0}')
-	DefineTensorExpression("GRAD_Theta_vec", "{{gradient(Theta_vec[0])[0],gradient(Theta_vec[0])[1]},{gradient(Theta_vec[1])[0],gradient(Theta_vec[1])[1]}}")
-	DefineScalarExpression("G_theta", "trace(STRESS_2D*(GRAD_U*GRAD_Theta_vec))-.5*trace(STRESS_2D*EPS_2D)*divergence(Theta_vec)")
-	DefineTensorExpression("GRAD_U", "{{gradient(Displacement_2D[0])[0],gradient(Displacement_2D[0])[1]},{gradient(Displacement_2D[1])[0],gradient(Displacement_2D[1])[1]}}")
-	DefineTensorExpression("STRESS_2D", "E/((1+v))*(EPS_2D+v/(1-2*v)*trace(EPS_2D)*{{1,0},{0,1}})")
-
-	SetTimeSliderState(Time)
-	AddPlot("Pseudocolor", "G_theta")
-	DrawPlots()
-	ExportDBAtts = ExportDBAttributes()
-	ExportDBAtts.db_type = "ExtrudedVol"
-	ExportDBAtts.filename = 'Data_G_theta_'+str(Time)+''
-	ExportDBAtts.dirname = ""
-	ExportDBAtts.variables = ('G_theta')
-	#ExportDBAtts.opts.types = () 
-	ExportDatabase(ExportDBAtts)
-	DeleteActivePlots()
-	CloseDatabase(MyDatabase)
+def parse(args=None):
+    import argparse
+    ### Get options from the command line
+    parser = argparse.ArgumentParser(description='Compute the value of G_theta')
+    parser.add_argument('-i','--inputfile',help='rootdir and prefix of the file')
+    parser.add_argument("--R_inn",type=float,help="interior radius of the control area",default=.5)
+    parser.add_argument("--R_out",type=float,help="outer radius of the control area",default=1.)
+    parser.add_argument('--Angle_crack_propagation',type=float,help="crack propagation angle made with the x direction in degree",default=0.)
+    parser.add_argument('--Crack_position',type=float,nargs=2,default=[0,0],help='postion of the crack in X,Y')
+    return parser.parse_args()
 
 
+
+
+def Get_G(opts):
+    import json
+    import os
+    import os.path
+    import shutil
+    import math
+    
+    ##  
+    ## Open the database
+    ##
+
+    MyDatabase = opts.inputfile
+    print "Trying to open database %s"%MyDatabase
+    status = OpenDatabase(MyDatabase)
+    
+    ## Define displacement, stress, and strain
+    DefineVectorExpression("Displacement_2D", "{Displacement_X,Displacement_Y}")
+    DefineTensorExpression("Stress_Tensor_2D", "{{Stress_XX,Stress_XY},{Stress_XY,Stress_YY}}")
+    DefineTensorExpression("GradU", "{{gradient(Displacement_2D[0])[0],gradient(Displacement_2D[0])[1]},{gradient(Displacement_2D[1])[0],gradient(Displacement_2D[1])[1]}}")
+
+    ## define the controlled area for the 
+    DefineVectorExpression("Crack_Pos", '{'+str(opts.Crack_position[0])+','+str(opts.Crack_position[1])+'}')
+    DefineVectorExpression("Coords", "coord(Mesh)-Crack_Pos")
+    DefineScalarExpression("R", "sqrt( (Coords[0])^2.+(Coords[1])^2.)")
+    DefineVectorExpression("InnerOuterRadius", '{'+str(opts.R_inn)+','+str(opts.R_out)+'}')
+
+    ## Define the vector theta and its gradients
+    DefineScalarExpression("Theta_function", "if( le(R, InnerOuterRadius[0]), 1 , if(ge(R, InnerOuterRadius[1]), 0, (R - InnerOuterRadius[1] )/( InnerOuterRadius[0] - InnerOuterRadius[1]) ))")
+    DefineVectorExpression("ThetaVector", '{Theta_function*cos('+str(opts.Angle_crack_propagation*180/math.pi)+'),Theta_function*sin('+str(opts.Angle_crack_propagation*180/math.pi)+')}')
+    DefineTensorExpression("GradThetaVector", "{{gradient(ThetaVector[0])[0],gradient(ThetaVector[0])[1]},{gradient(ThetaVector[1])[0],gradient(ThetaVector[1])[1]}}")
+    
+    DefineScalarExpression("G_theta_Density", "trace(Stress_Tensor_2D*(GradU*GradThetaVector))-.5*trace(Stress_Tensor_2D*GradU)*divergence(ThetaVector)")
+
+
+    AddPlot("Pseudocolor","G_theta_Density")
+    DrawPlots()
+    SuppressQueryOutputOn()
+
+    filename = opts.inputfile+'_Gtheta.txt'
+    f=open(filename,'w')
+    f.write("#t             load            G            for  R_inner = %e   R_outer = %e  \n"%(opts.R_inn,opts.R_out))
+    print 'options ',opts
+    for s in range(0,TimeSliderGetNStates(),1):
+        SetActiveWindow(1)
+        SetTimeSliderState(s)
+
+
+        Query("Time")
+        t=GetQueryOutputValue()
+
+        Query("Weighted Variable Sum")
+        G= GetQueryOutputValue()
+
+        print "****** step %i load = %e, G_theta = %e "%(s,t,G)
+        f.write("%e \t%e \t%e \n"%(s,t,G))
+        f.flush()
+        os.fsync(f)
+    f.close()
+    SetActiveWindow(1)
+    DeleteAllPlots()
+    DeleteWindow()
+    CloseDatabase(MyDatabase)
+    return 0
 
 if __name__ == "__main__":
-	import sys
-	import os.path
-	import numpy as np
-	import json
-	import os
-	import os.path
-	import shutil
-	import math
+    import sys  
+    import os.path
 
-	rootdir = os.getenv("PWD")
-
-	if os.path.exists(os.path.join(rootdir,'00_INFO.json')):
-		json_file = open(os.path.join(rootdir,'00_INFO.json'))
-		D = json.load(json_file)
-		Geometry = dict(D['Geometry'])
-		Mat_prop = dict(D['Mat_prop'])
-		Param = dict(D['Param'])
-		Param.update()
-		json_file.close()
-
-	for Time in range(int(Param['time_min']),int(Param['time_max'])):
-		# 
-		Export_data_from_visit(str(rootdir),str(Param['prefix']),str(Geometry['R_inn']),str(Geometry['R_out']),float(Geometry['X_center'][Time]),float(Geometry['Y_center']),Time,str(Mat_prop['E0']),str(Mat_prop['nu']),str(Mat_prop['AT_model']),str(Mat_prop['k']))
-
-exit()
+    opts = parse()
+    Get_G(opts)
+    exit()
