@@ -375,7 +375,7 @@ Program CoupledPlasticityDamage
    !!! Actual computations / time stepping
    !!!
    If (.NOT. MEF90GlobalOptions%dryrun) Then
-      If (MEF90GlobalOptions%timeSkip > 0) Then       
+      If (MEF90GlobalOptions%timeSkip > 0) Then
          !!! Restore state from file.     
          Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
          Call VecLoadExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
@@ -383,13 +383,36 @@ Program CoupledPlasticityDamage
          Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
          Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
          Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-
-         Call VecLoadExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%crackPressureOffset,ierr);CHKERRQ(ierr)
-         Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%crackPressure,ierr);CHKERRQ(ierr)
-         Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%crackPressure,ierr);CHKERRQ(ierr)
          Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
 
+         If (MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset > 0) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+            Call VecLoadExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                         MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalBegin(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalEnd(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+         End IF
+
+         If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+            Call VecLoadExodusCell(MEF90DefMechCtx%cellDMMatS,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                         MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%plasticStrainOffset,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalBegin(MEF90DefMechCtx%cellDMMatS,localVec,INSERT_VALUES,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalEnd(MEF90DefMechCtx%cellDMMatS,localVec,INSERT_VALUES,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
+         End IF
+
+         If (MEF90DefMechGlobalOptions%crackPressureOffset > 0) Then
+            Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+            Call VecLoadExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                         MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%crackPressureOffset,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalBegin(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%crackPressure,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalEnd(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%crackPressure,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
+         End If
 
          Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
          Call VecLoadExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
