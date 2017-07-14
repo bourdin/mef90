@@ -28,8 +28,8 @@ echo export PETSC_DIR=$HOME/Development/petsc-3.3-p7 >> ~/.bashrc
 echo export PETSC_ARCH=mef90-gcc-O >> ~/.bashrc
 
 ### Apply several patches to PETSc 3.3
-cd $PETSC_DIR; for d in $MEF90_DIR/patches/0*; do patch -p1 < $d; done
-cd $PETSC_DIR; for d in $MEF90_DIR/patches/f0*; do patch -p1 < $d; done  
+cd $PETSC_DIR; for d in $MEF90_DIR/patches/[0-1]*; do patch -p1 < $d; done
+cd $PETSC_DIR; for d in $MEF90_DIR/patches/f[0-1]*; do patch -p1 < $d; done  
 cd $PETSC_DIR/config/BuildSystem; for d in $MEF90_DIR/patches/b0*; do patch -p1 < $d; done
 
 ### Configure PETSc 3.3 for mef90
