@@ -1,5 +1,5 @@
 Program TestMaterials
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_Materials
    Use petsc
@@ -14,13 +14,12 @@ Program TestMaterials
    Type(MatS3D)                        :: E3D
    Character(len=256)                  :: IOBuffer
    Character(len=80)                   :: name,prefix
-   character(len=1),pointer            :: dummychar(:)
    PetscErrorCode                      :: ierr
    
 
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90Initialize(ierr)
-   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-n',numMat,flg,ierr);CHKERRQ(ierr);
+   Call PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-n',numMat,flg,ierr);CHKERRQ(ierr);
    
    Allocate(matBag2D(numMat))
    Allocate(matBag3D(numMat))

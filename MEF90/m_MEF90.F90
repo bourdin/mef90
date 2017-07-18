@@ -7,12 +7,12 @@ Module m_MEF90
    Use m_MEF90_Parameters
    Use m_MEF90_Materials
    Use m_MEF90_MPI
+   Use m_MEF90_EXO  
    Use m_MEF90_Utils
    !Use m_MEF90_DiffusionInterface
    !Use m_MEF90_ElasticityInterface
    !Use m_MEF90_GradDamageInterface
    !Use m_MEF90_Elements 
-   !Use m_MEF90_EXO  
    !Use m_MEF90_MassMatrixInterface
    !Use m_MEF90_Norm
 
@@ -73,7 +73,7 @@ Contains
       
       !!! Individual modules runtime initialization should be called here
       Call MEF90MPIInitialize_Private(ierr);CHKERRQ(ierr)
-      !Call MEF90MaterialsInitialize_Private(ierr);CHKERRQ(ierr)
+      Call MEF90MaterialsInitialize_Private(ierr);CHKERRQ(ierr)
       Call MEF90CtxInitialize_Private(ierr);CHKERRQ(ierr)
    End Subroutine MEF90Initialize
    
